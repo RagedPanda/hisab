@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/ids.dart';
 import '../../core/money.dart';
 import '../../data/db/database.dart';
+import '../../l10n/l10n.dart';
 
 /// Mutable draft of one line item while editing.
 class ItemDraft {
@@ -61,6 +62,7 @@ class _ItemRowState extends State<ItemRow> {
   @override
   Widget build(BuildContext context) {
     final draft = widget.draft;
+    final l10n = context.l10n;
     final unitOptions = {...widget.units, 'pcs', 'kg', 'g', 'L', 'ml', 'dozen', 'pack', if (draft.unit != null) draft.unit!}.toList();
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -72,7 +74,7 @@ class _ItemRowState extends State<ItemRow> {
               Expanded(
                 child: TextField(
                   controller: _name,
-                  decoration: const InputDecoration(hintText: 'Item name', isDense: true, filled: false, border: InputBorder.none),
+                  decoration: InputDecoration(hintText: l10n.itemName, isDense: true, filled: false, border: InputBorder.none),
                   textCapitalization: TextCapitalization.sentences,
                   onChanged: (v) => widget.onChanged(draft.copyWith(name: v)),
                 ),
@@ -86,7 +88,7 @@ class _ItemRowState extends State<ItemRow> {
                 child: TextField(
                   controller: _qty,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Qty', isDense: true),
+                  decoration: InputDecoration(labelText: l10n.qty, isDense: true),
                   onChanged: (v) => widget.onChanged(draft.copyWith(quantity: double.tryParse(v) ?? 0)),
                 ),
               ),
@@ -97,7 +99,7 @@ class _ItemRowState extends State<ItemRow> {
                   initialValue: draft.unit ?? '',
                   isDense: true,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Unit', isDense: true),
+                  decoration: InputDecoration(labelText: l10n.unit, isDense: true),
                   items: [
                     const DropdownMenuItem(value: '', child: Text('—')),
                     for (final unit in unitOptions) DropdownMenuItem(value: unit, child: Text(unit, overflow: TextOverflow.ellipsis)),
@@ -110,7 +112,7 @@ class _ItemRowState extends State<ItemRow> {
                 child: TextField(
                   controller: _price,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(labelText: 'Price per ${draft.unit ?? 'unit'}', prefixText: '${widget.symbol} ', isDense: true),
+                  decoration: InputDecoration(labelText: l10n.pricePerUnit(draft.unit ?? l10n.genericUnit), prefixText: '${widget.symbol} ', isDense: true),
                   onChanged: (v) => widget.onChanged(draft.copyWith(unitPriceMinor: parseAmountToMinor(v) ?? 0)),
                 ),
               ),

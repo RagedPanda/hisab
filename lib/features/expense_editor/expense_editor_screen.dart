@@ -12,6 +12,8 @@ import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
 import '../../domain/split/split_calculator.dart';
+import '../../l10n/category_names.dart';
+import '../../l10n/l10n.dart';
 import '../categories/category_picker.dart';
 import '../shell/widgets/common.dart';
 import '../split/split_editor.dart';
@@ -154,6 +156,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_loaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
     final symbol = settings.currencySymbol;
@@ -161,13 +164,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit entry' : _groupId != null ? 'Group expense' : 'New entry'),
+        title: Text(_isEditing ? l10n.editEntry : _groupId != null ? l10n.groupExpense : l10n.newEntry),
         actions: [
           if (_isEditing)
             IconButton(
               icon: const Icon(Icons.delete_outline),
               onPressed: () async {
-                if (await confirmDialog(context, title: 'Delete this entry?')) {
+                if (await confirmDialog(context, title: l10n.deleteEntryQuestion)) {
                   await ref.read(entriesRepositoryProvider).deleteEntry(_existingId!);
                   if (_previousAccountId != null && _source != 'sms' && _kind != 'transfer') {
                     await ref.read(accountsRepositoryProvider).adjustBalance(_previousAccountId!, _kind == 'expense' ? _previousAmountMinor! : -_previousAmountMinor!);
@@ -183,10 +186,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         children: [
           if (_groupId == null)
             SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'expense', label: Text('Expense'), icon: Icon(Icons.arrow_upward)),
-                ButtonSegment(value: 'income', label: Text('Income'), icon: Icon(Icons.arrow_downward)),
-                ButtonSegment(value: 'transfer', label: Text('Transfer'), icon: Icon(Icons.swap_horiz)),
+              segments: [
+                ButtonSegment(value: 'expense', label: Text(l10n.kindExpense), icon: const Icon(Icons.arrow_upward)),
+                ButtonSegment(value: 'income', label: Text(l10n.kindIncome), icon: const Icon(Icons.arrow_downward)),
+                ButtonSegment(value: 'transfer', label: Text(l10n.kindTransfer), icon: const Icon(Icons.swap_horiz)),
               ],
               selected: {_kind},
               onSelectionChanged: (set) => setState(() {
@@ -205,7 +208,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             decoration: InputDecoration(
               prefixText: '$symbol ',
               hintText: '0',
-              helperText: _hasItems ? 'Total of ${_items.length} items' : null,
+              helperText: _hasItems ? l10n.totalOfItems(_items.length) : null,
             ),
             onChanged: (_) => setState(() {}),
           ),
@@ -214,8 +217,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: IconBadge(icon: _category?.icon ?? 'category', color: _category?.color ?? 0xFF9E9E9E),
-              title: Text(_category?.name ?? 'Choose category'),
-              subtitle: _category == null ? const Text('Required') : null,
+              title: Text(_category?.displayName(context) ?? l10n.chooseCategory),
+              subtitle: _category == null ? Text(l10n.required) : null,
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
                 final picked = await showCategoryPicker(context, kind: _kind, selectedId: _category?.id);
@@ -227,12 +230,12 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             ),
           if (_kind == 'expense' && _groupId == null) _itemsSection(symbol, units),
           const SizedBox(height: 8),
-          Text(_kind == 'transfer' ? 'From account' : 'Account', style: Theme.of(context).textTheme.labelLarge),
+          Text(_kind == 'transfer' ? l10n.fromAccount : l10n.account, style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 6),
           _accountChips(accounts, _accountId, (id) => setState(() => _accountId = id)),
           if (_kind == 'transfer') ...[
             const SizedBox(height: 12),
-            Text('To account', style: Theme.of(context).textTheme.labelLarge),
+            Text(l10n.toAccount, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 6),
             _accountChips(accounts.where((a) => a.id != _accountId).toList(), _toAccountId, (id) => setState(() => _toAccountId = id)),
           ],
@@ -261,14 +264,14 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             ),
           ]),
           const SizedBox(height: 16),
-          TextField(controller: _payeeController, decoration: const InputDecoration(labelText: 'Paid to / received from', prefixIcon: Icon(Icons.storefront_outlined)), textCapitalization: TextCapitalization.words),
+          TextField(controller: _payeeController, decoration: InputDecoration(labelText: l10n.payeeLabel, prefixIcon: const Icon(Icons.storefront_outlined)), textCapitalization: TextCapitalization.words),
           const SizedBox(height: 12),
-          TextField(controller: _noteController, decoration: const InputDecoration(labelText: 'Note', prefixIcon: Icon(Icons.notes)), textCapitalization: TextCapitalization.sentences, maxLines: 2),
+          TextField(controller: _noteController, decoration: InputDecoration(labelText: l10n.note, prefixIcon: const Icon(Icons.notes)), textCapitalization: TextCapitalization.sentences, maxLines: 2),
           if (_groupId != null) _groupSection(symbol),
           if (_source == 'sms')
             Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: Text('Created from a bank SMS. Editing it will not change your bank balance.', style: Theme.of(context).textTheme.bodySmall),
+              child: Text(l10n.smsEntryNotice, style: Theme.of(context).textTheme.bodySmall),
             ),
         ],
       ),
@@ -278,7 +281,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           child: FilledButton(
             onPressed: _saving ? null : _save,
             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-            child: Text(_saving ? 'Saving…' : 'Save ${formatMinor(_amountMinor, symbol: symbol)}'),
+            child: Text(_saving ? l10n.saving : l10n.saveAmount(formatMinor(_amountMinor, symbol: symbol))),
           ),
         ),
       ),
@@ -297,20 +300,21 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             selected: selected == account.id,
             onSelected: (_) => onPick(account.id),
           ),
-        if (accounts.isEmpty) ActionChip(label: const Text('Add account'), avatar: const Icon(Icons.add, size: 16), onPressed: () => context.push('/accounts')),
+        if (accounts.isEmpty) ActionChip(label: Text(context.l10n.addAccount), avatar: const Icon(Icons.add, size: 16), onPressed: () => context.push('/accounts')),
       ],
     );
   }
 
   Widget _itemsSection(String symbol, List<String> units) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          'Items',
+          l10n.items,
           trailing: TextButton.icon(
             icon: const Icon(Icons.add, size: 18),
-            label: const Text('Add item'),
+            label: Text(l10n.addItem),
             onPressed: () => setState(() => _items.add(ItemDraft(unit: units.firstOrNull))),
           ),
         ),
@@ -324,7 +328,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                 for (final suggestion in _suggestions.where((s) => !_items.any((i) => i.name.toLowerCase() == s.name.toLowerCase())))
                   ActionChip(
                     avatar: const Icon(Icons.history, size: 16),
-                    label: Text('${suggestion.name} · ${formatQuantity(suggestion.lastQuantity, suggestion.unit)} @ ${formatMinor(suggestion.lastUnitPriceMinor, symbol: symbol)}'),
+                    label: Text(l10n.itemSuggestion(suggestion.name, formatQuantity(suggestion.lastQuantity, suggestion.unit), formatMinor(suggestion.lastUnitPriceMinor, symbol: symbol))),
                     onPressed: () => setState(() => _items.add(ItemDraft(
                           name: suggestion.name,
                           quantity: suggestion.lastQuantity,
@@ -345,26 +349,27 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             onRemove: () => setState(() => _items.removeAt(i)),
           ),
         if (_items.isEmpty && _suggestions.isEmpty)
-          Text('Optional: break this expense into items with quantity and price (e.g. buffalo milk 1 L). Hisab remembers them for next time.',
+          Text(l10n.itemsHelp,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
       ],
     );
   }
 
   Widget _groupSection(String symbol) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader('Paid by'),
+        SectionHeader(l10n.paidBy),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
             for (final member in _members)
-              ChoiceChip(label: Text(member.isMe ? '${member.name} (you)' : member.name), selected: _paidByMemberId == member.id, onSelected: (_) => setState(() => _paidByMemberId = member.id)),
+              ChoiceChip(label: Text(member.isMe ? l10n.youSuffix(member.name) : member.name), selected: _paidByMemberId == member.id, onSelected: (_) => setState(() => _paidByMemberId = member.id)),
           ],
         ),
-        const SectionHeader('Split'),
+        SectionHeader(l10n.split),
         SplitEditor(
           totalMinor: _amountMinor,
           members: _members,
@@ -383,32 +388,33 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   Future<void> _save() async {
     final amount = _amountMinor;
+    final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     if (amount <= 0) {
-      messenger.showSnackBar(const SnackBar(content: Text('Enter an amount greater than zero')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.errorAmountZero)));
       return;
     }
     if (_kind != 'transfer' && _category == null) {
-      messenger.showSnackBar(const SnackBar(content: Text('Pick a category')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.errorPickCategory)));
       return;
     }
     if (_kind == 'transfer' && (_accountId == null || _toAccountId == null)) {
-      messenger.showSnackBar(const SnackBar(content: Text('Pick both accounts for a transfer')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.errorPickBothAccounts)));
       return;
     }
     if (_items.any((i) => i.name.trim().isEmpty)) {
-      messenger.showSnackBar(const SnackBar(content: Text('Every item needs a name')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.errorItemName)));
       return;
     }
     SplitOutcome? outcome;
     if (_groupId != null) {
       if (_paidByMemberId == null) {
-        messenger.showSnackBar(const SnackBar(content: Text('Choose who paid')));
+        messenger.showSnackBar(SnackBar(content: Text(l10n.errorChoosePayer)));
         return;
       }
       outcome = computeSplit(totalMinor: amount, method: _splitMethod, inputs: _splitInputs);
       if (!outcome.isValid) {
-        messenger.showSnackBar(SnackBar(content: Text(outcome.error ?? 'Fix the split first')));
+        messenger.showSnackBar(SnackBar(content: Text(outcome.error == null ? l10n.errorFixSplit : splitErrorMessage(outcome.error!, l10n, ref.read(settingsProvider).currencySymbol))));
         return;
       }
     }

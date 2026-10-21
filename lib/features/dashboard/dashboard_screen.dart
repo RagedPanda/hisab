@@ -8,6 +8,8 @@ import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../domain/budget/budget_math.dart';
+import '../../l10n/category_names.dart';
+import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -15,16 +17,17 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final totals = ref.watch(monthTotalsProvider).value ?? (expense: 0, income: 0);
     final pending = ref.watch(pendingSmsProvider).value ?? const [];
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Hisab'),
+        title: Text(l10n.appName),
         actions: [
           if (pending.isNotEmpty)
             IconButton(
-              tooltip: '${pending.length} SMS to review',
+              tooltip: l10n.smsToReview(pending.length),
               onPressed: () => context.push('/sms'),
               icon: Badge(label: Text('${pending.length}'), child: const Icon(Icons.sms_outlined)),
             ),
@@ -65,15 +68,15 @@ class _SummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Spent this month', style: TextStyle(color: scheme.onPrimary.withValues(alpha: 0.85))),
+          Text(context.l10n.spentThisMonth, style: TextStyle(color: scheme.onPrimary.withValues(alpha: 0.85))),
           const SizedBox(height: 4),
           Text(formatMinor(expense, symbol: symbol), style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: scheme.onPrimary, fontWeight: FontWeight.w800)),
           const SizedBox(height: 16),
           Row(
             children: [
-              _Stat(label: 'Income', value: formatMinor(income, symbol: symbol, showDecimals: false), color: scheme.onPrimary),
+              _Stat(label: context.l10n.income, value: formatMinor(income, symbol: symbol, showDecimals: false), color: scheme.onPrimary),
               const SizedBox(width: 24),
-              _Stat(label: net >= 0 ? 'Saved' : 'Overspent', value: formatMinor(net.abs(), symbol: symbol, showDecimals: false), color: scheme.onPrimary),
+              _Stat(label: net >= 0 ? context.l10n.saved : context.l10n.overspent, value: formatMinor(net.abs(), symbol: symbol, showDecimals: false), color: scheme.onPrimary),
             ],
           ),
         ],
@@ -110,7 +113,7 @@ class _AccountsStrip extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          'Balances',
+          context.l10n.balances,
           trailing: TextButton(onPressed: () => context.push('/accounts'), child: Text(formatMinor(total, symbol: symbol, showDecimals: false))),
         ),
         SizedBox(
@@ -167,7 +170,7 @@ class _AddAccountChip extends StatelessWidget {
         child: Container(
           width: 92,
           decoration: BoxDecoration(border: Border.all(color: Theme.of(context).colorScheme.outlineVariant), borderRadius: BorderRadius.circular(16)),
-          child: const Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.add), Text('Account', style: TextStyle(fontSize: 12))]),
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Icons.add), Text(context.l10n.account, style: const TextStyle(fontSize: 12))]),
         ),
       );
 }
@@ -194,13 +197,13 @@ class _SpendingByCategory extends ConsumerWidget {
     final top = sorted.take(6).toList();
     final restValue = sorted.skip(6).fold(0, (sum, e) => sum + e.value);
     final slices = [
-      for (final e in top) (name: byId[e.key]?.name ?? 'Uncategorised', color: Color(byId[e.key]?.color ?? 0xFF9E9E9E), value: e.value),
-      if (restValue > 0) (name: 'Others', color: const Color(0xFF9E9E9E), value: restValue),
+      for (final e in top) (name: byId[e.key]?.displayName(context) ?? context.l10n.uncategorised, color: Color(byId[e.key]?.color ?? 0xFF9E9E9E), value: e.value),
+      if (restValue > 0) (name: context.l10n.others, color: const Color(0xFF9E9E9E), value: restValue),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader('Spending by category'),
+        SectionHeader(context.l10n.spendingByCategory),
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -273,13 +276,13 @@ class _BudgetsOverview extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader('Budgets', trailing: TextButton(onPressed: () => context.push('/budgets'), child: const Text('Manage'))),
+        SectionHeader(context.l10n.budgets, trailing: TextButton(onPressed: () => context.push('/budgets'), child: Text(context.l10n.manage))),
         Card(
           child: Column(
             children: [
               for (final budget in monthly)
                 _BudgetRow(
-                  name: budget.categoryId == null ? 'Overall' : byId[budget.categoryId]?.name ?? 'Category',
+                  name: budget.categoryId == null ? context.l10n.overall : byId[budget.categoryId]?.displayName(context) ?? context.l10n.category,
                   icon: byId[budget.categoryId]?.icon,
                   color: byId[budget.categoryId]?.color ?? kSeedColor.toARGB32(),
                   progress: BudgetProgress(limitMinor: budget.amountMinor, spentMinor: spentFor(budget.categoryId), elapsedFraction: elapsed),
@@ -318,8 +321,11 @@ class _BudgetRow extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             progress.isOver
-                ? 'Over by ${formatMinor(-progress.remainingMinor, symbol: symbol, showDecimals: false)}'
-                : '${formatMinor(progress.remainingMinor, symbol: symbol, showDecimals: false)} left of ${formatMinor(progress.limitMinor, symbol: symbol, showDecimals: false)}',
+                ? context.l10n.budgetOverBy(formatMinor(-progress.remainingMinor, symbol: symbol, showDecimals: false))
+                : context.l10n.budgetLeftOf(
+                    formatMinor(progress.remainingMinor, symbol: symbol, showDecimals: false),
+                    formatMinor(progress.limitMinor, symbol: symbol, showDecimals: false),
+                  ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -338,9 +344,9 @@ class _RecentEntries extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader('Recent', trailing: TextButton(onPressed: () => context.go('/transactions'), child: const Text('See all'))),
+        SectionHeader(context.l10n.recent, trailing: TextButton(onPressed: () => context.go('/transactions'), child: Text(context.l10n.seeAll))),
         if (recent.isEmpty)
-          const EmptyState(icon: Icons.receipt_long_outlined, title: 'No entries this month', message: 'Tap + to add your first expense, or turn on SMS reading in Settings.')
+          EmptyState(icon: Icons.receipt_long_outlined, title: context.l10n.noEntriesThisMonthTitle, message: context.l10n.noEntriesThisMonthBody)
         else
           Card(
             child: Column(

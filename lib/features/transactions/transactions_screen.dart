@@ -7,6 +7,8 @@ import '../../core/format.dart';
 import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/repositories/entries_repository.dart';
+import '../../l10n/category_names.dart';
+import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 
 class _SearchNotifier extends Notifier<String> {
@@ -29,6 +31,7 @@ class TransactionsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final search = ref.watch(_searchProvider);
     final kindFilter = ref.watch(_kindFilterProvider);
     final symbol = ref.watch(settingsProvider).currencySymbol;
@@ -40,19 +43,20 @@ class TransactionsScreen extends ConsumerWidget {
       return d.entry.note.toLowerCase().contains(needle) ||
           (d.entry.payee ?? '').toLowerCase().contains(needle) ||
           (d.category?.name ?? '').toLowerCase().contains(needle) ||
+          (d.category?.displayName(context) ?? '').toLowerCase().contains(needle) ||
           d.items.any((i) => i.name.toLowerCase().contains(needle));
     }).toList();
     final groups = _groupByDay(entries);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Entries'), actions: const [MonthSwitcher()]),
+      appBar: AppBar(title: Text(l10n.entries), actions: const [MonthSwitcher()]),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Search payee, note, item or category',
+                hintText: l10n.searchEntriesHint,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: search.isEmpty ? null : IconButton(icon: const Icon(Icons.clear), onPressed: () => ref.read(_searchProvider.notifier).set('')),
                 isDense: true,
@@ -66,7 +70,7 @@ class TransactionsScreen extends ConsumerWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
-                for (final (label, value) in [('All', null), ('Expenses', 'expense'), ('Income', 'income'), ('Transfers', 'transfer')])
+                for (final (label, value) in [(l10n.all, null), (l10n.kindExpenses, 'expense'), (l10n.income, 'income'), (l10n.kindTransfers, 'transfer')])
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(label: Text(label), selected: kindFilter == value, onSelected: (_) => ref.read(_kindFilterProvider.notifier).set(value)),
@@ -78,7 +82,7 @@ class TransactionsScreen extends ConsumerWidget {
             child: async.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : groups.isEmpty
-                    ? const EmptyState(icon: Icons.receipt_long_outlined, title: 'Nothing here yet', message: 'Entries for this month will appear grouped by day.')
+                    ? EmptyState(icon: Icons.receipt_long_outlined, title: l10n.noEntriesTitle, message: l10n.noEntriesBody)
                     : ListView.builder(
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
                         itemCount: groups.length,
@@ -91,7 +95,7 @@ class TransactionsScreen extends ConsumerWidget {
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(4, 14, 4, 6),
                                 child: Row(children: [
-                                  Expanded(child: Text(formatDayLabel(group.day), style: Theme.of(context).textTheme.labelLarge)),
+                                  Expanded(child: Text(formatDayLabel(group.day, today: l10n.today, yesterday: l10n.yesterday, locale: Localizations.localeOf(context).toString()), style: Theme.of(context).textTheme.labelLarge)),
                                   if (dayTotal > 0) Text(formatMinor(dayTotal, symbol: symbol), style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                                 ]),
                               ),

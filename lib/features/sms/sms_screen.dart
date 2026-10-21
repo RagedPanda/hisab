@@ -11,6 +11,7 @@ import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/sms/sms_channel.dart';
 import '../../data/sms/sms_ingest_service.dart';
+import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 
 class SmsScreen extends ConsumerStatefulWidget {
@@ -39,11 +40,12 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     final service = ref.read(smsIngestServiceProvider);
     final status = await service.ingest(RawSms(sender: 'PASTED', body: text, receivedAt: DateTime.now()), autoAdd: false, force: true);
     if (!mounted) return;
+    final l10n = context.l10n;
     setState(() => _lastResult = switch (status) {
-          IngestStatus.pending => 'Transaction found. Review it below.',
-          IngestStatus.added => 'Transaction added.',
-          IngestStatus.duplicate => 'Already imported.',
-          _ => 'Could not find a transaction in that text.',
+          IngestStatus.pending => l10n.smsFoundReview,
+          IngestStatus.added => l10n.smsAdded,
+          IngestStatus.duplicate => l10n.smsDuplicate,
+          _ => l10n.smsNotFound,
         });
   }
 
@@ -56,16 +58,12 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     }
     final consent = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Read bank SMS?'),
-        content: const Text(
-          'Hisab reads SMS from your bank and UPI apps to log transactions and show account balances. '
-          'Messages are processed on this device only and never uploaded. OTPs and promotional SMS are ignored. '
-          'You can turn this off any time.',
-        ),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.readBankSmsQuestion),
+        content: Text(dialogContext.l10n.smsConsentBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Not now')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Allow')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(dialogContext.l10n.notNow)),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text(dialogContext.l10n.allow)),
         ],
       ),
     );
@@ -74,8 +72,8 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     if (!granted) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('SMS permission was not granted'),
-          action: SnackBarAction(label: 'Settings', onPressed: openAppSettings),
+          content: Text(context.l10n.smsPermissionDenied),
+          action: SnackBarAction(label: context.l10n.settings, onPressed: openAppSettings),
         ));
       }
       return;
@@ -93,66 +91,63 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     if (mounted) {
       setState(() {
         _busy = false;
-        _lastResult = 'Scanned ${result.scanned} messages: ${result.added} added, ${result.pending} waiting for review.';
+        _lastResult = context.l10n.scanResult(result.scanned, result.added, result.pending);
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final pending = ref.watch(pendingSmsProvider).value ?? const <SmsLogData>[];
     final symbol = settings.currencySymbol;
     final supported = SmsChannel.isSupported;
     return Scaffold(
-      appBar: AppBar(title: const Text('Bank SMS')),
+      appBar: AppBar(title: Text(l10n.bankSms)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [
           Card(
             child: Column(children: [
               SwitchListTile(
-                title: const Text('Read bank SMS automatically'),
-                subtitle: Text(supported ? 'Android only. Processed on-device, never uploaded.' : 'Not available on iOS. Use the Shortcut or paste below.'),
+                title: Text(l10n.readBankSmsAuto),
+                subtitle: Text(supported ? l10n.smsAndroidOnly : l10n.smsNotOnIos),
                 value: settings.smsEnabled && supported,
                 onChanged: supported ? _toggleSms : null,
               ),
               SwitchListTile(
-                title: const Text('Add transactions without review'),
-                subtitle: const Text('Off: new SMS wait in the review list below.'),
+                title: Text(l10n.smsAutoAddTitle),
+                subtitle: Text(l10n.smsAutoAddHelp),
                 value: settings.smsAutoAdd,
                 onChanged: (v) => ref.read(settingsProvider.notifier).update((s) => s.copyWith(smsAutoAdd: v)),
               ),
               if (supported && settings.smsEnabled)
                 ListTile(
                   leading: _busy ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.refresh),
-                  title: const Text('Scan inbox now'),
-                  subtitle: const Text('Looks back 90 days the first time, then only new messages'),
+                  title: Text(l10n.scanInboxNow),
+                  subtitle: Text(l10n.scanInboxHelp),
                   onTap: _busy ? null : _scan,
                 ),
               ListTile(
                 leading: const Icon(Icons.content_paste),
-                title: const Text('Paste an SMS'),
-                subtitle: const Text('Works on iOS and Android'),
+                title: Text(l10n.pasteSms),
+                subtitle: Text(l10n.pasteSmsHelp),
                 onTap: () async {
-                  final text = await promptText(context, title: 'Paste bank SMS', hint: 'Rs.500 debited from A/c XX1234…');
+                  final text = await promptText(context, title: l10n.pasteBankSms, hint: l10n.pasteBankSmsHint);
                   if (text != null && text.isNotEmpty) await _ingestText(text);
                 },
               ),
             ]),
           ),
           if (_lastResult != null) Padding(padding: const EdgeInsets.all(12), child: Text(_lastResult!, style: Theme.of(context).textTheme.bodyMedium)),
-          SectionHeader('To review (${pending.length})'),
+          SectionHeader(l10n.toReview(pending.length)),
           if (pending.isEmpty)
-            const Card(child: ListTile(leading: Icon(Icons.inbox_outlined), title: Text('Nothing waiting'), subtitle: Text('New bank transactions will show up here.')))
+            Card(child: ListTile(leading: const Icon(Icons.inbox_outlined), title: Text(l10n.nothingWaitingTitle), subtitle: Text(l10n.nothingWaitingBody)))
           else
             for (final row in pending) _PendingCard(row: row, symbol: symbol),
           const SizedBox(height: 16),
-          Text(
-            'iPhone: create a Shortcuts automation "When I get a message containing \'debited\'" → "Open URL" with hisab:///sms?text=[Message]. '
-            'Hisab will open and queue the transaction for review.',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text(l10n.iosShortcutHelp, style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
@@ -202,15 +197,15 @@ class _PendingCard extends ConsumerWidget {
             const SizedBox(height: 4),
             Text(row.body, maxLines: 2, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.outline)),
             Row(children: [
-              TextButton(onPressed: () => smsLog.setStatus(row.id, 'ignored'), child: const Text('Ignore')),
+              TextButton(onPressed: () => smsLog.setStatus(row.id, 'ignored'), child: Text(context.l10n.ignore)),
               const Spacer(),
-              TextButton(onPressed: () => context.push('/entry?sms=${row.id}'), child: const Text('Edit')),
+              TextButton(onPressed: () => context.push('/entry?sms=${row.id}'), child: Text(context.l10n.edit)),
               FilledButton.tonal(
                 onPressed: () async {
                   final id = await service.approvePending(row);
-                  if (id == null && context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not add this one; use Edit')));
+                  if (id == null && context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.couldNotAddUseEdit)));
                 },
-                child: Text('Add ${formatMinor(amount, symbol: symbol, showDecimals: false)}'),
+                child: Text(context.l10n.addAmount(formatMinor(amount, symbol: symbol, showDecimals: false))),
               ),
             ]),
           ],

@@ -6,6 +6,8 @@ import '../../../core/format.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../data/repositories/entries_repository.dart';
+import '../../../l10n/category_names.dart';
+import '../../../l10n/l10n.dart';
 
 /// Rounded tile with a coloured icon, used for categories, accounts and groups.
 class IconBadge extends StatelessWidget {
@@ -59,19 +61,21 @@ class EntryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final entry = details.entry;
     final category = details.category;
+    final categoryName = category?.displayName(context);
     final title = entry.payee?.isNotEmpty == true
         ? entry.payee!
         : entry.note.isNotEmpty
             ? entry.note
-            : category?.name ?? (entry.kind == 'transfer' ? 'Transfer' : 'Uncategorised');
+            : categoryName ?? (entry.kind == 'transfer' ? l10n.kindTransfer : l10n.uncategorised);
     final subtitleParts = <String>[
-      if (category != null && title != category.name) category.name,
-      if (details.items.isNotEmpty) '${details.items.length} item${details.items.length == 1 ? '' : 's'}',
+      if (categoryName != null && title != categoryName) categoryName,
+      if (details.items.isNotEmpty) l10n.itemCount(details.items.length),
       if (details.account != null) details.account!.name,
-      if (entry.source == 'sms') 'SMS',
-      if (showDate) formatShortDate(entry.occurredAt),
+      if (entry.source == 'sms') l10n.sourceSms,
+      if (showDate) formatShortDate(entry.occurredAt, locale: Localizations.localeOf(context).toString()),
     ];
     return ListTile(
       onTap: onTap,
@@ -149,7 +153,7 @@ class MonthSwitcher extends ConsumerWidget {
         IconButton(onPressed: () => ref.read(selectedMonthProvider.notifier).shift(-1), icon: const Icon(Icons.chevron_left)),
         GestureDetector(
           onTap: () => ref.read(selectedMonthProvider.notifier).reset(),
-          child: Text(formatMonthLabel(range), style: Theme.of(context).textTheme.titleSmall),
+          child: Text(formatMonthLabel(range, locale: Localizations.localeOf(context).toString()), style: Theme.of(context).textTheme.titleSmall),
         ),
         IconButton(onPressed: () => ref.read(selectedMonthProvider.notifier).shift(1), icon: const Icon(Icons.chevron_right)),
       ],
@@ -157,15 +161,15 @@ class MonthSwitcher extends ConsumerWidget {
   }
 }
 
-Future<bool> confirmDialog(BuildContext context, {required String title, String? message, String confirmLabel = 'Delete'}) async {
+Future<bool> confirmDialog(BuildContext context, {required String title, String? message, String? confirmLabel}) async {
   final result = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
       title: Text(title),
       content: message == null ? null : Text(message),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(confirmLabel)),
+        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.cancel)),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(confirmLabel ?? context.l10n.delete)),
       ],
     ),
   );
@@ -180,8 +184,8 @@ Future<String?> promptText(BuildContext context, {required String title, String?
       title: Text(title),
       content: TextField(controller: controller, autofocus: true, decoration: InputDecoration(hintText: hint), keyboardType: keyboardType),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        FilledButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: const Text('Save')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.cancel)),
+        FilledButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: Text(context.l10n.save)),
       ],
     ),
   );

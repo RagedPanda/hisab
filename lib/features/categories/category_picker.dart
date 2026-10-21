@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/categories_repository.dart';
+import '../../l10n/category_names.dart';
+import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 
 /// Bottom sheet that lets the user pick a parent or child category.
@@ -49,7 +51,7 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
     final needle = _query.trim().toLowerCase();
     final searching = needle.isNotEmpty;
     final matches = searching
-        ? categories.where((c) => c.kind == widget.kind && c.name.toLowerCase().contains(needle)).toList()
+        ? categories.where((c) => c.kind == widget.kind && (c.name.toLowerCase().contains(needle) || c.displayName(context).toLowerCase().contains(needle))).toList()
         : const <Category>[];
     final byId = {for (final c in categories) c.id: c};
     final selected = widget.selectedId == null ? null : byId[widget.selectedId];
@@ -61,7 +63,7 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: TextField(
             autofocus: false,
-            decoration: const InputDecoration(hintText: 'Search categories', prefixIcon: Icon(Icons.search), isDense: true),
+            decoration: InputDecoration(hintText: context.l10n.searchCategories, prefixIcon: const Icon(Icons.search), isDense: true),
             onChanged: (value) => setState(() => _query = value),
           ),
         ),
@@ -73,11 +75,11 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
                     for (final category in matches)
                       ListTile(
                         leading: IconBadge(icon: category.icon, color: category.color),
-                        title: Text(category.name),
-                        subtitle: category.parentId == null ? null : Text(byId[category.parentId]?.name ?? ''),
+                        title: Text(category.displayName(context)),
+                        subtitle: category.parentId == null ? null : Text(byId[category.parentId]?.displayName(context) ?? ''),
                         onTap: () => Navigator.pop(context, category),
                       ),
-                    if (matches.isEmpty) const EmptyState(icon: Icons.search_off, title: 'No matching category'),
+                    if (matches.isEmpty) EmptyState(icon: Icons.search_off, title: context.l10n.noMatchingCategory),
                   ],
                 )
               : ListView(
@@ -115,7 +117,7 @@ class _ParentTile extends StatelessWidget {
       children: [
         ListTile(
           leading: IconBadge(icon: parent.icon, color: parent.color),
-          title: Text(parent.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+          title: Text(parent.displayName(context), style: const TextStyle(fontWeight: FontWeight.w600)),
           trailing: node.children.isEmpty
               ? null
               : IconButton(icon: Icon(expanded ? Icons.expand_less : Icons.expand_more), onPressed: onToggle),
@@ -132,14 +134,14 @@ class _ParentTile extends StatelessWidget {
               children: [
                 ChoiceChip(
                   avatar: Icon(Icons.label_outline, size: 18, color: Color(parent.color)),
-                  label: Text('${parent.name} (general)'),
+                  label: Text(context.l10n.categoryGeneral(parent.displayName(context))),
                   selected: selected?.id == parent.id,
                   onSelected: (_) => onPick(parent),
                 ),
                 for (final child in node.children)
                   ChoiceChip(
                     avatar: IconBadge(icon: child.icon, color: child.color, size: 22),
-                    label: Text(child.name),
+                    label: Text(child.displayName(context)),
                     selected: selected?.id == child.id,
                     onSelected: (_) => onPick(child),
                   ),

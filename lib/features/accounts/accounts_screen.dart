@@ -7,9 +7,18 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
+import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 
-const _types = [('bank', 'Bank account', 'account_balance'), ('card', 'Credit card', 'credit_card'), ('wallet', 'Wallet / UPI', 'account_balance_wallet'), ('cash', 'Cash', 'payments')];
+/// (stored type value, icon name). Labels come from [_typeLabel].
+const _types = [('bank', 'account_balance'), ('card', 'credit_card'), ('wallet', 'account_balance_wallet'), ('cash', 'payments')];
+
+String _typeLabel(AppLocalizations l10n, String type) => switch (type) {
+      'bank' => l10n.accountTypeBank,
+      'card' => l10n.accountTypeCard,
+      'wallet' => l10n.accountTypeWallet,
+      _ => l10n.accountTypeCash,
+    };
 
 class AccountsScreen extends ConsumerWidget {
   const AccountsScreen({super.key});
@@ -18,9 +27,10 @@ class AccountsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
     final symbol = ref.watch(settingsProvider).currencySymbol;
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Accounts')),
-      floatingActionButton: FloatingActionButton.extended(heroTag: 'add-account', onPressed: () => _showForm(context, ref), icon: const Icon(Icons.add), label: const Text('Account')),
+      appBar: AppBar(title: Text(l10n.accounts)),
+      floatingActionButton: FloatingActionButton.extended(heroTag: 'add-account', onPressed: () => _showForm(context, ref), icon: const Icon(Icons.add), label: Text(l10n.account)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
         children: [
@@ -28,23 +38,22 @@ class AccountsScreen extends ConsumerWidget {
             child: Column(children: [
               for (final account in accounts)
                 ListTile(
-                  leading: IconBadge(icon: _types.firstWhere((t) => t.$1 == account.type, orElse: () => _types.last).$3, color: account.color),
+                  leading: IconBadge(icon: _types.firstWhere((t) => t.$1 == account.type, orElse: () => _types.last).$2, color: account.color),
                   title: Text(account.name),
                   subtitle: Text([
                     if (account.bankName != null) account.bankName!,
                     if (account.last4 != null) '••${account.last4}',
-                    if (account.balanceAsOf != null) 'as of ${formatShortDate(account.balanceAsOf!)}',
-                    if (!account.includeInTotal) 'excluded from total',
+                    if (account.balanceAsOf != null) l10n.asOf(formatShortDate(account.balanceAsOf!)),
+                    if (!account.includeInTotal) l10n.excludedFromTotal,
                   ].join(' · ')),
                   trailing: Text(formatMinor(account.balanceMinor, symbol: symbol), style: TextStyle(fontWeight: FontWeight.w700, color: account.balanceMinor < 0 ? kExpenseColor : null)),
                   onTap: () => _showForm(context, ref, existing: account),
                 ),
-              if (accounts.isEmpty) const ListTile(title: Text('No accounts yet')),
+              if (accounts.isEmpty) ListTile(title: Text(l10n.noAccountsTitle)),
             ]),
           ),
           const SizedBox(height: 12),
-          Text('Bank accounts detected from SMS are added automatically with their reported balance. Manual entries adjust the balance of the account you pick.',
-              style: Theme.of(context).textTheme.bodySmall),
+          Text(l10n.noAccountsBody, style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
@@ -56,6 +65,7 @@ class AccountsScreen extends ConsumerWidget {
     var type = existing?.type ?? 'bank';
     var color = existing?.color ?? kPaletteColors.first;
     var include = existing?.includeInTotal ?? true;
+    final l10n = context.l10n;
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -67,21 +77,21 @@ class AccountsScreen extends ConsumerWidget {
           child: ListView(
             shrinkWrap: true,
             children: [
-              Text(existing == null ? 'New account' : 'Edit account', style: Theme.of(sheetContext).textTheme.titleLarge),
+              Text(existing == null ? l10n.newAccount : l10n.editAccount, style: Theme.of(sheetContext).textTheme.titleLarge),
               const SizedBox(height: 12),
-              TextField(controller: nameController, autofocus: existing == null, decoration: const InputDecoration(labelText: 'Name', hintText: 'HDFC Savings, Paytm, Cash'), textCapitalization: TextCapitalization.words),
+              TextField(controller: nameController, autofocus: existing == null, decoration: InputDecoration(labelText: l10n.name, hintText: l10n.accountNameHint), textCapitalization: TextCapitalization.words),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 children: [
-                  for (final option in _types) ChoiceChip(label: Text(option.$2), selected: type == option.$1, onSelected: (_) => setSheetState(() => type = option.$1)),
+                  for (final option in _types) ChoiceChip(label: Text(_typeLabel(l10n, option.$1)), selected: type == option.$1, onSelected: (_) => setSheetState(() => type = option.$1)),
                 ],
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: balanceController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                decoration: InputDecoration(labelText: type == 'card' ? 'Outstanding (negative = you owe)' : 'Current balance'),
+                decoration: InputDecoration(labelText: type == 'card' ? l10n.outstandingBalance : l10n.currentBalance),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -95,18 +105,18 @@ class AccountsScreen extends ConsumerWidget {
                     ),
                 ],
               ),
-              SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Include in total balance'), value: include, onChanged: (v) => setSheetState(() => include = v)),
+              SwitchListTile(contentPadding: EdgeInsets.zero, title: Text(l10n.includeInTotal), value: include, onChanged: (v) => setSheetState(() => include = v)),
               const SizedBox(height: 8),
               Row(children: [
                 if (existing != null)
                   TextButton(
                     onPressed: () async {
-                      if (await confirmDialog(sheetContext, title: 'Delete ${existing.name}?')) {
+                      if (await confirmDialog(sheetContext, title: l10n.deleteNamed(existing.name))) {
                         await ref.read(accountsRepositoryProvider).delete(existing.id);
                         if (sheetContext.mounted) Navigator.pop(sheetContext);
                       }
                     },
-                    child: const Text('Delete'),
+                    child: Text(l10n.delete),
                   ),
                 const Spacer(),
                 FilledButton(
@@ -132,7 +142,7 @@ class AccountsScreen extends ConsumerWidget {
                     }
                     if (sheetContext.mounted) Navigator.pop(sheetContext);
                   },
-                  child: const Text('Save'),
+                  child: Text(l10n.save),
                 ),
               ]),
             ],

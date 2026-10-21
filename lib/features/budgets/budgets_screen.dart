@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
+import '../../l10n/category_names.dart';
+import '../../l10n/l10n.dart';
 import '../categories/category_picker.dart';
 import '../shell/widgets/common.dart';
 
@@ -17,6 +19,7 @@ class BudgetsScreen extends ConsumerWidget {
     final symbol = ref.watch(settingsProvider).currencySymbol;
     final byId = {for (final c in categories) c.id: c};
     final repo = ref.read(budgetsRepositoryProvider);
+    final l10n = context.l10n;
 
     Future<void> edit({Budget? existing}) async {
       Category? category = existing?.categoryId == null ? null : byId[existing!.categoryId];
@@ -26,8 +29,8 @@ class BudgetsScreen extends ConsumerWidget {
           context: context,
           showDragHandle: true,
           builder: (sheetContext) => Column(mainAxisSize: MainAxisSize.min, children: [
-            ListTile(leading: const Icon(Icons.all_inclusive), title: const Text('Overall monthly budget'), onTap: () => Navigator.pop(sheetContext, 'overall')),
-            ListTile(leading: const Icon(Icons.category_outlined), title: const Text('Budget for a category'), onTap: () => Navigator.pop(sheetContext, 'category')),
+            ListTile(leading: const Icon(Icons.all_inclusive), title: Text(l10n.overallMonthlyBudget), onTap: () => Navigator.pop(sheetContext, 'overall')),
+            ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.budgetForCategory), onTap: () => Navigator.pop(sheetContext, 'category')),
           ]),
         );
         if (choice == null) return;
@@ -40,7 +43,7 @@ class BudgetsScreen extends ConsumerWidget {
       if (!context.mounted) return;
       final text = await promptText(
         context,
-        title: overall ? 'Overall monthly limit' : '${category!.name} monthly limit',
+        title: overall ? l10n.overallMonthlyLimit : l10n.categoryMonthlyLimit(category!.displayName(context)),
         initial: existing == null ? null : minorToDouble(existing.amountMinor).toStringAsFixed(0),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
       );
@@ -50,10 +53,10 @@ class BudgetsScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Budgets')),
-      floatingActionButton: FloatingActionButton.extended(heroTag: 'add-budget', onPressed: edit, icon: const Icon(Icons.add), label: const Text('Budget')),
+      appBar: AppBar(title: Text(l10n.budgets)),
+      floatingActionButton: FloatingActionButton.extended(heroTag: 'add-budget', onPressed: edit, icon: const Icon(Icons.add), label: Text(l10n.budget)),
       body: budgets.isEmpty
-          ? const EmptyState(icon: Icons.savings_outlined, title: 'No budgets yet', message: 'Set a monthly limit overall or per category. The dashboard shows pace and what is left.')
+          ? EmptyState(icon: Icons.savings_outlined, title: l10n.noBudgetsTitle, message: l10n.noBudgetsBody)
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
               children: [
@@ -62,18 +65,18 @@ class BudgetsScreen extends ConsumerWidget {
                     for (final budget in budgets)
                       ListTile(
                         leading: IconBadge(icon: budget.categoryId == null ? 'all_inclusive' : byId[budget.categoryId]?.icon, color: byId[budget.categoryId]?.color ?? 0xFF0F6E6B),
-                        title: Text(budget.categoryId == null ? 'Overall' : byId[budget.categoryId]?.name ?? 'Category'),
-                        subtitle: Text('per ${budget.period}'),
+                        title: Text(budget.categoryId == null ? l10n.overall : byId[budget.categoryId]?.displayName(context) ?? l10n.category),
+                        subtitle: Text(l10n.perPeriod(budget.period)),
                         trailing: Text(formatMinor(budget.amountMinor, symbol: symbol, showDecimals: false), style: const TextStyle(fontWeight: FontWeight.w700)),
                         onTap: () => edit(existing: budget),
                         onLongPress: () async {
-                          if (await confirmDialog(context, title: 'Remove this budget?', confirmLabel: 'Remove')) await repo.delete(budget.id);
+                          if (await confirmDialog(context, title: l10n.removeBudgetQuestion, confirmLabel: l10n.remove)) await repo.delete(budget.id);
                         },
                       ),
                   ]),
                 ),
                 const SizedBox(height: 8),
-                Text('Long-press a budget to remove it.', style: Theme.of(context).textTheme.bodySmall),
+                Text(l10n.longPressToRemoveBudget, style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
     );

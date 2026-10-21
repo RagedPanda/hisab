@@ -7,6 +7,8 @@ import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/categories_repository.dart';
+import '../../l10n/category_names.dart';
+import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 
 class CategoriesScreen extends ConsumerStatefulWidget {
@@ -23,23 +25,24 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
   Widget build(BuildContext context) {
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
     final tree = buildCategoryTree(categories, kind: _kind);
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Categories')),
+      appBar: AppBar(title: Text(l10n.categories)),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'add-category',
         onPressed: () => showCategoryForm(context, ref, kind: _kind),
         icon: const Icon(Icons.add),
-        label: const Text('Category'),
+        label: Text(l10n.category),
       ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'expense', label: Text('Expense')),
-                ButtonSegment(value: 'income', label: Text('Income')),
-                ButtonSegment(value: 'transfer', label: Text('Transfer')),
+              segments: [
+                ButtonSegment(value: 'expense', label: Text(l10n.kindExpense)),
+                ButtonSegment(value: 'income', label: Text(l10n.kindIncome)),
+                ButtonSegment(value: 'transfer', label: Text(l10n.kindTransfer)),
               ],
               selected: {_kind},
               onSelectionChanged: (set) => setState(() => _kind = set.first),
@@ -55,22 +58,22 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                     child: ExpansionTile(
                       shape: const Border(),
                       leading: IconBadge(icon: node.category.icon, color: node.category.color),
-                      title: Text(node.category.name, style: TextStyle(fontWeight: FontWeight.w600, decoration: node.category.isArchived ? TextDecoration.lineThrough : null)),
-                      subtitle: Text('${node.children.length} subcategories'),
+                      title: Text(node.category.displayName(context), style: TextStyle(fontWeight: FontWeight.w600, decoration: node.category.isArchived ? TextDecoration.lineThrough : null)),
+                      subtitle: Text(l10n.subcategoryCount(node.children.length)),
                       trailing: _menu(context, node.category),
                       children: [
                         for (final child in node.children)
                           ListTile(
                             dense: true,
                             leading: IconBadge(icon: child.icon, color: child.color, size: 32),
-                            title: Text(child.name, style: TextStyle(decoration: child.isArchived ? TextDecoration.lineThrough : null)),
-                            subtitle: child.units.isEmpty ? null : Text('Units: ${child.units.replaceAll(',', ', ')}'),
+                            title: Text(child.displayName(context), style: TextStyle(decoration: child.isArchived ? TextDecoration.lineThrough : null)),
+                            subtitle: child.units.isEmpty ? null : Text(l10n.unitsLabel(child.units.replaceAll(',', ', '))),
                             trailing: _menu(context, child),
                           ),
                         ListTile(
                           dense: true,
                           leading: const Icon(Icons.add, size: 20),
-                          title: const Text('Add subcategory'),
+                          title: Text(l10n.addSubcategory),
                           onTap: () => showCategoryForm(context, ref, kind: _kind, parent: node.category),
                         ),
                       ],
@@ -86,6 +89,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
 
   Widget _menu(BuildContext context, Category category) {
     final repo = ref.read(categoriesRepositoryProvider);
+    final l10n = context.l10n;
     return PopupMenuButton<String>(
       onSelected: (value) async {
         switch (value) {
@@ -94,15 +98,15 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           case 'archive':
             await repo.setArchived(category.id, !category.isArchived);
           case 'delete':
-            if (await confirmDialog(context, title: 'Delete ${category.name}?', message: 'Existing entries keep their amounts but become uncategorised.')) {
+            if (await confirmDialog(context, title: l10n.deleteNamed(category.displayName(context)), message: l10n.deleteCategoryBody)) {
               await repo.delete(category.id);
             }
         }
       },
       itemBuilder: (_) => [
-        const PopupMenuItem(value: 'edit', child: Text('Edit')),
-        PopupMenuItem(value: 'archive', child: Text(category.isArchived ? 'Unarchive' : 'Archive (hide from picker)')),
-        if (category.seedKey == null) const PopupMenuItem(value: 'delete', child: Text('Delete')),
+        PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
+        PopupMenuItem(value: 'archive', child: Text(category.isArchived ? l10n.unarchive : l10n.archiveCategory)),
+        if (category.seedKey == null) PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
       ],
     );
   }
@@ -113,6 +117,9 @@ Future<void> showCategoryForm(BuildContext context, WidgetRef ref, {required Str
   final unitsController = TextEditingController(text: existing?.units ?? '');
   var icon = existing?.icon ?? parent?.icon ?? 'category';
   var color = existing?.color ?? parent?.color ?? kPaletteColors.first;
+  final l10n = context.l10n;
+  final parentName = parent?.displayName(context);
+  final existingName = existing?.displayName(context);
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -124,13 +131,13 @@ Future<void> showCategoryForm(BuildContext context, WidgetRef ref, {required Str
         child: ListView(
           shrinkWrap: true,
           children: [
-            Text(existing == null ? (parent == null ? 'New category' : 'New subcategory of ${parent.name}') : 'Edit ${existing.name}', style: Theme.of(sheetContext).textTheme.titleLarge),
+            Text(existingName == null ? (parentName == null ? l10n.newCategory : l10n.newSubcategoryOf(parentName)) : l10n.editNamed(existingName), style: Theme.of(sheetContext).textTheme.titleLarge),
             const SizedBox(height: 12),
-            TextField(controller: nameController, autofocus: true, decoration: const InputDecoration(labelText: 'Name'), textCapitalization: TextCapitalization.words),
+            TextField(controller: nameController, autofocus: true, decoration: InputDecoration(labelText: l10n.name), textCapitalization: TextCapitalization.words),
             const SizedBox(height: 12),
-            TextField(controller: unitsController, decoration: const InputDecoration(labelText: 'Units for items (comma separated)', hintText: 'L, ml, kg')),
+            TextField(controller: unitsController, decoration: InputDecoration(labelText: l10n.unitsForItems, hintText: l10n.unitsHint)),
             const SizedBox(height: 12),
-            Text('Colour', style: Theme.of(sheetContext).textTheme.labelLarge),
+            Text(l10n.colour, style: Theme.of(sheetContext).textTheme.labelLarge),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -147,7 +154,7 @@ Future<void> showCategoryForm(BuildContext context, WidgetRef ref, {required Str
               ],
             ),
             const SizedBox(height: 12),
-            Text('Icon', style: Theme.of(sheetContext).textTheme.labelLarge),
+            Text(l10n.icon, style: Theme.of(sheetContext).textTheme.labelLarge),
             SizedBox(
               height: 160,
               child: GridView.count(
@@ -177,7 +184,7 @@ Future<void> showCategoryForm(BuildContext context, WidgetRef ref, {required Str
                 }
                 if (sheetContext.mounted) Navigator.pop(sheetContext);
               },
-              child: const Text('Save'),
+              child: Text(l10n.save),
             ),
           ],
         ),

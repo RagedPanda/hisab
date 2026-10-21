@@ -9,6 +9,8 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/groups_repository.dart';
+import '../../l10n/category_names.dart';
+import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 
 final _groupProvider = StreamProvider.family((ref, String id) => ref.watch(groupsRepositoryProvider).watchGroup(id));
@@ -23,6 +25,7 @@ class GroupDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final group = ref.watch(_groupProvider(groupId)).value;
     final members = ref.watch(_membersProvider(groupId)).value ?? const <Member>[];
     final entries = ref.watch(_entriesProvider(groupId)).value ?? const <(Entry, List<Split>)>[];
@@ -35,8 +38,8 @@ class GroupDetailScreen extends ConsumerWidget {
     final categoryById = {for (final c in categories) c.id: c};
     String nameOf(String id) {
       final member = memberById[id];
-      if (member == null) return 'Unknown';
-      return member.isMe ? 'You' : member.name;
+      if (member == null) return l10n.unknown;
+      return member.isMe ? l10n.you : member.name;
     }
 
     return DefaultTabController(
@@ -46,42 +49,42 @@ class GroupDetailScreen extends ConsumerWidget {
           title: Text(group.name),
           actions: [
             IconButton(
-              tooltip: 'Share summary',
+              tooltip: l10n.shareSummary,
               icon: const Icon(Icons.ios_share),
-              onPressed: () => SharePlus.instance.share(ShareParams(text: _summaryText(group, members, balances, symbol))),
+              onPressed: () => SharePlus.instance.share(ShareParams(text: _summaryText(l10n, group, members, balances, symbol))),
             ),
             PopupMenuButton<String>(
               onSelected: (value) async {
                 final repo = ref.read(groupsRepositoryProvider);
                 switch (value) {
                   case 'rename':
-                    final name = await promptText(context, title: 'Rename group', initial: group.name);
+                    final name = await promptText(context, title: l10n.renameGroup, initial: group.name);
                     if (name != null && name.isNotEmpty) await repo.updateGroup(GroupsCompanion(id: Value(group.id), name: Value(name)));
                   case 'simplify':
                     await repo.updateGroup(GroupsCompanion(id: Value(group.id), simplifyDebts: Value(!group.simplifyDebts)));
                   case 'delete':
-                    if (await confirmDialog(context, title: 'Delete ${group.name}?', message: 'All expenses in this group will be removed.')) {
+                    if (await confirmDialog(context, title: l10n.deleteNamed(group.name), message: l10n.deleteGroupBody, confirmLabel: l10n.delete)) {
                       await repo.deleteGroup(group.id);
                       if (context.mounted) context.pop();
                     }
                 }
               },
               itemBuilder: (_) => [
-                const PopupMenuItem(value: 'rename', child: Text('Rename')),
-                PopupMenuItem(value: 'simplify', child: Text(group.simplifyDebts ? 'Turn off simplify debts' : 'Turn on simplify debts')),
-                const PopupMenuItem(value: 'delete', child: Text('Delete group')),
+                PopupMenuItem(value: 'rename', child: Text(l10n.rename)),
+                PopupMenuItem(value: 'simplify', child: Text(group.simplifyDebts ? l10n.simplifyOff : l10n.simplifyOn)),
+                PopupMenuItem(value: 'delete', child: Text(l10n.deleteGroup)),
               ],
             ),
           ],
-          bottom: const TabBar(tabs: [Tab(text: 'Expenses'), Tab(text: 'Balances'), Tab(text: 'Members')]),
+          bottom: TabBar(tabs: [Tab(text: l10n.kindExpenses), Tab(text: l10n.balances), Tab(text: l10n.members)]),
         ),
         floatingActionButton: FloatingActionButton.extended(
           heroTag: 'add-group-expense',
           onPressed: members.length < 2
-              ? () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Add at least one more member first')))
+              ? () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.addMemberFirst)))
               : () => context.push('/entry?group=$groupId'),
           icon: const Icon(Icons.add),
-          label: const Text('Add expense'),
+          label: Text(l10n.addExpense),
         ),
         body: TabBarView(
           children: [
@@ -94,14 +97,14 @@ class GroupDetailScreen extends ConsumerWidget {
     );
   }
 
-  static String _summaryText(Group group, List<Member> members, GroupBalances? balances, String symbol) {
-    final buffer = StringBuffer('${group.name} — balances\n');
+  static String _summaryText(AppLocalizations l10n, Group group, List<Member> members, GroupBalances? balances, String symbol) {
+    final buffer = StringBuffer('${l10n.shareHeader(group.name)}\n');
     final byId = {for (final m in members) m.id: m.name};
     for (final transfer in balances?.suggested ?? const []) {
-      buffer.writeln('${byId[transfer.from]} pays ${byId[transfer.to]} ${formatMinor(transfer.amountMinor, symbol: symbol)}');
+      buffer.writeln(l10n.sharePays(byId[transfer.from] ?? l10n.unknown, byId[transfer.to] ?? l10n.unknown, formatMinor(transfer.amountMinor, symbol: symbol)));
     }
-    if (balances == null || balances.suggested.isEmpty) buffer.writeln('All settled up.');
-    buffer.writeln('\nShared from Hisab');
+    if (balances == null || balances.suggested.isEmpty) buffer.writeln(l10n.allSettledUp);
+    buffer.writeln('\n${l10n.sharedFromHisab}');
     return buffer.toString();
   }
 }
@@ -117,14 +120,15 @@ class _ExpensesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final rows = <(DateTime, Widget)>[
       for (final (entry, splits) in entries)
         (
           entry.occurredAt,
           ListTile(
             leading: IconBadge(icon: categoryById[entry.categoryId]?.icon, color: categoryById[entry.categoryId]?.color ?? 0xFF607D8B),
-            title: Text(entry.note.isNotEmpty ? entry.note : (entry.payee ?? categoryById[entry.categoryId]?.name ?? 'Expense')),
-            subtitle: Text('${nameOf(entry.paidByMemberId ?? '')} paid · ${splits.length} people · ${formatShortDate(entry.occurredAt)}'),
+            title: Text(entry.note.isNotEmpty ? entry.note : (entry.payee ?? categoryById[entry.categoryId]?.displayName(context) ?? l10n.kindExpense)),
+            subtitle: Text(l10n.paidByLine(nameOf(entry.paidByMemberId ?? ''), splits.length, formatShortDate(entry.occurredAt))),
             trailing: Text(formatMinor(entry.amountMinor, symbol: symbol), style: const TextStyle(fontWeight: FontWeight.w600)),
             onTap: () => context.push('/entry?id=${entry.id}'),
           )
@@ -134,14 +138,14 @@ class _ExpensesTab extends StatelessWidget {
           settlement.occurredAt,
           ListTile(
             leading: const IconBadge(icon: 'handshake', color: 0xFF2E9E6B),
-            title: Text('${nameOf(settlement.fromMemberId)} paid ${nameOf(settlement.toMemberId)}'),
-            subtitle: Text('Settlement · ${formatShortDate(settlement.occurredAt)}'),
+            title: Text(l10n.settlementLine(nameOf(settlement.fromMemberId), nameOf(settlement.toMemberId))),
+            subtitle: Text(l10n.settlementSubtitle(formatShortDate(settlement.occurredAt))),
             trailing: Text(formatMinor(settlement.amountMinor, symbol: symbol), style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF2E9E6B))),
           )
         ),
     ]..sort((a, b) => b.$1.compareTo(a.$1));
     if (rows.isEmpty) {
-      return const EmptyState(icon: Icons.receipt_long_outlined, title: 'No expenses yet', message: 'Add the first shared expense with the button below.');
+      return EmptyState(icon: Icons.receipt_long_outlined, title: l10n.noGroupExpensesTitle, message: l10n.noGroupExpensesBody);
     }
     return ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 96), children: [Card(child: Column(children: [for (final row in rows) row.$2]))]);
   }
@@ -157,12 +161,13 @@ class _BalancesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     if (balances == null) return const Center(child: CircularProgressIndicator());
     final net = balances!.net;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
       children: [
-        const SectionHeader('Net balances'),
+        SectionHeader(l10n.netBalances),
         Card(
           child: Column(children: [
             for (final member in members)
@@ -171,33 +176,33 @@ class _BalancesTab extends ConsumerWidget {
                 title: Text(nameOf(member.id)),
                 trailing: Text(
                   (net[member.id] ?? 0) == 0
-                      ? 'settled'
-                      : '${(net[member.id] ?? 0) > 0 ? 'gets back' : 'owes'} ${formatMinor((net[member.id] ?? 0).abs(), symbol: symbol)}',
+                      ? l10n.settled
+                      : '${(net[member.id] ?? 0) > 0 ? l10n.getsBack : l10n.owes} ${formatMinor((net[member.id] ?? 0).abs(), symbol: symbol)}',
                   style: TextStyle(fontWeight: FontWeight.w600, color: (net[member.id] ?? 0) >= 0 ? const Color(0xFF2E9E6B) : const Color(0xFFD9534F)),
                 ),
               ),
           ]),
         ),
-        SectionHeader(group.simplifyDebts ? 'Settle up (simplified)' : 'Settle up'),
+        SectionHeader(group.simplifyDebts ? l10n.settleUpSimplified : l10n.settleUp),
         if (balances!.suggested.isEmpty)
-          const Card(child: ListTile(leading: Icon(Icons.check_circle_outline), title: Text('Everyone is settled up')))
+          Card(child: ListTile(leading: const Icon(Icons.check_circle_outline), title: Text(l10n.everyoneSettled)))
         else
           Card(
             child: Column(children: [
               for (final transfer in balances!.suggested)
                 ListTile(
                   leading: const Icon(Icons.arrow_forward),
-                  title: Text('${nameOf(transfer.from)} → ${nameOf(transfer.to)}'),
+                  title: Text(l10n.transferArrow(nameOf(transfer.from), nameOf(transfer.to))),
                   trailing: Text(formatMinor(transfer.amountMinor, symbol: symbol), style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: TextButton(
                     style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
                     onPressed: () async {
-                      final text = await promptText(context, title: 'Record payment', initial: minorToDouble(transfer.amountMinor).toStringAsFixed(2), keyboardType: const TextInputType.numberWithOptions(decimal: true));
+                      final text = await promptText(context, title: l10n.recordPayment, initial: minorToDouble(transfer.amountMinor).toStringAsFixed(2), keyboardType: const TextInputType.numberWithOptions(decimal: true));
                       final amount = text == null ? null : parseAmountToMinor(text);
                       if (amount == null || amount <= 0) return;
                       await ref.read(groupsRepositoryProvider).addSettlement(groupId: group.id, fromMemberId: transfer.from, toMemberId: transfer.to, amountMinor: amount);
                     },
-                    child: const Text('Record payment'),
+                    child: Text(l10n.recordPayment),
                   ),
                 ),
             ]),
@@ -216,6 +221,7 @@ class _MembersTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final repo = ref.read(groupsRepositoryProvider);
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
@@ -225,7 +231,7 @@ class _MembersTab extends ConsumerWidget {
             for (final member in members)
               ListTile(
                 leading: CircleAvatar(child: Text(member.name.isEmpty ? '?' : member.name[0].toUpperCase())),
-                title: Text(member.isMe ? '${member.name} (you)' : member.name),
+                title: Text(member.isMe ? l10n.youSuffix(member.name) : member.name),
                 subtitle: member.phone == null ? null : Text(member.phone!),
                 trailing: member.isMe
                     ? null
@@ -234,29 +240,29 @@ class _MembersTab extends ConsumerWidget {
                         onPressed: () async {
                           final owed = balances?.net[member.id] ?? 0;
                           if (owed != 0) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Settle this member\'s balance before removing them')));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.settleBeforeRemove)));
                             return;
                           }
-                          if (await confirmDialog(context, title: 'Remove ${member.name}?', confirmLabel: 'Remove')) await repo.removeMember(member.id);
+                          if (await confirmDialog(context, title: l10n.removeNamed(member.name), confirmLabel: l10n.remove)) await repo.removeMember(member.id);
                         },
                       ),
                 onTap: () async {
-                  final name = await promptText(context, title: 'Rename member', initial: member.name);
+                  final name = await promptText(context, title: l10n.renameMember, initial: member.name);
                   if (name != null && name.isNotEmpty) await repo.updateMember(MembersCompanion(id: Value(member.id), name: Value(name)));
                 },
               ),
             ListTile(
               leading: const Icon(Icons.person_add_outlined),
-              title: const Text('Add member'),
+              title: Text(l10n.addMember),
               onTap: () async {
-                final name = await promptText(context, title: 'Member name', hint: 'Name');
+                final name = await promptText(context, title: l10n.memberName, hint: l10n.name);
                 if (name != null && name.isNotEmpty) await repo.addMember(groupId, name);
               },
             ),
           ]),
         ),
         const SizedBox(height: 16),
-        Text('Members are stored on this device. Shared sync with invite codes is planned; see Settings → Sync.', style: Theme.of(context).textTheme.bodySmall),
+        Text(l10n.membersLocalNotice, style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }

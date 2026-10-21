@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/providers.dart';
 import '../../l10n/l10n.dart';
+import '../groups/member_display.dart';
 import '../shell/widgets/common.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -99,10 +100,12 @@ class SettingsScreen extends ConsumerWidget {
             child: ListTile(
               leading: const Icon(Icons.person_outline),
               title: Text(l10n.yourNameInGroups),
-              trailing: Text(settings.myName),
+              trailing: Text(resolvedMyName(l10n, settings)),
               onTap: () async {
-                final name = await promptText(context, title: l10n.yourName, initial: settings.myName);
-                if (name != null && name.isNotEmpty) await notifier.update((s) => s.copyWith(myName: name));
+                final name = await promptText(context, title: l10n.yourName, initial: resolvedMyName(l10n, settings));
+                if (name == null || name.trim().isEmpty) return;
+                await notifier.update((s) => s.copyWith(myName: name.trim()));
+                await ref.read(groupsRepositoryProvider).renameMyMembers(name.trim());
               },
             ),
           ),

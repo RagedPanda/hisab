@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/providers.dart';
 import '../../l10n/l10n.dart';
+import 'member_display.dart';
 
 const groupIcons = ['groups', 'flight', 'home', 'restaurant', 'celebration', 'work', 'sports_cricket', 'directions_car', 'favorite', 'school'];
 
@@ -49,7 +50,7 @@ Future<void> showGroupForm(BuildContext context, WidgetRef ref) {
                 onPressed: () async {
                   final name = nameController.text.trim();
                   if (name.isEmpty) return;
-                  final myName = ref.read(settingsProvider).myName;
+                  final myName = resolvedMyName(l10n, ref.read(settingsProvider));
                   final others = membersController.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
                   final id = await ref.read(groupsRepositoryProvider).createGroup(name: name, icon: icon, myName: myName, otherMembers: others);
                   if (sheetContext.mounted) Navigator.pop(sheetContext);

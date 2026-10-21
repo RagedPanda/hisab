@@ -4,6 +4,7 @@ import '../../core/money.dart';
 import '../../data/db/database.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/l10n.dart';
+import '../groups/member_display.dart';
 
 /// Translated chip label for a split method.
 String splitMethodLabel(SplitMethod method, AppLocalizations l10n) => switch (method) {
@@ -154,7 +155,7 @@ class SplitEditor extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(member.isMe ? context.l10n.youSuffix(member.name) : member.name),
+              Text(memberDisplayName(context.l10n, member)),
               Text(shareText, style: Theme.of(context).textTheme.bodySmall),
             ]),
           ),

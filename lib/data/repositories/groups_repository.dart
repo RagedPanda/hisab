@@ -169,26 +169,38 @@ class GroupsRepository {
 
   Future<void> removeMember(String id) => updateMember(MembersCompanion(id: Value(id), deletedAt: Value(DateTime.now())));
 
-  Future<void> addSettlement({
+  /// Records a payment and returns its id so the caller can offer Undo.
+  Future<String> addSettlement({
     required String groupId,
     required String fromMemberId,
     required String toMemberId,
     required int amountMinor,
     DateTime? occurredAt,
     String note = '',
-  }) =>
-      db.into(db.settlements).insert(SettlementsCompanion.insert(
-            id: newId(),
-            groupId: groupId,
-            fromMemberId: fromMemberId,
-            toMemberId: toMemberId,
-            amountMinor: amountMinor,
-            occurredAt: occurredAt ?? DateTime.now(),
-            note: Value(note),
-          ));
+  }) async {
+    final id = newId();
+    await db.into(db.settlements).insert(SettlementsCompanion.insert(
+          id: id,
+          groupId: groupId,
+          fromMemberId: fromMemberId,
+          toMemberId: toMemberId,
+          amountMinor: amountMinor,
+          occurredAt: occurredAt ?? DateTime.now(),
+          note: Value(note),
+        ));
+    return id;
+  }
 
-  Future<void> deleteSettlement(String id) => (db.update(db.settlements)..where((t) => t.id.equals(id)))
-      .write(SettlementsCompanion(deletedAt: Value(DateTime.now()), updatedAt: Value(DateTime.now())));
+  Future<void> deleteSettlement(String id) => _setSettlementDeleted(id, DateTime.now());
+
+  Future<void> restoreSettlement(String id) => _setSettlementDeleted(id, null);
+
+  Future<void> _setSettlementDeleted(String id, DateTime? deletedAt) => (db.update(db.settlements)..where((t) => t.id.equals(id)))
+      .write(SettlementsCompanion(deletedAt: Value(deletedAt), updatedAt: Value(DateTime.now())));
+
+  /// Keeps every group's "me" member in sync with the name chosen in Settings.
+  Future<void> renameMyMembers(String name) => (db.update(db.members)..where((t) => t.isMe.equals(true) & t.deletedAt.isNull()))
+      .write(MembersCompanion(name: Value(name.trim()), updatedAt: Value(DateTime.now())));
 
   static String _inviteCode() {
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

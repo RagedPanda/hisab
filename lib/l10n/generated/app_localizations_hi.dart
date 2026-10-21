@@ -510,19 +510,49 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sharedFromHisab => 'हिसाब से साझा किया गया';
 
   @override
-  String paidByLine(String payer, int count, String date) {
-    return '$payer भुगतान किया गया · $count लोग · $date';
+  String paidByPeople(String payer, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count लोग',
+      one: '1 व्यक्ति',
+    );
+    return '$payer ने चुकाया · $_temp0';
+  }
+
+  @override
+  String yourShare(String amount) {
+    return 'आप: $amount';
   }
 
   @override
   String settlementLine(String from, String to) {
-    return '$from भुगतान $to';
+    return '$from ने $to को चुकाया';
   }
 
   @override
-  String settlementSubtitle(String date) {
-    return 'निपटान · $date';
+  String get settlementSubtitle => 'भुगतान · हटाने के लिए टैप करें';
+
+  @override
+  String get settledPayments => 'चुकाए गए भुगतान';
+
+  @override
+  String paymentRecorded(String transfer, String amount) {
+    return '$transfer $amount दर्ज हुआ';
   }
+
+  @override
+  String get paymentRemoved => 'भुगतान हटाया गया';
+
+  @override
+  String get removePayment => 'भुगतान हटाएँ';
+
+  @override
+  String get removePaymentBody =>
+      'बैलेंस वापस वैसे हो जाएँगे जैसे इस भुगतान से पहले थे।';
+
+  @override
+  String get moreOptions => 'और विकल्प';
 
   @override
   String get noGroupExpensesTitle => 'अभी कोई खर्च नहीं';

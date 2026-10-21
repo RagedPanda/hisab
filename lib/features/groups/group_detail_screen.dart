@@ -7,12 +7,14 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/format.dart';
 import '../../core/money.dart';
 import '../../core/providers.dart';
+import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/groups_repository.dart';
 import '../../domain/split/debt_simplifier.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import 'member_display.dart';
 
 final _groupProvider = StreamProvider.family((ref, String id) => ref.watch(groupsRepositoryProvider).watchGroup(id));
 final _membersProvider = StreamProvider.family((ref, String id) => ref.watch(groupsRepositoryProvider).watchMembers(id));
@@ -39,9 +41,9 @@ class GroupDetailScreen extends ConsumerWidget {
     final categoryById = {for (final c in categories) c.id: c};
     String nameOf(String id) {
       final member = memberById[id];
-      if (member == null) return l10n.unknown;
-      return member.isMe ? l10n.you : member.name;
+      return member == null ? l10n.unknown : memberShortName(l10n, member);
     }
+    final myMemberId = members.where((member) => member.isMe).firstOrNull?.id;
 
     return DefaultTabController(
       length: 3,
@@ -89,8 +91,8 @@ class GroupDetailScreen extends ConsumerWidget {
         ),
         body: TabBarView(
           children: [
-            _ExpensesTab(entries: entries, settlements: settlements, nameOf: nameOf, categoryById: categoryById, symbol: symbol, groupId: groupId),
-            _BalancesTab(group: group, members: members, balances: balances, nameOf: nameOf, symbol: symbol),
+            _ExpensesTab(entries: entries, settlements: settlements, nameOf: nameOf, categoryById: categoryById, symbol: symbol, groupId: groupId, myMemberId: myMemberId),
+            _BalancesTab(group: group, members: members, settlements: settlements, balances: balances, nameOf: nameOf, symbol: symbol),
             _MembersTab(groupId: groupId, members: members, balances: balances, symbol: symbol),
           ],
         ),
@@ -100,7 +102,7 @@ class GroupDetailScreen extends ConsumerWidget {
 
   static String _summaryText(AppLocalizations l10n, Group group, List<Member> members, GroupBalances? balances, String symbol) {
     final buffer = StringBuffer('${l10n.shareHeader(group.name)}\n');
-    final byId = {for (final m in members) m.id: m.name};
+    final byId = {for (final member in members) member.id: memberShortName(l10n, member)};
     for (final transfer in balances?.suggested ?? const []) {
       buffer.writeln(l10n.sharePays(byId[transfer.from] ?? l10n.unknown, byId[transfer.to] ?? l10n.unknown, formatMinor(transfer.amountMinor, symbol: symbol)));
     }
@@ -110,27 +112,37 @@ class GroupDetailScreen extends ConsumerWidget {
   }
 }
 
-class _ExpensesTab extends StatelessWidget {
-  const _ExpensesTab({required this.entries, required this.settlements, required this.nameOf, required this.categoryById, required this.symbol, required this.groupId});
+class _ExpensesTab extends ConsumerWidget {
+  const _ExpensesTab({
+    required this.entries,
+    required this.settlements,
+    required this.nameOf,
+    required this.categoryById,
+    required this.symbol,
+    required this.groupId,
+    required this.myMemberId,
+  });
   final List<(Entry, List<Split>)> entries;
   final List<Settlement> settlements;
   final String Function(String) nameOf;
   final Map<String, Category> categoryById;
   final String symbol;
   final String groupId;
+  final String? myMemberId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
     final rows = <(DateTime, Widget)>[
       for (final (entry, splits) in entries)
         (
           entry.occurredAt,
           ListTile(
             leading: IconBadge(icon: categoryById[entry.categoryId]?.icon, color: categoryById[entry.categoryId]?.color ?? 0xFF607D8B),
-            title: Text(entry.note.isNotEmpty ? entry.note : (entry.payee ?? categoryById[entry.categoryId]?.displayName(context) ?? l10n.kindExpense)),
-            subtitle: Text(l10n.paidByLine(nameOf(entry.paidByMemberId ?? ''), splits.length, formatShortDate(entry.occurredAt))),
-            trailing: Text(formatMinor(entry.amountMinor, symbol: symbol), style: const TextStyle(fontWeight: FontWeight.w600)),
+            title: Text(entry.note.isNotEmpty ? entry.note : (entry.payee ?? categoryById[entry.categoryId]?.displayName(context) ?? l10n.kindExpense), maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle: Text(_expenseSubtitle(l10n, entry, splits), maxLines: 1, overflow: TextOverflow.ellipsis),
+            trailing: _AmountWithDate(amountMinor: entry.amountMinor, date: entry.occurredAt, symbol: symbol, locale: locale),
             onTap: () => context.push('/entry?id=${entry.id}'),
           )
         ),
@@ -139,9 +151,10 @@ class _ExpensesTab extends StatelessWidget {
           settlement.occurredAt,
           ListTile(
             leading: const IconBadge(icon: 'handshake', color: 0xFF2E9E6B),
-            title: Text(l10n.settlementLine(nameOf(settlement.fromMemberId), nameOf(settlement.toMemberId))),
-            subtitle: Text(l10n.settlementSubtitle(formatShortDate(settlement.occurredAt))),
-            trailing: Text(formatMinor(settlement.amountMinor, symbol: symbol), style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF2E9E6B))),
+            title: Text(l10n.settlementLine(nameOf(settlement.fromMemberId), nameOf(settlement.toMemberId)), maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle: Text(l10n.settlementSubtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+            trailing: _AmountWithDate(amountMinor: settlement.amountMinor, date: settlement.occurredAt, symbol: symbol, locale: locale, color: kIncomeColor),
+            onTap: () => confirmRemoveSettlement(context, ref, settlement),
           )
         ),
     ]..sort((a, b) => b.$1.compareTo(a.$1));
@@ -150,12 +163,60 @@ class _ExpensesTab extends StatelessWidget {
     }
     return ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 96), children: [Card(child: Column(children: [for (final row in rows) row.$2]))]);
   }
+
+  String _expenseSubtitle(AppLocalizations l10n, Entry entry, List<Split> splits) {
+    final myShare = splits.where((split) => split.memberId == myMemberId).firstOrNull;
+    final parts = [
+      l10n.paidByPeople(nameOf(entry.paidByMemberId ?? ''), splits.length),
+      if (myShare != null) l10n.yourShare(formatMinor(myShare.amountMinor, symbol: symbol)),
+    ];
+    return parts.join(' · ');
+  }
+}
+
+/// Amount over a short date, right-aligned, matching the dashboard entry rows.
+class _AmountWithDate extends StatelessWidget {
+  const _AmountWithDate({required this.amountMinor, required this.date, required this.symbol, required this.locale, this.color});
+  final int amountMinor;
+  final DateTime date;
+  final String symbol;
+  final String locale;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(formatMinor(amountMinor, symbol: symbol), style: theme.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, color: color).tabular),
+        Text(formatRowDate(date, locale: locale), style: theme.textTheme.labelSmall!.copyWith(color: theme.colorScheme.onSurfaceVariant).tabular),
+      ],
+    );
+  }
+}
+
+/// Asks before soft-deleting a recorded payment, then offers Undo.
+Future<void> confirmRemoveSettlement(BuildContext context, WidgetRef ref, Settlement settlement) async {
+  final l10n = context.l10n;
+  final confirmed = await confirmDialog(context, title: l10n.removePayment, message: l10n.removePaymentBody, confirmLabel: l10n.remove);
+  if (!confirmed || !context.mounted) return;
+  final repo = ref.read(groupsRepositoryProvider);
+  await repo.deleteSettlement(settlement.id);
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    content: Text(l10n.paymentRemoved),
+    action: SnackBarAction(label: l10n.undo, onPressed: () => repo.restoreSettlement(settlement.id)),
+  ));
 }
 
 class _BalancesTab extends ConsumerWidget {
-  const _BalancesTab({required this.group, required this.members, required this.balances, required this.nameOf, required this.symbol});
+  const _BalancesTab({required this.group, required this.members, required this.settlements, required this.balances, required this.nameOf, required this.symbol});
   final Group group;
   final List<Member> members;
+  final List<Settlement> settlements;
   final GroupBalances? balances;
   final String Function(String) nameOf;
   final String symbol;
@@ -165,6 +226,7 @@ class _BalancesTab extends ConsumerWidget {
     final l10n = context.l10n;
     if (balances == null) return const Center(child: CircularProgressIndicator());
     final net = balances!.net;
+    final locale = Localizations.localeOf(context).toString();
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
       children: [
@@ -173,7 +235,7 @@ class _BalancesTab extends ConsumerWidget {
           child: Column(children: [
             for (final member in members)
               ListTile(
-                leading: CircleAvatar(child: Text(member.name.isEmpty ? '?' : member.name[0].toUpperCase())),
+                leading: MemberAvatar(member: member),
                 title: Text(nameOf(member.id)),
                 trailing: Text(
                   (net[member.id] ?? 0) == 0
@@ -197,18 +259,52 @@ class _BalancesTab extends ConsumerWidget {
                   trailing: Text(formatMinor(transfer.amountMinor, symbol: symbol), style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: TextButton(
                     style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
-                    onPressed: () async {
-                      final amount = await promptAmount(context, title: l10n.recordPayment, initialMinor: transfer.amountMinor);
-                      if (amount == null || amount <= 0) return;
-                      await ref.read(groupsRepositoryProvider).addSettlement(groupId: group.id, fromMemberId: transfer.from, toMemberId: transfer.to, amountMinor: amount);
-                    },
+                    onPressed: () => _recordPayment(context, ref, transfer),
                     child: Text(l10n.recordPayment),
                   ),
                 ),
             ]),
           ),
+        if (settlements.isNotEmpty) ...[
+          SectionHeader(l10n.settledPayments),
+          Card(
+            child: Column(children: [
+              for (final settlement in settlements)
+                ListTile(
+                  leading: const Icon(Icons.handshake_outlined),
+                  title: Text(l10n.transferArrow(nameOf(settlement.fromMemberId), nameOf(settlement.toMemberId)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(formatRowDate(settlement.occurredAt, locale: locale)),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(formatMinor(settlement.amountMinor, symbol: symbol), style: const TextStyle(fontWeight: FontWeight.w600).tabular),
+                      PopupMenuButton<void>(
+                        tooltip: l10n.moreOptions,
+                        itemBuilder: (context) => [
+                          PopupMenuItem(onTap: () => confirmRemoveSettlement(context, ref, settlement), child: Text(l10n.removePayment)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+            ]),
+          ),
+        ],
       ],
     );
+  }
+
+  Future<void> _recordPayment(BuildContext context, WidgetRef ref, Transfer transfer) async {
+    final l10n = context.l10n;
+    final amount = await promptAmount(context, title: l10n.recordPayment, initialMinor: transfer.amountMinor);
+    if (amount == null || amount <= 0 || !context.mounted) return;
+    final repo = ref.read(groupsRepositoryProvider);
+    final id = await repo.addSettlement(groupId: group.id, fromMemberId: transfer.from, toMemberId: transfer.to, amountMinor: amount);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(l10n.paymentRecorded(l10n.transferArrow(nameOf(transfer.from), nameOf(transfer.to)), formatMinor(amount, symbol: symbol))),
+      action: SnackBarAction(label: l10n.undo, onPressed: () => repo.deleteSettlement(id)),
+    ));
   }
 }
 
@@ -230,8 +326,8 @@ class _MembersTab extends ConsumerWidget {
           child: Column(children: [
             for (final member in members)
               ListTile(
-                leading: CircleAvatar(child: Text(member.name.isEmpty ? '?' : member.name[0].toUpperCase())),
-                title: Text(member.isMe ? l10n.youSuffix(member.name) : member.name),
+                leading: MemberAvatar(member: member),
+                title: Text(memberDisplayName(l10n, member)),
                 subtitle: member.phone == null ? null : Text(member.phone!),
                 trailing: member.isMe
                     ? null

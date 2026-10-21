@@ -950,11 +950,17 @@ abstract class AppLocalizations {
   /// **'Shared from Hisab'**
   String get sharedFromHisab;
 
-  /// No description provided for @paidByLine.
+  /// No description provided for @paidByPeople.
   ///
   /// In en, this message translates to:
-  /// **'{payer} paid · {count} people · {date}'**
-  String paidByLine(String payer, int count, String date);
+  /// **'{payer} paid · {count, plural, =1{1 person} other{{count} people}}'**
+  String paidByPeople(String payer, int count);
+
+  /// No description provided for @yourShare.
+  ///
+  /// In en, this message translates to:
+  /// **'you: {amount}'**
+  String yourShare(String amount);
 
   /// No description provided for @settlementLine.
   ///
@@ -965,8 +971,44 @@ abstract class AppLocalizations {
   /// No description provided for @settlementSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Settlement · {date}'**
-  String settlementSubtitle(String date);
+  /// **'Payment · tap to remove'**
+  String get settlementSubtitle;
+
+  /// No description provided for @settledPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled payments'**
+  String get settledPayments;
+
+  /// No description provided for @paymentRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded {transfer} {amount}'**
+  String paymentRecorded(String transfer, String amount);
+
+  /// No description provided for @paymentRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment removed'**
+  String get paymentRemoved;
+
+  /// No description provided for @removePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove payment'**
+  String get removePayment;
+
+  /// No description provided for @removePaymentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The balances will go back to what they were before this payment.'**
+  String get removePaymentBody;
+
+  /// No description provided for @moreOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get moreOptions;
 
   /// No description provided for @noGroupExpensesTitle.
   ///

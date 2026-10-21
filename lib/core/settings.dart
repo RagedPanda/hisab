@@ -9,7 +9,7 @@ class AppSettings {
     this.themeMode = ThemeMode.system,
     this.smsEnabled = false,
     this.smsAutoAdd = false,
-    this.myName = 'Me',
+    this.myName = '',
     this.onboarded = false,
     this.localeCode = '',
   });
@@ -58,7 +58,7 @@ class AppSettings {
         themeMode: ThemeMode.values[prefs.getInt('themeMode') ?? ThemeMode.system.index],
         smsEnabled: prefs.getBool('smsEnabled') ?? false,
         smsAutoAdd: prefs.getBool('smsAutoAdd') ?? false,
-        myName: prefs.getString('myName') ?? 'Me',
+        myName: prefs.getString('myName') ?? '',
         onboarded: prefs.getBool('onboarded') ?? false,
         localeCode: prefs.getString('localeCode') ?? '',
       );

@@ -90,4 +90,28 @@ void main() {
     expect(balances.net[bina], 0);
     expect(balances.suggested.where((t) => t.from == bina || t.to == bina), isNotEmpty);
   });
+
+  test('renaming yourself in Settings renames the me member of every group', () async {
+    final goa = await groups.createGroup(name: 'Goa', icon: 'beach', myName: 'You', otherMembers: ['Rahul']);
+    final flat = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'You', otherMembers: ['Priya']);
+    await groups.renameMyMembers('Ankur');
+    for (final groupId in [goa, flat]) {
+      final members = await groups.getMembers(groupId);
+      expect(members.firstWhere((m) => m.isMe).name, 'Ankur');
+      expect(members.where((m) => !m.isMe).map((m) => m.name), isNot(contains('Ankur')));
+    }
+  });
+
+  test('a removed payment can be restored by Undo', () async {
+    final groupId = await groups.createGroup(name: 'Goa', icon: 'beach', myName: 'You', otherMembers: ['Rahul']);
+    final members = await groups.getMembers(groupId);
+    final me = members.firstWhere((m) => m.isMe).id;
+    final rahul = members.firstWhere((m) => !m.isMe).id;
+    final id = await groups.addSettlement(groupId: groupId, fromMemberId: rahul, toMemberId: me, amountMinor: 5000);
+    expect((await groups.getSettlements(groupId)).map((s) => s.id), [id]);
+    await groups.deleteSettlement(id);
+    expect(await groups.getSettlements(groupId), isEmpty);
+    await groups.restoreSettlement(id);
+    expect((await groups.getSettlements(groupId)).map((s) => s.id), [id]);
+  });
 }

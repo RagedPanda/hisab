@@ -15,6 +15,7 @@ import '../../domain/ledger/balance_effects.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
+import '../groups/member_display.dart';
 import '../categories/category_picker.dart';
 import '../shell/widgets/common.dart';
 import '../split/split_editor.dart';
@@ -388,7 +389,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           runSpacing: 8,
           children: [
             for (final member in _members)
-              ChoiceChip(label: Text(member.isMe ? l10n.youSuffix(member.name) : member.name), selected: _paidByMemberId == member.id, onSelected: (_) => setState(() => _paidByMemberId = member.id)),
+              ChoiceChip(label: Text(memberDisplayName(l10n, member)), selected: _paidByMemberId == member.id, onSelected: (_) => setState(() => _paidByMemberId = member.id)),
           ],
         ),
         SectionHeader(l10n.split),

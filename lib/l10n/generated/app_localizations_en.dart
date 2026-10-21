@@ -510,8 +510,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharedFromHisab => 'Shared from Hisab';
 
   @override
-  String paidByLine(String payer, int count, String date) {
-    return '$payer paid · $count people · $date';
+  String paidByPeople(String payer, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people',
+      one: '1 person',
+    );
+    return '$payer paid · $_temp0';
+  }
+
+  @override
+  String yourShare(String amount) {
+    return 'you: $amount';
   }
 
   @override
@@ -520,9 +531,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String settlementSubtitle(String date) {
-    return 'Settlement · $date';
+  String get settlementSubtitle => 'Payment · tap to remove';
+
+  @override
+  String get settledPayments => 'Settled payments';
+
+  @override
+  String paymentRecorded(String transfer, String amount) {
+    return 'Recorded $transfer $amount';
   }
+
+  @override
+  String get paymentRemoved => 'Payment removed';
+
+  @override
+  String get removePayment => 'Remove payment';
+
+  @override
+  String get removePaymentBody =>
+      'The balances will go back to what they were before this payment.';
+
+  @override
+  String get moreOptions => 'More options';
 
   @override
   String get noGroupExpensesTitle => 'No expenses yet';

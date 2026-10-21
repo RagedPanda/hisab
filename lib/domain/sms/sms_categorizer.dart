@@ -30,7 +30,7 @@ const Map<String, List<String>> _debitRules = {
   'electricity': ['electricity', 'bescom', 'tneb', 'tangedco', 'mseb', 'msedcl', 'tata power', 'adani electricity', 'bses', 'torrent power', 'kseb', 'uppcl', 'pspcl', 'cesc', 'jvvnl', 'mahadiscom', 'wbsedcl', 'apspdcl', 'tsspdcl', 'dhbvn', 'uhbvn'],
   'water_bill': ['water bill', 'bwssb', 'jal board', 'water supply', 'jal'],
   'gas_lpg': ['indane', 'hp gas', 'bharat gas', 'bharatgas', 'lpg', 'cylinder', 'png', 'mahanagar gas', 'igl', 'adani gas', 'gujarat gas'],
-  'medicines': ['pharmacy', 'pharma', 'medical', 'medplus', 'apollo pharmacy', 'pharmeasy', '1mg', 'netmeds', 'chemist', 'medicine', 'drug'],
+  'medicines': ['pharmacy', 'pharma', 'medical', 'medplus', 'apollo pharmacy', 'apollopharmacy', 'pharmeasy', '1mg', 'netmeds', 'chemist', 'medicine', 'drug'],
   'hospital': ['hospital', 'clinic', 'apollo', 'fortis', 'manipal', 'max healthcare', 'narayana', 'aiims', 'medanta', 'nursing home'],
   'lab_tests': ['diagnostic', 'pathology', 'lab', 'thyrocare', 'metropolis', 'dr lal', 'srl', 'healthians', 'redcliffe'],
   'fitness': ['cult', 'cultfit', 'gym', 'fitness', 'yoga', 'decathlon play'],
@@ -99,19 +99,22 @@ int _indexOfWord(String haystack, String keyword) {
   return pattern.firstMatch(haystack)?.start ?? -1;
 }
 
-/// Returns the best category key for [txn], falling back to a generic key.
-String suggestCategoryKey(ParsedTransaction txn) {
-  final haystack = '${txn.counterparty ?? ''} ${txn.raw}'.toLowerCase();
-  final rules = txn.isDebit ? _debitRules : _creditRules;
-  if (txn.isDebit && txn.instrument == Instrument.atm) return 'cash_withdrawal';
-  if (!txn.isDebit && txn.isCreditCard) return 'credit_card_payment';
+/// Keywords this long are distinctive enough to match inside a longer
+/// token, which is how UPI handles such as `apollopharmacy@ybl` are spelt.
+const _substringMinLength = 6;
 
+int _indexOfSubstring(String haystack, String keyword) {
+  final trimmed = keyword.trim();
+  return trimmed.length < _substringMinLength ? -1 : haystack.indexOf(trimmed);
+}
+
+String? _bestMatch(String haystack, Map<String, List<String>> rules, int Function(String, String) indexOf) {
   String? best;
   var bestIndex = haystack.length + 1;
   var bestLength = 0;
   for (final entry in rules.entries) {
     for (final keyword in entry.value) {
-      final index = _indexOfWord(haystack, keyword);
+      final index = indexOf(haystack, keyword);
       if (index < 0) continue;
       // Prefer the keyword that appears earliest; longer keyword wins ties.
       if (index < bestIndex || (index == bestIndex && keyword.length > bestLength)) {
@@ -121,6 +124,18 @@ String suggestCategoryKey(ParsedTransaction txn) {
       }
     }
   }
+  return best;
+}
+
+/// Returns the best category key for [txn], falling back to a generic key.
+/// Whole-word matches win; a glued-together handle falls back to substrings.
+String suggestCategoryKey(ParsedTransaction txn) {
+  final haystack = '${txn.counterparty ?? ''} ${txn.raw}'.toLowerCase();
+  final rules = txn.isDebit ? _debitRules : _creditRules;
+  if (txn.isDebit && txn.instrument == Instrument.atm) return 'cash_withdrawal';
+  if (!txn.isDebit && txn.isCreditCard) return 'credit_card_payment';
+
+  final best = _bestMatch(haystack, rules, _indexOfWord) ?? _bestMatch(haystack, rules, _indexOfSubstring);
   if (best != null) return best;
   return txn.isDebit ? 'other_expense' : 'other_income';
 }

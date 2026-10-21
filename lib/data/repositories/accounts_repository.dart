@@ -7,12 +7,13 @@ class AccountsRepository {
   AccountsRepository(this.db);
   final AppDatabase db;
 
-  Stream<List<Account>> watchAll() => (db.select(db.accounts)
-        ..where((t) => t.deletedAt.isNull())
-        ..orderBy([(t) => OrderingTerm.asc(t.sortOrder), (t) => OrderingTerm.asc(t.name)]))
-      .watch();
+  SimpleSelectStatement<$AccountsTable, Account> _activeQuery() => db.select(db.accounts)
+    ..where((t) => t.deletedAt.isNull())
+    ..orderBy([(t) => OrderingTerm.asc(t.sortOrder), (t) => OrderingTerm.asc(t.name)]);
 
-  Future<List<Account>> getAll() => watchAll().first;
+  Stream<List<Account>> watchAll() => _activeQuery().watch();
+
+  Future<List<Account>> getAll() => _activeQuery().get();
 
   Future<Account?> findBySmsKey(String key) =>
       (db.select(db.accounts)..where((t) => t.smsKey.equals(key) & t.deletedAt.isNull())).getSingleOrNull();

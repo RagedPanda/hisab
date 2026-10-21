@@ -35,28 +35,37 @@ class GroupsRepository {
   Stream<Group?> watchGroup(String id) =>
       (db.select(db.groups)..where((t) => t.id.equals(id))).watchSingleOrNull();
 
-  Stream<List<Member>> watchMembers(String groupId) => (db.select(db.members)
-        ..where((t) => t.groupId.equals(groupId) & t.deletedAt.isNull())
-        ..orderBy([(t) => OrderingTerm.desc(t.isMe), (t) => OrderingTerm.asc(t.name)]))
-      .watch();
+  SimpleSelectStatement<$MembersTable, Member> _membersQuery(String groupId) => db.select(db.members)
+    ..where((t) => t.groupId.equals(groupId) & t.deletedAt.isNull())
+    ..orderBy([(t) => OrderingTerm.desc(t.isMe), (t) => OrderingTerm.asc(t.name)]);
 
-  Stream<List<Settlement>> watchSettlements(String groupId) => (db.select(db.settlements)
-        ..where((t) => t.groupId.equals(groupId) & t.deletedAt.isNull())
-        ..orderBy([(t) => OrderingTerm.desc(t.occurredAt)]))
-      .watch();
+  SimpleSelectStatement<$SettlementsTable, Settlement> _settlementsQuery(String groupId) => db.select(db.settlements)
+    ..where((t) => t.groupId.equals(groupId) & t.deletedAt.isNull())
+    ..orderBy([(t) => OrderingTerm.desc(t.occurredAt)]);
+
+  SimpleSelectStatement<$EntriesTable, Entry> _entriesQuery(String groupId) => db.select(db.entries)
+    ..where((t) => t.groupId.equals(groupId) & t.deletedAt.isNull())
+    ..orderBy([(t) => OrderingTerm.desc(t.occurredAt)]);
+
+  Stream<List<Member>> watchMembers(String groupId) => _membersQuery(groupId).watch();
+  Future<List<Member>> getMembers(String groupId) => _membersQuery(groupId).get();
+
+  Stream<List<Settlement>> watchSettlements(String groupId) => _settlementsQuery(groupId).watch();
+  Future<List<Settlement>> getSettlements(String groupId) => _settlementsQuery(groupId).get();
 
   /// Group entries with their splits; emits whenever either changes.
-  Stream<List<(Entry, List<Split>)>> watchGroupEntries(String groupId) {
-    final entriesQuery = db.select(db.entries)
-      ..where((t) => t.groupId.equals(groupId) & t.deletedAt.isNull())
-      ..orderBy([(t) => OrderingTerm.desc(t.occurredAt)]);
-    return entriesQuery.watch().asyncMap((entries) async {
-      final ids = entries.map((e) => e.id).toList();
-      final splits = ids.isEmpty
-          ? <Split>[]
-          : await (db.select(db.splits)..where((t) => t.entryId.isIn(ids) & t.deletedAt.isNull())).get();
-      return [for (final e in entries) (e, splits.where((s) => s.entryId == e.id).toList())];
-    });
+  Stream<List<(Entry, List<Split>)>> watchGroupEntries(String groupId) =>
+      _entriesQuery(groupId).watch().asyncMap(_withSplits);
+
+  Future<List<(Entry, List<Split>)>> getGroupEntries(String groupId) async =>
+      _withSplits(await _entriesQuery(groupId).get());
+
+  Future<List<(Entry, List<Split>)>> _withSplits(List<Entry> entries) async {
+    final ids = entries.map((e) => e.id).toList();
+    final splits = ids.isEmpty
+        ? <Split>[]
+        : await (db.select(db.splits)..where((t) => t.entryId.isIn(ids) & t.deletedAt.isNull())).get();
+    return [for (final e in entries) (e, splits.where((s) => s.entryId == e.id).toList())];
   }
 
   Stream<GroupBalances> watchBalances(String groupId) {
@@ -102,9 +111,9 @@ class GroupsRepository {
     return watchGroups().asyncExpand((groups) async* {
       final summaries = <GroupSummary>[];
       for (final group in groups) {
-        final members = await watchMembers(group.id).first;
-        final entries = await watchGroupEntries(group.id).first;
-        final settlements = await watchSettlements(group.id).first;
+        final members = await getMembers(group.id);
+        final entries = await getGroupEntries(group.id);
+        final settlements = await getSettlements(group.id);
         final balances = computeBalances(members: members, entries: entries, settlements: settlements, simplify: group.simplifyDebts);
         final me = members.where((m) => m.isMe).firstOrNull;
         summaries.add(GroupSummary(

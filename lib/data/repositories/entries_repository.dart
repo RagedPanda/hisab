@@ -75,61 +75,46 @@ class EntriesRepository {
     query.orderBy([OrderingTerm.desc(db.entries.occurredAt), OrderingTerm.desc(db.entries.createdAt)]);
     if (limit != null) query.limit(limit);
 
-    return query.watch().asyncMap((rows) async {
-      final entries = rows.map((r) => r.readTable(db.entries)).toList();
-      final ids = entries.map((e) => e.id).toList();
-      final items = ids.isEmpty
-          ? <EntryItem>[]
-          : await (db.select(db.entryItems)
-                ..where((t) => t.entryId.isIn(ids) & t.deletedAt.isNull())
-                ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
-              .get();
-      final splits = ids.isEmpty
-          ? <Split>[]
-          : await (db.select(db.splits)..where((t) => t.entryId.isIn(ids) & t.deletedAt.isNull())).get();
-      return [
-        for (final row in rows)
-          EntryDetails(
-            entry: row.readTable(db.entries),
-            category: row.readTableOrNull(db.categories),
-            account: row.readTableOrNull(db.accounts),
-            items: items.where((i) => i.entryId == row.readTable(db.entries).id).toList(),
-            splits: splits.where((s) => s.entryId == row.readTable(db.entries).id).toList(),
-          ),
-      ];
-    });
+    return query.watch().asyncMap(_hydrate);
   }
 
-  Future<EntryDetails?> getEntry(String id) async {
-    final list = await watchEntriesById(id).first;
-    return list.isEmpty ? null : list.first;
-  }
-
-  Stream<List<EntryDetails>> watchEntriesById(String id) {
-    final query = db.select(db.entries).join([
-      leftOuterJoin(db.categories, db.categories.id.equalsExp(db.entries.categoryId)),
-      leftOuterJoin(db.accounts, db.accounts.id.equalsExp(db.entries.accountId)),
-    ])
-      ..where(db.entries.id.equals(id));
-    return query.watch().asyncMap((rows) async {
-      if (rows.isEmpty) return const [];
-      final row = rows.first;
-      final items = await (db.select(db.entryItems)
-            ..where((t) => t.entryId.equals(id) & t.deletedAt.isNull())
-            ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
-          .get();
-      final splits = await (db.select(db.splits)..where((t) => t.entryId.equals(id) & t.deletedAt.isNull())).get();
-      return [
+  /// Loads items and splits for joined entry rows in two queries, not per row.
+  Future<List<EntryDetails>> _hydrate(List<TypedResult> rows) async {
+    final entries = rows.map((r) => r.readTable(db.entries)).toList();
+    final ids = entries.map((e) => e.id).toList();
+    final items = ids.isEmpty
+        ? <EntryItem>[]
+        : await (db.select(db.entryItems)
+              ..where((t) => t.entryId.isIn(ids) & t.deletedAt.isNull())
+              ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
+            .get();
+    final splits = ids.isEmpty
+        ? <Split>[]
+        : await (db.select(db.splits)..where((t) => t.entryId.isIn(ids) & t.deletedAt.isNull())).get();
+    return [
+      for (final row in rows)
         EntryDetails(
           entry: row.readTable(db.entries),
           category: row.readTableOrNull(db.categories),
           account: row.readTableOrNull(db.accounts),
-          items: items,
-          splits: splits,
+          items: items.where((i) => i.entryId == row.readTable(db.entries).id).toList(),
+          splits: splits.where((s) => s.entryId == row.readTable(db.entries).id).toList(),
         ),
-      ];
-    });
+    ];
   }
+
+  JoinedSelectStatement<HasResultSet, dynamic> _byIdQuery(String id) => db.select(db.entries).join([
+        leftOuterJoin(db.categories, db.categories.id.equalsExp(db.entries.categoryId)),
+        leftOuterJoin(db.accounts, db.accounts.id.equalsExp(db.entries.accountId)),
+      ])
+        ..where(db.entries.id.equals(id));
+
+  Future<EntryDetails?> getEntry(String id) async {
+    final list = await _hydrate(await _byIdQuery(id).get());
+    return list.isEmpty ? null : list.first;
+  }
+
+  Stream<List<EntryDetails>> watchEntriesById(String id) => _byIdQuery(id).watch().asyncMap(_hydrate);
 
   /// Inserts or replaces an entry with its items and splits atomically.
   Future<void> saveEntry(

@@ -26,12 +26,14 @@ class CategoriesRepository {
   CategoriesRepository(this.db);
   final AppDatabase db;
 
-  Stream<List<Category>> watchAll({bool includeArchived = false}) => (db.select(db.categories)
+  SimpleSelectStatement<$CategoriesTable, Category> _activeQuery({bool includeArchived = false}) =>
+      db.select(db.categories)
         ..where((t) => includeArchived ? t.deletedAt.isNull() : t.deletedAt.isNull() & t.isArchived.equals(false))
-        ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
-      .watch();
+        ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]);
 
-  Future<List<Category>> getAll() => watchAll().first;
+  Stream<List<Category>> watchAll({bool includeArchived = false}) => _activeQuery(includeArchived: includeArchived).watch();
+
+  Future<List<Category>> getAll({bool includeArchived = false}) => _activeQuery(includeArchived: includeArchived).get();
 
   Future<Category?> findBySeedKey(String key) =>
       (db.select(db.categories)..where((t) => t.seedKey.equals(key) & t.deletedAt.isNull())).getSingleOrNull();

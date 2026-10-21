@@ -125,7 +125,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   }
 
   Future<void> _loadMembers() async {
-    _members = await ref.read(groupsRepositoryProvider).watchMembers(_groupId!).first;
+    _members = await ref.read(groupsRepositoryProvider).getMembers(_groupId!);
   }
 
   List<SplitInput> _inputsFromSplits(List<Split> splits) {

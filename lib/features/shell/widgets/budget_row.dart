@@ -31,9 +31,10 @@ class BudgetRow extends StatelessWidget {
     final progress = view.progress;
     final barColor = budgetBandColor(progress.band, theme.colorScheme);
     final name = view.budget.categoryId == null ? l10n.overall : view.category?.displayName(context) ?? l10n.category;
+    final limit = formatMinor(progress.limitMinor, symbol: symbol, showDecimals: false);
     final caption = progress.isOver
-        ? l10n.budgetOverBy(formatMinor(-progress.remainingMinor, symbol: symbol, showDecimals: false))
-        : l10n.budgetLeftWithDays(formatMinor(progress.remainingMinor, symbol: symbol, showDecimals: false), view.daysLeft);
+        ? l10n.budgetOverBy(formatMinor(-progress.remainingMinor, symbol: symbol, showDecimals: false), limit)
+        : l10n.budgetLeftWithDays(formatMinor(progress.remainingMinor, symbol: symbol, showDecimals: false), limit, view.daysLeft);
     return ListTile(
       onTap: onTap,
       leading: IconBadge(icon: view.category?.icon ?? 'all_inclusive', color: view.category?.color ?? kSeedColor.toARGB32()),

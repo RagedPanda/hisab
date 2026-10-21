@@ -224,24 +224,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get removeBudgetQuestion => 'यह बजट हटाएँ?';
 
   @override
-  String budgetOverBy(String amount) {
-    return '$amount ज़्यादा';
+  String budgetOverBy(String amount, String limit) {
+    return '$limit से $amount ज़्यादा';
   }
 
   @override
-  String budgetLeftOf(String left, String limit) {
-    return '$limit में से $left बाकी';
-  }
-
-  @override
-  String budgetLeftWithDays(String amount, int days) {
+  String budgetLeftWithDays(String amount, String limit, int days) {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
       other: '$days दिन',
       one: '1 दिन',
     );
-    return '$amount बाकी · $_temp0';
+    return '$limit में से $amount बाकी · $_temp0';
   }
 
   @override

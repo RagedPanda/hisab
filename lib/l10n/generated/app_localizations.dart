@@ -485,20 +485,14 @@ abstract class AppLocalizations {
   /// No description provided for @budgetOverBy.
   ///
   /// In en, this message translates to:
-  /// **'Over by {amount}'**
-  String budgetOverBy(String amount);
-
-  /// No description provided for @budgetLeftOf.
-  ///
-  /// In en, this message translates to:
-  /// **'{left} left of {limit}'**
-  String budgetLeftOf(String left, String limit);
+  /// **'Over {limit} by {amount}'**
+  String budgetOverBy(String amount, String limit);
 
   /// No description provided for @budgetLeftWithDays.
   ///
   /// In en, this message translates to:
-  /// **'{amount} left · {days, plural, =1{1 day} other{{days} days}}'**
-  String budgetLeftWithDays(String amount, int days);
+  /// **'{amount} of {limit} left · {days, plural, =1{1 day} other{{days} days}}'**
+  String budgetLeftWithDays(String amount, String limit, int days);
 
   /// No description provided for @budgetRemoved.
   ///

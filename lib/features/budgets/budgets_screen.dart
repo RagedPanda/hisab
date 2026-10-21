@@ -41,13 +41,11 @@ class BudgetsScreen extends ConsumerWidget {
         }
       }
       if (!context.mounted) return;
-      final text = await promptText(
+      final amount = await promptAmount(
         context,
         title: overall ? l10n.overallMonthlyLimit : l10n.categoryMonthlyLimit(category!.displayName(context)),
-        initial: existing == null ? null : minorToDouble(existing.amountMinor).toStringAsFixed(0),
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        initialMinor: existing?.amountMinor,
       );
-      final amount = text == null ? null : parseAmountToMinor(text);
       if (amount == null || amount <= 0) return;
       await repo.save(id: existing?.id, categoryId: overall ? null : category!.id, period: 'month', amountMinor: amount);
     }

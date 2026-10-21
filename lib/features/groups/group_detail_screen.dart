@@ -197,8 +197,7 @@ class _BalancesTab extends ConsumerWidget {
                   subtitle: TextButton(
                     style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
                     onPressed: () async {
-                      final text = await promptText(context, title: l10n.recordPayment, initial: minorToDouble(transfer.amountMinor).toStringAsFixed(2), keyboardType: const TextInputType.numberWithOptions(decimal: true));
-                      final amount = text == null ? null : parseAmountToMinor(text);
+                      final amount = await promptAmount(context, title: l10n.recordPayment, initialMinor: transfer.amountMinor);
                       if (amount == null || amount <= 0) return;
                       await ref.read(groupsRepositoryProvider).addSettlement(groupId: group.id, fromMemberId: transfer.from, toMemberId: transfer.to, amountMinor: amount);
                     },

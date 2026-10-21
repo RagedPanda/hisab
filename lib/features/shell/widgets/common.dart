@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/app_icons.dart';
@@ -176,17 +177,75 @@ Future<bool> confirmDialog(BuildContext context, {required String title, String?
   return result ?? false;
 }
 
-Future<String?> promptText(BuildContext context, {required String title, String? initial, String? hint, TextInputType? keyboardType}) {
+/// Keeps amount fields to digits, a decimal point and thousands separators,
+/// and short enough that [parseAmountToMinor] can never overflow.
+final List<TextInputFormatter> amountInputFormatters = [
+  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+  LengthLimitingTextInputFormatter(kMaxAmountWholeDigits + 6),
+];
+
+/// Inline error for an amount field, or null while the text parses.
+String? amountErrorText(BuildContext context, String text) =>
+    text.trim().isNotEmpty && parseAmountToMinor(text) == null ? context.l10n.invalidAmount : null;
+
+Future<String?> promptText(
+  BuildContext context, {
+  required String title,
+  String? initial,
+  String? hint,
+  TextInputType? keyboardType,
+  List<TextInputFormatter>? inputFormatters,
+}) {
   final controller = TextEditingController(text: initial);
+  controller.selection = TextSelection(baseOffset: 0, extentOffset: controller.text.length);
   return showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
       title: Text(title),
-      content: TextField(controller: controller, autofocus: true, decoration: InputDecoration(hintText: hint), keyboardType: keyboardType),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        decoration: InputDecoration(hintText: hint),
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        onSubmitted: (value) => Navigator.pop(context, value.trim()),
+      ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.cancel)),
         FilledButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: Text(context.l10n.save)),
       ],
+    ),
+  );
+}
+
+/// Asks for a money amount; returns minor units, or null when cancelled.
+/// Save stays disabled until the text is a valid amount above zero.
+Future<int?> promptAmount(BuildContext context, {required String title, int? initialMinor, String? hint}) {
+  final controller = TextEditingController(text: initialMinor == null ? '' : amountInputText(initialMinor));
+  controller.selection = TextSelection(baseOffset: 0, extentOffset: controller.text.length);
+  return showDialog<int>(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) {
+        final parsed = parseAmountToMinor(controller.text);
+        final valid = parsed != null && parsed > 0;
+        return AlertDialog(
+          title: Text(title),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: amountInputFormatters,
+            decoration: InputDecoration(hintText: hint ?? '0', errorText: amountErrorText(context, controller.text)),
+            onChanged: (_) => setState(() {}),
+            onSubmitted: (_) => valid ? Navigator.pop(context, parsed) : null,
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.cancel)),
+            FilledButton(onPressed: valid ? () => Navigator.pop(context, parsed) : null, child: Text(context.l10n.save)),
+          ],
+        );
+      },
     ),
   );
 }

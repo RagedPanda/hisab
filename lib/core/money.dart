@@ -4,15 +4,23 @@ library;
 
 /// Converts a user-typed decimal string such as "1,234.5" to minor units.
 /// Returns null when the text is not a valid non-negative amount.
+/// Longest whole-currency part accepted from user input. Twelve digits keeps
+/// the minor-unit value far inside a 64-bit int, so parsing can never overflow.
+const int kMaxAmountWholeDigits = 12;
+
 int? parseAmountToMinor(String text) {
   final cleaned = text.replaceAll(',', '').replaceAll('₹', '').trim();
   if (cleaned.isEmpty) return null;
   final match = RegExp(r'^(\d+)(?:\.(\d{0,2}))?$').firstMatch(cleaned);
   if (match == null) return null;
+  if (match.group(1)!.length > kMaxAmountWholeDigits) return null;
   final whole = int.parse(match.group(1)!);
   final fraction = (match.group(2) ?? '').padRight(2, '0');
   return whole * 100 + int.parse(fraction);
 }
+
+/// Text to seed an amount field with: whole amounts drop the `.00`.
+String amountInputText(int minor) => minor % 100 == 0 ? '${minor ~/ 100}' : minorToDouble(minor).toStringAsFixed(2);
 
 /// Converts a double amount (e.g. 70.5) to minor units with round-half-up.
 int doubleToMinor(double amount) => (amount * 100).round();
@@ -85,3 +93,7 @@ List<int> allocateProportionally(int total, List<double> weights) {
   }
   return result;
 }
+
+/// Card accounts hold what you owe, so an entered amount due is stored as a
+/// negative balance; every other account type keeps the sign as entered.
+int signedBalanceForType(String accountType, int enteredMinor) => accountType == 'card' ? -enteredMinor.abs() : enteredMinor;

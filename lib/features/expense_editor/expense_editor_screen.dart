@@ -212,11 +212,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             readOnly: _hasItems,
             autofocus: !_isEditing && !_hasItems,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: amountInputFormatters,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
             decoration: InputDecoration(
               prefixText: '$symbol ',
               hintText: '0',
               helperText: _hasItems ? l10n.totalOfItems(_items.length) : null,
+              errorText: _hasItems ? null : amountErrorText(context, _amountController.text),
             ),
             onChanged: (_) => setState(() {}),
           ),
@@ -402,6 +404,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     final amount = _amountMinor;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
+    if (!_hasItems && amountErrorText(context, _amountController.text) != null) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.invalidAmount)));
+      return;
+    }
     if (amount <= 0) {
       messenger.showSnackBar(SnackBar(content: Text(l10n.errorAmountZero)));
       return;

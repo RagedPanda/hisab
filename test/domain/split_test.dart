@@ -22,6 +22,18 @@ void main() {
       expect(parseAmountToMinor('abc'), isNull);
       expect(parseAmountToMinor('1.234'), isNull);
     });
+    test('oversized input is rejected instead of overflowing (AND-02)', () {
+      expect(parseAmountToMinor('9' * 12), 999999999999 * 100);
+      expect(parseAmountToMinor('9' * 13), isNull);
+      expect(parseAmountToMinor('99999999999999999999'), isNull);
+    });
+    test('card balances are stored as money owed', () {
+      expect(signedBalanceForType('card', 124000), -124000);
+      expect(signedBalanceForType('card', -124000), -124000);
+      expect(signedBalanceForType('bank', 124000), 124000);
+      expect(amountInputText(124000), '1240');
+      expect(amountInputText(124050), '1240.50');
+    });
     test('proportional allocation sums exactly', () {
       expect(allocateProportionally(10000, [1, 1, 1]), [3334, 3333, 3333]);
       expect(allocateProportionally(100, [1, 1, 1]), [34, 33, 33]);

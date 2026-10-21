@@ -35,3 +35,12 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: assets/logo/hisab_logo.png
+  adaptive_icon_background: "#0F6E6B"
+  adaptive_icon_foreground: assets/logo/hisab_logo_foreground.png
+  adaptive_icon_monochrome: assets/logo/hisab_logo_foreground.png

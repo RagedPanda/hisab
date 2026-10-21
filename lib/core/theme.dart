@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Hisab uses a deep teal with a warm amber accent: calm for daily use,
 /// clearly different from the indigo/purple of most finance apps.
@@ -27,6 +28,9 @@ ThemeData buildTheme(Brightness brightness) {
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       foregroundColor: scheme.onSurface,
+      systemOverlayStyle: brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent)
+          : SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
       titleTextStyle: base.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700, color: scheme.onSurface),
     ),
     inputDecorationTheme: InputDecorationTheme(

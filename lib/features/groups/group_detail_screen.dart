@@ -9,6 +9,7 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/groups_repository.dart';
+import '../../domain/split/debt_simplifier.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
@@ -237,8 +238,9 @@ class _MembersTab extends ConsumerWidget {
                     : IconButton(
                         icon: const Icon(Icons.person_remove_outlined),
                         onPressed: () async {
-                          final owed = balances?.net[member.id] ?? 0;
-                          if (owed != 0) {
+                          final current = balances;
+                          final settled = current != null && isMemberSettled(memberId: member.id, net: current.net, transfers: current.suggested);
+                          if (!settled) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.settleBeforeRemove)));
                             return;
                           }

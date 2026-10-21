@@ -129,3 +129,10 @@ List<Transfer> pairwiseDebts({
   result.sort((a, b) => b.amountMinor.compareTo(a.amountMinor));
   return result;
 }
+
+/// A member can leave a group only once nothing is owed to or by them:
+/// their net is zero and no outstanding transfer names them. With
+/// simplification off a member can net to zero while still sitting in the
+/// middle of two pairwise debts, so the net alone is not enough.
+bool isMemberSettled({required String memberId, required Map<String, int> net, required List<Transfer> transfers}) =>
+    (net[memberId] ?? 0) == 0 && transfers.every((t) => t.from != memberId && t.to != memberId);

@@ -126,6 +126,19 @@ void main() {
     });
   });
 
+  group('member removal', () {
+    test('AND-08: net zero but caught between pairwise debts is not settled', () {
+      final transfers = [const Transfer('bina', 'me', 15000), const Transfer('chetan', 'bina', 15000)];
+      final net = {'me': 15000, 'bina': 0, 'chetan': -15000};
+      expect(isMemberSettled(memberId: 'bina', net: net, transfers: transfers), isFalse);
+      expect(isMemberSettled(memberId: 'me', net: net, transfers: transfers), isFalse);
+    });
+    test('fully settled member can be removed', () {
+      expect(isMemberSettled(memberId: 'bina', net: {'bina': 0, 'me': 0}, transfers: const []), isTrue);
+      expect(isMemberSettled(memberId: 'bina', net: {'me': 500, 'chetan': -500}, transfers: [const Transfer('chetan', 'me', 500)]), isTrue);
+    });
+  });
+
   group('debts', () {
     test('net balances and simplification', () {
       final net = computeNetBalances(

@@ -65,19 +65,11 @@ class TransactionsScreen extends ConsumerWidget {
               onChanged: (value) => ref.read(_searchProvider.notifier).set(value),
             ),
           ),
-          SizedBox(
-            height: 40,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                for (final (label, value) in [(l10n.all, null), (l10n.kindExpenses, 'expense'), (l10n.income, 'income'), (l10n.kindTransfers, 'transfer')])
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(label: Text(label), selected: kindFilter == value, onSelected: (_) => ref.read(_kindFilterProvider.notifier).set(value)),
-                  ),
-              ],
-            ),
+          ChipRow(
+            children: [
+              for (final (label, value) in [(l10n.all, null), (l10n.kindExpenses, 'expense'), (l10n.income, 'income'), (l10n.kindTransfers, 'transfer')])
+                ChoiceChip(label: Text(label), selected: kindFilter == value, onSelected: (_) => ref.read(_kindFilterProvider.notifier).set(value)),
+            ],
           ),
           Expanded(
             child: async.isLoading

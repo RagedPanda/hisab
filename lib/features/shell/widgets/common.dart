@@ -415,3 +415,71 @@ class SettingValue extends StatelessWidget {
     return Text(value, style: theme.textTheme.labelLarge!.copyWith(color: theme.colorScheme.primary));
   }
 }
+
+const double kChipRowHeight = 40;
+const double kChipRowFadeWidth = 28;
+
+/// Single-line horizontal chip strip. The right edge fades out while more
+/// chips are hidden off-screen so the row never looks clipped (P2-10/P2-11).
+class ChipRow extends StatefulWidget {
+  const ChipRow({super.key, required this.children, this.padding = const EdgeInsets.symmetric(horizontal: 16)});
+  final List<Widget> children;
+  final EdgeInsets padding;
+
+  @override
+  State<ChipRow> createState() => _ChipRowState();
+}
+
+class _ChipRowState extends State<ChipRow> {
+  final ScrollController _controller = ScrollController();
+  bool _moreToTheRight = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_syncFade);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncFade());
+  }
+
+  @override
+  void didUpdateWidget(covariant ChipRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncFade());
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _syncFade() {
+    if (!mounted || !_controller.hasClients) return;
+    final position = _controller.position;
+    final more = position.maxScrollExtent > 0 && position.pixels < position.maxScrollExtent - 1;
+    if (more != _moreToTheRight) setState(() => _moreToTheRight = more);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final list = ListView.separated(
+      controller: _controller,
+      scrollDirection: Axis.horizontal,
+      padding: widget.padding,
+      itemCount: widget.children.length,
+      separatorBuilder: (_, _) => const SizedBox(width: 8),
+      itemBuilder: (_, index) => widget.children[index],
+    );
+    return SizedBox(
+      height: kChipRowHeight,
+      child: _moreToTheRight ? ShaderMask(shaderCallback: _fadeShader, blendMode: BlendMode.dstIn, child: list) : list,
+    );
+  }
+
+  static Shader _fadeShader(Rect bounds) => LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: const [Colors.white, Colors.white, Colors.transparent],
+        stops: [0, 1 - kChipRowFadeWidth / bounds.width, 1],
+      ).createShader(bounds);
+}

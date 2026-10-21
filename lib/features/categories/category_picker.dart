@@ -120,23 +120,16 @@ class _RecentRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(context.l10n.recent),
-        SizedBox(
-          height: 40,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: categories.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final category = categories[index];
-              return ChoiceChip(
+        ChipRow(
+          children: [
+            for (final category in categories)
+              ChoiceChip(
                 avatar: IconBadge(icon: category.icon, color: category.color, size: 22),
                 label: Text(category.displayName(context)),
                 selected: selected?.id == category.id,
                 onSelected: (_) => onPick(category),
-              );
-            },
-          ),
+              ),
+          ],
         ),
         const SizedBox(height: 8),
       ],

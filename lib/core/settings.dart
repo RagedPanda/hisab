@@ -11,6 +11,7 @@ class AppSettings {
     this.smsAutoAdd = false,
     this.myName = 'Me',
     this.onboarded = false,
+    this.localeCode = '',
   });
 
   final String currencySymbol;
@@ -25,6 +26,11 @@ class AppSettings {
   final String myName;
   final bool onboarded;
 
+  /// BCP-47 language code, or empty to follow the device locale.
+  final String localeCode;
+
+  Locale? get locale => localeCode.isEmpty ? null : Locale(localeCode);
+
   AppSettings copyWith({
     String? currencySymbol,
     int? monthStartDay,
@@ -33,6 +39,7 @@ class AppSettings {
     bool? smsAutoAdd,
     String? myName,
     bool? onboarded,
+    String? localeCode,
   }) =>
       AppSettings(
         currencySymbol: currencySymbol ?? this.currencySymbol,
@@ -42,6 +49,7 @@ class AppSettings {
         smsAutoAdd: smsAutoAdd ?? this.smsAutoAdd,
         myName: myName ?? this.myName,
         onboarded: onboarded ?? this.onboarded,
+        localeCode: localeCode ?? this.localeCode,
       );
 
   static AppSettings fromPrefs(SharedPreferences prefs) => AppSettings(
@@ -52,6 +60,7 @@ class AppSettings {
         smsAutoAdd: prefs.getBool('smsAutoAdd') ?? false,
         myName: prefs.getString('myName') ?? 'Me',
         onboarded: prefs.getBool('onboarded') ?? false,
+        localeCode: prefs.getString('localeCode') ?? '',
       );
 
   Future<void> writeTo(SharedPreferences prefs) async {
@@ -62,5 +71,6 @@ class AppSettings {
     await prefs.setBool('smsAutoAdd', smsAutoAdd);
     await prefs.setString('myName', myName);
     await prefs.setBool('onboarded', onboarded);
+    await prefs.setString('localeCode', localeCode);
   }
 }

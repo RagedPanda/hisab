@@ -6,6 +6,7 @@ import '../../core/ids.dart';
 import '../../domain/split/debt_simplifier.dart';
 import '../../domain/split/split_calculator.dart';
 import '../db/database.dart';
+import '../db/watch_tables.dart';
 
 class GroupSummary {
   const GroupSummary({required this.group, required this.members, required this.myNetMinor, required this.totalSpentMinor});
@@ -68,20 +69,19 @@ class GroupsRepository {
     return [for (final e in entries) (e, splits.where((s) => s.entryId == e.id).toList())];
   }
 
-  Stream<GroupBalances> watchBalances(String groupId) {
-    return watchMembers(groupId).asyncExpand((members) {
-      return watchGroupEntries(groupId).asyncExpand((entries) {
-        return watchSettlements(groupId).asyncMap((settlements) async {
-          final group = await (db.select(db.groups)..where((t) => t.id.equals(groupId))).getSingleOrNull();
-          return computeBalances(
-            members: members,
-            entries: entries,
-            settlements: settlements,
-            simplify: group?.simplifyDebts ?? true,
-          );
-        });
-      });
-    });
+  /// Tables whose changes can move a group's balances.
+  List<TableInfo> get _ledgerTables => [db.groups, db.members, db.entries, db.splits, db.settlements];
+
+  Stream<GroupBalances> watchBalances(String groupId) => db.watchTables(_ledgerTables, () => getBalances(groupId));
+
+  Future<GroupBalances> getBalances(String groupId) async {
+    final group = await (db.select(db.groups)..where((t) => t.id.equals(groupId))).getSingleOrNull();
+    return computeBalances(
+      members: await getMembers(groupId),
+      entries: await getGroupEntries(groupId),
+      settlements: await getSettlements(groupId),
+      simplify: group?.simplifyDebts ?? true,
+    );
   }
 
   static GroupBalances computeBalances({
@@ -107,24 +107,28 @@ class GroupsRepository {
     return GroupBalances(net: net, suggested: suggested);
   }
 
-  Stream<List<GroupSummary>> watchSummaries() {
-    return watchGroups().asyncExpand((groups) async* {
-      final summaries = <GroupSummary>[];
-      for (final group in groups) {
-        final members = await getMembers(group.id);
-        final entries = await getGroupEntries(group.id);
-        final settlements = await getSettlements(group.id);
-        final balances = computeBalances(members: members, entries: entries, settlements: settlements, simplify: group.simplifyDebts);
-        final me = members.where((m) => m.isMe).firstOrNull;
-        summaries.add(GroupSummary(
-          group: group,
-          members: members,
-          myNetMinor: me == null ? 0 : balances.net[me.id] ?? 0,
-          totalSpentMinor: entries.fold(0, (sum, e) => sum + e.$1.amountMinor),
-        ));
-      }
-      yield summaries;
-    });
+  Stream<List<GroupSummary>> watchSummaries() => db.watchTables(_ledgerTables, getSummaries);
+
+  Future<List<GroupSummary>> getSummaries() async {
+    final groups = await (db.select(db.groups)
+          ..where((t) => t.deletedAt.isNull())
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .get();
+    return [for (final group in groups) await _summarise(group)];
+  }
+
+  Future<GroupSummary> _summarise(Group group) async {
+    final members = await getMembers(group.id);
+    final entries = await getGroupEntries(group.id);
+    final settlements = await getSettlements(group.id);
+    final balances = computeBalances(members: members, entries: entries, settlements: settlements, simplify: group.simplifyDebts);
+    final me = members.where((m) => m.isMe).firstOrNull;
+    return GroupSummary(
+      group: group,
+      members: members,
+      myNetMinor: me == null ? 0 : balances.net[me.id] ?? 0,
+      totalSpentMinor: entries.fold(0, (sum, e) => sum + e.$1.amountMinor),
+    );
   }
 
   Future<String> createGroup({required String name, required String icon, required String myName, List<String> otherMembers = const []}) async {

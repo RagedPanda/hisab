@@ -11,6 +11,7 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
+import '../../domain/ledger/balance_effects.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
@@ -52,8 +53,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   bool _loaded = false;
   bool _saving = false;
   String? _existingId;
-  int? _previousAmountMinor;
-  String? _previousAccountId;
+  /// Balance-relevant fields of the stored entry, used to reverse its
+  /// effect when the entry is edited or deleted.
+  EntrySnapshot? _previousSnapshot;
 
   bool get _isEditing => widget.entryId != null;
   bool get _hasItems => _items.isNotEmpty;
@@ -85,8 +87,14 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         _paidByMemberId = entry.paidByMemberId;
         _source = entry.source;
         _smsId = entry.smsId;
-        _previousAmountMinor = entry.amountMinor;
-        _previousAccountId = entry.accountId;
+        _previousSnapshot = EntrySnapshot(
+          kind: entry.kind,
+          amountMinor: entry.amountMinor,
+          accountId: entry.accountId,
+          toAccountId: entry.toAccountId,
+          source: entry.source,
+          groupId: entry.groupId,
+        );
         _splitMethod = SplitMethod.values.firstWhere((m) => m.name == entry.splitMethod, orElse: () => SplitMethod.equal);
         _items = details.items.map(ItemDraft.fromRow).toList();
         if (_groupId != null) {
@@ -172,8 +180,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               onPressed: () async {
                 if (await confirmDialog(context, title: l10n.deleteEntryQuestion)) {
                   await ref.read(entriesRepositoryProvider).deleteEntry(_existingId!);
-                  if (_previousAccountId != null && _source != 'sms' && _kind != 'transfer') {
-                    await ref.read(accountsRepositoryProvider).adjustBalance(_previousAccountId!, _kind == 'expense' ? _previousAmountMinor! : -_previousAmountMinor!);
+                  if (_previousSnapshot != null) {
+                    await ref.read(accountsRepositoryProvider).applyBalanceDeltas(deleteDeltas(_previousSnapshot!));
                   }
                   if (context.mounted) context.pop();
                 }
@@ -229,15 +237,19 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               },
             ),
           if (_kind == 'expense' && _groupId == null) _itemsSection(symbol, units),
-          const SizedBox(height: 8),
-          Text(_kind == 'transfer' ? l10n.fromAccount : l10n.account, style: Theme.of(context).textTheme.labelLarge),
-          const SizedBox(height: 6),
-          _accountChips(accounts, _accountId, (id) => setState(() => _accountId = id)),
-          if (_kind == 'transfer') ...[
-            const SizedBox(height: 12),
-            Text(l10n.toAccount, style: Theme.of(context).textTheme.labelLarge),
+          // Group expenses are a ledger between people, not an account
+          // movement, so they never pick (or touch) a personal account.
+          if (_groupId == null) ...[
+            const SizedBox(height: 8),
+            Text(_kind == 'transfer' ? l10n.fromAccount : l10n.account, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 6),
-            _accountChips(accounts.where((a) => a.id != _accountId).toList(), _toAccountId, (id) => setState(() => _toAccountId = id)),
+            _accountChips(accounts, _accountId, (id) => setState(() => _accountId = id)),
+            if (_kind == 'transfer') ...[
+              const SizedBox(height: 12),
+              Text(l10n.toAccount, style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 6),
+              _accountChips(accounts.where((a) => a.id != _accountId).toList(), _toAccountId, (id) => setState(() => _toAccountId = id)),
+            ],
           ],
           const SizedBox(height: 16),
           Row(children: [
@@ -426,7 +438,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       amountMinor: amount,
       occurredAt: _occurredAt,
       categoryId: _category?.id,
-      accountId: _accountId,
+      accountId: _groupId == null ? _accountId : null,
       note: _noteController.text.trim(),
       payee: _payeeController.text.trim().isEmpty ? null : _payeeController.text.trim(),
       source: _source,
@@ -458,24 +470,19 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     if (mounted) context.pop();
   }
 
-  /// Manual entries move the account's running balance; SMS entries do not,
-  /// because the bank SMS already told us the resulting balance.
+  /// Manual entries move the account's running balance; SMS and group
+  /// entries do not. The deltas come from the pure ledger module so the
+  /// previous version of the entry is always fully reversed first.
   Future<void> _applyBalanceChange(int amount) async {
-    if (_source == 'sms' || _groupId != null) return;
-    final accounts = ref.read(accountsRepositoryProvider);
-    if (_previousAccountId != null && _previousAmountMinor != null) {
-      await accounts.adjustBalance(_previousAccountId!, _kind == 'income' ? -_previousAmountMinor! : _previousAmountMinor!);
-    }
-    if (_accountId == null) return;
-    switch (_kind) {
-      case 'expense':
-        await accounts.adjustBalance(_accountId!, -amount);
-      case 'income':
-        await accounts.adjustBalance(_accountId!, amount);
-      case 'transfer':
-        await accounts.adjustBalance(_accountId!, -amount);
-        if (_toAccountId != null) await accounts.adjustBalance(_toAccountId!, amount);
-    }
+    final next = EntrySnapshot(
+      kind: _kind,
+      amountMinor: amount,
+      accountId: _accountId,
+      toAccountId: _kind == 'transfer' ? _toAccountId : null,
+      source: _source,
+      groupId: _groupId,
+    );
+    await ref.read(accountsRepositoryProvider).applyBalanceDeltas(editDeltas(previous: _previousSnapshot, next: next));
   }
 
   @override

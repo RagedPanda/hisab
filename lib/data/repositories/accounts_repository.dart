@@ -26,6 +26,7 @@ class AccountsRepository {
     String? last4,
     String? smsKey,
     int balanceMinor = 0,
+    bool includeInTotal = true,
   }) async {
     final companion = AccountsCompanion.insert(
       id: newId(),
@@ -37,6 +38,7 @@ class AccountsRepository {
       smsKey: Value(smsKey),
       balanceMinor: Value(balanceMinor),
       balanceAsOf: Value(balanceMinor == 0 ? null : DateTime.now()),
+      includeInTotal: Value(includeInTotal),
     );
     await db.into(db.accounts).insert(companion);
     return (db.select(db.accounts)..where((t) => t.id.equals(companion.id.value))).getSingle();
@@ -63,5 +65,15 @@ class AccountsRepository {
     final current = await (db.select(db.accounts)..where((t) => t.id.equals(id))).getSingleOrNull();
     if (current == null) return;
     await update(AccountsCompanion(id: Value(id), balanceMinor: Value(current.balanceMinor + deltaMinor)));
+  }
+
+  /// Applies a set of account deltas (see `lib/domain/ledger`) atomically.
+  Future<void> applyBalanceDeltas(Map<String, int> deltas) async {
+    if (deltas.isEmpty) return;
+    await db.transaction(() async {
+      for (final delta in deltas.entries) {
+        await adjustBalance(delta.key, delta.value);
+      }
+    });
   }
 }

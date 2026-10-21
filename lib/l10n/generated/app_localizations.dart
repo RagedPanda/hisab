@@ -1772,6 +1772,180 @@ abstract class AppLocalizations {
   /// **'item'**
   String get genericItem;
 
+  /// No description provided for @spentInMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent in {month}'**
+  String spentInMonth(String month);
+
+  /// No description provided for @vsLastMonthUp.
+  ///
+  /// In en, this message translates to:
+  /// **'▲ {percent}% vs {month}'**
+  String vsLastMonthUp(int percent, String month);
+
+  /// No description provided for @vsLastMonthDown.
+  ///
+  /// In en, this message translates to:
+  /// **'▼ {percent}% vs {month}'**
+  String vsLastMonthDown(int percent, String month);
+
+  /// No description provided for @vsLastMonthSame.
+  ///
+  /// In en, this message translates to:
+  /// **'Same as {month}'**
+  String vsLastMonthSame(String month);
+
+  /// No description provided for @dailyAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily avg'**
+  String get dailyAverage;
+
+  /// No description provided for @perDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount}/day'**
+  String perDay(String amount);
+
+  /// No description provided for @daysOfMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'{elapsed} of {total} days'**
+  String daysOfMonth(int elapsed, int total);
+
+  /// No description provided for @heroEmptyCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing spent yet this month'**
+  String get heroEmptyCaption;
+
+  /// No description provided for @addFirstEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first entry'**
+  String get addFirstEntry;
+
+  /// No description provided for @copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get copied;
+
+  /// No description provided for @spendingTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending trend'**
+  String get spendingTrend;
+
+  /// No description provided for @trendDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get trendDaily;
+
+  /// No description provided for @trendMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get trendMonthly;
+
+  /// No description provided for @trendEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a few entries to see your trend'**
+  String get trendEmpty;
+
+  /// No description provided for @trendSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending trend: {amount} spent so far this month'**
+  String trendSemantics(String amount);
+
+  /// No description provided for @thisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'this month'**
+  String get thisMonth;
+
+  /// No description provided for @categoriesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Your categories will show up here'**
+  String get categoriesEmpty;
+
+  /// No description provided for @percentOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String percentOf(int percent);
+
+  /// No description provided for @budgetsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a budget to see how you\'re tracking'**
+  String get budgetsEmptyBody;
+
+  /// No description provided for @andMoreCount.
+  ///
+  /// In en, this message translates to:
+  /// **'and {count, plural, =1{1 more} other{{count} more}}'**
+  String andMoreCount(int count);
+
+  /// No description provided for @youGetAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'You get {amount}'**
+  String youGetAmount(String amount);
+
+  /// No description provided for @youOweAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {amount}'**
+  String youOweAmount(String amount);
+
+  /// No description provided for @upcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get upcoming;
+
+  /// No description provided for @upcomingEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing due in the next two weeks'**
+  String get upcomingEmpty;
+
+  /// No description provided for @memberCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 member} other{{count} members}}'**
+  String memberCount(int count);
+
+  /// No description provided for @noEntriesYetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries yet'**
+  String get noEntriesYetTitle;
+
+  /// No description provided for @noEntriesYetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add one with + or turn on Bank SMS to capture them automatically'**
+  String get noEntriesYetBody;
+
+  /// No description provided for @addEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Add entry'**
+  String get addEntry;
+
+  /// No description provided for @showAllCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all categories'**
+  String get showAllCategories;
+
   /// No description provided for @today.
   ///
   /// In en, this message translates to:

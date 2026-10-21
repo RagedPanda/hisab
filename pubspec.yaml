@@ -47,3 +47,4 @@ flutter_launcher_icons:
   adaptive_icon_background: assets/logo/hisab_logo_background.png
   adaptive_icon_foreground: assets/logo/hisab_logo_foreground.png
   adaptive_icon_monochrome: assets/logo/hisab_logo_monochrome.png
+  adaptive_icon_foreground_inset: 0

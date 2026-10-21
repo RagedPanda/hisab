@@ -2,13 +2,14 @@ import 'package:flutter/widgets.dart';
 
 import '../data/db/database.dart';
 import '../domain/categories/category_catalog.dart';
+import 'category_names_hi.dart';
 
 /// Translated names for the built-in categories, keyed by language code and
 /// then by the seed key from `category_catalog.dart`. English is the catalog
 /// itself. To add a language, add one map here; keys you leave out fall back
 /// to English. User-renamed categories always keep the user's name.
 const Map<String, Map<String, String>> localizedCategoryNames = {
-  // 'hi': {'food': 'खाना-पीना', 'groceries': 'किराना', ...},
+  'hi': hindiCategoryNames,
 };
 
 final Map<String, String> _englishNameBySeedKey = {

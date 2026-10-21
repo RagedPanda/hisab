@@ -3,17 +3,9 @@ library;
 
 import '../../core/money.dart';
 
-enum SplitMethod {
-  equal('Equally'),
-  exact('Exact amounts'),
-  percent('Percentages'),
-  shares('Shares / ratio'),
-  adjustment('Adjustments'),
-  byItem('By item');
-
-  const SplitMethod(this.label);
-  final String label;
-}
+/// Stored by [name]; UI labels live in the l10n dictionaries (see
+/// `splitMethodLabel` in the split editor).
+enum SplitMethod { equal, exact, percent, shares, adjustment, byItem }
 
 /// One member's input for a split. Which field matters depends on the method:
 /// - [included]   equal, adjustment: takes part in the equal share
@@ -71,14 +63,54 @@ class SplitShare {
   int get hashCode => Object.hash(memberId, amountMinor);
 }
 
+/// Why a split could not be computed. Language-free: the widget layer maps a
+/// code plus its payload to a translated message (see `splitErrorMessage`).
+enum SplitErrorCode {
+  negativeTotal,
+  nobodyIncluded,
+  negativeAmounts,
+  amountLeft,
+  amountOver,
+  negativeValues,
+  percentMustTotal,
+  noShares,
+  percentLeft,
+  percentOver,
+  adjustmentsExceed,
+  adjustmentNegativeShare,
+  noItems,
+  itemsExceed,
+  itemUnassigned,
+}
+
+class SplitError {
+  const SplitError(this.code, {this.amountMinor = 0, this.percent = 0, this.label = ''});
+
+  final SplitErrorCode code;
+
+  /// Money payload for `amountLeft`, `amountOver`, `adjustmentsExceed`, `itemsExceed`.
+  final int amountMinor;
+
+  /// Percentage payload for `percentLeft`, `percentOver`.
+  final double percent;
+
+  /// Item label payload for `itemUnassigned`.
+  final String label;
+
+  @override
+  bool operator ==(Object other) =>
+      other is SplitError && other.code == code && other.amountMinor == amountMinor && other.percent == percent && other.label == label;
+
+  @override
+  int get hashCode => Object.hash(code, amountMinor, percent, label);
+}
+
 class SplitOutcome {
   const SplitOutcome(this.shares, {this.error});
-  const SplitOutcome.invalid(String message)
-      : shares = const [],
-        error = message;
+  const SplitOutcome.invalid(this.error) : shares = const [];
 
   final List<SplitShare> shares;
-  final String? error;
+  final SplitError? error;
   bool get isValid => error == null;
 
   int get totalMinor => shares.fold(0, (sum, s) => sum + s.amountMinor);
@@ -94,7 +126,7 @@ SplitOutcome computeSplit({
   required List<SplitInput> inputs,
   List<ItemSplitInput> items = const [],
 }) {
-  if (totalMinor < 0) return const SplitOutcome.invalid('Amount cannot be negative');
+  if (totalMinor < 0) return const SplitOutcome.invalid(SplitError(SplitErrorCode.negativeTotal));
   switch (method) {
     case SplitMethod.equal:
       return _equal(totalMinor, inputs);
@@ -113,7 +145,7 @@ SplitOutcome computeSplit({
 
 SplitOutcome _equal(int total, List<SplitInput> inputs) {
   final included = inputs.where((i) => i.included).toList();
-  if (included.isEmpty) return const SplitOutcome.invalid('Select at least one person');
+  if (included.isEmpty) return const SplitOutcome.invalid(SplitError(SplitErrorCode.nobodyIncluded));
   final amounts = allocateProportionally(total, List.filled(included.length, 1));
   return SplitOutcome([
     for (var i = 0; i < included.length; i++)
@@ -124,14 +156,14 @@ SplitOutcome _equal(int total, List<SplitInput> inputs) {
 SplitOutcome _exact(int total, List<SplitInput> inputs) {
   final sum = inputs.fold<int>(0, (acc, i) => acc + i.amountMinor);
   if (inputs.any((i) => i.amountMinor < 0)) {
-    return const SplitOutcome.invalid('Amounts cannot be negative');
+    return const SplitOutcome.invalid(SplitError(SplitErrorCode.negativeAmounts));
   }
   if (sum != total) {
     final diff = total - sum;
     return SplitOutcome.invalid(
       diff > 0
-          ? '${formatMinor(diff)} left to assign'
-          : '${formatMinor(-diff)} over the total',
+          ? SplitError(SplitErrorCode.amountLeft, amountMinor: diff)
+          : SplitError(SplitErrorCode.amountOver, amountMinor: -diff),
     );
   }
   return SplitOutcome([
@@ -147,11 +179,11 @@ SplitOutcome _weighted(
 }) {
   final active = inputs.where((i) => i.weight > 0).toList();
   if (inputs.any((i) => i.weight < 0)) {
-    return const SplitOutcome.invalid('Values cannot be negative');
+    return const SplitOutcome.invalid(SplitError(SplitErrorCode.negativeValues));
   }
   if (active.isEmpty) {
     return SplitOutcome.invalid(
-      requirePercentTotal ? 'Percentages must add up to 100' : 'Enter at least one share',
+      SplitError(requirePercentTotal ? SplitErrorCode.percentMustTotal : SplitErrorCode.noShares),
     );
   }
   if (requirePercentTotal) {
@@ -160,8 +192,8 @@ SplitOutcome _weighted(
       final diff = 100 - sum;
       return SplitOutcome.invalid(
         diff > 0
-            ? '${_trim(diff)}% left to assign'
-            : '${_trim(-diff)}% over 100',
+            ? SplitError(SplitErrorCode.percentLeft, percent: diff)
+            : SplitError(SplitErrorCode.percentOver, percent: -diff),
       );
     }
   }
@@ -174,18 +206,18 @@ SplitOutcome _weighted(
 
 SplitOutcome _adjustment(int total, List<SplitInput> inputs) {
   final included = inputs.where((i) => i.included).toList();
-  if (included.isEmpty) return const SplitOutcome.invalid('Select at least one person');
+  if (included.isEmpty) return const SplitOutcome.invalid(SplitError(SplitErrorCode.nobodyIncluded));
   final adjustments = included.fold<int>(0, (acc, i) => acc + i.amountMinor);
   final remainder = total - adjustments;
   if (remainder < 0) {
-    return SplitOutcome.invalid('Adjustments exceed the total by ${formatMinor(-remainder)}');
+    return SplitOutcome.invalid(SplitError(SplitErrorCode.adjustmentsExceed, amountMinor: -remainder));
   }
   final equal = allocateProportionally(remainder, List.filled(included.length, 1));
   final shares = <SplitShare>[];
   for (var i = 0; i < included.length; i++) {
     final amount = included[i].amountMinor + equal[i];
     if (amount < 0) {
-      return const SplitOutcome.invalid('An adjustment makes a share negative');
+      return const SplitOutcome.invalid(SplitError(SplitErrorCode.adjustmentNegativeShare));
     }
     shares.add(SplitShare(included[i].memberId, amount));
   }
@@ -196,17 +228,15 @@ SplitOutcome _adjustment(int total, List<SplitInput> inputs) {
 /// total (tax, tip, delivery) is spread in proportion to each member's
 /// item subtotal. Members with no items pay nothing.
 SplitOutcome _byItem(int total, List<SplitInput> inputs, List<ItemSplitInput> items) {
-  if (items.isEmpty) return const SplitOutcome.invalid('Add at least one item');
+  if (items.isEmpty) return const SplitOutcome.invalid(SplitError(SplitErrorCode.noItems));
   final itemSum = items.fold<int>(0, (acc, i) => acc + i.amountMinor);
   if (itemSum > total) {
-    return SplitOutcome.invalid('Items exceed the total by ${formatMinor(itemSum - total)}');
+    return SplitOutcome.invalid(SplitError(SplitErrorCode.itemsExceed, amountMinor: itemSum - total));
   }
   final subtotal = <String, int>{};
   for (final item in items) {
     if (item.memberIds.isEmpty) {
-      return SplitOutcome.invalid(
-        'Assign "${item.label.isEmpty ? 'item' : item.label}" to someone',
-      );
+      return SplitOutcome.invalid(SplitError(SplitErrorCode.itemUnassigned, label: item.label));
     }
     final parts = allocateProportionally(
       item.amountMinor,
@@ -227,7 +257,3 @@ SplitOutcome _byItem(int total, List<SplitInput> inputs, List<ItemSplitInput> it
   ]);
 }
 
-String _trim(double value) {
-  final text = value.toStringAsFixed(2);
-  return text.endsWith('.00') ? text.substring(0, text.length - 3) : text;
-}

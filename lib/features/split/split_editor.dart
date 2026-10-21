@@ -3,6 +3,54 @@ import 'package:flutter/material.dart';
 import '../../core/money.dart';
 import '../../data/db/database.dart';
 import '../../domain/split/split_calculator.dart';
+import '../../l10n/l10n.dart';
+
+/// Translated chip label for a split method.
+String splitMethodLabel(SplitMethod method, AppLocalizations l10n) => switch (method) {
+      SplitMethod.equal => l10n.splitEqual,
+      SplitMethod.exact => l10n.splitExact,
+      SplitMethod.percent => l10n.splitPercent,
+      SplitMethod.shares => l10n.splitShares,
+      SplitMethod.adjustment => l10n.splitAdjustment,
+      SplitMethod.byItem => l10n.splitByItem,
+    };
+
+/// Translated one-line explanation of how a split method works.
+/// Translates a language-free [SplitError] into user-facing text.
+String splitErrorMessage(SplitError error, AppLocalizations l10n, String symbol) {
+  String money() => formatMinor(error.amountMinor, symbol: symbol);
+  String percent() {
+    final text = error.percent.toStringAsFixed(2);
+    return text.endsWith('.00') ? text.substring(0, text.length - 3) : text;
+  }
+
+  return switch (error.code) {
+    SplitErrorCode.negativeTotal => l10n.splitErrorNegativeTotal,
+    SplitErrorCode.nobodyIncluded => l10n.splitErrorNobodyIncluded,
+    SplitErrorCode.negativeAmounts => l10n.splitErrorNegativeAmounts,
+    SplitErrorCode.amountLeft => l10n.splitErrorAmountLeft(money()),
+    SplitErrorCode.amountOver => l10n.splitErrorAmountOver(money()),
+    SplitErrorCode.negativeValues => l10n.splitErrorNegativeValues,
+    SplitErrorCode.percentMustTotal => l10n.splitErrorPercentMustTotal,
+    SplitErrorCode.noShares => l10n.splitErrorNoShares,
+    SplitErrorCode.percentLeft => l10n.splitErrorPercentLeft(percent()),
+    SplitErrorCode.percentOver => l10n.splitErrorPercentOver(percent()),
+    SplitErrorCode.adjustmentsExceed => l10n.splitErrorAdjustmentsExceed(money()),
+    SplitErrorCode.adjustmentNegativeShare => l10n.splitErrorAdjustmentNegativeShare,
+    SplitErrorCode.noItems => l10n.splitErrorNoItems,
+    SplitErrorCode.itemsExceed => l10n.splitErrorItemsExceed(money()),
+    SplitErrorCode.itemUnassigned => l10n.splitErrorItemUnassigned(error.label.isEmpty ? l10n.genericItem : error.label),
+  };
+}
+
+String splitMethodHelp(SplitMethod method, AppLocalizations l10n) => switch (method) {
+      SplitMethod.equal => l10n.splitHelpEqual,
+      SplitMethod.exact => l10n.splitHelpExact,
+      SplitMethod.percent => l10n.splitHelpPercent,
+      SplitMethod.shares => l10n.splitHelpShares,
+      SplitMethod.adjustment => l10n.splitHelpAdjustment,
+      SplitMethod.byItem => l10n.splitHelpByItem,
+    };
 
 /// Editable split for a group expense. Emits the full state on every change so
 /// the parent can persist it; validation comes from [computeSplit].
@@ -31,6 +79,7 @@ class SplitEditor extends StatelessWidget {
     final outcome = computeSplit(totalMinor: totalMinor, method: method, inputs: inputs);
     final shares = outcome.asMap();
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -42,20 +91,20 @@ class SplitEditor extends StatelessWidget {
               for (final option in SplitMethod.values.where((m) => m != SplitMethod.byItem))
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(label: Text(option.label), selected: method == option, onSelected: (_) => onMethodChanged(option)),
+                  child: ChoiceChip(label: Text(splitMethodLabel(option, l10n)), selected: method == option, onSelected: (_) => onMethodChanged(option)),
                 ),
             ],
           ),
         ),
         const SizedBox(height: 8),
-        Text(_hint(method), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        Text(splitMethodHelp(method, l10n), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 8),
         for (final member in members) _memberRow(context, member, shares[member.id]),
         const SizedBox(height: 8),
         if (!outcome.isValid)
-          Text(outcome.error ?? 'Split does not add up', style: TextStyle(color: theme.colorScheme.error))
+          Text(outcome.error == null ? l10n.splitDoesNotAddUp : splitErrorMessage(outcome.error!, l10n, symbol), style: TextStyle(color: theme.colorScheme.error))
         else
-          Text('Splits ${formatMinor(outcome.totalMinor, symbol: symbol)} across ${outcome.shares.length} people', style: theme.textTheme.bodySmall),
+          Text(l10n.splitsAcross(formatMinor(outcome.totalMinor, symbol: symbol), outcome.shares.length), style: theme.textTheme.bodySmall),
       ],
     );
   }
@@ -105,7 +154,7 @@ class SplitEditor extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(member.isMe ? '${member.name} (you)' : member.name),
+              Text(member.isMe ? context.l10n.youSuffix(member.name) : member.name),
               Text(shareText, style: Theme.of(context).textTheme.bodySmall),
             ]),
           ),
@@ -136,14 +185,6 @@ class SplitEditor extends StatelessWidget {
 
   static String _trim(double value) => value == value.roundToDouble() ? value.toInt().toString() : value.toString();
 
-  static String _hint(SplitMethod method) => switch (method) {
-        SplitMethod.equal => 'Everyone ticked pays the same share.',
-        SplitMethod.exact => 'Enter the exact amount each person owes; must add up to the total.',
-        SplitMethod.percent => 'Enter percentages adding up to 100.',
-        SplitMethod.shares => 'Enter shares, e.g. 2 for a couple and 1 for a single.',
-        SplitMethod.adjustment => 'Extras are charged first, the rest is split equally among ticked people.',
-        SplitMethod.byItem => 'Each item is split among the people who shared it.',
-      };
 }
 
 /// Default inputs for a method, so switching methods keeps a valid state.

@@ -61,7 +61,7 @@ void main() {
         method: SplitMethod.exact,
         inputs: const [SplitInput(memberId: a, amountMinor: 4000), SplitInput(memberId: b, amountMinor: 4000)],
       );
-      expect(bad.error, '₹20.00 left to assign');
+      expect(bad.error, const SplitError(SplitErrorCode.amountLeft, amountMinor: 2000));
       final good = computeSplit(
         totalMinor: 10000,
         method: SplitMethod.exact,
@@ -72,7 +72,7 @@ void main() {
     test('percent', () {
       expect(
         computeSplit(totalMinor: 10000, method: SplitMethod.percent, inputs: const [SplitInput(memberId: a, weight: 70), SplitInput(memberId: b, weight: 20)]).error,
-        '10% left to assign',
+        const SplitError(SplitErrorCode.percentLeft, percent: 10),
       );
       final out = computeSplit(
         totalMinor: 10001,

@@ -13,40 +13,40 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appName => 'हिसाब';
 
   @override
-  String get tabHome => 'घर';
+  String get tabHome => 'होम';
 
   @override
-  String get tabEntries => 'प्रविष्टियां';
+  String get tabEntries => 'लेन-देन';
 
   @override
-  String get tabGroups => 'समूह';
+  String get tabGroups => 'ग्रुप';
 
   @override
   String get tabSettings => 'सेटिंग्स';
 
   @override
-  String get cancel => 'रद्द करना';
+  String get cancel => 'रद्द करें';
 
   @override
-  String get save => 'बचाना';
+  String get save => 'सेव करें';
 
   @override
-  String get delete => 'मिटाना';
+  String get delete => 'हटाएँ';
 
   @override
-  String get remove => 'निकालना';
+  String get remove => 'निकालें';
 
   @override
-  String get edit => 'संपादन करना';
+  String get edit => 'बदलें';
 
   @override
   String get rename => 'नाम बदलें';
 
   @override
-  String get add => 'जोड़ना';
+  String get add => 'जोड़ें';
 
   @override
-  String get ignore => 'अनदेखा करना';
+  String get ignore => 'अनदेखा करें';
 
   @override
   String get allow => 'अनुमति दें';
@@ -61,7 +61,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get name => 'नाम';
 
   @override
-  String get note => 'टिप्पणी';
+  String get note => 'नोट';
 
   @override
   String get all => 'सभी';
@@ -87,25 +87,25 @@ class AppLocalizationsHi extends AppLocalizations {
   String get seeAll => 'सभी देखें';
 
   @override
-  String get manage => 'प्रबंधित करना';
+  String get manage => 'प्रबंधित करें';
 
   @override
-  String get kindExpense => 'व्यय';
+  String get kindExpense => 'खर्च';
 
   @override
   String get kindIncome => 'आय';
 
   @override
-  String get kindTransfer => 'स्थानांतरण';
+  String get kindTransfer => 'ट्रांसफ़र';
 
   @override
   String get kindExpenses => 'खर्च';
 
   @override
-  String get kindTransfers => 'स्थानांतरण';
+  String get kindTransfers => 'ट्रांसफ़र';
 
   @override
-  String get uncategorised => 'अवर्गीकृत';
+  String get uncategorised => 'बिना श्रेणी';
 
   @override
   String yourShareOf(String group) {
@@ -113,7 +113,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get sourceSms => 'SMS';
+  String get sourceSms => 'एसएमएस';
 
   @override
   String itemCount(int count) {
@@ -121,7 +121,7 @@ class AppLocalizationsHi extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count आइटम',
-      one: '1 समान',
+      one: '1 आइटम',
     );
     return '$_temp0';
   }
@@ -133,13 +133,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get accountTypeCard => 'क्रेडिट कार्ड';
 
   @override
-  String get accountTypeWallet => 'वॉलेट/यूपीआई';
+  String get accountTypeWallet => 'वॉलेट/UPI';
 
   @override
   String get accountTypeCash => 'नकद';
 
   @override
-  String get accounts => 'हिसाब किताब';
+  String get accounts => 'खाते';
 
   @override
   String get account => 'खाता';
@@ -151,10 +151,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get editAccount => 'खाता संपादित करें';
 
   @override
-  String get accountNameHint => 'एचडीएफसी सेविंग्स, पेटीएम, कैश';
+  String get accountNameHint => 'HDFC सेविंग्स, Paytm, नकद';
 
   @override
-  String get outstandingBalance => 'कार्ड पर बकाया राशि';
+  String get outstandingBalance => 'कार्ड पर बकाया';
 
   @override
   String cardDue(String amount) {
@@ -162,13 +162,13 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get currentBalance => 'वर्तमान शेष';
+  String get currentBalance => 'मौजूदा बैलेंस';
 
   @override
-  String get includeInTotal => 'कुल शेष में शामिल करें';
+  String get includeInTotal => 'कुल बैलेंस में शामिल करें';
 
   @override
-  String get excludedFromTotal => 'कुल से बाहर रखा गया';
+  String get excludedFromTotal => 'कुल से बाहर';
 
   @override
   String asOf(String date) {
@@ -176,15 +176,15 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get noAccountsTitle => 'अभी तक कोई खाता नहीं';
+  String get noAccountsTitle => 'अभी कोई खाता नहीं';
 
   @override
   String get noAccountsBody =>
-      'एसएमएस से पता लगाए गए बैंक खाते स्वचालित रूप से उनके रिपोर्ट किए गए शेष के साथ जुड़ जाते हैं। मैन्युअल प्रविष्टियाँ आपके द्वारा चुने गए खाते के शेष को समायोजित करती हैं।';
+      'बैंक एसएमएस से मिले खाते अपने बताए गए बैलेंस के साथ अपने-आप जुड़ जाते हैं। हाथ से जोड़े गए लेन-देन चुने हुए खाते का बैलेंस बदलते हैं।';
 
   @override
   String deleteNamed(String name) {
-    return '$name हटाएं?';
+    return '$name हटाएँ?';
   }
 
   @override
@@ -194,43 +194,43 @@ class AppLocalizationsHi extends AppLocalizations {
   String get budget => 'बजट';
 
   @override
-  String get overall => 'कुल मिलाकर';
+  String get overall => 'कुल';
 
   @override
-  String get category => 'वर्ग';
+  String get category => 'श्रेणी';
 
   @override
-  String get overallMonthlyBudget => 'कुल मिलाकर मासिक बजट';
+  String get overallMonthlyBudget => 'कुल मासिक बजट';
 
   @override
-  String get budgetForCategory => 'एक वर्ग के लिए बजट';
+  String get budgetForCategory => 'किसी श्रेणी का बजट';
 
   @override
-  String get overallMonthlyLimit => 'कुल मिलाकर मासिक सीमा';
+  String get overallMonthlyLimit => 'कुल मासिक सीमा';
 
   @override
   String categoryMonthlyLimit(String category) {
-    return '$category मासिक सीमा';
+    return '$category की मासिक सीमा';
   }
 
   @override
-  String get noBudgetsTitle => 'अभी कोई बजट नहीं है';
+  String get noBudgetsTitle => 'अभी कोई बजट नहीं';
 
   @override
   String get noBudgetsBody =>
-      'समग्र या प्रति श्रेणी एक मासिक सीमा निर्धारित करें। डैशबोर्ड गति दिखाता है और क्या बचा है।';
+      'कुल या श्रेणी के हिसाब से मासिक सीमा तय करें। होम पर दिखेगा कि कितना खर्च हुआ और कितना बचा है।';
 
   @override
-  String get removeBudgetQuestion => 'यह बजट निकालें?';
+  String get removeBudgetQuestion => 'यह बजट हटाएँ?';
 
   @override
   String budgetOverBy(String amount) {
-    return '$amount से अधिक';
+    return '$amount ज़्यादा';
   }
 
   @override
   String budgetLeftOf(String left, String limit) {
-    return '$limit में से $left बचे';
+    return '$limit में से $left बाकी';
   }
 
   @override
@@ -241,7 +241,7 @@ class AppLocalizationsHi extends AppLocalizations {
       other: '$days दिन',
       one: '1 दिन',
     );
-    return '$amount बचे · $_temp0';
+    return '$amount बाकी · $_temp0';
   }
 
   @override
@@ -272,13 +272,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get deleteCategoryBody =>
-      'मौजूदा प्रविष्टियाँ अपनी मात्रा रखती हैं लेकिन अवर्गीकृत हो जाती हैं।';
+      'मौजूदा लेन-देन की राशि बनी रहेगी, पर वे बिना श्रेणी के हो जाएँगे।';
 
   @override
-  String get archiveCategory => 'पुरालेख (पिकर से छिपाएँ)';
+  String get archiveCategory => 'आर्काइव करें (पिकर से छिपाएँ)';
 
   @override
-  String get unarchive => 'संग्रह से निकालें';
+  String get unarchive => 'आर्काइव से निकालें';
 
   @override
   String get newCategory => 'नई श्रेणी';
@@ -294,7 +294,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get unitsForItems => 'वस्तुओं के लिए इकाइयाँ (अल्पविराम से अलग)';
+  String get unitsForItems => 'आइटम की इकाइयाँ (कॉमा से अलग करें)';
 
   @override
   String get colour => 'रंग';
@@ -303,10 +303,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get icon => 'आइकन';
 
   @override
-  String get searchCategories => 'श्रेणियां खोजें';
+  String get searchCategories => 'श्रेणी खोजें';
 
   @override
-  String get noMatchingCategory => 'कोई मेल खाती श्रेणी नहीं';
+  String get noMatchingCategory => 'कोई मिलती-जुलती श्रेणी नहीं';
 
   @override
   String moreCount(int count) {
@@ -324,59 +324,59 @@ class AppLocalizationsHi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count समीक्षा के लिए एसएमएस करें',
-      one: 'समीक्षा के लिए 1 एसएमएस',
+      other: '$count एसएमएस समीक्षा के लिए',
+      one: '1 एसएमएस समीक्षा के लिए',
     );
     return '$_temp0';
   }
 
   @override
-  String get spentThisMonth => 'इस महीने बिताया';
+  String get spentThisMonth => 'इस महीने का खर्च';
 
   @override
   String get income => 'आय';
 
   @override
-  String get saved => 'सहेजा गया';
+  String get saved => 'बचत';
 
   @override
-  String get overspent => 'अधिव्यय';
+  String get overspent => 'ज़्यादा खर्च';
 
   @override
-  String get balances => 'शेष';
+  String get balances => 'बैलेंस';
 
   @override
-  String get spendingByCategory => 'श्रेणी के अनुसार खर्च';
+  String get spendingByCategory => 'श्रेणी के हिसाब से खर्च';
 
   @override
-  String get recent => 'हाल ही का';
+  String get recent => 'हाल के';
 
   @override
-  String get noEntriesThisMonthTitle => 'इस महीने कोई प्रविष्टि नहीं';
+  String get noEntriesThisMonthTitle => 'इस महीने कोई लेन-देन नहीं';
 
   @override
   String get noEntriesThisMonthBody =>
-      'अपना पहला खर्च जोड़ने के लिए + टैप करें, या सेटिंग्स में एसएमएस रीडिंग चालू करें।';
+      'पहला खर्च जोड़ने के लिए + दबाएँ, या सेटिंग्स में बैंक एसएमएस पढ़ना चालू करें।';
 
   @override
-  String get newEntry => 'नई प्रविष्टि';
+  String get newEntry => 'नया लेन-देन';
 
   @override
-  String get editEntry => 'प्रविष्टि संपादित करें';
+  String get editEntry => 'लेन-देन बदलें';
 
   @override
-  String get groupExpense => 'समूह व्यय';
+  String get groupExpense => 'ग्रुप खर्च';
 
   @override
-  String get deleteEntryQuestion => 'यह प्रविष्टि हटाएं?';
+  String get deleteEntryQuestion => 'यह लेन-देन हटाएँ?';
 
   @override
   String totalOfItems(int count) {
-    return 'कुल $count आइटम';
+    return '$count आइटम का कुल';
   }
 
   @override
-  String get chooseCategory => 'श्रेणी का चयन करें';
+  String get chooseCategory => 'श्रेणी चुनें';
 
   @override
   String get fromAccount => 'खाते से';
@@ -385,28 +385,28 @@ class AppLocalizationsHi extends AppLocalizations {
   String get toAccount => 'खाते में';
 
   @override
-  String get payeeLabel => 'को भुगतान किया गया/प्राप्त किया गया';
+  String get payeeLabel => 'किसे दिया / किससे मिला';
 
   @override
   String get smsEntryNotice =>
-      'एक बैंक एसएमएस से बनाया गया. इसे संपादित करने से आपका बैंक बैलेंस नहीं बदलेगा.';
+      'बैंक एसएमएस से बना है। इसे बदलने से बैंक बैलेंस नहीं बदलेगा।';
 
   @override
-  String get saving => 'सहेजा जा रहा है...';
+  String get saving => 'सेव हो रहा है…';
 
   @override
   String saveAmount(String amount) {
-    return '$amount सहेजें';
+    return '$amount सेव करें';
   }
 
   @override
   String get addAccount => 'खाता जोड़ें';
 
   @override
-  String get items => 'सामान';
+  String get items => 'आइटम';
 
   @override
-  String get addItem => 'मद जोड़ें';
+  String get addItem => 'आइटम जोड़ें';
 
   @override
   String itemSuggestion(String name, String quantity, String price) {
@@ -415,37 +415,37 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get itemsHelp =>
-      'वैकल्पिक: इस खर्च को मात्रा और कीमत के साथ आइटमों में विभाजित करें (उदाहरण के लिए भैंस का दूध 1 लीटर)। हिसाब उन्हें अगली बार याद रखेगा।';
+      'वैकल्पिक: इस खर्च को मात्रा और दाम के साथ आइटम में बाँटें (जैसे भैंस का दूध 1 लीटर)। हिसाब इन्हें अगली बार याद रखेगा।';
 
   @override
-  String get paidBy => 'द्वारा भुगतान किया गया';
+  String get paidBy => 'किसने दिया';
 
   @override
-  String get split => 'विभाजित करना';
+  String get split => 'बाँटें';
 
   @override
-  String get invalidAmount => 'सही राशि दर्ज करें, जैसे 250 या 99.50';
+  String get invalidAmount => 'सही राशि लिखें, जैसे 250 या 99.50';
 
   @override
-  String get errorAmountZero => 'शून्य से अधिक राशि दर्ज करें';
+  String get errorAmountZero => 'शून्य से ज़्यादा राशि लिखें';
 
   @override
-  String get errorPickCategory => 'एक श्रेणी चुनें';
+  String get errorPickCategory => 'श्रेणी चुनें';
 
   @override
-  String get errorPickBothAccounts => 'स्थानांतरण के लिए दोनों खाते चुनें';
+  String get errorPickBothAccounts => 'ट्रांसफ़र के लिए दोनों खाते चुनें';
 
   @override
-  String get errorItemName => 'प्रत्येक वस्तु को एक नाम की आवश्यकता होती है';
+  String get errorItemName => 'हर आइटम का नाम ज़रूरी है';
 
   @override
-  String get errorChoosePayer => 'चुनें कि किसने भुगतान किया';
+  String get errorChoosePayer => 'चुनें कि किसने दिया';
 
   @override
-  String get errorFixSplit => 'पहले विभाजन को ठीक करें';
+  String get errorFixSplit => 'पहले बँटवारा ठीक करें';
 
   @override
-  String get itemName => 'आइटम नाम';
+  String get itemName => 'आइटम का नाम';
 
   @override
   String get qty => 'मात्रा';
@@ -455,54 +455,54 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String pricePerUnit(String unit) {
-    return 'मूल्य प्रति $unit';
+    return 'दाम प्रति $unit';
   }
 
   @override
   String get genericUnit => 'इकाई';
 
   @override
-  String get shareSummary => 'सारांश साझा करें';
+  String get shareSummary => 'सारांश शेयर करें';
 
   @override
-  String get renameGroup => 'समूह का नाम बदलें';
+  String get renameGroup => 'ग्रुप का नाम बदलें';
 
   @override
-  String get deleteGroupBody => 'इस समूह में सभी खर्च हटा दिए जाएंगे.';
+  String get deleteGroupBody => 'इस ग्रुप के सभी खर्च हट जाएँगे।';
 
   @override
-  String get simplifyOn => 'ऋणों को सरल बनाएं चालू करें';
+  String get simplifyOn => 'उधार सरल करना चालू करें';
 
   @override
-  String get simplifyOff => 'ऋणों को सरल बनाना बंद करें';
+  String get simplifyOff => 'उधार सरल करना बंद करें';
 
   @override
-  String get deleteGroup => 'समूह हटाएँ';
+  String get deleteGroup => 'ग्रुप हटाएँ';
 
   @override
   String get addMemberFirst => 'पहले कम से कम एक और सदस्य जोड़ें';
 
   @override
-  String get addExpense => 'व्यय जोड़ें';
+  String get addExpense => 'खर्च जोड़ें';
 
   @override
-  String get members => 'सदस्यों';
+  String get members => 'सदस्य';
 
   @override
   String shareHeader(String group) {
-    return '$group - संतुलन';
+    return '$group — हिसाब';
   }
 
   @override
   String sharePays(String from, String to, String amount) {
-    return '$from भुगतान $to $amount';
+    return '$from $to को $amount देंगे';
   }
 
   @override
-  String get allSettledUp => 'सब व्यवस्थित हो गया.';
+  String get allSettledUp => 'सबका हिसाब बराबर है।';
 
   @override
-  String get sharedFromHisab => 'हिसाब से साझा किया गया';
+  String get sharedFromHisab => 'हिसाब ऐप से शेयर किया गया';
 
   @override
   String paidByPeople(String payer, int count) {
@@ -553,25 +553,25 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noGroupExpensesTitle => 'अभी कोई खर्च नहीं';
 
   @override
-  String get noGroupExpensesBody => 'नीचे दिए गए बटन से पहला साझा व्यय जोड़ें।';
+  String get noGroupExpensesBody => 'नीचे दिए बटन से पहला साझा खर्च जोड़ें।';
 
   @override
-  String get netBalances => 'शुद्ध शेष';
+  String get netBalances => 'कुल हिसाब';
 
   @override
-  String get getsBack => 'वापस हो जाता है';
+  String get getsBack => 'मिलेंगे';
 
   @override
-  String get owes => 'बकाया';
+  String get owes => 'देने हैं';
 
   @override
-  String get settleUp => 'सेटल हो';
+  String get settleUp => 'हिसाब चुकता करें';
 
   @override
-  String get settleUpSimplified => 'व्यवस्थित करें (सरलीकृत)';
+  String get settleUpSimplified => 'हिसाब चुकता करें (सरल)';
 
   @override
-  String get everyoneSettled => 'हर कोई व्यवस्थित हो गया है';
+  String get everyoneSettled => 'सबका हिसाब बराबर है';
 
   @override
   String transferArrow(String from, String to) {
@@ -579,15 +579,15 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get recordPayment => 'भुगतान रिकॉर्ड करें';
+  String get recordPayment => 'भुगतान दर्ज करें';
 
   @override
   String get settleBeforeRemove =>
-      'उन्हें हटाने से पहले इस सदस्य का संतुलन व्यवस्थित करें';
+      'इस सदस्य को निकालने से पहले उसका हिसाब बराबर करें';
 
   @override
   String removeNamed(String name) {
-    return '$name हटाएं?';
+    return '$name को निकालें?';
   }
 
   @override
@@ -601,41 +601,41 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get membersLocalNotice =>
-      'सदस्यों को इस डिवाइस पर संग्रहीत किया जाता है. आमंत्रण कोड के साथ साझा सिंक की योजना बनाई गई है; सेटिंग्स → सिंक देखें।';
+      'सदस्य इसी डिवाइस पर सहेजे जाते हैं। इनवाइट कोड से साझा सिंक की योजना है; सेटिंग्स → सिंक देखें।';
 
   @override
-  String get newGroup => 'नया समूह';
+  String get newGroup => 'नया ग्रुप';
 
   @override
-  String get groupName => 'समूह नाम';
+  String get groupName => 'ग्रुप का नाम';
 
   @override
-  String get groupNameHint => 'गोवा यात्रा, फ्लैट 302…';
+  String get groupNameHint => 'गोवा ट्रिप, फ़्लैट 302…';
 
   @override
-  String get membersCommaSeparated => 'सदस्य (अल्पविराम से अलग)';
+  String get membersCommaSeparated => 'सदस्य (कॉमा से अलग करें)';
 
   @override
   String get membersHint => 'राहुल, प्रिया, अमन';
 
   @override
-  String get createGroup => 'समूह बनाना';
+  String get createGroup => 'ग्रुप बनाएँ';
 
   @override
-  String get groups => 'समूह';
+  String get groups => 'ग्रुप';
 
   @override
-  String get noGroupsTitle => 'मित्रों के साथ बिल बाँटें';
+  String get noGroupsTitle => 'दोस्तों के साथ बिल बाँटें';
 
   @override
   String get noGroupsBody =>
-      'किसी यात्रा, फ्लैट या रात्रिभोज के लिए एक समूह बनाएं। खर्च जोड़ें, उन्हें समान रूप से, प्रतिशत, शेयर या सटीक मात्रा के आधार पर विभाजित करें और व्यवस्थित करें।';
+      'ट्रिप, फ़्लैट या डिनर के लिए ग्रुप बनाएँ। खर्च जोड़ें, उन्हें बराबर, प्रतिशत, शेयर या तय राशि में बाँटें और हिसाब चुकता करें।';
 
   @override
-  String get youAreOwed => 'आप पर बकाया है';
+  String get youAreOwed => 'आपको मिलने हैं';
 
   @override
-  String get youOwe => 'आप ऋणी हैं';
+  String get youOwe => 'आपको देने हैं';
 
   @override
   String groupSubtitle(int count, String amount) {
@@ -643,37 +643,37 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get youGet => 'आपको मिला';
+  String get youGet => 'आपको मिलेंगे';
 
   @override
-  String get youOweLower => 'आप ऋणी हैं';
+  String get youOweLower => 'आपको देने हैं';
 
   @override
   String get settings => 'सेटिंग्स';
 
   @override
-  String get appearance => 'उपस्थिति';
+  String get appearance => 'रूप-रंग';
 
   @override
-  String get themeSystem => 'प्रणाली';
+  String get themeSystem => 'सिस्टम';
 
   @override
-  String get themeLight => 'रोशनी';
+  String get themeLight => 'लाइट';
 
   @override
-  String get themeDark => 'अँधेरा';
+  String get themeDark => 'डार्क';
 
   @override
   String get language => 'भाषा';
 
   @override
-  String get languageSystem => 'डिवाइस भाषा';
+  String get languageSystem => 'डिवाइस की भाषा';
 
   @override
-  String get money => 'धन';
+  String get money => 'पैसा';
 
   @override
-  String get currencySymbol => 'मुद्रा चिन्ह';
+  String get currencySymbol => 'मुद्रा चिह्न';
 
   @override
   String get monthStartsOn => 'महीना शुरू होता है';
@@ -691,10 +691,10 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get monthStartPrompt => 'माह की शुरुआत दिन (1-28) से होती है';
+  String get monthStartPrompt => 'महीना किस दिन शुरू हो (1–28)';
 
   @override
-  String get automation => 'स्वचालन';
+  String get automation => 'ऑटोमेशन';
 
   @override
   String get bankSms => 'बैंक एसएमएस';
@@ -706,7 +706,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get off => 'बंद';
 
   @override
-  String get yourNameInGroups => 'समूहों में आपका नाम';
+  String get yourNameInGroups => 'ग्रुप में आपका नाम';
 
   @override
   String get yourName => 'आपका नाम';
@@ -718,137 +718,137 @@ class AppLocalizationsHi extends AppLocalizations {
   String get exportBackup => 'एन्क्रिप्टेड बैकअप निर्यात करें';
 
   @override
-  String get exportBackupHelp =>
-      'एईएस-256, आपके द्वारा चुने गए पासफ़्रेज़ द्वारा संरक्षित';
+  String get exportBackupHelp => 'AES-256, आपके चुने पासफ़्रेज़ से सुरक्षित';
 
   @override
-  String get restoreBackup => 'बैकअप से पुनर्स्थापित करें';
+  String get restoreBackup => 'बैकअप से वापस लाएँ';
 
   @override
-  String get restoreBackupHelp => 'विलय; नये स्थानीय संपादन रखे गये हैं';
+  String get restoreBackupHelp =>
+      'मिलाया जाता है; नए स्थानीय बदलाव बने रहते हैं';
 
   @override
   String get cloudSync => 'क्लाउड सिंक';
 
   @override
   String get cloudSyncHelp =>
-      'अगला: एंड्रॉइड पर Google ड्राइव, iOS पर iCloud, बैकअप के समान प्रारूप के साथ एंड-टू-एंड एन्क्रिप्टेड।';
+      'आगे: Android पर Google Drive, iOS पर iCloud, बैकअप जैसे ही फ़ॉर्मैट में एंड-टू-एंड एन्क्रिप्टेड।';
 
   @override
-  String get about => 'के बारे में';
+  String get about => 'ऐप के बारे में';
 
   @override
   String get aboutBody =>
-      'निःशुल्क, खुला स्रोत, कोई विज्ञापन नहीं, किसी खाते की आवश्यकता नहीं। आपका डेटा आपके डिवाइस पर रहता है.';
+      'मुफ़्त, ओपन सोर्स, कोई विज्ञापन नहीं, कोई अकाउंट नहीं। आपका डेटा आपके डिवाइस पर रहता है।';
 
   @override
   String get backupPassphrase => 'बैकअप पासफ़्रेज़';
 
   @override
   String get backupPassphraseHelp =>
-      'कम से कम 8 अक्षर; पुनर्स्थापित करने के लिए आपको इसकी आवश्यकता है';
+      'कम से कम 8 अक्षर; वापस लाने के लिए यही चाहिए होगा';
 
   @override
-  String get passphraseTooShort => 'कम से कम 8 अक्षरों का प्रयोग करें';
+  String get passphraseTooShort => 'कम से कम 8 अक्षर रखें';
 
   @override
   String get backupShareSubject => 'हिसाब एन्क्रिप्टेड बैकअप';
 
   @override
   String restoredRecords(int count) {
-    return '$count रिकॉर्ड पुनर्स्थापित किए गए';
+    return '$count रिकॉर्ड वापस लाए गए';
   }
 
   @override
   String restoreFailed(String error) {
-    return 'पुनर्स्थापना विफल: $error';
+    return 'वापस लाना विफल: $error';
   }
 
   @override
-  String get pasted => 'PASTED';
+  String get pasted => 'पेस्ट किया गया';
 
   @override
-  String get smsFoundReview => 'लेन-देन मिला. नीचे इसकी समीक्षा करें.';
+  String get smsFoundReview => 'लेन-देन मिला। नीचे समीक्षा करें।';
 
   @override
-  String get smsAdded => 'लेन-देन जोड़ा गया.';
+  String get smsAdded => 'लेन-देन जोड़ा गया।';
 
   @override
-  String get smsDuplicate => 'पहले ही आयात किया जा चुका है.';
+  String get smsDuplicate => 'पहले ही जोड़ा जा चुका है।';
 
   @override
-  String get smsNotFound => 'उस पाठ में कोई लेन-देन नहीं मिल सका.';
+  String get smsNotFound => 'इस टेक्स्ट में कोई लेन-देन नहीं मिला।';
 
   @override
   String get readBankSmsQuestion => 'बैंक एसएमएस पढ़ें?';
 
   @override
   String get smsConsentBody =>
-      'लेन-देन लॉग करने और खाते की शेष राशि दिखाने के लिए हिसाब आपके बैंक और यूपीआई ऐप्स से एसएमएस पढ़ता है। संदेशों को केवल इस डिवाइस पर संसाधित किया जाता है और कभी अपलोड नहीं किया जाता है। ओटीपी और प्रमोशनल एसएमएस को नजरअंदाज कर दिया जाता है। आप इसे किसी भी समय बंद कर सकते हैं.';
+      'लेन-देन दर्ज करने और खाते का बैलेंस दिखाने के लिए हिसाब आपके बैंक और UPI ऐप के एसएमएस पढ़ता है। संदेश सिर्फ़ इसी डिवाइस पर पढ़े जाते हैं और कभी अपलोड नहीं होते।';
 
   @override
-  String get smsPermissionDenied => 'एसएमएस की अनुमति नहीं दी गई';
+  String get smsPermissionDenied => 'एसएमएस की अनुमति नहीं मिली';
 
   @override
   String scanResult(int scanned, int added, int pending) {
-    return 'स्कैन किए गए $scanned संदेश: $added जोड़े गए, $pending समीक्षा की प्रतीक्षा में हैं।';
+    return '$scanned संदेश देखे: $added जोड़े गए, $pending समीक्षा के लिए बाकी।';
   }
 
   @override
-  String get readBankSmsAuto => 'बैंक एसएमएस स्वचालित रूप से पढ़ें';
+  String get readBankSmsAuto => 'बैंक एसएमएस अपने-आप पढ़ें';
 
   @override
   String get smsAndroidOnly =>
-      'केवल एंड्रॉइड. डिवाइस पर संसाधित, कभी अपलोड नहीं किया गया।';
+      'सिर्फ़ Android पर। डिवाइस पर ही पढ़े जाते हैं, कभी अपलोड नहीं होते।';
 
   @override
   String get smsNotOnIos =>
-      'आईओएस पर उपलब्ध नहीं है. शॉर्टकट का उपयोग करें या नीचे पेस्ट करें।';
+      'iOS पर उपलब्ध नहीं। शॉर्टकट इस्तेमाल करें या नीचे पेस्ट करें।';
 
   @override
-  String get smsAutoAddTitle => 'बिना समीक्षा के लेनदेन जोड़ें';
+  String get smsAutoAddTitle => 'बिना समीक्षा के लेन-देन जोड़ें';
 
   @override
   String get smsAutoAddHelp =>
-      'बंद: नया एसएमएस नीचे समीक्षा सूची में प्रतीक्षा करें।';
+      'बंद: नए एसएमएस नीचे समीक्षा सूची में रुकते हैं।';
 
   @override
   String get scanInboxNow => 'अभी इनबॉक्स स्कैन करें';
 
   @override
   String get scanInboxHelp =>
-      'पहली बार 90 दिन पीछे देखता हूँ, तो केवल नये सन्देश';
+      'पहली बार पिछले 90 दिन देखता है, फिर सिर्फ़ नए संदेश';
 
   @override
-  String get pasteSms => 'एक एसएमएस चिपकाएँ';
+  String get pasteSms => 'एसएमएस पेस्ट करें';
 
   @override
-  String get pasteSmsHelp => 'आईओएस और एंड्रॉइड पर काम करता है';
+  String get pasteSmsHelp => 'iOS और Android दोनों पर काम करता है';
 
   @override
-  String get pasteBankSms => 'बैंक एसएमएस चिपकाएँ';
+  String get pasteBankSms => 'बैंक एसएमएस पेस्ट करें';
 
   @override
-  String get pasteBankSmsHint => 'Rs.500 debited from A/c XX1234…';
+  String get pasteBankSmsHint =>
+      'Rs.500 debited from A/c XX1234… (बैंक का संदेश जैसा है वैसा)';
 
   @override
   String toReview(int count) {
-    return 'समीक्षा करने के लिए ($count)';
+    return 'समीक्षा के लिए ($count)';
   }
 
   @override
-  String get nothingWaitingTitle => 'कुछ भी इंतज़ार नहीं';
+  String get nothingWaitingTitle => 'कुछ बाकी नहीं';
 
   @override
-  String get nothingWaitingBody => 'नए बैंक लेनदेन यहां दिखाई देंगे.';
+  String get nothingWaitingBody => 'नए बैंक लेन-देन यहाँ दिखेंगे।';
 
   @override
   String get iosShortcutHelp =>
-      'iPhone: एक शॉर्टकट ऑटोमेशन बनाएं \"जब मुझे \'डेबिट\' वाला संदेश मिले\" → Hisab:///sms?text=[Message] के साथ \"URL खोलें\"। हिसाब खुलेगा और समीक्षा के लिए लेन-देन को कतारबद्ध करेगा।';
+      'iPhone: एक शॉर्टकट ऑटोमेशन बनाएँ \"जब मुझे \'debited\' वाला संदेश मिले\" → \"URL खोलें\" hisab://sms?text=[Message]। हिसाब खुलेगा और समीक्षा के लिए लेन-देन दिखाएगा।';
 
   @override
-  String get couldNotAddUseEdit =>
-      'इसे जोड़ा नहीं जा सका; संपादित करें का उपयोग करें';
+  String get couldNotAddUseEdit => 'जोड़ा नहीं जा सका; बदलें का इस्तेमाल करें';
 
   @override
   String addAmount(String amount) {
@@ -856,18 +856,18 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get splitDoesNotAddUp => 'बंटवारा नहीं जुड़ता';
+  String get splitDoesNotAddUp => 'बँटवारे का जोड़ कुल से मेल नहीं खाता';
 
   @override
   String splitsAcross(String amount, int count) {
-    return '$amount को $count लोगों में विभाजित करता है';
+    return '$amount को $count लोगों में बाँटता है';
   }
 
   @override
-  String get splitEqual => 'समान रूप से';
+  String get splitEqual => 'बराबर';
 
   @override
-  String get splitExact => 'सटीक मात्रा';
+  String get splitExact => 'तय राशि';
 
   @override
   String get splitPercent => 'प्रतिशत';
@@ -879,112 +879,110 @@ class AppLocalizationsHi extends AppLocalizations {
   String get splitAdjustment => 'समायोजन';
 
   @override
-  String get splitByItem => 'आइटम द्वारा';
+  String get splitByItem => 'आइटम के हिसाब से';
 
   @override
-  String get splitHelpEqual =>
-      'टिक किया हुआ प्रत्येक व्यक्ति समान हिस्से का भुगतान करता है।';
+  String get splitHelpEqual => 'हर चुना हुआ व्यक्ति बराबर हिस्सा देता है।';
 
   @override
   String get splitHelpExact =>
-      'प्रत्येक व्यक्ति पर बकाया राशि दर्ज करें; कुल में जोड़ना होगा.';
+      'हर व्यक्ति की राशि लिखें; जोड़ कुल के बराबर होना चाहिए।';
 
   @override
-  String get splitHelpPercent => '100 तक जोड़कर प्रतिशत दर्ज करें।';
+  String get splitHelpPercent => 'प्रतिशत लिखें, जोड़ 100 होना चाहिए।';
 
   @override
   String get splitHelpShares =>
-      'शेयर दर्ज करें, उदा. जोड़े के लिए 2 और एकल के लिए 1।';
+      'शेयर लिखें, जैसे जोड़े के लिए 2 और अकेले के लिए 1।';
 
   @override
   String get splitHelpAdjustment =>
-      'पहले अतिरिक्त शुल्क लिया जाता है, बाकी को टिक वाले लोगों के बीच समान रूप से विभाजित किया जाता है।';
+      'पहले अतिरिक्त राशि ली जाती है, बाकी चुने हुए लोगों में बराबर बँटती है।';
 
   @override
-  String get splitHelpByItem =>
-      'प्रत्येक आइटम को उसे साझा करने वाले लोगों के बीच विभाजित किया गया है।';
+  String get splitHelpByItem => 'हर आइटम उसे साझा करने वालों में बँटता है।';
 
   @override
-  String get entries => 'प्रविष्टियां';
+  String get entries => 'लेन-देन';
 
   @override
-  String get searchEntriesHint => 'आदाता, नोट, वस्तु या श्रेणी खोजें';
+  String get searchEntriesHint => 'नाम, नोट, आइटम या श्रेणी खोजें';
 
   @override
-  String get noEntriesTitle => 'अभी तक यहां कुछ भी नहीं है';
+  String get noEntriesTitle => 'अभी यहाँ कुछ नहीं';
 
   @override
   String get noEntriesBody =>
-      'इस महीने की प्रविष्टियाँ दिन के अनुसार समूहीकृत दिखाई देंगी।';
+      'इस महीने के लेन-देन दिन के हिसाब से यहाँ दिखेंगे।';
 
   @override
-  String get settled => 'बसे';
+  String get settled => 'हिसाब बराबर';
 
   @override
-  String get unitsHint => 'L, ml, kg';
+  String get unitsHint => 'ली, मिली, किलो';
 
   @override
   String get splitErrorNegativeTotal => 'राशि ऋणात्मक नहीं हो सकती';
 
   @override
-  String get splitErrorNobodyIncluded => 'कम से कम एक व्यक्ति का चयन करें';
+  String get splitErrorNobodyIncluded => 'कम से कम एक व्यक्ति चुनें';
 
   @override
   String get splitErrorNegativeAmounts => 'राशियाँ ऋणात्मक नहीं हो सकतीं';
 
   @override
   String splitErrorAmountLeft(String amount) {
-    return '$amount असाइन करना बाकी है';
+    return '$amount बाँटना बाकी है';
   }
 
   @override
   String splitErrorAmountOver(String amount) {
-    return '$amount कुल से अधिक';
+    return 'कुल से $amount ज़्यादा';
   }
 
   @override
-  String get splitErrorNegativeValues => 'मान नकारात्मक नहीं हो सकते';
+  String get splitErrorNegativeValues => 'मान ऋणात्मक नहीं हो सकते';
 
   @override
-  String get splitErrorPercentMustTotal => 'प्रतिशतों का योग 100 तक होना चाहिए';
+  String get splitErrorPercentMustTotal => 'प्रतिशत का जोड़ 100 होना चाहिए';
 
   @override
-  String get splitErrorNoShares => 'कम से कम एक शेयर दर्ज करें';
+  String get splitErrorNoShares => 'कम से कम एक शेयर लिखें';
 
   @override
   String splitErrorPercentLeft(String percent) {
-    return '$percent% असाइन करना बाकी है';
+    return '$percent% बाँटना बाकी है';
   }
 
   @override
   String splitErrorPercentOver(String percent) {
-    return '100 से अधिक $percent%';
+    return '100 से $percent% ज़्यादा';
   }
 
   @override
   String splitErrorAdjustmentsExceed(String amount) {
-    return 'समायोजन कुल $amount से अधिक है';
+    return 'समायोजन कुल $amount से ज़्यादा है';
   }
 
   @override
   String get splitErrorAdjustmentNegativeShare =>
-      'एक समायोजन किसी शेयर को नकारात्मक बना देता है';
+      'एक समायोजन से किसी का हिस्सा ऋणात्मक हो जाता है';
 
   @override
   String get splitErrorNoItems => 'कम से कम एक आइटम जोड़ें';
 
   @override
   String splitErrorItemsExceed(String amount) {
-    return 'आइटम कुल से $amount अधिक हैं';
+    return 'आइटम कुल से $amount ज़्यादा हैं';
   }
 
   @override
   String splitErrorItemUnassigned(String item) {
-    return 'किसी को \"$item\" असाइन करें';
+    return '\"$item\" किसी को दें';
   }
 
   @override
-  String get genericItem => 'वस्तु';
+  String get genericItem => 'आइटम';
 
   @override
   String get today => 'आज';

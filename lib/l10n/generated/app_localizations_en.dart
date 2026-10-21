@@ -108,6 +108,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uncategorised => 'Uncategorised';
 
   @override
+  String yourShareOf(String group) {
+    return '$group · your share';
+  }
+
+  @override
   String get sourceSms => 'SMS';
 
   @override

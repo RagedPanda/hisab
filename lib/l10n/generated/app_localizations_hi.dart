@@ -108,6 +108,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get uncategorised => 'अवर्गीकृत';
 
   @override
+  String yourShareOf(String group) {
+    return '$group · आपका हिस्सा';
+  }
+
+  @override
   String get sourceSms => 'SMS';
 
   @override

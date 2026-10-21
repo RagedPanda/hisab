@@ -36,6 +36,8 @@
   "kindExpenses": "Expenses",
   "kindTransfers": "Transfers",
   "uncategorised": "Uncategorised",
+  "yourShareOf": "{group} · your share",
+  "@yourShareOf": {"placeholders": {"group": {"type": "String"}}},
   "sourceSms": "SMS",
   "itemCount": "{count, plural, =1{1 item} other{{count} items}}",
   "@itemCount": {"placeholders": {"count": {"type": "int"}}},

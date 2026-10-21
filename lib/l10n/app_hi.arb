@@ -32,6 +32,7 @@
   "kindExpenses": "खर्च",
   "kindTransfers": "स्थानांतरण",
   "uncategorised": "अवर्गीकृत",
+  "yourShareOf": "{group} · आपका हिस्सा",
   "sourceSms": "SMS",
   "itemCount": "{count, plural, =1{1 समान} other{{count} आइटम}}",
   "accountTypeBank": "बैंक खाता",

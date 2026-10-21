@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../core/dates.dart';
 import '../../core/ids.dart';
+import '../../domain/ledger/personal_totals.dart';
 import '../db/database.dart';
 
 /// An entry with the rows the UI needs alongside it.
@@ -11,13 +12,28 @@ class EntryDetails {
     required this.items,
     this.category,
     this.account,
+    this.toAccount,
+    this.group,
+    this.myShareMinor,
     this.splits = const [],
   });
   final Entry entry;
   final List<EntryItem> items;
   final Category? category;
   final Account? account;
+  final Account? toAccount;
+  final Group? group;
+
+  /// My split of a group entry; null for personal entries or when I have no share.
+  final int? myShareMinor;
   final List<Split> splits;
+
+  bool get isGroupEntry => entry.groupId != null;
+
+  /// What this entry costs me: the full amount, or my share of a group entry.
+  int get myAmountMinor => myAmountMinorOf(amountMinor: entry.amountMinor, isGroupEntry: isGroupEntry, myShareMinor: myShareMinor);
+
+  LedgerLine get ledgerLine => LedgerLine(kind: entry.kind, amountMinor: myAmountMinor, occurredAt: entry.occurredAt, categoryId: category?.id);
 }
 
 /// A remembered item for a category: what the user bought last time.
@@ -40,26 +56,43 @@ class EntriesRepository {
   EntriesRepository(this.db);
   final AppDatabase db;
 
+  late final $AccountsTable _toAccounts = db.alias(db.accounts, 'to_accounts');
+  late final $SplitsTable _mySplits = db.alias(db.splits, 'my_splits');
+
+  /// Ids of the "me" member in every group, for picking out my split.
+  BaseSelectStatement get _myMemberIds => db.selectOnly(db.members)
+    ..addColumns([db.members.id])
+    ..where(db.members.isMe.equals(true) & db.members.deletedAt.isNull());
+
+  /// Entries joined with everything [EntryDetails] shows. A deleted category
+  /// joins as null so the row reads "Uncategorised".
+  JoinedSelectStatement<HasResultSet, dynamic> _detailsQuery() => db.select(db.entries).join([
+        leftOuterJoin(db.categories, db.categories.id.equalsExp(db.entries.categoryId) & db.categories.deletedAt.isNull()),
+        leftOuterJoin(db.accounts, db.accounts.id.equalsExp(db.entries.accountId)),
+        leftOuterJoin(_toAccounts, _toAccounts.id.equalsExp(db.entries.toAccountId)),
+        leftOuterJoin(db.groups, db.groups.id.equalsExp(db.entries.groupId)),
+        leftOuterJoin(_mySplits, _mySplits.entryId.equalsExp(db.entries.id) & _mySplits.deletedAt.isNull() & _mySplits.memberId.isInQuery(_myMemberIds)),
+      ]);
+
+  /// [myLedger] keeps personal entries plus the group entries I have a share
+  /// in, so month lists and totals reflect what I actually spent.
   Stream<List<EntryDetails>> watchEntries({
     DateRange? range,
     String? groupId,
-    bool personalOnly = false,
+    bool myLedger = false,
     String? accountId,
     String? categoryId,
     String? search,
     int? limit,
   }) {
-    final query = db.select(db.entries).join([
-      leftOuterJoin(db.categories, db.categories.id.equalsExp(db.entries.categoryId)),
-      leftOuterJoin(db.accounts, db.accounts.id.equalsExp(db.entries.accountId)),
-    ]);
+    final query = _detailsQuery();
     final conditions = <Expression<bool>>[db.entries.deletedAt.isNull()];
     if (range != null) {
       conditions.add(db.entries.occurredAt.isBiggerOrEqualValue(range.start));
       conditions.add(db.entries.occurredAt.isSmallerThanValue(range.end));
     }
     if (groupId != null) conditions.add(db.entries.groupId.equals(groupId));
-    if (personalOnly) conditions.add(db.entries.groupId.isNull());
+    if (myLedger) conditions.add(db.entries.groupId.isNull() | _mySplits.id.isNotNull());
     if (accountId != null) {
       conditions.add(db.entries.accountId.equals(accountId) | db.entries.toAccountId.equals(accountId));
     }
@@ -97,17 +130,16 @@ class EntriesRepository {
           entry: row.readTable(db.entries),
           category: row.readTableOrNull(db.categories),
           account: row.readTableOrNull(db.accounts),
+          toAccount: row.readTableOrNull(_toAccounts),
+          group: row.readTableOrNull(db.groups),
+          myShareMinor: row.readTableOrNull(_mySplits)?.amountMinor,
           items: items.where((i) => i.entryId == row.readTable(db.entries).id).toList(),
           splits: splits.where((s) => s.entryId == row.readTable(db.entries).id).toList(),
         ),
     ];
   }
 
-  JoinedSelectStatement<HasResultSet, dynamic> _byIdQuery(String id) => db.select(db.entries).join([
-        leftOuterJoin(db.categories, db.categories.id.equalsExp(db.entries.categoryId)),
-        leftOuterJoin(db.accounts, db.accounts.id.equalsExp(db.entries.accountId)),
-      ])
-        ..where(db.entries.id.equals(id));
+  JoinedSelectStatement<HasResultSet, dynamic> _byIdQuery(String id) => _detailsQuery()..where(db.entries.id.equals(id));
 
   Future<EntryDetails?> getEntry(String id) async {
     final list = await _hydrate(await _byIdQuery(id).get());
@@ -158,57 +190,19 @@ class EntriesRepository {
     });
   }
 
-  /// Total minor units per category id for expenses (or income) in [range].
-  Stream<Map<String, int>> watchCategoryTotals(DateRange range, {String kind = 'expense'}) {
-    final sum = db.entries.amountMinor.sum();
-    final query = db.selectOnly(db.entries)
-      ..addColumns([db.entries.categoryId, sum])
-      ..where(db.entries.deletedAt.isNull() &
-          db.entries.kind.equals(kind) &
-          db.entries.groupId.isNull() &
-          db.entries.occurredAt.isBiggerOrEqualValue(range.start) &
-          db.entries.occurredAt.isSmallerThanValue(range.end))
-      ..groupBy([db.entries.categoryId]);
-    return query.watch().map((rows) => {
-          for (final row in rows) row.read(db.entries.categoryId) ?? '': row.read(sum) ?? 0,
-        });
-  }
+  Stream<List<LedgerLine>> _watchMyLedgerLines(DateRange range) =>
+      watchEntries(range: range, myLedger: true).map((list) => [for (final d in list) d.ledgerLine]);
 
-  /// (expense, income) totals for personal entries in [range].
-  Stream<({int expense, int income})> watchTotals(DateRange range) {
-    final sum = db.entries.amountMinor.sum();
-    final query = db.selectOnly(db.entries)
-      ..addColumns([db.entries.kind, sum])
-      ..where(db.entries.deletedAt.isNull() &
-          db.entries.groupId.isNull() &
-          db.entries.occurredAt.isBiggerOrEqualValue(range.start) &
-          db.entries.occurredAt.isSmallerThanValue(range.end))
-      ..groupBy([db.entries.kind]);
-    return query.watch().map((rows) {
-      var expense = 0;
-      var income = 0;
-      for (final row in rows) {
-        final kind = row.read(db.entries.kind);
-        final total = row.read(sum) ?? 0;
-        if (kind == 'expense') expense = total;
-        if (kind == 'income') income = total;
-      }
-      return (expense: expense, income: income);
-    });
-  }
+  /// Total minor units per category id for expenses (or income) in [range],
+  /// counting my share of group entries. Deleted categories key on ''.
+  Stream<Map<String, int>> watchCategoryTotals(DateRange range, {String kind = 'expense'}) =>
+      _watchMyLedgerLines(range).map((lines) => totalsByCategory(lines, kind: kind));
 
-  /// Expense total per calendar day in [range], keyed by yyyy-mm-dd.
-  Stream<Map<DateTime, int>> watchDailyExpense(DateRange range) {
-    return watchEntries(range: range, personalOnly: true).map((list) {
-      final totals = <DateTime, int>{};
-      for (final details in list) {
-        if (details.entry.kind != 'expense') continue;
-        final day = startOfDay(details.entry.occurredAt);
-        totals.update(day, (v) => v + details.entry.amountMinor, ifAbsent: () => details.entry.amountMinor);
-      }
-      return totals;
-    });
-  }
+  /// (expense, income) totals for what I spent and earned in [range].
+  Stream<({int expense, int income})> watchTotals(DateRange range) => _watchMyLedgerLines(range).map(totalsByKind);
+
+  /// Expense total per calendar day in [range].
+  Stream<Map<DateTime, int>> watchDailyExpense(DateRange range) => _watchMyLedgerLines(range).map(expenseByDay);
 
   /// Items previously entered under [categoryId], most used first.
   Future<List<ItemSuggestion>> itemSuggestions(String categoryId, {int limit = 12}) async {

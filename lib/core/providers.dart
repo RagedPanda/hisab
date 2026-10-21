@@ -66,7 +66,7 @@ final pendingSmsProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryPro
 
 final monthEntriesProvider = StreamProvider((ref) {
   final range = ref.watch(selectedRangeProvider);
-  return ref.watch(entriesRepositoryProvider).watchEntries(range: range, personalOnly: true);
+  return ref.watch(entriesRepositoryProvider).watchEntries(range: range, myLedger: true);
 });
 final monthTotalsProvider = StreamProvider((ref) {
   final range = ref.watch(selectedRangeProvider);

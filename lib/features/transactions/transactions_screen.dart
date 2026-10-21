@@ -88,7 +88,7 @@ class TransactionsScreen extends ConsumerWidget {
                         itemCount: groups.length,
                         itemBuilder: (context, index) {
                           final group = groups[index];
-                          final dayTotal = group.entries.where((d) => d.entry.kind == 'expense').fold(0, (sum, d) => sum + d.entry.amountMinor);
+                          final dayTotal = group.entries.where((d) => d.entry.kind == 'expense').fold(0, (sum, d) => sum + d.myAmountMinor);
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

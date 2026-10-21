@@ -74,6 +74,7 @@ class EntryTile extends StatelessWidget {
     final subtitleParts = <String>[
       if (categoryName != null && title != categoryName) categoryName,
       if (details.items.isNotEmpty) l10n.itemCount(details.items.length),
+      if (details.group != null) l10n.yourShareOf(details.group!.name),
       if (details.account != null) details.account!.name,
       if (entry.source == 'sms') l10n.sourceSms,
       if (showDate) formatShortDate(entry.occurredAt, locale: Localizations.localeOf(context).toString()),
@@ -86,7 +87,7 @@ class EntryTile extends StatelessWidget {
       ),
       title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: subtitleParts.isEmpty ? null : Text(subtitleParts.join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: AmountText(entry.amountMinor, kind: entry.kind),
+      trailing: AmountText(details.myAmountMinor, kind: entry.kind),
     );
   }
 }

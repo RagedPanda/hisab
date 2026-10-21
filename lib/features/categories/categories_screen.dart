@@ -122,6 +122,7 @@ Future<void> showCategoryForm(BuildContext context, WidgetRef ref, {required Str
   final existingName = existing?.displayName(context);
   return showModalBottomSheet(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,

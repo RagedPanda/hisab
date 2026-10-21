@@ -8,6 +8,16 @@ const Color kAccentColor = Color(0xFFF2A33A);
 const Color kExpenseColor = Color(0xFFD9534F);
 const Color kIncomeColor = Color(0xFF2E9E6B);
 
+/// Light scaffold / splash background, mirrored in android res (splash_background).
+const Color kLightBackground = Color(0xFFF6F8F7);
+
+/// Fixed-width digits so amounts line up in rows and legends (P3-14).
+const List<FontFeature> kTabularFigures = [FontFeature.tabularFigures()];
+
+extension MoneyText on TextStyle {
+  TextStyle get tabular => copyWith(fontFeatures: kTabularFigures);
+}
+
 ThemeData buildTheme(Brightness brightness) {
   final scheme = ColorScheme.fromSeed(
     seedColor: kSeedColor,
@@ -15,18 +25,23 @@ ThemeData buildTheme(Brightness brightness) {
     brightness: brightness,
   );
   final base = ThemeData(colorScheme: scheme, useMaterial3: true);
+  final isDark = brightness == Brightness.dark;
+  final scaffoldColor = isDark ? scheme.surface : kLightBackground;
   return base.copyWith(
-    scaffoldBackgroundColor: brightness == Brightness.light ? const Color(0xFFF6F8F7) : null,
+    scaffoldBackgroundColor: scaffoldColor,
     cardTheme: CardThemeData(
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: scheme.surfaceContainerLow,
+      // One step above the scaffold in dark mode so cards keep their edges (P2-21).
+      color: isDark ? scheme.surfaceContainer : scheme.surfaceContainerLow,
     ),
     appBarTheme: AppBarTheme(
       centerTitle: false,
-      backgroundColor: Colors.transparent,
-      surfaceTintColor: Colors.transparent,
+      backgroundColor: scaffoldColor,
+      surfaceTintColor: scheme.surfaceTint,
+      scrolledUnderElevation: 2,
+      shadowColor: Colors.transparent,
       foregroundColor: scheme.onSurface,
       systemOverlayStyle: brightness == Brightness.dark
           ? SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent)
@@ -35,13 +50,25 @@ ThemeData buildTheme(Brightness brightness) {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: scheme.surfaceContainerLow,
+      fillColor: scheme.surfaceContainerHigh,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
     ),
+    bottomSheetTheme: BottomSheetThemeData(backgroundColor: scheme.surface, surfaceTintColor: Colors.transparent),
     chipTheme: base.chipTheme.copyWith(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      side: BorderSide.none,
+      // Unselected chips get an outline so they read as controls; the fill alone marks selection (P2-9).
+      side: WidgetStateBorderSide.resolveWith(
+        (states) => states.contains(WidgetState.selected) ? BorderSide.none : BorderSide(color: scheme.outlineVariant),
+      ),
+      backgroundColor: scheme.surface,
+      selectedColor: scheme.secondaryContainer,
+      labelStyle: base.textTheme.labelLarge?.copyWith(color: scheme.onSurface),
+      showCheckmark: false,
     ),
+    pageTransitionsTheme: const PageTransitionsTheme(builders: {
+      TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.iOS: ZoomPageTransitionsBuilder(),
+    }),
     navigationBarTheme: NavigationBarThemeData(
       indicatorColor: scheme.primaryContainer,
       labelTextStyle: WidgetStatePropertyAll(base.textTheme.labelMedium),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/app_icons.dart';
+import '../../../core/theme.dart';
 import '../../../core/format.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
@@ -49,7 +50,7 @@ class AmountText extends StatelessWidget {
     final prefix = !signed ? '' : switch (kind) { 'income' => '+', 'expense' => '-', _ => '' };
     return Text(
       '$prefix${formatMinor(minor, symbol: symbol)}',
-      style: (style ?? Theme.of(context).textTheme.bodyLarge)?.copyWith(color: color, fontWeight: FontWeight.w600),
+      style: (style ?? Theme.of(context).textTheme.bodyLarge)?.copyWith(color: color, fontWeight: FontWeight.w600).tabular,
     );
   }
 }

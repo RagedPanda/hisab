@@ -13,6 +13,7 @@ Future<void> showGroupForm(BuildContext context, WidgetRef ref) {
   var icon = groupIcons.first;
   return showModalBottomSheet(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,

@@ -70,7 +70,7 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Text(context.l10n.spentThisMonth, style: TextStyle(color: scheme.onPrimary.withValues(alpha: 0.85))),
           const SizedBox(height: 4),
-          Text(formatMinor(expense, symbol: symbol), style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: scheme.onPrimary, fontWeight: FontWeight.w800)),
+          Text(formatMinor(expense, symbol: symbol), style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: scheme.onPrimary, fontWeight: FontWeight.w800).tabular),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -96,7 +96,7 @@ class _Stat extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 12)),
-          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 16)),
+          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 16, fontFeatures: kTabularFigures)),
         ],
       );
 }

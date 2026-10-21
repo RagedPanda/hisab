@@ -73,6 +73,7 @@ class AccountsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     return showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
@@ -124,8 +125,10 @@ class AccountsScreen extends ConsumerWidget {
                     },
                     child: Text(l10n.delete),
                   ),
-                const Spacer(),
-                FilledButton(
+                if (existing != null) const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
                   onPressed: () async {
                     final name = nameController.text.trim();
                     if (name.isEmpty) return;
@@ -147,6 +150,7 @@ class AccountsScreen extends ConsumerWidget {
                     if (sheetContext.mounted) Navigator.pop(sheetContext);
                   },
                   child: Text(l10n.save),
+                  ),
                 ),
               ]),
             ],

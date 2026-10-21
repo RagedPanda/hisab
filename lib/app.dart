@@ -27,8 +27,8 @@ class HisabApp extends ConsumerWidget {
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       themeMode: settings.themeMode,
-      themeAnimationDuration: const Duration(milliseconds: 250),
-      themeAnimationCurve: Curves.easeInOut,
+      themeAnimationDuration: const Duration(milliseconds: 300),
+      themeAnimationCurve: Curves.easeOutCubic,
       routerConfig: appRouter,
     );
   }

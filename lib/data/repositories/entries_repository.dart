@@ -84,6 +84,20 @@ class EntriesRepository {
     String? categoryId,
     String? search,
     int? limit,
+  }) =>
+      _filteredQuery(range: range, groupId: groupId, myLedger: myLedger, accountId: accountId, categoryId: categoryId, search: search, limit: limit)
+          .watch()
+          .asyncMap(_hydrate);
+
+  /// The joined entry rows matching the filters, newest first.
+  JoinedSelectStatement<HasResultSet, dynamic> _filteredQuery({
+    DateRange? range,
+    String? groupId,
+    bool myLedger = false,
+    String? accountId,
+    String? categoryId,
+    String? search,
+    int? limit,
   }) {
     final query = _detailsQuery();
     final conditions = <Expression<bool>>[db.entries.deletedAt.isNull()];
@@ -107,9 +121,26 @@ class EntriesRepository {
     query.where(conditions.reduce((a, b) => a & b));
     query.orderBy([OrderingTerm.desc(db.entries.occurredAt), OrderingTerm.desc(db.entries.createdAt)]);
     if (limit != null) query.limit(limit);
-
-    return query.watch().asyncMap(_hydrate);
+    return query;
   }
+
+  /// My ledger in [range] reduced to the fields the roll-ups need: one query,
+  /// no item or split hydration, so dashboards stay cheap at thousands of rows.
+  Stream<List<LedgerLine>> watchLedgerLines(DateRange range) => _filteredQuery(range: range, myLedger: true).watch().map(_toLedgerLines);
+
+  List<LedgerLine> _toLedgerLines(List<TypedResult> rows) => [
+        for (final row in rows)
+          LedgerLine(
+            kind: row.readTable(db.entries).kind,
+            amountMinor: myAmountMinorOf(
+              amountMinor: row.readTable(db.entries).amountMinor,
+              isGroupEntry: row.readTable(db.entries).groupId != null,
+              myShareMinor: row.readTableOrNull(_mySplits)?.amountMinor,
+            ),
+            occurredAt: row.readTable(db.entries).occurredAt,
+            categoryId: row.readTableOrNull(db.categories)?.id,
+          ),
+      ];
 
   /// Loads items and splits for joined entry rows in two queries, not per row.
   Future<List<EntryDetails>> _hydrate(List<TypedResult> rows) async {
@@ -190,19 +221,16 @@ class EntriesRepository {
     });
   }
 
-  Stream<List<LedgerLine>> _watchMyLedgerLines(DateRange range) =>
-      watchEntries(range: range, myLedger: true).map((list) => [for (final d in list) d.ledgerLine]);
-
   /// Total minor units per category id for expenses (or income) in [range],
   /// counting my share of group entries. Deleted categories key on ''.
   Stream<Map<String, int>> watchCategoryTotals(DateRange range, {String kind = 'expense'}) =>
-      _watchMyLedgerLines(range).map((lines) => totalsByCategory(lines, kind: kind));
+      watchLedgerLines(range).map((lines) => totalsByCategory(lines, kind: kind));
 
   /// (expense, income) totals for what I spent and earned in [range].
-  Stream<({int expense, int income})> watchTotals(DateRange range) => _watchMyLedgerLines(range).map(totalsByKind);
+  Stream<({int expense, int income})> watchTotals(DateRange range) => watchLedgerLines(range).map(totalsByKind);
 
   /// Expense total per calendar day in [range].
-  Stream<Map<DateTime, int>> watchDailyExpense(DateRange range) => _watchMyLedgerLines(range).map(expenseByDay);
+  Stream<Map<DateTime, int>> watchDailyExpense(DateRange range) => watchLedgerLines(range).map(expenseByDay);
 
   /// Items previously entered under [categoryId], most used first.
   Future<List<ItemSuggestion>> itemSuggestions(String categoryId, {int limit = 12}) async {

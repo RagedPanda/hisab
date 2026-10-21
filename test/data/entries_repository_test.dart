@@ -82,4 +82,27 @@ void main() {
     expect(row.account?.name, 'HDFC');
     expect(row.toAccount?.name, 'Cash');
   });
+
+  test('ledger lines carry my share of group entries and key deleted categories on null', () async {
+    final groups = GroupsRepository(db);
+    final groupId = await groups.createGroup(name: 'Trip', icon: 'beach', myName: '', otherMembers: ['Priya']);
+    final members = await groups.getMembers(groupId);
+    final me = members.firstWhere((member) => member.isMe);
+    final other = members.firstWhere((member) => !member.isMe);
+    final groupEntryId = newId();
+    await entries.saveEntry(
+      EntriesRepository.newExpense(id: groupEntryId, amountMinor: 50000, occurredAt: DateTime(2026, 10, 9), groupId: groupId, paidByMemberId: me.id, splitMethod: 'equal'),
+      splits: [
+        SplitsCompanion.insert(id: newId(), entryId: groupEntryId, memberId: me.id, amountMinor: 20000),
+        SplitsCompanion.insert(id: newId(), entryId: groupEntryId, memberId: other.id, amountMinor: 30000),
+      ],
+    );
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 7000, occurredAt: DateTime(2026, 10, 2)));
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 9000, occurredAt: DateTime(2026, 9, 30)));
+
+    final lines = await entries.watchLedgerLines(range).first;
+    expect(lines.map((line) => line.amountMinor), [20000, 7000]);
+    expect(lines.every((line) => line.categoryId == null), isTrue);
+    expect(await entries.watchTotals(range).first, (expense: 27000, income: 0));
+  });
 }

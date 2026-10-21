@@ -10,6 +10,7 @@ import '../../data/repositories/categories_repository.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import 'subcategory_preview.dart';
 
 class CategoriesScreen extends ConsumerStatefulWidget {
   const CategoriesScreen({super.key});
@@ -59,7 +60,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                       shape: const Border(),
                       leading: IconBadge(icon: node.category.icon, color: node.category.color),
                       title: Text(node.category.displayName(context), style: TextStyle(fontWeight: FontWeight.w600, decoration: node.category.isArchived ? TextDecoration.lineThrough : null)),
-                      subtitle: Text(l10n.subcategoryCount(node.children.length)),
+                      subtitle: node.children.isEmpty ? null : Text(subcategoryPreview(context, node), maxLines: 1, overflow: TextOverflow.ellipsis),
                       trailing: _menu(context, node.category),
                       children: [
                         for (final child in node.children)

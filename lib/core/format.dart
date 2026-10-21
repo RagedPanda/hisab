@@ -38,3 +38,11 @@ String formatQuantity(double quantity, String? unit) {
   final text = quantity == quantity.roundToDouble() ? quantity.toInt().toString() : quantity.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '');
   return unit == null || unit.isEmpty ? text : '$text $unit';
 }
+
+/// Joins the first [max] names with ", " and appends [overflow] for the rest:
+/// ["a","b","c","d"] with max 3 becomes "a, b, c, +1".
+String joinWithOverflow(Iterable<String> names, {required int max, required String Function(int remaining) overflow}) {
+  final list = names.toList();
+  if (list.length <= max) return list.join(', ');
+  return '${list.take(max).join(', ')}, ${overflow(list.length - max)}';
+}

@@ -63,7 +63,8 @@ class SettingsScreen extends ConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.currency_rupee),
                 title: Text(l10n.currencySymbol),
-                trailing: Text(settings.currencySymbol, style: Theme.of(context).textTheme.titleMedium),
+                trailing: SettingValue(settings.currencySymbol),
+                visualDensity: VisualDensity.compact,
                 onTap: () async {
                   final symbol = await promptText(context, title: l10n.currencySymbol, initial: settings.currencySymbol, hint: '₹, \$, €');
                   if (symbol != null && symbol.isNotEmpty) await notifier.update((s) => s.copyWith(currencySymbol: symbol));
@@ -72,10 +73,11 @@ class SettingsScreen extends ConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.calendar_month_outlined),
                 title: Text(l10n.monthStartsOn),
-                subtitle: Text(l10n.monthStartsOnHelp),
-                trailing: Text(l10n.dayNumber(settings.monthStartDay)),
+                subtitle: Text(l10n.monthStartsOnHelp, maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: SettingValue(l10n.dayNumber(settings.monthStartDay)),
+                visualDensity: VisualDensity.compact,
                 onTap: () async {
-                  final text = await promptText(context, title: l10n.monthStartPrompt, initial: '${settings.monthStartDay}', keyboardType: TextInputType.number);
+                  final text = await promptText(context, title: l10n.monthStartPrompt, hint: l10n.monthStartsOnExplain, initial: '${settings.monthStartDay}', keyboardType: TextInputType.number);
                   final day = int.tryParse(text ?? '');
                   if (day != null && day >= 1 && day <= 28) await notifier.update((s) => s.copyWith(monthStartDay: day));
                 },
@@ -100,7 +102,8 @@ class SettingsScreen extends ConsumerWidget {
             child: ListTile(
               leading: const Icon(Icons.person_outline),
               title: Text(l10n.yourNameInGroups),
-              trailing: Text(resolvedMyName(l10n, settings)),
+              trailing: SettingValue(resolvedMyName(l10n, settings)),
+              visualDensity: VisualDensity.compact,
               onTap: () async {
                 final name = await promptText(context, title: l10n.yourName, initial: resolvedMyName(l10n, settings));
                 if (name == null || name.trim().isEmpty) return;

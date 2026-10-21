@@ -263,17 +263,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get categories => 'श्रेणियाँ';
 
   @override
-  String subcategoryCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count उपश्रेणियाँ',
-      one: '1 उपश्रेणी',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String unitsLabel(String units) {
     return 'इकाइयाँ: $units';
   }
@@ -320,9 +309,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noMatchingCategory => 'कोई मेल खाती श्रेणी नहीं';
 
   @override
-  String categoryGeneral(String parent) {
-    return '$parent (सामान्य)';
+  String moreCount(int count) {
+    return '+$count';
   }
+
+  @override
+  String get expand => 'खोलें';
+
+  @override
+  String get collapse => 'बंद करें';
 
   @override
   String smsToReview(int count) {
@@ -684,8 +679,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get monthStartsOn => 'महीना शुरू होता है';
 
   @override
-  String get monthStartsOnHelp =>
-      'अपनी वेतन तिथि का उपयोग करें ताकि बजट आपके वेतन चक्र के अनुरूप हो';
+  String get monthStartsOnHelp => 'अपनी सैलरी की तारीख चुनें';
+
+  @override
+  String get monthStartsOnExplain =>
+      'बजट और महीने के कुल आपके वेतन चक्र के हिसाब से चलेंगे';
 
   @override
   String dayNumber(int day) {

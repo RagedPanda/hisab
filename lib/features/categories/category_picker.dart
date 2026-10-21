@@ -7,6 +7,9 @@ import '../../data/repositories/categories_repository.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import 'subcategory_preview.dart';
+
+final _recentCategoryIdsProvider = FutureProvider.family<List<String>, String>((ref, kind) => ref.watch(entriesRepositoryProvider).recentCategoryIds(kind: kind));
 
 /// Bottom sheet that lets the user pick a parent or child category.
 Future<Category?> showCategoryPicker(BuildContext context, {required String kind, String? selectedId}) {
@@ -56,6 +59,7 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
     final byId = {for (final c in categories) c.id: c};
     final selected = widget.selectedId == null ? null : byId[widget.selectedId];
     final expanded = _expandedId == null ? null : (byId[_expandedId]?.parentId ?? _expandedId);
+    final recent = (ref.watch(_recentCategoryIdsProvider(widget.kind)).value ?? const <String>[]).map((id) => byId[id]).whereType<Category>().toList();
 
     return Column(
       children: [
@@ -86,6 +90,7 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
                   controller: widget.controller,
                   padding: const EdgeInsets.only(bottom: 24),
                   children: [
+                    if (recent.isNotEmpty) _RecentRow(categories: recent, selected: selected, onPick: (category) => Navigator.pop(context, category)),
                     for (final node in tree)
                       _ParentTile(
                         node: node,
@@ -102,6 +107,43 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
   }
 }
 
+/// Recently used categories as a chip row so the common picks are one tap away.
+class _RecentRow extends StatelessWidget {
+  const _RecentRow({required this.categories, required this.selected, required this.onPick});
+  final List<Category> categories;
+  final Category? selected;
+  final ValueChanged<Category> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(context.l10n.recent),
+        SizedBox(
+          height: 40,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: categories.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final category = categories[index];
+              return ChoiceChip(
+                avatar: IconBadge(icon: category.icon, color: category.color, size: 22),
+                label: Text(category.displayName(context)),
+                selected: selected?.id == category.id,
+                onSelected: (_) => onPick(category),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+}
+
 class _ParentTile extends StatelessWidget {
   const _ParentTile({required this.node, required this.expanded, required this.selected, required this.onToggle, required this.onPick});
   final CategoryNode node;
@@ -113,17 +155,22 @@ class _ParentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final parent = node.category;
+    final l10n = context.l10n;
     return Column(
       children: [
         ListTile(
           leading: IconBadge(icon: parent.icon, color: parent.color),
           title: Text(parent.displayName(context), style: const TextStyle(fontWeight: FontWeight.w600)),
+          subtitle: node.children.isEmpty || expanded ? null : Text(subcategoryPreview(context, node), maxLines: 1, overflow: TextOverflow.ellipsis),
           trailing: node.children.isEmpty
               ? null
-              : IconButton(icon: Icon(expanded ? Icons.expand_less : Icons.expand_more), onPressed: onToggle),
+              : IconButton(
+                  tooltip: expanded ? l10n.collapse : l10n.expand,
+                  icon: Icon(expanded ? Icons.expand_less : Icons.expand_more),
+                  onPressed: onToggle,
+                ),
           selected: selected?.id == parent.id,
-          onTap: node.children.isEmpty ? () => onPick(parent) : onToggle,
-          onLongPress: () => onPick(parent),
+          onTap: () => onPick(parent),
         ),
         if (expanded)
           Padding(
@@ -132,12 +179,6 @@ class _ParentTile extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                ChoiceChip(
-                  avatar: Icon(Icons.label_outline, size: 18, color: Color(parent.color)),
-                  label: Text(context.l10n.categoryGeneral(parent.displayName(context))),
-                  selected: selected?.id == parent.id,
-                  onSelected: (_) => onPick(parent),
-                ),
                 for (final child in node.children)
                   ChoiceChip(
                     avatar: IconBadge(icon: child.icon, color: child.color, size: 22),

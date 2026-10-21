@@ -536,12 +536,6 @@ abstract class AppLocalizations {
   /// **'Categories'**
   String get categories;
 
-  /// No description provided for @subcategoryCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 subcategory} other{{count} subcategories}}'**
-  String subcategoryCount(int count);
-
   /// No description provided for @unitsLabel.
   ///
   /// In en, this message translates to:
@@ -620,11 +614,23 @@ abstract class AppLocalizations {
   /// **'No matching category'**
   String get noMatchingCategory;
 
-  /// No description provided for @categoryGeneral.
+  /// No description provided for @moreCount.
   ///
   /// In en, this message translates to:
-  /// **'{parent} (general)'**
-  String categoryGeneral(String parent);
+  /// **'+{count}'**
+  String moreCount(int count);
+
+  /// No description provided for @expand.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand'**
+  String get expand;
+
+  /// No description provided for @collapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get collapse;
 
   /// No description provided for @smsToReview.
   ///
@@ -1253,8 +1259,14 @@ abstract class AppLocalizations {
   /// No description provided for @monthStartsOnHelp.
   ///
   /// In en, this message translates to:
-  /// **'Use your salary date so budgets follow your pay cycle'**
+  /// **'Use your salary date'**
   String get monthStartsOnHelp;
+
+  /// No description provided for @monthStartsOnExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'Budgets and monthly totals follow your pay cycle'**
+  String get monthStartsOnExplain;
 
   /// No description provided for @dayNumber.
   ///

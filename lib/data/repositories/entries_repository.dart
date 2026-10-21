@@ -241,6 +241,17 @@ class EntriesRepository {
     return rows.map((r) => r.read(db.entries.payee)).whereType<String>().toList();
   }
 
+  /// Most recently used category ids for [kind], newest first.
+  Future<List<String>> recentCategoryIds({required String kind, int limit = 6}) async {
+    final query = db.selectOnly(db.entries, distinct: true)
+      ..addColumns([db.entries.categoryId])
+      ..where(db.entries.categoryId.isNotNull() & db.entries.kind.equals(kind) & db.entries.deletedAt.isNull())
+      ..orderBy([OrderingTerm.desc(db.entries.occurredAt)])
+      ..limit(limit);
+    final rows = await query.get();
+    return rows.map((r) => r.read(db.entries.categoryId)).whereType<String>().toList();
+  }
+
   Future<bool> existsForSms(String smsId) async {
     final row = await (db.select(db.entries)..where((t) => t.smsId.equals(smsId))..limit(1)).getSingleOrNull();
     return row != null;

@@ -403,3 +403,15 @@ class HomeFallbackPop extends StatelessWidget {
     );
   }
 }
+
+/// Current value shown at the trailing edge of a settings row.
+class SettingValue extends StatelessWidget {
+  const SettingValue(this.value, {super.key});
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Text(value, style: theme.textTheme.labelLarge!.copyWith(color: theme.colorScheme.primary));
+  }
+}

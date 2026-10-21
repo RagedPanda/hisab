@@ -263,17 +263,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categories => 'Categories';
 
   @override
-  String subcategoryCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count subcategories',
-      one: '1 subcategory',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String unitsLabel(String units) {
     return 'Units: $units';
   }
@@ -320,9 +309,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMatchingCategory => 'No matching category';
 
   @override
-  String categoryGeneral(String parent) {
-    return '$parent (general)';
+  String moreCount(int count) {
+    return '+$count';
   }
+
+  @override
+  String get expand => 'Expand';
+
+  @override
+  String get collapse => 'Collapse';
 
   @override
   String smsToReview(int count) {
@@ -685,8 +680,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monthStartsOn => 'Month starts on';
 
   @override
-  String get monthStartsOnHelp =>
-      'Use your salary date so budgets follow your pay cycle';
+  String get monthStartsOnHelp => 'Use your salary date';
+
+  @override
+  String get monthStartsOnExplain =>
+      'Budgets and monthly totals follow your pay cycle';
 
   @override
   String dayNumber(int day) {

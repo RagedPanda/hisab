@@ -14,8 +14,12 @@ void main() {
     });
     test('format and parse', () {
       expect(formatMinor(123456789), '₹12,34,567.89');
-      expect(formatMinor(-5000), '-₹50.00');
-      expect(formatMinor(7050, showDecimals: false), '₹70');
+      expect(formatMinor(-5000), '-₹50');
+      expect(formatMinor(-5000, showDecimals: true), '-₹50.00');
+      expect(formatMinor(0), '₹0');
+      expect(formatMinor(7050, showDecimals: false), '₹71');
+      expect(formatMinor(987667, showDecimals: false), '₹9,877');
+      expect(formatMinor(7049, showDecimals: false), '₹70');
       expect(formatMinor(25000000, compact: true), '₹2.50L');
       expect(parseAmountToMinor('1,234.5'), 123450);
       expect(parseAmountToMinor('70'), 7000);

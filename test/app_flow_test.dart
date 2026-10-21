@@ -75,7 +75,7 @@ void main() {
     await enter(tester, find.ancestor(of: find.textContaining('Price per').last, matching: find.byType(TextField)).first, '60');
     await settle(tester);
 
-    expect(find.textContaining('Save ₹100.00'), findsOneWidget);
+    expect(find.textContaining('Save ₹100'), findsOneWidget);
     await tester.ensureVisible(find.textContaining('Save ₹'));
     await tester.tap(find.textContaining('Save ₹'));
     await settle(tester);

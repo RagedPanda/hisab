@@ -29,10 +29,14 @@ double minorToDouble(int minor) => minor / 100;
 
 /// Formats minor units using Indian digit grouping: 12,34,567.89.
 /// [symbol] is prefixed; negative amounts get a leading minus before the symbol.
+///
+/// [showDecimals] `null` (default) prints paise only when there are any
+/// (₹250, ₹99.50); `true` always prints two decimals; `false` rounds to the
+/// nearest whole unit (₹9,876.67 -> ₹9,877).
 String formatMinor(
   int minor, {
   String symbol = '₹',
-  bool showDecimals = true,
+  bool? showDecimals,
   bool compact = false,
 }) {
   final negative = minor < 0;
@@ -45,12 +49,18 @@ String formatMinor(
     body = lakhs >= 100
         ? '${(lakhs / 100).toStringAsFixed(2)}Cr'
         : '${lakhs.toStringAsFixed(2)}L';
+  } else if (showDecimals == false) {
+    body = groupIndian(roundMinorToWhole(abs));
+  } else if (showDecimals == true || frac != 0) {
+    body = '${groupIndian(whole)}.${frac.toString().padLeft(2, '0')}';
   } else {
-    final grouped = groupIndian(whole);
-    body = showDecimals ? '$grouped.${frac.toString().padLeft(2, '0')}' : grouped;
+    body = groupIndian(whole);
   }
   return '${negative ? '-' : ''}$symbol$body';
 }
+
+/// Rounds minor units to the nearest whole unit (half up).
+int roundMinorToWhole(int minor) => (minor.abs() + 50) ~/ 100 * minor.sign;
 
 /// Groups an integer the Indian way: last three digits, then pairs.
 String groupIndian(int value) {

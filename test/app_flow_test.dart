@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:hisab/app.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
@@ -45,7 +46,8 @@ void main() {
   testWidgets('dashboard renders with seeded cash account', (tester) async {
     await pumpApp(tester);
     expect(find.text('Hisab'), findsOneWidget);
-    expect(find.text('Spent this month'), findsOneWidget);
+    expect(find.text('Spent in ${DateFormat('MMMM').format(DateTime.now())}'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Cash'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('Cash'), findsOneWidget);
   });
 

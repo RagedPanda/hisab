@@ -10,6 +10,8 @@ import '../data/repositories/entries_repository.dart';
 import '../data/repositories/groups_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
 import '../data/sms/sms_ingest_service.dart';
+import '../domain/stats/dashboard_ledger.dart';
+import '../domain/stats/spend_series.dart';
 import 'dates.dart';
 import 'settings.dart';
 
@@ -46,6 +48,7 @@ class SelectedMonthNotifier extends Notifier<DateTime> {
   DateTime build() => DateTime.now();
 
   void shift(int months) => state = DateTime(state.year, state.month + months, 15);
+  void select(DateTime anchor) => state = anchor;
   void reset() => state = DateTime.now();
 }
 
@@ -79,6 +82,24 @@ final monthCategoryTotalsProvider = StreamProvider((ref) {
 final monthDailyExpenseProvider = StreamProvider((ref) {
   final range = ref.watch(selectedRangeProvider);
   return ref.watch(entriesRepositoryProvider).watchDailyExpense(range);
+});
+
+/// Months of ledger the dashboard loads in one stream: the selected month and
+/// the five before it, for the trend bars and last-month comparisons.
+const int kDashboardMonths = 6;
+
+final dashboardMonthRangesProvider = Provider<List<DateRange>>((ref) {
+  final range = ref.watch(selectedRangeProvider);
+  final startDay = ref.watch(settingsProvider).monthStartDay;
+  return trailingMonthRanges(range, count: kDashboardMonths, startDay: startDay);
+});
+
+/// Every ledger line of the dashboard window, in one query, so each card
+/// derives its figures from the same emission.
+final dashboardLedgerProvider = StreamProvider<DashboardLedger>((ref) {
+  final ranges = ref.watch(dashboardMonthRangesProvider);
+  final window = DateRange(ranges.first.start, ranges.last.end);
+  return ref.watch(entriesRepositoryProvider).watchLedgerLines(window).map((lines) => DashboardLedger(ranges: ranges, lines: lines));
 });
 
 final smsIngestServiceProvider = Provider((ref) => SmsIngestService(

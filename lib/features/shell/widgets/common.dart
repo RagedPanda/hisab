@@ -118,14 +118,15 @@ class EntryTile extends StatelessWidget {
 }
 
 class SectionHeader extends StatelessWidget {
-  const SectionHeader(this.title, {super.key, this.trailing});
+  const SectionHeader(this.title, {super.key, this.trailing, this.padding = const EdgeInsets.fromLTRB(16, 20, 16, 8)});
   final String title;
   final Widget? trailing;
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+      padding: padding,
       child: Row(
         children: [
           Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700))),
@@ -134,6 +135,20 @@ class SectionHeader extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Trailing text action of a [SectionHeader] with a full 48dp tap target.
+class SectionAction extends StatelessWidget {
+  const SectionAction({super.key, required this.label, required this.onPressed});
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(minimumSize: const Size(48, 48), padding: const EdgeInsets.symmetric(horizontal: 8)),
+        child: Text(label),
+      );
 }
 
 /// Neutral block shown while a stream has not produced its first value, so

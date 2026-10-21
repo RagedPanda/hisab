@@ -12,6 +12,8 @@ import '../settings/settings_screen.dart';
 import '../sms/sms_screen.dart';
 import '../transactions/transactions_screen.dart';
 import 'app_shell.dart';
+import 'deep_link.dart';
+import 'widgets/common.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
 
@@ -20,11 +22,7 @@ final appRouter = GoRouter(
   initialLocation: '/home',
   // Custom-scheme links arrive as 'hisab://sms?text=…' on some launchers; the
   // host is the intended path.
-  redirect: (context, state) {
-    final uri = state.uri;
-    if (uri.host.isNotEmpty && uri.path.isEmpty) return Uri(path: '/${uri.host}', queryParameters: uri.queryParameters).toString();
-    return null;
-  },
+  redirect: (context, state) => deepLinkLocation(state.uri),
   routes: [
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => AppShell(shell: shell),
@@ -38,17 +36,19 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/entry',
       parentNavigatorKey: _rootKey,
-      builder: (_, state) => ExpenseEditorScreen(
-        entryId: state.uri.queryParameters['id'],
-        groupId: state.uri.queryParameters['group'],
-        initialKind: state.uri.queryParameters['kind'],
-        smsId: state.uri.queryParameters['sms'],
+      builder: (_, state) => HomeFallbackPop(
+        child: ExpenseEditorScreen(
+          entryId: state.uri.queryParameters['id'],
+          groupId: state.uri.queryParameters['group'],
+          initialKind: state.uri.queryParameters['kind'],
+          smsId: state.uri.queryParameters['sms'],
+        ),
       ),
     ),
     GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(groupId: state.pathParameters['id']!)),
     GoRoute(path: '/categories', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoriesScreen()),
     GoRoute(path: '/accounts', parentNavigatorKey: _rootKey, builder: (_, _) => const AccountsScreen()),
     GoRoute(path: '/budgets', parentNavigatorKey: _rootKey, builder: (_, _) => const BudgetsScreen()),
-    GoRoute(path: '/sms', parentNavigatorKey: _rootKey, builder: (_, state) => SmsScreen(sharedText: state.uri.queryParameters['text'])),
+    GoRoute(path: '/sms', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: SmsScreen(sharedText: state.uri.queryParameters['text']))),
   ],
 );

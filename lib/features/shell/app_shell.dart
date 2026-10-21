@@ -11,7 +11,14 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final showFab = shell.currentIndex < 2;
     final l10n = context.l10n;
-    return Scaffold(
+    final onHomeTab = shell.currentIndex == 0;
+    return PopScope(
+      // Back on any other tab returns to Home instead of leaving the app.
+      canPop: onHomeTab,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) shell.goBranch(0);
+      },
+      child: Scaffold(
       body: shell,
       floatingActionButton: showFab
           ? FloatingActionButton(
@@ -29,6 +36,7 @@ class AppShell extends StatelessWidget {
           NavigationDestination(icon: const Icon(Icons.groups_outlined), selectedIcon: const Icon(Icons.groups), label: l10n.tabGroups),
           NavigationDestination(icon: const Icon(Icons.settings_outlined), selectedIcon: const Icon(Icons.settings), label: l10n.tabSettings),
         ],
+      ),
       ),
     );
   }

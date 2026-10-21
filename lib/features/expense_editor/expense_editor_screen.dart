@@ -191,7 +191,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                   if (_previousSnapshot != null) {
                     await ref.read(accountsRepositoryProvider).applyBalanceDeltas(deleteDeltas(_previousSnapshot!));
                   }
-                  if (context.mounted) context.pop();
+                  if (context.mounted) popOrGoHome(context);
                 }
               },
             ),
@@ -484,7 +484,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         );
     await _applyBalanceChange(amount);
     if (_smsId != null) await ref.read(smsLogRepositoryProvider).setStatus(_smsId!, 'added', entryId: id);
-    if (mounted) context.pop();
+    if (mounted) popOrGoHome(context);
   }
 
   /// Manual entries move the account's running balance; SMS and group

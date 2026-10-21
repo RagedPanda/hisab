@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/app_icons.dart';
 import '../../../core/format.dart';
@@ -328,4 +329,35 @@ ButtonSegment<T> compactSegment<T>(BuildContext context, {required T value, requ
     label: narrow ? null : Text(label, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
     tooltip: narrow ? label : null,
   );
+}
+
+/// Location of the first shell tab, used when Back has nowhere else to go.
+const String kHomeLocation = '/home';
+
+/// Pops the current route, or returns to Home when this is the only route
+/// (e.g. a screen opened straight from a deep link).
+void popOrGoHome(BuildContext context) {
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go(kHomeLocation);
+  }
+}
+
+/// Makes the system Back gesture return to Home instead of leaving the app
+/// when the wrapped screen is the only route on the stack (P2-3).
+class HomeFallbackPop extends StatelessWidget {
+  const HomeFallbackPop({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go(kHomeLocation);
+      },
+      child: child,
+    );
+  }
 }

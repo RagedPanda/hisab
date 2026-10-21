@@ -149,7 +149,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get accountNameHint => 'एचडीएफसी सेविंग्स, पेटीएम, कैश';
 
   @override
-  String get outstandingBalance => 'बकाया (नकारात्मक = आपका बकाया)';
+  String get outstandingBalance => 'कार्ड पर बकाया राशि';
+
+  @override
+  String cardDue(String amount) {
+    return 'बकाया $amount';
+  }
 
   @override
   String get currentBalance => 'वर्तमान शेष';
@@ -400,6 +405,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get split => 'विभाजित करना';
+
+  @override
+  String get invalidAmount => 'सही राशि दर्ज करें, जैसे 250 या 99.50';
 
   @override
   String get errorAmountZero => 'शून्य से अधिक राशि दर्ज करें';

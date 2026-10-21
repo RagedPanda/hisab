@@ -359,8 +359,14 @@ abstract class AppLocalizations {
   /// No description provided for @outstandingBalance.
   ///
   /// In en, this message translates to:
-  /// **'Outstanding (negative = you owe)'**
+  /// **'Amount due on the card'**
   String get outstandingBalance;
+
+  /// No description provided for @cardDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {amount}'**
+  String cardDue(String amount);
 
   /// No description provided for @currentBalance.
   ///
@@ -763,6 +769,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Split'**
   String get split;
+
+  /// No description provided for @invalidAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid amount, e.g. 250 or 99.50'**
+  String get invalidAmount;
 
   /// No description provided for @errorAmountZero.
   ///

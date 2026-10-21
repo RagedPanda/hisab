@@ -46,7 +46,10 @@ class AccountsScreen extends ConsumerWidget {
                     if (account.balanceAsOf != null) l10n.asOf(formatShortDate(account.balanceAsOf!)),
                     if (!account.includeInTotal) l10n.excludedFromTotal,
                   ].join(' · ')),
-                  trailing: Text(formatMinor(account.balanceMinor, symbol: symbol), style: TextStyle(fontWeight: FontWeight.w700, color: account.balanceMinor < 0 ? kExpenseColor : null)),
+                  trailing: Text(
+                    account.type == 'card' ? l10n.cardDue(formatMinor(account.balanceMinor.abs(), symbol: symbol)) : formatMinor(account.balanceMinor, symbol: symbol),
+                    style: TextStyle(fontWeight: FontWeight.w700, color: account.balanceMinor < 0 && account.type != 'card' ? kExpenseColor : null),
+                  ),
                   onTap: () => _showForm(context, ref, existing: account),
                 ),
               if (accounts.isEmpty) ListTile(title: Text(l10n.noAccountsTitle)),
@@ -61,7 +64,9 @@ class AccountsScreen extends ConsumerWidget {
 
   Future<void> _showForm(BuildContext context, WidgetRef ref, {Account? existing}) {
     final nameController = TextEditingController(text: existing?.name ?? '');
-    final balanceController = TextEditingController(text: existing == null ? '' : minorToDouble(existing.balanceMinor).toStringAsFixed(2));
+    // Card balances are stored negative (money owed) but entered as the
+    // positive amount due, so there is never a sign to type on a number pad.
+    final balanceController = TextEditingController(text: existing == null ? '' : amountInputText(existing.type == 'card' ? existing.balanceMinor.abs() : existing.balanceMinor));
     var type = existing?.type ?? 'bank';
     var color = existing?.color ?? kPaletteColors.first;
     var include = existing?.includeInTotal ?? true;
@@ -90,7 +95,8 @@ class AccountsScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               TextField(
                 controller: balanceController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: amountInputFormatters,
                 decoration: InputDecoration(labelText: type == 'card' ? l10n.outstandingBalance : l10n.currentBalance),
               ),
               const SizedBox(height: 12),
@@ -123,8 +129,7 @@ class AccountsScreen extends ConsumerWidget {
                   onPressed: () async {
                     final name = nameController.text.trim();
                     if (name.isEmpty) return;
-                    final balance = parseAmountToMinor(balanceController.text.replaceAll('-', '')) ?? 0;
-                    final signed = balanceController.text.trim().startsWith('-') ? -balance : balance;
+                    final signed = signedBalanceForType(type, parseAmountToMinor(balanceController.text) ?? 0);
                     final repo = ref.read(accountsRepositoryProvider);
                     if (existing == null) {
                       await repo.create(name: name, type: type, color: color, balanceMinor: signed, includeInTotal: include);

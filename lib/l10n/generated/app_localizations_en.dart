@@ -149,7 +149,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountNameHint => 'HDFC Savings, Paytm, Cash';
 
   @override
-  String get outstandingBalance => 'Outstanding (negative = you owe)';
+  String get outstandingBalance => 'Amount due on the card';
+
+  @override
+  String cardDue(String amount) {
+    return 'Due $amount';
+  }
 
   @override
   String get currentBalance => 'Current balance';
@@ -399,6 +404,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get split => 'Split';
+
+  @override
+  String get invalidAmount => 'Enter a valid amount, e.g. 250 or 99.50';
 
   @override
   String get errorAmountZero => 'Enter an amount greater than zero';

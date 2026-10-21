@@ -92,14 +92,15 @@ class _ItemRowState extends State<ItemRow> {
               ),
               const SizedBox(width: 8),
               SizedBox(
-                width: 90,
+                width: 96,
                 child: DropdownButtonFormField<String>(
                   initialValue: draft.unit ?? '',
                   isDense: true,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Unit', isDense: true),
                   items: [
                     const DropdownMenuItem(value: '', child: Text('—')),
-                    for (final unit in unitOptions) DropdownMenuItem(value: unit, child: Text(unit)),
+                    for (final unit in unitOptions) DropdownMenuItem(value: unit, child: Text(unit, overflow: TextOverflow.ellipsis)),
                   ],
                   onChanged: (v) => widget.onChanged((v ?? '').isEmpty ? draft.copyWith(clearUnit: true) : draft.copyWith(unit: v)),
                 ),

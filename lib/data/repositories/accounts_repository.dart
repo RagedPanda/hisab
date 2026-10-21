@@ -51,11 +51,12 @@ class AccountsRepository {
   Future<void> delete(String id) => (db.update(db.accounts)..where((t) => t.id.equals(id)))
       .write(AccountsCompanion(deletedAt: Value(DateTime.now()), updatedAt: Value(DateTime.now())));
 
-  /// Records the balance a bank SMS reported, if newer than what we have.
+  /// Records the balance a bank SMS reported, if strictly newer than what we
+  /// have; a re-delivered message can never roll the balance back.
   Future<void> applyReportedBalance(String id, int balanceMinor, DateTime asOf) async {
     final current = await (db.select(db.accounts)..where((t) => t.id.equals(id))).getSingleOrNull();
     if (current == null) return;
-    if (current.balanceAsOf != null && current.balanceAsOf!.isAfter(asOf)) return;
+    if (current.balanceAsOf != null && !asOf.isAfter(current.balanceAsOf!)) return;
     await update(AccountsCompanion(id: Value(id), balanceMinor: Value(balanceMinor), balanceAsOf: Value(asOf)));
   }
 

@@ -118,9 +118,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   }
 
   Future<void> _prefillFromSms(String smsId) async {
-    final log = await (ref.read(databaseProvider).select(ref.read(databaseProvider).smsLog)
-          ..where((t) => t.id.equals(smsId)))
-        .getSingleOrNull();
+    final log = await ref.read(smsLogRepositoryProvider).getById(smsId);
     if (log == null || log.parsedJson == null) return;
     final parsed = Map<String, dynamic>.from(jsonDecode(log.parsedJson!) as Map);
     _kind = parsed['direction'] == 'credit' ? 'income' : 'expense';
@@ -437,6 +435,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       }
     }
     setState(() => _saving = true);
+    if (_source == 'sms' && _smsId != null && _accountId == null && _groupId == null) {
+      _accountId = (await ref.read(smsIngestServiceProvider).ensureAccountForSms(_smsId!))?.id;
+    }
     final id = _existingId ?? newId();
     final entry = EntriesRepository.newExpense(
       id: id,

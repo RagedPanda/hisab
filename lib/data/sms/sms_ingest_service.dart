@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/ids.dart';
 import '../../core/theme.dart';
 import '../../domain/sms/bank_senders.dart';
 import '../../domain/sms/parsed_transaction.dart';
+import '../../domain/sms/sms_account_name.dart';
 import '../../domain/sms/sms_categorizer.dart';
 import '../../domain/sms/sms_parser.dart';
 import '../db/database.dart';
@@ -80,20 +80,23 @@ class SmsIngestService {
       return IngestStatus.unparsed;
     }
 
-    final account = await _ensureAccount(parsed);
-    if (account != null && parsed.balanceMinor != null) {
-      await accounts.applyReportedBalance(account.id, parsed.balanceMinor!, parsed.occurredAt);
+    // Only an account we already know gets its balance refreshed here; a new
+    // account is created when the user approves the transaction, not before.
+    final known = await accounts.findBySmsKey(parsed.accountKey);
+    if (known != null && parsed.balanceMinor != null) {
+      await accounts.applyReportedBalance(known.id, parsed.balanceMinor!, parsed.occurredAt);
     }
     final categoryKey = suggestCategoryKey(parsed);
     final payload = parsed.toJson()
       ..['suggestedCategory'] = categoryKey
       ..['accountKey'] = parsed.accountKey
-      ..['accountId'] = account?.id;
+      ..['accountId'] = known?.id;
 
     if (!autoAdd) {
       await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'pending', parsed: payload);
       return IngestStatus.pending;
     }
+    final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(id, parsed, categoryKey, account?.id);
     await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'added', parsed: payload, entryId: entryId);
     return IngestStatus.added;
@@ -107,6 +110,15 @@ class SmsIngestService {
     final entryId = await _createEntry(row.id, parsed, suggestCategoryKey(parsed), account?.id);
     await smsLog.setStatus(row.id, 'added', entryId: entryId);
     return entryId;
+  }
+
+  /// Creates (or finds) the account a logged SMS refers to. Used when the
+  /// user saves a pending SMS from the editor without picking an account.
+  Future<Account?> ensureAccountForSms(String smsId) async {
+    final row = await smsLog.getById(smsId);
+    if (row == null) return null;
+    final parsed = parseBankSms(sender: row.sender, body: row.body, receivedAt: row.receivedAt);
+    return parsed == null ? null : _ensureAccount(parsed);
   }
 
   Future<String> _createEntry(String smsId, ParsedTransaction parsed, String categoryKey, String? accountId) async {
@@ -131,18 +143,17 @@ class SmsIngestService {
     final key = parsed.accountKey;
     final existing = await accounts.findBySmsKey(key);
     if (existing != null) return existing;
-    final bank = parsed.bank ?? 'Bank';
-    final suffix = parsed.accountLast4 == null ? '' : ' ••${parsed.accountLast4}';
     final created = await accounts.create(
-      name: parsed.isCreditCard ? '$bank Card$suffix' : '$bank$suffix',
+      name: smsAccountName(bank: parsed.bank, isCreditCard: parsed.isCreditCard, last4: parsed.accountLast4),
       type: parsed.isCreditCard ? 'card' : 'bank',
       color: kPaletteColors[key.hashCode.abs() % kPaletteColors.length],
-      bankName: bank,
+      bankName: parsed.bank ?? 'Bank',
       last4: parsed.accountLast4,
       smsKey: key,
+      includeInTotal: !parsed.isCreditCard,
     );
-    if (parsed.isCreditCard) {
-      await accounts.update(AccountsCompanion(id: Value(created.id), includeInTotal: const Value(false)));
+    if (parsed.balanceMinor != null) {
+      await accounts.applyReportedBalance(created.id, parsed.balanceMinor!, parsed.occurredAt);
     }
     return created;
   }

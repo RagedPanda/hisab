@@ -9,8 +9,13 @@ class SmsLogRepository {
   SmsLogRepository(this.db);
   final AppDatabase db;
 
+  /// Stable id for a message. Banks re-send the same text within a day
+  /// (retries, gateway duplicates), so the bucket is the calendar day, not
+  /// the minute it arrived.
   static String idFor(String sender, String body, DateTime receivedAt) =>
-      sha1.convert(utf8.encode('$sender|$body|${receivedAt.millisecondsSinceEpoch ~/ 60000}')).toString();
+      sha1.convert(utf8.encode('$sender|${body.trim()}|${receivedAt.year}-${receivedAt.month}-${receivedAt.day}')).toString();
+
+  Future<SmsLogData?> getById(String id) => (db.select(db.smsLog)..where((t) => t.id.equals(id))).getSingleOrNull();
 
   Future<bool> exists(String id) async =>
       (await (db.select(db.smsLog)..where((t) => t.id.equals(id))).getSingleOrNull()) != null;

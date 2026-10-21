@@ -24,3 +24,4 @@ flutter run
 - [docs/PLAN.md](docs/PLAN.md): architecture, feature matrix, sync design.
 - [docs/PERMISSIONS.md](docs/PERMISSIONS.md): every permission per platform, store declaration text, reference apps.
 - [docs/LOCALIZATION.md](docs/LOCALIZATION.md): English today; a new language is one ARB file plus a category-name map.
+- [docs/REFERENCE_APPS.md](docs/REFERENCE_APPS.md): what FinArt, Splitwise, Money Manager, Monefy, Cashew and PennyWise taught us.

@@ -95,11 +95,13 @@ Groups need a relay both members can reach regardless of platform:
 3. Group relay with invite links.
 
 ## Reference-app learnings applied
+Full study in [REFERENCE_APPS.md](REFERENCE_APPS.md). Already in the app:
 - Dashboard leads with "spent this month" and account balances (FinArt, Walnut).
-- Review inbox with Add / Edit / Ignore per SMS (FinArt).
+- Review inbox with Add / Edit / Ignore per SMS (FinArt) behind a PennyWise-style disclosure.
 - Day-grouped entries list with day totals (Money Manager).
-- Settle-up suggestions with "record payment" (Splitwise).
+- Six split methods and settle-up suggestions with "record payment" (Splitwise), by-item assignment (Cashew).
 - Salary-month start day (Money Manager, Axio).
+- No login, no paywall, works offline (the opposite of axio and Splitwise).
 
 ## Still to do
 - Recurring entries and reminders
@@ -107,4 +109,5 @@ Groups need a relay both members can reach regardless of platform:
 - Home-screen widget and quick-add notification
 - Receipt photos (needs camera permission; deliberately deferred)
 - Cloud sync as above
-- Localisation (Hindi first)
+- Hindi and Spanish dictionaries (framework ready, see LOCALIZATION.md)
+- Calculator keypad, save-and-add-another, merchant autocomplete, smart rules (see REFERENCE_APPS.md backlog)

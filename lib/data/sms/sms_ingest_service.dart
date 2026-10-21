@@ -7,6 +7,7 @@ import '../../core/theme.dart';
 import '../../domain/sms/bank_senders.dart';
 import '../../domain/sms/parsed_transaction.dart';
 import '../../domain/sms/sms_account_name.dart';
+import '../../domain/sms/payee_normaliser.dart';
 import '../../domain/sms/sms_categorizer.dart';
 import '../../domain/sms/sms_parser.dart';
 import '../db/database.dart';
@@ -131,8 +132,8 @@ class SmsIngestService {
       occurredAt: parsed.occurredAt,
       categoryId: category?.id,
       accountId: accountId,
-      payee: parsed.counterparty,
-      note: parsed.reference == null ? '' : 'Ref ${parsed.reference}',
+      payee: parsed.counterparty == null ? null : normalisePayee(parsed.counterparty!),
+      note: smsEntryNote(reference: parsed.reference, rawCounterparty: parsed.counterparty),
       source: 'sms',
       smsId: smsId,
     ));

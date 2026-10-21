@@ -11,6 +11,7 @@ import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/sms/sms_channel.dart';
 import '../../data/sms/sms_ingest_service.dart';
+import '../../domain/sms/payee_normaliser.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
@@ -182,7 +183,7 @@ class _PendingCard extends ConsumerWidget {
             Row(children: [
               Expanded(
                 child: Text(
-                  (parsed['counterparty'] as String?) ?? (parsed['bank'] as String?) ?? row.sender,
+                  _payeeLabel(parsed['counterparty'] as String?) ?? (parsed['bank'] as String?) ?? row.sender,
                   style: const TextStyle(fontWeight: FontWeight.w600),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -220,3 +221,5 @@ class _PendingCard extends ConsumerWidget {
     );
   }
 }
+
+String? _payeeLabel(String? counterparty) => counterparty == null ? null : normalisePayee(counterparty);

@@ -7,11 +7,11 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
+import '../../domain/accounts/account_label.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 
 /// (stored type value, icon name). Labels come from [_typeLabel].
-const _types = [('bank', 'account_balance'), ('card', 'credit_card'), ('wallet', 'account_balance_wallet'), ('cash', 'payments')];
 
 String _typeLabel(AppLocalizations l10n, String type) => switch (type) {
       'bank' => l10n.accountTypeBank,
@@ -38,7 +38,7 @@ class AccountsScreen extends ConsumerWidget {
             child: Column(children: [
               for (final account in accounts)
                 ListTile(
-                  leading: IconBadge(icon: _types.firstWhere((t) => t.$1 == account.type, orElse: () => _types.last).$2, color: account.color),
+                  leading: IconBadge(icon: accountIconFor(account.type), color: account.color),
                   title: Text(account.name),
                   subtitle: Text([
                     if (account.bankName != null) account.bankName!,
@@ -93,7 +93,7 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
               Wrap(
                 spacing: 8,
                 children: [
-                  for (final option in _types) ChoiceChip(label: Text(_typeLabel(l10n, option.$1)), selected: type == option.$1, onSelected: (_) => setSheetState(() => type = option.$1)),
+                  for (final option in kAccountTypeIcons.keys) ChoiceChip(label: Text(_typeLabel(l10n, option)), selected: type == option, onSelected: (_) => setSheetState(() => type = option)),
                 ],
               ),
               const SizedBox(height: 12),

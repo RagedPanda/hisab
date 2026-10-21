@@ -11,6 +11,7 @@ import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/sms/sms_channel.dart';
 import '../../data/sms/sms_ingest_service.dart';
+import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 
@@ -166,6 +167,11 @@ class _PendingCard extends ConsumerWidget {
     final amount = (parsed['amountMinor'] as int?) ?? 0;
     final service = ref.read(smsIngestServiceProvider);
     final smsLog = ref.read(smsLogRepositoryProvider);
+    final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
+    final categoryKey = parsed['suggestedCategory'] as String?;
+    final category = categoryKey == null ? null : categories.where((c) => c.seedKey == categoryKey).firstOrNull;
+    final occurredAt = DateTime.tryParse(parsed['occurredAt'] as String? ?? '') ?? row.receivedAt;
+    final locale = Localizations.localeOf(context).toString();
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
@@ -189,8 +195,8 @@ class _PendingCard extends ConsumerWidget {
               [
                 if (parsed['bank'] != null) parsed['bank'] as String,
                 if (parsed['accountLast4'] != null) '••${parsed['accountLast4']}',
-                if (parsed['suggestedCategory'] != null) (parsed['suggestedCategory'] as String).replaceAll('_', ' '),
-                formatShortDate(row.receivedAt),
+                if (category != null) category.displayName(context),
+                formatShortDate(occurredAt, locale: locale),
               ].join(' · '),
               style: Theme.of(context).textTheme.bodySmall,
             ),

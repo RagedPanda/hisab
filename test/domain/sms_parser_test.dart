@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/domain/sms/bank_senders.dart';
 import 'package:hisab/domain/sms/parsed_transaction.dart';
+import 'package:hisab/domain/sms/sms_account_name.dart';
 import 'package:hisab/domain/sms/sms_categorizer.dart';
 import 'package:hisab/domain/sms/sms_parser.dart';
 
@@ -72,7 +73,7 @@ void main() {
       expect(t.isCreditCard, isTrue);
       expect(t.accountLast4, '5555');
       expect(t.counterparty, 'AMAZON');
-      expect(t.occurredAt, DateTime(2026, 8, 21));
+      expect(t.occurredAt, DateTime(2026, 8, 21, 5, 20, 26));
       expect(suggestCategoryKey(t), 'credit_card_payment');
     });
     test('SBI bare amount', () {
@@ -154,7 +155,17 @@ void main() {
       expect(t.accountLast4, '2225');
       expect(t.balanceMinor, 1000000);
       expect(t.counterparty, 'MERCHANT ABC');
-      expect(t.occurredAt, DateTime(2025, 12, 2));
+      expect(t.occurredAt, DateTime(2025, 12, 2, 20, 38, 23));
+    });
+    test('AND-11: Axis card with Avl Lmt and merchant after the clock time', () {
+      final t = parse('AX-AXISBK-S',
+          'Spent Card no. XX4321 INR 3,499.00 21-10-26 10:15:22 AMAZON Avl Lmt INR 96,501.00 SMS BLOCK 4321 to 919951860002, if not done by you - Axis Bank')!;
+      expect(t.amountMinor, 349900);
+      expect(t.isCreditCard, isTrue);
+      expect(t.accountLast4, '4321');
+      expect(t.counterparty, 'AMAZON');
+      expect(t.availableLimitMinor, 9650100);
+      expect(t.occurredAt, DateTime(2026, 10, 21, 10, 15, 22));
     });
     test('Kotak UPI sent and received', () {
       final sent = parse('JD-KOTAKB-S',
@@ -237,6 +248,31 @@ void main() {
     });
   });
 
+  group('transaction time', () {
+    test('same-day SMS without a clock time keeps the received time', () {
+      expect(transactionTime('Rs.500 debited on 21-10-26 to x', _now), _now);
+      expect(transactionTime('Rs.500 debited on 21-Oct-26 to x', _now), _now);
+    });
+    test('earlier-day SMS without a clock time is dated at midnight', () {
+      expect(transactionTime('Rs.500 debited on 19-10-26 to x', _now), DateTime(2026, 10, 19));
+    });
+    test('clock time in the SMS wins', () {
+      expect(transactionTime('Rs.500 debited on 21-10-26 09:05 to x', _now), DateTime(2026, 10, 21, 9, 5));
+    });
+    test('no date at all falls back to received time', () {
+      expect(transactionTime('Rs.500 debited to x', _now), _now);
+    });
+  });
+
+  group('sms account naming', () {
+    test('Low #12: does not double the word Card', () {
+      expect(smsAccountName(bank: 'SBI Card', isCreditCard: true, last4: '7788'), 'SBI Card ••7788');
+      expect(smsAccountName(bank: 'HDFC Bank', isCreditCard: true, last4: '1234'), 'HDFC Bank Card ••1234');
+      expect(smsAccountName(bank: 'HDFC Bank', isCreditCard: false, last4: '1234'), 'HDFC Bank ••1234');
+      expect(smsAccountName(bank: null, isCreditCard: false, last4: null), 'Bank');
+    });
+  });
+
   group('categorizer', () {
     ParsedTransaction txn(String raw, {TxnDirection direction = TxnDirection.debit, String? counterparty}) =>
         ParsedTransaction(direction: direction, amountMinor: 100, instrument: Instrument.upi, occurredAt: _now, raw: raw, counterparty: counterparty);
@@ -248,6 +284,12 @@ void main() {
       expect(suggestCategoryKey(txn('NEFT SALARY MAY', direction: TxnDirection.credit)), 'salary');
       expect(suggestCategoryKey(txn('refund from Flipkart', direction: TxnDirection.credit)), 'refunds_cashback');
       expect(suggestCategoryKey(txn('to Unknown Shop')), 'other_expense');
+    });
+    test('P3-3: glued UPI handles fall back to substring matching', () {
+      expect(suggestCategoryKey(txn('paid to apollopharmacy@ybl', counterparty: 'apollopharmacy@ybl')), 'medicines');
+      expect(suggestCategoryKey(txn('paid to swiggyinstamart@axl', counterparty: 'swiggyinstamart@axl')), isNot('other_expense'));
+      // Short keywords never match inside other words.
+      expect(suggestCategoryKey(txn('paid to coincidence shop')), 'other_expense');
     });
   });
 }

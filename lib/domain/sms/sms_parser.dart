@@ -23,7 +23,7 @@ final _balancePattern = RegExp(
   caseSensitive: false,
 );
 final _limitPattern = RegExp(
-  '(?:avl|avbl|available|avail)\\.?\\s*(?:credit\\s*)?limit\\s*(?:is|:)?\\s*$_currencyPrefix?\\s*:?\\s*$_number',
+  '(?:avl|avbl|available|avail)\\.?\\s*(?:credit\\s*)?(?:limit|lmt)\\s*(?:is|:)?\\s*$_currencyPrefix?\\s*:?\\s*$_number',
   caseSensitive: false,
 );
 
@@ -42,6 +42,7 @@ final _refPatterns = [
 final _numericDate = RegExp(r'\b(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})\b');
 final _namedDate = RegExp(r'\b(\d{1,2})[-/ ]?([A-Za-z]{3})[-/ ]?(\d{2,4})\b');
 final _isoDate = RegExp(r'\b(\d{4})-(\d{2})-(\d{2})\b');
+final _clockTime = RegExp(r'\b([01]?\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\b');
 const _months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
 const _rejectPhrases = [
@@ -100,7 +101,7 @@ ParsedTransaction? parseBankSms({
     amountMinor: amountMinor,
     currency: currency,
     instrument: _instrument(lower),
-    occurredAt: _date(text) ?? receivedAt,
+    occurredAt: transactionTime(text, receivedAt),
     raw: text,
     bank: bankFromSender(sender),
     accountLast4: _account(text),
@@ -196,23 +197,40 @@ String? _reference(String text) {
   return null;
 }
 
-DateTime? _date(String text) {
+/// When the transaction happened. The SMS date wins over the time we
+/// received the message; the SMS clock time (if any) wins over our clock.
+/// A same-day SMS without a clock time takes the received time rather than
+/// midnight, so entries keep their order within the day.
+DateTime transactionTime(String text, DateTime receivedAt) {
+  final found = _dateMatch(text);
+  if (found == null) return receivedAt;
+  final (date, span) = found;
+  // Look for the clock after the date so "2026-08-21:05:20:26" reads 05:20:26.
+  final clock = _clockTime.firstMatch(text.substring(span.end)) ?? _clockTime.firstMatch(text.substring(0, span.start));
+  if (clock != null) {
+    return DateTime(date.year, date.month, date.day, int.parse(clock.group(1)!), int.parse(clock.group(2)!), int.parse(clock.group(3) ?? '0'));
+  }
+  final sameDay = date.year == receivedAt.year && date.month == receivedAt.month && date.day == receivedAt.day;
+  return sameDay ? receivedAt : date;
+}
+
+(DateTime, Match)? _dateMatch(String text) {
   final numeric = _numericDate.firstMatch(text);
   if (numeric != null) {
     final day = int.parse(numeric.group(1)!);
     final month = int.parse(numeric.group(2)!);
     final year = _year(numeric.group(3)!);
-    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) return DateTime(year, month, day);
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) return (DateTime(year, month, day), numeric);
   }
   final named = _namedDate.firstMatch(text);
   if (named != null) {
     final month = _months.indexOf(named.group(2)!.toLowerCase()) + 1;
     final day = int.parse(named.group(1)!);
-    if (month > 0 && day >= 1 && day <= 31) return DateTime(_year(named.group(3)!), month, day);
+    if (month > 0 && day >= 1 && day <= 31) return (DateTime(_year(named.group(3)!), month, day), named);
   }
   final iso = _isoDate.firstMatch(text);
   if (iso != null) {
-    return DateTime(int.parse(iso.group(1)!), int.parse(iso.group(2)!), int.parse(iso.group(3)!));
+    return (DateTime(int.parse(iso.group(1)!), int.parse(iso.group(2)!), int.parse(iso.group(3)!)), iso);
   }
   return null;
 }
@@ -238,12 +256,14 @@ final _debitCounterparty = <RegExp>[
   RegExp('\\b(?:towards|to|at)\\s+$_name$_nameEnd', caseSensitive: false),
   RegExp('\\bon\\s+((?:M/s\\s+)?[A-Z][A-Za-z0-9 .&\\-\']{2,40}?)$_nameEnd', caseSensitive: false),
   RegExp('\\bfor\\s+$_name$_nameEnd', caseSensitive: false),
+  // "21-10-26 10:15:22 AMAZON Avl Lmt": merchant straight after the clock time.
+  RegExp('\\d{1,2}:\\d{2}(?::\\d{2})?\\s+(?:ist\\s+)?$_name$_nameEnd', caseSensitive: false),
 ];
 final _creditCounterparty = <RegExp>[
   RegExp('\\b(?:from|by)\\s+$_name$_nameEnd', caseSensitive: false),
 ];
 
-const _counterpartyNoise = ['your', 'you', 'a/c', 'ac', 'acct', 'account', 'card', 'bank', 'vpa', 'upi', 'the', 'rs', 'inr', 'dispute', 'processing', 'merchant'];
+const _counterpartyNoise = ['ist', 'your', 'you', 'a/c', 'ac', 'acct', 'account', 'card', 'bank', 'vpa', 'upi', 'the', 'rs', 'inr', 'dispute', 'processing', 'merchant'];
 
 String? _counterparty(String text, TxnDirection direction) {
   final patterns = [

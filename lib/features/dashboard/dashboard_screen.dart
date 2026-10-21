@@ -53,6 +53,10 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
+/// Identifies the headline amount of the summary card so tests can read it
+/// without matching the same figure elsewhere on the dashboard.
+const Key kSummarySpentKey = ValueKey('summary.spent');
+
 class _SummaryCard extends StatelessWidget {
   const _SummaryCard({required this.expense, required this.income, required this.symbol});
   final int expense;
@@ -74,7 +78,7 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Text(context.l10n.spentThisMonth, style: TextStyle(color: scheme.onPrimary.withValues(alpha: 0.85))),
           const SizedBox(height: 4),
-          Text(formatMinor(expense, symbol: symbol), style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: scheme.onPrimary, fontWeight: FontWeight.w800).tabular),
+          Text(formatMinor(expense, symbol: symbol), key: kSummarySpentKey, style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: scheme.onPrimary, fontWeight: FontWeight.w800).tabular),
           const SizedBox(height: 16),
           Row(
             children: [

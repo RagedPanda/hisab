@@ -20,8 +20,10 @@ import 'package:hisab/domain/backup/backup_codec.dart';
 import 'package:hisab/domain/split/debt_simplifier.dart';
 import 'package:hisab/domain/split/split_calculator.dart';
 import 'package:hisab/features/categories/categories_screen.dart';
+import 'package:hisab/features/dashboard/dashboard_screen.dart';
 import 'package:hisab/features/expense_editor/expense_editor_screen.dart';
 import 'package:hisab/features/split/split_editor.dart';
+import 'package:hisab/features/shell/widgets/common.dart';
 import 'package:hisab/l10n/category_names_hi.dart';
 import 'package:hisab/l10n/generated/app_localizations_hi.dart';
 import 'package:integration_test/integration_test.dart';
@@ -37,13 +39,25 @@ const _axisOpeningMinor = 500000;
 const _overallBudgetMinor = 100000;
 
 int get _spentMinor => _milkTotalMinor + _restaurantMinor;
+
+/// My share of the two Goa trip expenses (300 split three ways + 300 exact):
+/// personal totals count only this share of a group expense (P2-1).
+const _myGroupShareMinor = 10000 + 30000;
 int get _hdfcBalanceMinor => _hdfcOpeningMinor - _restaurantMinor + _salaryMinor;
 int get _totalBalanceMinor => _hdfcBalanceMinor + _axisOpeningMinor - _milkTotalMinor;
 
 Finder _amountField() => find.descendant(of: find.byType(ExpenseEditorScreen), matching: find.byType(TextField)).first;
 Finder _dialogField() => find.descendant(of: find.byType(AlertDialog), matching: find.byType(TextField));
-Finder _chip(String label) => find.widgetWithText(ChoiceChip, label);
+Finder _chip(String label) => find.widgetWithText(ChoiceChip, label, skipOffstage: false);
 Finder _filled(String label) => find.widgetWithText(FilledButton, label);
+Finder _accountCardAmount(String name, String amount) => find.descendant(of: find.ancestor(of: find.text(name), matching: find.byType(InkWell)).first, matching: find.text(amount));
+Finder _entryAmount(String title, String amount) => find.descendant(of: find.widgetWithText(EntryTile, title), matching: find.text(amount));
+
+/// The summary card headline; the same figure also appears in the donut centre
+/// and account cards, so it is read through its key rather than by text.
+void _expectSpent(WidgetTester tester, String amount, {String? reason}) {
+  expect(tester.widget<Text>(find.byKey(kSummarySpentKey)).data, amount, reason: reason);
+}
 
 Future<void> _pickCategory(WidgetTester tester, String query, String name) async {
   await tapText(tester, 'Choose category');
@@ -93,8 +107,11 @@ Future<void> _createAccount(WidgetTester tester, {required String name, required
   await tapFinder(tester, _filled('Save'));
 }
 
+/// Settle-up row that still offers "Record payment" for [transferLine].
+Finder _pendingTransfer(String transferLine) => find.ancestor(of: find.text('Record payment'), matching: find.widgetWithText(ListTile, transferLine));
+
 Future<void> _recordPayment(WidgetTester tester, String transferLine) async {
-  final tile = find.ancestor(of: find.text(transferLine), matching: find.byType(ListTile)).first;
+  final tile = _pendingTransfer(transferLine).first;
   await tapFinder(tester, find.descendant(of: tile, matching: find.text('Record payment')));
   expect(find.text('Record payment'), findsWidgets);
   await tapFinder(tester, _filled('Save'), frames: 12);
@@ -119,7 +136,7 @@ void main() {
     await pumpApp(tester, fresh);
     expect(find.text('Hisab'), findsOneWidget);
     expect(find.text('Spent this month'), findsOneWidget);
-    expect(find.text('₹0'), findsOneWidget);
+    _expectSpent(tester, '₹0');
     expect(find.text('Cash'), findsOneWidget);
     expect(find.text('No entries this month'), findsOneWidget);
     await shoot(tester, 'home_empty');
@@ -170,12 +187,13 @@ void main() {
     await tapFinder(tester, find.byIcon(Icons.schedule));
     await shoot(tester, 'time_picker');
     await tapText(tester, 'OK');
+    await scrollTo(tester, find.text('Paid to / received from'), within: find.byType(ExpenseEditorScreen));
     await enterText(tester, find.widgetWithText(TextField, 'Paid to / received from'), 'Mother Dairy');
     await shoot(tester, 'entry_filled');
     await _saveEntry(tester, formatMinor(_milkTotalMinor));
     expect(find.text('Mother Dairy'), findsOneWidget);
-    expect(find.text('-${formatMinor(_milkTotalMinor)}'), findsOneWidget);
-    expect(find.text(formatMinor(_milkTotalMinor)), findsOneWidget, reason: 'summary card spent amount');
+    expect(_entryAmount('Mother Dairy', '-${formatMinor(_milkTotalMinor)}'), findsOneWidget);
+    _expectSpent(tester, formatMinor(_milkTotalMinor), reason: 'summary card spent amount');
     await shoot(tester, 'home_after_expense');
   });
 
@@ -195,12 +213,12 @@ void main() {
     await shoot(tester, 'entry_income');
     await _saveEntry(tester, formatMinor(_salaryMinor));
 
-    expect(find.text(formatMinor(_spentMinor)), findsOneWidget, reason: 'Spent this month');
+    _expectSpent(tester, formatMinor(_spentMinor), reason: 'Spent this month');
     expect(find.text(formatMinor(_salaryMinor, showDecimals: false)), findsOneWidget, reason: 'Income stat');
     expect(find.text('Saved'), findsOneWidget);
     expect(find.text(formatMinor(_salaryMinor - _spentMinor, showDecimals: false)), findsOneWidget, reason: 'Saved stat');
     expect(find.text(formatMinor(_totalBalanceMinor, showDecimals: false)), findsOneWidget, reason: 'Balances header');
-    expect(find.text(formatMinor(-_milkTotalMinor, showDecimals: false)), findsOneWidget, reason: 'Cash card went negative');
+    expect(_accountCardAmount('Cash', formatMinor(-_milkTotalMinor, showDecimals: false)), findsOneWidget, reason: 'Cash card went negative');
     expect(find.text(formatMinor(_hdfcBalanceMinor, showDecimals: false)), findsOneWidget, reason: 'HDFC card');
     expect(find.text('Spending by category'), findsOneWidget);
     await shoot(tester, 'home_totals');
@@ -230,12 +248,12 @@ void main() {
     expect(find.text(current), findsOneWidget);
     await tapFinder(tester, find.byIcon(Icons.chevron_left));
     expect(find.text(previous), findsOneWidget);
-    expect(find.text('₹0'), findsOneWidget, reason: 'previous month has no spend');
+    _expectSpent(tester, '₹0', reason: 'previous month has no spend');
     expect(find.text('No entries this month'), findsOneWidget);
     await shoot(tester, 'home_previous_month');
     await tapFinder(tester, find.byIcon(Icons.chevron_right));
     expect(find.text(current), findsOneWidget);
-    expect(find.text(formatMinor(_spentMinor)), findsOneWidget);
+    _expectSpent(tester, formatMinor(_spentMinor));
   });
 
   testWidgets('06 budgets: overall budget is exceeded, category budget has room', (tester) async {
@@ -249,8 +267,7 @@ void main() {
     await enterText(tester, _dialogField(), '1000');
     await tapFinder(tester, _filled('Save'));
     expect(find.text('Overall'), findsOneWidget);
-    expect(find.text('per month'), findsOneWidget);
-    expect(find.text(formatMinor(_overallBudgetMinor, showDecimals: false)), findsOneWidget);
+    expect(find.textContaining('Over ${formatMinor(_overallBudgetMinor, showDecimals: false)} by '), findsOneWidget);
 
     await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Budget'));
     await tapText(tester, 'Budget for a category');
@@ -264,8 +281,8 @@ void main() {
     await goBack(tester);
     await goTab(tester, 'Home');
     await scrollTo(tester, find.text('Budgets'));
-    expect(find.text('Over by ${formatMinor(_spentMinor - _overallBudgetMinor, showDecimals: false)}'), findsOneWidget);
-    expect(find.text('${formatMinor(200000 - _milkTotalMinor, showDecimals: false)} left of ${formatMinor(200000, showDecimals: false)}'), findsOneWidget);
+    expect(find.text('Over ${formatMinor(_overallBudgetMinor, showDecimals: false)} by ${formatMinor(_spentMinor - _overallBudgetMinor, showDecimals: false)}'), findsOneWidget);
+    expect(find.textContaining('${formatMinor(200000 - _milkTotalMinor, showDecimals: false)} of ${formatMinor(200000, showDecimals: false)} left · '), findsOneWidget);
     await shoot(tester, 'home_budget_over');
   });
 
@@ -286,7 +303,7 @@ void main() {
     await tapFinder(tester, _chip('Cash'));
     await _saveEntry(tester, formatMinor(1000));
     await scrollTo(tester, find.text('Spent this month'), up: true);
-    expect(find.text(formatMinor(_spentMinor + 1000)), findsOneWidget);
+    _expectSpent(tester, formatMinor(_spentMinor + 1000));
     await scrollTo(tester, find.text('Groceries'));
     await tapText(tester, 'Groceries');
     await tapFinder(tester, find.byIcon(Icons.delete_outline));
@@ -294,8 +311,8 @@ void main() {
     await shoot(tester, 'entry_delete_confirm');
     await tapFinder(tester, _filled('Delete'), frames: 12);
     await scrollTo(tester, find.text('Spent this month'), up: true);
-    expect(find.text(formatMinor(_spentMinor)), findsOneWidget, reason: 'totals restored after delete');
-    expect(find.text(formatMinor(-_milkTotalMinor, showDecimals: false)), findsOneWidget, reason: 'Cash balance restored after delete');
+    _expectSpent(tester, formatMinor(_spentMinor), reason: 'totals restored after delete');
+    expect(_accountCardAmount('Cash', formatMinor(-_milkTotalMinor, showDecimals: false)), findsOneWidget, reason: 'Cash balance restored after delete');
   });
 
   testWidgets('08 groups: 3 members, equal + exact splits, simplified debts, settle up', (tester) async {
@@ -311,7 +328,7 @@ void main() {
     await shoot(tester, 'group_detail_empty');
     groupId = (await shared.db.select(shared.db.groups).getSingle()).id;
     final members = await shared.read(groupsRepositoryProvider).getMembers(groupId);
-    expect(members.map((m) => m.name), containsAll(['Me', 'Rahul', 'Priya']));
+    expect(members.map((m) => m.name), containsAll(['You', 'Rahul', 'Priya']));
 
     // Expense 1: 300 paid by me, equal split.
     await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
@@ -333,7 +350,7 @@ void main() {
     await shoot(tester, 'group_paid_by');
     await scrollTo(tester, find.text('Split'), within: find.byType(ExpenseEditorScreen));
     await tapFinder(tester, _chip('Exact amounts'));
-    await enterText(tester, _splitField('Me (you)'), '300');
+    await enterText(tester, _splitField('You'), '300');
     await enterText(tester, _splitField('Rahul'), '100');
     await enterText(tester, _splitField('Priya'), '100');
     expect(find.text('Splits ${formatMinor(50000)} across 3 people'), findsOneWidget);
@@ -377,15 +394,16 @@ void main() {
     await shoot(tester, 'group_balances');
 
     await tapText(tester, 'Members');
-    expect(find.text('Me (you)'), findsOneWidget);
+    expect(find.text('You'), findsOneWidget);
     expect(find.text('Rahul'), findsOneWidget);
     expect(find.text('Priya'), findsOneWidget);
     await shoot(tester, 'group_members');
 
     await tapText(tester, 'Balances');
     await _recordPayment(tester, 'Priya → Rahul');
-    expect(find.text('Priya → Rahul'), findsNothing);
-    expect(find.text('You → Rahul'), findsOneWidget);
+    expect(_pendingTransfer('Priya → Rahul'), findsNothing);
+    expect(_pendingTransfer('You → Rahul'), findsOneWidget);
+    expect(find.text('Settled payments'), findsOneWidget, reason: 'recorded payments are listed under Settle up');
     await _recordPayment(tester, 'You → Rahul');
     expect(find.text('Everyone is settled up'), findsOneWidget);
     expect(find.text('settled'), findsNWidgets(3));
@@ -398,7 +416,7 @@ void main() {
     expect(find.text('3 members · ${formatMinor(80000, showDecimals: false)} spent'), findsOneWidget);
     await shoot(tester, 'groups_list');
     await goTab(tester, 'Home');
-    expect(find.text(formatMinor(_spentMinor)), findsOneWidget, reason: 'group expenses must not count as personal spend');
+    _expectSpent(tester, formatMinor(_spentMinor + _myGroupShareMinor), reason: 'only my share of group expenses counts as personal spend');
   });
 
   testWidgets('09 categories: add, rename, delete a custom category', (tester) async {
@@ -519,7 +537,7 @@ void main() {
     await goTab(tester, hi.tabHome);
     await scrollTo(tester, find.text(hi.spentThisMonth), up: true);
     expect(find.text(hi.spentThisMonth), findsOneWidget);
-    expect(find.text(formatMinor(_spentMinor)), findsOneWidget);
+    _expectSpent(tester, formatMinor(_spentMinor + _myGroupShareMinor));
     await shoot(tester, 'hi_home');
     await scrollTo(tester, find.text(hi.recent));
     await shoot(tester, 'hi_home_bottom');

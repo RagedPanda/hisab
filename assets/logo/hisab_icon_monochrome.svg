@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<g transform="translate(85.5 94.8) scale(0.62)">
+<!-- letter h -->
+  <path d="M168 104 V400 M168 280 C168 222 206 196 254 196 S338 222 338 280 V400"
+        fill="none" stroke="#FFFFFF" stroke-width="64"/>
+  <!-- expense bars -->
+  <rect x="214" y="330" width="28" height="70" rx="4" fill="#FFFFFF"/>
+  <rect x="256" y="296" width="28" height="104" rx="4" fill="#FFFFFF"/>
+  <!-- rising arrow -->
+  <path d="M96 438 C190 446 316 420 396 334" fill="none" stroke="#FFFFFF"
+        stroke-width="22" stroke-linecap="round"/>
+  <polygon points="430,292 420,368 360,330" fill="#FFFFFF"/>
+  <!-- rupee coin -->
+  <circle cx="404" cy="124" r="50" fill="#FFFFFF"/>
+  <path d="M384 102 H424 M384 118 H424 M392 102 H398 C416 102 416 134 398 134 H388 L418 154"
+        fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>

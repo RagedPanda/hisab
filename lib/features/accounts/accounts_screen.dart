@@ -127,8 +127,7 @@ class AccountsScreen extends ConsumerWidget {
                     final signed = balanceController.text.trim().startsWith('-') ? -balance : balance;
                     final repo = ref.read(accountsRepositoryProvider);
                     if (existing == null) {
-                      await repo.create(name: name, type: type, color: color, balanceMinor: signed);
-                      await repo.update(AccountsCompanion(id: Value((await repo.getAll()).last.id), includeInTotal: Value(include)));
+                      await repo.create(name: name, type: type, color: color, balanceMinor: signed, includeInTotal: include);
                     } else {
                       await repo.update(AccountsCompanion(
                         id: Value(existing.id),

@@ -80,7 +80,7 @@ class _ItemRowState extends State<ItemRow> {
                 ),
               ),
               Text(formatMinor(draft.amountMinor, symbol: widget.symbol), style: Theme.of(context).textTheme.labelLarge),
-              IconButton(icon: const Icon(Icons.close, size: 18), onPressed: widget.onRemove),
+              IconButton(tooltip: l10n.remove, icon: const Icon(Icons.close, size: 18), onPressed: widget.onRemove),
             ]),
             Row(children: [
               SizedBox(

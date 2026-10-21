@@ -146,18 +146,33 @@ class EmptyState extends StatelessWidget {
 class MonthSwitcher extends ConsumerWidget {
   const MonthSwitcher({super.key});
 
+  static void _shift(WidgetRef ref, int months) {
+    HapticFeedback.selectionClick();
+    ref.read(selectedMonthProvider.notifier).shift(months);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final range = ref.watch(selectedRangeProvider);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(onPressed: () => ref.read(selectedMonthProvider.notifier).shift(-1), icon: const Icon(Icons.chevron_left)),
+        IconButton(onPressed: () => _shift(ref, -1), icon: const Icon(Icons.chevron_left)),
         GestureDetector(
-          onTap: () => ref.read(selectedMonthProvider.notifier).reset(),
-          child: Text(formatMonthLabel(range, locale: Localizations.localeOf(context).toString()), style: Theme.of(context).textTheme.titleSmall),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            ref.read(selectedMonthProvider.notifier).reset();
+          },
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 150),
+            child: Text(
+              formatMonthLabel(range, locale: Localizations.localeOf(context).toString()),
+              key: ValueKey(range.start),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          ),
         ),
-        IconButton(onPressed: () => ref.read(selectedMonthProvider.notifier).shift(1), icon: const Icon(Icons.chevron_right)),
+        IconButton(onPressed: () => _shift(ref, 1), icon: const Icon(Icons.chevron_right)),
       ],
     );
   }
@@ -248,5 +263,69 @@ Future<int?> promptAmount(BuildContext context, {required String title, int? ini
         );
       },
     ),
+  );
+}
+
+/// Unfocuses any text field when the user taps outside it, so the keyboard
+/// can always be dismissed on iOS (which has no system back gesture for it).
+class DismissKeyboardOnTap extends StatelessWidget {
+  const DismissKeyboardOnTap({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: child,
+    );
+  }
+}
+
+/// Full-width primary action pinned above the keyboard and the home indicator.
+/// Use as a Scaffold `bottomNavigationBar`; Scaffold does not move that slot
+/// above the keyboard by itself.
+class BottomActionBar extends StatelessWidget {
+  const BottomActionBar({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: keyboardInset),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: SizedBox(width: double.infinity, height: 52, child: child),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Width below which icon-and-label segmented buttons no longer fit three
+/// segments without wrapping their labels mid-word (P1-5).
+const double kCompactSegmentWidth = 380;
+
+/// A [ButtonSegment] that never wraps its label: on narrow screens it falls
+/// back to an icon with the label as tooltip.
+ButtonSegment<T> compactSegment<T>(BuildContext context, {required T value, required String label, required IconData icon}) {
+  final narrow = MediaQuery.sizeOf(context).width < kCompactSegmentWidth;
+  return ButtonSegment(
+    value: value,
+    icon: Icon(icon),
+    label: narrow ? null : Text(label, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
+    tooltip: narrow ? label : null,
   );
 }

@@ -76,7 +76,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         final entry = details.entry;
         _existingId = entry.id;
         _kind = entry.kind;
-        _amountController.text = minorToDouble(entry.amountMinor).toStringAsFixed(2);
+        _amountController.text = amountInputText(entry.amountMinor);
         _noteController.text = entry.note;
         _payeeController.text = entry.payee ?? '';
         _occurredAt = entry.occurredAt;
@@ -122,7 +122,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     if (log == null || log.parsedJson == null) return;
     final parsed = Map<String, dynamic>.from(jsonDecode(log.parsedJson!) as Map);
     _kind = parsed['direction'] == 'credit' ? 'income' : 'expense';
-    _amountController.text = minorToDouble(parsed['amountMinor'] as int).toStringAsFixed(2);
+    _amountController.text = amountInputText(parsed['amountMinor'] as int);
     _occurredAt = DateTime.tryParse(parsed['occurredAt'] as String? ?? '') ?? log.receivedAt;
     _payeeController.text = (parsed['counterparty'] as String?) ?? '';
     _source = 'sms';
@@ -159,6 +159,15 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   int get _amountMinor => _hasItems ? _itemsTotalMinor : (parseAmountToMinor(_amountController.text) ?? 0);
 
+  /// Mutates the item list and keeps the amount field bound to the items total (P1-2).
+  /// When the last item is removed the last total stays prefilled and the field becomes editable again.
+  void _updateItems(void Function() mutate) {
+    setState(() {
+      mutate();
+      if (_hasItems) _amountController.text = amountInputText(_itemsTotalMinor);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_loaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -174,6 +183,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         actions: [
           if (_isEditing)
             IconButton(
+              tooltip: l10n.delete,
               icon: const Icon(Icons.delete_outline),
               onPressed: () async {
                 if (await confirmDialog(context, title: l10n.deleteEntryQuestion)) {
@@ -187,21 +197,24 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
-        children: [
+      body: DismissKeyboardOnTap(
+        child: ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+          children: [
           if (_groupId == null)
             SegmentedButton<String>(
               segments: [
-                ButtonSegment(value: 'expense', label: Text(l10n.kindExpense), icon: const Icon(Icons.arrow_upward)),
-                ButtonSegment(value: 'income', label: Text(l10n.kindIncome), icon: const Icon(Icons.arrow_downward)),
-                ButtonSegment(value: 'transfer', label: Text(l10n.kindTransfer), icon: const Icon(Icons.swap_horiz)),
+                compactSegment(context, value: 'expense', label: l10n.kindExpense, icon: Icons.arrow_upward),
+                compactSegment(context, value: 'income', label: l10n.kindIncome, icon: Icons.arrow_downward),
+                compactSegment(context, value: 'transfer', label: l10n.kindTransfer, icon: Icons.swap_horiz),
               ],
               selected: {_kind},
               onSelectionChanged: (set) => setState(() {
                 _kind = set.first;
                 _category = null;
                 _items = [];
+                _amountController.text = '';
               }),
             ),
           const SizedBox(height: 16),
@@ -256,7 +269,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.calendar_today_outlined, size: 18),
-                label: Text(formatShortDate(_occurredAt)),
+                label: Text(formatShortDate(_occurredAt, locale: Localizations.localeOf(context).toString())),
                 onPressed: () async {
                   final picked = await showDatePicker(context: context, initialDate: _occurredAt, firstDate: DateTime(2000), lastDate: DateTime.now().add(const Duration(days: 365)));
                   if (picked != null) setState(() => _occurredAt = DateTime(picked.year, picked.month, picked.day, _occurredAt.hour, _occurredAt.minute));
@@ -267,7 +280,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.schedule, size: 18),
-                label: Text(formatTime(_occurredAt)),
+                label: Text(formatTime(_occurredAt, locale: Localizations.localeOf(context).toString())),
                 onPressed: () async {
                   final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_occurredAt));
                   if (picked != null) setState(() => _occurredAt = DateTime(_occurredAt.year, _occurredAt.month, _occurredAt.day, picked.hour, picked.minute));
@@ -285,16 +298,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               padding: const EdgeInsets.only(top: 12),
               child: Text(l10n.smsEntryNotice, style: Theme.of(context).textTheme.bodySmall),
             ),
-        ],
+          ],
+        ),
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: FilledButton(
-            onPressed: _saving ? null : _save,
-            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-            child: Text(_saving ? l10n.saving : l10n.saveAmount(formatMinor(_amountMinor, symbol: symbol))),
-          ),
+      bottomNavigationBar: BottomActionBar(
+        child: FilledButton(
+          onPressed: _saving ? null : _save,
+          child: Text(_saving ? l10n.saving : l10n.saveAmount(formatMinor(_amountMinor, symbol: symbol))),
         ),
       ),
     );
@@ -327,7 +337,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           trailing: TextButton.icon(
             icon: const Icon(Icons.add, size: 18),
             label: Text(l10n.addItem),
-            onPressed: () => setState(() => _items.add(ItemDraft(unit: units.firstOrNull))),
+            onPressed: () => _updateItems(() => _items.add(ItemDraft())),
           ),
         ),
         if (_suggestions.isNotEmpty)
@@ -341,7 +351,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                   ActionChip(
                     avatar: const Icon(Icons.history, size: 16),
                     label: Text(l10n.itemSuggestion(suggestion.name, formatQuantity(suggestion.lastQuantity, suggestion.unit), formatMinor(suggestion.lastUnitPriceMinor, symbol: symbol))),
-                    onPressed: () => setState(() => _items.add(ItemDraft(
+                    onPressed: () => _updateItems(() => _items.add(ItemDraft(
                           name: suggestion.name,
                           quantity: suggestion.lastQuantity,
                           unit: suggestion.unit,
@@ -357,8 +367,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             draft: _items[i],
             units: units,
             symbol: symbol,
-            onChanged: (draft) => setState(() => _items[i] = draft),
-            onRemove: () => setState(() => _items.removeAt(i)),
+            onChanged: (draft) => _updateItems(() => _items[i] = draft),
+            onRemove: () => _updateItems(() => _items.removeAt(i)),
           ),
         if (_items.isEmpty && _suggestions.isEmpty)
           Text(l10n.itemsHelp,

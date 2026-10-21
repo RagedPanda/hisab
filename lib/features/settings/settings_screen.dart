@@ -37,9 +37,9 @@ class SettingsScreen extends ConsumerWidget {
                     visualDensity: VisualDensity.standard,
                   ),
                   segments: [
-                    ButtonSegment(value: ThemeMode.system, label: Text(l10n.themeSystem), icon: const Icon(Icons.brightness_auto)),
-                    ButtonSegment(value: ThemeMode.light, label: Text(l10n.themeLight), icon: const Icon(Icons.light_mode_outlined)),
-                    ButtonSegment(value: ThemeMode.dark, label: Text(l10n.themeDark), icon: const Icon(Icons.dark_mode_outlined)),
+                    compactSegment(context, value: ThemeMode.system, label: l10n.themeSystem, icon: Icons.brightness_auto),
+                    compactSegment(context, value: ThemeMode.light, label: l10n.themeLight, icon: Icons.light_mode_outlined),
+                    compactSegment(context, value: ThemeMode.dark, label: l10n.themeDark, icon: Icons.dark_mode_outlined),
                   ],
                   selected: {settings.themeMode},
                   onSelectionChanged: (set) => notifier.update((s) => s.copyWith(themeMode: set.first)),

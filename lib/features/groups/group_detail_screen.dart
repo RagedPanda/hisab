@@ -236,6 +236,7 @@ class _MembersTab extends ConsumerWidget {
                 trailing: member.isMe
                     ? null
                     : IconButton(
+                        tooltip: l10n.removeNamed(member.name),
                         icon: const Icon(Icons.person_remove_outlined),
                         onPressed: () async {
                           final current = balances;

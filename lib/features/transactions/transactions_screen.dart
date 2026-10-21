@@ -50,7 +50,8 @@ class TransactionsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.entries), actions: const [MonthSwitcher()]),
-      body: Column(
+      body: DismissKeyboardOnTap(
+        child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -84,6 +85,7 @@ class TransactionsScreen extends ConsumerWidget {
                 : groups.isEmpty
                     ? EmptyState(icon: Icons.receipt_long_outlined, title: l10n.noEntriesTitle, message: l10n.noEntriesBody)
                     : ListView.builder(
+                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
                         itemCount: groups.length,
                         itemBuilder: (context, index) {
@@ -111,6 +113,7 @@ class TransactionsScreen extends ConsumerWidget {
                       ),
           ),
         ],
+        ),
       ),
     );
   }

@@ -29,11 +29,14 @@ class GroupsScreen extends ConsumerWidget {
         icon: const Icon(Icons.group_add_outlined),
         label: Text(l10n.newGroup),
       ),
-      body: list.isEmpty
+      body: !summaries.hasValue
+          ? const SizedBox.shrink()
+          : list.isEmpty
           ? EmptyState(
               icon: Icons.groups_outlined,
               title: l10n.noGroupsTitle,
               message: l10n.noGroupsBody,
+              action: FilledButton.tonal(onPressed: () => showGroupForm(context, ref), child: Text(l10n.startGroup)),
             )
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
@@ -54,7 +57,7 @@ class GroupsScreen extends ConsumerWidget {
                     child: ListTile(
                       leading: IconBadge(icon: summary.group.icon, color: 0xFF0F6E6B),
                       title: Text(summary.group.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text(l10n.groupSubtitle(summary.members.length, formatMinor(summary.totalSpentMinor, symbol: symbol, showDecimals: false))),
+                      subtitle: Text(l10n.groupSubtitle(summary.members.length, formatMinor(summary.totalSpentMinor, symbol: symbol, showDecimals: false, compact: true)), maxLines: 1, overflow: TextOverflow.ellipsis),
                       trailing: _NetBadge(net: summary.myNetMinor, symbol: symbol),
                       onTap: () => context.push('/groups/${summary.group.id}'),
                     ),

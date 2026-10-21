@@ -73,14 +73,19 @@ class EntryTile extends StatelessWidget {
         : entry.note.isNotEmpty
             ? entry.note
             : categoryName ?? (entry.kind == 'transfer' ? l10n.kindTransfer : l10n.uncategorised);
+    final locale = Localizations.localeOf(context).toString();
+    final accountLabel = entry.kind == 'transfer' && details.toAccount != null
+        ? l10n.transferArrow(details.account?.name ?? '', details.toAccount!.name)
+        : details.account?.name;
+    // Line 2 keeps the context; the date moves under the amount so it never gets truncated away (P2-5, P2-22).
     final subtitleParts = <String>[
       if (categoryName != null && title != categoryName) categoryName,
       if (details.items.isNotEmpty) l10n.itemCount(details.items.length),
       if (details.group != null) l10n.yourShareOf(details.group!.name),
-      if (details.account != null) details.account!.name,
-      if (entry.source == 'sms') l10n.sourceSms,
-      if (showDate) formatShortDate(entry.occurredAt, locale: Localizations.localeOf(context).toString()),
+      ?accountLabel,
     ];
+    final theme = Theme.of(context);
+    final mutedSmall = theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
     return ListTile(
       onTap: onTap,
       leading: IconBadge(
@@ -88,8 +93,26 @@ class EntryTile extends StatelessWidget {
         color: category?.color ?? 0xFF607D8B,
       ),
       title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: subtitleParts.isEmpty ? null : Text(subtitleParts.join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: AmountText(details.myAmountMinor, kind: entry.kind),
+      subtitle: subtitleParts.isEmpty
+          ? null
+          : Row(children: [
+              if (entry.source == 'sms') ...[
+                Icon(Icons.sms_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant, semanticLabel: l10n.sourceSms),
+                const SizedBox(width: 4),
+              ],
+              Expanded(child: Text(subtitleParts.join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis)),
+            ]),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          AmountText(details.myAmountMinor, kind: entry.kind),
+          Text(
+            showDate ? formatRowDate(entry.occurredAt, locale: locale) : formatTime(entry.occurredAt, locale: locale),
+            style: mutedSmall?.tabular,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -113,6 +136,19 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
+/// Neutral block shown while a stream has not produced its first value, so
+/// screens never flash an empty state on cold start (P2-23).
+class LoadingPlaceholder extends StatelessWidget {
+  const LoadingPlaceholder({super.key, this.height = 96});
+  final double height;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        height: height,
+        decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHigh, borderRadius: BorderRadius.circular(16)),
+      );
+}
+
 class EmptyState extends StatelessWidget {
   const EmptyState({super.key, required this.icon, required this.title, this.message, this.action});
   final IconData icon;
@@ -129,8 +165,13 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 56, color: scheme.outline),
-            const SizedBox(height: 12),
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(color: scheme.primaryContainer, shape: BoxShape.circle),
+              child: Icon(icon, size: 48, color: scheme.onPrimaryContainer),
+            ),
+            const SizedBox(height: 16),
             Text(title, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
             if (message != null) ...[
               const SizedBox(height: 6),

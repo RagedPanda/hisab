@@ -20,4 +20,8 @@ class BudgetsRepository {
 
   Future<void> delete(String id) => (db.update(db.budgets)..where((t) => t.id.equals(id)))
       .write(BudgetsCompanion(deletedAt: Value(DateTime.now()), updatedAt: Value(DateTime.now())));
+
+  /// Reverses a soft delete (undo from the snackbar).
+  Future<void> restore(String id) => (db.update(db.budgets)..where((t) => t.id.equals(id)))
+      .write(BudgetsCompanion(deletedAt: const Value(null), updatedAt: Value(DateTime.now())));
 }

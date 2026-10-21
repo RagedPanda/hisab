@@ -26,6 +26,12 @@ String formatMonthLabel(DateRange range, {String? locale}) {
 }
 
 String formatShortDate(DateTime value, {String? locale}) => DateFormat('d MMM yyyy', locale).format(value);
+
+/// Compact date for list rows: "21 Oct" (this year) or "21 Oct 2025".
+String formatRowDate(DateTime value, {DateTime? now, String? locale}) {
+  final sameYear = value.year == (now ?? DateTime.now()).year;
+  return DateFormat(sameYear ? 'd MMM' : 'd MMM yyyy', locale).format(value);
+}
 String formatTime(DateTime value, {String? locale}) => DateFormat('h:mm a', locale).format(value);
 
 String formatQuantity(double quantity, String? unit) {

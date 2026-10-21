@@ -476,23 +476,11 @@ abstract class AppLocalizations {
   /// **'Set a monthly limit overall or per category. The dashboard shows pace and what is left.'**
   String get noBudgetsBody;
 
-  /// No description provided for @perPeriod.
-  ///
-  /// In en, this message translates to:
-  /// **'per {period}'**
-  String perPeriod(String period);
-
   /// No description provided for @removeBudgetQuestion.
   ///
   /// In en, this message translates to:
   /// **'Remove this budget?'**
   String get removeBudgetQuestion;
-
-  /// No description provided for @longPressToRemoveBudget.
-  ///
-  /// In en, this message translates to:
-  /// **'Long-press a budget to remove it.'**
-  String get longPressToRemoveBudget;
 
   /// No description provided for @budgetOverBy.
   ///
@@ -505,6 +493,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{left} left of {limit}'**
   String budgetLeftOf(String left, String limit);
+
+  /// No description provided for @budgetLeftWithDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} left · {days, plural, =1{1 day} other{{days} days}}'**
+  String budgetLeftWithDays(String amount, int days);
+
+  /// No description provided for @budgetRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget removed'**
+  String get budgetRemoved;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @setOpeningBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Set opening balance'**
+  String get setOpeningBalance;
+
+  /// No description provided for @setBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a budget'**
+  String get setBudget;
+
+  /// No description provided for @startGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a group'**
+  String get startGroup;
 
   /// No description provided for @categories.
   ///

@@ -7,9 +7,13 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
-import '../../domain/budget/budget_math.dart';
+import '../../data/repositories/entries_repository.dart';
+import '../../domain/accounts/account_label.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
+import '../accounts/accounts_screen.dart';
+import '../budgets/budget_views.dart';
+import '../shell/widgets/budget_row.dart';
 import '../shell/widgets/common.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -117,37 +121,67 @@ class _AccountsStrip extends ConsumerWidget {
           trailing: TextButton(onPressed: () => context.push('/accounts'), child: Text(formatMinor(total, symbol: symbol, showDecimals: false))),
         ),
         SizedBox(
-          height: 92,
+          height: 104,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
             itemCount: accounts.length + 1,
             separatorBuilder: (_, _) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
               if (index == accounts.length) {
                 return _AddAccountChip(onTap: () => context.push('/accounts'));
               }
-              final account = accounts[index];
-              return Container(
-                width: 150,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerLow, borderRadius: BorderRadius.circular(16)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(children: [
-                      IconBadge(icon: _accountIcon(account.type), color: account.color, size: 26),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(account.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.labelLarge)),
-                    ]),
-                    Text(formatMinor(account.balanceMinor, symbol: symbol, showDecimals: false), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                  ],
-                ),
-              );
+              return _AccountCard(account: accounts[index], symbol: symbol);
             },
           ),
         ),
       ],
+    );
+  }
+}
+
+/// One balance card: name on one line, the ••mask on its own line, credit
+/// cards as "Due", and a prompt to set an opening balance when cash goes
+/// negative (P2-7, P2-17).
+class _AccountCard extends ConsumerWidget {
+  const _AccountCard({required this.account, required this.symbol});
+  final Account account;
+  final String symbol;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final label = splitAccountLabel(account.name);
+    final isCard = account.type == 'card';
+    final needsOpeningBalance = account.type == 'cash' && account.balanceMinor < 0;
+    final balanceText = isCard
+        ? l10n.cardDue(formatMinor(account.balanceMinor.abs(), symbol: symbol, showDecimals: false))
+        : formatMinor(account.balanceMinor, symbol: symbol, showDecimals: false);
+    final balanceColor = isCard || needsOpeningBalance ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.onSurface;
+    return InkWell(
+      onTap: () => needsOpeningBalance ? showAccountForm(context, ref, existing: account, focusBalance: true) : context.push('/accounts'),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: 148,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: theme.cardTheme.color, borderRadius: BorderRadius.circular(16)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              IconBadge(icon: _accountIcon(account.type), color: account.color, size: 26),
+              const SizedBox(width: 8),
+              Expanded(child: Text(label.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.labelLarge)),
+            ]),
+            if (label.mask != null) Text(label.mask!, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            const Spacer(),
+            Text(balanceText, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700, color: balanceColor).tabular),
+            if (needsOpeningBalance)
+              Text(l10n.setOpeningBalance, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.primary)),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -212,14 +246,23 @@ class _SpendingByCategory extends ConsumerWidget {
                 SizedBox(
                   width: 120,
                   height: 120,
-                  child: PieChart(PieChartData(
-                    sectionsSpace: 2,
-                    centerSpaceRadius: 34,
-                    sections: [
-                      for (final slice in slices)
-                        PieChartSectionData(value: slice.value.toDouble(), color: slice.color, radius: 24, showTitle: false),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      PieChart(PieChartData(
+                        sectionsSpace: 2,
+                        centerSpaceRadius: 34,
+                        sections: [
+                          for (final slice in slices)
+                            PieChartSectionData(value: slice.value.toDouble(), color: slice.color, radius: 24, showTitle: false),
+                        ],
+                      )),
+                      Text(
+                        formatMinor(total, symbol: symbol, showDecimals: false, compact: true),
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700).tabular,
+                      ),
                     ],
-                  )),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -231,10 +274,13 @@ class _SpendingByCategory extends ConsumerWidget {
                           child: Row(children: [
                             Container(width: 10, height: 10, decoration: BoxDecoration(color: slice.color, shape: BoxShape.circle)),
                             const SizedBox(width: 8),
-                            Expanded(child: Text(slice.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall)),
-                            Text('${(slice.value * 100 / total).round()}%', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+                            Expanded(flex: 3, child: Text(slice.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall)),
+                            SizedBox(
+                              width: 44,
+                              child: Text('${(slice.value * 100 / total).round()}%', textAlign: TextAlign.end, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600).tabular),
+                            ),
                             const SizedBox(width: 8),
-                            Text(formatMinor(slice.value, symbol: symbol, showDecimals: false), style: Theme.of(context).textTheme.bodySmall),
+                            Text(formatMinor(slice.value, symbol: symbol, showDecimals: false), style: Theme.of(context).textTheme.bodySmall?.tabular),
                           ]),
                         ),
                     ],
@@ -254,25 +300,9 @@ class _BudgetsOverview extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final budgets = ref.watch(budgetsProvider).value ?? const <Budget>[];
-    final totals = ref.watch(monthCategoryTotalsProvider).value ?? const {};
-    final monthTotals = ref.watch(monthTotalsProvider).value;
-    final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
-    final range = ref.watch(selectedRangeProvider);
+    final views = ref.watch(budgetViewsProvider);
     final symbol = ref.watch(settingsProvider).currencySymbol;
-    final monthly = budgets.where((b) => b.period == 'month').toList();
-    if (monthly.isEmpty) return const SizedBox.shrink();
-    final byId = {for (final c in categories) c.id: c};
-    final elapsed = elapsedFraction(start: range.start, end: range.end, now: DateTime.now());
-    int spentFor(String? categoryId) {
-      if (categoryId == null) return monthTotals?.expense ?? 0;
-      var sum = totals[categoryId] ?? 0;
-      for (final child in categories.where((c) => c.parentId == categoryId)) {
-        sum += totals[child.id] ?? 0;
-      }
-      return sum;
-    }
-
+    if (views.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -280,56 +310,11 @@ class _BudgetsOverview extends ConsumerWidget {
         Card(
           child: Column(
             children: [
-              for (final budget in monthly)
-                _BudgetRow(
-                  name: budget.categoryId == null ? context.l10n.overall : byId[budget.categoryId]?.displayName(context) ?? context.l10n.category,
-                  icon: byId[budget.categoryId]?.icon,
-                  color: byId[budget.categoryId]?.color ?? kSeedColor.toARGB32(),
-                  progress: BudgetProgress(limitMinor: budget.amountMinor, spentMinor: spentFor(budget.categoryId), elapsedFraction: elapsed),
-                  symbol: symbol,
-                ),
+              for (final view in views) BudgetRow(view: view, symbol: symbol, onTap: () => context.push('/budgets')),
             ],
           ),
         ),
       ],
-    );
-  }
-}
-
-class _BudgetRow extends StatelessWidget {
-  const _BudgetRow({required this.name, required this.icon, required this.color, required this.progress, required this.symbol});
-  final String name;
-  final String? icon;
-  final int color;
-  final BudgetProgress progress;
-  final String symbol;
-
-  @override
-  Widget build(BuildContext context) {
-    final barColor = progress.isOver ? kExpenseColor : (progress.isAheadOfPace ? kAccentColor : Color(color));
-    return ListTile(
-      leading: IconBadge(icon: icon ?? 'savings', color: color),
-      title: Text(name),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(value: progress.usedFraction.clamp(0, 1), color: barColor, backgroundColor: barColor.withValues(alpha: 0.15), minHeight: 6),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            progress.isOver
-                ? context.l10n.budgetOverBy(formatMinor(-progress.remainingMinor, symbol: symbol, showDecimals: false))
-                : context.l10n.budgetLeftOf(
-                    formatMinor(progress.remainingMinor, symbol: symbol, showDecimals: false),
-                    formatMinor(progress.limitMinor, symbol: symbol, showDecimals: false),
-                  ),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
-      ),
     );
   }
 }
@@ -339,13 +324,16 @@ class _RecentEntries extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final entries = ref.watch(monthEntriesProvider).value ?? const [];
-    final recent = entries.take(8).toList();
+    final async = ref.watch(monthEntriesProvider);
+    final recent = (async.value ?? const <EntryDetails>[]).take(8).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(context.l10n.recent, trailing: TextButton(onPressed: () => context.go('/transactions'), child: Text(context.l10n.seeAll))),
-        if (recent.isEmpty)
+        // Never flash the empty state before the first stream value arrives (P2-23).
+        if (!async.hasValue)
+          const LoadingPlaceholder(height: 180)
+        else if (recent.isEmpty)
           EmptyState(icon: Icons.receipt_long_outlined, title: context.l10n.noEntriesThisMonthTitle, message: context.l10n.noEntriesThisMonthBody)
         else
           Card(

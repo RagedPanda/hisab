@@ -221,16 +221,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'समग्र या प्रति श्रेणी एक मासिक सीमा निर्धारित करें। डैशबोर्ड गति दिखाता है और क्या बचा है।';
 
   @override
-  String perPeriod(String period) {
-    return 'प्रति $period';
-  }
-
-  @override
   String get removeBudgetQuestion => 'यह बजट निकालें?';
-
-  @override
-  String get longPressToRemoveBudget =>
-      'किसी बजट को हटाने के लिए उसे देर तक दबाकर रखें।';
 
   @override
   String budgetOverBy(String amount) {
@@ -239,8 +230,34 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String budgetLeftOf(String left, String limit) {
-    return '$left $limit के बाएँ';
+    return '$limit में से $left बचे';
   }
+
+  @override
+  String budgetLeftWithDays(String amount, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन',
+      one: '1 दिन',
+    );
+    return '$amount बचे · $_temp0';
+  }
+
+  @override
+  String get budgetRemoved => 'बजट हटाया गया';
+
+  @override
+  String get undo => 'पूर्ववत करें';
+
+  @override
+  String get setOpeningBalance => 'शुरुआती बैलेंस सेट करें';
+
+  @override
+  String get setBudget => 'बजट सेट करें';
+
+  @override
+  String get startGroup => 'ग्रुप शुरू करें';
 
   @override
   String get categories => 'श्रेणियाँ';

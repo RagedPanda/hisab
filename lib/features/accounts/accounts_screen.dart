@@ -30,7 +30,7 @@ class AccountsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.accounts)),
-      floatingActionButton: FloatingActionButton.extended(heroTag: 'add-account', onPressed: () => _showForm(context, ref), icon: const Icon(Icons.add), label: Text(l10n.account)),
+      floatingActionButton: FloatingActionButton.extended(heroTag: 'add-account', onPressed: () => showAccountForm(context, ref), icon: const Icon(Icons.add), label: Text(l10n.account)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
         children: [
@@ -50,7 +50,7 @@ class AccountsScreen extends ConsumerWidget {
                     account.type == 'card' ? l10n.cardDue(formatMinor(account.balanceMinor.abs(), symbol: symbol)) : formatMinor(account.balanceMinor, symbol: symbol),
                     style: TextStyle(fontWeight: FontWeight.w700, color: account.balanceMinor < 0 && account.type != 'card' ? kExpenseColor : null),
                   ),
-                  onTap: () => _showForm(context, ref, existing: account),
+                  onTap: () => showAccountForm(context, ref, existing: account),
                 ),
               if (accounts.isEmpty) ListTile(title: Text(l10n.noAccountsTitle)),
             ]),
@@ -61,8 +61,11 @@ class AccountsScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Future<void> _showForm(BuildContext context, WidgetRef ref, {Account? existing}) {
+/// Opens the create/edit account sheet. [focusBalance] lands the cursor in the
+/// balance field, used by the "Set opening balance" prompt.
+Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? existing, bool focusBalance = false}) {
     final nameController = TextEditingController(text: existing?.name ?? '');
     // Card balances are stored negative (money owed) but entered as the
     // positive amount due, so there is never a sign to type on a number pad.
@@ -85,7 +88,7 @@ class AccountsScreen extends ConsumerWidget {
             children: [
               Text(existing == null ? l10n.newAccount : l10n.editAccount, style: Theme.of(sheetContext).textTheme.titleLarge),
               const SizedBox(height: 12),
-              TextField(controller: nameController, autofocus: existing == null, decoration: InputDecoration(labelText: l10n.name, hintText: l10n.accountNameHint), textCapitalization: TextCapitalization.words),
+              TextField(controller: nameController, autofocus: existing == null && !focusBalance, decoration: InputDecoration(labelText: l10n.name, hintText: l10n.accountNameHint), textCapitalization: TextCapitalization.words),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -96,6 +99,7 @@ class AccountsScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               TextField(
                 controller: balanceController,
+                autofocus: focusBalance,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: amountInputFormatters,
                 decoration: InputDecoration(labelText: type == 'card' ? l10n.outstandingBalance : l10n.currentBalance),
@@ -158,5 +162,4 @@ class AccountsScreen extends ConsumerWidget {
         ),
       ),
     );
-  }
 }

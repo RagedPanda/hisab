@@ -221,15 +221,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Set a monthly limit overall or per category. The dashboard shows pace and what is left.';
 
   @override
-  String perPeriod(String period) {
-    return 'per $period';
-  }
-
-  @override
   String get removeBudgetQuestion => 'Remove this budget?';
-
-  @override
-  String get longPressToRemoveBudget => 'Long-press a budget to remove it.';
 
   @override
   String budgetOverBy(String amount) {
@@ -240,6 +232,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String budgetLeftOf(String left, String limit) {
     return '$left left of $limit';
   }
+
+  @override
+  String budgetLeftWithDays(String amount, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return '$amount left · $_temp0';
+  }
+
+  @override
+  String get budgetRemoved => 'Budget removed';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get setOpeningBalance => 'Set opening balance';
+
+  @override
+  String get setBudget => 'Set a budget';
+
+  @override
+  String get startGroup => 'Start a group';
 
   @override
   String get categories => 'Categories';

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../categories/category_picker.dart';
+import '../shell/widgets/budget_row.dart';
 import '../shell/widgets/common.dart';
+import 'budget_views.dart';
 
 class BudgetsScreen extends ConsumerWidget {
   const BudgetsScreen({super.key});
@@ -15,6 +16,7 @@ class BudgetsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final budgets = ref.watch(budgetsProvider).value ?? const <Budget>[];
+    final views = ref.watch(budgetViewsProvider);
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
     final symbol = ref.watch(settingsProvider).currencySymbol;
     final byId = {for (final c in categories) c.id: c};
@@ -50,31 +52,58 @@ class BudgetsScreen extends ConsumerWidget {
       await repo.save(id: existing?.id, categoryId: overall ? null : category!.id, period: 'month', amountMinor: amount);
     }
 
+    Future<void> remove(Budget budget) async {
+      await repo.delete(budget.id);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l10n.budgetRemoved),
+        action: SnackBarAction(label: l10n.undo, onPressed: () => repo.restore(budget.id)),
+      ));
+    }
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.budgets)),
       floatingActionButton: FloatingActionButton.extended(heroTag: 'add-budget', onPressed: edit, icon: const Icon(Icons.add), label: Text(l10n.budget)),
       body: budgets.isEmpty
-          ? EmptyState(icon: Icons.savings_outlined, title: l10n.noBudgetsTitle, message: l10n.noBudgetsBody)
+          ? EmptyState(
+              icon: Icons.savings_outlined,
+              title: l10n.noBudgetsTitle,
+              message: l10n.noBudgetsBody,
+              action: FilledButton.tonal(onPressed: edit, child: Text(l10n.setBudget)),
+            )
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
               children: [
                 Card(
+                  clipBehavior: Clip.antiAlias,
                   child: Column(children: [
-                    for (final budget in budgets)
-                      ListTile(
-                        leading: IconBadge(icon: budget.categoryId == null ? 'all_inclusive' : byId[budget.categoryId]?.icon, color: byId[budget.categoryId]?.color ?? 0xFF0F6E6B),
-                        title: Text(budget.categoryId == null ? l10n.overall : byId[budget.categoryId]?.displayName(context) ?? l10n.category),
-                        subtitle: Text(l10n.perPeriod(budget.period)),
-                        trailing: Text(formatMinor(budget.amountMinor, symbol: symbol, showDecimals: false), style: const TextStyle(fontWeight: FontWeight.w700)),
-                        onTap: () => edit(existing: budget),
-                        onLongPress: () async {
-                          if (await confirmDialog(context, title: l10n.removeBudgetQuestion, confirmLabel: l10n.remove)) await repo.delete(budget.id);
-                        },
+                    for (final view in views)
+                      Dismissible(
+                        key: ValueKey(view.budget.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          color: Theme.of(context).colorScheme.errorContainer,
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 24),
+                          child: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.onErrorContainer),
+                        ),
+                        onDismissed: (_) => remove(view.budget),
+                        child: BudgetRow(
+                          view: view,
+                          symbol: symbol,
+                          onTap: () => edit(existing: view.budget),
+                          trailing: PopupMenuButton<String>(
+                            tooltip: l10n.edit,
+                            onSelected: (value) => value == 'edit' ? edit(existing: view.budget) : remove(view.budget),
+                            itemBuilder: (_) => [
+                              PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
+                              PopupMenuItem(value: 'remove', child: Text(l10n.remove)),
+                            ],
+                          ),
+                        ),
                       ),
                   ]),
                 ),
-                const SizedBox(height: 8),
-                Text(l10n.longPressToRemoveBudget, style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
     );

@@ -149,7 +149,7 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
             for (final row in pending) _PendingCard(row: row, symbol: symbol),
           const SizedBox(height: 16),
           Text(
-            'iPhone: create a Shortcuts automation "When I get a message containing \'debited\'" → "Open URL" with hisab://sms?text=[Message]. '
+            'iPhone: create a Shortcuts automation "When I get a message containing \'debited\'" → "Open URL" with hisab:///sms?text=[Message]. '
             'Hisab will open and queue the transaction for review.',
             style: Theme.of(context).textTheme.bodySmall,
           ),

@@ -18,6 +18,13 @@ final _rootKey = GlobalKey<NavigatorState>();
 final appRouter = GoRouter(
   navigatorKey: _rootKey,
   initialLocation: '/home',
+  // Custom-scheme links arrive as 'hisab://sms?text=…' on some launchers; the
+  // host is the intended path.
+  redirect: (context, state) {
+    final uri = state.uri;
+    if (uri.host.isNotEmpty && uri.path.isEmpty) return Uri(path: '/${uri.host}', queryParameters: uri.queryParameters).toString();
+    return null;
+  },
   routes: [
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => AppShell(shell: shell),

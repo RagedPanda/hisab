@@ -4,12 +4,16 @@ import '../../core/settings.dart';
 import '../../data/db/database.dart';
 import '../../l10n/l10n.dart';
 
+/// Groups created before the self member defaulted to an empty name stored
+/// this literal; it is shown as "You" rather than "Me (you)".
+const String kLegacyDefaultMyName = 'Me';
+
 /// Resolves the label shown for a member: the "me" member reads as "You" (or
 /// "Name (you)" when a custom name is set); everyone else shows their name.
 String memberDisplayName(AppLocalizations l10n, Member member) {
   if (!member.isMe) return member.name;
   final name = member.name.trim();
-  if (name.isEmpty || name == l10n.you) return l10n.you;
+  if (name.isEmpty || name == l10n.you || name == kLegacyDefaultMyName) return l10n.you;
   return l10n.youSuffix(name);
 }
 

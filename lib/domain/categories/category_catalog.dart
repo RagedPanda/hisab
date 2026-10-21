@@ -98,7 +98,7 @@ const List<CategorySeed> categoryCatalog = [
   ]),
   CategorySeed('health', 'Health & Medical', icon: 'medical_services', color: _health, children: [
     CategorySeed('medicines', 'Medicines & Pharmacy', icon: 'medication', color: _health, units: ['strip', 'pcs', 'bottle']),
-    CategorySeed('doctor', 'Doctor & Consultation', icon: 'stethoscope', color: _health),
+    CategorySeed('doctor', 'Doctor & Consultation', icon: 'medical_services', color: _health),
     CategorySeed('hospital', 'Hospital & Surgery', icon: 'local_hospital', color: _health),
     CategorySeed('lab_tests', 'Lab Tests & Diagnostics', icon: 'biotech', color: _health),
     CategorySeed('dental_eye', 'Dental & Eye Care', icon: 'visibility', color: _health),

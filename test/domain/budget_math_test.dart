@@ -34,4 +34,16 @@ void main() {
       expect(spentForBudget(categoryId: null, expenseByCategory: totals, monthExpenseMinor: 17000, childCategoryIds: const []), 17000);
     });
   });
+
+  group('budget overview rows', () {
+    test('overall first, then by limit, capped with a remainder count', () {
+      final rows = budgetOverviewRows<(String?, int)>(
+        [('food', 1500), (null, 6000), ('fuel', 400), ('rent', 18000), ('fun', 900), ('books', 300)],
+        isOverall: (row) => row.$1 == null,
+        limitOf: (row) => row.$2,
+      );
+      expect(rows.shown.map((row) => row.$1), [null, 'rent', 'food', 'fun']);
+      expect(rows.more, 2);
+    });
+  });
 }

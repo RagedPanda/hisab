@@ -43,14 +43,24 @@ class BudgetRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress.usedFraction.clamp(0, 1),
-              color: barColor,
-              backgroundColor: barColor.withValues(alpha: 0.15),
-              minHeight: 6,
-            ),
+          Stack(
+            alignment: Alignment.centerLeft,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: progress.usedFraction.clamp(0, 1),
+                  color: barColor,
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  minHeight: 6,
+                ),
+              ),
+              // Where the bar would be if spend tracked the calendar exactly.
+              Align(
+                alignment: Alignment(-1 + 2 * progress.elapsedFraction, 0),
+                child: Container(width: 1, height: 6, color: theme.colorScheme.outline),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(caption, style: theme.textTheme.bodySmall?.tabular),

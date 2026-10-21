@@ -74,3 +74,13 @@ double elapsedFraction({
   final elapsed = now.difference(start).inMinutes;
   return (elapsed / total).clamp(0, 1).toDouble();
 }
+
+/// Order for a budgets overview: the overall budget first, then by limit
+/// descending; at most [max] rows with the rest counted for an "N more" link.
+({List<T> shown, int more}) budgetOverviewRows<T>(List<T> budgets, {required bool Function(T) isOverall, required int Function(T) limitOf, int max = 4}) {
+  final sorted = [...budgets]..sort((a, b) {
+      final overall = (isOverall(b) ? 1 : 0) - (isOverall(a) ? 1 : 0);
+      return overall != 0 ? overall : limitOf(b).compareTo(limitOf(a));
+    });
+  return (shown: sorted.take(max).toList(), more: sorted.length > max ? sorted.length - max : 0);
+}

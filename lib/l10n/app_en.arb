@@ -648,5 +648,13 @@
   "@amountUpTo": {"placeholders": {"amount": {"type": "String"}}},
   "amountBetween": "{min} – {max}",
   "@amountBetween": {"placeholders": {"min": {"type": "String"}, "max": {"type": "String"}}},
-  "minAboveMax": "Min is more than max"
+  "minAboveMax": "Min is more than max",
+  "calculator": "Calculator",
+  "useAmount": "Use {amount}",
+  "@useAmount": {"placeholders": {"amount": {"type": "String"}}},
+  "calcDivideByZero": "Can't divide by zero",
+  "calcNegative": "The result is below zero",
+  "calcTooLarge": "The result is too large",
+  "saveAndAddAnother": "Save & add another",
+  "savedAddAnother": "Saved. Add the next one."
 }

@@ -35,7 +35,16 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="hisab"/>
             </intent-filter>
+            <!-- Share sheet: text shared to Hisab (e.g. a bank SMS from Messages)
+                 opens the SMS paste screen. MainActivity rewrites the SEND intent
+                 to hisab://sms?text=... so the router handles it like a link. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
             <meta-data android:name="flutter_deeplinking_enabled" android:value="true" />
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

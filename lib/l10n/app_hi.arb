@@ -558,5 +558,12 @@
   "amountFrom": "{amount} से",
   "amountUpTo": "{amount} तक",
   "amountBetween": "{min} – {max}",
-  "minAboveMax": "कम से कम रकम ज़्यादा से ज़्यादा से बड़ी है"
+  "minAboveMax": "कम से कम रकम ज़्यादा से ज़्यादा से बड़ी है",
+  "calculator": "कैलकुलेटर",
+  "useAmount": "{amount} लगाएँ",
+  "calcDivideByZero": "शून्य से भाग नहीं हो सकता",
+  "calcNegative": "नतीजा शून्य से कम है",
+  "calcTooLarge": "नतीजा बहुत बड़ा है",
+  "saveAndAddAnother": "सेव करके और जोड़ें",
+  "savedAddAnother": "सेव हो गया। अगला जोड़ें।"
 }

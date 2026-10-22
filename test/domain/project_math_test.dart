@@ -93,4 +93,21 @@ void main() {
       expect(ProjectStatus.parse('garbage'), ProjectStatus.active);
     });
   });
+
+  group('dashboard and chart shapes', () {
+    test('month totals fill gaps with zero and honour the month start day', () {
+      final bars = projectMonthTotals({DateTime(2026, 8, 5): 500}, [DateTime(2026, 7, 5), DateTime(2026, 8, 5)], startDay: 5);
+      expect(bars.map((bar) => bar.expense), [0, 500]);
+      expect(bars.last.range.start, DateTime(2026, 8, 5));
+      expect(bars.last.range.end, DateTime(2026, 9, 5));
+    });
+
+    test('active rows skip completed and archived and count the overflow', () {
+      final statuses = [ProjectStatus.active, ProjectStatus.completed, ProjectStatus.active, ProjectStatus.active, ProjectStatus.archived, ProjectStatus.active];
+      final rows = activeProjectRows(statuses, statusOf: (status) => status, max: 3);
+      expect(rows.shown, [ProjectStatus.active, ProjectStatus.active, ProjectStatus.active]);
+      expect(rows.more, 1);
+      expect(activeProjectRows([ProjectStatus.completed], statusOf: (status) => status).shown, isEmpty);
+    });
+  });
 }

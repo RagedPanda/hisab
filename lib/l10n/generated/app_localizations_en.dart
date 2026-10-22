@@ -1104,6 +1104,135 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showAllCategories => 'Show all categories';
 
   @override
+  String get projects => 'Projects';
+
+  @override
+  String get project => 'Project';
+
+  @override
+  String get newProject => 'New project';
+
+  @override
+  String get blankProject => 'Blank project';
+
+  @override
+  String get editProject => 'Edit project';
+
+  @override
+  String get projectName => 'Project name';
+
+  @override
+  String get noProjectsTitle => 'No projects yet';
+
+  @override
+  String get noProjectsBody =>
+      'Track a car, a renovation, a trip or a wedding against its own budget.';
+
+  @override
+  String get startProject => 'Start a project';
+
+  @override
+  String get projectsEmptyBody =>
+      'Start a project to track a big spend against its budget';
+
+  @override
+  String get projectStatusActive => 'Active';
+
+  @override
+  String get projectStatusCompleted => 'Completed';
+
+  @override
+  String get projectStatusArchived => 'Archived';
+
+  @override
+  String get showArchived => 'Show archived';
+
+  @override
+  String get hideArchived => 'Hide archived';
+
+  @override
+  String spentOfBudget(String spent, String budget) {
+    return '$spent of $budget';
+  }
+
+  @override
+  String spentAmount(String amount) {
+    return '$amount spent';
+  }
+
+  @override
+  String leftOfBudget(String amount, String budget) {
+    return '$amount of $budget left';
+  }
+
+  @override
+  String receivedAmount(String amount) {
+    return '$amount came back';
+  }
+
+  @override
+  String get noBudgetSet => 'No budget set';
+
+  @override
+  String get allTime => 'all time';
+
+  @override
+  String entryCountLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries',
+      one: '1 entry',
+      zero: 'No entries',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noProjectEntriesTitle => 'Nothing spent yet';
+
+  @override
+  String get noProjectEntriesBody =>
+      'Add an entry from here and it counts towards this project';
+
+  @override
+  String get markCompleted => 'Mark completed';
+
+  @override
+  String get reopenProject => 'Reopen';
+
+  @override
+  String get archiveProject => 'Archive';
+
+  @override
+  String get deleteProject => 'Delete project';
+
+  @override
+  String get deleteProjectBody =>
+      'Entries stay in your ledger; they just leave this project.';
+
+  @override
+  String get projectDeleted => 'Project deleted';
+
+  @override
+  String get startDate => 'Start date';
+
+  @override
+  String get endDate => 'End date';
+
+  @override
+  String get notSet => 'Not set';
+
+  @override
+  String get budgetOptional => 'Budget (optional)';
+
+  @override
+  String get notes => 'Notes';
+
+  @override
+  String get projectNotFound => 'This project was deleted';
+
+  @override
   String get today => 'Today';
 
   @override

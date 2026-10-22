@@ -5,6 +5,7 @@ library;
 import '../../core/dates.dart';
 import '../budget/budget_math.dart';
 import '../ledger/personal_totals.dart';
+import '../stats/spend_series.dart';
 
 /// Lifecycle of a project. Stored in the database by [name].
 enum ProjectStatus {
@@ -122,4 +123,17 @@ List<DateTime> projectMonths({
 int compareProjects({required ProjectStatus statusA, required DateTime updatedA, required ProjectStatus statusB, required DateTime updatedB}) {
   final byStatus = statusA.index.compareTo(statusB.index);
   return byStatus != 0 ? byStatus : updatedB.compareTo(updatedA);
+}
+
+/// One bar per month in [months] with that month's project spend, ready for
+/// the monthly trend chart. Months without spend read as zero.
+List<PeriodTotal> projectMonthTotals(Map<DateTime, int> byMonth, List<DateTime> months, {int startDay = 1}) => [
+      for (final month in months) PeriodTotal(range: monthRange(month, startDay: startDay), expense: byMonth[month] ?? 0, income: 0),
+    ];
+
+/// The active projects a dashboard summary shows, in list order, capped at
+/// [max], with how many active ones did not fit.
+({List<T> shown, int more}) activeProjectRows<T>(List<T> projects, {required ProjectStatus Function(T) statusOf, int max = 3}) {
+  final active = projects.where((project) => statusOf(project) == ProjectStatus.active).toList();
+  return (shown: active.take(max).toList(), more: active.length > max ? active.length - max : 0);
 }

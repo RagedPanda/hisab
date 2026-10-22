@@ -84,17 +84,20 @@ class CategoryBreakdown {
 final categoryBreakdownProvider = Provider<AsyncValue<CategoryBreakdown>>((ref) => combineAsync(
       ref.watch(dashboardLedgerProvider),
       ref.watch(allCategoriesProvider),
-      (ledger, categories) {
-        final totals = totalsByCategory(linesWithin(ledger.lines, ledger.range));
-        final rolled = rollUpToParents(totals, {for (final category in categories) category.id: category.parentId});
-        final shares = categoryShares(rolled);
-        return CategoryBreakdown(
-          shares: shares,
-          categoriesById: {for (final category in categories) category.id: category},
-          totalMinor: shares.fold(0, (sum, share) => sum + share.minor),
-        );
-      },
+      (ledger, categories) => buildCategoryBreakdown(totalsByCategory(linesWithin(ledger.lines, ledger.range)), categories),
     ));
+
+/// Expense per category rolled up to parents and cut to the top slices; the
+/// shape the category donut draws, for the dashboard month or a project.
+CategoryBreakdown buildCategoryBreakdown(Map<String, int> expenseByCategory, List<Category> categories) {
+  final rolled = rollUpToParents(expenseByCategory, {for (final category in categories) category.id: category.parentId});
+  final shares = categoryShares(rolled);
+  return CategoryBreakdown(
+    shares: shares,
+    categoriesById: {for (final category in categories) category.id: category},
+    totalMinor: shares.fold(0, (sum, share) => sum + share.minor),
+  );
+}
 
 /// The category the donut has selected; '' is "uncategorised", null is none.
 class SelectedDashboardCategory extends Notifier<String?> {

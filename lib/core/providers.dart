@@ -13,7 +13,9 @@ import '../data/repositories/project_fields_repository.dart';
 import '../data/repositories/projects_repository.dart';
 import '../data/repositories/reminders_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
+import '../data/sms/reminder_payment_adapter.dart';
 import '../data/sms/sms_ingest_service.dart';
+import '../data/sms/sms_reminder_linker.dart';
 import '../domain/entries/entry_filter.dart';
 import '../domain/stats/dashboard_ledger.dart';
 import '../domain/stats/spend_series.dart';
@@ -147,6 +149,17 @@ final smsIngestServiceProvider = Provider((ref) => SmsIngestService(
       accounts: ref.watch(accountsRepositoryProvider),
       categories: ref.watch(categoriesRepositoryProvider),
       entries: ref.watch(entriesRepositoryProvider),
+      reminderLinker: ref.watch(smsReminderLinkerProvider),
+    ));
+
+/// Marks a pending reminder paid when an SMS entry matches it (R2).
+final smsReminderLinkerProvider = Provider((ref) => SmsReminderLinker(
+      smsLog: ref.watch(smsLogRepositoryProvider),
+      reminders: ReminderPaymentAdapter(
+        reminders: ref.watch(remindersRepositoryProvider),
+        scheduler: ref.watch(reminderSchedulerProvider),
+        accounts: ref.watch(accountsRepositoryProvider),
+      ),
     ));
 
 final backupServiceProvider = Provider((ref) => BackupService(ref.watch(databaseProvider)));

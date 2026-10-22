@@ -16,6 +16,7 @@ import '../repositories/categories_repository.dart';
 import '../repositories/entries_repository.dart';
 import '../repositories/sms_log_repository.dart';
 import 'sms_channel.dart';
+import 'sms_reminder_linker.dart';
 
 enum IngestStatus { duplicate, notBank, unparsed, pending, added }
 
@@ -26,12 +27,16 @@ class SmsIngestService {
     required this.accounts,
     required this.categories,
     required this.entries,
+    this.reminderLinker,
   });
 
   final SmsLogRepository smsLog;
   final AccountsRepository accounts;
   final CategoriesRepository categories;
   final EntriesRepository entries;
+
+  /// Pays a pending reminder the new entry matches; null disables matching.
+  final SmsReminderLinker? reminderLinker;
 
   StreamSubscription<RawSms>? _liveSubscription;
 
@@ -100,6 +105,7 @@ class SmsIngestService {
     final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(id, parsed, categoryKey, account?.id);
     await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'added', parsed: payload, entryId: entryId);
+    await reminderLinker?.linkEntry(smsId: id, parsed: parsed, entryId: entryId);
     return IngestStatus.added;
   }
 
@@ -110,7 +116,18 @@ class SmsIngestService {
     final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(row.id, parsed, suggestCategoryKey(parsed), account?.id);
     await smsLog.setStatus(row.id, 'added', entryId: entryId);
+    await reminderLinker?.linkEntry(smsId: row.id, parsed: parsed, entryId: entryId);
     return entryId;
+  }
+
+  /// Pays the reminder a logged SMS matches once the user saved it as [entryId]
+  /// from the editor. Returns the reminder id, or null.
+  Future<String?> linkSavedEntry(String smsId, String entryId) async {
+    final linker = reminderLinker;
+    final row = await smsLog.getById(smsId);
+    if (linker == null || row == null) return null;
+    final parsed = parseBankSms(sender: row.sender, body: row.body, receivedAt: row.receivedAt);
+    return parsed == null ? null : linker.linkEntry(smsId: smsId, parsed: parsed, entryId: entryId);
   }
 
   /// Creates (or finds) the account a logged SMS refers to. Used when the

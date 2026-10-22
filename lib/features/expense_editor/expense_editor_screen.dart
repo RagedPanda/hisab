@@ -648,6 +648,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     if (widget.reminderId != null && !_isEditing) {
       await ref.read(reminderSchedulerProvider).markDone(widget.reminderId!, entryId: id);
       messenger.showSnackBar(SnackBar(content: Text(l10n.reminderMarkedPaid)));
+    } else if (_smsId != null) {
+      await ref.read(smsIngestServiceProvider).linkSavedEntry(_smsId!, id);
     }
     if (!mounted) return;
     if (addAnother) {

@@ -452,5 +452,6 @@
   "@paymentNoDebt": {"placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
   "paymentVia": "Payment · {method}",
   "@paymentVia": {"placeholders": {"method": {"type": "String"}}},
-  "samePersonError": "Pick two different people"
+  "samePersonError": "Pick two different people",
+  "amountLabel": "Amount"
 }

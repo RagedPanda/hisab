@@ -144,7 +144,7 @@ Future<void> _recordPayment(WidgetTester tester, String transferLine) async {
   final tile = _pendingTransfer(transferLine).first;
   await tapFinder(tester, find.descendant(of: tile, matching: find.text('Record payment')));
   expect(find.text('Record payment'), findsWidgets);
-  await tapFinder(tester, _filled('Save'), frames: 12);
+  await tapFinder(tester, _filled('Save payment'), frames: 12);
 }
 
 Finder _splitField(String memberLabel) => find.descendant(

@@ -968,12 +968,6 @@ abstract class AppLocalizations {
   /// **'{from} paid {to}'**
   String settlementLine(String from, String to);
 
-  /// No description provided for @settlementSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Payment · tap to remove'**
-  String get settlementSubtitle;
-
   /// No description provided for @settledPayments.
   ///
   /// In en, this message translates to:
@@ -2221,6 +2215,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yesterday'**
   String get yesterday;
+
+  /// No description provided for @savePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Save payment'**
+  String get savePayment;
+
+  /// No description provided for @recordAPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a payment'**
+  String get recordAPayment;
+
+  /// No description provided for @recordAPaymentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Any pair, any amount — partial payments are fine'**
+  String get recordAPaymentHint;
+
+  /// No description provided for @editPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit payment'**
+  String get editPayment;
+
+  /// No description provided for @paymentUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment updated'**
+  String get paymentUpdated;
+
+  /// No description provided for @paymentFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get paymentFrom;
+
+  /// No description provided for @paymentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get paymentTo;
+
+  /// No description provided for @swapDirection.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap'**
+  String get swapDirection;
+
+  /// No description provided for @paymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Method'**
+  String get paymentMethod;
+
+  /// No description provided for @methodCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get methodCash;
+
+  /// No description provided for @methodUpi.
+  ///
+  /// In en, this message translates to:
+  /// **'UPI'**
+  String get methodUpi;
+
+  /// No description provided for @methodBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank'**
+  String get methodBank;
+
+  /// No description provided for @methodOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get methodOther;
+
+  /// No description provided for @paymentOverOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'More than the {amount} owed; the extra becomes a credit'**
+  String paymentOverOwed(String amount);
+
+  /// No description provided for @paymentNoDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} owes {to} nothing right now; this payment becomes a credit'**
+  String paymentNoDebt(String from, String to);
+
+  /// No description provided for @paymentVia.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment · {method}'**
+  String paymentVia(String method);
+
+  /// No description provided for @samePersonError.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick two different people'**
+  String get samePersonError;
+
+  /// No description provided for @amountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get amountLabel;
 }
 
 class _AppLocalizationsDelegate

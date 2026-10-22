@@ -377,5 +377,6 @@
   "@paymentNoDebt": {"placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
   "paymentVia": "भुगतान · {method}",
   "@paymentVia": {"placeholders": {"method": {"type": "String"}}},
-  "samePersonError": "दो अलग लोग चुनें"
+  "samePersonError": "दो अलग लोग चुनें",
+  "amountLabel": "रकम"
 }

@@ -73,6 +73,7 @@ void main() {
     final afterDelete = await groups.getActivityFeed(groupId: groupId);
     expect(afterDelete.activities.first.action, ActivityAction.deleted);
     expect(afterDelete.restorableIds, {afterDelete.activities.first.id});
+    expect(afterDelete.deletedExpenseIds, {'e1'});
 
     await groups.restoreGroupExpense('e1');
     final restored = await groups.getGroupEntries(groupId);

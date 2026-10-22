@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../../core/dates.dart';
+
 /// What happened to an expense or payment in a group's activity log.
 enum ActivityAction { added, edited, deleted, restored }
 
@@ -219,7 +221,7 @@ List<ActivityChange> _diffExpenses(ExpenseSnapshot before, ExpenseSnapshot after
   return [
     if (expenseDescription(before) != expenseDescription(after)) DescriptionChange(expenseDescription(before), expenseDescription(after)),
     if (before.amountMinor != after.amountMinor) AmountChange(before.amountMinor, after.amountMinor),
-    if (!_sameDay(before.occurredAt, after.occurredAt)) DateChange(before.occurredAt, after.occurredAt),
+    if (!isSameDay(before.occurredAt, after.occurredAt)) DateChange(before.occurredAt, after.occurredAt),
     if (before.categoryId != after.categoryId) CategoryChange(before.categoryId, after.categoryId),
     if (!_sameList(payersBefore, payersAfter)) PayersChange(payersBefore, payersAfter),
     ..._shareChanges(before.shares, after.shares),
@@ -230,7 +232,7 @@ List<ActivityChange> _diffPayments(PaymentSnapshot before, PaymentSnapshot after
       if (before.fromMemberId != after.fromMemberId || before.toMemberId != after.toMemberId)
         PartiesChange(fromBefore: before.fromMemberId, toBefore: before.toMemberId, fromAfter: after.fromMemberId, toAfter: after.toMemberId),
       if (before.amountMinor != after.amountMinor) AmountChange(before.amountMinor, after.amountMinor),
-      if (!_sameDay(before.occurredAt, after.occurredAt)) DateChange(before.occurredAt, after.occurredAt),
+      if (!isSameDay(before.occurredAt, after.occurredAt)) DateChange(before.occurredAt, after.occurredAt),
       if (before.method != after.method) MethodChange(before.method, after.method),
       if (before.note != after.note) NoteChange(before.note, after.note),
     ];
@@ -258,8 +260,6 @@ Map<String, int> _totalsByMember(List<MemberAmount> amounts) {
 List<String> _sortedMemberIds(List<MemberAmount> amounts) => ({for (final amount in amounts) amount.memberId}.toList()..sort());
 
 bool _sameList(List<String> first, List<String> second) => first.length == second.length && first.indexed.every((pair) => second[pair.$1] == pair.$2);
-
-bool _sameDay(DateTime first, DateTime second) => first.year == second.year && first.month == second.month && first.day == second.day;
 
 /// A log row as the feed needs it, already decoded.
 class ActivityRecord {

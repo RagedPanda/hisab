@@ -84,7 +84,7 @@ typedef GroupEntry = (Entry, List<Split>, List<EntryPayer>);
 /// The activity log as a feed shows it: decoded rows (newest first) with the
 /// names and groups they mention.
 class ActivityFeed {
-  const ActivityFeed({required this.activities, required this.membersById, required this.groupsById, required this.restorableIds});
+  const ActivityFeed({required this.activities, required this.membersById, required this.groupsById, required this.restorableIds, this.deletedExpenseIds = const {}});
   final List<ActivityRecord> activities;
 
   /// Every member of the groups shown, removed ones included.
@@ -95,6 +95,9 @@ class ActivityFeed {
 
   /// Rows that offer Restore (see [restorableActivityIds]).
   final Set<String> restorableIds;
+
+  /// Expenses the feed mentions that are deleted now, so rows do not open them.
+  final Set<String> deletedExpenseIds;
 }
 
 class GroupsRepository {
@@ -570,6 +573,7 @@ class GroupsRepository {
       membersById: {for (final member in members) member.id: member},
       groupsById: {for (final group in groups) group.id: group},
       restorableIds: restorableActivityIds(activities, deletedExpenseIds: deletedExpenseIds),
+      deletedExpenseIds: deletedExpenseIds,
     );
   }
 

@@ -62,8 +62,25 @@ Future<void> rewindToVersion4(File file) async {
 
 /// Rewinds a freshly created database to the schema shipped at version 5
 /// (generic reminders table without the due-reminder columns).
+/// Rewinds a freshly created database to the schema shipped at version 6
+/// (due reminders, but no project link or document number).
+Future<void> rewindToVersion6(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropDocumentReminderColumns(db);
+  await db.customStatement('PRAGMA user_version = 6');
+  await db.close();
+}
+
+Future<void> dropDocumentReminderColumns(AppDatabase db) async {
+  await db.customStatement('DROP INDEX reminders_project_id');
+  for (final column in documentReminderColumns(db.reminders)) {
+    await db.customStatement('ALTER TABLE reminders DROP COLUMN ${column.name}');
+  }
+}
+
 Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropDocumentReminderColumns(db);
   await db.customStatement('DROP INDEX reminders_status_due');
   for (final column in dueReminderColumns(db.reminders)) {
     await db.customStatement('ALTER TABLE reminders DROP COLUMN ${column.name}');
@@ -184,6 +201,25 @@ void main() {
     expect(settleUp.notifyAtMinute, isNull);
     final indexes = await db.customSelect("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'reminders'").get();
     expect(indexes.map((row) => row.data['name']), contains('reminders_status_due'));
+    await db.close();
+  });
+
+  test('upgrading from schema 6 links reminders to projects and keeps existing ones', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.reminders).insert(RemindersCompanion.insert(id: 'r1', kind: 'document', title: const Value('Passport'), dueAt: Value(DateTime(2027, 3, 1))));
+    await seed.close();
+    await rewindToVersion6(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final passport = await db.select(db.reminders).getSingle();
+    expect(passport.title, 'Passport');
+    expect(passport.projectId, isNull);
+    expect(passport.documentNumber, '');
+    expect(passport.presetKey, isNull);
+    final indexes = await db.customSelect("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'reminders'").get();
+    expect(indexes.map((row) => row.data['name']), contains('reminders_project_id'));
     await db.close();
   });
 

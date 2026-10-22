@@ -264,6 +264,7 @@ class EntryFieldValues extends Table with SyncColumns {
 /// reminders, recurring-expense prompts and the like share history and sync.
 @TableIndex(name: 'reminders_group_id', columns: {#groupId})
 @TableIndex(name: 'reminders_status_due', columns: {#status, #dueAt})
+@TableIndex(name: 'reminders_project_id', columns: {#projectId})
 class Reminders extends Table with SyncColumns {
   TextColumn get id => text()();
 
@@ -329,6 +330,17 @@ class Reminders extends Table with SyncColumns {
   /// so undo can remove it again.
   TextColumn get nextId => text().nullable()();
 
+  // Document reminders (v7): PUC, passport, insurance and other renewals.
+
+  /// Project the reminder belongs to (projects.id), e.g. the Vehicle project's PUC.
+  TextColumn get projectId => text().nullable()();
+
+  /// Policy, registration or document number, kept for reference.
+  TextColumn get documentNumber => text().withDefault(const Constant(''))();
+
+  /// Document preset the reminder was made from (lib/domain/reminders/document_presets.dart).
+  TextColumn get presetKey => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -370,7 +382,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -408,6 +420,14 @@ class AppDatabase extends _$AppDatabase {
             }
           }
           if (from < 6) await m.createIndex(remindersStatusDue);
+          // v7: document reminders link to a project and keep a document number.
+          // The table exists from v5 on; older databases created it whole above.
+          if (from < 7 && from >= 5) {
+            for (final column in documentReminderColumns(reminders)) {
+              await m.addColumn(reminders, column);
+            }
+          }
+          if (from < 7) await m.createIndex(remindersProjectId);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -482,3 +502,6 @@ List<GeneratedColumn> dueReminderColumns($RemindersTable table) => [
       table.snoozedUntil,
       table.nextId,
     ];
+
+/// Columns v7 added to [Reminders]; a v6 database gains exactly these.
+List<GeneratedColumn> documentReminderColumns($RemindersTable table) => [table.projectId, table.documentNumber, table.presetKey];

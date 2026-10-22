@@ -20,6 +20,9 @@ class ReminderDraft {
     this.notifyAtMinute = kDefaultNotifyMinute,
     this.matchKeywords = '',
     this.toleranceMinor = 0,
+    this.projectId,
+    this.documentNumber = '',
+    this.presetKey,
   });
 
   final String? id;
@@ -42,13 +45,22 @@ class ReminderDraft {
   final String matchKeywords;
   final int toleranceMinor;
 
+  /// Project the reminder belongs to (the Vehicle project's PUC).
+  final String? projectId;
+
+  /// Policy, registration or document number, kept for reference.
+  final String documentNumber;
+
+  /// Document preset the reminder was created from (lib/domain/reminders/document_presets.dart).
+  final String? presetKey;
+
   /// The due day at midnight, the form stored in the database.
   DateTime get dueDay => DateTime(dueAt.year, dueAt.month, dueAt.day);
 
   /// Day of month a repeating reminder keeps, or null for one-offs and weekly.
   int? get repeatDay => switch (repeat) {
-        ReminderRepeat.monthly || ReminderRepeat.quarterly || ReminderRepeat.yearly => dueAt.day,
         ReminderRepeat.once || ReminderRepeat.weekly => null,
+        _ => dueAt.day,
       };
 
   /// Why this draft cannot be saved, or null when it can.

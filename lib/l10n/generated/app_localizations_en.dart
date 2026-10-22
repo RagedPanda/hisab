@@ -1934,4 +1934,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get minAboveMax => 'Min is more than max';
+
+  @override
+  String get calculator => 'Calculator';
+
+  @override
+  String useAmount(String amount) {
+    return 'Use $amount';
+  }
+
+  @override
+  String get calcDivideByZero => 'Can\'t divide by zero';
+
+  @override
+  String get calcNegative => 'The result is below zero';
+
+  @override
+  String get calcTooLarge => 'The result is too large';
+
+  @override
+  String get saveAndAddAnother => 'Save & add another';
+
+  @override
+  String get savedAddAnother => 'Saved. Add the next one.';
 }

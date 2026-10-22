@@ -1927,4 +1927,27 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get minAboveMax => 'कम से कम रकम ज़्यादा से ज़्यादा से बड़ी है';
+
+  @override
+  String get calculator => 'कैलकुलेटर';
+
+  @override
+  String useAmount(String amount) {
+    return '$amount लगाएँ';
+  }
+
+  @override
+  String get calcDivideByZero => 'शून्य से भाग नहीं हो सकता';
+
+  @override
+  String get calcNegative => 'नतीजा शून्य से कम है';
+
+  @override
+  String get calcTooLarge => 'नतीजा बहुत बड़ा है';
+
+  @override
+  String get saveAndAddAnother => 'सेव करके और जोड़ें';
+
+  @override
+  String get savedAddAnother => 'सेव हो गया। अगला जोड़ें।';
 }

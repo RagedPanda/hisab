@@ -3313,6 +3313,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Min is more than max'**
   String get minAboveMax;
+
+  /// No description provided for @calculator.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculator'**
+  String get calculator;
+
+  /// No description provided for @useAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {amount}'**
+  String useAmount(String amount);
+
+  /// No description provided for @calcDivideByZero.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t divide by zero'**
+  String get calcDivideByZero;
+
+  /// No description provided for @calcNegative.
+  ///
+  /// In en, this message translates to:
+  /// **'The result is below zero'**
+  String get calcNegative;
+
+  /// No description provided for @calcTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The result is too large'**
+  String get calcTooLarge;
+
+  /// No description provided for @saveAndAddAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & add another'**
+  String get saveAndAddAnother;
+
+  /// No description provided for @savedAddAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. Add the next one.'**
+  String get savedAddAnother;
 }
 
 class _AppLocalizationsDelegate

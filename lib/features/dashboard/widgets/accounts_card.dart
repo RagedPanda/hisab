@@ -75,7 +75,9 @@ class _AccountCard extends ConsumerWidget {
         padding: const EdgeInsets.all(12),
         onTap: () => needsOpeningBalance
             ? showAccountForm(context, ref, existing: account, focusBalance: true)
-            : context.go(Uri(path: '/transactions', queryParameters: {'account': account.id}).toString()),
+            : isCard
+                ? openCardAccount(context, account.id)
+                : context.go(Uri(path: '/transactions', queryParameters: {'account': account.id}).toString()),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

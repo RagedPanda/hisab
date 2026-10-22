@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../accounts/accounts_screen.dart';
+import '../accounts/card_account_screen.dart';
 import '../budgets/budgets_screen.dart';
 import '../categories/categories_screen.dart';
 import '../categories/category_packs_screen.dart';
@@ -56,7 +57,14 @@ final appRouter = GoRouter(
     GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(groupId: state.pathParameters['id']!)),
     GoRoute(path: '/categories', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoriesScreen()),
     GoRoute(path: '/categories/packs', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoryPacksScreen()),
-    GoRoute(path: '/accounts', parentNavigatorKey: _rootKey, builder: (_, _) => const AccountsScreen()),
+    GoRoute(
+      path: '/accounts',
+      parentNavigatorKey: _rootKey,
+      builder: (_, _) => const AccountsScreen(),
+      routes: [
+        GoRoute(path: 'card/:id', parentNavigatorKey: _rootKey, builder: (_, state) => CardAccountScreen(accountId: state.pathParameters['id']!)),
+      ],
+    ),
     GoRoute(path: '/budgets', parentNavigatorKey: _rootKey, builder: (_, _) => const BudgetsScreen()),
     GoRoute(
       path: '/projects',

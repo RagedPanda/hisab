@@ -3787,6 +3787,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{days, plural, =1{Overdue by 1 day} other{Overdue by {days} days}}'**
   String reminderOverdueDays(int days);
+
+  /// No description provided for @cardStatementDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement day'**
+  String get cardStatementDay;
+
+  /// No description provided for @cardDueDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment due day'**
+  String get cardDueDay;
+
+  /// No description provided for @cardDayNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get cardDayNotSet;
+
+  /// No description provided for @cardCreditLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit limit'**
+  String get cardCreditLimit;
+
+  /// No description provided for @cardLastStatementAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Last statement amount'**
+  String get cardLastStatementAmount;
+
+  /// No description provided for @cardDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement and due days let Hisab show your billing cycle and remind you before the bill is due.'**
+  String get cardDetailsHint;
+
+  /// No description provided for @cardOutstanding.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding'**
+  String get cardOutstanding;
+
+  /// No description provided for @cardThisCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'This cycle'**
+  String get cardThisCycle;
+
+  /// No description provided for @cardCycleDates.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} to {end}'**
+  String cardCycleDates(String start, String end);
+
+  /// No description provided for @cardLastStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Last statement'**
+  String get cardLastStatement;
+
+  /// No description provided for @cardStatementOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement of {date}'**
+  String cardStatementOn(String date);
+
+  /// No description provided for @cardNoStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recorded'**
+  String get cardNoStatement;
+
+  /// No description provided for @cardAvailableLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Available limit'**
+  String get cardAvailableLimit;
+
+  /// No description provided for @cardOverLimitBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Over limit by {amount}'**
+  String cardOverLimitBy(String amount);
+
+  /// No description provided for @cardLimitUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of {limit} limit used'**
+  String cardLimitUsed(int percent, String limit);
+
+  /// No description provided for @cardDueOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date}'**
+  String cardDueOn(String date);
+
+  /// No description provided for @cardPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get cardPaid;
+
+  /// No description provided for @cardAmountLeftToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} left to pay'**
+  String cardAmountLeftToPay(String amount);
+
+  /// No description provided for @cardSetUpDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Set statement and due days'**
+  String get cardSetUpDays;
+
+  /// No description provided for @cardViewTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'View transactions'**
+  String get cardViewTransactions;
+
+  /// No description provided for @cardNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This card was deleted'**
+  String get cardNotFound;
 }
 
 class _AppLocalizationsDelegate

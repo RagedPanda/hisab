@@ -84,6 +84,20 @@ void main() {
     expect(await entries.watchTotals(range).first, (expense: 0, income: 0));
   });
 
+  test('watchAccountMovements lists entries charged to or paid into one account since a date', () async {
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 1000, occurredAt: DateTime(2026, 10, 5), accountId: 'card'));
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 2000, occurredAt: DateTime(2026, 9, 30), accountId: 'card'));
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 3000, occurredAt: DateTime(2026, 10, 6), accountId: 'bank'));
+    await entries.saveEntry(EntriesRepository.newExpense(kind: 'transfer', amountMinor: 4000, occurredAt: DateTime(2026, 10, 7), accountId: 'bank').copyWith(toAccountId: const Value('card')));
+    final deletedId = newId();
+    await entries.saveEntry(EntriesRepository.newExpense(id: deletedId, amountMinor: 5000, occurredAt: DateTime(2026, 10, 8), accountId: 'card'));
+    await entries.deleteEntry(deletedId);
+
+    final movements = await entries.watchAccountMovements('card', since: DateTime(2026, 10, 1)).first;
+    expect(movements.map((movement) => (movement.kind, movement.amountMinor)).toSet(), {('expense', 1000), ('transfer', 4000)});
+    expect(movements.firstWhere((movement) => movement.kind == 'transfer').toAccountId, 'card');
+  });
+
   test('transfer rows carry both accounts', () async {
     await db.into(db.accounts).insert(AccountsCompanion.insert(id: 'bank', name: 'HDFC', type: 'bank', color: 1));
     await db.into(db.accounts).insert(AccountsCompanion.insert(id: 'cash', name: 'Cash', type: 'cash', color: 2));

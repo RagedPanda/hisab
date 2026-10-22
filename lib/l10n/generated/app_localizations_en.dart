@@ -2232,4 +2232,80 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get cardStatementDay => 'Statement day';
+
+  @override
+  String get cardDueDay => 'Payment due day';
+
+  @override
+  String get cardDayNotSet => 'Not set';
+
+  @override
+  String get cardCreditLimit => 'Credit limit';
+
+  @override
+  String get cardLastStatementAmount => 'Last statement amount';
+
+  @override
+  String get cardDetailsHint =>
+      'Statement and due days let Hisab show your billing cycle and remind you before the bill is due.';
+
+  @override
+  String get cardOutstanding => 'Outstanding';
+
+  @override
+  String get cardThisCycle => 'This cycle';
+
+  @override
+  String cardCycleDates(String start, String end) {
+    return '$start to $end';
+  }
+
+  @override
+  String get cardLastStatement => 'Last statement';
+
+  @override
+  String cardStatementOn(String date) {
+    return 'Statement of $date';
+  }
+
+  @override
+  String get cardNoStatement => 'Not recorded';
+
+  @override
+  String get cardAvailableLimit => 'Available limit';
+
+  @override
+  String cardOverLimitBy(String amount) {
+    return 'Over limit by $amount';
+  }
+
+  @override
+  String cardLimitUsed(int percent, String limit) {
+    return '$percent% of $limit limit used';
+  }
+
+  @override
+  String cardDueOn(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String get cardPaid => 'Paid';
+
+  @override
+  String cardAmountLeftToPay(String amount) {
+    return '$amount left to pay';
+  }
+
+  @override
+  String get cardSetUpDays => 'Set statement and due days';
+
+  @override
+  String get cardViewTransactions => 'View transactions';
+
+  @override
+  String get cardNotFound => 'This card was deleted';
 }

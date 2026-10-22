@@ -48,9 +48,6 @@ enum ReminderRepeat {
 
   bool get repeats => this != once;
 
-  /// The everyday choices the editor always shows; the rest come from presets.
-  static const List<ReminderRepeat> common = [once, weekly, monthly, quarterly, yearly];
-
   static ReminderRepeat fromKey(String key) {
     for (final repeat in values) {
       if (repeat.key == key) return repeat;

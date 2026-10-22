@@ -29,7 +29,11 @@ String reminderRepeatLabel(AppLocalizations l10n, ReminderRepeat repeat) => swit
       ReminderRepeat.weekly => l10n.reminderRepeatWeekly,
       ReminderRepeat.monthly => l10n.reminderRepeatMonthly,
       ReminderRepeat.quarterly => l10n.reminderRepeatQuarterly,
+      ReminderRepeat.halfYearly => l10n.reminderRepeatHalfYearly,
       ReminderRepeat.yearly => l10n.reminderRepeatYearly,
+      ReminderRepeat.everyElevenMonths => l10n.reminderRepeatElevenMonths,
+      ReminderRepeat.everyFiveYears => l10n.reminderRepeatFiveYears,
+      ReminderRepeat.everyTenYears => l10n.reminderRepeatTenYears,
     };
 
 String reminderBucketLabel(AppLocalizations l10n, ReminderBucket bucket) => switch (bucket) {

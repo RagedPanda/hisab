@@ -169,10 +169,11 @@ ReminderDraft draftFromPreset(DocumentPreset preset, {required String title, req
   projectId: projectId,
 );
 
-/// Repeat options the editor shows: the everyday ones plus whatever the
-/// preset suggests (and the current value, so an edited reminder keeps it).
-List<ReminderRepeat> repeatOptionsFor({DocumentPreset? preset, ReminderRepeat? current}) {
-  final wanted = {...ReminderRepeat.common, ...?preset?.repeatChoices, ?current};
+/// Repeat options the editor shows: the everyday [common] ones plus whatever
+/// the preset suggests (and the current value, so an edited reminder keeps
+/// it), in [ReminderRepeat] order.
+List<ReminderRepeat> repeatOptionsFor({required List<ReminderRepeat> common, DocumentPreset? preset, ReminderRepeat? current}) {
+  final wanted = {...common, ...?preset?.repeatChoices, ?current};
   return [
     for (final repeat in ReminderRepeat.values)
       if (wanted.contains(repeat)) repeat,

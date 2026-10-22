@@ -122,17 +122,21 @@ void main() {
   });
 
   group('editor options', () {
+    const everyday = [ReminderRepeat.once, ReminderRepeat.monthly, ReminderRepeat.quarterly, ReminderRepeat.yearly];
+
     test('repeat options add the preset cycles to the everyday ones, in enum order', () {
-      final options = repeatOptionsFor(preset: documentPresetByKey('rent_agreement'));
-      expect(options, [...ReminderRepeat.common.take(4), ReminderRepeat.yearly, ReminderRepeat.everyElevenMonths]);
+      final options = repeatOptionsFor(common: everyday, preset: documentPresetByKey('rent_agreement'));
+      expect(options, [...everyday, ReminderRepeat.everyElevenMonths]);
+      expect(repeatOptionsFor(common: everyday, preset: documentPresetByKey('puc')),
+          [ReminderRepeat.once, ReminderRepeat.monthly, ReminderRepeat.quarterly, ReminderRepeat.halfYearly, ReminderRepeat.yearly]);
     });
 
     test('without a preset only the everyday repeats show', () {
-      expect(repeatOptionsFor(), ReminderRepeat.common);
+      expect(repeatOptionsFor(common: everyday), everyday);
     });
 
     test('an edited reminder keeps its unusual repeat on offer', () {
-      expect(repeatOptionsFor(current: ReminderRepeat.everyTenYears), contains(ReminderRepeat.everyTenYears));
+      expect(repeatOptionsFor(common: everyday, current: ReminderRepeat.everyTenYears), contains(ReminderRepeat.everyTenYears));
     });
 
     test('days-before options merge everyday, preset and current lead times, nearest first', () {

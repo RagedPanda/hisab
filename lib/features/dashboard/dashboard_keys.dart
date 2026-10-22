@@ -1,0 +1,15 @@
+/// Keys on each dashboard card's root so tests can assert the composition
+/// without matching on translated text.
+library;
+
+import 'package:flutter/widgets.dart';
+
+const Key kSummarySpentKey = ValueKey('summary.spent');
+const Key kHeroCardKey = ValueKey('dashboard.hero');
+const Key kTrendCardKey = ValueKey('dashboard.trend');
+const Key kCategoryCardKey = ValueKey('dashboard.categories');
+const Key kBudgetsCardKey = ValueKey('dashboard.budgets');
+const Key kUpcomingCardKey = ValueKey('dashboard.upcoming');
+const Key kAccountsCardKey = ValueKey('dashboard.accounts');
+const Key kGroupsCardKey = ValueKey('dashboard.groups');
+const Key kRecentCardKey = ValueKey('dashboard.recent');

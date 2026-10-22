@@ -980,6 +980,130 @@ class AppLocalizationsEn extends AppLocalizations {
   String get genericItem => 'item';
 
   @override
+  String spentInMonth(String month) {
+    return 'Spent in $month';
+  }
+
+  @override
+  String vsLastMonthUp(int percent, String month) {
+    return '▲ $percent% vs $month';
+  }
+
+  @override
+  String vsLastMonthDown(int percent, String month) {
+    return '▼ $percent% vs $month';
+  }
+
+  @override
+  String vsLastMonthSame(String month) {
+    return 'Same as $month';
+  }
+
+  @override
+  String get dailyAverage => 'Daily avg';
+
+  @override
+  String perDay(String amount) {
+    return '$amount/day';
+  }
+
+  @override
+  String daysOfMonth(int elapsed, int total) {
+    return '$elapsed of $total days';
+  }
+
+  @override
+  String get heroEmptyCaption => 'Nothing spent yet this month';
+
+  @override
+  String get addFirstEntry => 'Add your first entry';
+
+  @override
+  String get copied => 'Copied';
+
+  @override
+  String get spendingTrend => 'Spending trend';
+
+  @override
+  String get trendDaily => 'Daily';
+
+  @override
+  String get trendMonthly => 'Monthly';
+
+  @override
+  String get trendEmpty => 'Add a few entries to see your trend';
+
+  @override
+  String trendSemantics(String amount) {
+    return 'Spending trend: $amount spent so far this month';
+  }
+
+  @override
+  String get thisMonth => 'this month';
+
+  @override
+  String get categoriesEmpty => 'Your categories will show up here';
+
+  @override
+  String percentOf(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get budgetsEmptyBody => 'Set a budget to see how you\'re tracking';
+
+  @override
+  String andMoreCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more',
+      one: '1 more',
+    );
+    return 'and $_temp0';
+  }
+
+  @override
+  String youGetAmount(String amount) {
+    return 'You get $amount';
+  }
+
+  @override
+  String youOweAmount(String amount) {
+    return 'You owe $amount';
+  }
+
+  @override
+  String get upcoming => 'Upcoming';
+
+  @override
+  String get upcomingEmpty => 'Nothing due in the next two weeks';
+
+  @override
+  String memberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noEntriesYetTitle => 'No entries yet';
+
+  @override
+  String get noEntriesYetBody =>
+      'Add one with + or turn on Bank SMS to capture them automatically';
+
+  @override
+  String get addEntry => 'Add entry';
+
+  @override
+  String get showAllCategories => 'Show all categories';
+
+  @override
   String get today => 'Today';
 
   @override

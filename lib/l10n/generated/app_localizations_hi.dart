@@ -980,6 +980,124 @@ class AppLocalizationsHi extends AppLocalizations {
   String get genericItem => 'आइटम';
 
   @override
+  String spentInMonth(String month) {
+    return '$month का खर्च';
+  }
+
+  @override
+  String vsLastMonthUp(int percent, String month) {
+    return '▲ $percent% बनाम $month';
+  }
+
+  @override
+  String vsLastMonthDown(int percent, String month) {
+    return '▼ $percent% बनाम $month';
+  }
+
+  @override
+  String vsLastMonthSame(String month) {
+    return '$month जितना';
+  }
+
+  @override
+  String get dailyAverage => 'रोज़ाना औसत';
+
+  @override
+  String perDay(String amount) {
+    return '$amount/दिन';
+  }
+
+  @override
+  String daysOfMonth(int elapsed, int total) {
+    return '$total में से $elapsed दिन';
+  }
+
+  @override
+  String get heroEmptyCaption => 'इस महीने अभी तक कोई खर्च नहीं';
+
+  @override
+  String get addFirstEntry => 'अपनी पहली प्रविष्टि जोड़ें';
+
+  @override
+  String get copied => 'कॉपी हो गया';
+
+  @override
+  String get spendingTrend => 'खर्च का रुझान';
+
+  @override
+  String get trendDaily => 'दैनिक';
+
+  @override
+  String get trendMonthly => 'मासिक';
+
+  @override
+  String get trendEmpty => 'अपना रुझान देखने के लिए कुछ प्रविष्टियाँ जोड़ें';
+
+  @override
+  String trendSemantics(String amount) {
+    return 'खर्च का रुझान: इस महीने अब तक $amount खर्च';
+  }
+
+  @override
+  String get thisMonth => 'इस महीने';
+
+  @override
+  String get categoriesEmpty => 'आपकी श्रेणियाँ यहाँ दिखेंगी';
+
+  @override
+  String percentOf(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get budgetsEmptyBody => 'अपनी प्रगति देखने के लिए बजट तय करें';
+
+  @override
+  String andMoreCount(int count) {
+    return 'और $count और';
+  }
+
+  @override
+  String youGetAmount(String amount) {
+    return 'आपको $amount मिलेंगे';
+  }
+
+  @override
+  String youOweAmount(String amount) {
+    return 'आप पर $amount बकाया';
+  }
+
+  @override
+  String get upcoming => 'आने वाले';
+
+  @override
+  String get upcomingEmpty => 'अगले दो हफ़्तों में कुछ देय नहीं';
+
+  @override
+  String memberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count सदस्य',
+      one: '1 सदस्य',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noEntriesYetTitle => 'अभी कोई प्रविष्टि नहीं';
+
+  @override
+  String get noEntriesYetBody =>
+      '+ से जोड़ें या बैंक एसएमएस चालू करें ताकि ये अपने आप दर्ज हों';
+
+  @override
+  String get addEntry => 'प्रविष्टि जोड़ें';
+
+  @override
+  String get showAllCategories => 'सभी श्रेणियाँ दिखाएँ';
+
+  @override
   String get today => 'आज';
 
   @override

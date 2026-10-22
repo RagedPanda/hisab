@@ -25,6 +25,13 @@ String formatMonthLabel(DateRange range, {String? locale}) {
   return '${DateFormat('d MMM', locale).format(range.start)} – ${DateFormat('d MMM', locale).format(end)}';
 }
 
+/// Month name for headings ("October", short "Oct"); a month that starts on a
+/// custom day keeps the explicit range label instead.
+String formatMonthName(DateRange range, {String? locale, bool short = false}) {
+  if (range.start.day != 1) return formatMonthLabel(range, locale: locale);
+  return DateFormat(short ? 'MMM' : 'MMMM', locale).format(range.start);
+}
+
 String formatShortDate(DateTime value, {String? locale}) => DateFormat('d MMM yyyy', locale).format(value);
 
 /// Compact date for list rows: "21 Oct" (this year) or "21 Oct 2025".

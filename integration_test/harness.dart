@@ -112,9 +112,8 @@ Future<void> scrollTo(WidgetTester tester, Finder target, {Finder? within, bool 
     await tester.pump();
   }
   if (target.evaluate().isEmpty) {
-    final onstage = find.byType(Text).evaluate().map((e) => (e.widget as Text).data).whereType<String>().toList();
     final widget = scrollables.first.evaluate().first.widget as Scrollable;
-    debugPrint('SCROLL-DIAG axis=${widget.axisDirection} pixels=${position.pixels} min=${position.minScrollExtent} max=${position.maxScrollExtent} count=${scrollables.evaluate().length} texts=$onstage');
+    debugPrint('SCROLL-DIAG axis=${widget.axisDirection} pixels=${position.pixels} min=${position.minScrollExtent} max=${position.maxScrollExtent} count=${scrollables.evaluate().length} texts=${onstageTexts()}');
   }
   expect(target, findsWidgets, reason: 'scrollTo could not bring the target on screen');
   await tester.ensureVisible(target.first);
@@ -149,8 +148,12 @@ Future<void> waitFor(WidgetTester tester, Finder finder, {int frames = 20}) asyn
   for (var frame = 0; frame < frames && finder.evaluate().isEmpty; frame++) {
     await tester.pump(const Duration(milliseconds: 100));
   }
+  if (finder.evaluate().isEmpty) debugPrint('WAIT-DIAG texts=${onstageTexts()}');
   expect(finder, findsWidgets);
 }
+
+/// Every [Text] currently on stage, for failure diagnostics.
+List<String> onstageTexts() => find.byType(Text).evaluate().map((element) => (element.widget as Text).data).whereType<String>().toList();
 
 /// Whether the dialog/sheet currently on screen contains [text].
 bool hasText(String text) => find.text(text).evaluate().isNotEmpty;

@@ -13,9 +13,12 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/money.dart';
+import 'package:hisab/core/dates.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/backup/backup_service.dart';
 import 'package:hisab/data/db/database.dart';
+import 'package:hisab/data/debug/demo_plan.dart';
+import 'package:hisab/data/debug/demo_seed.dart';
 import 'package:hisab/domain/backup/backup_codec.dart';
 import 'package:hisab/domain/split/debt_simplifier.dart';
 import 'package:hisab/domain/split/split_calculator.dart';
@@ -38,6 +41,9 @@ const _hdfcOpeningMinor = 1000000;
 const _axisOpeningMinor = 500000;
 const _overallBudgetMinor = 100000;
 
+/// Entries seeded for the dashboard flow; enough that every card has data.
+const kDashboardSeedEntries = 120;
+
 int get _spentMinor => _milkTotalMinor + _restaurantMinor;
 
 /// My share of the two Goa trip expenses (300 split three ways + 300 exact):
@@ -53,10 +59,34 @@ Finder _filled(String label) => find.widgetWithText(FilledButton, label);
 Finder _accountCardAmount(String name, String amount) => find.descendant(of: find.ancestor(of: find.text(name), matching: find.byType(InkWell)).first, matching: find.text(amount));
 Finder _entryAmount(String title, String amount) => find.descendant(of: find.widgetWithText(EntryTile, title), matching: find.text(amount));
 
+/// Hero card caption, "Spent in October", for the month on screen.
+String _spentIn(DateTime anchor, {String? locale}) => locale == null ? 'Spent in ${DateFormat('MMMM').format(anchor)}' : AppLocalizationsHi().spentInMonth(DateFormat('MMMM', locale).format(anchor));
+
+/// What the hero shows for a database seeded by [seedDemoData] at [now]:
+/// this month's planned expenses plus my 3,000 share of the Goa trip hotel.
+int _expectedSeededSpend(DateTime now, {required int entryCount}) {
+  final range = monthRange(now);
+  final hotelDate = now.subtract(const Duration(days: 3));
+  final planned = planDemoEntries(count: entryCount, now: now)
+      .where((item) => item.kind == 'expense' && range.contains(item.occurredAt))
+      .fold(0, (sum, item) => sum + item.amountMinor);
+  return planned + (range.contains(hotelDate) ? 300000 : 0);
+}
+
 /// The summary card headline; the same figure also appears in the donut centre
 /// and account cards, so it is read through its key rather than by text.
-void _expectSpent(WidgetTester tester, String amount, {String? reason}) {
-  expect(tester.widget<Text>(find.byKey(kSummarySpentKey)).data, amount, reason: reason);
+Future<void> _expectSpent(WidgetTester tester, String amount, {String? reason}) async {
+  // The home list keeps its scroll offset between tests, so bring the hero back on stage first.
+  await scrollTo(tester, find.byKey(kSummarySpentKey), up: true);
+  String shown() => tester.widget<Text>(find.byKey(kSummarySpentKey)).data ?? '';
+  // The ledger stream delivers asynchronously and the headline tweens to the new value over 300 ms.
+  var waited = 0;
+  while (shown() != amount && waited < 40) {
+    await tester.pump(const Duration(milliseconds: 100));
+    waited++;
+  }
+  if (waited > 0) debugPrint('SPENT-DIAG waited ${waited * 100}ms for $amount');
+  expect(shown(), amount, reason: reason);
 }
 
 Future<void> _pickCategory(WidgetTester tester, String query, String name) async {
@@ -135,10 +165,12 @@ void main() {
     addTearDown(fresh.container.dispose);
     await pumpApp(tester, fresh);
     expect(find.text('Hisab'), findsOneWidget);
-    expect(find.text('Spent this month'), findsOneWidget);
-    _expectSpent(tester, '₹0');
+    expect(find.text(_spentIn(DateTime.now())), findsOneWidget);
+    await _expectSpent(tester, '₹0');
+    await scrollTo(tester, find.text('Cash'));
     expect(find.text('Cash'), findsOneWidget);
-    expect(find.text('No entries this month'), findsOneWidget);
+    await scrollTo(tester, find.text('No entries yet'));
+    expect(find.text('No entries yet'), findsOneWidget);
     await shoot(tester, 'home_empty');
     await goTab(tester, 'Entries');
     expect(find.text('Nothing here yet'), findsOneWidget);
@@ -191,9 +223,11 @@ void main() {
     await enterText(tester, find.widgetWithText(TextField, 'Paid to / received from'), 'Mother Dairy');
     await shoot(tester, 'entry_filled');
     await _saveEntry(tester, formatMinor(_milkTotalMinor));
+    await scrollTo(tester, find.text('Mother Dairy'));
     expect(find.text('Mother Dairy'), findsOneWidget);
     expect(_entryAmount('Mother Dairy', '-${formatMinor(_milkTotalMinor)}'), findsOneWidget);
-    _expectSpent(tester, formatMinor(_milkTotalMinor), reason: 'summary card spent amount');
+    await scrollTo(tester, find.byKey(kSummarySpentKey), up: true);
+    await _expectSpent(tester, formatMinor(_milkTotalMinor), reason: 'summary card spent amount');
     await shoot(tester, 'home_after_expense');
   });
 
@@ -213,15 +247,17 @@ void main() {
     await shoot(tester, 'entry_income');
     await _saveEntry(tester, formatMinor(_salaryMinor));
 
-    _expectSpent(tester, formatMinor(_spentMinor), reason: 'Spent this month');
+    await _expectSpent(tester, formatMinor(_spentMinor), reason: 'Spent this month');
     expect(find.text(formatMinor(_salaryMinor, showDecimals: false)), findsOneWidget, reason: 'Income stat');
     expect(find.text('Saved'), findsOneWidget);
     expect(find.text(formatMinor(_salaryMinor - _spentMinor, showDecimals: false)), findsOneWidget, reason: 'Saved stat');
-    expect(find.text(formatMinor(_totalBalanceMinor, showDecimals: false)), findsOneWidget, reason: 'Balances header');
-    expect(_accountCardAmount('Cash', formatMinor(-_milkTotalMinor, showDecimals: false)), findsOneWidget, reason: 'Cash card went negative');
-    expect(find.text(formatMinor(_hdfcBalanceMinor, showDecimals: false)), findsOneWidget, reason: 'HDFC card');
     expect(find.text('Spending by category'), findsOneWidget);
     await shoot(tester, 'home_totals');
+    await scrollTo(tester, find.text('Accounts'));
+    expect(find.text(formatMinor(_totalBalanceMinor, showDecimals: false)), findsOneWidget, reason: 'Accounts header total');
+    expect(_accountCardAmount('Cash', formatMinor(-_milkTotalMinor, showDecimals: false)), findsOneWidget, reason: 'Cash card went negative');
+    expect(find.text(formatMinor(_hdfcBalanceMinor, showDecimals: false)), findsOneWidget, reason: 'HDFC card');
+    await shoot(tester, 'home_accounts');
 
     await goTab(tester, 'Entries');
     expect(find.text('Today'), findsOneWidget);
@@ -242,18 +278,22 @@ void main() {
 
   testWidgets('05 month navigation', (tester) async {
     await pumpApp(tester, shared);
+    // Later tests share this app and expect the current month, whatever happens here.
+    addTearDown(() => shared.container.read(selectedMonthProvider.notifier).reset());
     final now = DateTime.now();
     final previous = DateFormat('MMMM yyyy').format(DateTime(now.year, now.month - 1, 15));
     final current = DateFormat('MMMM yyyy').format(now);
     expect(find.text(current), findsOneWidget);
     await tapFinder(tester, find.byIcon(Icons.chevron_left));
     expect(find.text(previous), findsOneWidget);
-    _expectSpent(tester, '₹0', reason: 'previous month has no spend');
-    expect(find.text('No entries this month'), findsOneWidget);
+    await _expectSpent(tester, '₹0', reason: 'previous month has no spend');
     await shoot(tester, 'home_previous_month');
+    await scrollTo(tester, find.text('No entries this month'));
+    expect(find.text('No entries this month'), findsOneWidget);
+    await scrollTo(tester, find.byIcon(Icons.chevron_right), up: true);
     await tapFinder(tester, find.byIcon(Icons.chevron_right));
     expect(find.text(current), findsOneWidget);
-    _expectSpent(tester, formatMinor(_spentMinor));
+    await _expectSpent(tester, formatMinor(_spentMinor));
   });
 
   testWidgets('06 budgets: overall budget is exceeded, category budget has room', (tester) async {
@@ -267,7 +307,7 @@ void main() {
     await enterText(tester, _dialogField(), '1000');
     await tapFinder(tester, _filled('Save'));
     expect(find.text('Overall'), findsOneWidget);
-    expect(find.textContaining('Over ${formatMinor(_overallBudgetMinor, showDecimals: false)} by '), findsOneWidget);
+    await waitFor(tester, find.textContaining('Over ${formatMinor(_overallBudgetMinor, showDecimals: false)} by '));
 
     await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Budget'));
     await tapText(tester, 'Budget for a category');
@@ -302,16 +342,17 @@ void main() {
     await enterText(tester, _amountField(), '10');
     await tapFinder(tester, _chip('Cash'));
     await _saveEntry(tester, formatMinor(1000));
-    await scrollTo(tester, find.text('Spent this month'), up: true);
-    _expectSpent(tester, formatMinor(_spentMinor + 1000));
+    await scrollTo(tester, find.text(_spentIn(DateTime.now())), up: true);
+    await _expectSpent(tester, formatMinor(_spentMinor + 1000));
     await scrollTo(tester, find.text('Groceries'));
     await tapText(tester, 'Groceries');
     await tapFinder(tester, find.byIcon(Icons.delete_outline));
     expect(find.text('Delete this entry?'), findsOneWidget);
     await shoot(tester, 'entry_delete_confirm');
     await tapFinder(tester, _filled('Delete'), frames: 12);
-    await scrollTo(tester, find.text('Spent this month'), up: true);
-    _expectSpent(tester, formatMinor(_spentMinor), reason: 'totals restored after delete');
+    await scrollTo(tester, find.text(_spentIn(DateTime.now())), up: true);
+    await _expectSpent(tester, formatMinor(_spentMinor), reason: 'totals restored after delete');
+    await scrollTo(tester, find.text('Accounts'));
     expect(_accountCardAmount('Cash', formatMinor(-_milkTotalMinor, showDecimals: false)), findsOneWidget, reason: 'Cash balance restored after delete');
   });
 
@@ -416,7 +457,7 @@ void main() {
     expect(find.text('3 members · ${formatMinor(80000, showDecimals: false)} spent'), findsOneWidget);
     await shoot(tester, 'groups_list');
     await goTab(tester, 'Home');
-    _expectSpent(tester, formatMinor(_spentMinor + _myGroupShareMinor), reason: 'only my share of group expenses counts as personal spend');
+    await _expectSpent(tester, formatMinor(_spentMinor + _myGroupShareMinor), reason: 'only my share of group expenses counts as personal spend');
   });
 
   testWidgets('09 categories: add, rename, delete a custom category', (tester) async {
@@ -535,9 +576,9 @@ void main() {
     await scrollTo(tester, find.text(hi.about));
     await shoot(tester, 'hi_settings_bottom');
     await goTab(tester, hi.tabHome);
-    await scrollTo(tester, find.text(hi.spentThisMonth), up: true);
-    expect(find.text(hi.spentThisMonth), findsOneWidget);
-    _expectSpent(tester, formatMinor(_spentMinor + _myGroupShareMinor));
+    await scrollTo(tester, find.text(_spentIn(DateTime.now(), locale: 'hi')), up: true);
+    expect(find.text(_spentIn(DateTime.now(), locale: 'hi')), findsOneWidget);
+    await _expectSpent(tester, formatMinor(_spentMinor + _myGroupShareMinor));
     await shoot(tester, 'hi_home');
     await scrollTo(tester, find.text(hi.recent));
     await shoot(tester, 'hi_home_bottom');
@@ -613,6 +654,42 @@ void main() {
     final axisTile = find.ancestor(of: find.text('Axis Bank'), matching: find.byType(ListTile)).first;
     expect(find.descendant(of: axisTile, matching: find.textContaining('excluded from total')), findsOneWidget);
     await goBack(tester);
-    expect(find.text(formatMinor(_hdfcOpeningMinor, showDecimals: false)), findsWidgets, reason: 'Balances header = Cash 0 + HDFC 10,000; Axis excluded');
+    await scrollTo(tester, find.text('Accounts'));
+    expect(find.text(formatMinor(_hdfcOpeningMinor, showDecimals: false)), findsWidgets, reason: 'Accounts header = Cash 0 + HDFC 10,000; Axis excluded');
+  });
+
+  testWidgets('15 dashboard: every card renders from a seeded ledger and the hero matches the domain total', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final now = DateTime.now();
+    await seedDemoData(fresh.db, entryCount: kDashboardSeedEntries, now: now);
+    await pumpApp(tester, fresh);
+    await settle(tester, 12);
+    expect(find.text(_spentIn(now)), findsOneWidget);
+    await _expectSpent(tester, formatMinor(_expectedSeededSpend(now, entryCount: kDashboardSeedEntries), showDecimals: false), reason: 'hero spend = planned expenses this month + my hotel share');
+    expect(find.byKey(kHeroCardKey), findsOneWidget);
+    expect(find.text('Income'), findsOneWidget);
+    expect(find.text('Daily avg'), findsOneWidget);
+    await shoot(tester, 'dashboard_seeded_hero');
+    await scrollTo(tester, find.byKey(kTrendCardKey));
+    expect(find.text('Spending trend'), findsOneWidget);
+    await tapText(tester, 'Monthly');
+    expect(find.text(DateFormat('MMM').format(now)), findsWidgets, reason: 'monthly bars label the current month');
+    await shoot(tester, 'dashboard_seeded_trend_monthly');
+    await scrollTo(tester, find.byKey(kCategoryCardKey));
+    expect(find.text('Spending by category'), findsOneWidget);
+    expect(find.text('Others'), findsOneWidget, reason: 'top 5 + Others with a seeded ledger');
+    await scrollTo(tester, find.byKey(kBudgetsCardKey));
+    expect(find.text('Overall'), findsOneWidget, reason: 'overall budget row comes first');
+    await scrollTo(tester, find.byKey(kAccountsCardKey));
+    expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsOneWidget, reason: 'upcoming slot is keyed even while it has no data');
+    expect(find.text('HDFC Savings'), findsOneWidget);
+    await scrollTo(tester, find.byKey(kGroupsCardKey));
+    expect(find.text('Goa trip'), findsOneWidget);
+    expect(find.text('You get ${formatMinor(600000, showDecimals: false)}'), findsOneWidget, reason: 'two friends owe 3,000 each');
+    await scrollTo(tester, find.byKey(kRecentCardKey));
+    expect(find.text('Recent'), findsOneWidget);
+    expect(find.byType(EntryTile), findsWidgets);
+    await shoot(tester, 'dashboard_seeded_bottom');
   });
 }

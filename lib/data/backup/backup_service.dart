@@ -30,6 +30,7 @@ class BackupService {
       'settlements': await dump(db.settlements),
       'budgets': await dump(db.budgets),
       'smsLog': await dump(db.smsLog),
+      'projects': await dump(db.projects),
     };
   }
 
@@ -83,6 +84,7 @@ class BackupService {
       await restore(db.settlements, 'settlements', Settlement.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.budgets, 'budgets', Budget.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.smsLog, 'smsLog', SmsLogData.fromJson, (r) => r.id, (_) => null);
+      await restore(db.projects, 'projects', Project.fromJson, (r) => r.id, (r) => r.updatedAt);
     });
     return written;
   }

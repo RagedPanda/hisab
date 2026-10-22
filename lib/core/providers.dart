@@ -8,6 +8,7 @@ import '../data/repositories/budgets_repository.dart';
 import '../data/repositories/categories_repository.dart';
 import '../data/repositories/entries_repository.dart';
 import '../data/repositories/groups_repository.dart';
+import '../data/repositories/projects_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
 import '../data/sms/sms_ingest_service.dart';
 import '../domain/stats/dashboard_ledger.dart';
@@ -28,6 +29,7 @@ final accountsRepositoryProvider = Provider((ref) => AccountsRepository(ref.watc
 final categoriesRepositoryProvider = Provider((ref) => CategoriesRepository(ref.watch(databaseProvider)));
 final groupsRepositoryProvider = Provider((ref) => GroupsRepository(ref.watch(databaseProvider)));
 final budgetsRepositoryProvider = Provider((ref) => BudgetsRepository(ref.watch(databaseProvider)));
+final projectsRepositoryProvider = Provider((ref) => ProjectsRepository(ref.watch(databaseProvider)));
 final smsLogRepositoryProvider = Provider((ref) => SmsLogRepository(ref.watch(databaseProvider)));
 
 class SettingsNotifier extends Notifier<AppSettings> {
@@ -65,6 +67,12 @@ final allCategoriesProvider = StreamProvider((ref) => ref.watch(categoriesReposi
 final accountsProvider = StreamProvider((ref) => ref.watch(accountsRepositoryProvider).watchAll());
 final budgetsProvider = StreamProvider((ref) => ref.watch(budgetsRepositoryProvider).watchAll());
 final groupSummariesProvider = StreamProvider((ref) => ref.watch(groupsRepositoryProvider).watchSummaries());
+
+/// Every live project with its spend, budget progress and month buckets.
+final projectViewsProvider = StreamProvider<List<ProjectView>>((ref) {
+  final monthStartDay = ref.watch(settingsProvider).monthStartDay;
+  return ref.watch(projectsRepositoryProvider).watchViews(monthStartDay: monthStartDay);
+});
 final pendingSmsProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryProvider).watchPending());
 
 final monthEntriesProvider = StreamProvider((ref) {

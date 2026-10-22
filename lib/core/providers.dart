@@ -12,6 +12,7 @@ import '../data/repositories/project_fields_repository.dart';
 import '../data/repositories/projects_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
 import '../data/sms/sms_ingest_service.dart';
+import '../data/sms/sms_sync_cursor.dart';
 import '../domain/entries/entry_filter.dart';
 import '../domain/stats/dashboard_ledger.dart';
 import '../domain/stats/spend_series.dart';
@@ -139,6 +140,7 @@ final smsIngestServiceProvider = Provider((ref) => SmsIngestService(
       accounts: ref.watch(accountsRepositoryProvider),
       categories: ref.watch(categoriesRepositoryProvider),
       entries: ref.watch(entriesRepositoryProvider),
+      cursor: SmsSyncCursor(ref.watch(sharedPreferencesProvider)),
     ));
 
 final backupServiceProvider = Provider((ref) => BackupService(ref.watch(databaseProvider)));

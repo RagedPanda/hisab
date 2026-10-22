@@ -1,11 +1,10 @@
-import 'dart:async';
-
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/ids.dart';
 import '../../core/theme.dart';
 import '../../domain/sms/bank_senders.dart';
 import '../../domain/sms/parsed_transaction.dart';
+import '../../domain/sms/sms_catch_up.dart';
 import '../../domain/sms/sms_account_name.dart';
 import '../../domain/sms/payee_normaliser.dart';
 import '../../domain/sms/sms_categorizer.dart';
@@ -16,8 +15,17 @@ import '../repositories/categories_repository.dart';
 import '../repositories/entries_repository.dart';
 import '../repositories/sms_log_repository.dart';
 import 'sms_channel.dart';
+import 'sms_sync_cursor.dart';
 
 enum IngestStatus { duplicate, notBank, unparsed, pending, added }
+
+/// What one [SmsIngestService.sync] did.
+class SmsSyncResult {
+  const SmsSyncResult({required this.scanned, required this.pending, required this.added});
+  final int scanned;
+  final int pending;
+  final int added;
+}
 
 /// Turns raw SMS into log rows, accounts and (optionally) entries.
 class SmsIngestService {
@@ -26,6 +34,8 @@ class SmsIngestService {
     required this.accounts,
     required this.categories,
     required this.entries,
+    required this.cursor,
+    this.source = const PlatformSmsSource(),
   });
 
   final SmsLogRepository smsLog;
@@ -33,7 +43,10 @@ class SmsIngestService {
   final CategoriesRepository categories;
   final EntriesRepository entries;
 
-  StreamSubscription<RawSms>? _liveSubscription;
+  final SmsSyncCursor cursor;
+  final SmsSource source;
+
+  Future<void> _syncChain = Future.value();
 
   Future<bool> requestPermission() async {
     if (!SmsChannel.isSupported) return false;
@@ -43,28 +56,35 @@ class SmsIngestService {
 
   Future<bool> hasPermission() async => SmsChannel.isSupported && await Permission.sms.isGranted;
 
-  /// Scans the inbox for bank messages newer than the last one we logged
-  /// (or [lookback] if the log is empty). Returns how many were queued/added.
-  Future<({int scanned, int pending, int added})> scanInbox({Duration lookback = const Duration(days: 90), required bool autoAdd}) async {
-    final since = (await smsLog.latestReceivedAt()) ?? DateTime.now().subtract(lookback);
-    final messages = await SmsChannel.readInbox(since: since.subtract(const Duration(minutes: 1)));
-    var pending = 0;
-    var added = 0;
-    for (final message in messages) {
+  /// Asks for POST_NOTIFICATIONS (Android 13+) so SMS captured while the
+  /// app is closed can be announced. Capture works whatever the answer.
+  Future<void> requestNotificationPermission() async {
+    if (!SmsChannel.isSupported) return;
+    await Permission.notification.request();
+  }
+
+  /// Runs everything captured since the last sync through [ingest]: first the
+  /// messages the background receiver queued, then an inbox scan from the
+  /// stored cursor (or [lookback] on a first scan) for anything it missed.
+  /// Calls are serialised, so start, resume and live signals can overlap.
+  Future<SmsSyncResult> sync({required bool autoAdd, Duration lookback = const Duration(days: 90), DateTime? now}) {
+    final next = _syncChain.then((_) => _sync(autoAdd: autoAdd, lookback: lookback, now: now ?? DateTime.now()));
+    _syncChain = next.then((_) {}, onError: (_) {});
+    return next;
+  }
+
+  Future<SmsSyncResult> _sync({required bool autoAdd, required Duration lookback, required DateTime now}) async {
+    final queued = await source.drainQueue();
+    final since = catchUpSince(now: now, cursor: cursor.read(), lastLogged: await smsLog.latestReceivedAt(), lookback: lookback);
+    final inbox = await source.readInbox(since: since);
+    final counts = <IngestStatus, int>{};
+    for (final message in [...queued, ...inbox]) {
       final status = await ingest(message, autoAdd: autoAdd);
-      if (status == IngestStatus.pending) pending++;
-      if (status == IngestStatus.added) added++;
+      counts[status] = (counts[status] ?? 0) + 1;
     }
-    return (scanned: messages.length, pending: pending, added: added);
-  }
-
-  void startListening({required bool Function() autoAdd}) {
-    _liveSubscription ??= SmsChannel.incoming().listen((message) => ingest(message, autoAdd: autoAdd()));
-  }
-
-  void stopListening() {
-    _liveSubscription?.cancel();
-    _liveSubscription = null;
+    final advanced = advanceCursor(cursor.read(), inbox.map((message) => message.receivedAt));
+    if (advanced != null) await cursor.write(advanced);
+    return SmsSyncResult(scanned: queued.length + inbox.length, pending: counts[IngestStatus.pending] ?? 0, added: counts[IngestStatus.added] ?? 0);
   }
 
   /// Handles one message end to end. Safe to call repeatedly for the same SMS.

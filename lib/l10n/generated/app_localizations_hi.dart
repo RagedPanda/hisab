@@ -1717,4 +1717,139 @@ class AppLocalizationsHi extends AppLocalizations {
   String namePaidYou(String name) {
     return '$name ने आपको दिए';
   }
+
+  @override
+  String get remindAction => 'याद दिलाएँ';
+
+  @override
+  String get payAction => 'भुगतान करें';
+
+  @override
+  String remindName(String name) {
+    return '$name को याद दिलाएँ';
+  }
+
+  @override
+  String payName(String name) {
+    return '$name को भुगतान करें';
+  }
+
+  @override
+  String reminderOwesMe(String name, String amount, String group) {
+    return 'नमस्ते $name, एक छोटी-सी याद: $group के लिए आपको मुझे $amount देने हैं।';
+  }
+
+  @override
+  String reminderIOwe(String name, String amount, String group) {
+    return 'नमस्ते $name, $group के लिए मुझे आपको $amount देने हैं। पैसे अभी भेजे जा रहे हैं।';
+  }
+
+  @override
+  String reminderOwes(String from, String to, String amount, String group) {
+    return '$group के लिए $from को $to को $amount देने हैं।';
+  }
+
+  @override
+  String reminderEveryone(String group) {
+    return '$group का हिसाब चुकता करना है:';
+  }
+
+  @override
+  String owesLine(String from, String to, String amount) {
+    return '$from को $to को $amount देने हैं';
+  }
+
+  @override
+  String get messageLabel => 'संदेश';
+
+  @override
+  String get shareAction => 'शेयर करें…';
+
+  @override
+  String get copyAction => 'कॉपी करें';
+
+  @override
+  String get whatsAppAction => 'WhatsApp';
+
+  @override
+  String get smsAction => 'SMS';
+
+  @override
+  String get payWithUpi => 'UPI से भुगतान करें';
+
+  @override
+  String get noUpiApp =>
+      'इस फ़ोन पर कोई UPI ऐप नहीं है। किसी और तरीके से भुगतान करके उसे दर्ज करें।';
+
+  @override
+  String couldNotOpenApp(String app) {
+    return '$app नहीं खुल सका।';
+  }
+
+  @override
+  String get didPaymentGoThrough => 'क्या भुगतान हो गया?';
+
+  @override
+  String didPaymentGoThroughBody(String amount, String name) {
+    return 'अगर $amount $name तक पहुँच गए, तो Hisab इसे आज UPI से भुगतान के रूप में दर्ज करेगा। Hisab आपका UPI ऐप नहीं देख सकता, इसलिए केवल आप पुष्टि कर सकते हैं।';
+  }
+
+  @override
+  String get yesRecordIt => 'हाँ, दर्ज करें';
+
+  @override
+  String get notYet => 'अभी नहीं';
+
+  @override
+  String remindedDaysAgo(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन पहले याद दिलाया',
+      one: 'कल याद दिलाया',
+      zero: 'आज याद दिलाया',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get remindAgain => 'फिर याद दिलाएँ';
+
+  @override
+  String get copiedReminder => 'कॉपी हो गया। इसे किसी भी चैट में पेस्ट करें।';
+
+  @override
+  String get nothingToRemind =>
+      'सबका हिसाब बराबर है। न किसी को याद दिलाना है, न भुगतान करना है।';
+
+  @override
+  String get shareSummaryAnyway => 'फिर भी सारांश शेयर करें';
+
+  @override
+  String get shareBalancesSummary => 'बैलेंस का सारांश शेयर करें';
+
+  @override
+  String get remindEveryoneWhoOwes => 'जिन पर आपका बकाया है, सबको याद दिलाएँ';
+
+  @override
+  String get copyAsText => 'टेक्स्ट के रूप में कॉपी करें';
+
+  @override
+  String get phoneOptional => 'फ़ोन (वैकल्पिक)';
+
+  @override
+  String get upiIdOptional => 'UPI ID (वैकल्पिक)';
+
+  @override
+  String get upiIdHint => 'name@bank';
+
+  @override
+  String get invalidUpiId => 'name@bank जैसा UPI ID डालें';
+
+  @override
+  String get memberContactLocal =>
+      'फ़ोन और UPI ID इसी डिवाइस पर रहते हैं। Hisab इनका इस्तेमाल सिर्फ़ रिमाइंडर और UPI भुगतान भरने के लिए करता है।';
+
+  @override
+  String get editMember => 'सदस्य बदलें';
 }

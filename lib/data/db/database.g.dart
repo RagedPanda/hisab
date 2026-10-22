@@ -3914,6 +3914,15 @@ class $MembersTable extends Members with TableInfo<$MembersTable, Member> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _upiIdMeta = const VerificationMeta('upiId');
+  @override
+  late final GeneratedColumn<String> upiId = GeneratedColumn<String>(
+    'upi_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isMeMeta = const VerificationMeta('isMe');
   @override
   late final GeneratedColumn<bool> isMe = GeneratedColumn<bool>(
@@ -3946,6 +3955,7 @@ class $MembersTable extends Members with TableInfo<$MembersTable, Member> {
     name,
     phone,
     email,
+    upiId,
     isMe,
     weight,
   ];
@@ -4006,6 +4016,12 @@ class $MembersTable extends Members with TableInfo<$MembersTable, Member> {
         email.isAcceptableOrUnknown(data['email']!, _emailMeta),
       );
     }
+    if (data.containsKey('upi_id')) {
+      context.handle(
+        _upiIdMeta,
+        upiId.isAcceptableOrUnknown(data['upi_id']!, _upiIdMeta),
+      );
+    }
     if (data.containsKey('is_me')) {
       context.handle(
         _isMeMeta,
@@ -4055,6 +4071,10 @@ class $MembersTable extends Members with TableInfo<$MembersTable, Member> {
         DriftSqlType.string,
         data['${effectivePrefix}email'],
       ),
+      upiId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}upi_id'],
+      ),
       isMe: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_me'],
@@ -4080,6 +4100,9 @@ class Member extends DataClass implements Insertable<Member> {
   final String name;
   final String? phone;
   final String? email;
+
+  /// UPI ID (VPA) for "Pay with UPI" links. Plain text, kept on this device.
+  final String? upiId;
   final bool isMe;
 
   /// Default weight for equal splits (2 = counts as two people).
@@ -4092,6 +4115,7 @@ class Member extends DataClass implements Insertable<Member> {
     required this.name,
     this.phone,
     this.email,
+    this.upiId,
     required this.isMe,
     required this.weight,
   });
@@ -4110,6 +4134,9 @@ class Member extends DataClass implements Insertable<Member> {
     }
     if (!nullToAbsent || email != null) {
       map['email'] = Variable<String>(email);
+    }
+    if (!nullToAbsent || upiId != null) {
+      map['upi_id'] = Variable<String>(upiId);
     }
     map['is_me'] = Variable<bool>(isMe);
     map['weight'] = Variable<double>(weight);
@@ -4131,6 +4158,9 @@ class Member extends DataClass implements Insertable<Member> {
       email: email == null && nullToAbsent
           ? const Value.absent()
           : Value(email),
+      upiId: upiId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(upiId),
       isMe: Value(isMe),
       weight: Value(weight),
     );
@@ -4149,6 +4179,7 @@ class Member extends DataClass implements Insertable<Member> {
       name: serializer.fromJson<String>(json['name']),
       phone: serializer.fromJson<String?>(json['phone']),
       email: serializer.fromJson<String?>(json['email']),
+      upiId: serializer.fromJson<String?>(json['upiId']),
       isMe: serializer.fromJson<bool>(json['isMe']),
       weight: serializer.fromJson<double>(json['weight']),
     );
@@ -4164,6 +4195,7 @@ class Member extends DataClass implements Insertable<Member> {
       'name': serializer.toJson<String>(name),
       'phone': serializer.toJson<String?>(phone),
       'email': serializer.toJson<String?>(email),
+      'upiId': serializer.toJson<String?>(upiId),
       'isMe': serializer.toJson<bool>(isMe),
       'weight': serializer.toJson<double>(weight),
     };
@@ -4177,6 +4209,7 @@ class Member extends DataClass implements Insertable<Member> {
     String? name,
     Value<String?> phone = const Value.absent(),
     Value<String?> email = const Value.absent(),
+    Value<String?> upiId = const Value.absent(),
     bool? isMe,
     double? weight,
   }) => Member(
@@ -4187,6 +4220,7 @@ class Member extends DataClass implements Insertable<Member> {
     name: name ?? this.name,
     phone: phone.present ? phone.value : this.phone,
     email: email.present ? email.value : this.email,
+    upiId: upiId.present ? upiId.value : this.upiId,
     isMe: isMe ?? this.isMe,
     weight: weight ?? this.weight,
   );
@@ -4199,6 +4233,7 @@ class Member extends DataClass implements Insertable<Member> {
       name: data.name.present ? data.name.value : this.name,
       phone: data.phone.present ? data.phone.value : this.phone,
       email: data.email.present ? data.email.value : this.email,
+      upiId: data.upiId.present ? data.upiId.value : this.upiId,
       isMe: data.isMe.present ? data.isMe.value : this.isMe,
       weight: data.weight.present ? data.weight.value : this.weight,
     );
@@ -4214,6 +4249,7 @@ class Member extends DataClass implements Insertable<Member> {
           ..write('name: $name, ')
           ..write('phone: $phone, ')
           ..write('email: $email, ')
+          ..write('upiId: $upiId, ')
           ..write('isMe: $isMe, ')
           ..write('weight: $weight')
           ..write(')'))
@@ -4229,6 +4265,7 @@ class Member extends DataClass implements Insertable<Member> {
     name,
     phone,
     email,
+    upiId,
     isMe,
     weight,
   );
@@ -4243,6 +4280,7 @@ class Member extends DataClass implements Insertable<Member> {
           other.name == this.name &&
           other.phone == this.phone &&
           other.email == this.email &&
+          other.upiId == this.upiId &&
           other.isMe == this.isMe &&
           other.weight == this.weight);
 }
@@ -4255,6 +4293,7 @@ class MembersCompanion extends UpdateCompanion<Member> {
   final Value<String> name;
   final Value<String?> phone;
   final Value<String?> email;
+  final Value<String?> upiId;
   final Value<bool> isMe;
   final Value<double> weight;
   final Value<int> rowid;
@@ -4266,6 +4305,7 @@ class MembersCompanion extends UpdateCompanion<Member> {
     this.name = const Value.absent(),
     this.phone = const Value.absent(),
     this.email = const Value.absent(),
+    this.upiId = const Value.absent(),
     this.isMe = const Value.absent(),
     this.weight = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -4278,6 +4318,7 @@ class MembersCompanion extends UpdateCompanion<Member> {
     required String name,
     this.phone = const Value.absent(),
     this.email = const Value.absent(),
+    this.upiId = const Value.absent(),
     this.isMe = const Value.absent(),
     this.weight = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -4292,6 +4333,7 @@ class MembersCompanion extends UpdateCompanion<Member> {
     Expression<String>? name,
     Expression<String>? phone,
     Expression<String>? email,
+    Expression<String>? upiId,
     Expression<bool>? isMe,
     Expression<double>? weight,
     Expression<int>? rowid,
@@ -4304,6 +4346,7 @@ class MembersCompanion extends UpdateCompanion<Member> {
       if (name != null) 'name': name,
       if (phone != null) 'phone': phone,
       if (email != null) 'email': email,
+      if (upiId != null) 'upi_id': upiId,
       if (isMe != null) 'is_me': isMe,
       if (weight != null) 'weight': weight,
       if (rowid != null) 'rowid': rowid,
@@ -4318,6 +4361,7 @@ class MembersCompanion extends UpdateCompanion<Member> {
     Value<String>? name,
     Value<String?>? phone,
     Value<String?>? email,
+    Value<String?>? upiId,
     Value<bool>? isMe,
     Value<double>? weight,
     Value<int>? rowid,
@@ -4330,6 +4374,7 @@ class MembersCompanion extends UpdateCompanion<Member> {
       name: name ?? this.name,
       phone: phone ?? this.phone,
       email: email ?? this.email,
+      upiId: upiId ?? this.upiId,
       isMe: isMe ?? this.isMe,
       weight: weight ?? this.weight,
       rowid: rowid ?? this.rowid,
@@ -4360,6 +4405,9 @@ class MembersCompanion extends UpdateCompanion<Member> {
     if (email.present) {
       map['email'] = Variable<String>(email.value);
     }
+    if (upiId.present) {
+      map['upi_id'] = Variable<String>(upiId.value);
+    }
     if (isMe.present) {
       map['is_me'] = Variable<bool>(isMe.value);
     }
@@ -4382,6 +4430,7 @@ class MembersCompanion extends UpdateCompanion<Member> {
           ..write('name: $name, ')
           ..write('phone: $phone, ')
           ..write('email: $email, ')
+          ..write('upiId: $upiId, ')
           ..write('isMe: $isMe, ')
           ..write('weight: $weight, ')
           ..write('rowid: $rowid')
@@ -8476,6 +8525,711 @@ class EntryFieldValuesCompanion extends UpdateCompanion<EntryFieldValue> {
   }
 }
 
+class $RemindersTable extends Reminders
+    with TableInfo<$RemindersTable, Reminder> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RemindersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _memberIdMeta = const VerificationMeta(
+    'memberId',
+  );
+  @override
+  late final GeneratedColumn<String> memberId = GeneratedColumn<String>(
+    'member_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _entryIdMeta = const VerificationMeta(
+    'entryId',
+  );
+  @override
+  late final GeneratedColumn<String> entryId = GeneratedColumn<String>(
+    'entry_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dueAtMeta = const VerificationMeta('dueAt');
+  @override
+  late final GeneratedColumn<DateTime> dueAt = GeneratedColumn<DateTime>(
+    'due_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sentAtMeta = const VerificationMeta('sentAt');
+  @override
+  late final GeneratedColumn<DateTime> sentAt = GeneratedColumn<DateTime>(
+    'sent_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _doneAtMeta = const VerificationMeta('doneAt');
+  @override
+  late final GeneratedColumn<DateTime> doneAt = GeneratedColumn<DateTime>(
+    'done_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _channelMeta = const VerificationMeta(
+    'channel',
+  );
+  @override
+  late final GeneratedColumn<String> channel = GeneratedColumn<String>(
+    'channel',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('share'),
+  );
+  static const VerificationMeta _messageMeta = const VerificationMeta(
+    'message',
+  );
+  @override
+  late final GeneratedColumn<String> message = GeneratedColumn<String>(
+    'message',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    updatedAt,
+    deletedAt,
+    id,
+    kind,
+    groupId,
+    memberId,
+    entryId,
+    dueAt,
+    sentAt,
+    doneAt,
+    channel,
+    message,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'reminders';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Reminder> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    }
+    if (data.containsKey('member_id')) {
+      context.handle(
+        _memberIdMeta,
+        memberId.isAcceptableOrUnknown(data['member_id']!, _memberIdMeta),
+      );
+    }
+    if (data.containsKey('entry_id')) {
+      context.handle(
+        _entryIdMeta,
+        entryId.isAcceptableOrUnknown(data['entry_id']!, _entryIdMeta),
+      );
+    }
+    if (data.containsKey('due_at')) {
+      context.handle(
+        _dueAtMeta,
+        dueAt.isAcceptableOrUnknown(data['due_at']!, _dueAtMeta),
+      );
+    }
+    if (data.containsKey('sent_at')) {
+      context.handle(
+        _sentAtMeta,
+        sentAt.isAcceptableOrUnknown(data['sent_at']!, _sentAtMeta),
+      );
+    }
+    if (data.containsKey('done_at')) {
+      context.handle(
+        _doneAtMeta,
+        doneAt.isAcceptableOrUnknown(data['done_at']!, _doneAtMeta),
+      );
+    }
+    if (data.containsKey('channel')) {
+      context.handle(
+        _channelMeta,
+        channel.isAcceptableOrUnknown(data['channel']!, _channelMeta),
+      );
+    }
+    if (data.containsKey('message')) {
+      context.handle(
+        _messageMeta,
+        message.isAcceptableOrUnknown(data['message']!, _messageMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Reminder map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Reminder(
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      ),
+      memberId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}member_id'],
+      ),
+      entryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_id'],
+      ),
+      dueAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}due_at'],
+      ),
+      sentAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}sent_at'],
+      ),
+      doneAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}done_at'],
+      ),
+      channel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}channel'],
+      )!,
+      message: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message'],
+      )!,
+    );
+  }
+
+  @override
+  $RemindersTable createAlias(String alias) {
+    return $RemindersTable(attachedDatabase, alias);
+  }
+}
+
+class Reminder extends DataClass implements Insertable<Reminder> {
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String id;
+
+  /// settle_up | recurring | ...
+  final String kind;
+  final String? groupId;
+
+  /// Who the reminder is about (the member asked to pay, for settle_up).
+  final String? memberId;
+  final String? entryId;
+
+  /// When it should fire; null for reminders sent on the spot.
+  final DateTime? dueAt;
+  final DateTime? sentAt;
+  final DateTime? doneAt;
+
+  /// share | copy | whatsapp | sms | notification
+  final String channel;
+  final String message;
+  const Reminder({
+    required this.updatedAt,
+    this.deletedAt,
+    required this.id,
+    required this.kind,
+    this.groupId,
+    this.memberId,
+    this.entryId,
+    this.dueAt,
+    this.sentAt,
+    this.doneAt,
+    required this.channel,
+    required this.message,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['id'] = Variable<String>(id);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || groupId != null) {
+      map['group_id'] = Variable<String>(groupId);
+    }
+    if (!nullToAbsent || memberId != null) {
+      map['member_id'] = Variable<String>(memberId);
+    }
+    if (!nullToAbsent || entryId != null) {
+      map['entry_id'] = Variable<String>(entryId);
+    }
+    if (!nullToAbsent || dueAt != null) {
+      map['due_at'] = Variable<DateTime>(dueAt);
+    }
+    if (!nullToAbsent || sentAt != null) {
+      map['sent_at'] = Variable<DateTime>(sentAt);
+    }
+    if (!nullToAbsent || doneAt != null) {
+      map['done_at'] = Variable<DateTime>(doneAt);
+    }
+    map['channel'] = Variable<String>(channel);
+    map['message'] = Variable<String>(message);
+    return map;
+  }
+
+  RemindersCompanion toCompanion(bool nullToAbsent) {
+    return RemindersCompanion(
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      id: Value(id),
+      kind: Value(kind),
+      groupId: groupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(groupId),
+      memberId: memberId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(memberId),
+      entryId: entryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(entryId),
+      dueAt: dueAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueAt),
+      sentAt: sentAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sentAt),
+      doneAt: doneAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(doneAt),
+      channel: Value(channel),
+      message: Value(message),
+    );
+  }
+
+  factory Reminder.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Reminder(
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      id: serializer.fromJson<String>(json['id']),
+      kind: serializer.fromJson<String>(json['kind']),
+      groupId: serializer.fromJson<String?>(json['groupId']),
+      memberId: serializer.fromJson<String?>(json['memberId']),
+      entryId: serializer.fromJson<String?>(json['entryId']),
+      dueAt: serializer.fromJson<DateTime?>(json['dueAt']),
+      sentAt: serializer.fromJson<DateTime?>(json['sentAt']),
+      doneAt: serializer.fromJson<DateTime?>(json['doneAt']),
+      channel: serializer.fromJson<String>(json['channel']),
+      message: serializer.fromJson<String>(json['message']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'id': serializer.toJson<String>(id),
+      'kind': serializer.toJson<String>(kind),
+      'groupId': serializer.toJson<String?>(groupId),
+      'memberId': serializer.toJson<String?>(memberId),
+      'entryId': serializer.toJson<String?>(entryId),
+      'dueAt': serializer.toJson<DateTime?>(dueAt),
+      'sentAt': serializer.toJson<DateTime?>(sentAt),
+      'doneAt': serializer.toJson<DateTime?>(doneAt),
+      'channel': serializer.toJson<String>(channel),
+      'message': serializer.toJson<String>(message),
+    };
+  }
+
+  Reminder copyWith({
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? id,
+    String? kind,
+    Value<String?> groupId = const Value.absent(),
+    Value<String?> memberId = const Value.absent(),
+    Value<String?> entryId = const Value.absent(),
+    Value<DateTime?> dueAt = const Value.absent(),
+    Value<DateTime?> sentAt = const Value.absent(),
+    Value<DateTime?> doneAt = const Value.absent(),
+    String? channel,
+    String? message,
+  }) => Reminder(
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    id: id ?? this.id,
+    kind: kind ?? this.kind,
+    groupId: groupId.present ? groupId.value : this.groupId,
+    memberId: memberId.present ? memberId.value : this.memberId,
+    entryId: entryId.present ? entryId.value : this.entryId,
+    dueAt: dueAt.present ? dueAt.value : this.dueAt,
+    sentAt: sentAt.present ? sentAt.value : this.sentAt,
+    doneAt: doneAt.present ? doneAt.value : this.doneAt,
+    channel: channel ?? this.channel,
+    message: message ?? this.message,
+  );
+  Reminder copyWithCompanion(RemindersCompanion data) {
+    return Reminder(
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      id: data.id.present ? data.id.value : this.id,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      memberId: data.memberId.present ? data.memberId.value : this.memberId,
+      entryId: data.entryId.present ? data.entryId.value : this.entryId,
+      dueAt: data.dueAt.present ? data.dueAt.value : this.dueAt,
+      sentAt: data.sentAt.present ? data.sentAt.value : this.sentAt,
+      doneAt: data.doneAt.present ? data.doneAt.value : this.doneAt,
+      channel: data.channel.present ? data.channel.value : this.channel,
+      message: data.message.present ? data.message.value : this.message,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Reminder(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('groupId: $groupId, ')
+          ..write('memberId: $memberId, ')
+          ..write('entryId: $entryId, ')
+          ..write('dueAt: $dueAt, ')
+          ..write('sentAt: $sentAt, ')
+          ..write('doneAt: $doneAt, ')
+          ..write('channel: $channel, ')
+          ..write('message: $message')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    updatedAt,
+    deletedAt,
+    id,
+    kind,
+    groupId,
+    memberId,
+    entryId,
+    dueAt,
+    sentAt,
+    doneAt,
+    channel,
+    message,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Reminder &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.id == this.id &&
+          other.kind == this.kind &&
+          other.groupId == this.groupId &&
+          other.memberId == this.memberId &&
+          other.entryId == this.entryId &&
+          other.dueAt == this.dueAt &&
+          other.sentAt == this.sentAt &&
+          other.doneAt == this.doneAt &&
+          other.channel == this.channel &&
+          other.message == this.message);
+}
+
+class RemindersCompanion extends UpdateCompanion<Reminder> {
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String> id;
+  final Value<String> kind;
+  final Value<String?> groupId;
+  final Value<String?> memberId;
+  final Value<String?> entryId;
+  final Value<DateTime?> dueAt;
+  final Value<DateTime?> sentAt;
+  final Value<DateTime?> doneAt;
+  final Value<String> channel;
+  final Value<String> message;
+  final Value<int> rowid;
+  const RemindersCompanion({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.id = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.memberId = const Value.absent(),
+    this.entryId = const Value.absent(),
+    this.dueAt = const Value.absent(),
+    this.sentAt = const Value.absent(),
+    this.doneAt = const Value.absent(),
+    this.channel = const Value.absent(),
+    this.message = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RemindersCompanion.insert({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String id,
+    required String kind,
+    this.groupId = const Value.absent(),
+    this.memberId = const Value.absent(),
+    this.entryId = const Value.absent(),
+    this.dueAt = const Value.absent(),
+    this.sentAt = const Value.absent(),
+    this.doneAt = const Value.absent(),
+    this.channel = const Value.absent(),
+    this.message = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       kind = Value(kind);
+  static Insertable<Reminder> custom({
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? id,
+    Expression<String>? kind,
+    Expression<String>? groupId,
+    Expression<String>? memberId,
+    Expression<String>? entryId,
+    Expression<DateTime>? dueAt,
+    Expression<DateTime>? sentAt,
+    Expression<DateTime>? doneAt,
+    Expression<String>? channel,
+    Expression<String>? message,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (id != null) 'id': id,
+      if (kind != null) 'kind': kind,
+      if (groupId != null) 'group_id': groupId,
+      if (memberId != null) 'member_id': memberId,
+      if (entryId != null) 'entry_id': entryId,
+      if (dueAt != null) 'due_at': dueAt,
+      if (sentAt != null) 'sent_at': sentAt,
+      if (doneAt != null) 'done_at': doneAt,
+      if (channel != null) 'channel': channel,
+      if (message != null) 'message': message,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RemindersCompanion copyWith({
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String>? id,
+    Value<String>? kind,
+    Value<String?>? groupId,
+    Value<String?>? memberId,
+    Value<String?>? entryId,
+    Value<DateTime?>? dueAt,
+    Value<DateTime?>? sentAt,
+    Value<DateTime?>? doneAt,
+    Value<String>? channel,
+    Value<String>? message,
+    Value<int>? rowid,
+  }) {
+    return RemindersCompanion(
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      id: id ?? this.id,
+      kind: kind ?? this.kind,
+      groupId: groupId ?? this.groupId,
+      memberId: memberId ?? this.memberId,
+      entryId: entryId ?? this.entryId,
+      dueAt: dueAt ?? this.dueAt,
+      sentAt: sentAt ?? this.sentAt,
+      doneAt: doneAt ?? this.doneAt,
+      channel: channel ?? this.channel,
+      message: message ?? this.message,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (memberId.present) {
+      map['member_id'] = Variable<String>(memberId.value);
+    }
+    if (entryId.present) {
+      map['entry_id'] = Variable<String>(entryId.value);
+    }
+    if (dueAt.present) {
+      map['due_at'] = Variable<DateTime>(dueAt.value);
+    }
+    if (sentAt.present) {
+      map['sent_at'] = Variable<DateTime>(sentAt.value);
+    }
+    if (doneAt.present) {
+      map['done_at'] = Variable<DateTime>(doneAt.value);
+    }
+    if (channel.present) {
+      map['channel'] = Variable<String>(channel.value);
+    }
+    if (message.present) {
+      map['message'] = Variable<String>(message.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RemindersCompanion(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('groupId: $groupId, ')
+          ..write('memberId: $memberId, ')
+          ..write('entryId: $entryId, ')
+          ..write('dueAt: $dueAt, ')
+          ..write('sentAt: $sentAt, ')
+          ..write('doneAt: $doneAt, ')
+          ..write('channel: $channel, ')
+          ..write('message: $message, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -8494,6 +9248,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $EntryFieldValuesTable entryFieldValues = $EntryFieldValuesTable(
     this,
   );
+  late final $RemindersTable reminders = $RemindersTable(this);
   late final Index entriesProjectId = Index(
     'entries_project_id',
     'CREATE INDEX entries_project_id ON entries (project_id)',
@@ -8505,6 +9260,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index entryFieldValuesEntryId = Index(
     'entry_field_values_entry_id',
     'CREATE INDEX entry_field_values_entry_id ON entry_field_values (entry_id)',
+  );
+  late final Index remindersGroupId = Index(
+    'reminders_group_id',
+    'CREATE INDEX reminders_group_id ON reminders (group_id)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -8524,9 +9283,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     projects,
     projectFields,
     entryFieldValues,
+    reminders,
     entriesProjectId,
     projectFieldsProjectId,
     entryFieldValuesEntryId,
+    remindersGroupId,
   ];
 }
 
@@ -10353,6 +11114,7 @@ typedef $$MembersTableCreateCompanionBuilder = MembersCompanion Function({
   required String name,
   Value<String?> phone,
   Value<String?> email,
+  Value<String?> upiId,
   Value<bool> isMe,
   Value<double> weight,
   Value<int> rowid,
@@ -10365,6 +11127,7 @@ typedef $$MembersTableUpdateCompanionBuilder = MembersCompanion Function({
   Value<String> name,
   Value<String?> phone,
   Value<String?> email,
+  Value<String?> upiId,
   Value<bool> isMe,
   Value<double> weight,
   Value<int> rowid,
@@ -10411,6 +11174,11 @@ class $$MembersTableFilterComposer
 
   ColumnFilters<String> get email => $composableBuilder(
     column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get upiId => $composableBuilder(
+    column: $table.upiId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10469,6 +11237,11 @@ class $$MembersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get upiId => $composableBuilder(
+    column: $table.upiId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isMe => $composableBuilder(
     column: $table.isMe,
     builder: (column) => ColumnOrderings(column),
@@ -10509,6 +11282,9 @@ class $$MembersTableAnnotationComposer
 
   GeneratedColumn<String> get email =>
       $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get upiId =>
+      $composableBuilder(column: $table.upiId, builder: (column) => column);
 
   GeneratedColumn<bool> get isMe =>
       $composableBuilder(column: $table.isMe, builder: (column) => column);
@@ -10552,6 +11328,7 @@ class $$MembersTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String?> phone = const Value.absent(),
                 Value<String?> email = const Value.absent(),
+                Value<String?> upiId = const Value.absent(),
                 Value<bool> isMe = const Value.absent(),
                 Value<double> weight = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -10563,6 +11340,7 @@ class $$MembersTableTableManager
                 name: name,
                 phone: phone,
                 email: email,
+                upiId: upiId,
                 isMe: isMe,
                 weight: weight,
                 rowid: rowid,
@@ -10576,6 +11354,7 @@ class $$MembersTableTableManager
                 required String name,
                 Value<String?> phone = const Value.absent(),
                 Value<String?> email = const Value.absent(),
+                Value<String?> upiId = const Value.absent(),
                 Value<bool> isMe = const Value.absent(),
                 Value<double> weight = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -10587,6 +11366,7 @@ class $$MembersTableTableManager
                 name: name,
                 phone: phone,
                 email: email,
+                upiId: upiId,
                 isMe: isMe,
                 weight: weight,
                 rowid: rowid,
@@ -12676,6 +13456,340 @@ typedef $$EntryFieldValuesTableProcessedTableManager =
       EntryFieldValue,
       PrefetchHooks Function()
     >;
+typedef $$RemindersTableCreateCompanionBuilder = RemindersCompanion Function({
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required String id,
+  required String kind,
+  Value<String?> groupId,
+  Value<String?> memberId,
+  Value<String?> entryId,
+  Value<DateTime?> dueAt,
+  Value<DateTime?> sentAt,
+  Value<DateTime?> doneAt,
+  Value<String> channel,
+  Value<String> message,
+  Value<int> rowid,
+});
+typedef $$RemindersTableUpdateCompanionBuilder = RemindersCompanion Function({
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String> id,
+  Value<String> kind,
+  Value<String?> groupId,
+  Value<String?> memberId,
+  Value<String?> entryId,
+  Value<DateTime?> dueAt,
+  Value<DateTime?> sentAt,
+  Value<DateTime?> doneAt,
+  Value<String> channel,
+  Value<String> message,
+  Value<int> rowid,
+});
+
+class $$RemindersTableFilterComposer
+    extends Composer<_$AppDatabase, $RemindersTable> {
+  $$RemindersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get memberId => $composableBuilder(
+    column: $table.memberId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get dueAt => $composableBuilder(
+    column: $table.dueAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get sentAt => $composableBuilder(
+    column: $table.sentAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get doneAt => $composableBuilder(
+    column: $table.doneAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get channel => $composableBuilder(
+    column: $table.channel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get message => $composableBuilder(
+    column: $table.message,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RemindersTableOrderingComposer
+    extends Composer<_$AppDatabase, $RemindersTable> {
+  $$RemindersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get memberId => $composableBuilder(
+    column: $table.memberId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get dueAt => $composableBuilder(
+    column: $table.dueAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get sentAt => $composableBuilder(
+    column: $table.sentAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get doneAt => $composableBuilder(
+    column: $table.doneAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get channel => $composableBuilder(
+    column: $table.channel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get message => $composableBuilder(
+    column: $table.message,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RemindersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RemindersTable> {
+  $$RemindersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get groupId =>
+      $composableBuilder(column: $table.groupId, builder: (column) => column);
+
+  GeneratedColumn<String> get memberId =>
+      $composableBuilder(column: $table.memberId, builder: (column) => column);
+
+  GeneratedColumn<String> get entryId =>
+      $composableBuilder(column: $table.entryId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get dueAt =>
+      $composableBuilder(column: $table.dueAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get sentAt =>
+      $composableBuilder(column: $table.sentAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get doneAt =>
+      $composableBuilder(column: $table.doneAt, builder: (column) => column);
+
+  GeneratedColumn<String> get channel =>
+      $composableBuilder(column: $table.channel, builder: (column) => column);
+
+  GeneratedColumn<String> get message =>
+      $composableBuilder(column: $table.message, builder: (column) => column);
+}
+
+class $$RemindersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RemindersTable,
+          Reminder,
+          $$RemindersTableFilterComposer,
+          $$RemindersTableOrderingComposer,
+          $$RemindersTableAnnotationComposer,
+          $$RemindersTableCreateCompanionBuilder,
+          $$RemindersTableUpdateCompanionBuilder,
+          (Reminder, BaseReferences<_$AppDatabase, $RemindersTable, Reminder>),
+          Reminder,
+          PrefetchHooks Function()
+        > {
+  $$RemindersTableTableManager(_$AppDatabase db, $RemindersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RemindersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RemindersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RemindersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> groupId = const Value.absent(),
+                Value<String?> memberId = const Value.absent(),
+                Value<String?> entryId = const Value.absent(),
+                Value<DateTime?> dueAt = const Value.absent(),
+                Value<DateTime?> sentAt = const Value.absent(),
+                Value<DateTime?> doneAt = const Value.absent(),
+                Value<String> channel = const Value.absent(),
+                Value<String> message = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RemindersCompanion(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                kind: kind,
+                groupId: groupId,
+                memberId: memberId,
+                entryId: entryId,
+                dueAt: dueAt,
+                sentAt: sentAt,
+                doneAt: doneAt,
+                channel: channel,
+                message: message,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String id,
+                required String kind,
+                Value<String?> groupId = const Value.absent(),
+                Value<String?> memberId = const Value.absent(),
+                Value<String?> entryId = const Value.absent(),
+                Value<DateTime?> dueAt = const Value.absent(),
+                Value<DateTime?> sentAt = const Value.absent(),
+                Value<DateTime?> doneAt = const Value.absent(),
+                Value<String> channel = const Value.absent(),
+                Value<String> message = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RemindersCompanion.insert(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                kind: kind,
+                groupId: groupId,
+                memberId: memberId,
+                entryId: entryId,
+                dueAt: dueAt,
+                sentAt: sentAt,
+                doneAt: doneAt,
+                channel: channel,
+                message: message,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RemindersTable, Reminder>(table),
+                  BaseReferences<_$AppDatabase, $RemindersTable, Reminder>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RemindersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RemindersTable,
+      Reminder,
+      $$RemindersTableFilterComposer,
+      $$RemindersTableOrderingComposer,
+      $$RemindersTableAnnotationComposer,
+      $$RemindersTableCreateCompanionBuilder,
+      $$RemindersTableUpdateCompanionBuilder,
+      (Reminder, BaseReferences<_$AppDatabase, $RemindersTable, Reminder>),
+      Reminder,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -12706,4 +13820,6 @@ class $AppDatabaseManager {
       $$ProjectFieldsTableTableManager(_db, _db.projectFields);
   $$EntryFieldValuesTableTableManager get entryFieldValues =>
       $$EntryFieldValuesTableTableManager(_db, _db.entryFieldValues);
+  $$RemindersTableTableManager get reminders =>
+      $$RemindersTableTableManager(_db, _db.reminders);
 }

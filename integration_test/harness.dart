@@ -30,14 +30,11 @@ class AppHandle {
 }
 
 /// Creates a fresh in-memory database and preference store.
-Future<AppHandle> createApp({bool onboarded = true}) async {
+Future<AppHandle> createApp({bool onboarded = true, List<Override> overrides = const []}) async {
   SharedPreferences.setMockInitialValues({'onboarded': onboarded});
   final prefs = await SharedPreferences.getInstance();
   final db = AppDatabase(NativeDatabase.memory());
-  final container = ProviderContainer(overrides: [
-    sharedPreferencesProvider.overrideWithValue(prefs),
-    databaseProvider.overrideWithValue(db),
-  ]);
+  final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db), ...overrides]);
   return AppHandle(container, db);
 }
 
@@ -113,7 +110,9 @@ Future<void> scrollTo(WidgetTester tester, Finder target, {Finder? within, bool 
   }
   if (target.evaluate().isEmpty) {
     final widget = scrollables.first.evaluate().first.widget as Scrollable;
-    debugPrint('SCROLL-DIAG axis=${widget.axisDirection} pixels=${position.pixels} min=${position.minScrollExtent} max=${position.maxScrollExtent} count=${scrollables.evaluate().length} texts=${onstageTexts()}');
+    debugPrint(
+      'SCROLL-DIAG axis=${widget.axisDirection} pixels=${position.pixels} min=${position.minScrollExtent} max=${position.maxScrollExtent} count=${scrollables.evaluate().length} texts=${onstageTexts()}',
+    );
   }
   expect(target, findsWidgets, reason: 'scrollTo could not bring the target on screen');
   await tester.ensureVisible(target.first);

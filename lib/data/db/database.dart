@@ -31,6 +31,16 @@ class Accounts extends Table with SyncColumns {
   IntColumn get color => integer()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
+  /// Credit cards only: day of month the statement is generated (1-31; short
+  /// months clamp to their last day) and the day the bill is due.
+  IntColumn get statementDay => integer().nullable()();
+  IntColumn get dueDay => integer().nullable()();
+  IntColumn get creditLimitMinor => integer().nullable()();
+
+  /// Amount billed on the most recent statement and that statement's date.
+  IntColumn get lastStatementMinor => integer().nullable()();
+  DateTimeColumn get lastStatementAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -370,7 +380,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -408,6 +418,14 @@ class AppDatabase extends _$AppDatabase {
             }
           }
           if (from < 6) await m.createIndex(remindersStatusDue);
+          // v7: credit card statement and due days, limit and last statement.
+          if (from < 7) {
+            await m.addColumn(accounts, accounts.statementDay);
+            await m.addColumn(accounts, accounts.dueDay);
+            await m.addColumn(accounts, accounts.creditLimitMinor);
+            await m.addColumn(accounts, accounts.lastStatementMinor);
+            await m.addColumn(accounts, accounts.lastStatementAt);
+          }
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');

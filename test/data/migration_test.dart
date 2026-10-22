@@ -11,6 +11,7 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropCardColumns(db);
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -29,6 +30,7 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropCardColumns(db);
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -42,6 +44,7 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropCardColumns(db);
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -54,9 +57,26 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropCardColumns(db);
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('PRAGMA user_version = 4');
+  await db.close();
+}
+
+/// Drops the v7 credit card columns from accounts.
+Future<void> dropCardColumns(AppDatabase db) async {
+  for (final column in ['statement_day', 'due_day', 'credit_limit_minor', 'last_statement_minor', 'last_statement_at']) {
+    await db.customStatement('ALTER TABLE accounts DROP COLUMN $column');
+  }
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 6
+/// (no credit card statement fields).
+Future<void> rewindToVersion6(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropCardColumns(db);
+  await db.customStatement('PRAGMA user_version = 6');
   await db.close();
 }
 
@@ -68,6 +88,7 @@ Future<void> rewindToVersion5(File file) async {
   for (final column in dueReminderColumns(db.reminders)) {
     await db.customStatement('ALTER TABLE reminders DROP COLUMN ${column.name}');
   }
+  await dropCardColumns(db);
   await db.customStatement('PRAGMA user_version = 5');
   await db.close();
 }
@@ -184,6 +205,29 @@ void main() {
     expect(settleUp.notifyAtMinute, isNull);
     final indexes = await db.customSelect("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'reminders'").get();
     expect(indexes.map((row) => row.data['name']), contains('reminders_status_due'));
+    await db.close();
+  });
+
+  test('upgrading from schema 6 adds the credit card statement fields, empty', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.accounts).insert(AccountsCompanion.insert(id: 'c1', name: 'HDFC Regalia', type: 'card', color: 0xFF1E88E5, balanceMinor: const Value(-25000)));
+    await seed.close();
+    await rewindToVersion6(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final card = await (db.select(db.accounts)..where((t) => t.id.equals('c1'))).getSingle();
+    expect(card.statementDay, isNull);
+    expect(card.dueDay, isNull);
+    expect(card.creditLimitMinor, isNull);
+    expect(card.lastStatementMinor, isNull);
+    expect(card.lastStatementAt, isNull);
+    expect(card.balanceMinor, -25000, reason: 'existing rows survive the upgrade');
+    await (db.update(db.accounts)..where((t) => t.id.equals('c1'))).write(AccountsCompanion(statementDay: const Value(31), dueDay: const Value(20), creditLimitMinor: const Value(10000000), lastStatementMinor: const Value(25000), lastStatementAt: Value(DateTime(2026, 9, 30))));
+    final updated = await (db.select(db.accounts)..where((t) => t.id.equals('c1'))).getSingle();
+    expect(updated.statementDay, 31);
+    expect(updated.lastStatementAt, DateTime(2026, 9, 30));
     await db.close();
   });
 

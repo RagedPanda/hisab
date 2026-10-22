@@ -3391,6 +3391,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'you'**
   String get youInList;
+
+  /// No description provided for @settleReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle up: {group}'**
+  String settleReminderTitle(String group);
+
+  /// No description provided for @settleReminderOwesYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes you {amount}'**
+  String settleReminderOwesYou(String name, String amount);
+
+  /// No description provided for @settleReminderYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {name} {amount}'**
+  String settleReminderYouOwe(String name, String amount);
+
+  /// No description provided for @settleReminderPeopleOweYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 person owes you {amount}} other{{count} people owe you {amount}}}'**
+  String settleReminderPeopleOweYou(int count, String amount);
+
+  /// No description provided for @settleReminderYouOweTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {amount} in all'**
+  String settleReminderYouOweTotal(String amount);
 }
 
 class _AppLocalizationsDelegate

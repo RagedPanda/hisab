@@ -571,5 +571,11 @@
   "payersAssigned": "{total} में से {assigned} दर्ज",
   "payersMustTotal": "दी गई रकम का जोड़ {total} होना चाहिए",
   "namesAnd": "{first} और {last}",
-  "youInList": "आप"
+  "youInList": "आप",
+  "settleReminderTitle": "हिसाब बराबर करें: {group}",
+  "settleReminderOwesYou": "{name} को आपको {amount} देने हैं",
+  "settleReminderYouOwe": "आपको {name} को {amount} देने हैं",
+  "settleReminderPeopleOweYou": "{count, plural, =1{1 व्यक्ति को आपको {amount} देने हैं} other{{count} लोगों को आपको {amount} देने हैं}}",
+  "@settleReminderPeopleOweYou": {"placeholders": {"count": {"type": "int"}, "amount": {"type": "String"}}},
+  "settleReminderYouOweTotal": "आपको कुल {amount} देने हैं"
 }

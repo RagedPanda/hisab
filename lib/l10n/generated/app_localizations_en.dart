@@ -1981,4 +1981,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get youInList => 'you';
+
+  @override
+  String settleReminderTitle(String group) {
+    return 'Settle up: $group';
+  }
+
+  @override
+  String settleReminderOwesYou(String name, String amount) {
+    return '$name owes you $amount';
+  }
+
+  @override
+  String settleReminderYouOwe(String name, String amount) {
+    return 'You owe $name $amount';
+  }
+
+  @override
+  String settleReminderPeopleOweYou(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people owe you $amount',
+      one: '1 person owes you $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settleReminderYouOweTotal(String amount) {
+    return 'You owe $amount in all';
+  }
 }

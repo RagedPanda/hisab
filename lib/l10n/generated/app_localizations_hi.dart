@@ -1974,4 +1974,35 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get youInList => 'आप';
+
+  @override
+  String settleReminderTitle(String group) {
+    return 'हिसाब बराबर करें: $group';
+  }
+
+  @override
+  String settleReminderOwesYou(String name, String amount) {
+    return '$name को आपको $amount देने हैं';
+  }
+
+  @override
+  String settleReminderYouOwe(String name, String amount) {
+    return 'आपको $name को $amount देने हैं';
+  }
+
+  @override
+  String settleReminderPeopleOweYou(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count लोगों को आपको $amount देने हैं',
+      one: '1 व्यक्ति को आपको $amount देने हैं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settleReminderYouOweTotal(String amount) {
+    return 'आपको कुल $amount देने हैं';
+  }
 }

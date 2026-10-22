@@ -3787,6 +3787,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{days, plural, =1{Overdue by 1 day} other{Overdue by {days} days}}'**
   String reminderOverdueDays(int days);
+
+  /// Label on a reminder that a matching bank SMS marked done
+  ///
+  /// In en, this message translates to:
+  /// **'Paid via SMS'**
+  String get smsReminderPaidViaSms;
 }
 
 class _AppLocalizationsDelegate

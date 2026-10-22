@@ -742,5 +742,7 @@
   "reminderDueInDays": "{days, plural, =1{Due tomorrow} other{Due in {days} days}}",
   "@reminderDueInDays": {"placeholders": {"days": {"type": "int"}}},
   "reminderOverdueDays": "{days, plural, =1{Overdue by 1 day} other{Overdue by {days} days}}",
-  "@reminderOverdueDays": {"placeholders": {"days": {"type": "int"}}}
+  "@reminderOverdueDays": {"placeholders": {"days": {"type": "int"}}},
+  "smsReminderPaidViaSms": "Paid via SMS",
+  "@smsReminderPaidViaSms": {"description": "Label on a reminder that a matching bank SMS marked done"}
 }

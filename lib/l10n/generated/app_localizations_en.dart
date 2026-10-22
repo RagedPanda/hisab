@@ -2232,4 +2232,7 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get smsReminderPaidViaSms => 'Paid via SMS';
 }

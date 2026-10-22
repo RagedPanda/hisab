@@ -12,6 +12,7 @@ import '../data/repositories/project_fields_repository.dart';
 import '../data/repositories/projects_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
 import '../data/sms/sms_ingest_service.dart';
+import '../domain/entries/entry_filter.dart';
 import '../domain/stats/dashboard_ledger.dart';
 import '../domain/stats/spend_series.dart';
 import 'dates.dart';
@@ -92,6 +93,13 @@ final monthEntriesProvider = StreamProvider((ref) {
   final range = ref.watch(selectedRangeProvider);
   return ref.watch(entriesRepositoryProvider).watchEntries(range: range, myLedger: true);
 });
+/// My ledger in an explicit window, for the Entries date filter.
+final windowEntriesProvider = StreamProvider.family<List<EntryDetails>, ({DateTime start, DateTime end})>(
+  (ref, window) => ref.watch(entriesRepositoryProvider).watchEntries(range: DateRange(window.start, window.end), myLedger: true),
+);
+
+/// Every tag used on a live entry, for the Entries tag filter.
+final entryTagsProvider = StreamProvider((ref) => ref.watch(entriesRepositoryProvider).watchTagTexts().map(distinctTags));
 final monthTotalsProvider = StreamProvider((ref) {
   final range = ref.watch(selectedRangeProvider);
   return ref.watch(entriesRepositoryProvider).watchTotals(range);

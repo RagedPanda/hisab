@@ -8,11 +8,11 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
-import '../../domain/categories/category_filter.dart';
-import '../../domain/projects/project_picker.dart';
+import '../../domain/entries/entry_filter.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../projects/project_picker_sheet.dart';
+import 'entry_filter_sheet.dart';
 import '../shell/widgets/common.dart';
 
 class _SearchNotifier extends Notifier<String> {
@@ -27,13 +27,13 @@ class _KindFilterNotifier extends Notifier<String?> {
   void set(String? value) => state = value;
 }
 
-class _ProjectFilterNotifier extends Notifier<String?> {
+class _EntryFilterNotifier extends Notifier<EntryFilter> {
   @override
-  String? build() => null;
-  void set(String? value) => state = value;
+  EntryFilter build() => const EntryFilter();
+  void set(EntryFilter value) => state = value;
 }
 
-final _projectFilterProvider = NotifierProvider<_ProjectFilterNotifier, String?>(_ProjectFilterNotifier.new);
+final _entryFilterProvider = NotifierProvider<_EntryFilterNotifier, EntryFilter>(_EntryFilterNotifier.new);
 final _searchProvider = NotifierProvider<_SearchNotifier, String>(_SearchNotifier.new);
 final _kindFilterProvider = NotifierProvider<_KindFilterNotifier, String?>(_KindFilterNotifier.new);
 
@@ -60,12 +60,24 @@ class RouteFilters {
         },
       ).toString().replaceFirst(RegExp(r'\?$'), '');
 
-  bool matches(EntryDetails details) {
-    if (accountId != null && details.entry.accountId != accountId) return false;
-    if (categoryId != null && !matchesCategoryFilter(selectedId: categoryId!, categoryId: details.category?.id, parentId: details.category?.parentId)) return false;
-    return true;
-  }
+  EntryFilter get asFilter => EntryFilter(categoryId: categoryId, accountId: accountId);
 }
+
+/// What search and filters see of one listed entry.
+EntryFacts entryFacts(BuildContext context, EntryDetails details) => EntryFacts(
+      amountMinor: details.myAmountMinor,
+      occurredAt: details.entry.occurredAt,
+      note: details.entry.note,
+      payee: details.entry.payee,
+      categoryId: details.category?.id,
+      categoryParentId: details.category?.parentId,
+      categoryNames: [if (details.category != null) ...[details.category!.name, details.category!.displayName(context)]],
+      itemNames: [for (final item in details.items) item.name],
+      accountId: details.entry.accountId,
+      toAccountId: details.entry.toAccountId,
+      projectId: details.entry.projectId,
+      tags: details.entry.tags,
+    );
 
 class TransactionsScreen extends ConsumerWidget {
   const TransactionsScreen({super.key});
@@ -75,40 +87,50 @@ class TransactionsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final search = ref.watch(_searchProvider);
     final kindFilter = ref.watch(_kindFilterProvider);
-    final projectFilter = ref.watch(_projectFilterProvider);
+    final filter = ref.watch(_entryFilterProvider);
     final symbol = ref.watch(settingsProvider).currencySymbol;
-    final async = ref.watch(monthEntriesProvider);
+    final window = filter.dateWindow;
+    final async = window == null ? ref.watch(monthEntriesProvider) : ref.watch(windowEntriesProvider(window));
     final routeFilters = RouteFilters.of(context);
+    final routeFilter = routeFilters.asFilter;
     final entries = (async.value ?? const <EntryDetails>[]).where((d) {
-      if (!routeFilters.matches(d)) return false;
       if (kindFilter != null && d.entry.kind != kindFilter) return false;
-      if (!matchesProjectFilter(selectedId: projectFilter, entryProjectId: d.entry.projectId)) return false;
-      if (search.isEmpty) return true;
-      final needle = search.toLowerCase();
-      return d.entry.note.toLowerCase().contains(needle) ||
-          (d.entry.payee ?? '').toLowerCase().contains(needle) ||
-          (d.category?.name ?? '').toLowerCase().contains(needle) ||
-          (d.category?.displayName(context) ?? '').toLowerCase().contains(needle) ||
-          d.items.any((i) => i.name.toLowerCase().contains(needle));
+      final facts = entryFacts(context, d);
+      return matchesEntryFilter(routeFilter, facts) && matchesEntryFilter(filter, facts) && matchesSearch(search, facts);
     }).toList();
     final groups = _groupByDay(entries);
+    final narrowed = search.trim().isNotEmpty || !filter.isEmpty || kindFilter != null || !routeFilters.isEmpty;
+    void clearAll() {
+      ref.read(_searchProvider.notifier).set('');
+      ref.read(_entryFilterProvider.notifier).set(const EntryFilter());
+      ref.read(_kindFilterProvider.notifier).set(null);
+      if (!routeFilters.isEmpty) context.go('/transactions');
+    }
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.entries), actions: const [MonthSwitcher()]),
+      appBar: AppBar(title: Text(l10n.entries), actions: [if (window == null) const MonthSwitcher()]),
       body: DismissKeyboardOnTap(
         child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: l10n.searchEntriesHint,
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: search.isEmpty ? null : IconButton(icon: const Icon(Icons.clear), onPressed: () => ref.read(_searchProvider.notifier).set('')),
-                isDense: true,
+            child: Row(children: [
+              const Expanded(child: _SearchField()),
+              const SizedBox(width: 8),
+              IconButton.filledTonal(
+                key: const ValueKey('entries.filters'),
+                tooltip: l10n.filters,
+                icon: Badge(
+                  isLabelVisible: !filter.isEmpty,
+                  label: Text('${filter.activeCount}'),
+                  child: const Icon(Icons.tune),
+                ),
+                onPressed: () async {
+                  final next = await showEntryFilterSheet(context, initial: filter, categoryKind: kindFilter == 'income' ? 'income' : 'expense');
+                  if (next != null) ref.read(_entryFilterProvider.notifier).set(next);
+                },
               ),
-              onChanged: (value) => ref.read(_searchProvider.notifier).set(value),
-            ),
+            ]),
           ),
           ChipRow(
             children: [
@@ -122,11 +144,26 @@ class TransactionsScreen extends ConsumerWidget {
                   label: _accountFilterLabel(ref, routeFilters.accountId!),
                   onDeleted: () => context.go(routeFilters.locationWithout(account: true)),
                 ),
-              _ProjectFilterChip(selectedId: projectFilter),
+              _ProjectFilterChip(selectedId: filter.projectId),
+              ..._activeFilterChips(context, ref, filter, symbol),
               for (final (label, value) in [(l10n.all, null), (l10n.kindExpenses, 'expense'), (l10n.income, 'income'), (l10n.kindTransfers, 'transfer')])
                 ChoiceChip(label: Text(label), selected: kindFilter == value, onSelected: (_) => ref.read(_kindFilterProvider.notifier).set(value)),
             ],
           ),
+          if (narrowed)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 8, 0),
+              child: Row(children: [
+                Expanded(
+                  child: Text(
+                    l10n.resultsCount(entries.length),
+                    key: const ValueKey('entries.resultsCount'),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ),
+                ),
+                TextButton(key: const ValueKey('entries.clearAll'), onPressed: clearAll, child: Text(l10n.clearAll)),
+              ]),
+            ),
           Expanded(
             child: async.isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -213,10 +250,11 @@ class _ProjectFilterChip extends ConsumerWidget {
     final l10n = context.l10n;
     final views = ref.watch(projectViewsProvider).value ?? const [];
     final name = views.where((view) => view.project.id == selectedId).firstOrNull?.project.name;
-    final notifier = ref.read(_projectFilterProvider.notifier);
+    final notifier = ref.read(_entryFilterProvider.notifier);
+    void setProject(String? projectId) => notifier.set(ref.read(_entryFilterProvider).copyWith(projectId: projectId));
     Future<void> pick() async {
-      final choice = await showProjectPicker(context, selectedId: selectedId, includeCompleted: true);
-      if (choice != null) notifier.set(choice.projectId);
+      final choice = await showProjectPicker(context, selectedId: selectedId, includeCompleted: true, noneLabel: l10n.anyProject);
+      if (choice != null) setProject(choice.projectId);
     }
 
     const key = ValueKey('entries.projectFilter');
@@ -229,8 +267,67 @@ class _ProjectFilterChip extends ConsumerWidget {
       avatar: const Icon(Icons.folder, size: 18),
       label: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 160), child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis)),
       onPressed: pick,
-      onDeleted: () => notifier.set(null),
+      onDeleted: () => setProject(null),
       deleteIcon: const Icon(Icons.close, size: 18),
     );
   }
+}
+
+/// Search box kept in step with the search provider, so "Clear all" empties it.
+class _SearchField extends ConsumerStatefulWidget {
+  const _SearchField();
+
+  @override
+  ConsumerState<_SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends ConsumerState<_SearchField> {
+  late final _controller = TextEditingController(text: ref.read(_searchProvider));
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(_searchProvider, (_, next) {
+      if (next != _controller.text) _controller.text = next;
+    });
+    final search = ref.watch(_searchProvider);
+    return TextField(
+      key: const ValueKey('entries.search'),
+      controller: _controller,
+      decoration: InputDecoration(
+        hintText: context.l10n.searchEntriesHint,
+        prefixIcon: const Icon(Icons.search),
+        suffixIcon: search.isEmpty ? null : IconButton(icon: const Icon(Icons.clear), onPressed: () => ref.read(_searchProvider.notifier).set('')),
+        isDense: true,
+      ),
+      onChanged: (value) => ref.read(_searchProvider.notifier).set(value),
+    );
+  }
+}
+
+/// One removable chip per filter set in the sheet (project has its own chip).
+List<Widget> _activeFilterChips(BuildContext context, WidgetRef ref, EntryFilter filter, String symbol) {
+  final l10n = context.l10n;
+  final notifier = ref.read(_entryFilterProvider.notifier);
+  Widget chip(String name, String label, EntryFilter Function(EntryFilter) clear) => InputChip(
+        key: ValueKey('entries.filter.$name'),
+        label: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 200), child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis)),
+        selected: true,
+        deleteIcon: const Icon(Icons.close, size: 18),
+        onDeleted: () => notifier.set(clear(ref.read(_entryFilterProvider))),
+      );
+  return [
+    if (filter.categoryId != null) chip('category', _categoryFilterLabel(context, ref, filter.categoryId!), (current) => current.copyWith(categoryId: null)),
+    if (filter.accountId != null) chip('account', _accountFilterLabel(ref, filter.accountId!), (current) => current.copyWith(accountId: null)),
+    if (filter.hasAmount)
+      chip('amount', amountRangeLabel(l10n, filter.minAmountMinor, filter.maxAmountMinor, symbol), (current) => current.copyWith(minAmountMinor: null, maxAmountMinor: null)),
+    if (filter.hasDates)
+      chip('dates', dateRangeLabel(filter.from, filter.to, locale: Localizations.localeOf(context).toString()), (current) => current.copyWith(from: null, to: null)),
+    if (filter.tag != null) chip('tag', '#${filter.tag}', (current) => current.copyWith(tag: null)),
+  ];
 }

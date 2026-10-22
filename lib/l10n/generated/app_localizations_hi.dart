@@ -1865,4 +1865,66 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get editMember => 'सदस्य बदलें';
+
+  @override
+  String get filters => 'फ़िल्टर';
+
+  @override
+  String get filterEntries => 'लेन-देन फ़िल्टर करें';
+
+  @override
+  String get anyProject => 'कोई भी प्रोजेक्ट';
+
+  @override
+  String get anyCategory => 'कोई भी श्रेणी';
+
+  @override
+  String get anyDate => 'कोई भी तारीख़';
+
+  @override
+  String get minAmount => 'कम से कम';
+
+  @override
+  String get maxAmount => 'ज़्यादा से ज़्यादा';
+
+  @override
+  String get dates => 'तारीख़ें';
+
+  @override
+  String get tags => 'टैग';
+
+  @override
+  String get showResults => 'नतीजे दिखाएँ';
+
+  @override
+  String get clearAll => 'सब हटाएँ';
+
+  @override
+  String resultsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count नतीजे',
+      one: '1 नतीजा',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String amountFrom(String amount) {
+    return '$amount से';
+  }
+
+  @override
+  String amountUpTo(String amount) {
+    return '$amount तक';
+  }
+
+  @override
+  String amountBetween(String min, String max) {
+    return '$min – $max';
+  }
+
+  @override
+  String get minAboveMax => 'कम से कम रकम ज़्यादा से ज़्यादा से बड़ी है';
 }

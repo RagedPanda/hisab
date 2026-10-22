@@ -44,6 +44,3 @@ Map<String, V> keepFieldValues<V>(Map<String, V> values, Iterable<String> fieldK
       if (keys.contains(key)) key: value,
   };
 }
-
-/// Whether an entry passes the Entries project filter; no filter passes all.
-bool matchesProjectFilter({String? selectedId, String? entryProjectId}) => selectedId == null || entryProjectId == selectedId;

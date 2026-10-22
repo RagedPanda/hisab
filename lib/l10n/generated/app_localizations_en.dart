@@ -1872,4 +1872,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editMember => 'Edit member';
+
+  @override
+  String get filters => 'Filters';
+
+  @override
+  String get filterEntries => 'Filter entries';
+
+  @override
+  String get anyProject => 'Any project';
+
+  @override
+  String get anyCategory => 'Any category';
+
+  @override
+  String get anyDate => 'Any date';
+
+  @override
+  String get minAmount => 'Min';
+
+  @override
+  String get maxAmount => 'Max';
+
+  @override
+  String get dates => 'Dates';
+
+  @override
+  String get tags => 'Tags';
+
+  @override
+  String get showResults => 'Show results';
+
+  @override
+  String get clearAll => 'Clear all';
+
+  @override
+  String resultsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count results',
+      one: '1 result',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String amountFrom(String amount) {
+    return 'From $amount';
+  }
+
+  @override
+  String amountUpTo(String amount) {
+    return 'Up to $amount';
+  }
+
+  @override
+  String amountBetween(String min, String max) {
+    return '$min – $max';
+  }
+
+  @override
+  String get minAboveMax => 'Min is more than max';
 }

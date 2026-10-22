@@ -16,9 +16,11 @@ class ProjectChoice {
 
 /// Bottom sheet listing the projects an entry can go to (or the Entries list
 /// can be filtered by), with a "No project" row first.
-Future<ProjectChoice?> showProjectPicker(BuildContext context, {String? selectedId, bool includeCompleted = false}) =>
+/// [noneLabel] names the first row; it defaults to "No project".
+Future<ProjectChoice?> showProjectPicker(BuildContext context, {String? selectedId, bool includeCompleted = false, String? noneLabel}) =>
     showModalBottomSheet<ProjectChoice>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
@@ -27,14 +29,15 @@ Future<ProjectChoice?> showProjectPicker(BuildContext context, {String? selected
         initialChildSize: 0.5,
         minChildSize: 0.3,
         maxChildSize: 0.9,
-        builder: (context, controller) => _ProjectPickerBody(selectedId: selectedId, includeCompleted: includeCompleted, controller: controller),
+        builder: (context, controller) => _ProjectPickerBody(selectedId: selectedId, includeCompleted: includeCompleted, noneLabel: noneLabel, controller: controller),
       ),
     );
 
 class _ProjectPickerBody extends ConsumerWidget {
-  const _ProjectPickerBody({required this.selectedId, required this.includeCompleted, required this.controller});
+  const _ProjectPickerBody({required this.selectedId, required this.includeCompleted, required this.noneLabel, required this.controller});
   final String? selectedId;
   final bool includeCompleted;
+  final String? noneLabel;
   final ScrollController controller;
 
   @override
@@ -59,7 +62,7 @@ class _ProjectPickerBody extends ConsumerWidget {
         ListTile(
           key: const ValueKey('project.none'),
           leading: const SizedBox.square(dimension: 40, child: Icon(Icons.folder_off_outlined)),
-          title: Text(l10n.noProject),
+          title: Text(noneLabel ?? l10n.noProject),
           trailing: selectedId == null ? selectedIcon : null,
           onTap: () => Navigator.of(context).pop(const ProjectChoice(null)),
         ),

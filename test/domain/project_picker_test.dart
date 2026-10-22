@@ -49,11 +49,4 @@ void main() {
     expect(keepFieldValues({'odometer': 1, 'floor': 2}, ['odometer', 'stage']), {'odometer': 1});
     expect(keepFieldValues({'odometer': 1}, const []), isEmpty);
   });
-
-  test('matchesProjectFilter', () {
-    expect(matchesProjectFilter(entryProjectId: 'p1'), isTrue);
-    expect(matchesProjectFilter(selectedId: 'p1', entryProjectId: 'p1'), isTrue);
-    expect(matchesProjectFilter(selectedId: 'p1', entryProjectId: null), isFalse);
-    expect(matchesProjectFilter(selectedId: 'p1', entryProjectId: 'p2'), isFalse);
-  });
 }

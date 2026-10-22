@@ -115,4 +115,14 @@ void main() {
     expect(lines.every((line) => line.categoryId == null), isTrue);
     expect(await entries.watchTotals(range).first, (expense: 27000, income: 0));
   });
+
+  test('watchTagTexts lists distinct tags of live entries only', () async {
+    final deletedId = newId();
+    await entries.saveEntry(EntriesRepository.newExpense(id: newId(), amountMinor: 1000, occurredAt: DateTime(2026, 10, 5)).copyWith(tags: const Value('#home')));
+    await entries.saveEntry(EntriesRepository.newExpense(id: newId(), amountMinor: 2000, occurredAt: DateTime(2026, 10, 6)).copyWith(tags: const Value('#home')));
+    await entries.saveEntry(EntriesRepository.newExpense(id: newId(), amountMinor: 3000, occurredAt: DateTime(2026, 10, 7)));
+    await entries.saveEntry(EntriesRepository.newExpense(id: deletedId, amountMinor: 4000, occurredAt: DateTime(2026, 10, 8)).copyWith(tags: const Value('old')));
+    await entries.deleteEntry(deletedId);
+    expect(await entries.watchTagTexts().first, ['#home']);
+  });
 }

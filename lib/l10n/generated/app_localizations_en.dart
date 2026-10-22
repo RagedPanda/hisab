@@ -384,7 +384,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smsEntryNotice =>
-      'Created from a bank SMS. Editing it will not change your bank balance.';
+      'Added from SMS. Editing it will not change your bank balance.';
 
   @override
   String get saving => 'Saving…';
@@ -799,10 +799,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not available on iOS. Use the Shortcut or paste below.';
 
   @override
-  String get smsAutoAddTitle => 'Add transactions without review';
+  String get smsAutoAddTitle => 'Add clear transactions automatically';
 
   @override
-  String get smsAutoAddHelp => 'Off: new SMS wait in the review list below.';
+  String get smsAutoAddHelp =>
+      'On: clear bank SMS are added right away with Undo. Unclear ones wait for review.';
 
   @override
   String get scanInboxNow => 'Scan inbox now';
@@ -1957,4 +1958,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savedAddAnother => 'Saved. Add the next one.';
+
+  @override
+  String get smsAddedMarker => 'Added from SMS';
+
+  @override
+  String smsAutoAddedOne(String amount) {
+    return 'Added $amount from SMS';
+  }
+
+  @override
+  String smsAutoAddedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added $count entries from SMS',
+      one: 'Added 1 entry from SMS',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get smsReviewTitle => 'SMS to review';
+
+  @override
+  String get smsReviewHelp =>
+      'These messages were not clear enough to add on their own. Add, edit or ignore each one.';
+
+  @override
+  String get smsReviewUnread => 'Could not read the amount';
+
+  @override
+  String get smsReviewAddManually => 'Add manually';
 }

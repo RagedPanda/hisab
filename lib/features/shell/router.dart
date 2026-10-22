@@ -14,6 +14,7 @@ import '../projects/project_form_screen.dart';
 import '../projects/project_templates_screen.dart';
 import '../projects/projects_screen.dart';
 import '../settings/settings_screen.dart';
+import '../sms/sms_review_screen.dart';
 import '../sms/sms_screen.dart';
 import '../transactions/transactions_screen.dart';
 import 'app_shell.dart';
@@ -78,5 +79,6 @@ final appRouter = GoRouter(
       ],
     ),
     GoRoute(path: '/sms', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: SmsScreen(sharedText: state.uri.queryParameters['text']))),
+    GoRoute(path: '/sms/review', parentNavigatorKey: _rootKey, builder: (_, _) => const HomeFallbackPop(child: SmsReviewScreen())),
   ],
 );

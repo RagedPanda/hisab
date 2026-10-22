@@ -25,3 +25,6 @@ flutter run
 - [docs/PERMISSIONS.md](docs/PERMISSIONS.md): every permission per platform, store declaration text, reference apps.
 - [docs/LOCALIZATION.md](docs/LOCALIZATION.md): English and Hindi today; a new language is one ARB file plus a category-name map.
 - [docs/REFERENCE_APPS.md](docs/REFERENCE_APPS.md): what FinArt, Splitwise, Money Manager, Monefy, Cashew and PennyWise taught us.
+
+## Contributing
+Issues and pull requests are welcome. Run `flutter test` before opening a PR, and add new user-facing strings to the ARB files rather than hardcoding them (see [docs/LOCALIZATION.md](docs/LOCALIZATION.md)).

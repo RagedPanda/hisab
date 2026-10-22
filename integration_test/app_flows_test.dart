@@ -1484,4 +1484,68 @@ void main() {
     expect(tester.widget<TextFormField>(payerField(rahul)).initialValue, '600');
     expect(tester.widget<TextFormField>(payerField(me)).initialValue, '300');
   });
+
+  testWidgets('25 group settings: type, default split with weights, currency label, notes, leave blocked, archive', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final flatId = await groups.createGroup(name: 'Flat 4B', icon: 'groups', myName: 'You', otherMembers: ['Rahul']);
+    final members = await groups.getMembers(flatId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => member.name == 'Rahul').id;
+    await groups.addSettlement(groupId: flatId, fromMemberId: me, toMemberId: rahul, amountMinor: 50000, occurredAt: DateTime.now());
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Flat 4B');
+    await tapFinder(tester, find.byType(PopupMenuButton<String>));
+    await tapText(tester, 'Group settings', frames: 12);
+
+    await tapFinder(tester, _chip('Home'));
+    var group = (await groups.getGroup(flatId))!;
+    expect((group.type, group.icon), ('home', 'home'), reason: 'the generic icon follows the new type');
+
+    await scrollTo(tester, _chip('Shares'));
+    await tapFinder(tester, _chip('Shares'));
+    await scrollTo(tester, find.byTooltip('More shares for Rahul'));
+    await tapFinder(tester, find.byTooltip('More shares for Rahul'));
+    expect(find.text('1.5 shares'), findsOneWidget);
+    await shoot(tester, 'group_settings_shares');
+
+    await scrollTo(tester, find.text('Same as app (${fresh.read(settingsProvider).currencySymbol})'));
+    await tapText(tester, 'Same as app (${fresh.read(settingsProvider).currencySymbol})', frames: 12);
+    await tapText(tester, '€  ·  EUR', frames: 12);
+    expect((await groups.getGroup(flatId))!.currencyLabel, '€');
+
+    await scrollTo(tester, find.text('Add a note for this group'));
+    await tapText(tester, 'Add a note for this group', frames: 12);
+    await enterText(tester, _dialogField(), 'Rent is due on the 1st');
+    await tapFinder(tester, _filled('Save'), frames: 12);
+    expect(find.text('Rent is due on the 1st'), findsOneWidget);
+
+    await scrollTo(tester, find.text('Leave group'));
+    await tapText(tester, 'Leave group');
+    expect(find.text('Settle up first. You can leave once nobody owes you and you owe nobody.'), findsOneWidget);
+    await shoot(tester, 'group_settings_bottom');
+
+    await goBack(tester);
+    expect(find.text('Rent is due on the 1st'), findsOneWidget, reason: 'notes show on the Expenses tab');
+    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'), frames: 12);
+    await scrollTo(tester, _chip('Shares'), within: find.byType(ExpenseEditorScreen));
+    expect(tester.widget<ChoiceChip>(_chip('Shares')).selected, isTrue, reason: 'new expenses start from the default split');
+    expect(find.textContaining('€'), findsWidgets, reason: 'the editor shows the group currency label');
+    await goBack(tester);
+
+    await tapFinder(tester, find.byType(PopupMenuButton<String>));
+    await tapText(tester, 'Archive group', frames: 12);
+    await tapFinder(tester, _filled('Archive'), frames: 12);
+    expect(find.text('This group is archived. Unarchive it to add expenses.'), findsOneWidget);
+    expect(find.widgetWithText(FloatingActionButton, 'Add expense'), findsNothing);
+    await shoot(tester, 'group_archived');
+    await goBack(tester);
+    expect(find.text('Archived (1)'), findsOneWidget);
+    group = (await groups.getGroup(flatId))!;
+    expect((group.defaultSplitMethod, group.archivedAt != null), ('shares', true));
+    expect((await groups.getMembers(flatId)).firstWhere((member) => member.id == rahul).weight, 1.5);
+  });
 }

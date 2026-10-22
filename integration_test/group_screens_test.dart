@@ -30,6 +30,7 @@ void main() {
     final groupId = await _seedGroup(app);
     final settledGroupId = await _seedSettledGroup(app);
     final squareGroupId = await _seedSquareGroup(app);
+    final archivedGroupId = await _seedArchivedGroup(app);
     await pumpApp(tester, app);
 
     for (final (locale, mode) in _configs) {
@@ -38,6 +39,23 @@ void main() {
       appRouter.go('/groups/$groupId');
       await settle(tester, 10);
       await shoot(tester, 'group_expenses_$tag');
+      appRouter.go('/groups/$groupId/settings');
+      await settle(tester, 10);
+      await shoot(tester, 'group_settings_top_$tag');
+      await tester.drag(find.byType(ListView).first, const Offset(0, -700));
+      await settle(tester, 10);
+      await shoot(tester, 'group_settings_middle_$tag');
+      await tester.drag(find.byType(ListView).first, const Offset(0, -1400));
+      await settle(tester, 10);
+      await shoot(tester, 'group_settings_bottom_$tag');
+      await tapFinder(tester, find.byIcon(Icons.currency_exchange), frames: 12);
+      await shoot(tester, 'group_currency_sheet_$tag');
+      await _popSheet(tester);
+      appRouter.go('/groups/$archivedGroupId');
+      await settle(tester, 10);
+      await shoot(tester, 'group_archived_$tag');
+      appRouter.go('/groups/$groupId');
+      await settle(tester, 10);
       await tester.tap(find.byType(Tab).at(1));
       await settle(tester, 10);
       await shoot(tester, 'group_balances_$tag');
@@ -96,6 +114,11 @@ void main() {
       appRouter.go('/groups');
       await settle(tester, 10);
       await shoot(tester, 'groups_list_$tag');
+      await scrollTo(tester, find.byIcon(Icons.archive_outlined));
+      await tapFinder(tester, find.byIcon(Icons.archive_outlined), frames: 10);
+      await scrollTo(tester, find.text('Old flat'));
+      await shoot(tester, 'groups_list_archived_$tag');
+      await tapFinder(tester, find.byIcon(Icons.archive_outlined), frames: 10);
     }
   });
 }
@@ -148,6 +171,19 @@ Future<String> _seedGroup(AppHandle app) async {
     payers: [for (final member in [rahul, me]) EntryPayersCompanion.insert(id: newId(), entryId: _sharedFuelId, memberId: member, amountMinor: 30000)],
   );
   await groups.updateMember(MembersCompanion(id: Value(rahul), phone: const Value('98765 43210')));
+  // Group settings: a trip that splits by shares, Rahul counting double, with notes.
+  await groups.updateGroup(GroupsCompanion(id: Value(groupId), type: const Value('trip'), defaultSplitMethod: const Value('shares'), notes: const Value('Villa keys are with Priya. Checkout 11 am Sunday.')));
+  await groups.setMemberWeight(rahul, 2);
+  return groupId;
+}
+
+/// Old flat: an archived home group with no expenses, for the banner, the
+/// home-type empty state and the Archived section of the groups list.
+Future<String> _seedArchivedGroup(AppHandle app) async {
+  final groups = app.read(groupsRepositoryProvider);
+  final groupId = await groups.createGroup(name: 'Old flat', icon: 'home', myName: 'You', otherMembers: ['Rahul']);
+  await groups.updateGroup(GroupsCompanion(id: Value(groupId), type: const Value('home')));
+  await groups.archiveGroup(groupId);
   return groupId;
 }
 

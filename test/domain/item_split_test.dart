@@ -29,4 +29,17 @@ void main() {
     expect(toggleItemMember(const ['me', 'priya'], 'me', order), ['priya']);
     expect(defaultItemMembers(order), order);
   });
+
+  test('an unassigned non-shared item blocks Save; a shared one does not', () {
+    expect(anyItemUnassigned(const [ItemSplitInput(amountMinor: 1, memberIds: [])]), isTrue);
+    expect(anyItemUnassigned(const [ItemSplitInput(amountMinor: 1, memberIds: [], shared: true)]), isFalse);
+    expect(anyItemUnassigned(items), isFalse);
+  });
+
+  test('custom assignments are any shared item or an item not split among everyone', () {
+    const everyone = ['me', 'rahul'];
+    expect(hasCustomAssignments(const [ItemSplitInput(amountMinor: 1, memberIds: ['rahul', 'me'])], everyone), isFalse);
+    expect(hasCustomAssignments(const [ItemSplitInput(amountMinor: 1, memberIds: ['me'])], everyone), isTrue);
+    expect(hasCustomAssignments(const [ItemSplitInput(amountMinor: 1, memberIds: ['me', 'rahul'], shared: true)], everyone), isTrue);
+  });
 }

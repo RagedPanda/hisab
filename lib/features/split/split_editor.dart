@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/money.dart';
 import '../../data/db/database.dart';
+import '../../domain/split/item_split.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
@@ -66,6 +67,8 @@ class SplitEditor extends StatelessWidget {
     required this.symbol,
     required this.onMethodChanged,
     required this.onInputsChanged,
+    this.items = const [],
+    this.payerId,
   });
 
   final int totalMinor;
@@ -76,10 +79,17 @@ class SplitEditor extends StatelessWidget {
   final ValueChanged<SplitMethod> onMethodChanged;
   final ValueChanged<List<SplitInput>> onInputsChanged;
 
+  /// The expense's line items; "By item" is offered only when there are some.
+  final List<ItemSplitInput> items;
+
+  /// Takes the rounding remainders of a by-item split.
+  final String? payerId;
+
   @override
   Widget build(BuildContext context) {
-    final outcome = computeSplit(totalMinor: totalMinor, method: method, inputs: inputs);
+    final outcome = computeSplit(totalMinor: totalMinor, method: method, inputs: inputs, items: items, payerId: payerId);
     final shares = outcome.asMap();
+    final summaries = {for (final summary in itemShareSummaries(outcome, items)) summary.memberId: summary};
     final theme = Theme.of(context);
     final l10n = context.l10n;
     return Column(
@@ -88,14 +98,26 @@ class SplitEditor extends StatelessWidget {
         ChipRow(
           padding: EdgeInsets.zero,
           children: [
-            for (final option in SplitMethod.values.where((m) => m != SplitMethod.byItem))
-              ChoiceChip(label: Text(splitMethodLabel(option, l10n)), selected: method == option, onSelected: (_) => onMethodChanged(option)),
+            for (final option in SplitMethod.values.where((m) => m != SplitMethod.byItem || items.isNotEmpty))
+              ChoiceChip(
+                key: Key('split-method-${option.name}'),
+                label: Text(splitMethodLabel(option, l10n)),
+                selected: method == option,
+                onSelected: (_) => onMethodChanged(option),
+              ),
           ],
         ),
         const SizedBox(height: 8),
         Text(splitMethodHelp(method, l10n), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        if (items.isEmpty)
+          Text(l10n.byItemHint, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 8),
-        for (final member in members) _memberRow(context, member, shares[member.id]),
+        for (final member in members)
+          _memberRow(
+            context,
+            member,
+            method == SplitMethod.byItem ? _byItemLine(l10n, summaries[member.id]) : _shareText(shares[member.id]),
+          ),
         const SizedBox(height: 8),
         if (!outcome.isValid)
           Text(outcome.error == null ? l10n.splitDoesNotAddUp : splitErrorMessage(outcome.error!, l10n, symbol), style: TextStyle(color: theme.colorScheme.error))
@@ -105,9 +127,14 @@ class SplitEditor extends StatelessWidget {
     );
   }
 
-  Widget _memberRow(BuildContext context, Member member, int? share) {
+  String _shareText(int? share) => share == null ? '—' : formatMinor(share, symbol: symbol);
+
+  /// "₹620 · 3 items · 31%" for a member of a by-item split.
+  String _byItemLine(AppLocalizations l10n, ItemShareSummary? summary) =>
+      summary == null ? '—' : l10n.byItemSummary(formatMinor(summary.amountMinor, symbol: symbol), summary.itemCount, summary.percent);
+
+  Widget _memberRow(BuildContext context, Member member, String shareText) {
     final input = inputs.firstWhere((i) => i.memberId == member.id, orElse: () => SplitInput(memberId: member.id));
-    final shareText = share == null ? '—' : formatMinor(share, symbol: symbol);
     Widget trailing;
     switch (method) {
       case SplitMethod.equal:

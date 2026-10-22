@@ -49,3 +49,11 @@ List<String> toggleItemMember(List<String> current, String memberId, List<String
   final next = current.contains(memberId) ? current.where((id) => id != memberId).toSet() : {...current, memberId};
   return [for (final id in groupOrder) if (next.contains(id)) id];
 }
+
+/// True when some non-shared item has nobody on it, so Save must wait.
+bool anyItemUnassigned(List<ItemSplitInput> items) => items.any((item) => !item.shared && item.memberIds.isEmpty);
+
+/// True when leaving "By item" would lose work: an item is shared or is not
+/// split among everyone in [memberIds].
+bool hasCustomAssignments(List<ItemSplitInput> items, List<String> memberIds) =>
+    items.any((item) => item.shared || item.memberIds.toSet().length != memberIds.toSet().length || !item.memberIds.toSet().containsAll(memberIds));

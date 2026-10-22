@@ -8,6 +8,7 @@ import '../categories/category_packs_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../expense_editor/expense_editor_screen.dart';
 import '../groups/group_detail_screen.dart';
+import '../groups/group_settings_screen.dart';
 import '../groups/groups_screen.dart';
 import '../projects/project_detail_screen.dart';
 import '../projects/project_form_screen.dart';
@@ -52,6 +53,7 @@ final appRouter = GoRouter(
       ),
     ),
     GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(groupId: state.pathParameters['id']!)),
+    GoRoute(path: '/groups/:id/settings', parentNavigatorKey: _rootKey, builder: (_, state) => GroupSettingsScreen(groupId: state.pathParameters['id']!)),
     GoRoute(path: '/categories', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoriesScreen()),
     GoRoute(path: '/categories/packs', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoryPacksScreen()),
     GoRoute(path: '/accounts', parentNavigatorKey: _rootKey, builder: (_, _) => const AccountsScreen()),

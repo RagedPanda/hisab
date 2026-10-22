@@ -53,6 +53,19 @@ class SmsLogRepository {
       (db.update(db.smsLog)..where((t) => t.id.equals(id)))
           .write(SmsLogCompanion(status: Value(status), entryId: Value(entryId)));
 
+  /// Links a logged SMS to the reminder it paid.
+  Future<void> setMatchedReminder(String smsId, String reminderId) =>
+      (db.update(db.smsLog)..where((t) => t.id.equals(smsId))).write(SmsLogCompanion(matchedReminderId: Value(reminderId)));
+
+  /// Reminders some SMS has already paid, so the matcher never pays one twice.
+  Future<Set<String>> matchedReminderIds() async {
+    final rows = await (db.selectOnly(db.smsLog)
+          ..addColumns([db.smsLog.matchedReminderId])
+          ..where(db.smsLog.matchedReminderId.isNotNull()))
+        .get();
+    return rows.map((row) => row.read(db.smsLog.matchedReminderId)!).toSet();
+  }
+
   Future<DateTime?> latestReceivedAt() async {
     final max = db.smsLog.receivedAt.max();
     final row = await (db.selectOnly(db.smsLog)..addColumns([max])).getSingle();

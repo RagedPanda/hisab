@@ -29,6 +29,7 @@ ReminderMatchCandidate reminder({
   required DateTime dueAt,
   int? amountMinor = 150000,
   String? payee,
+  int toleranceMinor = 0,
   String? bankName,
   String? last4,
 }) =>
@@ -38,7 +39,8 @@ ReminderMatchCandidate reminder({
       title: title,
       dueAt: dueAt,
       amountMinor: amountMinor,
-      payee: payee,
+      toleranceMinor: toleranceMinor,
+      matchKeywords: payee == null ? const [] : parseMatchKeywords(payee),
       bankName: bankName,
       accountLast4: last4,
     );
@@ -79,6 +81,15 @@ void main() {
       expect(toleranceForKind('custom'), AmountTolerance.percentage);
     });
 
+    test('a tolerance the user set wins over the kind default', () {
+      final emi = reminder(kind: 'emi', title: 'Car loan', amountMinor: 1234500, toleranceMinor: 100, bankName: 'HDFC Bank', dueAt: due);
+      expect(matchSmsToReminder(debitSms(amountMinor: 1234600, occurredAt: due), [emi]), isNotNull);
+      expect(matchSmsToReminder(debitSms(amountMinor: 1234601, occurredAt: due), [emi]), isNull);
+      final bill = reminder(payee: 'bescom', amountMinor: 150000, toleranceMinor: 5000, dueAt: due);
+      expect(matchSmsToReminder(debitSms(amountMinor: 160000, occurredAt: due, counterparty: 'BESCOM'), [bill]), isNull,
+          reason: 'Rs 50 set by the user, not the 10% default');
+    });
+
     test('a reminder without an amount never auto-matches', () {
       final document = reminder(kind: 'document', title: 'PUC', amountMinor: null, bankName: 'HDFC Bank', dueAt: due);
       expect(matchSmsToReminder(debitSms(amountMinor: 10000, occurredAt: due), [document]), isNull);
@@ -86,14 +97,25 @@ void main() {
   });
 
   group('payee or bank', () {
-    test('payee words match the counterparty, generic words do not', () {
-      expect(payeeMatches(counterparty: 'ola.cabs@axisbank', reminderPayee: 'Ola', reminderTitle: 'x'), isTrue);
-      expect(payeeMatches(counterparty: 'jiomart@ybl', reminderPayee: 'Jio', reminderTitle: 'x'), isFalse,
-          reason: 'a short name only matches a whole word');
-      expect(payeeMatches(counterparty: 'AIRTEL PAYMENTS', reminderPayee: null, reminderTitle: 'Airtel postpaid'), isTrue);
-      expect(payeeMatches(counterparty: 'netflixupi@hdfcbank', reminderPayee: 'Netflix', reminderTitle: 'OTT'), isTrue);
-      expect(payeeMatches(counterparty: 'Amazon Pay bill', reminderPayee: 'Tata Power bill', reminderTitle: 'x'), isFalse);
-      expect(payeeMatches(counterparty: null, reminderPayee: 'BESCOM', reminderTitle: 'x'), isFalse);
+    test('keywords match anywhere in the counterparty, short ones only as a whole word', () {
+      expect(payeeMatches(counterparty: 'ola.cabs@axisbank', keywords: ['ola'], reminderTitle: 'x'), isTrue);
+      expect(payeeMatches(counterparty: 'jiomart@ybl', keywords: ['jio'], reminderTitle: 'x'), isFalse);
+      expect(payeeMatches(counterparty: 'TATAPOWER DDL', keywords: ['tata power', 'tpddl'], reminderTitle: 'Power'), isTrue);
+      expect(payeeMatches(counterparty: 'tpddl.bill@okhdfc', keywords: ['tata power', 'tpddl'], reminderTitle: 'Power'), isTrue);
+      expect(payeeMatches(counterparty: 'netflixupi@hdfcbank', keywords: ['netflix'], reminderTitle: 'OTT'), isTrue);
+      expect(payeeMatches(counterparty: 'Amazon Pay', keywords: ['tata power'], reminderTitle: 'Amazon'), isFalse,
+          reason: 'keywords, when set, replace the title');
+      expect(payeeMatches(counterparty: null, keywords: ['bescom'], reminderTitle: 'x'), isFalse);
+    });
+
+    test('without keywords a distinctive title word must appear', () {
+      expect(payeeMatches(counterparty: 'AIRTEL PAYMENTS', keywords: const [], reminderTitle: 'Airtel postpaid'), isTrue);
+      expect(payeeMatches(counterparty: 'Amazon Pay bill', keywords: const [], reminderTitle: 'Electricity bill'), isFalse);
+    });
+
+    test('stored keywords split on the bar, trimmed and lower-cased', () {
+      expect(parseMatchKeywords(' Tata Power | TPDDL ||'), ['tata power', 'tpddl']);
+      expect(parseMatchKeywords(''), isEmpty);
     });
 
     test('bank must agree, and so must the last digits when both are known', () {

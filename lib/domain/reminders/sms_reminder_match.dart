@@ -17,7 +17,8 @@ class ReminderMatchCandidate {
     required this.title,
     required this.dueAt,
     required this.amountMinor,
-    this.payee,
+    this.toleranceMinor = 0,
+    this.matchKeywords = const [],
     this.bankName,
     this.accountLast4,
   });
@@ -31,7 +32,13 @@ class ReminderMatchCandidate {
 
   /// Reminders without an amount (documents, renewals) never auto-match.
   final int? amountMinor;
-  final String? payee;
+
+  /// Difference the user allows, in minor units; 0 uses the kind's default.
+  final int toleranceMinor;
+
+  /// Names the payee goes by in bank SMS ("tata power", "tpddl"); the title
+  /// is used when there are none.
+  final List<String> matchKeywords;
 
   /// Bank of the account the reminder is paid from, e.g. "HDFC Bank".
   final String? bankName;
@@ -86,15 +93,17 @@ const Set<String> _exactAmountKinds = {'emi', 'subscription', 'insurance'};
 AmountTolerance toleranceForKind(String kind) =>
     _exactAmountKinds.contains(kind) ? AmountTolerance.exact : AmountTolerance.percentage;
 
-bool amountWithinTolerance({
-  required int paidMinor,
+/// Largest difference from [expectedMinor] that still counts as paying it.
+/// A tolerance the user set wins over the kind's default.
+int allowedDifferenceMinor({
   required int expectedMinor,
-  required AmountTolerance tolerance,
+  required String kind,
+  required int userToleranceMinor,
   required int tolerancePercent,
 }) {
-  final difference = (paidMinor - expectedMinor).abs();
-  if (tolerance == AmountTolerance.exact) return difference == 0;
-  return difference * 100 <= expectedMinor * tolerancePercent;
+  if (userToleranceMinor > 0) return userToleranceMinor;
+  if (toleranceForKind(kind) == AmountTolerance.exact) return 0;
+  return expectedMinor * tolerancePercent ~/ 100;
 }
 
 /// Whole calendar days from [dueAt] to [paidAt], ignoring the time of day.
@@ -129,17 +138,27 @@ Set<String> _significantWords(String text) => text
 
 String _compact(String text) => text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9ऀ-ॿ]+'), '');
 
-/// True when the SMS counterparty names the reminder's payee (or, without a
-/// payee, its title): a shared distinctive word, or one name inside the other.
-bool payeeMatches({required String? counterparty, required String? reminderPayee, required String reminderTitle}) {
+/// Splits the stored "tata power|tpddl" keyword column into keywords.
+List<String> parseMatchKeywords(String stored) =>
+    stored.split('|').map((keyword) => keyword.trim().toLowerCase()).where((keyword) => keyword.isNotEmpty).toList();
+
+/// True when the SMS counterparty names the payee. A keyword the user typed
+/// matches anywhere in the counterparty ("tata power" in "TATAPOWER DDL");
+/// without keywords, a distinctive word of the title must appear.
+bool payeeMatches({required String? counterparty, required List<String> keywords, required String reminderTitle}) {
   if (counterparty == null || counterparty.trim().isEmpty) return false;
-  final target = (reminderPayee != null && reminderPayee.trim().isNotEmpty) ? reminderPayee : reminderTitle;
-  final targetWords = _significantWords(target);
-  if (targetWords.isEmpty) return false;
-  final counterpartyWords = {..._significantWords(counterparty), ..._significantWords(normalisePayee(counterparty))};
-  if (targetWords.any(counterpartyWords.contains)) return true;
   final compactCounterparty = _compact(counterparty);
-  return targetWords.any((word) => word.length >= 4 && compactCounterparty.contains(word));
+  final counterpartyWords = {..._significantWords(counterparty), ..._significantWords(normalisePayee(counterparty))};
+  if (keywords.isNotEmpty) {
+    return keywords.any((keyword) {
+      final compactKeyword = _compact(keyword);
+      if (compactKeyword.length < 4) return counterpartyWords.contains(compactKeyword);
+      return compactCounterparty.contains(compactKeyword);
+    });
+  }
+  final titleWords = _significantWords(reminderTitle);
+  if (titleWords.any(counterpartyWords.contains)) return true;
+  return titleWords.any((word) => word.length >= 4 && compactCounterparty.contains(word));
 }
 
 String _bankKey(String bank) => _compact(bank.toLowerCase().replaceAll(RegExp(r'\bbank\b'), ''));
@@ -158,16 +177,16 @@ bool bankMatches({required String? smsBank, required String? smsLast4, required 
 ReminderMatch? evaluateCandidate(ParsedTransaction parsed, ReminderMatchCandidate candidate, SmsMatchPolicy policy) {
   final expected = candidate.amountMinor;
   if (expected == null || expected <= 0) return null;
-  final amountOk = amountWithinTolerance(
-    paidMinor: parsed.amountMinor,
+  final allowed = allowedDifferenceMinor(
     expectedMinor: expected,
-    tolerance: toleranceForKind(candidate.kind),
+    kind: candidate.kind,
+    userToleranceMinor: candidate.toleranceMinor,
     tolerancePercent: policy.billTolerancePercent,
   );
-  if (!amountOk) return null;
+  if ((parsed.amountMinor - expected).abs() > allowed) return null;
   final dayOffset = calendarDayOffset(dueAt: candidate.dueAt, paidAt: parsed.occurredAt);
   if (!withinDueWindow(dayOffset, policy)) return null;
-  final partyOk = payeeMatches(counterparty: parsed.counterparty, reminderPayee: candidate.payee, reminderTitle: candidate.title) ||
+  final partyOk = payeeMatches(counterparty: parsed.counterparty, keywords: candidate.matchKeywords, reminderTitle: candidate.title) ||
       bankMatches(smsBank: parsed.bank, smsLast4: parsed.accountLast4, reminderBank: candidate.bankName, reminderLast4: candidate.accountLast4);
   if (!partyOk) return null;
   return ReminderMatch(reminderId: candidate.id, dayOffset: dayOffset, amountDifferenceMinor: (parsed.amountMinor - expected).abs());

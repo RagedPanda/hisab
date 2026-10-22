@@ -22,9 +22,12 @@ import '../split/split_editor.dart';
 import 'item_row.dart';
 
 class ExpenseEditorScreen extends ConsumerStatefulWidget {
-  const ExpenseEditorScreen({super.key, this.entryId, this.groupId, this.initialKind, this.smsId});
+  const ExpenseEditorScreen({super.key, this.entryId, this.groupId, this.initialKind, this.smsId, this.projectId});
   final String? entryId;
   final String? groupId;
+
+  /// Project a new entry starts tagged to, e.g. from a project's Add entry.
+  final String? projectId;
   final String? initialKind;
   final String? smsId;
 
@@ -43,6 +46,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   String? _accountId;
   String? _toAccountId;
   String? _groupId;
+  String? _projectId;
   String? _paidByMemberId;
   SplitMethod _splitMethod = SplitMethod.equal;
   List<SplitInput> _splitInputs = const [];
@@ -66,6 +70,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     super.initState();
     _kind = widget.initialKind ?? 'expense';
     _groupId = widget.groupId;
+    _projectId = widget.projectId;
     _smsId = widget.smsId;
     _load();
   }
@@ -85,6 +90,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         _accountId = entry.accountId;
         _toAccountId = entry.toAccountId;
         _groupId = entry.groupId;
+        _projectId = entry.projectId;
         _paidByMemberId = entry.paidByMemberId;
         _source = entry.source;
         _smsId = entry.smsId;
@@ -464,6 +470,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       groupId: _groupId,
       paidByMemberId: _paidByMemberId,
       splitMethod: _groupId == null ? null : _splitMethod.name,
+      projectId: _projectId,
     ).copyWith(toAccountId: Value(_kind == 'transfer' ? _toAccountId : null));
     final weights = {for (final i in _splitInputs) i.memberId: i};
     await ref.read(entriesRepositoryProvider).saveEntry(

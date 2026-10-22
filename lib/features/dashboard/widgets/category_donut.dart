@@ -44,10 +44,29 @@ class CategoryDonutCard extends ConsumerWidget {
         title: l10n.spendingByCategory,
         child: DashboardCard(
           key: kCategoryCardKey,
-          child: data.shares.isEmpty ? _EmptyDonut(symbol: symbol) : _Breakdown(data: data, selectedId: selected, symbol: symbol),
+          child: data.shares.isEmpty
+              ? EmptyDonut(symbol: symbol, message: l10n.categoriesEmpty)
+              : CategoryDonut(
+                  data: data,
+                  selectedId: selected,
+                  symbol: symbol,
+                  totalCaption: l10n.thisMonth,
+                  onSliceTap: (share) => _toggle(context, ref, selected, share),
+                ),
         ),
       ),
     );
+  }
+
+  /// First tap narrows the Recent card; a second tap on the same slice opens
+  /// the Entries tab filtered to that category.
+  void _toggle(BuildContext context, WidgetRef ref, String? selectedId, CategoryShare share) {
+    final notifier = ref.read(selectedDashboardCategoryProvider.notifier);
+    if (selectedId == share.categoryId) {
+      context.go(Uri(path: '/transactions', queryParameters: {'category': share.categoryId!}).toString());
+    } else {
+      notifier.set(share.categoryId);
+    }
   }
 }
 
@@ -81,32 +100,44 @@ List<_Slice> _slices(BuildContext context, CategoryBreakdown data) {
   ];
 }
 
-class _Breakdown extends ConsumerWidget {
-  const _Breakdown({required this.data, required this.selectedId, required this.symbol});
+/// Donut plus legend for any [CategoryBreakdown]: the dashboard month, a
+/// project, or anything else that rolls up to categories. Selection is owned
+/// by the caller; tapping a slice reports its share through [onSliceTap].
+class CategoryDonut extends StatelessWidget {
+  const CategoryDonut({super.key, required this.data, required this.selectedId, required this.symbol, required this.totalCaption, this.onSliceTap});
   final CategoryBreakdown data;
   final String? selectedId;
   final String symbol;
 
+  /// Caption under the total when nothing is selected, e.g. "this month".
+  final String totalCaption;
+  final ValueChanged<CategoryShare>? onSliceTap;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final slices = _slices(context, data);
     final selectedIndex = selectedId == null ? null : slices.indexWhere((slice) => slice.share.categoryId == selectedId);
     final selected = selectedIndex == null || selectedIndex < 0 ? null : slices[selectedIndex];
     final l10n = context.l10n;
-    void onSliceTap(_Slice slice) => _toggle(context, ref, slice);
+    void onTap(_Slice slice) {
+      if (slice.share.isOthers || onSliceTap == null) return;
+      HapticFeedback.selectionClick();
+      onSliceTap!(slice.share);
+    }
+
     Widget donut(bool sideBySide) => _Donut(
       slices: slices,
       selectedIndex: selected == null ? null : selectedIndex,
       size: sideBySide ? kDonutSideDiameter : kDonutStackedDiameter,
       centre: selected == null
-          ? _Centre(amount: formatMinor(data.totalMinor, symbol: symbol, showDecimals: false), caption: l10n.thisMonth)
+          ? _Centre(amount: formatMinor(data.totalMinor, symbol: symbol, showDecimals: false), caption: totalCaption)
           : _Centre(amount: formatMinor(selected.share.minor, symbol: symbol, showDecimals: false), caption: selected.name),
-      onTap: onSliceTap,
+      onTap: onTap,
     );
     final legend = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        for (final slice in slices) _LegendRow(slice: slice, selected: slice == selected, symbol: symbol, onTap: () => onSliceTap(slice)),
+        for (final slice in slices) _LegendRow(slice: slice, selected: slice == selected, symbol: symbol, onTap: () => onTap(slice)),
       ],
     );
     final semantics = '${l10n.spendingByCategory}: ${slices.map((slice) => '${slice.name} ${l10n.percentOf(sharePercent(slice.share))}').join(', ')}';
@@ -118,17 +149,6 @@ class _Breakdown extends ConsumerWidget {
             : Column(children: [donut(false), const SizedBox(height: 12), legend]),
       ),
     );
-  }
-
-  void _toggle(BuildContext context, WidgetRef ref, _Slice slice) {
-    if (slice.share.isOthers) return;
-    HapticFeedback.selectionClick();
-    final notifier = ref.read(selectedDashboardCategoryProvider.notifier);
-    if (selectedId == slice.share.categoryId) {
-      context.go(Uri(path: '/transactions', queryParameters: {'category': slice.share.categoryId!}).toString());
-    } else {
-      notifier.set(slice.share.categoryId);
-    }
   }
 }
 
@@ -241,9 +261,11 @@ class _LegendRow extends StatelessWidget {
   }
 }
 
-class _EmptyDonut extends StatelessWidget {
-  const _EmptyDonut({required this.symbol});
+/// Hollow ring with a zero total, for a breakdown with nothing in it yet.
+class EmptyDonut extends StatelessWidget {
+  const EmptyDonut({super.key, required this.symbol, required this.message});
   final String symbol;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
@@ -258,7 +280,7 @@ class _EmptyDonut extends StatelessWidget {
           child: Text(formatMinor(0, symbol: symbol, showDecimals: false), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700).tabular),
         ),
         const SizedBox(height: 12),
-        Text(context.l10n.categoriesEmpty, style: captionStyle(context), textAlign: TextAlign.center),
+        Text(message, style: captionStyle(context), textAlign: TextAlign.center),
       ],
     );
   }

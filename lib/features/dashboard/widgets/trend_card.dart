@@ -50,7 +50,9 @@ class _TrendCardState extends ConsumerState<TrendCard> {
             key: kTrendCardKey,
             child: SizedBox(
               height: kTrendChartHeight,
-              child: _mode == TrendMode.daily ? _DailyChart(data: data, symbol: symbol) : _MonthlyChart(data: data, symbol: symbol),
+              child: _mode == TrendMode.daily
+                  ? _DailyChart(data: data, symbol: symbol)
+                  : MonthlyBars(months: data.months, symbol: symbol, onSelectMonth: (range) => ref.read(selectedMonthProvider.notifier).select(range.start)),
             ),
           ),
         );
@@ -196,23 +198,28 @@ class _DailyChart extends StatelessWidget {
   }
 }
 
-class _MonthlyChart extends ConsumerWidget {
-  const _MonthlyChart({required this.data, required this.symbol});
-  final TrendData data;
+/// One bar per month of [months], the last one highlighted as the current
+/// period. Shared by the dashboard trend and project detail; a tap reports
+/// the month's range through [onSelectMonth].
+class MonthlyBars extends StatelessWidget {
+  const MonthlyBars({super.key, required this.months, required this.symbol, this.onSelectMonth});
+  final List<PeriodTotal> months;
   final String symbol;
+  final ValueChanged<DateRange>? onSelectMonth;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final locale = Localizations.localeOf(context).toString();
-    final months = data.months;
     final maxExpense = months.fold(0, (maximum, month) => max(maximum, month.expense));
     final maxY = niceCeiling(maxExpense / 100);
     final labelStyle = theme.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant);
     final current = months.length - 1;
+    final yearSpan = months.isNotEmpty && months.first.range.start.year != months.last.range.start.year;
+    String monthLabel(DateTime start) => DateFormat(yearSpan ? 'MMM yy' : 'MMM', locale).format(start);
     return Semantics(
-      label: [for (final month in months) '${DateFormat('MMM', locale).format(month.range.start)} ${formatMinor(month.expense, symbol: symbol, showDecimals: false)}'].join(', '),
+      label: [for (final month in months) '${monthLabel(month.range.start)} ${formatMinor(month.expense, symbol: symbol, showDecimals: false)}'].join(', '),
       child: BarChart(
         duration: chartAnimation(context),
         curve: kChartCurve,
@@ -243,7 +250,7 @@ class _MonthlyChart extends ConsumerWidget {
                 reservedSize: 22,
                 getTitlesWidget: (value, meta) => Padding(
                   padding: const EdgeInsets.only(top: 6),
-                  child: Text(DateFormat('MMM', locale).format(months[value.round()].range.start), style: labelStyle),
+                  child: Text(monthLabel(months[value.round()].range.start), style: labelStyle),
                 ),
               ),
             ),
@@ -255,7 +262,7 @@ class _MonthlyChart extends ConsumerWidget {
                 barRods: [
                   BarChartRodData(
                     toY: months[index].expense / 100,
-                    width: 18,
+                    width: months.length > 8 ? 10 : 18,
                     borderRadius: BorderRadius.circular(6),
                     color: index == current ? scheme.primaryContainer : scheme.primary,
                     borderSide: index == current ? BorderSide(color: scheme.primary, width: 1.5) : BorderSide.none,
@@ -266,7 +273,7 @@ class _MonthlyChart extends ConsumerWidget {
           barTouchData: BarTouchData(
             touchCallback: (event, response) {
               final group = response?.spot?.touchedBarGroup;
-              if (event is FlTapUpEvent && group != null) _selectMonth(ref, months[group.x].range);
+              if (event is FlTapUpEvent && group != null) onSelectMonth?.call(months[group.x].range);
             },
             touchTooltipData: BarTouchTooltipData(
               getTooltipColor: (_) => scheme.surfaceContainerHighest,
@@ -281,8 +288,6 @@ class _MonthlyChart extends ConsumerWidget {
       ),
     );
   }
-
-  void _selectMonth(WidgetRef ref, DateRange range) => ref.read(selectedMonthProvider.notifier).select(range.start);
 }
 
 /// Flat baseline with a caption for a month that has no spend yet.

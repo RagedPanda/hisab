@@ -545,7 +545,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noGroupExpensesTitle => 'अभी कोई खर्च नहीं';
 
   @override
-  String get noGroupExpensesBody => 'नीचे दिए बटन से पहला साझा खर्च जोड़ें।';
+  String get noGroupExpensesBody =>
+      'पहला साझा खर्च जोड़ें; किसे कितना देना है, Hisab हिसाब लगा देगा।';
 
   @override
   String get netBalances => 'कुल हिसाब';
@@ -1597,4 +1598,65 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get amountLabel => 'रकम';
+
+  @override
+  String get filterMine => 'मेरे';
+
+  @override
+  String get filterUnsettled => 'बकाया';
+
+  @override
+  String get nothingInvolvingYou => 'अभी तक आपसे जुड़ा कुछ नहीं।';
+
+  @override
+  String get expensesAllSettled => 'सब चुकता है। नए खर्च यहाँ दिखेंगे।';
+
+  @override
+  String settledUpTo(String date) {
+    return '$date तक चुकता';
+  }
+
+  @override
+  String showOlderRows(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count पुरानी एंट्री दिखाएँ',
+      one: '1 पुरानी एंट्री दिखाएँ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get hideOlderRows => 'पुरानी एंट्री छिपाएँ';
+
+  @override
+  String get youLent => 'आपने उधार दिया';
+
+  @override
+  String get youBorrowed => 'आपने उधार लिया';
+
+  @override
+  String get youPaid => 'आपने दिए';
+
+  @override
+  String get youReceived => 'आपको मिले';
+
+  @override
+  String get notInvolved => 'शामिल नहीं';
+
+  @override
+  String payerPaidAmount(String payer, String amount) {
+    return '$payer ने $amount दिए';
+  }
+
+  @override
+  String youPaidName(String name) {
+    return 'आपने $name को दिए';
+  }
+
+  @override
+  String namePaidYou(String name) {
+    return '$name ने आपको दिए';
+  }
 }

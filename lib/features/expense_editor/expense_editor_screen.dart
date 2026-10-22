@@ -190,6 +190,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               ),
               onPressed: _pickProject,
               onDeleted: () => _setProject(null),
+              deleteIcon: const Icon(Icons.close, size: 18),
             ),
     );
   }
@@ -326,11 +327,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                 }
               },
             ),
-          if (_kind == 'expense' && _groupId == null) _itemsSection(symbol, units),
           if (_kind != 'transfer' && _groupId == null) ...[
             const SizedBox(height: 8),
             _projectChip(l10n, ref.watch(projectViewsProvider).value ?? const <ProjectView>[]),
           ],
+          if (_kind == 'expense' && _groupId == null) _itemsSection(symbol, units),
           if (_kind != 'transfer' && _projectFields.isNotEmpty) ...[
             SectionHeader(l10n.projectDetails, padding: const EdgeInsets.fromLTRB(0, 16, 0, 8)),
             ProjectFieldInputs(key: ValueKey('fields.$_projectId'), fields: _projectFields, values: _fieldValues, onChanged: (values) => setState(() => _fieldValues = values)),

@@ -230,6 +230,7 @@ class _ProjectFilterChip extends ConsumerWidget {
       label: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 160), child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis)),
       onPressed: pick,
       onDeleted: () => notifier.set(null),
+      deleteIcon: const Icon(Icons.close, size: 18),
     );
   }
 }

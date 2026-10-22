@@ -196,6 +196,7 @@ const Map<String, IconData> appIcons = {
   'language': Icons.language,
   'qr_code': Icons.qr_code,
   'sync': Icons.sync,
+  'folder': Icons.folder_outlined,
 };
 
 IconData iconFor(String? name, {IconData fallback = Icons.category}) =>

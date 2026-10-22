@@ -2162,6 +2162,54 @@ abstract class AppLocalizations {
   /// **'This project was deleted'**
   String get projectNotFound;
 
+  /// No description provided for @spentSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent so far'**
+  String get spentSoFar;
+
+  /// No description provided for @spendingByMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending by month'**
+  String get spendingByMonth;
+
+  /// No description provided for @projectMarkedCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked completed'**
+  String get projectMarkedCompleted;
+
+  /// No description provided for @projectArchivedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Project archived'**
+  String get projectArchivedSnack;
+
+  /// No description provided for @projectReopened.
+  ///
+  /// In en, this message translates to:
+  /// **'Project reopened'**
+  String get projectReopened;
+
+  /// No description provided for @projectDates.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} – {end}'**
+  String projectDates(String start, String end);
+
+  /// No description provided for @sinceDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Since {date}'**
+  String sinceDate(String date);
+
+  /// No description provided for @untilDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Until {date}'**
+  String untilDate(String date);
+
   /// No description provided for @today.
   ///
   /// In en, this message translates to:

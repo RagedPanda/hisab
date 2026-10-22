@@ -348,6 +348,15 @@
   "notes": "नोट्स",
   "projectNotFound": "यह प्रोजेक्ट हटा दिया गया",
 
+  "spentSoFar": "अब तक खर्च",
+  "spendingByMonth": "महीनेवार खर्च",
+  "projectMarkedCompleted": "पूरा चिह्नित किया",
+  "projectArchivedSnack": "प्रोजेक्ट संग्रहित किया",
+  "projectReopened": "प्रोजेक्ट फिर से खोला",
+  "projectDates": "{start} – {end}",
+  "sinceDate": "{date} से",
+  "untilDate": "{date} तक",
+
   "today": "आज",
   "yesterday": "कल"
 }

@@ -420,6 +420,18 @@
   "notes": "Notes",
   "projectNotFound": "This project was deleted",
 
+  "spentSoFar": "Spent so far",
+  "spendingByMonth": "Spending by month",
+  "projectMarkedCompleted": "Marked completed",
+  "projectArchivedSnack": "Project archived",
+  "projectReopened": "Project reopened",
+  "projectDates": "{start} – {end}",
+  "@projectDates": {"placeholders": {"start": {"type": "String"}, "end": {"type": "String"}}},
+  "sinceDate": "Since {date}",
+  "@sinceDate": {"placeholders": {"date": {"type": "String"}}},
+  "untilDate": "Until {date}",
+  "@untilDate": {"placeholders": {"date": {"type": "String"}}},
+
   "today": "Today",
   "yesterday": "Yesterday"
 }

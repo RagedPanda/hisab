@@ -1233,6 +1233,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projectNotFound => 'This project was deleted';
 
   @override
+  String get spentSoFar => 'Spent so far';
+
+  @override
+  String get spendingByMonth => 'Spending by month';
+
+  @override
+  String get projectMarkedCompleted => 'Marked completed';
+
+  @override
+  String get projectArchivedSnack => 'Project archived';
+
+  @override
+  String get projectReopened => 'Project reopened';
+
+  @override
+  String projectDates(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String sinceDate(String date) {
+    return 'Since $date';
+  }
+
+  @override
+  String untilDate(String date) {
+    return 'Until $date';
+  }
+
+  @override
   String get today => 'Today';
 
   @override

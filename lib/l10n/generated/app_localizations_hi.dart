@@ -1227,6 +1227,36 @@ class AppLocalizationsHi extends AppLocalizations {
   String get projectNotFound => 'यह प्रोजेक्ट हटा दिया गया';
 
   @override
+  String get spentSoFar => 'अब तक खर्च';
+
+  @override
+  String get spendingByMonth => 'महीनेवार खर्च';
+
+  @override
+  String get projectMarkedCompleted => 'पूरा चिह्नित किया';
+
+  @override
+  String get projectArchivedSnack => 'प्रोजेक्ट संग्रहित किया';
+
+  @override
+  String get projectReopened => 'प्रोजेक्ट फिर से खोला';
+
+  @override
+  String projectDates(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String sinceDate(String date) {
+    return '$date से';
+  }
+
+  @override
+  String untilDate(String date) {
+    return '$date तक';
+  }
+
+  @override
   String get today => 'आज';
 
   @override

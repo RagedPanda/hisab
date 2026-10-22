@@ -2294,6 +2294,78 @@ abstract class AppLocalizations {
   /// **'{count} already in your list'**
   String suggestedCategoriesReused(int count);
 
+  /// No description provided for @categoryPacks.
+  ///
+  /// In en, this message translates to:
+  /// **'Category packs'**
+  String get categoryPacks;
+
+  /// No description provided for @addAPack.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a pack'**
+  String get addAPack;
+
+  /// No description provided for @categoryPacksHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready-made sets of categories for a part of your life. Add one in a tap and remove it any time.'**
+  String get categoryPacksHint;
+
+  /// No description provided for @packCategoryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 category} other{{count} categories}}'**
+  String packCategoryCount(int count);
+
+  /// No description provided for @packAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get packAdded;
+
+  /// No description provided for @addPack.
+  ///
+  /// In en, this message translates to:
+  /// **'Add pack'**
+  String get addPack;
+
+  /// No description provided for @removePack.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove pack'**
+  String get removePack;
+
+  /// No description provided for @packAddedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Pack added. You already had all its categories} =1{Pack added with 1 new category} other{Pack added with {count} new categories}}'**
+  String packAddedMessage(int count);
+
+  /// No description provided for @removePackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {pack}?'**
+  String removePackTitle(String pack);
+
+  /// No description provided for @removePackMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Unused categories ({archived}) will be archived. Categories in use ({kept}) stay as your own.'**
+  String removePackMessage(int archived, int kept);
+
+  /// No description provided for @packRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Pack removed'**
+  String get packRemoved;
+
+  /// No description provided for @packAlreadyHave.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in your list'**
+  String get packAlreadyHave;
+
   /// No description provided for @suggestedCategoriesAllPresent.
   ///
   /// In en, this message translates to:

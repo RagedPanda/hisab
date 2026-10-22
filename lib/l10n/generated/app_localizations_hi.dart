@@ -1310,6 +1310,64 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get categoryPacks => 'श्रेणी पैक';
+
+  @override
+  String get addAPack => 'पैक जोड़ें';
+
+  @override
+  String get categoryPacksHint =>
+      'ज़िंदगी के किसी हिस्से के लिए तैयार श्रेणियाँ। एक टैप में जोड़ें, जब चाहें हटाएँ।';
+
+  @override
+  String packCategoryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count श्रेणियाँ',
+      one: '1 श्रेणी',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get packAdded => 'जोड़ा गया';
+
+  @override
+  String get addPack => 'पैक जोड़ें';
+
+  @override
+  String get removePack => 'पैक हटाएँ';
+
+  @override
+  String packAddedMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'पैक $count नई श्रेणियों के साथ जुड़ गया',
+      one: 'पैक 1 नई श्रेणी के साथ जुड़ गया',
+      zero: 'पैक जुड़ गया। इसकी सभी श्रेणियाँ पहले से थीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removePackTitle(String pack) {
+    return '$pack हटाएँ?';
+  }
+
+  @override
+  String removePackMessage(int archived, int kept) {
+    return 'बिना इस्तेमाल वाली श्रेणियाँ ($archived) आर्काइव होंगी। इस्तेमाल में आ रही श्रेणियाँ ($kept) आपकी अपनी बनकर रहेंगी।';
+  }
+
+  @override
+  String get packRemoved => 'पैक हटाया गया';
+
+  @override
+  String get packAlreadyHave => 'पहले से आपकी सूची में';
+
+  @override
   String get suggestedCategoriesAllPresent =>
       'सुझाई गई सभी श्रेणियाँ पहले से आपकी सूची में हैं';
 

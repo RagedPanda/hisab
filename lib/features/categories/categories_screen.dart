@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/app_icons.dart';
 import '../../core/providers.dart';
@@ -28,7 +29,17 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
     final tree = buildCategoryTree(categories, kind: _kind);
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.categories)),
+      appBar: AppBar(
+        title: Text(l10n.categories),
+        actions: [
+          TextButton.icon(
+            key: const ValueKey('categories.addPack'),
+            onPressed: () => context.push('/categories/packs'),
+            icon: const Icon(Icons.library_add_outlined),
+            label: Text(l10n.addAPack),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'add-category',
         onPressed: () => showCategoryForm(context, ref, kind: _kind),

@@ -1317,6 +1317,64 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get categoryPacks => 'Category packs';
+
+  @override
+  String get addAPack => 'Add a pack';
+
+  @override
+  String get categoryPacksHint =>
+      'Ready-made sets of categories for a part of your life. Add one in a tap and remove it any time.';
+
+  @override
+  String packCategoryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count categories',
+      one: '1 category',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get packAdded => 'Added';
+
+  @override
+  String get addPack => 'Add pack';
+
+  @override
+  String get removePack => 'Remove pack';
+
+  @override
+  String packAddedMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Pack added with $count new categories',
+      one: 'Pack added with 1 new category',
+      zero: 'Pack added. You already had all its categories',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removePackTitle(String pack) {
+    return 'Remove $pack?';
+  }
+
+  @override
+  String removePackMessage(int archived, int kept) {
+    return 'Unused categories ($archived) will be archived. Categories in use ($kept) stay as your own.';
+  }
+
+  @override
+  String get packRemoved => 'Pack removed';
+
+  @override
+  String get packAlreadyHave => 'Already in your list';
+
+  @override
   String get suggestedCategoriesAllPresent =>
       'All suggested categories are already in your list';
 

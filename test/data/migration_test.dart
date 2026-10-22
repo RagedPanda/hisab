@@ -11,6 +11,7 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN cleared_at');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -29,6 +30,7 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN cleared_at');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -42,6 +44,7 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN cleared_at');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -54,9 +57,19 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN cleared_at');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('PRAGMA user_version = 4');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 5
+/// (SMS history could not be cleared).
+Future<void> rewindToVersion5(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN cleared_at');
+  await db.customStatement('PRAGMA user_version = 5');
   await db.close();
 }
 
@@ -151,6 +164,21 @@ void main() {
     expect(reminder.channel, 'share');
     expect(reminder.message, '');
     expect(reminder.doneAt, isNull);
+    await db.close();
+  });
+
+  test('upgrading from schema 5 adds the SMS history cleared marker', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.smsLog).insert(SmsLogCompanion.insert(id: 's1', sender: 'HDFCBK', body: 'Rs.10 debited', receivedAt: DateTime(2026, 10, 20), status: 'added'));
+    await seed.close();
+    await rewindToVersion5(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final row = await db.select(db.smsLog).getSingle();
+    expect(row.clearedAt, isNull);
+    expect(row.body, 'Rs.10 debited', reason: 'existing rows survive the upgrade');
     await db.close();
   });
 

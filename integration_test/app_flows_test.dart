@@ -1438,6 +1438,9 @@ void main() {
     await shoot(tester, 'reminders_empty');
 
     await tapText(tester, 'Add reminder');
+    expect(find.text('Documents & renewals'), findsOneWidget);
+    await shoot(tester, 'new_reminder_sheet');
+    await tapFinder(tester, find.byKey(const ValueKey('new-reminder.blank')), frames: 12);
     await enterText(tester, find.byKey(const ValueKey('reminder-title')), 'Electricity bill');
     await enterText(tester, find.byKey(const ValueKey('reminder-amount')), '2100');
     FocusManager.instance.primaryFocus?.unfocus();
@@ -1489,6 +1492,8 @@ void main() {
     await settle(tester, 8);
     await shoot(tester, 'dark_reminders_list');
     await tapFinder(tester, find.byType(FloatingActionButton), frames: 12);
+    await shoot(tester, 'dark_new_reminder_sheet');
+    await tapFinder(tester, find.byKey(const ValueKey('new-reminder.preset.puc')), frames: 12);
     await shoot(tester, 'dark_reminder_editor');
     await goBack(tester);
 
@@ -1501,6 +1506,8 @@ void main() {
     await settle(tester, 8);
     await shoot(tester, 'hi_reminders_list');
     await tapFinder(tester, find.byType(FloatingActionButton), frames: 12);
+    await shoot(tester, 'hi_new_reminder_sheet');
+    await tapFinder(tester, find.byKey(const ValueKey('new-reminder.preset.puc')), frames: 12);
     await shoot(tester, 'hi_reminder_editor');
     await goBack(tester);
     await tapText(tester, hi.reminderTabHistory);

@@ -6,6 +6,7 @@ import 'package:hisab/app.dart';
 import 'package:hisab/core/notifications/reminder_payload.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
+import 'package:hisab/data/sms/sms_channel.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
 import 'package:hisab/features/shell/router.dart';
@@ -134,6 +135,32 @@ void main() {
     final reopened = await (db.select(db.reminders)..where((t) => t.id.equals(id))).getSingle();
     expect(reopened.status, 'pending');
     expect(gateway.alertsFor(reminderPayload(id)), isNotEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a bank SMS that matches a bill marks it paid and History labels it Paid via SMS', (tester) async {
+    final gateway = FakeNotificationGateway();
+    final (container, db) = await _pumpReminders(tester, gateway, location: '/settings');
+    final scheduler = container.read(reminderSchedulerProvider);
+    const body = 'Rs.2,150.00 debited from A/c XX1234 to electricity.board@okicici (UPI Ref No 123456789012). Avl bal Rs.10,000.00';
+    final electricityId = await _addBill(container);
+    final rent = await scheduler.save(ReminderDraft(kind: ReminderKind.bill, title: 'Rent', dueAt: _inDays(2), amountMinor: 1500000));
+    await scheduler.markDone(rent);
+    await container.read(smsIngestServiceProvider).ingest(RawSms(sender: 'HDFCBK', body: body, receivedAt: DateTime.now()), autoAdd: true);
+    final paid = await (db.select(db.reminders)..where((t) => t.id.equals(electricityId))).getSingle();
+    final log = await db.select(db.smsLog).getSingle();
+    expect(paid.status, 'done');
+    expect(paid.entryId, isNotNull);
+    expect(paid.nextId, isNotNull, reason: 'the monthly bill rolls on');
+    expect(log.matchedReminderId, electricityId);
+
+    appRouter.push('/reminders');
+    await _settle(tester);
+    await tester.tap(find.text('History'));
+    await _settle(tester);
+    expect(find.text('Electricity'), findsOneWidget);
+    expect(find.text('Rent'), findsOneWidget);
+    expect(find.text('Paid via SMS'), findsOneWidget, reason: 'only the SMS-paid reminder carries the label');
     expect(tester.takeException(), isNull);
   });
 

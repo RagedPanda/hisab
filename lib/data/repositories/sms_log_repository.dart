@@ -57,14 +57,17 @@ class SmsLogRepository {
   Future<void> setMatchedReminder(String smsId, String reminderId) =>
       (db.update(db.smsLog)..where((t) => t.id.equals(smsId))).write(SmsLogCompanion(matchedReminderId: Value(reminderId)));
 
+  JoinedSelectStatement<$SmsLogTable, SmsLogData> _matchedReminderIdsQuery() => db.selectOnly(db.smsLog)
+    ..addColumns([db.smsLog.matchedReminderId])
+    ..where(db.smsLog.matchedReminderId.isNotNull());
+
+  Set<String> _readMatchedReminderIds(List<TypedResult> rows) => rows.map((row) => row.read(db.smsLog.matchedReminderId)!).toSet();
+
   /// Reminders some SMS has already paid, so the matcher never pays one twice.
-  Future<Set<String>> matchedReminderIds() async {
-    final rows = await (db.selectOnly(db.smsLog)
-          ..addColumns([db.smsLog.matchedReminderId])
-          ..where(db.smsLog.matchedReminderId.isNotNull()))
-        .get();
-    return rows.map((row) => row.read(db.smsLog.matchedReminderId)!).toSet();
-  }
+  Future<Set<String>> matchedReminderIds() async => _readMatchedReminderIds(await _matchedReminderIdsQuery().get());
+
+  /// The same set, live, for the "Paid via SMS" label.
+  Stream<Set<String>> watchMatchedReminderIds() => _matchedReminderIdsQuery().watch().map(_readMatchedReminderIds);
 
   Future<DateTime?> latestReceivedAt() async {
     final max = db.smsLog.receivedAt.max();

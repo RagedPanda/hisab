@@ -197,6 +197,9 @@ final reminderSchedulerProvider = Provider((ref) => ReminderScheduler(
 /// Pending due reminders, earliest (overdue) first.
 final upcomingRemindersProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchUpcoming());
 
+/// Reminders a matching bank SMS marked paid, for the "Paid via SMS" label.
+final smsPaidReminderIdsProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryProvider).watchMatchedReminderIds());
+
 /// Paid and skipped reminders, latest first.
 final reminderHistoryProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchHistory());
 

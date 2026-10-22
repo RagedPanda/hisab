@@ -53,3 +53,6 @@ String joinWithOverflow(Iterable<String> names, {required int max, required Stri
   if (list.length <= max) return list.join(', ');
   return '${list.take(max).join(', ')}, ${overflow(list.length - max)}';
 }
+
+/// Month heading with the year: "October 2026".
+String formatMonthYear(DateTime month, {String? locale}) => DateFormat('MMMM yyyy', locale).format(month);

@@ -11,9 +11,9 @@ import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/groups_repository.dart';
 import '../../domain/split/debt_simplifier.dart';
-import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import 'group_expenses_tab.dart';
 import 'member_display.dart';
 import 'record_payment_sheet.dart';
 
@@ -99,14 +99,16 @@ class GroupDetailScreen extends ConsumerWidget {
         ),
         body: TabBarView(
           children: [
-            _ExpensesTab(
+            GroupExpensesTab(
+              groupId: groupId,
               entries: entries,
               settlements: settlements,
+              timelineByEntryId: detail.timelineByEntryId,
+              settledUpTo: detail.settledUpTo,
+              myMemberId: myMemberId,
               nameOf: nameOf,
               categoryById: categoryById,
               symbol: symbol,
-              groupId: groupId,
-              myMemberId: myMemberId,
               openPayment: (settlement) => openPaymentSheet(existing: settlement),
             ),
             _BalancesTab(group: group, members: members, settlements: settlements, balances: balances, nameOf: nameOf, symbol: symbol, openPayment: openPaymentSheet),
@@ -126,98 +128,6 @@ class GroupDetailScreen extends ConsumerWidget {
     if (balances.suggested.isEmpty) buffer.writeln(l10n.allSettledUp);
     buffer.writeln('\n${l10n.sharedFromHisab}');
     return buffer.toString();
-  }
-}
-
-class _ExpensesTab extends ConsumerWidget {
-  const _ExpensesTab({
-    required this.entries,
-    required this.settlements,
-    required this.nameOf,
-    required this.categoryById,
-    required this.symbol,
-    required this.groupId,
-    required this.myMemberId,
-    required this.openPayment,
-  });
-  final List<(Entry, List<Split>)> entries;
-  final List<Settlement> settlements;
-  final String Function(String) nameOf;
-  final void Function(Settlement) openPayment;
-  final Map<String, Category> categoryById;
-  final String symbol;
-  final String groupId;
-  final String? myMemberId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final locale = Localizations.localeOf(context).toString();
-    final rows = <(DateTime, Widget)>[
-      for (final (entry, splits) in entries)
-        (
-          entry.occurredAt,
-          ListTile(
-            leading: IconBadge(icon: categoryById[entry.categoryId]?.icon, color: categoryById[entry.categoryId]?.color ?? 0xFF607D8B),
-            title: Text(entry.note.isNotEmpty ? entry.note : (entry.payee ?? categoryById[entry.categoryId]?.displayName(context) ?? l10n.kindExpense), maxLines: 1, overflow: TextOverflow.ellipsis),
-            subtitle: Text(_expenseSubtitle(l10n, entry, splits), maxLines: 1, overflow: TextOverflow.ellipsis),
-            trailing: _AmountWithDate(amountMinor: entry.amountMinor, date: entry.occurredAt, symbol: symbol, locale: locale),
-            onTap: () => context.push('/entry?id=${entry.id}'),
-          )
-        ),
-      for (final settlement in settlements)
-        (
-          settlement.occurredAt,
-          ListTile(
-            leading: const IconBadge(icon: 'handshake', color: 0xFF2E9E6B),
-            title: Text(l10n.settlementLine(nameOf(settlement.fromMemberId), nameOf(settlement.toMemberId)), maxLines: 1, overflow: TextOverflow.ellipsis),
-            subtitle: Text(
-              [l10n.paymentVia(paymentMethodLabel(settlement.method, l10n)), if (settlement.note.isNotEmpty) settlement.note].join(' · '),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: _AmountWithDate(amountMinor: settlement.amountMinor, date: settlement.occurredAt, symbol: symbol, locale: locale, color: kIncomeColor),
-            onTap: () => openPayment(settlement),
-          )
-        ),
-    ]..sort((a, b) => b.$1.compareTo(a.$1));
-    if (rows.isEmpty) {
-      return EmptyState(icon: Icons.receipt_long_outlined, title: l10n.noGroupExpensesTitle, message: l10n.noGroupExpensesBody);
-    }
-    return ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 96), children: [Card(child: Column(children: [for (final row in rows) row.$2]))]);
-  }
-
-  String _expenseSubtitle(AppLocalizations l10n, Entry entry, List<Split> splits) {
-    final myShare = splits.where((split) => split.memberId == myMemberId).firstOrNull;
-    final parts = [
-      l10n.paidByPeople(nameOf(entry.paidByMemberId ?? ''), splits.length),
-      if (myShare != null) l10n.yourShare(formatMinor(myShare.amountMinor, symbol: symbol)),
-    ];
-    return parts.join(' · ');
-  }
-}
-
-/// Amount over a short date, right-aligned, matching the dashboard entry rows.
-class _AmountWithDate extends StatelessWidget {
-  const _AmountWithDate({required this.amountMinor, required this.date, required this.symbol, required this.locale, this.color});
-  final int amountMinor;
-  final DateTime date;
-  final String symbol;
-  final String locale;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(formatMinor(amountMinor, symbol: symbol), style: theme.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, color: color).tabular),
-        Text(formatRowDate(date, locale: locale), style: theme.textTheme.labelSmall!.copyWith(color: theme.colorScheme.onSurfaceVariant).tabular),
-      ],
-    );
   }
 }
 

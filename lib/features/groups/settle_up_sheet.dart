@@ -90,6 +90,10 @@ class _SettleUpSheet extends ConsumerStatefulWidget {
 class _SettleUpSheetState extends ConsumerState<_SettleUpSheet> {
   late final _message = TextEditingController(text: widget.message);
 
+  /// Why the last action failed. Shown inside the sheet, because a snackbar
+  /// would sit behind it.
+  String? _problem;
+
   @override
   void dispose() {
     _message.dispose();
@@ -128,7 +132,7 @@ class _SettleUpSheetState extends ConsumerState<_SettleUpSheet> {
     if (uri != null && await ref.read(linkLauncherProvider)(uri)) {
       await _sent(channel);
     } else if (mounted) {
-      _snack(context.l10n.couldNotOpenApp(appName));
+      setState(() => _problem = context.l10n.couldNotOpenApp(appName));
     }
   }
 
@@ -136,7 +140,7 @@ class _SettleUpSheetState extends ConsumerState<_SettleUpSheet> {
     final l10n = context.l10n;
     final uri = upiPayUri(upiId: upiId, payeeName: widget.counterpart.name, amountMinor: widget.transfer.amountMinor, note: widget.group.name, currency: widget.group.currency);
     if (!await ref.read(linkLauncherProvider)(uri)) {
-      if (mounted) _snack(l10n.noUpiApp);
+      if (mounted) setState(() => _problem = l10n.noUpiApp);
       return;
     }
     if (!mounted) return;
@@ -187,6 +191,17 @@ class _SettleUpSheetState extends ConsumerState<_SettleUpSheet> {
             if (_isReminder && lastReminded != null) ...[
               const SizedBox(height: 4),
               Text(l10n.remindedDaysAgo(daysBetween(lastReminded, DateTime.now())), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            ],
+            if (_problem case final problem?) ...[
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.error_outline, size: 20, color: theme.colorScheme.error),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(problem, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error))),
+                ],
+              ),
             ],
             const SizedBox(height: 16),
             if (!_isReminder && upiId != null) ...[

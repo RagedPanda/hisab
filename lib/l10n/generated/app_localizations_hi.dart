@@ -1974,4 +1974,81 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get youInList => 'आप';
+
+  @override
+  String get groupExportCsv => 'CSV फ़ाइल के रूप में एक्सपोर्ट करें';
+
+  @override
+  String groupExportCsvSubject(String group) {
+    return '$group के खर्च';
+  }
+
+  @override
+  String get groupExportFailed => 'CSV एक्सपोर्ट नहीं हो सका';
+
+  @override
+  String get groupCsvDate => 'तारीख';
+
+  @override
+  String get groupCsvDescription => 'विवरण';
+
+  @override
+  String get groupCsvCost => 'राशि';
+
+  @override
+  String get groupCsvPaidBy => 'किसने दिया';
+
+  @override
+  String groupCsvPaidColumn(String name) {
+    return '$name ने दिया';
+  }
+
+  @override
+  String groupCsvShareColumn(String name) {
+    return '$name का हिस्सा';
+  }
+
+  @override
+  String groupCsvBalanceColumn(String name) {
+    return '$name का बैलेंस';
+  }
+
+  @override
+  String get groupCsvPayment => 'भुगतान';
+
+  @override
+  String get groupSummaryWhoPaysWhom => 'किसे किसको देना है';
+
+  @override
+  String get groupSummaryStandings => 'किसका कितना हिसाब';
+
+  @override
+  String groupSummaryYouOwe(String name, String amount) {
+    return 'आपको $name को $amount देने हैं';
+  }
+
+  @override
+  String groupSummaryOwesYou(String name, String amount) {
+    return '$name को आपको $amount देने हैं';
+  }
+
+  @override
+  String groupSummaryGetsBack(String name, String amount) {
+    return '$name को $amount वापस मिलेंगे';
+  }
+
+  @override
+  String groupSummaryOwesInTotal(String name, String amount) {
+    return '$name को कुल $amount देने हैं';
+  }
+
+  @override
+  String groupSummaryYouGetBack(String amount) {
+    return 'आपको $amount वापस मिलेंगे';
+  }
+
+  @override
+  String groupSummaryYouOweInTotal(String amount) {
+    return 'आपको कुल $amount देने हैं';
+  }
 }

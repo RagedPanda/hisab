@@ -11,6 +11,7 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP TABLE group_activities');
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
@@ -30,6 +31,7 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP TABLE group_activities');
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
@@ -44,6 +46,7 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP TABLE group_activities');
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
@@ -57,6 +60,7 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP TABLE group_activities');
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
@@ -68,8 +72,18 @@ Future<void> rewindToVersion4(File file) async {
 /// (reminders and UPI IDs, but only one payer per expense).
 Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP TABLE group_activities');
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('PRAGMA user_version = 5');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 6
+/// (several payers, but no activity log).
+Future<void> rewindToVersion6(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP TABLE group_activities');
+  await db.customStatement('PRAGMA user_version = 6');
   await db.close();
 }
 
@@ -144,6 +158,23 @@ void main() {
     expect(field.choices, '[]');
     expect((await db.select(db.entryFieldValues).getSingle()).numberValue, 1200);
     expect((await db.select(db.projects).getSingle()).name, 'Scotty', reason: 'existing rows survive the upgrade');
+    await db.close();
+  });
+
+  test('upgrading from schema 6 adds the group activity log and keeps expenses', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.entries).insert(EntriesRepository.newExpense(id: 'e1', amountMinor: 90000, occurredAt: DateTime(2026, 10, 20), groupId: 'g1', paidByMemberId: 'm1', splitMethod: 'equal'));
+    await seed.close();
+    await rewindToVersion6(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    expect((await db.select(db.entries).getSingle()).id, 'e1', reason: 'existing rows survive the upgrade');
+    await db.into(db.groupActivities).insert(GroupActivitiesCompanion.insert(id: 'a1', groupId: 'g1', action: 'added', subjectKind: 'expense', subjectId: 'e1', occurredAt: DateTime(2026, 10, 20)));
+    final activity = await db.select(db.groupActivities).getSingle();
+    expect(activity.beforeJson, isNull);
+    expect(activity.deletedAt, isNull);
     await db.close();
   });
 

@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 
 import '../../core/ids.dart';
 import '../../domain/split/debt_simplifier.dart';
+import '../../domain/split/group_timeline.dart';
 import '../../domain/split/split_calculator.dart';
 import '../db/database.dart';
 import '../db/watch_tables.dart';
@@ -43,6 +44,8 @@ class GroupDetail {
     required this.entries,
     required this.settlements,
     required this.balances,
+    required this.timelineByEntryId,
+    required this.settledUpTo,
   });
   final Group group;
 
@@ -55,6 +58,12 @@ class GroupDetail {
   final List<(Entry, List<Split>)> entries;
   final List<Settlement> settlements;
   final GroupBalances balances;
+
+  /// Each expense as payers and shares, keyed by entry id.
+  final Map<String, TimelineExpense> timelineByEntryId;
+
+  /// Last day everyone was square, or null if never (see [settledUpPoint]).
+  final DateTime? settledUpTo;
 
   Member? get me => members.where((member) => member.isMe).firstOrNull;
 }
@@ -127,6 +136,7 @@ class GroupsRepository {
     final members = allMembers.where((member) => member.deletedAt == null).toList();
     final entries = await getGroupEntries(groupId);
     final settlements = await getSettlements(groupId);
+    final timelineByEntryId = timelineOf(entries);
     return GroupDetail(
       group: group,
       members: members,
@@ -134,8 +144,27 @@ class GroupsRepository {
       entries: entries,
       settlements: settlements,
       balances: computeBalances(members: members, entries: entries, settlements: settlements, simplify: group.simplifyDebts),
+      timelineByEntryId: timelineByEntryId,
+      settledUpTo: settledUpPoint(
+        expenses: timelineByEntryId.values.toList(),
+        payments: [
+          for (final settlement in settlements)
+            TimelinePayment(occurredAt: settlement.occurredAt, fromMemberId: settlement.fromMemberId, toMemberId: settlement.toMemberId, amountMinor: settlement.amountMinor),
+        ],
+      ),
     );
   }
+
+  /// Expenses with a payer, as timeline entries keyed by entry id.
+  static Map<String, TimelineExpense> timelineOf(List<(Entry, List<Split>)> entries) => {
+        for (final (entry, splits) in entries)
+          if (ledgerExpenseOf(entry, splits) case final expense?) entry.id: timelineExpenseOf(entry.occurredAt, expense),
+      };
+
+  /// The ledger form of a group expense, or null when it has no payer.
+  static LedgerExpense? ledgerExpenseOf(Entry entry, List<Split> splits) => entry.paidByMemberId == null
+      ? null
+      : LedgerExpense(paidByMemberId: entry.paidByMemberId!, shares: [for (final split in splits) SplitShare(split.memberId, split.amountMinor)]);
 
   static GroupBalances computeBalances({
     required List<Member> members,
@@ -145,11 +174,7 @@ class GroupsRepository {
   }) {
     final ledger = [
       for (final (entry, splits) in entries)
-        if (entry.paidByMemberId != null)
-          LedgerExpense(
-            paidByMemberId: entry.paidByMemberId!,
-            shares: [for (final s in splits) SplitShare(s.memberId, s.amountMinor)],
-          ),
+        ?ledgerExpenseOf(entry, splits),
     ];
     final paid = [
       for (final s in settlements)

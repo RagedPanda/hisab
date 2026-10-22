@@ -1013,7 +1013,7 @@ abstract class AppLocalizations {
   /// No description provided for @noGroupExpensesBody.
   ///
   /// In en, this message translates to:
-  /// **'Add the first shared expense with the button below.'**
+  /// **'Add the first shared expense; Hisab works out who owes whom.'**
   String get noGroupExpensesBody;
 
   /// No description provided for @netBalances.
@@ -2821,6 +2821,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Amount'**
   String get amountLabel;
+
+  /// No description provided for @filterMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Mine'**
+  String get filterMine;
+
+  /// No description provided for @filterUnsettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsettled'**
+  String get filterUnsettled;
+
+  /// No description provided for @nothingInvolvingYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing involving you yet.'**
+  String get nothingInvolvingYou;
+
+  /// No description provided for @expensesAllSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'All settled up. New expenses will show here.'**
+  String get expensesAllSettled;
+
+  /// No description provided for @settledUpTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled up to {date}'**
+  String settledUpTo(String date);
+
+  /// No description provided for @showOlderRows.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Show 1 older entry} other{Show {count} older entries}}'**
+  String showOlderRows(int count);
+
+  /// No description provided for @hideOlderRows.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide older entries'**
+  String get hideOlderRows;
+
+  /// No description provided for @youLent.
+  ///
+  /// In en, this message translates to:
+  /// **'you lent'**
+  String get youLent;
+
+  /// No description provided for @youBorrowed.
+  ///
+  /// In en, this message translates to:
+  /// **'you borrowed'**
+  String get youBorrowed;
+
+  /// No description provided for @youPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'you paid'**
+  String get youPaid;
+
+  /// No description provided for @youReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'you received'**
+  String get youReceived;
+
+  /// No description provided for @notInvolved.
+  ///
+  /// In en, this message translates to:
+  /// **'not involved'**
+  String get notInvolved;
+
+  /// No description provided for @payerPaidAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'{payer} paid {amount}'**
+  String payerPaidAmount(String payer, String amount);
+
+  /// No description provided for @youPaidName.
+  ///
+  /// In en, this message translates to:
+  /// **'You paid {name}'**
+  String youPaidName(String name);
+
+  /// No description provided for @namePaidYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} paid you'**
+  String namePaidYou(String name);
 }
 
 class _AppLocalizationsDelegate

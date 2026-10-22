@@ -30,6 +30,7 @@ void main() {
   testWidgets('group screens in every locale and theme', (tester) async {
     final app = await createApp();
     final groupId = await _seedGroup(app);
+    final settledGroupId = await _seedSettledGroup(app);
     await pumpApp(tester, app);
 
     for (final (locale, mode) in _configs) {
@@ -54,6 +55,15 @@ void main() {
       await tester.tap(find.byType(Tab).at(2));
       await settle(tester, 10);
       await shoot(tester, 'group_members_$tag');
+      appRouter.go('/groups/$settledGroupId');
+      await settle(tester, 10);
+      await tester.tap(find.byType(Tab).first);
+      await settle(tester, 10);
+      await shoot(tester, 'group_expenses_settled_$tag');
+      await tapFinder(tester, find.byIcon(Icons.expand_more), frames: 10);
+      await shoot(tester, 'group_expenses_settled_open_$tag');
+      await tapFinder(tester, find.byIcon(Icons.expand_less), frames: 10);
+
       appRouter.go('/groups');
       await settle(tester, 10);
       await shoot(tester, 'groups_list_$tag');
@@ -95,5 +105,28 @@ Future<String> _seedGroup(AppHandle app) async {
   await expense('Scooter rent', rahul, 240000, [me, rahul, priya], DateTime(2026, 10, 4));
   await expense('Dinner at Thalassa', priya, 450000, [me, rahul, priya], DateTime(2026, 10, 5));
   await groups.addSettlement(groupId: groupId, fromMemberId: priya, toMemberId: me, amountMinor: 100000, occurredAt: DateTime(2026, 10, 6), method: 'upi');
+  return groupId;
+}
+
+/// Flat dinners: Rahul squared up with me, then a fresh expense, so the
+/// expenses tab opens on Unsettled with the settled history folded away.
+Future<String> _seedSettledGroup(AppHandle app) async {
+  final groups = app.read(groupsRepositoryProvider);
+  final entries = app.read(entriesRepositoryProvider);
+  final groupId = await groups.createGroup(name: 'Flat dinners', icon: 'restaurant', myName: 'You', otherMembers: ['Rahul']);
+  final members = await groups.getMembers(groupId);
+  final me = members.firstWhere((m) => m.isMe).id;
+  final rahul = members.firstWhere((m) => m.name == 'Rahul').id;
+  Future<void> expense(String note, String payer, int total, DateTime when) async {
+    final entryId = newId();
+    await entries.saveEntry(
+      EntriesRepository.newExpense(id: entryId, amountMinor: total, occurredAt: when, note: note, groupId: groupId, paidByMemberId: payer, splitMethod: 'equal'),
+      splits: [for (final member in [me, rahul]) SplitsCompanion.insert(id: newId(), entryId: entryId, memberId: member, amountMinor: total ~/ 2)],
+    );
+  }
+
+  await expense('Pizza night', me, 120000, DateTime(2026, 9, 26));
+  await groups.addSettlement(groupId: groupId, fromMemberId: rahul, toMemberId: me, amountMinor: 60000, occurredAt: DateTime(2026, 9, 28), method: 'upi');
+  await expense('Biryani', rahul, 80000, DateTime(2026, 10, 8));
   return groupId;
 }

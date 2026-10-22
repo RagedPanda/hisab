@@ -156,6 +156,24 @@ void main() {
     expect(balances.net[me], 2500);
   });
 
+  test('group detail carries each expense as payer and shares and the last settled day', () async {
+    final groupId = await groups.createGroup(name: 'Goa', icon: 'beach', myName: 'Me', otherMembers: ['Rahul']);
+    final members = await groups.getMembers(groupId);
+    final me = members.firstWhere((m) => m.isMe).id;
+    final rahul = members.firstWhere((m) => !m.isMe).id;
+    await addGroupExpense(groupId, me, {me: 500, rahul: 500});
+
+    var detail = (await groups.getGroupDetail(groupId))!;
+    expect(detail.settledUpTo, isNull);
+    final timeline = detail.timelineByEntryId.values.single;
+    expect(timeline.paidMinor, {me: 1000});
+    expect(timeline.shareMinor, {me: 500, rahul: 500});
+
+    await groups.addSettlement(groupId: groupId, fromMemberId: rahul, toMemberId: me, amountMinor: 500, occurredAt: DateTime(2026, 10, 4, 18));
+    detail = (await groups.getGroupDetail(groupId))!;
+    expect(detail.settledUpTo, DateTime(2026, 10, 4));
+  });
+
   test('renaming yourself in Settings renames the me member of every group', () async {
     final goa = await groups.createGroup(name: 'Goa', icon: 'beach', myName: 'You', otherMembers: ['Rahul']);
     final flat = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'You', otherMembers: ['Priya']);

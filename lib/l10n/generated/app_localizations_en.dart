@@ -546,7 +546,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noGroupExpensesBody =>
-      'Add the first shared expense with the button below.';
+      'Add the first shared expense; Hisab works out who owes whom.';
 
   @override
   String get netBalances => 'Net balances';
@@ -1662,4 +1662,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get amountLabel => 'Amount';
+
+  @override
+  String get filterMine => 'Mine';
+
+  @override
+  String get filterUnsettled => 'Unsettled';
+
+  @override
+  String get nothingInvolvingYou => 'Nothing involving you yet.';
+
+  @override
+  String get expensesAllSettled =>
+      'All settled up. New expenses will show here.';
+
+  @override
+  String settledUpTo(String date) {
+    return 'Settled up to $date';
+  }
+
+  @override
+  String showOlderRows(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Show $count older entries',
+      one: 'Show 1 older entry',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get hideOlderRows => 'Hide older entries';
+
+  @override
+  String get youLent => 'you lent';
+
+  @override
+  String get youBorrowed => 'you borrowed';
+
+  @override
+  String get youPaid => 'you paid';
+
+  @override
+  String get youReceived => 'you received';
+
+  @override
+  String get notInvolved => 'not involved';
+
+  @override
+  String payerPaidAmount(String payer, String amount) {
+    return '$payer paid $amount';
+  }
+
+  @override
+  String youPaidName(String name) {
+    return 'You paid $name';
+  }
+
+  @override
+  String namePaidYou(String name) {
+    return '$name paid you';
+  }
 }

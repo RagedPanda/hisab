@@ -2,6 +2,11 @@ enum TxnDirection { debit, credit }
 
 enum Instrument { upi, card, netbanking, atm, neft, imps, rtgs, emi, wallet, cheque, unknown }
 
+/// What kind of money movement the message describes. [general] is an
+/// ordinary payment or receipt; the rest are the types worth telling apart
+/// for categories and account mapping.
+enum TxnKind { general, salary, refund, atmWithdrawal, emi, autopay, cardSpend, cardPayment, walletTopUp }
+
 /// What the SMS parser extracted from one bank message. Immutable.
 class ParsedTransaction {
   const ParsedTransaction({
@@ -11,6 +16,7 @@ class ParsedTransaction {
     required this.occurredAt,
     required this.raw,
     this.currency = 'INR',
+    this.kind = TxnKind.general,
     this.bank,
     this.accountLast4,
     this.isCreditCard = false,
@@ -27,6 +33,7 @@ class ParsedTransaction {
   /// converted amount before posting.
   final String currency;
   final Instrument instrument;
+  final TxnKind kind;
   final DateTime occurredAt;
   final String raw;
 
@@ -57,6 +64,7 @@ class ParsedTransaction {
         'amountMinor': amountMinor,
         'currency': currency,
         'instrument': instrument.name,
+        'kind': kind.name,
         'occurredAt': occurredAt.toIso8601String(),
         'bank': bank,
         'accountLast4': accountLast4,

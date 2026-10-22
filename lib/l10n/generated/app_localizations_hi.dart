@@ -1072,6 +1072,83 @@ class AppLocalizationsHi extends AppLocalizations {
   String get upcomingEmpty => 'अगले दो हफ़्तों में कुछ देय नहीं';
 
   @override
+  String upcomingEmptyWithin(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'अगले $days दिनों में कुछ देय नहीं',
+      one: 'कल कुछ देय नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get upcomingEmptyHint =>
+      'दोहराए जाने वाले बिल, रिमाइंडर और कार्ड की देय तारीख़ें यहाँ दिखेंगी।';
+
+  @override
+  String upcomingWindowDays(int days) {
+    return '$days दिन';
+  }
+
+  @override
+  String upcomingOverdueBy(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन से बकाया',
+      one: '1 दिन से बकाया',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get upcomingDueToday => 'आज देय';
+
+  @override
+  String get upcomingDueTomorrow => 'कल देय';
+
+  @override
+  String upcomingDueInDays(int days, String date) {
+    return '$days दिन में · $date';
+  }
+
+  @override
+  String upcomingOverdueCount(int count) {
+    return '$count बकाया';
+  }
+
+  @override
+  String upcomingDueTotal(String amount) {
+    return '$amount चुकाने हैं';
+  }
+
+  @override
+  String upcomingShowAll(int count) {
+    return '$count और';
+  }
+
+  @override
+  String get upcomingCalendar => 'देय कैलेंडर';
+
+  @override
+  String get upcomingCalendarOpen => 'देय कैलेंडर खोलें';
+
+  @override
+  String get upcomingCalendarDayEmpty => 'इस दिन कुछ देय नहीं';
+
+  @override
+  String get upcomingCalendarPreviousMonth => 'पिछला महीना';
+
+  @override
+  String get upcomingCalendarNextMonth => 'अगला महीना';
+
+  @override
+  String upcomingCalendarDueCount(int count) {
+    return '$count देय';
+  }
+
+  @override
   String memberCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

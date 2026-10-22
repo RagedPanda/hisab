@@ -7,10 +7,19 @@ import 'package:hisab/core/ids.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 
+/// Undoes the v6 step (recurring rules, entries.recurring_id) on a database
+/// created at the current schema, so older rewinds start from v5.
+Future<void> dropVersion6(AppDatabase db) async {
+  await db.customStatement('DROP TABLE recurring_rules');
+  await db.customStatement('DROP INDEX IF EXISTS entries_recurring_id');
+  await db.customStatement('ALTER TABLE entries DROP COLUMN recurring_id');
+}
+
 /// Rewinds a freshly created database to the schema shipped at version 1 so
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion6(db);
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -29,6 +38,7 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion6(db);
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -42,6 +52,7 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion6(db);
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -54,9 +65,19 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion6(db);
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('PRAGMA user_version = 4');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 5
+/// (no recurring rules).
+Future<void> rewindToVersion5(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion6(db);
+  await db.customStatement('PRAGMA user_version = 5');
   await db.close();
 }
 
@@ -151,6 +172,30 @@ void main() {
     expect(reminder.channel, 'share');
     expect(reminder.message, '');
     expect(reminder.doneAt, isNull);
+    await db.close();
+  });
+
+  test('upgrading from schema 5 adds recurring rules and the entry link', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await EntriesRepository(seed).saveEntry(EntriesRepository.newExpense(id: 'e1', amountMinor: 1500000, occurredAt: DateTime(2026, 10, 5)));
+    await seed.close();
+    await rewindToVersion5(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final entry = await db.select(db.entries).getSingle();
+    expect(entry.recurringId, isNull);
+    expect(entry.amountMinor, 1500000, reason: 'existing rows survive the upgrade');
+    await db.into(db.recurringRules).insert(RecurringRulesCompanion.insert(id: 'r1', kind: 'expense', amountMinor: 1500000, frequency: 'monthly', startDate: DateTime(2026, 10, 5)));
+    final rule = await db.select(db.recurringRules).getSingle();
+    expect(rule.interval, 1);
+    expect(rule.autoPost, isTrue);
+    expect(rule.status, 'active');
+    expect(rule.postedCount, 0);
+    expect(rule.isSubscription, isFalse);
+    await (db.update(db.entries)..where((t) => t.id.equals('e1'))).write(const EntriesCompanion(recurringId: Value('r1')));
+    expect((await db.select(db.entries).getSingle()).recurringId, 'r1');
     await db.close();
   });
 

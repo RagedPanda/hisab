@@ -107,7 +107,7 @@
   "fromAccount": "खाते से",
   "toAccount": "खाते में",
   "payeeLabel": "किसे दिया / किससे मिला",
-  "smsEntryNotice": "बैंक एसएमएस से बना है। इसे बदलने से बैंक बैलेंस नहीं बदलेगा।",
+  "smsEntryNotice": "एसएमएस से जोड़ा गया। इसे बदलने से बैंक बैलेंस नहीं बदलेगा।",
   "saving": "सेव हो रहा है…",
   "saveAmount": "{amount} सेव करें",
   "addAccount": "खाता जोड़ें",
@@ -228,8 +228,8 @@
   "readBankSmsAuto": "बैंक एसएमएस अपने-आप पढ़ें",
   "smsAndroidOnly": "सिर्फ़ Android पर। डिवाइस पर ही पढ़े जाते हैं, कभी अपलोड नहीं होते।",
   "smsNotOnIos": "iOS पर उपलब्ध नहीं। शॉर्टकट इस्तेमाल करें या नीचे पेस्ट करें।",
-  "smsAutoAddTitle": "बिना समीक्षा के लेन-देन जोड़ें",
-  "smsAutoAddHelp": "बंद: नए एसएमएस नीचे समीक्षा सूची में रुकते हैं।",
+  "smsAutoAddTitle": "साफ़ लेन-देन अपने-आप जोड़ें",
+  "smsAutoAddHelp": "चालू: साफ़ बैंक एसएमएस तुरंत जुड़ते हैं, पूर्ववत करने के विकल्प के साथ। अस्पष्ट एसएमएस समीक्षा के लिए रुकते हैं।",
   "scanInboxNow": "अभी इनबॉक्स स्कैन करें",
   "scanInboxHelp": "पहली बार पिछले 90 दिन देखता है, फिर सिर्फ़ नए संदेश",
   "pasteSms": "एसएमएस पेस्ट करें",
@@ -594,5 +594,12 @@
   "groupCsvTotal": "कुल",
   "groupSummaryGroupTotal": "ग्रुप का कुल खर्च: {amount}",
   "groupSummaryYourShare": "आपका हिस्सा: {amount}",
-  "groupSummaryMemberShare": "{name} का हिस्सा: {amount}"
+  "groupSummaryMemberShare": "{name} का हिस्सा: {amount}",
+  "smsAddedMarker": "एसएमएस से जोड़ा गया",
+  "smsAutoAddedOne": "एसएमएस से {amount} जोड़ा गया",
+  "smsAutoAddedMany": "{count, plural, =1{एसएमएस से 1 एंट्री जोड़ी गई} other{एसएमएस से {count} एंट्री जोड़ी गईं}}",
+  "smsReviewTitle": "समीक्षा के लिए एसएमएस",
+  "smsReviewHelp": "ये संदेश अपने-आप जोड़ने लायक साफ़ नहीं थे। हर एक को जोड़ें, बदलें या अनदेखा करें।",
+  "smsReviewUnread": "रकम पढ़ी नहीं जा सकी",
+  "smsReviewAddManually": "खुद जोड़ें"
 }

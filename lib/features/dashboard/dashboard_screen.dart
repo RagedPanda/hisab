@@ -50,7 +50,7 @@ class DashboardScreen extends ConsumerWidget {
               if (pending.isNotEmpty)
                 IconButton(
                   tooltip: l10n.smsToReview(pending.length),
-                  onPressed: () => context.push('/sms'),
+                  onPressed: () => context.push('/sms/review'),
                   icon: Badge(label: Text('${pending.length}'), child: const Icon(Icons.sms_outlined)),
                 ),
               const MonthSwitcher(),
@@ -68,7 +68,8 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-/// Bank SMS waiting to be reviewed, above the hero so it is never missed.
+/// Compact row for bank SMS waiting in the review queue, above the hero so
+/// it is never missed. Opens the queue.
 class _PendingSmsBanner extends StatelessWidget {
   const _PendingSmsBanner({required this.count});
   final int count;
@@ -84,7 +85,7 @@ class _PendingSmsBanner extends StatelessWidget {
           leading: Icon(Icons.sms_outlined, color: theme.colorScheme.onSecondaryContainer),
           title: Text(context.l10n.smsToReview(count), style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSecondaryContainer)),
           trailing: Icon(Icons.chevron_right, color: theme.colorScheme.onSecondaryContainer),
-          onTap: () => context.push('/sms'),
+          onTap: () => context.push('/sms/review'),
         ),
       ),
     );

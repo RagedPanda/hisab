@@ -208,6 +208,55 @@ class Projects extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
+/// A field a project records, copied from its template or added by the user.
+/// Entry-scope fields are filled on each entry (into [EntryFieldValues]);
+/// project-scope fields hold one value for the whole project right here.
+@TableIndex(name: 'project_fields_project_id', columns: {#projectId})
+class ProjectFields extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get projectId => text()();
+
+  /// Stable key: a template field key (`odometer`) or a generated one for custom fields.
+  TextColumn get key => text()();
+
+  /// User-facing label for custom fields; template fields are labelled from the ARB files.
+  TextColumn get label => text().withDefault(const Constant(''))();
+
+  /// number | text | date | choice | unit
+  TextColumn get type => text()();
+  TextColumn get unit => text().nullable()();
+
+  /// JSON array of option keys (choice) or unit options (unit).
+  TextColumn get choices => text().withDefault(const Constant('[]'))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
+  /// project | entry
+  TextColumn get scope => text().withDefault(const Constant('entry'))();
+
+  /// The value of a project-scope field.
+  RealColumn get numberValue => real().nullable()();
+  TextColumn get textValue => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// The value one entry recorded for a project field, keyed by the field's key
+/// so it survives the field being re-created. A unit field keeps its number
+/// in [numberValue] and its unit in [textValue].
+@TableIndex(name: 'entry_field_values_entry_id', columns: {#entryId})
+class EntryFieldValues extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get entryId => text()();
+  TextColumn get fieldKey => text()();
+  RealColumn get numberValue => real().nullable()();
+  TextColumn get textValue => text().nullable()();
+  DateTimeColumn get dateValue => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class SmsLog extends Table {
   /// Hash of sender+body+timestamp so a message is only processed once.
   TextColumn get id => text()();
@@ -237,12 +286,14 @@ class SmsLog extends Table {
   Budgets,
   SmsLog,
   Projects,
+  ProjectFields,
+  EntryFieldValues,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -260,6 +311,13 @@ class AppDatabase extends _$AppDatabase {
           }
           // v3: payment method on settlements (groups parity, record payment).
           if (from < 3) await m.addColumn(settlements, settlements.method);
+          // v4: project fields and the values entries record for them.
+          if (from < 4) {
+            await m.createTable(projectFields);
+            await m.createIndex(projectFieldsProjectId);
+            await m.createTable(entryFieldValues);
+            await m.createIndex(entryFieldValuesEntryId);
+          }
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');

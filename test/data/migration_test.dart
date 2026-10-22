@@ -11,6 +11,8 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP TABLE project_fields');
+  await db.customStatement('DROP TABLE entry_field_values');
   await db.customStatement('ALTER TABLE settlements DROP COLUMN method');
   await db.customStatement('DROP INDEX IF EXISTS entries_project_id');
   await db.customStatement('ALTER TABLE entries DROP COLUMN project_id');
@@ -25,8 +27,20 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP TABLE project_fields');
+  await db.customStatement('DROP TABLE entry_field_values');
   await db.customStatement('ALTER TABLE settlements DROP COLUMN method');
   await db.customStatement('PRAGMA user_version = 2');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 3
+/// (no project fields yet).
+Future<void> rewindToVersion3(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP TABLE project_fields');
+  await db.customStatement('DROP TABLE entry_field_values');
+  await db.customStatement('PRAGMA user_version = 3');
   await db.close();
 }
 
@@ -82,6 +96,25 @@ void main() {
     final settlement = await db.select(db.settlements).getSingle();
     expect(settlement.method, 'cash');
     expect(settlement.amountMinor, 500);
+    await db.close();
+  });
+
+  test('upgrading from schema 3 adds project fields and entry field values', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.projects).insert(ProjectsCompanion.insert(id: 'p1', name: 'Scotty', color: 0xFF1E88E5));
+    await seed.close();
+    await rewindToVersion3(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    await db.into(db.projectFields).insert(ProjectFieldsCompanion.insert(id: 'f1', projectId: 'p1', key: 'odometer', type: 'number'));
+    await db.into(db.entryFieldValues).insert(EntryFieldValuesCompanion.insert(id: 'v1', entryId: 'e1', fieldKey: 'odometer', numberValue: const Value(1200)));
+    final field = await db.select(db.projectFields).getSingle();
+    expect(field.scope, 'entry');
+    expect(field.choices, '[]');
+    expect((await db.select(db.entryFieldValues).getSingle()).numberValue, 1200);
+    expect((await db.select(db.projects).getSingle()).name, 'Scotty', reason: 'existing rows survive the upgrade');
     await db.close();
   });
 

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static launcher shortcuts (long-press the app icon). Each opens a
+     hisab:// deep link, which the router rewrites to /entry?kind=... -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="add_expense"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_expense"
+        android:shortcutShortLabel="@string/shortcut_add_expense"
+        android:shortcutLongLabel="@string/shortcut_add_expense">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="hisab://entry?kind=expense"
+            android:targetPackage="com.sarv.hisab"
+            android:targetClass="com.sarv.hisab.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="add_income"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_income"
+        android:shortcutShortLabel="@string/shortcut_add_income"
+        android:shortcutLongLabel="@string/shortcut_add_income">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="hisab://entry?kind=income"
+            android:targetPackage="com.sarv.hisab"
+            android:targetClass="com.sarv.hisab.MainActivity" />
+    </shortcut>
+</shortcuts>

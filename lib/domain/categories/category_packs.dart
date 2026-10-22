@@ -187,8 +187,144 @@ final CategoryPack weddingPack = CategoryPack(key: 'wedding', icon: 'favorite', 
   _reuse('gifts_received'),
 ]);
 
+const _babyColor = 0xFFF06292;
+const _petColor = 0xFF7CB342;
+const _medicalColor = 0xFFE53935;
+const _educationColor = 0xFF3949AB;
+const _incomeColor = 0xFF2E7D32;
+const _farmColor = 0xFF689F38;
+const _shopColor = 0xFF5D4037;
+const _festivalColor = 0xFFFF8F00;
+const _eventColor = 0xFF8E24AA;
+
+final CategoryPack babyPack = CategoryPack(key: 'baby', icon: 'child_care', roots: [
+  CategorySeed('baby', 'Baby & Child', icon: 'child_care', color: _babyColor, children: [
+    const CategorySeed('baby_delivery', 'Delivery & Hospital', icon: 'local_hospital', color: _babyColor),
+    const CategorySeed('baby_doctor', 'Doctor & Vaccinations', icon: 'healing', color: _babyColor),
+    const CategorySeed('baby_diapers', 'Diapers & Hygiene', icon: 'child_friendly', color: _babyColor, units: ['pack', 'pcs']),
+    const CategorySeed('baby_food', 'Food & Formula', icon: 'local_drink', color: _babyColor, units: ['tin', 'pack']),
+    const CategorySeed('baby_clothes', 'Baby Clothes', icon: 'checkroom', color: _babyColor),
+    const CategorySeed('baby_toys_books', 'Toys & Books', icon: 'toys', color: _babyColor),
+    const CategorySeed('baby_gear', 'Gear (pram, crib, car seat)', icon: 'crib', color: _babyColor),
+    _reuse('daycare'),
+    _reuse('nanny'),
+    const CategorySeed('baby_ceremonies', 'Ceremonies & Birthdays', icon: 'cake', color: _babyColor),
+    const CategorySeed('baby_playschool', 'Playschool', icon: 'school', color: _babyColor),
+  ]),
+]);
+
+final CategoryPack petPack = CategoryPack(key: 'pet', icon: 'pets', roots: [
+  _reuseParent('pets', [
+    _reuse('pet_food'),
+    _reuse('vet'),
+    const CategorySeed('pet_vaccination', 'Vaccination & Deworming', icon: 'medication', color: _petColor),
+    const CategorySeed('pet_medicines', 'Pet Medicines', icon: 'local_pharmacy', color: _petColor),
+    _reuse('pet_grooming'),
+    const CategorySeed('pet_accessories', 'Pet Accessories & Toys', icon: 'toys', color: _petColor),
+    const CategorySeed('pet_boarding', 'Boarding & Walker', icon: 'hiking', color: _petColor),
+    const CategorySeed('pet_insurance', 'Pet Insurance & Licence', icon: 'verified_user', color: _petColor),
+  ]),
+]);
+
+final CategoryPack farmingPack = CategoryPack(key: 'farming', icon: 'eco', roots: [
+  const CategorySeed('farming', 'Farming', icon: 'eco', color: _farmColor, children: [
+    CategorySeed('farm_seeds', 'Seeds', icon: 'eco', color: _farmColor, units: ['kg', 'bag']),
+    CategorySeed('farm_fertiliser', 'Fertiliser', icon: 'yard', color: _farmColor, units: ['bag', 'kg']),
+    CategorySeed('farm_pesticides', 'Pesticides', icon: 'water_drop', color: _farmColor, units: ['L', 'bottle']),
+    CategorySeed('farm_irrigation', 'Irrigation, Water & Diesel', icon: 'water', color: _farmColor, units: ['L', 'hour']),
+    CategorySeed('farm_electricity', 'Farm Electricity', icon: 'electric_bolt', color: _farmColor),
+    CategorySeed('farm_labour', 'Farm Labour', icon: 'groups', color: _farmColor, units: ['day']),
+    CategorySeed('farm_machine_hire', 'Tractor & Machine Hire', icon: 'engineering', color: _farmColor, units: ['hour', 'acre']),
+    CategorySeed('farm_harvest', 'Harvesting & Threshing', icon: 'handyman', color: _farmColor),
+    CategorySeed('farm_transport', 'Transport to Mandi', icon: 'local_shipping', color: _farmColor),
+    CategorySeed('farm_land_lease', 'Land Lease', icon: 'map', color: _farmColor),
+    CategorySeed('farm_storage', 'Storage', icon: 'garage', color: _farmColor),
+    CategorySeed('farm_loan_interest', 'Farm Loan Interest', icon: 'percent', color: _farmColor),
+    CategorySeed('farm_tools', 'Tools & Repairs', icon: 'build', color: _farmColor),
+  ]),
+  const CategorySeed('farm_crop_sale', 'Crop Sale', icon: 'sell', color: _incomeColor, kind: CategoryKind.income),
+  const CategorySeed('farm_subsidy', 'Subsidy & PM-Kisan', icon: 'account_balance', color: _incomeColor, kind: CategoryKind.income),
+  const CategorySeed('farm_dairy_income', 'Dairy & Other Farm Income', icon: 'local_drink', color: _incomeColor, kind: CategoryKind.income),
+]);
+
+final CategoryPack shopPack = CategoryPack(key: 'shop', icon: 'storefront', roots: [
+  CategorySeed('shop', 'Shop', icon: 'storefront', color: _shopColor, children: [
+    const CategorySeed('shop_stock', 'Stock Purchase', icon: 'shopping_basket', color: _shopColor),
+    const CategorySeed('shop_rent', 'Shop Rent', icon: 'storefront', color: _shopColor),
+    const CategorySeed('shop_electricity', 'Shop Electricity', icon: 'electric_bolt', color: _shopColor),
+    const CategorySeed('shop_staff', 'Staff Salary', icon: 'groups', color: _shopColor),
+    const CategorySeed('shop_packaging', 'Packaging', icon: 'card_travel', color: _shopColor),
+    const CategorySeed('shop_transport', 'Shop Transport', icon: 'local_shipping', color: _shopColor),
+    const CategorySeed('shop_licence_gst', 'Licence & GST Paid', icon: 'request_quote', color: _shopColor),
+    const CategorySeed('shop_repairs', 'Shop Repairs', icon: 'handyman', color: _shopColor),
+  ]),
+  const CategorySeed('shop_sales_cash', 'Sales (Cash)', icon: 'payments', color: _incomeColor, kind: CategoryKind.income),
+  const CategorySeed('shop_sales_upi', 'Sales (UPI)', icon: 'qr_code', color: _incomeColor, kind: CategoryKind.income),
+  const CategorySeed('shop_udhaar_recovered', 'Udhaar Recovered', icon: 'handshake', color: _incomeColor, kind: CategoryKind.income),
+]);
+
+final CategoryPack medicalPack = CategoryPack(key: 'medical', icon: 'medical_services', roots: [
+  _reuseParent('health', [
+    _reuse('doctor'),
+    _reuse('medicines'),
+    _reuse('lab_tests'),
+    _reuse('hospital'),
+    const CategorySeed('medical_physio', 'Physio & Therapy', icon: 'self_improvement', color: _medicalColor),
+    _reuse('dental_eye'),
+    _reuse('health_insurance'),
+    const CategorySeed('medical_checkup', 'Preventive Check-up', icon: 'health_and_safety', color: _medicalColor),
+  ]),
+  _reuse('reimbursement'),
+]);
+
+final CategoryPack educationPack = CategoryPack(key: 'education', icon: 'school', roots: [
+  _reuseParent('education', [
+    _reuse('school_fees'),
+    _reuse('tuition'),
+    _reuse('study_material'),
+    const CategorySeed('edu_uniform', 'Uniform & Shoes', icon: 'checkroom', color: _educationColor),
+    const CategorySeed('edu_school_bus', 'School Bus', icon: 'directions_bus', color: _educationColor),
+    const CategorySeed('edu_exam_admission', 'Exam & Admission Fees', icon: 'receipt_long', color: _educationColor),
+    const CategorySeed('edu_hostel', 'Hostel', icon: 'bed', color: _educationColor),
+    const CategorySeed('edu_activities', 'Activities & Sports', icon: 'sports_cricket', color: _educationColor),
+    _reuse('courses'),
+    _reuse('education_loan'),
+  ]),
+]);
+
+final CategoryPack festivalPack = CategoryPack(key: 'festival', icon: 'celebration', roots: [
+  CategorySeed('festival', 'Festivals', icon: 'celebration', color: _festivalColor, children: [
+    _reuse('festivals_puja'),
+    const CategorySeed('festival_clothes', 'Festival Clothes', icon: 'checkroom', color: _festivalColor),
+    const CategorySeed('festival_gifts', 'Festival Gifts', icon: 'card_giftcard', color: _festivalColor),
+    const CategorySeed('festival_sweets', 'Sweets & Food', icon: 'bakery_dining', color: _festivalColor, units: ['kg', 'box']),
+    const CategorySeed('festival_decoration', 'Decoration & Lights', icon: 'lightbulb', color: _festivalColor),
+    const CategorySeed('festival_puja_items', 'Puja Items', icon: 'temple_hindu', color: _festivalColor),
+    const CategorySeed('festival_crackers', 'Crackers', icon: 'celebration', color: _festivalColor),
+    const CategorySeed('festival_gold', 'Gold & Jewellery', icon: 'diamond', color: _festivalColor),
+    const CategorySeed('festival_travel_home', 'Travel Home', icon: 'train', color: _festivalColor),
+    const CategorySeed('festival_bakshish', 'Bakshish & Tips', icon: 'thumb_up', color: _festivalColor),
+    _reuse('donation'),
+  ]),
+]);
+
+final CategoryPack eventPack = CategoryPack(key: 'event', icon: 'cake', roots: [
+  const CategorySeed('event', 'Event & Party', icon: 'cake', color: _eventColor, children: [
+    CategorySeed('event_venue', 'Event Venue', icon: 'museum', color: _eventColor),
+    CategorySeed('event_food_cake', 'Food & Cake', icon: 'cake', color: _eventColor),
+    CategorySeed('event_decoration', 'Event Decoration', icon: 'local_florist', color: _eventColor),
+    CategorySeed('event_return_gifts', 'Return Gifts', icon: 'card_giftcard', color: _eventColor),
+    CategorySeed('event_invites', 'Invites', icon: 'mail', color: _eventColor),
+    CategorySeed('event_photography', 'Event Photography', icon: 'camera_alt', color: _eventColor),
+    CategorySeed('event_puja', 'Event Puja', icon: 'temple_hindu', color: _eventColor),
+  ]),
+]);
+
 /// Every pack, in the order shown to the user.
-final List<CategoryPack> categoryPacks = [vehiclePack, constructionPack, renovationPack, tripPack, weddingPack];
+final List<CategoryPack> categoryPacks = [
+  vehiclePack, constructionPack, renovationPack, tripPack, weddingPack,
+  babyPack, petPack, farmingPack, shopPack, medicalPack, educationPack, festivalPack, eventPack,
+];
 
 CategoryPack? packByKey(String? key) {
   for (final pack in categoryPacks) {

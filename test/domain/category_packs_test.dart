@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hisab/core/app_icons.dart';
 import 'package:hisab/domain/categories/category_catalog.dart';
 import 'package:hisab/domain/categories/category_packs.dart';
 import 'package:hisab/domain/projects/project_templates.dart';
@@ -70,6 +71,25 @@ void main() {
   });
 
   group('project templates', () {
+    test('the roadmap packs are all registered and every pack icon exists', () {
+      expect(categoryPacks.map((pack) => pack.key), containsAll(['baby', 'pet', 'farming', 'shop', 'medical', 'education', 'festival', 'event']));
+      for (final pack in categoryPacks) {
+        expect(appIcons, contains(pack.icon), reason: pack.key);
+        for (final seed in flattenCatalog(pack.roots)) {
+          expect(appIcons, contains(seed.icon), reason: '${pack.key}/${seed.key}');
+        }
+      }
+    });
+
+    test('packs nest under reused roots only, never under a catalog child', () {
+      final catalogChildKeys = {for (final root in categoryCatalog) for (final child in root.children) child.key};
+      for (final pack in categoryPacks) {
+        for (final root in pack.roots.where((root) => root.children.isNotEmpty)) {
+          expect(catalogChildKeys, isNot(contains(root.key)), reason: '${pack.key}/${root.key}');
+        }
+      }
+    });
+
     test('the five R1 templates each point at an existing pack', () {
       expect(projectTemplates.map((template) => template.key), ['vehicle', 'construction', 'renovation', 'trip', 'wedding']);
       for (final template in projectTemplates) {

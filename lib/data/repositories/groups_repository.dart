@@ -4,6 +4,8 @@ import 'package:drift/drift.dart';
 
 import '../../core/ids.dart';
 import '../../domain/split/debt_simplifier.dart';
+import '../../domain/split/group_net.dart';
+import '../../domain/split/group_settings.dart';
 import '../../domain/split/group_timeline.dart';
 import '../../domain/split/split_calculator.dart';
 import '../db/database.dart';
@@ -73,7 +75,21 @@ class GroupDetail {
   final Map<String, DateTime> lastRemindedAt;
 
   Member? get me => members.where((member) => member.isMe).firstOrNull;
+
+  /// Whether I can leave: I am a member and no debt, direct or simplified,
+  /// involves me (the same rule as removing any other member).
+  bool get canLeave {
+    final myId = me?.id;
+    return myId != null && isMemberSettled(memberId: myId, net: balances.net, transfers: balances.pairwise);
+  }
 }
+
+/// What I am owed and owe across [summaries], counting only groups whose
+/// amounts are in the app currency (labels are never converted).
+({int owedToMe, int iOwe}) groupTotalsInAppCurrency(Iterable<GroupSummary> summaries, {required String appSymbol}) => groupNetTotals([
+      for (final summary in summaries)
+        if (sharesAppCurrency(currencyLabel: summary.group.currencyLabel, appSymbol: appSymbol)) summary.myNetMinor,
+    ]);
 
 /// A group expense with its splits and, when several members paid, its payer
 /// rows (empty for a single payer).
@@ -87,6 +103,8 @@ class GroupsRepository {
         ..where((t) => t.deletedAt.isNull())
         ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
       .watch();
+
+  Future<Group?> getGroup(String id) => (db.select(db.groups)..where((t) => t.id.equals(id) & t.deletedAt.isNull())).getSingleOrNull();
 
   Stream<Group?> watchGroup(String id) =>
       (db.select(db.groups)..where((t) => t.id.equals(id))).watchSingleOrNull();
@@ -297,6 +315,39 @@ class GroupsRepository {
         await (db.update(db.groups)..where((t) => t.id.equals(id))).write(GroupsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
         await (db.update(db.entries)..where((t) => t.groupId.equals(id))).write(EntriesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
       });
+
+  /// Hides the group under "Archived" on the groups list; nothing is deleted.
+  Future<void> archiveGroup(String id) => _setArchived(id, DateTime.now());
+
+  Future<void> unarchiveGroup(String id) => _setArchived(id, null);
+
+  Future<void> _setArchived(String id, DateTime? archivedAt) =>
+      updateGroup(GroupsCompanion(id: Value(id), archivedAt: Value(archivedAt)));
+
+  /// Leaves the group on this device: removes my member and archives the
+  /// group so its history stays readable. Returns false, changing nothing,
+  /// while any debt still involves me.
+  Future<bool> leaveGroup(String groupId) async {
+    final detail = await getGroupDetail(groupId);
+    final me = detail?.me;
+    if (detail == null || me == null || !detail.canLeave) return false;
+    await db.transaction(() async {
+      await removeMember(me.id);
+      await archiveGroup(groupId);
+    });
+    return true;
+  }
+
+  /// Weight a member starts with when an expense is split by shares.
+  Future<void> setMemberWeight(String memberId, double weight) =>
+      updateMember(MembersCompanion(id: Value(memberId), weight: Value(weight)));
+
+  /// Labels the group's amounts with [label] (null: follow the app setting).
+  Future<void> setCurrencyLabel(Group group, String? label) => updateGroup(GroupsCompanion(
+        id: Value(group.id),
+        currencyLabel: Value(label),
+        currency: Value(currencyCodeFor(label, fallbackCode: group.currency)),
+      ));
 
   Future<String> addMember(String groupId, String name, {String? phone, String? upiId}) async {
     final id = newId();

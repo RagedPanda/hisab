@@ -156,7 +156,7 @@ class GroupExpensesTab extends ConsumerWidget {
       title: Text(entry.note.isNotEmpty ? entry.note : (entry.payee ?? category?.displayName(context) ?? l10n.kindExpense), maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         '${formatRowDate(entry.occurredAt, locale: locale)} · ${l10n.payerPaidAmount(payers.join(', '), formatMinor(entry.amountMinor, symbol: symbol))}',
-        maxLines: 1,
+        maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
       trailing: _Effect(label: label, amount: effect.kind == ExpenseEffectKind.notInvolved ? null : formatMinor(effect.amountMinor, symbol: symbol), color: color),

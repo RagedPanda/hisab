@@ -1974,4 +1974,162 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get youInList => 'आप';
+
+  @override
+  String get groupSettingsTitle => 'ग्रुप सेटिंग्स';
+
+  @override
+  String get groupSettingsType => 'प्रकार';
+
+  @override
+  String get groupTypeTrip => 'यात्रा';
+
+  @override
+  String get groupTypeHome => 'घर';
+
+  @override
+  String get groupTypeCouple => 'कपल';
+
+  @override
+  String get groupTypeOther => 'अन्य';
+
+  @override
+  String get groupSettingsIcon => 'आइकन';
+
+  @override
+  String get groupSettingsDefaultSplit => 'डिफ़ॉल्ट बँटवारा';
+
+  @override
+  String get groupSettingsDefaultSplitHint =>
+      'नए खर्चों के लिए पहले से चुना रहेगा। पहले से जोड़े गए खर्चों का बँटवारा नहीं बदलेगा।';
+
+  @override
+  String get groupSettingsWeights => 'हर सदस्य के हिस्से';
+
+  @override
+  String groupSettingsWeightValue(String weight) {
+    return '$weight हिस्से';
+  }
+
+  @override
+  String groupSettingsWeightLess(String name) {
+    return '$name के हिस्से घटाएँ';
+  }
+
+  @override
+  String groupSettingsWeightMore(String name) {
+    return '$name के हिस्से बढ़ाएँ';
+  }
+
+  @override
+  String get groupSettingsCurrency => 'मुद्रा चिह्न';
+
+  @override
+  String get groupSettingsCurrencyHint =>
+      'सिर्फ़ इस ग्रुप में दिखने वाला चिह्न बदलता है। रकम बदली नहीं जाती।';
+
+  @override
+  String groupSettingsCurrencyAppDefault(String symbol) {
+    return 'ऐप जैसा ($symbol)';
+  }
+
+  @override
+  String get groupSettingsCurrencyOther => 'दूसरा चिह्न';
+
+  @override
+  String get groupSettingsSimplify => 'उधार सरल करें';
+
+  @override
+  String get groupSettingsSimplifyBody =>
+      'उधार को जोड़कर ग्रुप में कम भुगतान करने पड़ते हैं। अगर आशा को रवि को देना है और रवि को मीना को, तो आशा सीधे मीना को दे सकती है। किसी का कुल लेना-देना नहीं बदलता।';
+
+  @override
+  String groupSettingsSimplifySaves(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'अभी $count भुगतान बचते हैं',
+      one: 'अभी 1 भुगतान बचता है',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupSettingsNotes => 'नोट्स';
+
+  @override
+  String get groupSettingsNotesHint =>
+      'वाई-फ़ाई पासवर्ड, घर के नियम, यात्रा का प्लान';
+
+  @override
+  String get groupSettingsNotesAdd => 'इस ग्रुप के लिए नोट जोड़ें';
+
+  @override
+  String get groupSettingsManage => 'ग्रुप प्रबंधन';
+
+  @override
+  String get groupArchive => 'ग्रुप आर्काइव करें';
+
+  @override
+  String groupArchiveTitle(String name) {
+    return '$name आर्काइव करें?';
+  }
+
+  @override
+  String get groupArchiveBody =>
+      'ग्रुप, ग्रुप सूची में \'आर्काइव\' में चला जाएगा। कुछ नहीं हटेगा, और आप इसे कभी भी आर्काइव से निकाल सकते हैं।';
+
+  @override
+  String get groupArchiveConfirm => 'आर्काइव करें';
+
+  @override
+  String get groupUnarchive => 'आर्काइव से निकालें';
+
+  @override
+  String get groupArchivedBanner =>
+      'यह ग्रुप आर्काइव है। खर्च जोड़ने के लिए इसे आर्काइव से निकालें।';
+
+  @override
+  String get groupLeftBanner =>
+      'आपने यह ग्रुप छोड़ दिया है। इसका इतिहास यहीं रहेगा।';
+
+  @override
+  String groupArchivedSection(int count) {
+    return 'आर्काइव ($count)';
+  }
+
+  @override
+  String get groupLeave => 'ग्रुप छोड़ें';
+
+  @override
+  String groupLeaveTitle(String name) {
+    return '$name छोड़ें?';
+  }
+
+  @override
+  String get groupLeaveBody =>
+      'आप इस फ़ोन पर ग्रुप से हट जाएँगे और ग्रुप आर्काइव में चला जाएगा, ताकि इसका इतिहास पढ़ा जा सके।';
+
+  @override
+  String get groupLeaveConfirm => 'छोड़ें';
+
+  @override
+  String get groupLeaveBlocked =>
+      'पहले हिसाब चुकता करें। जब न आपको किसी से लेना हो, न किसी को देना, तब ग्रुप छोड़ सकते हैं।';
+
+  @override
+  String get groupDeleteUnsettledBody =>
+      'इस ग्रुप में अभी हिसाब बाकी है। हटाने पर सभी खर्च और भुगतान हट जाएँगे, और यह वापस नहीं होगा।';
+
+  @override
+  String get groupEmptyTrip =>
+      'टिकट, ठहरने और खाने के खर्च जैसे-जैसे हों, जोड़ते जाएँ; किसे कितना देना है, Hisab हिसाब लगा देगा।';
+
+  @override
+  String get groupEmptyHome =>
+      'किराया, बिल और राशन जोड़ें; किसे कितना देना है, Hisab हिसाब लगा देगा।';
+
+  @override
+  String get groupEmptyCouple =>
+      'साथ के खाने, राशन और घूमने के खर्च जोड़ें; Hisab हिसाब रखेगा।';
 }

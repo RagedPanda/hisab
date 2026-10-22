@@ -1737,4 +1737,139 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noActiveProjects =>
       'No active projects. Start one from the Projects screen.';
+
+  @override
+  String get remindAction => 'Remind';
+
+  @override
+  String get payAction => 'Pay';
+
+  @override
+  String remindName(String name) {
+    return 'Remind $name';
+  }
+
+  @override
+  String payName(String name) {
+    return 'Pay $name';
+  }
+
+  @override
+  String reminderOwesMe(String name, String amount, String group) {
+    return 'Hi $name, a quick reminder: you owe me $amount for $group.';
+  }
+
+  @override
+  String reminderIOwe(String name, String amount, String group) {
+    return 'Hi $name, I owe you $amount for $group. Paying now.';
+  }
+
+  @override
+  String reminderOwes(String from, String to, String amount, String group) {
+    return '$from owes $to $amount for $group.';
+  }
+
+  @override
+  String reminderEveryone(String group) {
+    return 'Settling up $group:';
+  }
+
+  @override
+  String owesLine(String from, String to, String amount) {
+    return '$from owes $to $amount';
+  }
+
+  @override
+  String get messageLabel => 'Message';
+
+  @override
+  String get shareAction => 'Share…';
+
+  @override
+  String get copyAction => 'Copy';
+
+  @override
+  String get whatsAppAction => 'WhatsApp';
+
+  @override
+  String get smsAction => 'SMS';
+
+  @override
+  String get payWithUpi => 'Pay with UPI';
+
+  @override
+  String get noUpiApp =>
+      'No UPI app on this phone. Pay another way, then record it.';
+
+  @override
+  String couldNotOpenApp(String app) {
+    return 'Couldn\'t open $app.';
+  }
+
+  @override
+  String get didPaymentGoThrough => 'Did the payment go through?';
+
+  @override
+  String didPaymentGoThroughBody(String amount, String name) {
+    return 'If $amount reached $name, Hisab records it as paid by UPI today. Hisab can\'t see your UPI app, so only you can confirm.';
+  }
+
+  @override
+  String get yesRecordIt => 'Yes, record it';
+
+  @override
+  String get notYet => 'Not yet';
+
+  @override
+  String remindedDaysAgo(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Reminded $days days ago',
+      one: 'Reminded yesterday',
+      zero: 'Reminded today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get remindAgain => 'Remind again';
+
+  @override
+  String get copiedReminder => 'Copied. Paste it into any chat.';
+
+  @override
+  String get nothingToRemind =>
+      'Everyone is settled up. Nothing to remind or pay.';
+
+  @override
+  String get shareSummaryAnyway => 'Share the summary anyway';
+
+  @override
+  String get shareBalancesSummary => 'Share balances summary';
+
+  @override
+  String get remindEveryoneWhoOwes => 'Remind everyone who owes you';
+
+  @override
+  String get copyAsText => 'Copy as text';
+
+  @override
+  String get phoneOptional => 'Phone (optional)';
+
+  @override
+  String get upiIdOptional => 'UPI ID (optional)';
+
+  @override
+  String get upiIdHint => 'name@bank';
+
+  @override
+  String get invalidUpiId => 'Enter a UPI ID like name@bank';
+
+  @override
+  String get memberContactLocal =>
+      'Phone and UPI ID stay on this device. Hisab uses them only to fill in reminders and UPI payments.';
+
+  @override
+  String get editMember => 'Edit member';
 }

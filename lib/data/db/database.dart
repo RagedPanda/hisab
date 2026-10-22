@@ -130,6 +130,9 @@ class Members extends Table with SyncColumns {
   TextColumn get name => text()();
   TextColumn get phone => text().nullable()();
   TextColumn get email => text().nullable()();
+
+  /// UPI ID (VPA) for "Pay with UPI" links. Plain text, kept on this device.
+  TextColumn get upiId => text().nullable()();
   BoolColumn get isMe => boolean().withDefault(const Constant(false))();
 
   /// Default weight for equal splits (2 = counts as two people).
@@ -257,6 +260,33 @@ class EntryFieldValues extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
+/// Anything Hisab nudged someone about, or will. One generic table so settle-up
+/// reminders, recurring-expense prompts and the like share history and sync.
+@TableIndex(name: 'reminders_group_id', columns: {#groupId})
+class Reminders extends Table with SyncColumns {
+  TextColumn get id => text()();
+
+  /// settle_up | recurring | ...
+  TextColumn get kind => text()();
+  TextColumn get groupId => text().nullable()();
+
+  /// Who the reminder is about (the member asked to pay, for settle_up).
+  TextColumn get memberId => text().nullable()();
+  TextColumn get entryId => text().nullable()();
+
+  /// When it should fire; null for reminders sent on the spot.
+  DateTimeColumn get dueAt => dateTime().nullable()();
+  DateTimeColumn get sentAt => dateTime().nullable()();
+  DateTimeColumn get doneAt => dateTime().nullable()();
+
+  /// share | copy | whatsapp | sms | notification
+  TextColumn get channel => text().withDefault(const Constant('share'))();
+  TextColumn get message => text().withDefault(const Constant(''))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class SmsLog extends Table {
   /// Hash of sender+body+timestamp so a message is only processed once.
   TextColumn get id => text()();
@@ -288,12 +318,13 @@ class SmsLog extends Table {
   Projects,
   ProjectFields,
   EntryFieldValues,
+  Reminders,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -317,6 +348,12 @@ class AppDatabase extends _$AppDatabase {
             await m.createIndex(projectFieldsProjectId);
             await m.createTable(entryFieldValues);
             await m.createIndex(entryFieldValuesEntryId);
+          }
+          // v5: member UPI IDs and the generic reminders table (groups parity, reminders).
+          if (from < 5) {
+            await m.addColumn(members, members.upiId);
+            await m.createTable(reminders);
+            await m.createIndex(remindersGroupId);
           }
         },
         beforeOpen: (details) async {

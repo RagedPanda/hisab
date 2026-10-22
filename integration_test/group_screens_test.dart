@@ -6,6 +6,7 @@
 ///     --target=integration_test/group_screens_test.dart -d emulator-5556
 library;
 
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/ids.dart';
@@ -17,12 +18,7 @@ import 'package:integration_test/integration_test.dart';
 
 import 'harness.dart';
 
-const _configs = [
-  ('en', ThemeMode.light),
-  ('en', ThemeMode.dark),
-  ('hi', ThemeMode.light),
-  ('hi', ThemeMode.dark),
-];
+const _configs = [('en', ThemeMode.light), ('en', ThemeMode.dark), ('hi', ThemeMode.light), ('hi', ThemeMode.dark)];
 
 void main() {
   binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +27,7 @@ void main() {
     final app = await createApp();
     final groupId = await _seedGroup(app);
     final settledGroupId = await _seedSettledGroup(app);
+    final squareGroupId = await _seedSquareGroup(app);
     await pumpApp(tester, app);
 
     for (final (locale, mode) in _configs) {
@@ -43,7 +40,8 @@ void main() {
       await settle(tester, 10);
       await shoot(tester, 'group_balances_$tag');
 
-      await tapFinder(tester, find.byType(TextButton).first, frames: 12);
+      // The first transfer row is Rahul -> You: Remind, then Record payment.
+      await tapFinder(tester, find.byType(TextButton).at(1), frames: 12);
       await _dropKeyboard(tester);
       await shoot(tester, 'record_payment_prefilled_$tag');
       await _closeSheet(tester);
@@ -51,10 +49,21 @@ void main() {
       await _dropKeyboard(tester);
       await shoot(tester, 'record_payment_$tag');
       await _closeSheet(tester);
+      await tapFinder(tester, find.byIcon(Icons.notifications_active_outlined).first, frames: 12);
+      await _dropKeyboard(tester);
+      await shoot(tester, 'remind_sheet_$tag');
+      await _popSheet(tester);
+      await tapFinder(tester, find.byIcon(Icons.ios_share).first, frames: 12);
+      await shoot(tester, 'share_options_$tag');
+      await _popSheet(tester);
 
       await tester.tap(find.byType(Tab).at(2));
       await settle(tester, 10);
       await shoot(tester, 'group_members_$tag');
+      await tapFinder(tester, find.text('Rahul').first, frames: 12);
+      await _dropKeyboard(tester);
+      await shoot(tester, 'member_sheet_$tag');
+      await _popSheet(tester);
       appRouter.go('/groups/$settledGroupId');
       await settle(tester, 10);
       await tester.tap(find.byType(Tab).first);
@@ -63,6 +72,19 @@ void main() {
       await tapFinder(tester, find.byIcon(Icons.expand_more), frames: 10);
       await shoot(tester, 'group_expenses_settled_open_$tag');
       await tapFinder(tester, find.byIcon(Icons.expand_less), frames: 10);
+      await tester.tap(find.byType(Tab).at(1));
+      await settle(tester, 10);
+      await shoot(tester, 'group_balances_pay_$tag');
+      await tapFinder(tester, find.byIcon(Icons.send_outlined).first, frames: 12);
+      await _dropKeyboard(tester);
+      await shoot(tester, 'pay_sheet_$tag');
+      await _popSheet(tester);
+
+      appRouter.go('/groups/$squareGroupId');
+      await settle(tester, 10);
+      await tester.tap(find.byType(Tab).at(1));
+      await settle(tester, 10);
+      await shoot(tester, 'group_balances_settled_$tag');
 
       appRouter.go('/groups');
       await settle(tester, 10);
@@ -75,6 +97,12 @@ void main() {
 Future<void> _dropKeyboard(WidgetTester tester) async {
   FocusManager.instance.primaryFocus?.unfocus();
   await settle(tester, 6);
+}
+
+/// Pops the top bottom sheet without relying on where its scrim is.
+Future<void> _popSheet(WidgetTester tester) async {
+  Navigator.of(tester.element(find.byType(BottomSheet).last)).pop();
+  await settle(tester, 10);
 }
 
 Future<void> _closeSheet(WidgetTester tester) async {
@@ -105,6 +133,7 @@ Future<String> _seedGroup(AppHandle app) async {
   await expense('Scooter rent', rahul, 240000, [me, rahul, priya], DateTime(2026, 10, 4));
   await expense('Dinner at Thalassa', priya, 450000, [me, rahul, priya], DateTime(2026, 10, 5));
   await groups.addSettlement(groupId: groupId, fromMemberId: priya, toMemberId: me, amountMinor: 100000, occurredAt: DateTime(2026, 10, 6), method: 'upi');
+  await groups.updateMember(MembersCompanion(id: Value(rahul), phone: const Value('98765 43210')));
   return groupId;
 }
 
@@ -121,12 +150,34 @@ Future<String> _seedSettledGroup(AppHandle app) async {
     final entryId = newId();
     await entries.saveEntry(
       EntriesRepository.newExpense(id: entryId, amountMinor: total, occurredAt: when, note: note, groupId: groupId, paidByMemberId: payer, splitMethod: 'equal'),
-      splits: [for (final member in [me, rahul]) SplitsCompanion.insert(id: newId(), entryId: entryId, memberId: member, amountMinor: total ~/ 2)],
+      splits: [
+        for (final member in [me, rahul]) SplitsCompanion.insert(id: newId(), entryId: entryId, memberId: member, amountMinor: total ~/ 2),
+      ],
     );
   }
 
   await expense('Pizza night', me, 120000, DateTime(2026, 9, 26));
   await groups.addSettlement(groupId: groupId, fromMemberId: rahul, toMemberId: me, amountMinor: 60000, occurredAt: DateTime(2026, 9, 28), method: 'upi');
   await expense('Biryani', rahul, 80000, DateTime(2026, 10, 8));
+  await groups.updateMember(MembersCompanion(id: Value(rahul), phone: const Value('98765 43210'), upiId: const Value('rahul.k@okicici')));
+  return groupId;
+}
+
+/// Movie night: one expense Rahul has fully paid back, so balances are square.
+Future<String> _seedSquareGroup(AppHandle app) async {
+  final groups = app.read(groupsRepositoryProvider);
+  final entries = app.read(entriesRepositoryProvider);
+  final groupId = await groups.createGroup(name: 'Movie night', icon: 'celebration', myName: 'You', otherMembers: ['Rahul']);
+  final members = await groups.getMembers(groupId);
+  final me = members.firstWhere((m) => m.isMe).id;
+  final rahul = members.firstWhere((m) => m.name == 'Rahul').id;
+  final entryId = newId();
+  await entries.saveEntry(
+    EntriesRepository.newExpense(id: entryId, amountMinor: 60000, occurredAt: DateTime(2026, 10, 10), note: 'Tickets', groupId: groupId, paidByMemberId: me, splitMethod: 'equal'),
+    splits: [
+      for (final member in [me, rahul]) SplitsCompanion.insert(id: newId(), entryId: entryId, memberId: member, amountMinor: 30000),
+    ],
+  );
+  await groups.addSettlement(groupId: groupId, fromMemberId: rahul, toMemberId: me, amountMinor: 30000, occurredAt: DateTime(2026, 10, 11), method: 'cash');
   return groupId;
 }

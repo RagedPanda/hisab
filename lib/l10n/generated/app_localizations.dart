@@ -3007,6 +3007,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No active projects. Start one from the Projects screen.'**
   String get noActiveProjects;
+
+  /// No description provided for @remindAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind'**
+  String get remindAction;
+
+  /// No description provided for @payAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay'**
+  String get payAction;
+
+  /// No description provided for @remindName.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind {name}'**
+  String remindName(String name);
+
+  /// No description provided for @payName.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay {name}'**
+  String payName(String name);
+
+  /// No description provided for @reminderOwesMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi {name}, a quick reminder: you owe me {amount} for {group}.'**
+  String reminderOwesMe(String name, String amount, String group);
+
+  /// No description provided for @reminderIOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi {name}, I owe you {amount} for {group}. Paying now.'**
+  String reminderIOwe(String name, String amount, String group);
+
+  /// No description provided for @reminderOwes.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} owes {to} {amount} for {group}.'**
+  String reminderOwes(String from, String to, String amount, String group);
+
+  /// No description provided for @reminderEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Settling up {group}:'**
+  String reminderEveryone(String group);
+
+  /// No description provided for @owesLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} owes {to} {amount}'**
+  String owesLine(String from, String to, String amount);
+
+  /// No description provided for @messageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get messageLabel;
+
+  /// No description provided for @shareAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share…'**
+  String get shareAction;
+
+  /// No description provided for @copyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copyAction;
+
+  /// No description provided for @whatsAppAction.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get whatsAppAction;
+
+  /// No description provided for @smsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS'**
+  String get smsAction;
+
+  /// No description provided for @payWithUpi.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay with UPI'**
+  String get payWithUpi;
+
+  /// No description provided for @noUpiApp.
+  ///
+  /// In en, this message translates to:
+  /// **'No UPI app on this phone. Pay another way, then record it.'**
+  String get noUpiApp;
+
+  /// No description provided for @couldNotOpenApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open {app}.'**
+  String couldNotOpenApp(String app);
+
+  /// No description provided for @didPaymentGoThrough.
+  ///
+  /// In en, this message translates to:
+  /// **'Did the payment go through?'**
+  String get didPaymentGoThrough;
+
+  /// No description provided for @didPaymentGoThroughBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If {amount} reached {name}, Hisab records it as paid by UPI today. Hisab can\'t see your UPI app, so only you can confirm.'**
+  String didPaymentGoThroughBody(String amount, String name);
+
+  /// No description provided for @yesRecordIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, record it'**
+  String get yesRecordIt;
+
+  /// No description provided for @notYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get notYet;
+
+  /// No description provided for @remindedDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =0{Reminded today} =1{Reminded yesterday} other{Reminded {days} days ago}}'**
+  String remindedDaysAgo(int days);
+
+  /// No description provided for @remindAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind again'**
+  String get remindAgain;
+
+  /// No description provided for @copiedReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied. Paste it into any chat.'**
+  String get copiedReminder;
+
+  /// No description provided for @nothingToRemind.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone is settled up. Nothing to remind or pay.'**
+  String get nothingToRemind;
+
+  /// No description provided for @shareSummaryAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Share the summary anyway'**
+  String get shareSummaryAnyway;
+
+  /// No description provided for @shareBalancesSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Share balances summary'**
+  String get shareBalancesSummary;
+
+  /// No description provided for @remindEveryoneWhoOwes.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind everyone who owes you'**
+  String get remindEveryoneWhoOwes;
+
+  /// No description provided for @copyAsText.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy as text'**
+  String get copyAsText;
+
+  /// No description provided for @phoneOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone (optional)'**
+  String get phoneOptional;
+
+  /// No description provided for @upiIdOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'UPI ID (optional)'**
+  String get upiIdOptional;
+
+  /// No description provided for @upiIdHint.
+  ///
+  /// In en, this message translates to:
+  /// **'name@bank'**
+  String get upiIdHint;
+
+  /// No description provided for @invalidUpiId.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a UPI ID like name@bank'**
+  String get invalidUpiId;
+
+  /// No description provided for @memberContactLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone and UPI ID stay on this device. Hisab uses them only to fill in reminders and UPI payments.'**
+  String get memberContactLocal;
+
+  /// No description provided for @editMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit member'**
+  String get editMember;
 }
 
 class _AppLocalizationsDelegate

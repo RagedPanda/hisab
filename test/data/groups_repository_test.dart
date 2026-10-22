@@ -197,4 +197,33 @@ void main() {
     await groups.restoreSettlement(id);
     expect((await groups.getSettlements(groupId)).map((s) => s.id), [id]);
   });
+
+  test('group detail carries the latest settle-up reminder per member and refreshes on a new one', () async {
+    final groupId = await groups.createGroup(name: 'Goa', icon: 'flight', myName: 'Me', otherMembers: ['Rahul', 'Priya']);
+    final members = await groups.getMembers(groupId);
+    final rahul = members.firstWhere((m) => m.name == 'Rahul').id;
+    final priya = members.firstWhere((m) => m.name == 'Priya').id;
+    await groups.recordSettleUpReminder(groupId: groupId, memberId: rahul, channel: 'share', message: 'old', sentAt: DateTime(2026, 10, 1));
+    await groups.recordSettleUpReminder(groupId: groupId, memberId: rahul, channel: 'copy', message: 'new', sentAt: DateTime(2026, 10, 9));
+    final otherGroup = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'Me', otherMembers: ['Priya']);
+    await groups.recordSettleUpReminder(groupId: otherGroup, memberId: priya, channel: 'share', message: 'elsewhere', sentAt: DateTime(2026, 10, 5));
+
+    expect((await groups.getGroupDetail(groupId))!.lastRemindedAt, {rahul: DateTime(2026, 10, 9)});
+
+    final updates = groups.watchGroupDetail(groupId).map((detail) => detail!.lastRemindedAt.length);
+    final seen = <int>[];
+    final subscription = updates.listen(seen.add);
+    await pumpEventQueue();
+    await groups.recordSettleUpReminder(groupId: groupId, memberId: priya, channel: 'whatsapp', message: 'hi');
+    await pumpEventQueue();
+    await subscription.cancel();
+    expect(seen, [1, 2]);
+  });
+
+  test('a member can be added with a phone and UPI ID', () async {
+    final groupId = await groups.createGroup(name: 'Goa', icon: 'flight', myName: 'Me');
+    await groups.addMember(groupId, ' Rahul ', phone: '98100 12345', upiId: 'rahul@ybl');
+    final rahul = (await groups.getMembers(groupId)).firstWhere((m) => m.name == 'Rahul');
+    expect((rahul.phone, rahul.upiId), ('98100 12345', 'rahul@ybl'));
+  });
 }

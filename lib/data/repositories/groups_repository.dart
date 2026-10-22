@@ -9,6 +9,9 @@ import '../../domain/split/split_calculator.dart';
 import '../db/database.dart';
 import '../db/watch_tables.dart';
 
+/// [Reminders.kind] for "please settle up" nudges sent from the balances tab.
+const settleUpReminderKind = 'settle_up';
+
 class GroupSummary {
   const GroupSummary({required this.group, required this.members, required this.myNetMinor, required this.totalSpentMinor});
   final Group group;
@@ -46,6 +49,7 @@ class GroupDetail {
     required this.balances,
     required this.timelineByEntryId,
     required this.settledUpTo,
+    this.lastRemindedAt = const {},
   });
   final Group group;
 
@@ -64,6 +68,9 @@ class GroupDetail {
 
   /// Last day everyone was square, or null if never (see [settledUpPoint]).
   final DateTime? settledUpTo;
+
+  /// When I last sent each member a settle-up reminder, keyed by member id.
+  final Map<String, DateTime> lastRemindedAt;
 
   Member? get me => members.where((member) => member.isMe).firstOrNull;
 }
@@ -126,7 +133,7 @@ class GroupsRepository {
 
   Future<GroupBalances> getBalances(String groupId) async => (await getGroupDetail(groupId))?.balances ?? computeBalances(members: const [], entries: const [], settlements: const [], simplify: true);
 
-  Stream<GroupDetail?> watchGroupDetail(String groupId) => db.watchTables(_ledgerTables, () => getGroupDetail(groupId));
+  Stream<GroupDetail?> watchGroupDetail(String groupId) => db.watchTables([..._ledgerTables, db.reminders], () => getGroupDetail(groupId));
 
   /// Null when the group does not exist (or was deleted and the screen is closing).
   Future<GroupDetail?> getGroupDetail(String groupId) async {
@@ -137,6 +144,7 @@ class GroupsRepository {
     final entries = await getGroupEntries(groupId);
     final settlements = await getSettlements(groupId);
     final timelineByEntryId = timelineOf(entries);
+    final lastRemindedAt = await getLastRemindedAt(groupId);
     return GroupDetail(
       group: group,
       members: members,
@@ -152,7 +160,40 @@ class GroupsRepository {
             TimelinePayment(occurredAt: settlement.occurredAt, fromMemberId: settlement.fromMemberId, toMemberId: settlement.toMemberId, amountMinor: settlement.amountMinor),
         ],
       ),
+      lastRemindedAt: lastRemindedAt,
     );
+  }
+
+  /// Latest settle-up reminder sent to each member of the group, in one query.
+  Future<Map<String, DateTime>> getLastRemindedAt(String groupId) async {
+    final lastSent = db.reminders.sentAt.max();
+    final rows = await (db.selectOnly(db.reminders)
+          ..addColumns([db.reminders.memberId, lastSent])
+          ..where(db.reminders.groupId.equals(groupId) &
+              db.reminders.kind.equals(settleUpReminderKind) &
+              db.reminders.deletedAt.isNull() &
+              db.reminders.memberId.isNotNull() &
+              db.reminders.sentAt.isNotNull())
+          ..groupBy([db.reminders.memberId]))
+        .get();
+    return {
+      for (final row in rows) row.read(db.reminders.memberId)!: ?row.read(lastSent),
+    };
+  }
+
+  /// Logs that I asked [memberId] to settle up, through [channel].
+  Future<String> recordSettleUpReminder({required String groupId, required String memberId, required String channel, required String message, DateTime? sentAt}) async {
+    final id = newId();
+    await db.into(db.reminders).insert(RemindersCompanion.insert(
+          id: id,
+          kind: settleUpReminderKind,
+          groupId: Value(groupId),
+          memberId: Value(memberId),
+          sentAt: Value(sentAt ?? DateTime.now()),
+          channel: Value(channel),
+          message: Value(message),
+        ));
+    return id;
   }
 
   /// Expenses with a payer, as timeline entries keyed by entry id.
@@ -236,9 +277,9 @@ class GroupsRepository {
         await (db.update(db.entries)..where((t) => t.groupId.equals(id))).write(EntriesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
       });
 
-  Future<String> addMember(String groupId, String name, {String? phone}) async {
+  Future<String> addMember(String groupId, String name, {String? phone, String? upiId}) async {
     final id = newId();
-    await db.into(db.members).insert(MembersCompanion.insert(id: id, groupId: groupId, name: name.trim(), phone: Value(phone)));
+    await db.into(db.members).insert(MembersCompanion.insert(id: id, groupId: groupId, name: name.trim(), phone: Value(phone), upiId: Value(upiId)));
     return id;
   }
 

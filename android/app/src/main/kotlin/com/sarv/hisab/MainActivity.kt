@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.provider.Telephony
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -19,6 +20,20 @@ import io.flutter.plugin.common.MethodChannel
  */
 class MainActivity : FlutterActivity() {
     private var receiver: BroadcastReceiver? = null
+
+    // Text shared from another app arrives as ACTION_SEND. Turn it into the
+    // hisab://sms?text=... link before Flutter reads the intent, so the
+    // router opens the SMS paste screen as it does for any deep link.
+    override fun onCreate(savedInstanceState: Bundle?) {
+        sharedTextAsLink(intent)?.let { setIntent(it) }
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        val link = sharedTextAsLink(intent) ?: intent
+        setIntent(link)
+        super.onNewIntent(link)
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -110,4 +125,16 @@ class MainActivity : FlutterActivity() {
         const val METHOD_CHANNEL = "com.sarv.hisab/sms"
         const val EVENT_CHANNEL = "com.sarv.hisab/sms_events"
     }
+}
+
+/**
+ * VIEW intent for hisab://sms?text=<shared text> when [intent] is a plain-text
+ * share, or null for anything else.
+ */
+internal fun sharedTextAsLink(intent: Intent?): Intent? {
+    if (intent?.action != Intent.ACTION_SEND || intent.type != "text/plain") return null
+    val text = intent.getStringExtra(Intent.EXTRA_TEXT)?.trim().orEmpty()
+    if (text.isEmpty()) return null
+    val link = Uri.Builder().scheme("hisab").authority("sms").appendQueryParameter("text", text).build()
+    return Intent(Intent.ACTION_VIEW, link)
 }

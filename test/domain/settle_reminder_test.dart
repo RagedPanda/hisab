@@ -53,4 +53,27 @@ void main() {
       expect(settleReminderFacts(transfers, myMemberId: null).isSettled, isTrue);
     });
   });
+
+  group('stored schedule', () {
+    test('round-trips monthly, last-day and weekly schedules', () {
+      for (final schedule in const [
+        SettleReminderSchedule(frequency: RecurrenceFrequency.monthly, dayOfMonth: 1, memberId: 'ravi'),
+        SettleReminderSchedule(frequency: RecurrenceFrequency.monthly, dayOfMonth: kLastDayOfMonth),
+        SettleReminderSchedule(frequency: RecurrenceFrequency.weekly, weekday: DateTime.friday),
+      ]) {
+        final stored = settleScheduleFromStored(repeat: settleScheduleRepeat(schedule), repeatDay: settleScheduleRepeatDay(schedule), memberId: schedule.memberId);
+        expect(stored, schedule);
+      }
+    });
+
+    test('ignores repeats this feature never writes', () {
+      expect(settleScheduleFromStored(repeat: 'once'), isNull);
+    });
+
+    test('the reminder id names its group', () {
+      expect(groupIdOfSettleSchedule(settleScheduleReminderId('flat')), 'flat');
+      expect(groupIdOfSettleSchedule('some-bill'), isNull);
+      expect(groupIdOfSettleSchedule('settle_schedule_'), isNull);
+    });
+  });
 }

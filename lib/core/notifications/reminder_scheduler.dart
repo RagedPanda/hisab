@@ -1,4 +1,5 @@
 import '../../data/repositories/reminders_repository.dart';
+import '../../data/repositories/settle_schedule_repository.dart';
 import '../../domain/reminders/reminder_draft.dart';
 import 'notification_service.dart';
 import 'reminder_payload.dart';
@@ -9,16 +10,20 @@ import 'reminder_payload.dart';
 /// reminders (card dues, documents, salary, SMS matching...) call this, not
 /// the repository, so notifications never drift from the table.
 class ReminderScheduler {
-  ReminderScheduler({required this.reminders, required this.notifications, DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
+  ReminderScheduler({required this.reminders, required this.notifications, this.settleSchedules, DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
 
   final RemindersRepository reminders;
+
+  /// Groups' scheduled settle-up reminders, posted alongside due reminders.
+  final SettleScheduleRepository? settleSchedules;
   final NotificationService notifications;
   final DateTime Function() _clock;
 
   /// Re-posts the alerts of [id] from its stored row (or cancels them when it
   /// is closed or gone). Call after changing a reminder row directly.
   Future<void> refresh(String id) async {
-    final reminder = await reminders.getById(id);
+    final settleRow = await settleSchedules?.getRow(id);
+    final reminder = settleRow == null ? await reminders.getById(id) : (SettleScheduleRepository.isSchedulable(settleRow) ? settleRow : null);
     if (reminder == null) {
       await notifications.cancel(id);
     } else {
@@ -74,7 +79,10 @@ class ReminderScheduler {
 
   /// Re-posts every pending reminder's alerts. Run on app start (after reboot,
   /// app update or a time-zone change) and after a backup restore.
-  Future<int> rescheduleAll() async => notifications.rescheduleAll(await reminders.getSchedulable());
+  Future<int> rescheduleAll() async => notifications.rescheduleAll([
+        ...await reminders.getSchedulable(),
+        ...?await settleSchedules?.schedulable(),
+      ]);
 
   Future<void> _afterClose(String id, String? nextId) async {
     await notifications.cancel(id);

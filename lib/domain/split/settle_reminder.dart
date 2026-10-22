@@ -71,3 +71,33 @@ SettleReminderFacts settleReminderFacts(List<Transfer> transfers, {required Stri
     iOwe: [for (final transfer in transfers) if (transfer.from == myMemberId && transfer.amountMinor > 0 && concernsMember(transfer.to)) transfer],
   );
 }
+
+/// Reminders-table kind of a group's scheduled settle-up reminder. It is not
+/// a due-reminder kind, so the Reminders screens never list it.
+const String kSettleScheduleKind = 'settle_schedule';
+
+const String _settleScheduleIdPrefix = 'settle_schedule_';
+
+/// One schedule per group, so its reminder id is derived from the group.
+String settleScheduleReminderId(String groupId) => '$_settleScheduleIdPrefix$groupId';
+
+/// The group of a scheduled settle-up reminder id, or null for any other id.
+String? groupIdOfSettleSchedule(String reminderId) =>
+    reminderId.startsWith(_settleScheduleIdPrefix) && reminderId.length > _settleScheduleIdPrefix.length
+        ? reminderId.substring(_settleScheduleIdPrefix.length)
+        : null;
+
+/// The stored `repeat` value of [schedule]: 'weekly' or 'monthly'.
+String settleScheduleRepeat(SettleReminderSchedule schedule) => schedule.frequency == RecurrenceFrequency.weekly ? 'weekly' : 'monthly';
+
+/// The stored `repeatDay`: the weekday for weekly, the day of month (or
+/// [kLastDayOfMonth]) for monthly.
+int settleScheduleRepeatDay(SettleReminderSchedule schedule) =>
+    schedule.frequency == RecurrenceFrequency.weekly ? (schedule.weekday ?? DateTime.monday) : (schedule.dayOfMonth ?? 1);
+
+/// Reads a stored schedule back; null when [repeat] is not one this feature writes.
+SettleReminderSchedule? settleScheduleFromStored({required String repeat, int? repeatDay, String? memberId}) => switch (repeat) {
+      'weekly' => SettleReminderSchedule(frequency: RecurrenceFrequency.weekly, weekday: repeatDay ?? DateTime.monday, memberId: memberId),
+      'monthly' => SettleReminderSchedule(frequency: RecurrenceFrequency.monthly, dayOfMonth: repeatDay ?? 1, memberId: memberId),
+      _ => null,
+    };

@@ -12,6 +12,7 @@ import '../data/repositories/project_fields_repository.dart';
 import '../data/repositories/projects_repository.dart';
 import '../data/repositories/recurring_repository.dart';
 import '../data/repositories/reminders_repository.dart';
+import '../data/repositories/settle_schedule_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
 import '../data/sms/sms_ingest_service.dart';
 import '../domain/entries/entry_filter.dart';
@@ -43,6 +44,7 @@ final projectFieldsRepositoryProvider = Provider((ref) => ProjectFieldsRepositor
 final smsLogRepositoryProvider = Provider((ref) => SmsLogRepository(ref.watch(databaseProvider)));
 final recurringRepositoryProvider = Provider((ref) => RecurringRepository(ref.watch(databaseProvider)));
 final remindersRepositoryProvider = Provider((ref) => RemindersRepository(ref.watch(databaseProvider)));
+final settleScheduleRepositoryProvider = Provider((ref) => SettleScheduleRepository(ref.watch(databaseProvider)));
 
 class SettingsNotifier extends Notifier<AppSettings> {
   @override
@@ -176,6 +178,7 @@ final notificationServiceProvider = Provider((ref) {
 final reminderSchedulerProvider = Provider((ref) => ReminderScheduler(
       reminders: ref.watch(remindersRepositoryProvider),
       notifications: ref.watch(notificationServiceProvider),
+      settleSchedules: ref.watch(settleScheduleRepositoryProvider),
     ));
 
 /// Pending due reminders, earliest (overdue) first.

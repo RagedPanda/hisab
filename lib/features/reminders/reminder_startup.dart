@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/notifications/notification_gateway.dart';
 import '../../core/notifications/reminder_payload.dart';
 import '../../core/providers.dart';
+import '../groups/settle_reminder_service.dart';
 import '../shell/router.dart';
 
 /// Opens the screen a reminder notification (or its Mark paid button) points
@@ -29,6 +30,7 @@ Future<void> startReminderNotifications(ProviderContainer container) async {
     await service.initialize(onTap: (tap) => handleReminderTap(container, tap));
     final launch = await service.launchTap();
     if (launch != null) await handleReminderTap(container, launch);
+    await container.read(settleReminderServiceProvider).refreshAll();
     await container.read(reminderSchedulerProvider).rescheduleAll();
   } catch (error, stack) {
     debugPrint('Hisab: reminder notifications unavailable: $error\n$stack');

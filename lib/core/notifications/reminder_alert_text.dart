@@ -3,6 +3,7 @@ import 'dart:ui';
 import '../../data/db/database.dart';
 import '../../domain/reminders/reminder_kind.dart';
 import '../../domain/reminders/reminder_schedule.dart';
+import '../../domain/split/settle_reminder.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../money.dart';
 import 'notification_gateway.dart';
@@ -37,6 +38,19 @@ String reminderDueCaption(AppLocalizations l10n, {required DateTime dueAt, requi
 
 /// The notification for [alert] of [reminder].
 AlertRequest alertRequestFor(Reminder reminder, PlannedAlert alert, AppLocalizations l10n, {required String currencySymbol}) {
+  // A group's settle-up schedule stores its worked-out texts on the row.
+  if (reminder.kind == kSettleScheduleKind) {
+    return AlertRequest(
+      id: alert.notificationId,
+      title: reminder.title,
+      body: reminder.notes,
+      fireAt: alert.fireAt,
+      payload: reminderPayload(reminder.id),
+      markPaidLabel: l10n.reminderMarkDone,
+      snoozeLabel: l10n.reminderSnoozeOneDay,
+      isMoney: false,
+    );
+  }
   final isMoney = ReminderKind.fromKey(reminder.kind)?.isMoney ?? true;
   return AlertRequest(
     id: alert.notificationId,

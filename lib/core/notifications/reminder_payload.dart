@@ -2,6 +2,8 @@
 /// foreground app, the background action isolate and tests agree on them.
 library;
 
+import '../../domain/split/settle_reminder.dart';
+
 const String kReminderPayloadPrefix = 'hisab://reminder/';
 
 /// Action id: open the app on a prefilled entry and mark the reminder paid.
@@ -27,6 +29,9 @@ String? reminderLocationFor({required String? payload, required String? actionId
   final id = reminderIdFromPayload(payload);
   if (id == null) return null;
   if (actionId == kSnoozeActionId) return null;
+  // A group's settle-up reminder opens the group, whichever button was used.
+  final settleGroupId = groupIdOfSettleSchedule(id);
+  if (settleGroupId != null) return '/groups/$settleGroupId';
   if (actionId == kMarkPaidActionId) return '/entry?reminder=$id';
   return '/reminders/$id';
 }

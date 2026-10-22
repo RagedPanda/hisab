@@ -1717,4 +1717,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String namePaidYou(String name) {
     return '$name ने आपको दिए';
   }
+
+  @override
+  String get addToProject => 'प्रोजेक्ट में जोड़ें';
+
+  @override
+  String get chooseProject => 'प्रोजेक्ट चुनें';
+
+  @override
+  String get noProject => 'कोई प्रोजेक्ट नहीं';
+
+  @override
+  String get noActiveProjects =>
+      'कोई चालू प्रोजेक्ट नहीं। प्रोजेक्ट स्क्रीन से नया शुरू करें।';
 }

@@ -493,5 +493,9 @@
   "youPaidName": "आपने {name} को दिए",
   "@youPaidName": {"placeholders": {"name": {"type": "String"}}},
   "namePaidYou": "{name} ने आपको दिए",
-  "@namePaidYou": {"placeholders": {"name": {"type": "String"}}}
+  "@namePaidYou": {"placeholders": {"name": {"type": "String"}}},
+  "addToProject": "प्रोजेक्ट में जोड़ें",
+  "chooseProject": "प्रोजेक्ट चुनें",
+  "noProject": "कोई प्रोजेक्ट नहीं",
+  "noActiveProjects": "कोई चालू प्रोजेक्ट नहीं। प्रोजेक्ट स्क्रीन से नया शुरू करें।"
 }

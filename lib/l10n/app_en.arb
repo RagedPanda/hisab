@@ -579,5 +579,9 @@
   "youPaidName": "You paid {name}",
   "@youPaidName": {"placeholders": {"name": {"type": "String"}}},
   "namePaidYou": "{name} paid you",
-  "@namePaidYou": {"placeholders": {"name": {"type": "String"}}}
+  "@namePaidYou": {"placeholders": {"name": {"type": "String"}}},
+  "addToProject": "Add to project",
+  "chooseProject": "Choose project",
+  "noProject": "No project",
+  "noActiveProjects": "No active projects. Start one from the Projects screen."
 }

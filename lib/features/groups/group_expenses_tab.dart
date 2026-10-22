@@ -6,6 +6,7 @@ import '../../core/format.dart';
 import '../../core/money.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
+import '../../data/repositories/groups_repository.dart';
 import '../../domain/split/group_timeline.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
@@ -53,7 +54,7 @@ class GroupExpensesTab extends ConsumerWidget {
     required this.openPayment,
   });
   final String groupId;
-  final List<(Entry, List<Split>)> entries;
+  final List<GroupEntry> entries;
   final List<Settlement> settlements;
   final Map<String, TimelineExpense> timelineByEntryId;
   final DateTime? settledUpTo;
@@ -72,7 +73,7 @@ class GroupExpensesTab extends ConsumerWidget {
     final view = ref.watch(expenseListViewsProvider)[groupId] ?? const ExpenseListView();
     final filter = view.filter ?? defaultExpenseFilter(settledUpTo);
     final rows = <LedgerRow<Object>>[
-      for (final (entry, _) in entries)
+      for (final (entry, _, _) in entries)
         if (timelineByEntryId[entry.id] case final timeline?)
           LedgerRow(source: (entry, timeline), occurredAt: entry.occurredAt, totalMinor: entry.amountMinor, involvesMe: expenseInvolves(myMemberId, timeline)),
       for (final settlement in settlements)

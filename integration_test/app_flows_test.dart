@@ -434,7 +434,7 @@ void main() {
     // Expected balances straight from the domain layer.
     final entries = await shared.read(groupsRepositoryProvider).getGroupEntries(groupId);
     final ledger = [
-      for (final (entry, splits) in entries) LedgerExpense(paidByMemberId: entry.paidByMemberId!, shares: [for (final s in splits) SplitShare(s.memberId, s.amountMinor)]),
+      for (final (entry, splits, _) in entries) LedgerExpense(paidByMemberId: entry.paidByMemberId!, shares: [for (final s in splits) SplitShare(s.memberId, s.amountMinor)]),
     ];
     final net = computeNetBalances(memberIds: members.map((m) => m.id), expenses: ledger, settlements: const []);
     final nameOf = {for (final m in members) m.id: m.isMe ? 'You' : m.name};

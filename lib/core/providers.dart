@@ -8,6 +8,7 @@ import '../data/repositories/budgets_repository.dart';
 import '../data/repositories/categories_repository.dart';
 import '../data/repositories/entries_repository.dart';
 import '../data/repositories/groups_repository.dart';
+import '../data/repositories/project_fields_repository.dart';
 import '../data/repositories/projects_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
 import '../data/sms/sms_ingest_service.dart';
@@ -30,6 +31,7 @@ final categoriesRepositoryProvider = Provider((ref) => CategoriesRepository(ref.
 final groupsRepositoryProvider = Provider((ref) => GroupsRepository(ref.watch(databaseProvider)));
 final budgetsRepositoryProvider = Provider((ref) => BudgetsRepository(ref.watch(databaseProvider)));
 final projectsRepositoryProvider = Provider((ref) => ProjectsRepository(ref.watch(databaseProvider)));
+final projectFieldsRepositoryProvider = Provider((ref) => ProjectFieldsRepository(ref.watch(databaseProvider)));
 final smsLogRepositoryProvider = Provider((ref) => SmsLogRepository(ref.watch(databaseProvider)));
 
 class SettingsNotifier extends Notifier<AppSettings> {

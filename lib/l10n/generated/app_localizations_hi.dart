@@ -2188,4 +2188,279 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get recurringRuleMissing => 'यह दोहराई जाने वाली एंट्री हटा दी गई है';
+
+  @override
+  String get remindersTitle => 'रिमाइंडर';
+
+  @override
+  String remindersUpcomingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count आने वाले',
+      one: '1 आने वाला',
+      zero: 'कुछ देय नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get remindersNotificationsOn => 'सूचनाएँ चालू';
+
+  @override
+  String get remindersNotificationsOff => 'सूचनाएँ बंद';
+
+  @override
+  String remindersSettingsSubtitle(String count, String state) {
+    return '$count · $state';
+  }
+
+  @override
+  String get reminderTabHistory => 'इतिहास';
+
+  @override
+  String get reminderSectionOverdue => 'बकाया';
+
+  @override
+  String get reminderSectionThisWeek => 'इस हफ़्ते';
+
+  @override
+  String get reminderSectionLater => 'बाद में';
+
+  @override
+  String get reminderAdd => 'रिमाइंडर जोड़ें';
+
+  @override
+  String get reminderFab => 'रिमाइंडर';
+
+  @override
+  String get remindersEmptyTitle => 'अभी कोई रिमाइंडर नहीं';
+
+  @override
+  String get remindersEmptyBody =>
+      'बिल, किराया, ईएमआई, रिन्यूअल: एक जोड़ें, हिसाब देय तारीख़ से पहले याद दिलाएगा।';
+
+  @override
+  String get reminderHistoryEmpty => 'चुकाए और छोड़े गए रिमाइंडर यहाँ दिखेंगे।';
+
+  @override
+  String get reminderSkip => 'इस बार छोड़ें';
+
+  @override
+  String get reminderDeleted => 'रिमाइंडर हटाया गया';
+
+  @override
+  String get reminderMarkedPaid => 'चुकाया गया';
+
+  @override
+  String get reminderMarkedDone => 'पूरा हुआ';
+
+  @override
+  String get reminderSkipped => 'इस बार छोड़ा गया';
+
+  @override
+  String reminderSnoozedUntil(String date) {
+    return '$date तक टाला गया';
+  }
+
+  @override
+  String get reminderAlreadyDone => 'पहले ही चुकाया जा चुका है';
+
+  @override
+  String reminderPaidOn(String date) {
+    return '$date को चुकाया';
+  }
+
+  @override
+  String reminderDoneOn(String date) {
+    return '$date को पूरा';
+  }
+
+  @override
+  String reminderSkippedOn(String date) {
+    return '$date को छोड़ा';
+  }
+
+  @override
+  String reminderNextDue(String date) {
+    return 'अगली देय तारीख़ $date';
+  }
+
+  @override
+  String get notifOffBanner =>
+      'सूचनाएँ बंद हैं। रिमाइंडर सिर्फ़ ऐप में दिखेंगे।';
+
+  @override
+  String get notifTurnOn => 'चालू करें';
+
+  @override
+  String get reminderExactAlarmNote =>
+      'सूचना कुछ मिनट देर से आ सकती है। सही समय के लिए \"अलार्म और रिमाइंडर\" अनुमति चाहिए।';
+
+  @override
+  String get notifPrePromptTitle => 'देय तारीख़ से पहले याद पाएँ';
+
+  @override
+  String get notifPrePromptBody =>
+      'हिसाब आपके चुने समय पर सिर्फ़ आपके रिमाइंडर की सूचना भेजेगा। कोई विज्ञापन नहीं।';
+
+  @override
+  String reminderPaidSheetTitle(String title) {
+    return '$title चुका दिया?';
+  }
+
+  @override
+  String reminderPaidSheetBody(String amount) {
+    return '$amount का खर्च जोड़ें और इसे चुकाया हुआ मानें।';
+  }
+
+  @override
+  String get reminderAddEntryAndMark => 'एंट्री जोड़ें और चुकाया मानें';
+
+  @override
+  String get reminderJustMark => 'बस चुकाया मानें';
+
+  @override
+  String get reminderNew => 'नया रिमाइंडर';
+
+  @override
+  String get reminderEditTitle => 'रिमाइंडर बदलें';
+
+  @override
+  String get reminderKindBill => 'बिल';
+
+  @override
+  String get reminderKindEmi => 'ईएमआई';
+
+  @override
+  String get reminderKindCard => 'कार्ड बिल';
+
+  @override
+  String get reminderKindSubscription => 'सब्सक्रिप्शन';
+
+  @override
+  String get reminderKindInsurance => 'बीमा';
+
+  @override
+  String get reminderKindDocument => 'दस्तावेज़';
+
+  @override
+  String get reminderKindCustom => 'अन्य';
+
+  @override
+  String get reminderTitleLabel => 'शीर्षक';
+
+  @override
+  String get reminderTitleHint => 'जैसे बिजली का बिल';
+
+  @override
+  String get reminderTitleRequired => 'शीर्षक लिखें';
+
+  @override
+  String get reminderAmountOptional => 'राशि (वैकल्पिक)';
+
+  @override
+  String get reminderDueDate => 'देय तारीख़';
+
+  @override
+  String get reminderRepeatLabel => 'दोहराएँ';
+
+  @override
+  String get reminderRepeatOnce => 'एक बार';
+
+  @override
+  String get reminderRepeatWeekly => 'हर हफ़्ते';
+
+  @override
+  String get reminderRepeatMonthly => 'हर महीने';
+
+  @override
+  String get reminderRepeatQuarterly => 'हर 3 महीने';
+
+  @override
+  String get reminderRepeatYearly => 'हर साल';
+
+  @override
+  String get reminderNotifyLabel => 'याद दिलाएँ';
+
+  @override
+  String get reminderNotifyOnDay => 'उसी दिन';
+
+  @override
+  String reminderNotifyDaysBefore(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन पहले',
+      one: '1 दिन पहले',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reminderNotifyEnabled => 'सूचना भेजें';
+
+  @override
+  String reminderNotifyAt(String time) {
+    return '$time बजे';
+  }
+
+  @override
+  String reminderNotifyPreview(String when) {
+    return 'पहली सूचना: $when';
+  }
+
+  @override
+  String get reminderNoAlertsLeft =>
+      'सूचना के सारे समय निकल गए; ऐप में देय दिखेगा।';
+
+  @override
+  String get reminderPickDaysError => 'कम से कम एक दिन चुनें';
+
+  @override
+  String get reminderSave => 'रिमाइंडर सेव करें';
+
+  @override
+  String get reminderNoAccount => 'कोई खाता नहीं';
+
+  @override
+  String get reminderChannelName => 'बिल और देय तारीख़ रिमाइंडर';
+
+  @override
+  String get reminderChannelDescription =>
+      'बिल, ईएमआई, कार्ड बकाया और रिन्यूअल से पहले सूचना';
+
+  @override
+  String get reminderMarkPaid => 'चुकाया';
+
+  @override
+  String get reminderMarkDone => 'हो गया';
+
+  @override
+  String get reminderSnoozeOneDay => '1 दिन टालें';
+
+  @override
+  String get reminderDueToday => 'आज देय';
+
+  @override
+  String reminderDueInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन में देय',
+      one: 'कल देय',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reminderOverdueDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन से बकाया',
+      one: '1 दिन से बकाया',
+    );
+    return '$_temp0';
+  }
 }

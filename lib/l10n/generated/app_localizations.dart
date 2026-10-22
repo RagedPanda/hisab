@@ -3673,6 +3673,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This recurring entry was deleted'**
   String get recurringRuleMissing;
+
+  /// No description provided for @salaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary'**
+  String get salaryTitle;
+
+  /// No description provided for @salarySetUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up salary day'**
+  String get salarySetUp;
+
+  /// No description provided for @salaryIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Hisab adds your salary as a monthly income you confirm, and gently reminds you if it has not arrived.'**
+  String get salaryIntro;
+
+  /// No description provided for @salarySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} on day {day}'**
+  String salarySummary(String amount, int day);
+
+  /// No description provided for @salaryAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly salary'**
+  String get salaryAmount;
+
+  /// No description provided for @salaryAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Credited to'**
+  String get salaryAccount;
+
+  /// No description provided for @salaryAnyAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Any account'**
+  String get salaryAnyAccount;
+
+  /// No description provided for @salaryDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary day'**
+  String get salaryDay;
+
+  /// No description provided for @salaryShiftLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'On a weekend or holiday'**
+  String get salaryShiftLabel;
+
+  /// No description provided for @salaryShiftSameDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Same day'**
+  String get salaryShiftSameDay;
+
+  /// No description provided for @salaryShiftPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous working day'**
+  String get salaryShiftPrevious;
+
+  /// No description provided for @salaryShiftNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next working day'**
+  String get salaryShiftNext;
+
+  /// No description provided for @salaryHolidays.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank holidays'**
+  String get salaryHolidays;
+
+  /// No description provided for @salaryHolidaysHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped like weekends when the salary day moves'**
+  String get salaryHolidaysHelp;
+
+  /// No description provided for @salaryAddHoliday.
+  ///
+  /// In en, this message translates to:
+  /// **'Add holiday'**
+  String get salaryAddHoliday;
+
+  /// No description provided for @salaryReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me if it has not arrived'**
+  String get salaryReminder;
+
+  /// No description provided for @salaryReminderDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind after'**
+  String get salaryReminderDelay;
+
+  /// No description provided for @salaryDaysAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day after} other{{days} days after}}'**
+  String salaryDaysAfter(int days);
+
+  /// No description provided for @salaryAligned.
+  ///
+  /// In en, this message translates to:
+  /// **'Your month already starts on payday'**
+  String get salaryAligned;
+
+  /// No description provided for @salaryNotAligned.
+  ///
+  /// In en, this message translates to:
+  /// **'Your month starts on day {monthStart}, salary arrives on day {salaryDay}'**
+  String salaryNotAligned(int monthStart, int salaryDay);
+
+  /// No description provided for @salaryAlignTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start months on day {day}?'**
+  String salaryAlignTitle(int day);
+
+  /// No description provided for @salaryAlignMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Budgets and monthly totals will run from one salary to the next.'**
+  String get salaryAlignMessage;
+
+  /// No description provided for @salaryAlignAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Align'**
+  String get salaryAlignAction;
+
+  /// No description provided for @salaryRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove salary'**
+  String get salaryRemove;
+
+  /// No description provided for @salaryRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary removed'**
+  String get salaryRemoved;
+
+  /// No description provided for @salarySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary saved'**
+  String get salarySaved;
+
+  /// No description provided for @salaryExpectedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected {date}'**
+  String salaryExpectedOn(String date);
+
+  /// No description provided for @salaryReceivedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Received {date}'**
+  String salaryReceivedOn(String date);
+
+  /// No description provided for @salaryNotSeenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary not seen yet'**
+  String get salaryNotSeenTitle;
+
+  /// No description provided for @salaryNotSeenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It was expected on {date}. This clears by itself once it arrives.'**
+  String salaryNotSeenBody(String date);
+
+  /// No description provided for @salaryNotificationChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary reminders'**
+  String get salaryNotificationChannel;
+
+  /// No description provided for @salaryRuleName.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary'**
+  String get salaryRuleName;
 }
 
 class _AppLocalizationsDelegate

@@ -10,12 +10,18 @@ import '../data/repositories/entries_repository.dart';
 import '../data/repositories/groups_repository.dart';
 import '../data/repositories/project_fields_repository.dart';
 import '../data/repositories/projects_repository.dart';
+import '../data/repositories/reminders_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
 import '../data/sms/sms_ingest_service.dart';
 import '../domain/entries/entry_filter.dart';
 import '../domain/stats/dashboard_ledger.dart';
 import '../domain/stats/spend_series.dart';
 import 'dates.dart';
+import 'notifications/notification_gateway.dart';
+import 'notifications/notification_service.dart';
+import 'notifications/plugin_notification_gateway.dart';
+import 'notifications/reminder_alert_text.dart';
+import 'notifications/reminder_scheduler.dart';
 import 'settings.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -34,6 +40,7 @@ final budgetsRepositoryProvider = Provider((ref) => BudgetsRepository(ref.watch(
 final projectsRepositoryProvider = Provider((ref) => ProjectsRepository(ref.watch(databaseProvider)));
 final projectFieldsRepositoryProvider = Provider((ref) => ProjectFieldsRepository(ref.watch(databaseProvider)));
 final smsLogRepositoryProvider = Provider((ref) => SmsLogRepository(ref.watch(databaseProvider)));
+final remindersRepositoryProvider = Provider((ref) => RemindersRepository(ref.watch(databaseProvider)));
 
 class SettingsNotifier extends Notifier<AppSettings> {
   @override
@@ -142,3 +149,38 @@ final smsIngestServiceProvider = Provider((ref) => SmsIngestService(
     ));
 
 final backupServiceProvider = Provider((ref) => BackupService(ref.watch(databaseProvider)));
+
+// Reminders and notifications ------------------------------------------------
+
+/// Plugin access for [NotificationService]; tests override it with a fake.
+final notificationGatewayProvider = Provider<NotificationGateway>((ref) {
+  final localeCode = ref.watch(settingsProvider.select((settings) => settings.localeCode));
+  return PluginNotificationGateway(notificationSetupTexts(notificationLocalizations(localeCode)));
+});
+
+/// The single notification layer: schedule, cancel, rescheduleAll, permissions.
+final notificationServiceProvider = Provider((ref) {
+  final localeCode = ref.watch(settingsProvider.select((settings) => settings.localeCode));
+  final currencySymbol = ref.watch(settingsProvider.select((settings) => settings.currencySymbol));
+  final l10n = notificationLocalizations(localeCode);
+  return NotificationService(
+    ref.watch(notificationGatewayProvider),
+    buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, l10n, currencySymbol: currencySymbol),
+  );
+});
+
+/// Reminder writes that keep notifications in step; what features call.
+final reminderSchedulerProvider = Provider((ref) => ReminderScheduler(
+      reminders: ref.watch(remindersRepositoryProvider),
+      notifications: ref.watch(notificationServiceProvider),
+    ));
+
+/// Pending due reminders, earliest (overdue) first.
+final upcomingRemindersProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchUpcoming());
+
+/// Paid and skipped reminders, latest first.
+final reminderHistoryProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchHistory());
+
+/// Whether notifications and exact alarms are allowed; invalidate after asking.
+final notificationPermissionProvider = FutureProvider((ref) => ref.watch(notificationServiceProvider).checkPermission());
+

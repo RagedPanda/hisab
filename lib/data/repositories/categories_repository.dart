@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../core/ids.dart';
+import '../../domain/categories/category_packs.dart';
 import '../db/database.dart';
 
 /// A parent category with its children, as shown in pickers.
@@ -81,6 +82,32 @@ class CategoriesRepository {
         for (var i = 0; i < idsInOrder.length; i++) {
           await update(CategoriesCompanion(id: Value(idsInOrder[i]), sortOrder: Value(i)));
         }
+      });
+
+  /// Adds the categories of [pack] the user does not have yet. Seeds whose
+  /// key already exists are reused, never duplicated; categories the pack
+  /// created earlier and that were archived come back. Returns how many
+  /// categories were created.
+  Future<int> addPack(CategoryPack pack) => db.transaction(() async {
+        final existing = await (db.select(db.categories)..where((t) => t.deletedAt.isNull())).get();
+        final idBySeedKey = {
+          for (final category in existing)
+            if (category.seedKey != null) category.seedKey!: category.id,
+        };
+        final missing = missingPackItems(pack, idBySeedKey.keys.toSet());
+        var order = await _maxSortOrder();
+        for (final item in missing) {
+          final id = newId();
+          final parentId = item.parentKey == null ? null : idBySeedKey[item.parentKey];
+          await db.into(db.categories).insert(
+                seedCategoryRow(item.seed, id: id, parentId: parentId, order: ++order, packKey: pack.key),
+              );
+          idBySeedKey[item.seed.key] = id;
+        }
+        await (db.update(db.categories)
+              ..where((t) => t.packKey.equals(pack.key) & t.isArchived.equals(true) & t.deletedAt.isNull()))
+            .write(CategoriesCompanion(isArchived: const Value(false), updatedAt: Value(DateTime.now())));
+        return missing.length;
       });
 
   Future<int> _maxSortOrder() async {

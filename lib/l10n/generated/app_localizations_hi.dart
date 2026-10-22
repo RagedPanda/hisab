@@ -2069,4 +2069,34 @@ class AppLocalizationsHi extends AppLocalizations {
   String groupSummaryMemberShare(String name, String amount) {
     return '$name का हिस्सा: $amount';
   }
+
+  @override
+  String get byItemShared => 'साझा';
+
+  @override
+  String get byItemSharedHelp => 'जिनके पास कोई आइटम है, उनमें बराबर बँटेगा';
+
+  @override
+  String get byItemOnlyMe => 'सिर्फ़ मैं';
+
+  @override
+  String get byItemEveryone => 'सभी';
+
+  @override
+  String get byItemAddExtras => 'डिलीवरी, टैक्स या टिप';
+
+  @override
+  String get byItemHint => 'आइटम के हिसाब से बाँटने के लिए आइटम जोड़ें';
+
+  @override
+  String byItemSummary(String amount, int count, int percent) {
+    return '$amount · $count आइटम · $percent%';
+  }
+
+  @override
+  String get byItemClearTitle => 'आइटम का बँटवारा हट जाएगा';
+
+  @override
+  String get byItemClearBody =>
+      'आइटम बने रहेंगे, और हर आइटम फिर सब में बँटेगा।';
 }

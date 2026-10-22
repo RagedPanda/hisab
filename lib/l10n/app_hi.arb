@@ -594,5 +594,14 @@
   "groupCsvTotal": "कुल",
   "groupSummaryGroupTotal": "ग्रुप का कुल खर्च: {amount}",
   "groupSummaryYourShare": "आपका हिस्सा: {amount}",
-  "groupSummaryMemberShare": "{name} का हिस्सा: {amount}"
+  "groupSummaryMemberShare": "{name} का हिस्सा: {amount}",
+  "byItemShared": "साझा",
+  "byItemSharedHelp": "जिनके पास कोई आइटम है, उनमें बराबर बँटेगा",
+  "byItemOnlyMe": "सिर्फ़ मैं",
+  "byItemEveryone": "सभी",
+  "byItemAddExtras": "डिलीवरी, टैक्स या टिप",
+  "byItemHint": "आइटम के हिसाब से बाँटने के लिए आइटम जोड़ें",
+  "byItemSummary": "{amount} · {count} आइटम · {percent}%",
+  "byItemClearTitle": "आइटम का बँटवारा हट जाएगा",
+  "byItemClearBody": "आइटम बने रहेंगे, और हर आइटम फिर सब में बँटेगा।"
 }

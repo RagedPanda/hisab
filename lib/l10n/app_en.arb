@@ -701,5 +701,15 @@
   "groupSummaryYourShare": "Your share: {amount}",
   "@groupSummaryYourShare": {"placeholders": {"amount": {"type": "String"}}},
   "groupSummaryMemberShare": "{name}'s share: {amount}",
-  "@groupSummaryMemberShare": {"placeholders": {"name": {"type": "String"}, "amount": {"type": "String"}}}
+  "@groupSummaryMemberShare": {"placeholders": {"name": {"type": "String"}, "amount": {"type": "String"}}},
+  "byItemShared": "Shared",
+  "byItemSharedHelp": "Split among everyone with an item",
+  "byItemOnlyMe": "Only me",
+  "byItemEveryone": "Everyone",
+  "byItemAddExtras": "Delivery, tax or tip",
+  "byItemHint": "Add items to split by item",
+  "byItemSummary": "{amount} · {count, plural, =1{1 item} other{{count} items}} · {percent}%",
+  "@byItemSummary": {"placeholders": {"amount": {"type": "String"}, "count": {"type": "int"}, "percent": {"type": "int"}}},
+  "byItemClearTitle": "Item assignments will be cleared",
+  "byItemClearBody": "Items stay, and everyone shares each one again."
 }

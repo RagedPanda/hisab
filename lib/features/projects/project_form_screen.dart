@@ -9,16 +9,24 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
+import '../../domain/categories/category_packs.dart';
+import '../../domain/projects/project_templates.dart';
+import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import 'project_template_labels.dart';
 
 /// Create or edit a project: name, icon, colour, optional budget and dates,
-/// and notes. Creating opens the new project's detail screen.
+/// and notes. Creating from a template prefills it and offers the template's
+/// category pack. Creating opens the new project's detail screen.
 class ProjectFormScreen extends ConsumerStatefulWidget {
-  const ProjectFormScreen({super.key, this.projectId});
+  const ProjectFormScreen({super.key, this.projectId, this.templateKey});
 
   /// Null to create a new project.
   final String? projectId;
+
+  /// Template to start a new project from; null (or unknown) for blank.
+  final String? templateKey;
 
   @override
   ConsumerState<ProjectFormScreen> createState() => _ProjectFormScreenState();
@@ -33,13 +41,16 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   bool _loaded = false;
+  bool _addCategories = false;
 
   bool get _isEditing => widget.projectId != null;
+
+  ProjectTemplate? get _template => _isEditing ? null : templateByKey(widget.templateKey);
 
   @override
   void initState() {
     super.initState();
-    _load();
+    Future.microtask(_load);
   }
 
   Future<void> _load() async {
@@ -56,7 +67,14 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
         _endDate = project.endDate;
       }
     }
-    if (mounted) setState(() => _loaded = true);
+    if (!mounted) return;
+    final template = _template;
+    if (template != null) {
+      _nameController.text = templateName(context.l10n, template);
+      _icon = template.icon;
+      _color = template.color;
+    }
+    setState(() => _loaded = true);
   }
 
   @override
@@ -150,6 +168,12 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                       ],
                     ),
                   ),
+                  if (_template case final template?)
+                    _SuggestedCategories(
+                      pack: template.pack,
+                      selected: _addCategories,
+                      onChanged: (value) => setState(() => _addCategories = value),
+                    ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _notesController,
@@ -193,7 +217,20 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
     final notes = _notesController.text.trim();
     final id = widget.projectId;
     if (id == null) {
-      final newId = await repo.create(name: name, icon: _icon, color: _color, budgetMinor: budgetMinor, startDate: _startDate, endDate: _endDate, notes: notes);
+      final template = _template;
+      final newId = await repo.create(
+        name: name,
+        icon: _icon,
+        color: _color,
+        templateKey: template?.key,
+        budgetMinor: budgetMinor,
+        startDate: _startDate,
+        endDate: _endDate,
+        notes: notes,
+      );
+      if (template != null && _addCategories) {
+        await ref.read(categoriesRepositoryProvider).addPack(template.pack);
+      }
       if (mounted) context.pushReplacement('/projects/$newId');
     } else {
       await repo.update(
@@ -229,4 +266,65 @@ class _DateTile extends StatelessWidget {
         onTap: onPick,
         trailing: onClear == null ? null : IconButton(tooltip: context.l10n.remove, icon: const Icon(Icons.close), onPressed: onClear),
       );
+}
+
+/// Opt-in for a template's category pack, with a preview of what it adds.
+class _SuggestedCategories extends ConsumerWidget {
+  const _SuggestedCategories({required this.pack, required this.selected, required this.onChanged});
+  final CategoryPack pack;
+  final bool selected;
+  final ValueChanged<bool> onChanged;
+
+  static const _previewCount = 8;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context);
+    final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
+    final existingKeys = {for (final category in categories) ?category.seedKey};
+    final plan = planPack(pack, existingKeys);
+    final missing = plan.where((item) => !item.exists).toList();
+    final reusedCount = plan.length - missing.length;
+    final summary = [
+      if (missing.isNotEmpty) l10n.suggestedCategoriesNew(missing.length),
+      if (reusedCount > 0) l10n.suggestedCategoriesReused(reusedCount),
+    ].join(' · ');
+    final hidden = missing.length - _previewCount;
+    return Card(
+      margin: const EdgeInsets.only(top: 16),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CheckboxListTile(
+              key: const ValueKey('project.addSuggestedCategories'),
+              value: missing.isNotEmpty && selected,
+              onChanged: missing.isEmpty ? null : (value) => onChanged(value ?? false),
+              title: Text(l10n.addSuggestedCategories),
+              subtitle: Text(missing.isEmpty ? l10n.suggestedCategoriesAllPresent : summary),
+            ),
+            if (missing.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final item in missing.take(_previewCount))
+                      Chip(
+                        avatar: Icon(appIcons[item.seed.icon], size: 16, color: Color(item.seed.color)),
+                        label: Text(seedDisplayName(item.seed, locale)),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    if (hidden > 0) Chip(label: Text(l10n.moreCount(hidden)), visualDensity: VisualDensity.compact),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }

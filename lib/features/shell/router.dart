@@ -10,6 +10,7 @@ import '../groups/group_detail_screen.dart';
 import '../groups/groups_screen.dart';
 import '../projects/project_detail_screen.dart';
 import '../projects/project_form_screen.dart';
+import '../projects/project_templates_screen.dart';
 import '../projects/projects_screen.dart';
 import '../settings/settings_screen.dart';
 import '../sms/sms_screen.dart';
@@ -58,7 +59,12 @@ final appRouter = GoRouter(
       parentNavigatorKey: _rootKey,
       builder: (_, _) => const ProjectsScreen(),
       routes: [
-        GoRoute(path: 'new', parentNavigatorKey: _rootKey, builder: (_, _) => const ProjectFormScreen()),
+        GoRoute(path: 'new', parentNavigatorKey: _rootKey, builder: (_, _) => const ProjectTemplatesScreen()),
+        GoRoute(
+          path: 'new/:template',
+          parentNavigatorKey: _rootKey,
+          builder: (_, state) => ProjectFormScreen(templateKey: state.pathParameters['template']),
+        ),
         GoRoute(
           path: ':id',
           parentNavigatorKey: _rootKey,

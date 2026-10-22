@@ -357,6 +357,22 @@
   "sinceDate": "{date} से",
   "untilDate": "{date} तक",
 
+  "startFromTemplate": "टेम्पलेट से शुरू करें",
+  "blankProjectHint": "नाम दें और कुछ भी ट्रैक करें",
+  "templateVehicle": "वाहन",
+  "templateVehicleHint": "पेट्रोल, सर्विस, बीमा और प्रति किमी खर्च",
+  "templateConstruction": "घर निर्माण",
+  "templateConstructionHint": "सामग्री, मज़दूरी, चरण और प्रति वर्ग फ़ुट खर्च",
+  "templateRenovation": "मरम्मत / रिनोवेशन",
+  "templateRenovationHint": "कमरेवार खर्च, सामान और कारीगर",
+  "templateTrip": "यात्रा",
+  "templateTripHint": "सफ़र, ठहरना, खाना और घूमना",
+  "templateWedding": "शादी",
+  "templateWeddingHint": "वेन्यू, खानपान, कपड़े, वेंडर और शगुन",
+  "addSuggestedCategories": "सुझाई गई श्रेणियाँ जोड़ें",
+  "suggestedCategoriesNew": "{count, plural, =1{1 नई श्रेणी} other{{count} नई श्रेणियाँ}}",
+  "suggestedCategoriesReused": "{count} पहले से आपकी सूची में",
+  "suggestedCategoriesAllPresent": "सुझाई गई सभी श्रेणियाँ पहले से आपकी सूची में हैं",
   "today": "आज",
   "yesterday": "कल"
 }

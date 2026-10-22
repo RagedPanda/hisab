@@ -2210,6 +2210,102 @@ abstract class AppLocalizations {
   /// **'Until {date}'**
   String untilDate(String date);
 
+  /// No description provided for @startFromTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from a template'**
+  String get startFromTemplate;
+
+  /// No description provided for @blankProjectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Name it and track anything'**
+  String get blankProjectHint;
+
+  /// No description provided for @templateVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get templateVehicle;
+
+  /// No description provided for @templateVehicleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel, service, insurance and cost per km'**
+  String get templateVehicleHint;
+
+  /// No description provided for @templateConstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Home construction'**
+  String get templateConstruction;
+
+  /// No description provided for @templateConstructionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Materials, labour, stages and cost per sq ft'**
+  String get templateConstructionHint;
+
+  /// No description provided for @templateRenovation.
+  ///
+  /// In en, this message translates to:
+  /// **'Renovation'**
+  String get templateRenovation;
+
+  /// No description provided for @templateRenovationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Room by room, materials and workers'**
+  String get templateRenovationHint;
+
+  /// No description provided for @templateTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip'**
+  String get templateTrip;
+
+  /// No description provided for @templateTripHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel, stay, food and sightseeing'**
+  String get templateTripHint;
+
+  /// No description provided for @templateWedding.
+  ///
+  /// In en, this message translates to:
+  /// **'Wedding'**
+  String get templateWedding;
+
+  /// No description provided for @templateWeddingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Venue, catering, outfits, vendors and shagun'**
+  String get templateWeddingHint;
+
+  /// No description provided for @addSuggestedCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Add suggested categories'**
+  String get addSuggestedCategories;
+
+  /// No description provided for @suggestedCategoriesNew.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 new category} other{{count} new categories}}'**
+  String suggestedCategoriesNew(int count);
+
+  /// No description provided for @suggestedCategoriesReused.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} already in your list'**
+  String suggestedCategoriesReused(int count);
+
+  /// No description provided for @suggestedCategoriesAllPresent.
+  ///
+  /// In en, this message translates to:
+  /// **'All suggested categories are already in your list'**
+  String get suggestedCategoriesAllPresent;
+
   /// No description provided for @today.
   ///
   /// In en, this message translates to:

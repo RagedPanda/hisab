@@ -27,6 +27,10 @@ String categoryDisplayName(Category category, Locale locale) {
   return localizedCategoryNames[locale.languageCode]?[seedKey] ?? category.name;
 }
 
+/// Display name for a catalog or pack seed that may not be in the database yet.
+String seedDisplayName(CategorySeed seed, Locale locale) =>
+    localizedCategoryNames[locale.languageCode]?[seed.key] ?? seed.name;
+
 extension CategoryDisplayName on Category {
   String displayName(BuildContext context) => categoryDisplayName(this, Localizations.localeOf(context));
 }

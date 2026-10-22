@@ -247,6 +247,7 @@ Future<void> showAddFieldSheet(BuildContext context, WidgetRef ref, {required St
                 controller: nameController,
                 autofocus: true,
                 textCapitalization: TextCapitalization.sentences,
+                onChanged: (_) => error == NewFieldError.missingName ? setSheetState(() => error = null) : null,
                 decoration: InputDecoration(labelText: l10n.fieldName, errorText: error == NewFieldError.missingName ? l10n.errorFieldName : null),
               ),
               const SizedBox(height: 12),
@@ -266,6 +267,7 @@ Future<void> showAddFieldSheet(BuildContext context, WidgetRef ref, {required St
                 TextField(
                   key: const ValueKey('addField.options'),
                   controller: optionsController,
+                  onChanged: (_) => error == NewFieldError.missingOptions ? setSheetState(() => error = null) : null,
                   decoration: InputDecoration(labelText: l10n.fieldOptions, errorText: error == NewFieldError.missingOptions ? l10n.errorFieldOptions : null),
                 ),
               ],

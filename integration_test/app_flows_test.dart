@@ -904,6 +904,7 @@ void main() {
     await tapFinder(tester, find.byKey(const ValueKey('addField.save')));
     expect(find.text('Give the field a name'), findsOneWidget);
     await enterText(tester, find.byKey(const ValueKey('addField.name')), 'Floor');
+    expect(find.text('Give the field a name'), findsNothing);
     await tapFinder(tester, find.byKey(const ValueKey('addField.type')));
     await tapText(tester, 'Choice', last: true);
     await enterText(tester, find.byKey(const ValueKey('addField.options')), 'Ground, First');

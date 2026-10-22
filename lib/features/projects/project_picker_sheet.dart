@@ -20,6 +20,7 @@ class ProjectChoice {
 Future<ProjectChoice?> showProjectPicker(BuildContext context, {String? selectedId, bool includeCompleted = false, String? noneLabel}) =>
     showModalBottomSheet<ProjectChoice>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,

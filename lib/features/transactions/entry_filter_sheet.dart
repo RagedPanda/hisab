@@ -18,6 +18,7 @@ import '../shell/widgets/common.dart';
 Future<EntryFilter?> showEntryFilterSheet(BuildContext context, {required EntryFilter initial, required String categoryKind}) =>
     showModalBottomSheet<EntryFilter>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,

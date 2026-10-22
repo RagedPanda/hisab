@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The reminder notification icon is referenced only by name from Dart
+     ("@drawable/ic_notification"); keep it from resource shrinking. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification" />

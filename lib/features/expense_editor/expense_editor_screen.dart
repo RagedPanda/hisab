@@ -27,6 +27,7 @@ import '../projects/project_field_inputs.dart';
 import '../projects/project_picker_sheet.dart';
 import '../shell/widgets/common.dart';
 import '../split/split_editor.dart';
+import 'calculator_sheet.dart';
 import 'item_row.dart';
 
 class ExpenseEditorScreen extends ConsumerStatefulWidget {
@@ -45,6 +46,7 @@ class ExpenseEditorScreen extends ConsumerStatefulWidget {
 
 class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   final _amountController = TextEditingController();
+  final _amountFocus = FocusNode();
   final _noteController = TextEditingController();
   final _payeeController = TextEditingController();
 
@@ -77,6 +79,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   bool get _isEditing => widget.entryId != null;
   bool get _hasItems => _items.isNotEmpty;
+
+  /// "Save & add another" is offered for new entries typed by hand; SMS
+  /// entries and edits close the editor on save.
+  bool get _canAddAnother => !_isEditing && widget.smsId == null && _source != 'sms';
 
   @override
   void initState() {
@@ -298,6 +304,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           const SizedBox(height: 16),
           TextField(
             controller: _amountController,
+            focusNode: _amountFocus,
             readOnly: _hasItems,
             autofocus: !_isEditing && !_hasItems,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -308,6 +315,14 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               hintText: '0',
               helperText: _hasItems ? l10n.totalOfItems(_items.length) : null,
               errorText: _hasItems ? null : amountErrorText(context, _amountController.text),
+              suffixIcon: _hasItems
+                  ? null
+                  : IconButton(
+                      key: const ValueKey('editor.calculator'),
+                      tooltip: l10n.calculator,
+                      icon: const Icon(Icons.calculate_outlined),
+                      onPressed: () => _openCalculator(symbol),
+                    ),
             ),
             onChanged: (_) => setState(() {}),
           ),
@@ -388,12 +403,58 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         ),
       ),
       bottomNavigationBar: BottomActionBar(
-        child: FilledButton(
-          onPressed: _saving ? null : _save,
-          child: Text(_saving ? l10n.saving : l10n.saveAmount(formatMinor(_amountMinor, symbol: symbol))),
-        ),
+        child: _saveButtons(l10n, symbol),
       ),
     );
+  }
+
+  Widget _saveButtons(AppLocalizations l10n, String symbol) {
+    final save = FilledButton(
+      key: const ValueKey('editor.save'),
+      onPressed: _saving ? null : _save,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(_saving ? l10n.saving : l10n.saveAmount(formatMinor(_amountMinor, symbol: symbol))),
+      ),
+    );
+    if (!_canAddAnother) return save;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            key: const ValueKey('editor.saveAndAddAnother'),
+            onPressed: _saving ? null : () => _save(addAnother: true),
+            child: FittedBox(fit: BoxFit.scaleDown, child: Text(l10n.saveAndAddAnother)),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(child: save),
+      ],
+    );
+  }
+
+  Future<void> _openCalculator(String symbol) async {
+    FocusScope.of(context).unfocus();
+    final minor = await showCalculatorSheet(context, initialAmountText: _amountController.text, symbol: symbol);
+    if (minor == null || !mounted) return;
+    setState(() => _amountController.text = amountInputText(minor));
+  }
+
+  /// Clears the form for the next entry, keeping the kind, account, project,
+  /// date and (for groups) the payer and split method.
+  void _startNextEntry() {
+    setState(() {
+      _amountController.clear();
+      _noteController.clear();
+      _payeeController.clear();
+      _category = null;
+      _items = [];
+      _fieldValues = const {};
+      if (_groupId != null) _splitInputs = defaultSplitInputs(_members, _splitMethod);
+      _saving = false;
+    });
+    _amountFocus.requestFocus();
   }
 
   Widget _accountChips(List<Account> accounts, String? selected, ValueChanged<String?> onPick) {
@@ -494,7 +555,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     );
   }
 
-  Future<void> _save() async {
+  Future<void> _save({bool addAnother = false}) async {
     final amount = _amountMinor;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
@@ -574,7 +635,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     if (!_isEditing && _groupId == null && _kind != 'transfer') ref.read(lastProjectIdProvider.notifier).set(projectId);
     await _applyBalanceChange(amount);
     if (_smsId != null) await ref.read(smsLogRepositoryProvider).setStatus(_smsId!, 'added', entryId: id);
-    if (mounted) popOrGoHome(context);
+    if (!mounted) return;
+    if (addAnother) {
+      _startNextEntry();
+      messenger.showSnackBar(SnackBar(content: Text(l10n.savedAddAnother)));
+    } else {
+      popOrGoHome(context);
+    }
   }
 
   /// Manual entries move the account's running balance; SMS and group
@@ -595,6 +662,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   @override
   void dispose() {
     _amountController.dispose();
+    _amountFocus.dispose();
     _noteController.dispose();
     _payeeController.dispose();
     super.dispose();

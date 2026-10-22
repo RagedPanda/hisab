@@ -2300,6 +2300,408 @@ abstract class AppLocalizations {
   /// **'All suggested categories are already in your list'**
   String get suggestedCategoriesAllPresent;
 
+  /// No description provided for @projectDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Project details'**
+  String get projectDetails;
+
+  /// No description provided for @fieldOdometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer'**
+  String get fieldOdometer;
+
+  /// No description provided for @fieldLitres.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel litres'**
+  String get fieldLitres;
+
+  /// No description provided for @fieldBuiltUpArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Built-up area'**
+  String get fieldBuiltUpArea;
+
+  /// No description provided for @fieldStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage'**
+  String get fieldStage;
+
+  /// No description provided for @fieldQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get fieldQuantity;
+
+  /// No description provided for @fieldRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Room'**
+  String get fieldRoom;
+
+  /// No description provided for @fieldTravellers.
+  ///
+  /// In en, this message translates to:
+  /// **'Travellers'**
+  String get fieldTravellers;
+
+  /// No description provided for @fieldEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Event'**
+  String get fieldEvent;
+
+  /// No description provided for @fieldVendor.
+  ///
+  /// In en, this message translates to:
+  /// **'Vendor'**
+  String get fieldVendor;
+
+  /// No description provided for @stageFoundation.
+  ///
+  /// In en, this message translates to:
+  /// **'Foundation'**
+  String get stageFoundation;
+
+  /// No description provided for @stagePlinth.
+  ///
+  /// In en, this message translates to:
+  /// **'Plinth'**
+  String get stagePlinth;
+
+  /// No description provided for @stageStructure.
+  ///
+  /// In en, this message translates to:
+  /// **'Structure'**
+  String get stageStructure;
+
+  /// No description provided for @stageBrickwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Brickwork'**
+  String get stageBrickwork;
+
+  /// No description provided for @stageRoofSlab.
+  ///
+  /// In en, this message translates to:
+  /// **'Roof slab'**
+  String get stageRoofSlab;
+
+  /// No description provided for @stagePlaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Plaster'**
+  String get stagePlaster;
+
+  /// No description provided for @stageElectricalPlumbing.
+  ///
+  /// In en, this message translates to:
+  /// **'Electrical & plumbing'**
+  String get stageElectricalPlumbing;
+
+  /// No description provided for @stageFlooring.
+  ///
+  /// In en, this message translates to:
+  /// **'Flooring'**
+  String get stageFlooring;
+
+  /// No description provided for @stageDoorsWindows.
+  ///
+  /// In en, this message translates to:
+  /// **'Doors & windows'**
+  String get stageDoorsWindows;
+
+  /// No description provided for @stagePainting.
+  ///
+  /// In en, this message translates to:
+  /// **'Painting'**
+  String get stagePainting;
+
+  /// No description provided for @stageFinishing.
+  ///
+  /// In en, this message translates to:
+  /// **'Finishing'**
+  String get stageFinishing;
+
+  /// No description provided for @roomKitchen.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen'**
+  String get roomKitchen;
+
+  /// No description provided for @roomBathroom.
+  ///
+  /// In en, this message translates to:
+  /// **'Bathroom'**
+  String get roomBathroom;
+
+  /// No description provided for @roomBedroom.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedroom'**
+  String get roomBedroom;
+
+  /// No description provided for @roomLivingRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Living room'**
+  String get roomLivingRoom;
+
+  /// No description provided for @roomDining.
+  ///
+  /// In en, this message translates to:
+  /// **'Dining'**
+  String get roomDining;
+
+  /// No description provided for @roomBalcony.
+  ///
+  /// In en, this message translates to:
+  /// **'Balcony'**
+  String get roomBalcony;
+
+  /// No description provided for @roomWholeHouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole house'**
+  String get roomWholeHouse;
+
+  /// No description provided for @eventRoka.
+  ///
+  /// In en, this message translates to:
+  /// **'Roka'**
+  String get eventRoka;
+
+  /// No description provided for @eventEngagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Engagement'**
+  String get eventEngagement;
+
+  /// No description provided for @eventHaldi.
+  ///
+  /// In en, this message translates to:
+  /// **'Haldi'**
+  String get eventHaldi;
+
+  /// No description provided for @eventMehndi.
+  ///
+  /// In en, this message translates to:
+  /// **'Mehndi'**
+  String get eventMehndi;
+
+  /// No description provided for @eventSangeet.
+  ///
+  /// In en, this message translates to:
+  /// **'Sangeet'**
+  String get eventSangeet;
+
+  /// No description provided for @eventWedding.
+  ///
+  /// In en, this message translates to:
+  /// **'Wedding'**
+  String get eventWedding;
+
+  /// No description provided for @eventReception.
+  ///
+  /// In en, this message translates to:
+  /// **'Reception'**
+  String get eventReception;
+
+  /// No description provided for @projectMetrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Metrics'**
+  String get projectMetrics;
+
+  /// No description provided for @costPerKm.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost per km'**
+  String get costPerKm;
+
+  /// No description provided for @kmDriven.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km driven'**
+  String kmDriven(String km);
+
+  /// No description provided for @fuelBought.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel bought'**
+  String get fuelBought;
+
+  /// No description provided for @litresAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'{litres} L for {amount}'**
+  String litresAmount(String litres, String amount);
+
+  /// No description provided for @pricePerLitre.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per litre'**
+  String get pricePerLitre;
+
+  /// No description provided for @costPerSqFt.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost per sq ft'**
+  String get costPerSqFt;
+
+  /// No description provided for @areaOf.
+  ///
+  /// In en, this message translates to:
+  /// **'over {area} sq ft'**
+  String areaOf(String area);
+
+  /// No description provided for @costPerTraveller.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost per traveller'**
+  String get costPerTraveller;
+
+  /// No description provided for @travellersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 traveller} other{{count} travellers}}'**
+  String travellersCount(int count);
+
+  /// No description provided for @spendingByField.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending by {field}'**
+  String spendingByField(String field);
+
+  /// No description provided for @notPicked.
+  ///
+  /// In en, this message translates to:
+  /// **'Not picked'**
+  String get notPicked;
+
+  /// No description provided for @metricsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in project details on entries (odometer, stage, room…) to see metrics here.'**
+  String get metricsHint;
+
+  /// No description provided for @projectFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Fields'**
+  String get projectFields;
+
+  /// No description provided for @addField.
+  ///
+  /// In en, this message translates to:
+  /// **'Add field'**
+  String get addField;
+
+  /// No description provided for @fieldName.
+  ///
+  /// In en, this message translates to:
+  /// **'Field name'**
+  String get fieldName;
+
+  /// No description provided for @fieldType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get fieldType;
+
+  /// No description provided for @fieldTypeNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get fieldTypeNumber;
+
+  /// No description provided for @fieldTypeText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get fieldTypeText;
+
+  /// No description provided for @fieldTypeDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get fieldTypeDate;
+
+  /// No description provided for @fieldTypeChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Choice'**
+  String get fieldTypeChoice;
+
+  /// No description provided for @fieldTypeUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount with unit'**
+  String get fieldTypeUnit;
+
+  /// No description provided for @fieldUnitOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit (optional)'**
+  String get fieldUnitOptional;
+
+  /// No description provided for @fieldOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Options, separated by commas'**
+  String get fieldOptions;
+
+  /// No description provided for @fieldOnEachEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Asked on each entry'**
+  String get fieldOnEachEntry;
+
+  /// No description provided for @fieldOncePerProject.
+  ///
+  /// In en, this message translates to:
+  /// **'One value for the project'**
+  String get fieldOncePerProject;
+
+  /// No description provided for @fieldDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Field deleted'**
+  String get fieldDeleted;
+
+  /// No description provided for @deleteField.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete field'**
+  String get deleteField;
+
+  /// No description provided for @setValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Set value'**
+  String get setValue;
+
+  /// No description provided for @errorFieldName.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the field a name'**
+  String get errorFieldName;
+
+  /// No description provided for @errorFieldOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one option'**
+  String get errorFieldOptions;
+
+  /// No description provided for @clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
+
   /// No description provided for @today.
   ///
   /// In en, this message translates to:

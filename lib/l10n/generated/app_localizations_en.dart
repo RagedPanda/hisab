@@ -1321,6 +1321,224 @@ class AppLocalizationsEn extends AppLocalizations {
       'All suggested categories are already in your list';
 
   @override
+  String get projectDetails => 'Project details';
+
+  @override
+  String get fieldOdometer => 'Odometer';
+
+  @override
+  String get fieldLitres => 'Fuel litres';
+
+  @override
+  String get fieldBuiltUpArea => 'Built-up area';
+
+  @override
+  String get fieldStage => 'Stage';
+
+  @override
+  String get fieldQuantity => 'Quantity';
+
+  @override
+  String get fieldRoom => 'Room';
+
+  @override
+  String get fieldTravellers => 'Travellers';
+
+  @override
+  String get fieldEvent => 'Event';
+
+  @override
+  String get fieldVendor => 'Vendor';
+
+  @override
+  String get stageFoundation => 'Foundation';
+
+  @override
+  String get stagePlinth => 'Plinth';
+
+  @override
+  String get stageStructure => 'Structure';
+
+  @override
+  String get stageBrickwork => 'Brickwork';
+
+  @override
+  String get stageRoofSlab => 'Roof slab';
+
+  @override
+  String get stagePlaster => 'Plaster';
+
+  @override
+  String get stageElectricalPlumbing => 'Electrical & plumbing';
+
+  @override
+  String get stageFlooring => 'Flooring';
+
+  @override
+  String get stageDoorsWindows => 'Doors & windows';
+
+  @override
+  String get stagePainting => 'Painting';
+
+  @override
+  String get stageFinishing => 'Finishing';
+
+  @override
+  String get roomKitchen => 'Kitchen';
+
+  @override
+  String get roomBathroom => 'Bathroom';
+
+  @override
+  String get roomBedroom => 'Bedroom';
+
+  @override
+  String get roomLivingRoom => 'Living room';
+
+  @override
+  String get roomDining => 'Dining';
+
+  @override
+  String get roomBalcony => 'Balcony';
+
+  @override
+  String get roomWholeHouse => 'Whole house';
+
+  @override
+  String get eventRoka => 'Roka';
+
+  @override
+  String get eventEngagement => 'Engagement';
+
+  @override
+  String get eventHaldi => 'Haldi';
+
+  @override
+  String get eventMehndi => 'Mehndi';
+
+  @override
+  String get eventSangeet => 'Sangeet';
+
+  @override
+  String get eventWedding => 'Wedding';
+
+  @override
+  String get eventReception => 'Reception';
+
+  @override
+  String get projectMetrics => 'Metrics';
+
+  @override
+  String get costPerKm => 'Cost per km';
+
+  @override
+  String kmDriven(String km) {
+    return '$km km driven';
+  }
+
+  @override
+  String get fuelBought => 'Fuel bought';
+
+  @override
+  String litresAmount(String litres, String amount) {
+    return '$litres L for $amount';
+  }
+
+  @override
+  String get pricePerLitre => 'Price per litre';
+
+  @override
+  String get costPerSqFt => 'Cost per sq ft';
+
+  @override
+  String areaOf(String area) {
+    return 'over $area sq ft';
+  }
+
+  @override
+  String get costPerTraveller => 'Cost per traveller';
+
+  @override
+  String travellersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travellers',
+      one: '1 traveller',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String spendingByField(String field) {
+    return 'Spending by $field';
+  }
+
+  @override
+  String get notPicked => 'Not picked';
+
+  @override
+  String get metricsHint =>
+      'Fill in project details on entries (odometer, stage, room…) to see metrics here.';
+
+  @override
+  String get projectFields => 'Fields';
+
+  @override
+  String get addField => 'Add field';
+
+  @override
+  String get fieldName => 'Field name';
+
+  @override
+  String get fieldType => 'Type';
+
+  @override
+  String get fieldTypeNumber => 'Number';
+
+  @override
+  String get fieldTypeText => 'Text';
+
+  @override
+  String get fieldTypeDate => 'Date';
+
+  @override
+  String get fieldTypeChoice => 'Choice';
+
+  @override
+  String get fieldTypeUnit => 'Amount with unit';
+
+  @override
+  String get fieldUnitOptional => 'Unit (optional)';
+
+  @override
+  String get fieldOptions => 'Options, separated by commas';
+
+  @override
+  String get fieldOnEachEntry => 'Asked on each entry';
+
+  @override
+  String get fieldOncePerProject => 'One value for the project';
+
+  @override
+  String get fieldDeleted => 'Field deleted';
+
+  @override
+  String get deleteField => 'Delete field';
+
+  @override
+  String get setValue => 'Set value';
+
+  @override
+  String get errorFieldName => 'Give the field a name';
+
+  @override
+  String get errorFieldOptions => 'Add at least one option';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
   String get today => 'Today';
 
   @override

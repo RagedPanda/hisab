@@ -31,6 +31,8 @@ class BackupService {
       'budgets': await dump(db.budgets),
       'smsLog': await dump(db.smsLog),
       'projects': await dump(db.projects),
+      'projectFields': await dump(db.projectFields),
+      'entryFieldValues': await dump(db.entryFieldValues),
     };
   }
 
@@ -85,6 +87,8 @@ class BackupService {
       await restore(db.budgets, 'budgets', Budget.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.smsLog, 'smsLog', SmsLogData.fromJson, (r) => r.id, (_) => null);
       await restore(db.projects, 'projects', Project.fromJson, (r) => r.id, (r) => r.updatedAt);
+      await restore(db.projectFields, 'projectFields', ProjectField.fromJson, (r) => r.id, (r) => r.updatedAt);
+      await restore(db.entryFieldValues, 'entryFieldValues', EntryFieldValue.fromJson, (r) => r.id, (r) => r.updatedAt);
     });
     return written;
   }

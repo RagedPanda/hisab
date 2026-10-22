@@ -832,4 +832,104 @@ void main() {
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
     await settle(tester, 6);
   });
+
+  testWidgets('18 project fields: vehicle cost per km and per litre, construction per sq ft and by stage, custom field, Hindi', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    await pumpApp(tester, fresh);
+    Finder metric(String key, String value) => find.descendant(of: find.byKey(ValueKey('metric.$key')), matching: find.text(value));
+
+    Future<void> addVehicleEntry(String amount, String odometer, String litres) async {
+      await tapText(tester, 'Add entry');
+      await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
+      await enterText(tester, _amountField(), amount);
+      await scrollTo(tester, find.text('Project details'));
+      await scrollTo(tester, find.byKey(const ValueKey('field.litres')));
+      await enterText(tester, find.byKey(const ValueKey('field.odometer')), odometer);
+      await enterText(tester, find.byKey(const ValueKey('field.litres')), litres);
+    }
+
+    await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Projects'));
+    await tapText(tester, 'Projects');
+    await tapText(tester, 'Start a project');
+    await tapText(tester, 'Vehicle');
+    await tapFinder(tester, _filled('Save'), frames: 12);
+    expect(find.text('Fill in project details on entries (odometer, stage, room…) to see metrics here.'), findsOneWidget);
+
+    await addVehicleEntry('2000', '10000', '20');
+    await shoot(tester, 'project_entry_fields');
+    await _saveEntry(tester, formatMinor(200000));
+    await addVehicleEntry('2000', '11000', '20');
+    await _saveEntry(tester, formatMinor(200000));
+    await waitFor(tester, find.byKey(const ValueKey('metric.costPerKm')));
+    expect(metric('costPerKm', formatMinor(200)), findsOneWidget, reason: '₹2000 after the first fill over 1000 km');
+    expect(find.text('1000 km driven'), findsOneWidget);
+    expect(metric('perLitre', formatMinor(10000)), findsOneWidget, reason: '₹4000 over 40 L');
+    await shoot(tester, 'project_metrics_vehicle');
+    final values = await fresh.db.select(fresh.db.entryFieldValues).get();
+    expect(values.where((value) => value.fieldKey == 'odometer').map((value) => value.numberValue), containsAll([10000.0, 11000.0]));
+
+    await goBack(tester);
+    await tapText(tester, 'New project');
+    await tapText(tester, 'Home construction');
+    await scrollTo(tester, find.byKey(const ValueKey('project.addSuggestedCategories')));
+    await tapFinder(tester, find.byKey(const ValueKey('project.addSuggestedCategories')));
+    await tapFinder(tester, _filled('Save'), frames: 12);
+    await scrollTo(tester, find.byKey(const ValueKey('projectField.built_up_area')));
+    expect(find.descendant(of: find.byKey(const ValueKey('projectField.built_up_area')), matching: find.text('Not set')), findsOneWidget);
+    await tapFinder(tester, find.byKey(const ValueKey('projectField.built_up_area')));
+    await enterText(tester, _dialogField(), '1000');
+    await tapFinder(tester, _filled('Save').last, frames: 10);
+    expect(find.text('1000 sq ft'), findsOneWidget);
+
+    await tapText(tester, 'Add entry');
+    await _pickCategory(tester, 'cement', 'Cement');
+    await enterText(tester, _amountField(), '50000');
+    await scrollTo(tester, _chip('Foundation'));
+    await tapFinder(tester, _chip('Foundation'));
+    await enterText(tester, find.byKey(const ValueKey('field.quantity')), '100');
+    await _saveEntry(tester, formatMinor(5000000));
+    await waitFor(tester, find.byKey(const ValueKey('metric.perSqFt')));
+    expect(metric('perSqFt', formatMinor(5000)), findsOneWidget, reason: '₹50,000 over 1000 sq ft');
+    await scrollTo(tester, find.text('Spending by Stage'));
+    expect(find.text('Foundation'), findsOneWidget);
+    await shoot(tester, 'project_metrics_construction');
+    final quantity = (await fresh.db.select(fresh.db.entryFieldValues).get()).firstWhere((value) => value.fieldKey == 'quantity');
+    expect((quantity.numberValue, quantity.textValue), (100.0, 'bag'));
+
+    await scrollTo(tester, find.byKey(const ValueKey('project.addField')));
+    await tapFinder(tester, find.byKey(const ValueKey('project.addField')));
+    await tapFinder(tester, find.byKey(const ValueKey('addField.save')));
+    expect(find.text('Give the field a name'), findsOneWidget);
+    await enterText(tester, find.byKey(const ValueKey('addField.name')), 'Floor');
+    expect(find.text('Give the field a name'), findsNothing);
+    await tapFinder(tester, find.byKey(const ValueKey('addField.type')));
+    await tapText(tester, 'Choice', last: true);
+    await enterText(tester, find.byKey(const ValueKey('addField.options')), 'Ground, First');
+    await shoot(tester, 'project_add_field');
+    await tapFinder(tester, find.byKey(const ValueKey('addField.save')), frames: 10);
+    final floor = (await fresh.db.select(fresh.db.projectFields).get()).singleWhere((field) => field.label == 'Floor');
+    expect(floor.choices, '["Ground","First"]');
+    await scrollTo(tester, find.text('Floor'));
+    await shoot(tester, 'project_fields');
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    await scrollTo(tester, find.text(hi.costPerSqFt), up: true);
+    expect(find.text(hi.projectMetrics), findsOneWidget);
+    await shoot(tester, 'hi_project_metrics');
+    await scrollTo(tester, find.text(hi.spendingByField(hi.fieldStage)));
+    expect(find.text(hi.stageFoundation), findsOneWidget);
+    await scrollTo(tester, find.text(hi.fieldBuiltUpArea));
+    await shoot(tester, 'hi_project_fields');
+    await tapText(tester, hi.addEntry);
+    await scrollTo(tester, find.text(hi.projectDetails));
+    expect(find.text(hi.fieldStage), findsOneWidget);
+    await shoot(tester, 'hi_project_entry_fields');
+    await goBack(tester);
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+  });
 }

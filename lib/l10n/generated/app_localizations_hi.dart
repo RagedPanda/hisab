@@ -1314,6 +1314,224 @@ class AppLocalizationsHi extends AppLocalizations {
       'सुझाई गई सभी श्रेणियाँ पहले से आपकी सूची में हैं';
 
   @override
+  String get projectDetails => 'प्रोजेक्ट विवरण';
+
+  @override
+  String get fieldOdometer => 'ओडोमीटर';
+
+  @override
+  String get fieldLitres => 'ईंधन लीटर';
+
+  @override
+  String get fieldBuiltUpArea => 'निर्मित क्षेत्र';
+
+  @override
+  String get fieldStage => 'चरण';
+
+  @override
+  String get fieldQuantity => 'मात्रा';
+
+  @override
+  String get fieldRoom => 'कमरा';
+
+  @override
+  String get fieldTravellers => 'यात्री';
+
+  @override
+  String get fieldEvent => 'समारोह';
+
+  @override
+  String get fieldVendor => 'विक्रेता';
+
+  @override
+  String get stageFoundation => 'नींव';
+
+  @override
+  String get stagePlinth => 'प्लिंथ';
+
+  @override
+  String get stageStructure => 'ढाँचा';
+
+  @override
+  String get stageBrickwork => 'चिनाई';
+
+  @override
+  String get stageRoofSlab => 'छत की ढलाई';
+
+  @override
+  String get stagePlaster => 'प्लास्टर';
+
+  @override
+  String get stageElectricalPlumbing => 'बिजली और प्लंबिंग';
+
+  @override
+  String get stageFlooring => 'फ़र्श';
+
+  @override
+  String get stageDoorsWindows => 'दरवाज़े और खिड़कियाँ';
+
+  @override
+  String get stagePainting => 'पेंटिंग';
+
+  @override
+  String get stageFinishing => 'फ़िनिशिंग';
+
+  @override
+  String get roomKitchen => 'रसोई';
+
+  @override
+  String get roomBathroom => 'बाथरूम';
+
+  @override
+  String get roomBedroom => 'बेडरूम';
+
+  @override
+  String get roomLivingRoom => 'बैठक';
+
+  @override
+  String get roomDining => 'डाइनिंग';
+
+  @override
+  String get roomBalcony => 'बालकनी';
+
+  @override
+  String get roomWholeHouse => 'पूरा घर';
+
+  @override
+  String get eventRoka => 'रोका';
+
+  @override
+  String get eventEngagement => 'सगाई';
+
+  @override
+  String get eventHaldi => 'हल्दी';
+
+  @override
+  String get eventMehndi => 'मेहंदी';
+
+  @override
+  String get eventSangeet => 'संगीत';
+
+  @override
+  String get eventWedding => 'शादी';
+
+  @override
+  String get eventReception => 'रिसेप्शन';
+
+  @override
+  String get projectMetrics => 'आँकड़े';
+
+  @override
+  String get costPerKm => 'प्रति किमी ख़र्च';
+
+  @override
+  String kmDriven(String km) {
+    return '$km किमी चली';
+  }
+
+  @override
+  String get fuelBought => 'ख़रीदा गया ईंधन';
+
+  @override
+  String litresAmount(String litres, String amount) {
+    return '$litres लीटर, $amount में';
+  }
+
+  @override
+  String get pricePerLitre => 'प्रति लीटर दाम';
+
+  @override
+  String get costPerSqFt => 'प्रति वर्ग फ़ुट ख़र्च';
+
+  @override
+  String areaOf(String area) {
+    return '$area वर्ग फ़ुट पर';
+  }
+
+  @override
+  String get costPerTraveller => 'प्रति यात्री ख़र्च';
+
+  @override
+  String travellersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count यात्री',
+      one: '1 यात्री',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String spendingByField(String field) {
+    return '$field के हिसाब से ख़र्च';
+  }
+
+  @override
+  String get notPicked => 'नहीं चुना';
+
+  @override
+  String get metricsHint =>
+      'आँकड़े देखने के लिए एंट्री में प्रोजेक्ट विवरण भरें (ओडोमीटर, चरण, कमरा…)।';
+
+  @override
+  String get projectFields => 'फ़ील्ड';
+
+  @override
+  String get addField => 'फ़ील्ड जोड़ें';
+
+  @override
+  String get fieldName => 'फ़ील्ड का नाम';
+
+  @override
+  String get fieldType => 'प्रकार';
+
+  @override
+  String get fieldTypeNumber => 'संख्या';
+
+  @override
+  String get fieldTypeText => 'टेक्स्ट';
+
+  @override
+  String get fieldTypeDate => 'तारीख़';
+
+  @override
+  String get fieldTypeChoice => 'विकल्प';
+
+  @override
+  String get fieldTypeUnit => 'इकाई के साथ मात्रा';
+
+  @override
+  String get fieldUnitOptional => 'इकाई (वैकल्पिक)';
+
+  @override
+  String get fieldOptions => 'विकल्प, कॉमा से अलग करें';
+
+  @override
+  String get fieldOnEachEntry => 'हर एंट्री में पूछा जाए';
+
+  @override
+  String get fieldOncePerProject => 'पूरे प्रोजेक्ट के लिए एक मान';
+
+  @override
+  String get fieldDeleted => 'फ़ील्ड हटाया गया';
+
+  @override
+  String get deleteField => 'फ़ील्ड हटाएँ';
+
+  @override
+  String get setValue => 'मान सेट करें';
+
+  @override
+  String get errorFieldName => 'फ़ील्ड को नाम दें';
+
+  @override
+  String get errorFieldOptions => 'कम से कम एक विकल्प जोड़ें';
+
+  @override
+  String get clear => 'साफ़ करें';
+
+  @override
   String get today => 'आज';
 
   @override

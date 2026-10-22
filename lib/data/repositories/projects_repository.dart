@@ -3,8 +3,10 @@ import 'package:drift/drift.dart';
 import '../../core/ids.dart';
 import '../../domain/ledger/personal_totals.dart';
 import '../../domain/projects/project_math.dart';
+import '../../domain/projects/project_templates.dart';
 import '../db/database.dart';
 import '../db/watch_tables.dart';
+import 'project_fields_repository.dart';
 
 /// A project with the figures its card and detail screen show.
 class ProjectView {
@@ -42,18 +44,27 @@ class ProjectsRepository {
     String? id,
   }) async {
     final projectId = id ?? newId();
-    await db.into(db.projects).insert(ProjectsCompanion.insert(
-          id: projectId,
-          name: name,
-          icon: Value(icon),
-          color: color,
-          templateKey: Value(templateKey),
-          startDate: Value(startDate),
-          endDate: Value(endDate),
-          budgetMinor: Value(budgetMinor),
-          currency: Value(currency),
-          notes: Value(notes),
-        ));
+    final template = templateByKey(templateKey);
+    await db.transaction(() async {
+      await db.into(db.projects).insert(ProjectsCompanion.insert(
+            id: projectId,
+            name: name,
+            icon: Value(icon),
+            color: color,
+            templateKey: Value(templateKey),
+            startDate: Value(startDate),
+            endDate: Value(endDate),
+            budgetMinor: Value(budgetMinor),
+            currency: Value(currency),
+            notes: Value(notes),
+          ));
+      // A template's default fields come with the project.
+      if (template != null) {
+        for (final row in templateFieldRows(projectId, template)) {
+          await db.into(db.projectFields).insert(row);
+        }
+      }
+    });
     return projectId;
   }
 

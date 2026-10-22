@@ -192,10 +192,13 @@ class EntriesRepository {
   Stream<List<EntryDetails>> watchEntriesById(String id) => _byIdQuery(id).watch().asyncMap(_hydrate);
 
   /// Inserts or replaces an entry with its items and splits atomically.
+  /// [fieldValues], when given, replace the project field values the entry
+  /// recorded; null leaves them as they are.
   Future<void> saveEntry(
     EntriesCompanion entry, {
     List<EntryItemsCompanion> items = const [],
     List<SplitsCompanion> splits = const [],
+    List<EntryFieldValuesCompanion>? fieldValues,
   }) {
     final entryId = entry.id.value;
     final now = DateTime.now();
@@ -219,6 +222,17 @@ class EntriesRepository {
               deletedAt: const Value(null),
               updatedAt: Value(now),
             ));
+      }
+      if (fieldValues != null) {
+        await (db.update(db.entryFieldValues)..where((t) => t.entryId.equals(entryId)))
+            .write(EntryFieldValuesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+        for (final value in fieldValues) {
+          await db.into(db.entryFieldValues).insertOnConflictUpdate(value.copyWith(
+                entryId: Value(entryId),
+                deletedAt: const Value(null),
+                updatedAt: Value(now),
+              ));
+        }
       }
     });
   }

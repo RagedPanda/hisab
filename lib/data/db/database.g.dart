@@ -7206,6 +7206,1276 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
   }
 }
 
+class $ProjectFieldsTable extends ProjectFields
+    with TableInfo<$ProjectFieldsTable, ProjectField> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProjectFieldsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _projectIdMeta = const VerificationMeta(
+    'projectId',
+  );
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+    'project_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _choicesMeta = const VerificationMeta(
+    'choices',
+  );
+  @override
+  late final GeneratedColumn<String> choices = GeneratedColumn<String>(
+    'choices',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _scopeMeta = const VerificationMeta('scope');
+  @override
+  late final GeneratedColumn<String> scope = GeneratedColumn<String>(
+    'scope',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('entry'),
+  );
+  static const VerificationMeta _numberValueMeta = const VerificationMeta(
+    'numberValue',
+  );
+  @override
+  late final GeneratedColumn<double> numberValue = GeneratedColumn<double>(
+    'number_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _textValueMeta = const VerificationMeta(
+    'textValue',
+  );
+  @override
+  late final GeneratedColumn<String> textValue = GeneratedColumn<String>(
+    'text_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    updatedAt,
+    deletedAt,
+    id,
+    projectId,
+    key,
+    label,
+    type,
+    unit,
+    choices,
+    sortOrder,
+    scope,
+    numberValue,
+    textValue,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'project_fields';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ProjectField> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(
+        _projectIdMeta,
+        projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('key')) {
+      context.handle(
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    }
+    if (data.containsKey('choices')) {
+      context.handle(
+        _choicesMeta,
+        choices.isAcceptableOrUnknown(data['choices']!, _choicesMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('scope')) {
+      context.handle(
+        _scopeMeta,
+        scope.isAcceptableOrUnknown(data['scope']!, _scopeMeta),
+      );
+    }
+    if (data.containsKey('number_value')) {
+      context.handle(
+        _numberValueMeta,
+        numberValue.isAcceptableOrUnknown(
+          data['number_value']!,
+          _numberValueMeta,
+        ),
+      );
+    }
+    if (data.containsKey('text_value')) {
+      context.handle(
+        _textValueMeta,
+        textValue.isAcceptableOrUnknown(data['text_value']!, _textValueMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ProjectField map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProjectField(
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      projectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project_id'],
+      )!,
+      key: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      ),
+      choices: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}choices'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      scope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scope'],
+      )!,
+      numberValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}number_value'],
+      ),
+      textValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}text_value'],
+      ),
+    );
+  }
+
+  @override
+  $ProjectFieldsTable createAlias(String alias) {
+    return $ProjectFieldsTable(attachedDatabase, alias);
+  }
+}
+
+class ProjectField extends DataClass implements Insertable<ProjectField> {
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String id;
+  final String projectId;
+
+  /// Stable key: a template field key (`odometer`) or a generated one for custom fields.
+  final String key;
+
+  /// User-facing label for custom fields; template fields are labelled from the ARB files.
+  final String label;
+
+  /// number | text | date | choice | unit
+  final String type;
+  final String? unit;
+
+  /// JSON array of option keys (choice) or unit options (unit).
+  final String choices;
+  final int sortOrder;
+
+  /// project | entry
+  final String scope;
+
+  /// The value of a project-scope field.
+  final double? numberValue;
+  final String? textValue;
+  const ProjectField({
+    required this.updatedAt,
+    this.deletedAt,
+    required this.id,
+    required this.projectId,
+    required this.key,
+    required this.label,
+    required this.type,
+    this.unit,
+    required this.choices,
+    required this.sortOrder,
+    required this.scope,
+    this.numberValue,
+    this.textValue,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['id'] = Variable<String>(id);
+    map['project_id'] = Variable<String>(projectId);
+    map['key'] = Variable<String>(key);
+    map['label'] = Variable<String>(label);
+    map['type'] = Variable<String>(type);
+    if (!nullToAbsent || unit != null) {
+      map['unit'] = Variable<String>(unit);
+    }
+    map['choices'] = Variable<String>(choices);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['scope'] = Variable<String>(scope);
+    if (!nullToAbsent || numberValue != null) {
+      map['number_value'] = Variable<double>(numberValue);
+    }
+    if (!nullToAbsent || textValue != null) {
+      map['text_value'] = Variable<String>(textValue);
+    }
+    return map;
+  }
+
+  ProjectFieldsCompanion toCompanion(bool nullToAbsent) {
+    return ProjectFieldsCompanion(
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      id: Value(id),
+      projectId: Value(projectId),
+      key: Value(key),
+      label: Value(label),
+      type: Value(type),
+      unit: unit == null && nullToAbsent ? const Value.absent() : Value(unit),
+      choices: Value(choices),
+      sortOrder: Value(sortOrder),
+      scope: Value(scope),
+      numberValue: numberValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(numberValue),
+      textValue: textValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(textValue),
+    );
+  }
+
+  factory ProjectField.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProjectField(
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      id: serializer.fromJson<String>(json['id']),
+      projectId: serializer.fromJson<String>(json['projectId']),
+      key: serializer.fromJson<String>(json['key']),
+      label: serializer.fromJson<String>(json['label']),
+      type: serializer.fromJson<String>(json['type']),
+      unit: serializer.fromJson<String?>(json['unit']),
+      choices: serializer.fromJson<String>(json['choices']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      scope: serializer.fromJson<String>(json['scope']),
+      numberValue: serializer.fromJson<double?>(json['numberValue']),
+      textValue: serializer.fromJson<String?>(json['textValue']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'id': serializer.toJson<String>(id),
+      'projectId': serializer.toJson<String>(projectId),
+      'key': serializer.toJson<String>(key),
+      'label': serializer.toJson<String>(label),
+      'type': serializer.toJson<String>(type),
+      'unit': serializer.toJson<String?>(unit),
+      'choices': serializer.toJson<String>(choices),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'scope': serializer.toJson<String>(scope),
+      'numberValue': serializer.toJson<double?>(numberValue),
+      'textValue': serializer.toJson<String?>(textValue),
+    };
+  }
+
+  ProjectField copyWith({
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? id,
+    String? projectId,
+    String? key,
+    String? label,
+    String? type,
+    Value<String?> unit = const Value.absent(),
+    String? choices,
+    int? sortOrder,
+    String? scope,
+    Value<double?> numberValue = const Value.absent(),
+    Value<String?> textValue = const Value.absent(),
+  }) => ProjectField(
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    id: id ?? this.id,
+    projectId: projectId ?? this.projectId,
+    key: key ?? this.key,
+    label: label ?? this.label,
+    type: type ?? this.type,
+    unit: unit.present ? unit.value : this.unit,
+    choices: choices ?? this.choices,
+    sortOrder: sortOrder ?? this.sortOrder,
+    scope: scope ?? this.scope,
+    numberValue: numberValue.present ? numberValue.value : this.numberValue,
+    textValue: textValue.present ? textValue.value : this.textValue,
+  );
+  ProjectField copyWithCompanion(ProjectFieldsCompanion data) {
+    return ProjectField(
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      id: data.id.present ? data.id.value : this.id,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      key: data.key.present ? data.key.value : this.key,
+      label: data.label.present ? data.label.value : this.label,
+      type: data.type.present ? data.type.value : this.type,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      choices: data.choices.present ? data.choices.value : this.choices,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      scope: data.scope.present ? data.scope.value : this.scope,
+      numberValue: data.numberValue.present
+          ? data.numberValue.value
+          : this.numberValue,
+      textValue: data.textValue.present ? data.textValue.value : this.textValue,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProjectField(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('key: $key, ')
+          ..write('label: $label, ')
+          ..write('type: $type, ')
+          ..write('unit: $unit, ')
+          ..write('choices: $choices, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('scope: $scope, ')
+          ..write('numberValue: $numberValue, ')
+          ..write('textValue: $textValue')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    updatedAt,
+    deletedAt,
+    id,
+    projectId,
+    key,
+    label,
+    type,
+    unit,
+    choices,
+    sortOrder,
+    scope,
+    numberValue,
+    textValue,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProjectField &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.id == this.id &&
+          other.projectId == this.projectId &&
+          other.key == this.key &&
+          other.label == this.label &&
+          other.type == this.type &&
+          other.unit == this.unit &&
+          other.choices == this.choices &&
+          other.sortOrder == this.sortOrder &&
+          other.scope == this.scope &&
+          other.numberValue == this.numberValue &&
+          other.textValue == this.textValue);
+}
+
+class ProjectFieldsCompanion extends UpdateCompanion<ProjectField> {
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String> id;
+  final Value<String> projectId;
+  final Value<String> key;
+  final Value<String> label;
+  final Value<String> type;
+  final Value<String?> unit;
+  final Value<String> choices;
+  final Value<int> sortOrder;
+  final Value<String> scope;
+  final Value<double?> numberValue;
+  final Value<String?> textValue;
+  final Value<int> rowid;
+  const ProjectFieldsCompanion({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.id = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.key = const Value.absent(),
+    this.label = const Value.absent(),
+    this.type = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.choices = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.scope = const Value.absent(),
+    this.numberValue = const Value.absent(),
+    this.textValue = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProjectFieldsCompanion.insert({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String id,
+    required String projectId,
+    required String key,
+    this.label = const Value.absent(),
+    required String type,
+    this.unit = const Value.absent(),
+    this.choices = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.scope = const Value.absent(),
+    this.numberValue = const Value.absent(),
+    this.textValue = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       projectId = Value(projectId),
+       key = Value(key),
+       type = Value(type);
+  static Insertable<ProjectField> custom({
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? id,
+    Expression<String>? projectId,
+    Expression<String>? key,
+    Expression<String>? label,
+    Expression<String>? type,
+    Expression<String>? unit,
+    Expression<String>? choices,
+    Expression<int>? sortOrder,
+    Expression<String>? scope,
+    Expression<double>? numberValue,
+    Expression<String>? textValue,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (id != null) 'id': id,
+      if (projectId != null) 'project_id': projectId,
+      if (key != null) 'key': key,
+      if (label != null) 'label': label,
+      if (type != null) 'type': type,
+      if (unit != null) 'unit': unit,
+      if (choices != null) 'choices': choices,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (scope != null) 'scope': scope,
+      if (numberValue != null) 'number_value': numberValue,
+      if (textValue != null) 'text_value': textValue,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProjectFieldsCompanion copyWith({
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String>? id,
+    Value<String>? projectId,
+    Value<String>? key,
+    Value<String>? label,
+    Value<String>? type,
+    Value<String?>? unit,
+    Value<String>? choices,
+    Value<int>? sortOrder,
+    Value<String>? scope,
+    Value<double?>? numberValue,
+    Value<String?>? textValue,
+    Value<int>? rowid,
+  }) {
+    return ProjectFieldsCompanion(
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      key: key ?? this.key,
+      label: label ?? this.label,
+      type: type ?? this.type,
+      unit: unit ?? this.unit,
+      choices: choices ?? this.choices,
+      sortOrder: sortOrder ?? this.sortOrder,
+      scope: scope ?? this.scope,
+      numberValue: numberValue ?? this.numberValue,
+      textValue: textValue ?? this.textValue,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (choices.present) {
+      map['choices'] = Variable<String>(choices.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (scope.present) {
+      map['scope'] = Variable<String>(scope.value);
+    }
+    if (numberValue.present) {
+      map['number_value'] = Variable<double>(numberValue.value);
+    }
+    if (textValue.present) {
+      map['text_value'] = Variable<String>(textValue.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProjectFieldsCompanion(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('key: $key, ')
+          ..write('label: $label, ')
+          ..write('type: $type, ')
+          ..write('unit: $unit, ')
+          ..write('choices: $choices, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('scope: $scope, ')
+          ..write('numberValue: $numberValue, ')
+          ..write('textValue: $textValue, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $EntryFieldValuesTable extends EntryFieldValues
+    with TableInfo<$EntryFieldValuesTable, EntryFieldValue> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EntryFieldValuesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entryIdMeta = const VerificationMeta(
+    'entryId',
+  );
+  @override
+  late final GeneratedColumn<String> entryId = GeneratedColumn<String>(
+    'entry_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fieldKeyMeta = const VerificationMeta(
+    'fieldKey',
+  );
+  @override
+  late final GeneratedColumn<String> fieldKey = GeneratedColumn<String>(
+    'field_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _numberValueMeta = const VerificationMeta(
+    'numberValue',
+  );
+  @override
+  late final GeneratedColumn<double> numberValue = GeneratedColumn<double>(
+    'number_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _textValueMeta = const VerificationMeta(
+    'textValue',
+  );
+  @override
+  late final GeneratedColumn<String> textValue = GeneratedColumn<String>(
+    'text_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dateValueMeta = const VerificationMeta(
+    'dateValue',
+  );
+  @override
+  late final GeneratedColumn<DateTime> dateValue = GeneratedColumn<DateTime>(
+    'date_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    updatedAt,
+    deletedAt,
+    id,
+    entryId,
+    fieldKey,
+    numberValue,
+    textValue,
+    dateValue,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'entry_field_values';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EntryFieldValue> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('entry_id')) {
+      context.handle(
+        _entryIdMeta,
+        entryId.isAcceptableOrUnknown(data['entry_id']!, _entryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entryIdMeta);
+    }
+    if (data.containsKey('field_key')) {
+      context.handle(
+        _fieldKeyMeta,
+        fieldKey.isAcceptableOrUnknown(data['field_key']!, _fieldKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fieldKeyMeta);
+    }
+    if (data.containsKey('number_value')) {
+      context.handle(
+        _numberValueMeta,
+        numberValue.isAcceptableOrUnknown(
+          data['number_value']!,
+          _numberValueMeta,
+        ),
+      );
+    }
+    if (data.containsKey('text_value')) {
+      context.handle(
+        _textValueMeta,
+        textValue.isAcceptableOrUnknown(data['text_value']!, _textValueMeta),
+      );
+    }
+    if (data.containsKey('date_value')) {
+      context.handle(
+        _dateValueMeta,
+        dateValue.isAcceptableOrUnknown(data['date_value']!, _dateValueMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EntryFieldValue map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EntryFieldValue(
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      entryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_id'],
+      )!,
+      fieldKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}field_key'],
+      )!,
+      numberValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}number_value'],
+      ),
+      textValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}text_value'],
+      ),
+      dateValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}date_value'],
+      ),
+    );
+  }
+
+  @override
+  $EntryFieldValuesTable createAlias(String alias) {
+    return $EntryFieldValuesTable(attachedDatabase, alias);
+  }
+}
+
+class EntryFieldValue extends DataClass implements Insertable<EntryFieldValue> {
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String id;
+  final String entryId;
+  final String fieldKey;
+  final double? numberValue;
+  final String? textValue;
+  final DateTime? dateValue;
+  const EntryFieldValue({
+    required this.updatedAt,
+    this.deletedAt,
+    required this.id,
+    required this.entryId,
+    required this.fieldKey,
+    this.numberValue,
+    this.textValue,
+    this.dateValue,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['id'] = Variable<String>(id);
+    map['entry_id'] = Variable<String>(entryId);
+    map['field_key'] = Variable<String>(fieldKey);
+    if (!nullToAbsent || numberValue != null) {
+      map['number_value'] = Variable<double>(numberValue);
+    }
+    if (!nullToAbsent || textValue != null) {
+      map['text_value'] = Variable<String>(textValue);
+    }
+    if (!nullToAbsent || dateValue != null) {
+      map['date_value'] = Variable<DateTime>(dateValue);
+    }
+    return map;
+  }
+
+  EntryFieldValuesCompanion toCompanion(bool nullToAbsent) {
+    return EntryFieldValuesCompanion(
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      id: Value(id),
+      entryId: Value(entryId),
+      fieldKey: Value(fieldKey),
+      numberValue: numberValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(numberValue),
+      textValue: textValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(textValue),
+      dateValue: dateValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dateValue),
+    );
+  }
+
+  factory EntryFieldValue.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EntryFieldValue(
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      id: serializer.fromJson<String>(json['id']),
+      entryId: serializer.fromJson<String>(json['entryId']),
+      fieldKey: serializer.fromJson<String>(json['fieldKey']),
+      numberValue: serializer.fromJson<double?>(json['numberValue']),
+      textValue: serializer.fromJson<String?>(json['textValue']),
+      dateValue: serializer.fromJson<DateTime?>(json['dateValue']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'id': serializer.toJson<String>(id),
+      'entryId': serializer.toJson<String>(entryId),
+      'fieldKey': serializer.toJson<String>(fieldKey),
+      'numberValue': serializer.toJson<double?>(numberValue),
+      'textValue': serializer.toJson<String?>(textValue),
+      'dateValue': serializer.toJson<DateTime?>(dateValue),
+    };
+  }
+
+  EntryFieldValue copyWith({
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? id,
+    String? entryId,
+    String? fieldKey,
+    Value<double?> numberValue = const Value.absent(),
+    Value<String?> textValue = const Value.absent(),
+    Value<DateTime?> dateValue = const Value.absent(),
+  }) => EntryFieldValue(
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    id: id ?? this.id,
+    entryId: entryId ?? this.entryId,
+    fieldKey: fieldKey ?? this.fieldKey,
+    numberValue: numberValue.present ? numberValue.value : this.numberValue,
+    textValue: textValue.present ? textValue.value : this.textValue,
+    dateValue: dateValue.present ? dateValue.value : this.dateValue,
+  );
+  EntryFieldValue copyWithCompanion(EntryFieldValuesCompanion data) {
+    return EntryFieldValue(
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      id: data.id.present ? data.id.value : this.id,
+      entryId: data.entryId.present ? data.entryId.value : this.entryId,
+      fieldKey: data.fieldKey.present ? data.fieldKey.value : this.fieldKey,
+      numberValue: data.numberValue.present
+          ? data.numberValue.value
+          : this.numberValue,
+      textValue: data.textValue.present ? data.textValue.value : this.textValue,
+      dateValue: data.dateValue.present ? data.dateValue.value : this.dateValue,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EntryFieldValue(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('entryId: $entryId, ')
+          ..write('fieldKey: $fieldKey, ')
+          ..write('numberValue: $numberValue, ')
+          ..write('textValue: $textValue, ')
+          ..write('dateValue: $dateValue')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    updatedAt,
+    deletedAt,
+    id,
+    entryId,
+    fieldKey,
+    numberValue,
+    textValue,
+    dateValue,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EntryFieldValue &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.id == this.id &&
+          other.entryId == this.entryId &&
+          other.fieldKey == this.fieldKey &&
+          other.numberValue == this.numberValue &&
+          other.textValue == this.textValue &&
+          other.dateValue == this.dateValue);
+}
+
+class EntryFieldValuesCompanion extends UpdateCompanion<EntryFieldValue> {
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String> id;
+  final Value<String> entryId;
+  final Value<String> fieldKey;
+  final Value<double?> numberValue;
+  final Value<String?> textValue;
+  final Value<DateTime?> dateValue;
+  final Value<int> rowid;
+  const EntryFieldValuesCompanion({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.id = const Value.absent(),
+    this.entryId = const Value.absent(),
+    this.fieldKey = const Value.absent(),
+    this.numberValue = const Value.absent(),
+    this.textValue = const Value.absent(),
+    this.dateValue = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EntryFieldValuesCompanion.insert({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String id,
+    required String entryId,
+    required String fieldKey,
+    this.numberValue = const Value.absent(),
+    this.textValue = const Value.absent(),
+    this.dateValue = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       entryId = Value(entryId),
+       fieldKey = Value(fieldKey);
+  static Insertable<EntryFieldValue> custom({
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? id,
+    Expression<String>? entryId,
+    Expression<String>? fieldKey,
+    Expression<double>? numberValue,
+    Expression<String>? textValue,
+    Expression<DateTime>? dateValue,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (id != null) 'id': id,
+      if (entryId != null) 'entry_id': entryId,
+      if (fieldKey != null) 'field_key': fieldKey,
+      if (numberValue != null) 'number_value': numberValue,
+      if (textValue != null) 'text_value': textValue,
+      if (dateValue != null) 'date_value': dateValue,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EntryFieldValuesCompanion copyWith({
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String>? id,
+    Value<String>? entryId,
+    Value<String>? fieldKey,
+    Value<double?>? numberValue,
+    Value<String?>? textValue,
+    Value<DateTime?>? dateValue,
+    Value<int>? rowid,
+  }) {
+    return EntryFieldValuesCompanion(
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      id: id ?? this.id,
+      entryId: entryId ?? this.entryId,
+      fieldKey: fieldKey ?? this.fieldKey,
+      numberValue: numberValue ?? this.numberValue,
+      textValue: textValue ?? this.textValue,
+      dateValue: dateValue ?? this.dateValue,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (entryId.present) {
+      map['entry_id'] = Variable<String>(entryId.value);
+    }
+    if (fieldKey.present) {
+      map['field_key'] = Variable<String>(fieldKey.value);
+    }
+    if (numberValue.present) {
+      map['number_value'] = Variable<double>(numberValue.value);
+    }
+    if (textValue.present) {
+      map['text_value'] = Variable<String>(textValue.value);
+    }
+    if (dateValue.present) {
+      map['date_value'] = Variable<DateTime>(dateValue.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EntryFieldValuesCompanion(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('entryId: $entryId, ')
+          ..write('fieldKey: $fieldKey, ')
+          ..write('numberValue: $numberValue, ')
+          ..write('textValue: $textValue, ')
+          ..write('dateValue: $dateValue, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7220,9 +8490,21 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $BudgetsTable budgets = $BudgetsTable(this);
   late final $SmsLogTable smsLog = $SmsLogTable(this);
   late final $ProjectsTable projects = $ProjectsTable(this);
+  late final $ProjectFieldsTable projectFields = $ProjectFieldsTable(this);
+  late final $EntryFieldValuesTable entryFieldValues = $EntryFieldValuesTable(
+    this,
+  );
   late final Index entriesProjectId = Index(
     'entries_project_id',
     'CREATE INDEX entries_project_id ON entries (project_id)',
+  );
+  late final Index projectFieldsProjectId = Index(
+    'project_fields_project_id',
+    'CREATE INDEX project_fields_project_id ON project_fields (project_id)',
+  );
+  late final Index entryFieldValuesEntryId = Index(
+    'entry_field_values_entry_id',
+    'CREATE INDEX entry_field_values_entry_id ON entry_field_values (entry_id)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -7240,7 +8522,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     budgets,
     smsLog,
     projects,
+    projectFields,
+    entryFieldValues,
     entriesProjectId,
+    projectFieldsProjectId,
+    entryFieldValuesEntryId,
   ];
 }
 
@@ -10753,6 +12039,643 @@ typedef $$ProjectsTableProcessedTableManager =
       Project,
       PrefetchHooks Function()
     >;
+typedef $$ProjectFieldsTableCreateCompanionBuilder =
+    ProjectFieldsCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      required String id,
+      required String projectId,
+      required String key,
+      Value<String> label,
+      required String type,
+      Value<String?> unit,
+      Value<String> choices,
+      Value<int> sortOrder,
+      Value<String> scope,
+      Value<double?> numberValue,
+      Value<String?> textValue,
+      Value<int> rowid,
+    });
+typedef $$ProjectFieldsTableUpdateCompanionBuilder =
+    ProjectFieldsCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String> id,
+      Value<String> projectId,
+      Value<String> key,
+      Value<String> label,
+      Value<String> type,
+      Value<String?> unit,
+      Value<String> choices,
+      Value<int> sortOrder,
+      Value<String> scope,
+      Value<double?> numberValue,
+      Value<String?> textValue,
+      Value<int> rowid,
+    });
+
+class $$ProjectFieldsTableFilterComposer
+    extends Composer<_$AppDatabase, $ProjectFieldsTable> {
+  $$ProjectFieldsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get choices => $composableBuilder(
+    column: $table.choices,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get scope => $composableBuilder(
+    column: $table.scope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get numberValue => $composableBuilder(
+    column: $table.numberValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get textValue => $composableBuilder(
+    column: $table.textValue,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ProjectFieldsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProjectFieldsTable> {
+  $$ProjectFieldsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get choices => $composableBuilder(
+    column: $table.choices,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get scope => $composableBuilder(
+    column: $table.scope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get numberValue => $composableBuilder(
+    column: $table.numberValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get textValue => $composableBuilder(
+    column: $table.textValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ProjectFieldsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProjectFieldsTable> {
+  $$ProjectFieldsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get projectId =>
+      $composableBuilder(column: $table.projectId, builder: (column) => column);
+
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<String> get choices =>
+      $composableBuilder(column: $table.choices, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<String> get scope =>
+      $composableBuilder(column: $table.scope, builder: (column) => column);
+
+  GeneratedColumn<double> get numberValue => $composableBuilder(
+    column: $table.numberValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get textValue =>
+      $composableBuilder(column: $table.textValue, builder: (column) => column);
+}
+
+class $$ProjectFieldsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ProjectFieldsTable,
+          ProjectField,
+          $$ProjectFieldsTableFilterComposer,
+          $$ProjectFieldsTableOrderingComposer,
+          $$ProjectFieldsTableAnnotationComposer,
+          $$ProjectFieldsTableCreateCompanionBuilder,
+          $$ProjectFieldsTableUpdateCompanionBuilder,
+          (
+            ProjectField,
+            BaseReferences<_$AppDatabase, $ProjectFieldsTable, ProjectField>,
+          ),
+          ProjectField,
+          PrefetchHooks Function()
+        > {
+  $$ProjectFieldsTableTableManager(_$AppDatabase db, $ProjectFieldsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProjectFieldsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProjectFieldsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProjectFieldsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> projectId = const Value.absent(),
+                Value<String> key = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String?> unit = const Value.absent(),
+                Value<String> choices = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<String> scope = const Value.absent(),
+                Value<double?> numberValue = const Value.absent(),
+                Value<String?> textValue = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProjectFieldsCompanion(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                projectId: projectId,
+                key: key,
+                label: label,
+                type: type,
+                unit: unit,
+                choices: choices,
+                sortOrder: sortOrder,
+                scope: scope,
+                numberValue: numberValue,
+                textValue: textValue,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String id,
+                required String projectId,
+                required String key,
+                Value<String> label = const Value.absent(),
+                required String type,
+                Value<String?> unit = const Value.absent(),
+                Value<String> choices = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<String> scope = const Value.absent(),
+                Value<double?> numberValue = const Value.absent(),
+                Value<String?> textValue = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProjectFieldsCompanion.insert(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                projectId: projectId,
+                key: key,
+                label: label,
+                type: type,
+                unit: unit,
+                choices: choices,
+                sortOrder: sortOrder,
+                scope: scope,
+                numberValue: numberValue,
+                textValue: textValue,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ProjectFieldsTable, ProjectField>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ProjectFieldsTable,
+                    ProjectField
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ProjectFieldsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ProjectFieldsTable,
+      ProjectField,
+      $$ProjectFieldsTableFilterComposer,
+      $$ProjectFieldsTableOrderingComposer,
+      $$ProjectFieldsTableAnnotationComposer,
+      $$ProjectFieldsTableCreateCompanionBuilder,
+      $$ProjectFieldsTableUpdateCompanionBuilder,
+      (
+        ProjectField,
+        BaseReferences<_$AppDatabase, $ProjectFieldsTable, ProjectField>,
+      ),
+      ProjectField,
+      PrefetchHooks Function()
+    >;
+typedef $$EntryFieldValuesTableCreateCompanionBuilder =
+    EntryFieldValuesCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      required String id,
+      required String entryId,
+      required String fieldKey,
+      Value<double?> numberValue,
+      Value<String?> textValue,
+      Value<DateTime?> dateValue,
+      Value<int> rowid,
+    });
+typedef $$EntryFieldValuesTableUpdateCompanionBuilder =
+    EntryFieldValuesCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String> id,
+      Value<String> entryId,
+      Value<String> fieldKey,
+      Value<double?> numberValue,
+      Value<String?> textValue,
+      Value<DateTime?> dateValue,
+      Value<int> rowid,
+    });
+
+class $$EntryFieldValuesTableFilterComposer
+    extends Composer<_$AppDatabase, $EntryFieldValuesTable> {
+  $$EntryFieldValuesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fieldKey => $composableBuilder(
+    column: $table.fieldKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get numberValue => $composableBuilder(
+    column: $table.numberValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get textValue => $composableBuilder(
+    column: $table.textValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get dateValue => $composableBuilder(
+    column: $table.dateValue,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$EntryFieldValuesTableOrderingComposer
+    extends Composer<_$AppDatabase, $EntryFieldValuesTable> {
+  $$EntryFieldValuesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fieldKey => $composableBuilder(
+    column: $table.fieldKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get numberValue => $composableBuilder(
+    column: $table.numberValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get textValue => $composableBuilder(
+    column: $table.textValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get dateValue => $composableBuilder(
+    column: $table.dateValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EntryFieldValuesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EntryFieldValuesTable> {
+  $$EntryFieldValuesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get entryId =>
+      $composableBuilder(column: $table.entryId, builder: (column) => column);
+
+  GeneratedColumn<String> get fieldKey =>
+      $composableBuilder(column: $table.fieldKey, builder: (column) => column);
+
+  GeneratedColumn<double> get numberValue => $composableBuilder(
+    column: $table.numberValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get textValue =>
+      $composableBuilder(column: $table.textValue, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get dateValue =>
+      $composableBuilder(column: $table.dateValue, builder: (column) => column);
+}
+
+class $$EntryFieldValuesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EntryFieldValuesTable,
+          EntryFieldValue,
+          $$EntryFieldValuesTableFilterComposer,
+          $$EntryFieldValuesTableOrderingComposer,
+          $$EntryFieldValuesTableAnnotationComposer,
+          $$EntryFieldValuesTableCreateCompanionBuilder,
+          $$EntryFieldValuesTableUpdateCompanionBuilder,
+          (
+            EntryFieldValue,
+            BaseReferences<
+              _$AppDatabase,
+              $EntryFieldValuesTable,
+              EntryFieldValue
+            >,
+          ),
+          EntryFieldValue,
+          PrefetchHooks Function()
+        > {
+  $$EntryFieldValuesTableTableManager(
+    _$AppDatabase db,
+    $EntryFieldValuesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EntryFieldValuesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EntryFieldValuesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EntryFieldValuesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> entryId = const Value.absent(),
+                Value<String> fieldKey = const Value.absent(),
+                Value<double?> numberValue = const Value.absent(),
+                Value<String?> textValue = const Value.absent(),
+                Value<DateTime?> dateValue = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EntryFieldValuesCompanion(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                entryId: entryId,
+                fieldKey: fieldKey,
+                numberValue: numberValue,
+                textValue: textValue,
+                dateValue: dateValue,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String id,
+                required String entryId,
+                required String fieldKey,
+                Value<double?> numberValue = const Value.absent(),
+                Value<String?> textValue = const Value.absent(),
+                Value<DateTime?> dateValue = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EntryFieldValuesCompanion.insert(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                entryId: entryId,
+                fieldKey: fieldKey,
+                numberValue: numberValue,
+                textValue: textValue,
+                dateValue: dateValue,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$EntryFieldValuesTable, EntryFieldValue>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $EntryFieldValuesTable,
+                    EntryFieldValue
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$EntryFieldValuesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EntryFieldValuesTable,
+      EntryFieldValue,
+      $$EntryFieldValuesTableFilterComposer,
+      $$EntryFieldValuesTableOrderingComposer,
+      $$EntryFieldValuesTableAnnotationComposer,
+      $$EntryFieldValuesTableCreateCompanionBuilder,
+      $$EntryFieldValuesTableUpdateCompanionBuilder,
+      (
+        EntryFieldValue,
+        BaseReferences<_$AppDatabase, $EntryFieldValuesTable, EntryFieldValue>,
+      ),
+      EntryFieldValue,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -10779,4 +12702,8 @@ class $AppDatabaseManager {
       $$SmsLogTableTableManager(_db, _db.smsLog);
   $$ProjectsTableTableManager get projects =>
       $$ProjectsTableTableManager(_db, _db.projects);
+  $$ProjectFieldsTableTableManager get projectFields =>
+      $$ProjectFieldsTableTableManager(_db, _db.projectFields);
+  $$EntryFieldValuesTableTableManager get entryFieldValues =>
+      $$EntryFieldValuesTableTableManager(_db, _db.entryFieldValues);
 }

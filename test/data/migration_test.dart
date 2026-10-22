@@ -11,6 +11,7 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -29,6 +30,7 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -42,6 +44,7 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -54,6 +57,7 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('PRAGMA user_version = 4');
@@ -64,11 +68,21 @@ Future<void> rewindToVersion4(File file) async {
 /// (generic reminders table without the due-reminder columns).
 Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
   await db.customStatement('DROP INDEX reminders_status_due');
   for (final column in dueReminderColumns(db.reminders)) {
     await db.customStatement('ALTER TABLE reminders DROP COLUMN ${column.name}');
   }
   await db.customStatement('PRAGMA user_version = 5');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 6
+/// (no SMS-to-reminder link).
+Future<void> rewindToVersion6(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
+  await db.customStatement('PRAGMA user_version = 6');
   await db.close();
 }
 
@@ -184,6 +198,23 @@ void main() {
     expect(settleUp.notifyAtMinute, isNull);
     final indexes = await db.customSelect("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'reminders'").get();
     expect(indexes.map((row) => row.data['name']), contains('reminders_status_due'));
+    await db.close();
+  });
+
+  test('upgrading from schema 6 adds the matched reminder to the SMS log', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.smsLog).insert(SmsLogCompanion.insert(id: 's1', sender: 'HDFCBK', body: 'Rs 1500 debited', receivedAt: DateTime(2026, 11, 5), status: 'added'));
+    await seed.close();
+    await rewindToVersion6(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final row = await db.select(db.smsLog).getSingle();
+    expect(row.matchedReminderId, isNull);
+    expect(row.body, 'Rs 1500 debited', reason: 'existing rows survive the upgrade');
+    await (db.update(db.smsLog)..where((t) => t.id.equals('s1'))).write(const SmsLogCompanion(matchedReminderId: Value('r1')));
+    expect((await db.select(db.smsLog).getSingle()).matchedReminderId, 'r1');
     await db.close();
   });
 

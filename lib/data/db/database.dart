@@ -344,6 +344,9 @@ class SmsLog extends Table {
   TextColumn get status => text()();
   TextColumn get parsedJson => text().nullable()();
   TextColumn get entryId => text().nullable()();
+
+  /// Reminder this message paid, when it matched one (R2 auto-done).
+  TextColumn get matchedReminderId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
@@ -370,7 +373,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -408,6 +411,8 @@ class AppDatabase extends _$AppDatabase {
             }
           }
           if (from < 6) await m.createIndex(remindersStatusDue);
+          // v7: the reminder a bank SMS paid (R2 auto-done on an SMS match).
+          if (from < 7) await m.addColumn(smsLog, smsLog.matchedReminderId);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');

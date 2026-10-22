@@ -6019,6 +6019,18 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _matchedReminderIdMeta = const VerificationMeta(
+    'matchedReminderId',
+  );
+  @override
+  late final GeneratedColumn<String> matchedReminderId =
+      GeneratedColumn<String>(
+        'matched_reminder_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -6040,6 +6052,7 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
     status,
     parsedJson,
     entryId,
+    matchedReminderId,
     createdAt,
   ];
   @override
@@ -6103,6 +6116,15 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
         entryId.isAcceptableOrUnknown(data['entry_id']!, _entryIdMeta),
       );
     }
+    if (data.containsKey('matched_reminder_id')) {
+      context.handle(
+        _matchedReminderIdMeta,
+        matchedReminderId.isAcceptableOrUnknown(
+          data['matched_reminder_id']!,
+          _matchedReminderIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -6146,6 +6168,10 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
         DriftSqlType.string,
         data['${effectivePrefix}entry_id'],
       ),
+      matchedReminderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}matched_reminder_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -6170,6 +6196,9 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
   final String status;
   final String? parsedJson;
   final String? entryId;
+
+  /// Reminder this message paid, when it matched one (R2 auto-done).
+  final String? matchedReminderId;
   final DateTime createdAt;
   const SmsLogData({
     required this.id,
@@ -6179,6 +6208,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     required this.status,
     this.parsedJson,
     this.entryId,
+    this.matchedReminderId,
     required this.createdAt,
   });
   @override
@@ -6194,6 +6224,9 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     }
     if (!nullToAbsent || entryId != null) {
       map['entry_id'] = Variable<String>(entryId);
+    }
+    if (!nullToAbsent || matchedReminderId != null) {
+      map['matched_reminder_id'] = Variable<String>(matchedReminderId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -6212,6 +6245,9 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       entryId: entryId == null && nullToAbsent
           ? const Value.absent()
           : Value(entryId),
+      matchedReminderId: matchedReminderId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(matchedReminderId),
       createdAt: Value(createdAt),
     );
   }
@@ -6229,6 +6265,9 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       status: serializer.fromJson<String>(json['status']),
       parsedJson: serializer.fromJson<String?>(json['parsedJson']),
       entryId: serializer.fromJson<String?>(json['entryId']),
+      matchedReminderId: serializer.fromJson<String?>(
+        json['matchedReminderId'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -6243,6 +6282,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       'status': serializer.toJson<String>(status),
       'parsedJson': serializer.toJson<String?>(parsedJson),
       'entryId': serializer.toJson<String?>(entryId),
+      'matchedReminderId': serializer.toJson<String?>(matchedReminderId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -6255,6 +6295,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     String? status,
     Value<String?> parsedJson = const Value.absent(),
     Value<String?> entryId = const Value.absent(),
+    Value<String?> matchedReminderId = const Value.absent(),
     DateTime? createdAt,
   }) => SmsLogData(
     id: id ?? this.id,
@@ -6264,6 +6305,9 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     status: status ?? this.status,
     parsedJson: parsedJson.present ? parsedJson.value : this.parsedJson,
     entryId: entryId.present ? entryId.value : this.entryId,
+    matchedReminderId: matchedReminderId.present
+        ? matchedReminderId.value
+        : this.matchedReminderId,
     createdAt: createdAt ?? this.createdAt,
   );
   SmsLogData copyWithCompanion(SmsLogCompanion data) {
@@ -6279,6 +6323,9 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           ? data.parsedJson.value
           : this.parsedJson,
       entryId: data.entryId.present ? data.entryId.value : this.entryId,
+      matchedReminderId: data.matchedReminderId.present
+          ? data.matchedReminderId.value
+          : this.matchedReminderId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -6293,6 +6340,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           ..write('status: $status, ')
           ..write('parsedJson: $parsedJson, ')
           ..write('entryId: $entryId, ')
+          ..write('matchedReminderId: $matchedReminderId, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -6307,6 +6355,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     status,
     parsedJson,
     entryId,
+    matchedReminderId,
     createdAt,
   );
   @override
@@ -6320,6 +6369,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           other.status == this.status &&
           other.parsedJson == this.parsedJson &&
           other.entryId == this.entryId &&
+          other.matchedReminderId == this.matchedReminderId &&
           other.createdAt == this.createdAt);
 }
 
@@ -6331,6 +6381,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
   final Value<String> status;
   final Value<String?> parsedJson;
   final Value<String?> entryId;
+  final Value<String?> matchedReminderId;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const SmsLogCompanion({
@@ -6341,6 +6392,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     this.status = const Value.absent(),
     this.parsedJson = const Value.absent(),
     this.entryId = const Value.absent(),
+    this.matchedReminderId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -6352,6 +6404,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     required String status,
     this.parsedJson = const Value.absent(),
     this.entryId = const Value.absent(),
+    this.matchedReminderId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -6367,6 +6420,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     Expression<String>? status,
     Expression<String>? parsedJson,
     Expression<String>? entryId,
+    Expression<String>? matchedReminderId,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -6378,6 +6432,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
       if (status != null) 'status': status,
       if (parsedJson != null) 'parsed_json': parsedJson,
       if (entryId != null) 'entry_id': entryId,
+      if (matchedReminderId != null) 'matched_reminder_id': matchedReminderId,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -6391,6 +6446,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     Value<String>? status,
     Value<String?>? parsedJson,
     Value<String?>? entryId,
+    Value<String?>? matchedReminderId,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
@@ -6402,6 +6458,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
       status: status ?? this.status,
       parsedJson: parsedJson ?? this.parsedJson,
       entryId: entryId ?? this.entryId,
+      matchedReminderId: matchedReminderId ?? this.matchedReminderId,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -6431,6 +6488,9 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     if (entryId.present) {
       map['entry_id'] = Variable<String>(entryId.value);
     }
+    if (matchedReminderId.present) {
+      map['matched_reminder_id'] = Variable<String>(matchedReminderId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -6450,6 +6510,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
           ..write('status: $status, ')
           ..write('parsedJson: $parsedJson, ')
           ..write('entryId: $entryId, ')
+          ..write('matchedReminderId: $matchedReminderId, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -13011,6 +13072,7 @@ typedef $$SmsLogTableCreateCompanionBuilder = SmsLogCompanion Function({
   required String status,
   Value<String?> parsedJson,
   Value<String?> entryId,
+  Value<String?> matchedReminderId,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -13022,6 +13084,7 @@ typedef $$SmsLogTableUpdateCompanionBuilder = SmsLogCompanion Function({
   Value<String> status,
   Value<String?> parsedJson,
   Value<String?> entryId,
+  Value<String?> matchedReminderId,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -13067,6 +13130,11 @@ class $$SmsLogTableFilterComposer
 
   ColumnFilters<String> get entryId => $composableBuilder(
     column: $table.entryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get matchedReminderId => $composableBuilder(
+    column: $table.matchedReminderId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -13120,6 +13188,11 @@ class $$SmsLogTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get matchedReminderId => $composableBuilder(
+    column: $table.matchedReminderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -13160,6 +13233,11 @@ class $$SmsLogTableAnnotationComposer
   GeneratedColumn<String> get entryId =>
       $composableBuilder(column: $table.entryId, builder: (column) => column);
 
+  GeneratedColumn<String> get matchedReminderId => $composableBuilder(
+    column: $table.matchedReminderId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
@@ -13199,6 +13277,7 @@ class $$SmsLogTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String?> parsedJson = const Value.absent(),
                 Value<String?> entryId = const Value.absent(),
+                Value<String?> matchedReminderId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SmsLogCompanion(
@@ -13209,6 +13288,7 @@ class $$SmsLogTableTableManager
                 status: status,
                 parsedJson: parsedJson,
                 entryId: entryId,
+                matchedReminderId: matchedReminderId,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -13221,6 +13301,7 @@ class $$SmsLogTableTableManager
                 required String status,
                 Value<String?> parsedJson = const Value.absent(),
                 Value<String?> entryId = const Value.absent(),
+                Value<String?> matchedReminderId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SmsLogCompanion.insert(
@@ -13231,6 +13312,7 @@ class $$SmsLogTableTableManager
                 status: status,
                 parsedJson: parsedJson,
                 entryId: entryId,
+                matchedReminderId: matchedReminderId,
                 createdAt: createdAt,
                 rowid: rowid,
               ),

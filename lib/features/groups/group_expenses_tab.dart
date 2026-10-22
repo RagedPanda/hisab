@@ -3,13 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
+import '../../core/providers.dart';
 import '../../core/money.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/groups_repository.dart';
+import '../../domain/recurring/repeat_draft.dart';
 import '../../domain/split/group_timeline.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
+import '../recurring/recurring_list_model.dart';
+import '../recurring/recurring_screen.dart';
 import '../shell/widgets/common.dart';
 import 'expense_list_model.dart';
 import 'member_display.dart';
@@ -38,6 +42,16 @@ class ExpenseListViews extends Notifier<Map<String, ExpenseListView>> {
 }
 
 final expenseListViewsProvider = NotifierProvider<ExpenseListViews, Map<String, ExpenseListView>>(ExpenseListViews.new);
+
+/// The group's repeating expenses (rent, maid, wifi) that have not ended,
+/// grouped waiting, active, paused like the personal Recurring screen.
+final groupRecurringItemsProvider = StreamProvider.family<List<RecurringListItem>, String>((ref, groupId) {
+  final monthStartDay = ref.watch(settingsProvider.select((settings) => settings.monthStartDay));
+  return ref.watch(recurringRepositoryProvider).watchViews(groupId: groupId).map((views) => [
+        for (final item in recurringListItems(views, now: DateTime.now(), monthStartDay: monthStartDay))
+          if (item.section != RecurringSection.ended) item,
+      ]);
+});
 
 /// The group's expenses and payments, newest first, as seen by me.
 class GroupExpensesTab extends ConsumerWidget {
@@ -89,9 +103,19 @@ class GroupExpensesTab extends ConsumerWidget {
     final items = buildExpenseList(rows: rows, filter: filter, settledUpTo: settledUpTo, showOlder: view.showOlder);
     final notifier = ref.read(expenseListViewsProvider.notifier);
 
+    final repeating = ref.watch(groupRecurringItemsProvider(groupId)).value ?? const <RecurringListItem>[];
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
       children: [
+        if (repeating.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+            child: Text(l10n.groupRecurringUpcoming, style: Theme.of(context).textTheme.titleSmall),
+          ),
+          for (final item in repeating) RecurringRuleCard(key: ValueKey('group.recurring.${item.view.rule.id}'), item: item),
+          const SizedBox(height: 8),
+        ],
         Wrap(
           spacing: 8,
           children: [

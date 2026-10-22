@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/data/db/database.dart';
@@ -66,5 +67,54 @@ void main() {
     await repo.setArchived(puc.id, true);
     await repo.addPack(vehiclePack);
     expect((await bySeed('vehicle_puc')).isArchived, isFalse);
+  });
+
+  group('removePack', () {
+    Future<void> spendOn(Category category) => db.into(db.entries).insert(EntriesCompanion.insert(
+          id: 'e-${category.id}', kind: 'expense', amountMinor: 100, occurredAt: DateTime(2026, 10, 1), categoryId: Value(category.id)));
+
+    test('archives unused pack categories and keeps used ones as ordinary categories', () async {
+      await repo.addPack(farmingPack);
+      final seeds = await bySeed('farm_seeds');
+      await spendOn(seeds);
+
+      final removal = await repo.removePack('farming');
+
+      expect(removal.keepIds, containsAll([seeds.id, (await bySeed('farming')).id]));
+      expect((await bySeed('farm_seeds')).isArchived, isFalse);
+      expect((await bySeed('farm_seeds')).packKey, isNull);
+      expect((await bySeed('farming')).isArchived, isFalse, reason: 'parent of a used category stays');
+      expect((await bySeed('farm_fertiliser')).isArchived, isTrue);
+      expect((await bySeed('farm_crop_sale')).isArchived, isTrue);
+      expect(addedPackKeys((await repo.getAll(includeArchived: true)).map(packCategoryRef)), isNot(contains('farming')));
+    });
+
+    test('reused catalog categories are never touched', () async {
+      await repo.addPack(petPack);
+      await repo.removePack('pet');
+      expect((await bySeed('pets')).isArchived, isFalse);
+      expect((await bySeed('vet')).isArchived, isFalse);
+      expect((await bySeed('pet_vaccination')).isArchived, isTrue);
+    });
+
+    test('the pack can be added again after removal and comes back tagged', () async {
+      await repo.addPack(farmingPack);
+      await spendOn(await bySeed('farm_seeds'));
+      await repo.removePack('farming');
+      expect(await repo.addPack(farmingPack), 0);
+      expect((await bySeed('farm_fertiliser')).isArchived, isFalse);
+      expect((await bySeed('farm_seeds')).packKey, 'farming');
+      expect(addedPackKeys((await repo.getAll(includeArchived: true)).map(packCategoryRef)), contains('farming'));
+    });
+
+    test('seeds shared with another added pack move to that pack', () async {
+      await repo.addPack(constructionPack);
+      await repo.addPack(renovationPack);
+      await repo.removePack('construction');
+      final cement = await bySeed('build_cement');
+      expect(cement.isArchived, isFalse);
+      expect(cement.packKey, 'renovation');
+      expect((await bySeed('build_steel')).isArchived, isTrue);
+    });
   });
 }

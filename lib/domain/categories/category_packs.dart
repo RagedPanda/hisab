@@ -344,3 +344,70 @@ List<CategorySeed> packOnlySeeds() {
         if (!catalogKeys.contains(seed.key) && seen.add(seed.key)) seed,
   ];
 }
+
+/// Seed keys that only packs bring (not in the everyday catalog), for one pack.
+Set<String> packOwnSeedKeys(CategoryPack pack) {
+  final catalogKeys = flattenCatalog().map((seed) => seed.key).toSet();
+  return {for (final seed in flattenCatalog(pack.roots)) if (!catalogKeys.contains(seed.key)) seed.key};
+}
+
+/// The bits of a stored category that pack removal looks at.
+class PackCategoryRef {
+  const PackCategoryRef({required this.id, required this.parentId, required this.packKey, required this.isArchived, this.seedKey});
+  final String id;
+  final String? parentId;
+  final String? packKey;
+  final bool isArchived;
+  final String? seedKey;
+}
+
+/// What removing a pack does: [archiveIds] are the pack's categories nothing
+/// uses; [keepIds] are in use (or hold a category that is) and stay as
+/// ordinary categories without the pack tag; [handOver] maps categories that
+/// another added pack also lists to that pack's key, so they stay with it.
+class PackRemoval {
+  const PackRemoval({required this.archiveIds, required this.keepIds, this.handOver = const {}});
+  final List<String> archiveIds;
+  final List<String> keepIds;
+  final Map<String, String> handOver;
+}
+
+/// Plans removing pack [packKey] from [categories]. A category is in use when
+/// its id is in [usedIds] or it has a live child that stays (a child from
+/// another pack, one the user made, or a used child of this pack). Categories
+/// whose seed another added pack in [otherPacks] lists move to that pack.
+PackRemoval planPackRemoval({
+  required String packKey,
+  required List<PackCategoryRef> categories,
+  required Set<String> usedIds,
+  List<CategoryPack> otherPacks = const [],
+}) {
+  final addedOthers = addedPackKeys(categories)..remove(packKey);
+  final otherOwner = <String, String>{
+    for (final pack in otherPacks.where((pack) => addedOthers.contains(pack.key)))
+      for (final seedKey in packOwnSeedKeys(pack)) seedKey: pack.key,
+  };
+  final childrenOf = <String, List<PackCategoryRef>>{};
+  for (final category in categories) {
+    final parentId = category.parentId;
+    if (parentId != null && !category.isArchived) childrenOf.putIfAbsent(parentId, () => []).add(category);
+  }
+  String? newOwner(PackCategoryRef category) => category.seedKey == null ? null : otherOwner[category.seedKey];
+  bool stays(PackCategoryRef category) =>
+      category.packKey != packKey ||
+      usedIds.contains(category.id) ||
+      newOwner(category) != null ||
+      (childrenOf[category.id] ?? const []).any(stays);
+  final candidates = categories.where((category) => category.packKey == packKey && !category.isArchived).toList();
+  return PackRemoval(
+    archiveIds: [for (final category in candidates) if (!stays(category)) category.id],
+    keepIds: [for (final category in candidates) if (stays(category) && newOwner(category) == null) category.id],
+    handOver: {for (final category in candidates) if (newOwner(category) != null) category.id: newOwner(category)!},
+  );
+}
+
+/// Packs that are on: some live category still carries the pack's key.
+Set<String> addedPackKeys(Iterable<PackCategoryRef> categories) => {
+      for (final category in categories)
+        if (!category.isArchived && category.packKey != null) category.packKey!,
+    };

@@ -105,10 +105,54 @@ class CategoriesRepository {
           idBySeedKey[item.seed.key] = id;
         }
         await (db.update(db.categories)
+              ..where((t) => t.seedKey.isIn(packOwnSeedKeys(pack)) & t.packKey.isNull() & t.deletedAt.isNull()))
+            .write(CategoriesCompanion(packKey: Value(pack.key), updatedAt: Value(DateTime.now())));
+        await (db.update(db.categories)
               ..where((t) => t.packKey.equals(pack.key) & t.isArchived.equals(true) & t.deletedAt.isNull()))
             .write(CategoriesCompanion(isArchived: const Value(false), updatedAt: Value(DateTime.now())));
         return missing.length;
       });
+
+  /// What [removePack] would do right now, for the confirmation dialog.
+  Future<PackRemoval> previewPackRemoval(String packKey) async {
+    final categories = await (db.select(db.categories)..where((t) => t.deletedAt.isNull())).get();
+    return planPackRemoval(packKey: packKey, categories: categories.map(packCategoryRef).toList(), usedIds: await _usedCategoryIds(), otherPacks: categoryPacks);
+  }
+
+  /// Removes pack [packKey]: archives the categories it created that no entry
+  /// or budget uses, and untags the ones in use so they stay as ordinary
+  /// categories. The pack can be added again later.
+  Future<PackRemoval> removePack(String packKey) => db.transaction(() async {
+        final removal = await previewPackRemoval(packKey);
+        final now = DateTime.now();
+        if (removal.archiveIds.isNotEmpty) {
+          await (db.update(db.categories)..where((t) => t.id.isIn(removal.archiveIds)))
+              .write(CategoriesCompanion(isArchived: const Value(true), updatedAt: Value(now)));
+        }
+        if (removal.keepIds.isNotEmpty) {
+          await (db.update(db.categories)..where((t) => t.id.isIn(removal.keepIds)))
+              .write(CategoriesCompanion(packKey: const Value(null), updatedAt: Value(now)));
+        }
+        for (final MapEntry(key: id, value: owner) in removal.handOver.entries) {
+          await (db.update(db.categories)..where((t) => t.id.equals(id)))
+              .write(CategoriesCompanion(packKey: Value(owner), updatedAt: Value(now)));
+        }
+        return removal;
+      });
+
+  Future<Set<String>> _usedCategoryIds() async {
+    final fromEntries = await (db.selectOnly(db.entries, distinct: true)
+          ..addColumns([db.entries.categoryId])
+          ..where(db.entries.deletedAt.isNull() & db.entries.categoryId.isNotNull()))
+        .map((row) => row.read(db.entries.categoryId)!)
+        .get();
+    final fromBudgets = await (db.selectOnly(db.budgets, distinct: true)
+          ..addColumns([db.budgets.categoryId])
+          ..where(db.budgets.deletedAt.isNull() & db.budgets.categoryId.isNotNull()))
+        .map((row) => row.read(db.budgets.categoryId)!)
+        .get();
+    return {...fromEntries, ...fromBudgets};
+  }
 
   Future<int> _maxSortOrder() async {
     final max = db.categories.sortOrder.max();
@@ -116,3 +160,6 @@ class CategoriesRepository {
     return row.read(max) ?? 0;
   }
 }
+
+PackCategoryRef packCategoryRef(Category category) =>
+    PackCategoryRef(id: category.id, parentId: category.parentId, packKey: category.packKey, isArchived: category.isArchived, seedKey: category.seedKey);

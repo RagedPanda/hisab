@@ -116,4 +116,54 @@ void main() {
       expect(templateByKey('blank'), isNull);
     });
   });
+
+  group('planPackRemoval', () {
+    PackCategoryRef ref(String id, {String? parent, String? pack = 'farming', bool archived = false, String? seed}) =>
+        PackCategoryRef(id: id, parentId: parent, packKey: pack, isArchived: archived, seedKey: seed);
+
+    test('archives unused categories and keeps used ones with their parent', () {
+      final removal = planPackRemoval(packKey: 'farming', usedIds: {'seeds'}, categories: [
+        ref('root'), ref('seeds', parent: 'root'), ref('fertiliser', parent: 'root'), ref('sale'),
+      ]);
+      expect(removal.archiveIds, unorderedEquals(['fertiliser', 'sale']));
+      expect(removal.keepIds, unorderedEquals(['root', 'seeds']));
+    });
+
+    test('a parent holding a user-made child stays, archived children do not count', () {
+      final removal = planPackRemoval(packKey: 'farming', usedIds: const {}, categories: [
+        ref('root'), ref('mine', parent: 'root', pack: null), ref('other'), ref('old', parent: 'other', pack: null, archived: true),
+      ]);
+      expect(removal.keepIds, ['root']);
+      expect(removal.archiveIds, ['other']);
+    });
+
+    test('ignores other packs and already archived categories', () {
+      final removal = planPackRemoval(packKey: 'farming', usedIds: const {}, categories: [
+        ref('a', pack: 'shop'), ref('b', archived: true), ref('c'),
+      ]);
+      expect(removal.archiveIds, ['c']);
+      expect(removal.keepIds, isEmpty);
+    });
+
+    test('hands a shared seed to another added pack instead of archiving it', () {
+      final removal = planPackRemoval(
+        packKey: 'construction',
+        usedIds: const {},
+        otherPacks: categoryPacks,
+        categories: [
+          ref('root', pack: 'construction', seed: 'construction'),
+          ref('cement', parent: 'root', pack: 'construction', seed: 'build_cement'),
+          ref('steel', parent: 'root', pack: 'construction', seed: 'build_steel'),
+          ref('reno', pack: 'renovation', seed: 'renovation'),
+        ],
+      );
+      expect(removal.handOver, {'cement': 'renovation'});
+      expect(removal.archiveIds, ['steel']);
+      expect(removal.keepIds, ['root']);
+    });
+
+    test('addedPackKeys skips archived and untagged categories', () {
+      expect(addedPackKeys([ref('a'), ref('b', pack: 'shop', archived: true), ref('c', pack: null)]), {'farming'});
+    });
+  });
 }

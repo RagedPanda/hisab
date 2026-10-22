@@ -307,6 +307,7 @@ class EntriesRepository {
     String? groupId,
     String? paidByMemberId,
     String? splitMethod,
+    String? projectId,
     String? id,
   }) =>
       EntriesCompanion.insert(
@@ -323,5 +324,6 @@ class EntriesRepository {
         groupId: Value(groupId),
         paidByMemberId: Value(paidByMemberId),
         splitMethod: Value(splitMethod),
+        projectId: Value(projectId),
       );
 }

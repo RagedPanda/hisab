@@ -53,10 +53,15 @@ class Categories extends Table with SyncColumns {
   /// Comma separated suggested units for item entry ("L,ml,kg").
   TextColumn get units => text().withDefault(const Constant(''))();
 
+  /// Category pack this row came from (Settings > Categories > Add a pack);
+  /// null for catalog and user-created categories.
+  TextColumn get packKey => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(name: 'entries_project_id', columns: {#projectId})
 class Entries extends Table with SyncColumns {
   TextColumn get id => text()();
 
@@ -78,6 +83,9 @@ class Entries extends Table with SyncColumns {
   TextColumn get paidByMemberId => text().nullable()();
   TextColumn get splitMethod => text().nullable()();
   TextColumn get tags => text().withDefault(const Constant(''))();
+
+  /// Project (vehicle, trip, construction...) this entry is tracked under.
+  TextColumn get projectId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
@@ -107,6 +115,9 @@ class Groups extends Table with SyncColumns {
 
   /// Short code shared with friends so other devices can join (sync plan).
   TextColumn get inviteCode => text().nullable()();
+
+  /// Project this group's expenses roll up into (no UI yet; see roadmap R1).
+  TextColumn get projectId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
@@ -168,6 +179,32 @@ class Budgets extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
+/// A long-running thing money is spent on: a vehicle, a trip, a house build.
+/// Entries link to it through [Entries.projectId]; totals are derived.
+class Projects extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get icon => text().withDefault(const Constant('folder'))();
+  IntColumn get color => integer()();
+
+  /// Key of the template the project was created from; null for blank.
+  TextColumn get templateKey => text().nullable()();
+
+  /// active | completed | archived
+  TextColumn get status => text().withDefault(const Constant('active'))();
+  DateTimeColumn get startDate => dateTime().nullable()();
+  DateTimeColumn get endDate => dateTime().nullable()();
+
+  /// null = no budget set for this project.
+  IntColumn get budgetMinor => integer().nullable()();
+  TextColumn get currency => text().withDefault(const Constant('INR'))();
+  TextColumn get notes => text().withDefault(const Constant(''))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class SmsLog extends Table {
   /// Hash of sender+body+timestamp so a message is only processed once.
   TextColumn get id => text()();
@@ -196,18 +233,28 @@ class SmsLog extends Table {
   Settlements,
   Budgets,
   SmsLog,
+  Projects,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
           await seedDefaults();
+        },
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(projects);
+            await m.addColumn(entries, entries.projectId);
+            await m.createIndex(entriesProjectId);
+            await m.addColumn(groups, groups.projectId);
+            await m.addColumn(categories, categories.packKey);
+          }
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');

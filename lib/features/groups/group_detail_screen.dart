@@ -18,6 +18,8 @@ import 'group_expenses_tab.dart';
 import 'member_display.dart';
 import 'member_sheet.dart';
 import 'record_payment_sheet.dart';
+import 'settle_reminder_service.dart';
+import 'settle_schedule_tile.dart';
 import 'settle_up_messages.dart';
 import 'settle_up_sheet.dart';
 
@@ -34,6 +36,11 @@ class GroupDetailScreen extends ConsumerWidget {
     final detail = ref.watch(groupDetailProvider(groupId)).value;
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
     final symbol = ref.watch(settingsProvider).currencySymbol;
+    // Balances changed: reword the group's scheduled settle-up alert. A no-op
+    // without a schedule, and nothing is written when the text is unchanged.
+    ref.listen(groupDetailProvider(groupId), (previous, next) {
+      if (previous?.value != null && next.value != null) ref.read(settleReminderServiceProvider).refreshGroup(groupId);
+    });
     if (detail == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final group = detail.group;
     final members = detail.members;
@@ -336,6 +343,8 @@ class _BalancesTab extends ConsumerWidget {
               subtitle: Text(l10n.recordAPaymentHint),
               onTap: () => openPayment(),
             ),
+            const Divider(height: 1),
+            SettleScheduleTile(detail: detail, symbol: symbol),
           ]),
         ),
         if (settlements.isNotEmpty) ...[

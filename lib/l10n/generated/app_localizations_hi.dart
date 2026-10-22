@@ -2574,4 +2574,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupRecurringUpcoming => 'दोहराए जाने वाले';
+
+  @override
+  String get settleReminderShareNudge => 'याद दिलाने वाला संदेश भेजें';
 }

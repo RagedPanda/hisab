@@ -2582,4 +2582,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupRecurringUpcoming => 'Repeating';
+
+  @override
+  String get settleReminderShareNudge => 'Share a nudge';
 }

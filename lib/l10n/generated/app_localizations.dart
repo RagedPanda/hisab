@@ -4267,6 +4267,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Repeating'**
   String get groupRecurringUpcoming;
+
+  /// No description provided for @settleReminderShareNudge.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a nudge'**
+  String get settleReminderShareNudge;
 }
 
 class _AppLocalizationsDelegate

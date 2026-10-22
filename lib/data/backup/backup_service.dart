@@ -35,6 +35,7 @@ class BackupService {
       'entryFieldValues': await dump(db.entryFieldValues),
       'reminders': await dump(db.reminders),
       'entryPayers': await dump(db.entryPayers),
+      'itemAssignments': await dump(db.itemAssignments),
     };
   }
 
@@ -93,6 +94,7 @@ class BackupService {
       await restore(db.entryFieldValues, 'entryFieldValues', EntryFieldValue.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.reminders, 'reminders', Reminder.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.entryPayers, 'entryPayers', EntryPayer.fromJson, (r) => r.id, (r) => r.updatedAt);
+      await restore(db.itemAssignments, 'itemAssignments', ItemAssignment.fromJson, (r) => r.id, (r) => r.updatedAt);
     });
     return written;
   }

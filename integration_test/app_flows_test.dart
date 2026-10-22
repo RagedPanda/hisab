@@ -1073,8 +1073,9 @@ void main() {
 
     await tapFinder(tester, find.byType(FloatingActionButton));
     expect(find.descendant(of: projectChip, matching: find.text('Kitchen')), findsOneWidget);
-    await tapFinder(tester, find.descendant(of: projectChip, matching: find.byIcon(Icons.cancel)));
+    await tapFinder(tester, find.descendant(of: projectChip, matching: find.byIcon(Icons.close)));
     expect(find.text('Add to project'), findsOneWidget, reason: 'the cross clears the project');
+    await scrollTo(tester, find.text('Choose category'), up: true);
     await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
     await enterText(tester, _amountField(), '100');
     await _saveEntry(tester, formatMinor(10000));
@@ -1089,7 +1090,7 @@ void main() {
     expect(find.descendant(of: filterChip, matching: find.text('Swift car')), findsOneWidget);
     expect(find.byType(EntryTile), findsOneWidget);
     await shoot(tester, 'entries_project_filter');
-    await tapFinder(tester, find.descendant(of: filterChip, matching: find.byIcon(Icons.cancel)));
+    await tapFinder(tester, find.descendant(of: filterChip, matching: find.byIcon(Icons.close)));
     expect(find.byType(EntryTile), findsNWidgets(3));
 
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));

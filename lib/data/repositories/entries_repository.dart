@@ -129,6 +129,14 @@ class EntriesRepository {
 
   /// My ledger in [range] reduced to the fields the roll-ups need: one query,
   /// no item or split hydration, so dashboards stay cheap at thousands of rows.
+  /// The distinct non-empty tags text of live entries, for the tag filter.
+  Stream<List<String>> watchTagTexts() {
+    final query = db.selectOnly(db.entries, distinct: true)
+      ..addColumns([db.entries.tags])
+      ..where(db.entries.deletedAt.isNull() & db.entries.tags.equals('').not());
+    return query.watch().map((rows) => [for (final row in rows) row.read(db.entries.tags)!]);
+  }
+
   /// Whether any live entry exists at all, for the first-run empty state.
   Stream<bool> watchHasAnyEntries() {
     final query = db.selectOnly(db.entries)

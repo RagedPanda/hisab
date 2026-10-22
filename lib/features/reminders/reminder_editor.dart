@@ -14,6 +14,7 @@ import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../categories/category_picker.dart';
 import '../shell/widgets/common.dart';
+import 'reminder_actions.dart';
 import 'reminder_labels.dart';
 
 /// Repeats offered in the editor; weekly suits few bills, so it stays out.
@@ -106,45 +107,12 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
     if (category != null) setState(() => _categoryId = category.id);
   }
 
-  /// Pre-permission sheet shown the first time a reminder with alerts is
-  /// saved while notifications are off; the reminder is saved either way.
-  Future<void> _askPermissionIfNeeded() async {
-    final permission = await ref.read(notificationServiceProvider).checkPermission();
-    if (permission.notificationsAllowed || !mounted) return;
-    final l10n = context.l10n;
-    final allow = await showModalBottomSheet<bool>(
-      context: context,
-      useRootNavigator: true,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.notifications_active_outlined, size: 48, color: Theme.of(sheetContext).colorScheme.primary),
-            const SizedBox(height: 12),
-            Text(l10n.notifPrePromptTitle, style: Theme.of(sheetContext).textTheme.titleLarge, textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            Text(l10n.notifPrePromptBody, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            Row(children: [
-              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext, false), child: Text(l10n.notNow))),
-              const SizedBox(width: 12),
-              Expanded(child: FilledButton(onPressed: () => Navigator.pop(sheetContext, true), child: Text(l10n.allow))),
-            ]),
-          ]),
-        ),
-      ),
-    );
-    if (allow ?? false) await ref.read(notificationServiceProvider).requestPermission();
-    ref.invalidate(notificationPermissionProvider);
-  }
-
   Future<void> _save() async {
     setState(() => _submitted = true);
     final draft = _draft;
     if (draft.error != null || (_notify && _daysBefore.isEmpty) || _saving) return;
     setState(() => _saving = true);
-    if (_notify) await _askPermissionIfNeeded();
+    if (_notify) await askNotificationPermissionIfNeeded(context, ref);
     final id = await ref.read(reminderSchedulerProvider).save(draft);
     if (mounted) Navigator.pop(context, id);
   }

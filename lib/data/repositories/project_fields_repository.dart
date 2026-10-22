@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../core/ids.dart';
+import '../../domain/projects/project_fields.dart';
 import '../../domain/projects/project_metrics.dart';
 import '../../domain/projects/project_templates.dart';
 import '../db/database.dart';

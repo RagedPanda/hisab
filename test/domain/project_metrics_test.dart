@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hisab/domain/projects/project_fields.dart';
 import 'package:hisab/domain/projects/project_metrics.dart';
 import 'package:hisab/domain/projects/project_templates.dart';
 
@@ -117,5 +118,19 @@ void main() {
   test('FieldReading.isEmpty treats blank text as empty', () {
     expect(const FieldReading(text: '  ').isEmpty, isTrue);
     expect(const FieldReading(number: 0).isEmpty, isFalse);
+  });
+
+  test('parseFieldNumber reads decimals with a point or a comma', () {
+    expect(parseFieldNumber(' 12.5 '), 12.5);
+    expect(parseFieldNumber('12,5'), 12.5);
+    expect(parseFieldNumber(''), isNull);
+    expect(parseFieldNumber('abc'), isNull);
+  });
+
+  test('validateNewField needs a name, and options for choice and unit fields', () {
+    expect(validateNewField(label: ' ', type: ProjectFieldType.text, choices: const []), NewFieldError.missingName);
+    expect(validateNewField(label: 'Floor', type: ProjectFieldType.choice, choices: const []), NewFieldError.missingOptions);
+    expect(validateNewField(label: 'Floor', type: ProjectFieldType.choice, choices: const ['Ground']), isNull);
+    expect(validateNewField(label: 'Tip', type: ProjectFieldType.number, choices: const []), isNull);
   });
 }

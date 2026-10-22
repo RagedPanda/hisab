@@ -4,26 +4,16 @@
 /// Pure, no Flutter or Drift imports.
 library;
 
-import 'dart:convert';
-
+import 'project_fields.dart';
 import 'project_templates.dart';
+
+export 'project_fields.dart' show FieldReading;
 
 /// Field keys the metrics understand. Templates use the same keys.
 const odometerFieldKey = 'odometer';
 const litresFieldKey = 'litres';
 const builtUpAreaFieldKey = 'built_up_area';
 const travellersFieldKey = 'travellers';
-
-/// One value an entry recorded for a field. A unit field keeps its number in
-/// [number] and its unit in [text].
-class FieldReading {
-  const FieldReading({this.number, this.text, this.date});
-  final double? number;
-  final String? text;
-  final DateTime? date;
-
-  bool get isEmpty => number == null && (text == null || text!.trim().isEmpty) && date == null;
-}
 
 /// An entry reduced to what the metrics need.
 class MetricEntry {
@@ -150,19 +140,3 @@ ChoiceBreakdown choiceBreakdown(TemplateField field, List<MetricEntry> entries) 
   };
   return ChoiceBreakdown(fieldKey: field.key, byOption: ordered, unassignedMinor: unassigned);
 }
-
-/// Options stored as a JSON array; anything unreadable is no options.
-List<String> decodeChoices(String json) {
-  try {
-    final decoded = jsonDecode(json);
-    return decoded is List ? [for (final item in decoded) if (item is String && item.trim().isNotEmpty) item.trim()] : const [];
-  } on FormatException {
-    return const [];
-  }
-}
-
-String encodeChoices(List<String> choices) => jsonEncode([for (final choice in choices) if (choice.trim().isNotEmpty) choice.trim()]);
-
-/// Splits a comma-separated list typed by the user into options, dropping
-/// blanks and repeats.
-List<String> parseChoiceList(String input) => input.split(RegExp(r'[,،\n]')).map((part) => part.trim()).where((part) => part.isNotEmpty).toSet().toList();

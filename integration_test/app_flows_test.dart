@@ -9,6 +9,7 @@ library;
 
 import 'dart:ui' as ui;
 
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,6 +18,7 @@ import 'package:hisab/core/dates.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/backup/backup_service.dart';
 import 'package:hisab/data/db/database.dart';
+import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/data/debug/demo_plan.dart';
 import 'package:hisab/data/debug/demo_seed.dart';
 import 'package:hisab/domain/backup/backup_codec.dart';
@@ -1196,5 +1198,136 @@ void main() {
     expect(find.text('Reminded today'), findsOneWidget);
     expect(find.text('Remind again'), findsOneWidget);
     await shoot(tester, 'reminded_today');
+  });
+
+  testWidgets('22 entries search and filters: payee, item, account, amount, tag, category, project, dates, clear all, Hindi', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    final now = DateTime.now();
+    final thisMonth = DateTime(now.year, now.month, 1, 9);
+    final lastMonth = DateTime(now.year, now.month - 1, 10, 9);
+    final categories = await fresh.db.select(fresh.db.categories).get();
+    String categoryOf(String seedKey) => categories.firstWhere((category) => category.seedKey == seedKey).id;
+    final hdfc = await fresh.read(accountsRepositoryProvider).create(name: 'HDFC', type: 'bank', color: 0xFF1E88E5);
+    final carId = await fresh.read(projectsRepositoryProvider).create(name: 'Swift car', icon: 'folder', color: 0xFF1E88E5);
+    final entries = fresh.read(entriesRepositoryProvider);
+    final milkId = 'milk';
+    await entries.saveEntry(
+      EntriesRepository.newExpense(id: milkId, amountMinor: 45000, occurredAt: thisMonth, categoryId: categoryOf('groceries'), payee: 'Sharma Dairy', note: 'Morning milk'),
+      items: [EntryItemsCompanion.insert(id: 'paneer', entryId: milkId, name: 'Paneer', unitPriceMinor: 45000, amountMinor: 45000)],
+    );
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 250000, occurredAt: thisMonth, categoryId: categoryOf('fuel'), accountId: hdfc.id, projectId: carId, note: 'Highway fill').copyWith(tags: const Value('#trip')));
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 12000, occurredAt: thisMonth, note: 'Chai').copyWith(tags: const Value('#office')));
+    await entries.saveEntry(EntriesRepository.newExpense(kind: 'income', amountMinor: 5000000, occurredAt: thisMonth, categoryId: categoryOf('salary'), payee: 'Acme'));
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 800000, occurredAt: lastMonth, categoryId: categoryOf('rent'), note: 'Old rent'));
+    await pumpApp(tester, fresh);
+
+    final search = find.byKey(const ValueKey('entries.search'));
+    final results = find.byKey(const ValueKey('entries.resultsCount'));
+    final filterSheet = find.byKey(const ValueKey('filter.sheet'));
+    Future<void> openFilters() => tapFinder(tester, find.byKey(const ValueKey('entries.filters')), frames: 10);
+    Future<void> applyFilters() => tapFinder(tester, find.byKey(const ValueKey('filter.apply')), frames: 10);
+    Future<void> clearAll() => tapFinder(tester, find.byKey(const ValueKey('entries.clearAll')), frames: 10);
+    Finder tileAmount(int minor) => find.descendant(of: find.byType(EntryTile), matching: find.textContaining(formatMinor(minor, showDecimals: false)));
+    void expectResults(int count) {
+      expect(find.byType(EntryTile), findsNWidgets(count));
+      expect(tester.widget<Text>(results).data, count == 1 ? '1 result' : '$count results');
+    }
+
+    await goTab(tester, 'Entries');
+    expect(find.byType(EntryTile), findsNWidgets(4));
+    expect(results, findsNothing, reason: 'no count until something narrows the list');
+
+    await enterText(tester, search, 'paneer');
+    expectResults(1);
+    expect(tileAmount(45000), findsOneWidget, reason: 'item names are searched');
+    await shoot(tester, 'entries_search_item');
+    await enterText(tester, search, 'sharma');
+    expectResults(1);
+    await enterText(tester, search, 'chai');
+    expectResults(1);
+    await clearAll();
+    expect(find.byType(EntryTile), findsNWidgets(4));
+    expect(find.descendant(of: search, matching: find.text('chai')), findsNothing, reason: 'clear all empties the search box');
+
+    await openFilters();
+    expect(find.text('Filter entries'), findsOneWidget);
+    await scrollTo(tester, find.byKey(const ValueKey('filter.tag.office')), within: filterSheet);
+    expect(find.byKey(const ValueKey('filter.tag.trip')), findsOneWidget, reason: 'tags in use are offered');
+    await scrollTo(tester, find.byKey(const ValueKey('filter.project')), up: true, within: filterSheet);
+    await shoot(tester, 'entry_filter_sheet');
+    await tapFinder(tester, find.byKey(ValueKey('filter.account.${hdfc.id}')));
+    await enterText(tester, find.byKey(const ValueKey('filter.minAmount')), '1000');
+    await enterText(tester, find.byKey(const ValueKey('filter.maxAmount')), '3000');
+    await applyFilters();
+    expectResults(1);
+    expect(find.byKey(const ValueKey('entries.filter.account')), findsOneWidget);
+    expect(find.byKey(const ValueKey('entries.filter.amount')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const ValueKey('entries.filters')), matching: find.text('2')), findsOneWidget, reason: 'the badge counts active filters');
+    await shoot(tester, 'entries_filtered');
+    await tapFinder(tester, find.descendant(of: find.byKey(const ValueKey('entries.filter.account')), matching: find.byIcon(Icons.close)));
+    expectResults(1);
+    await tapFinder(tester, find.descendant(of: find.byKey(const ValueKey('entries.filter.amount')), matching: find.byIcon(Icons.close)));
+    expect(find.byType(EntryTile), findsNWidgets(4));
+
+    await openFilters();
+    await enterText(tester, find.byKey(const ValueKey('filter.minAmount')), '500');
+    await enterText(tester, find.byKey(const ValueKey('filter.maxAmount')), '100');
+    expect(find.text('Min is more than max'), findsOneWidget);
+    expect(tester.widget<FilledButton>(find.byKey(const ValueKey('filter.apply'))).onPressed, isNull);
+    await tapFinder(tester, find.byKey(const ValueKey('filter.clearAll')));
+    await scrollTo(tester, find.byKey(const ValueKey('filter.tag.office')), within: filterSheet);
+    await tapFinder(tester, find.byKey(const ValueKey('filter.tag.office')));
+    await applyFilters();
+    expectResults(1);
+    expect(tileAmount(12000), findsOneWidget);
+    await clearAll();
+
+    await openFilters();
+    await tapFinder(tester, find.byKey(const ValueKey('filter.category')));
+    await enterText(tester, find.widgetWithText(TextField, 'Search categories'), 'fuel');
+    await tapText(tester, 'Fuel / Petrol / Diesel');
+    await tapFinder(tester, find.byKey(const ValueKey('filter.project')));
+    await tapFinder(tester, find.byKey(ValueKey('project.option.$carId')));
+    await applyFilters();
+    expectResults(1);
+    expect(find.byKey(const ValueKey('entries.filter.category')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const ValueKey('entries.projectFilter')), matching: find.text('Swift car')), findsOneWidget);
+    await clearAll();
+
+    await openFilters();
+    await scrollTo(tester, find.byKey(const ValueKey('filter.dates')), within: filterSheet);
+    await tapFinder(tester, find.byKey(const ValueKey('filter.dates')), frames: 10);
+    await tapFinder(tester, find.byIcon(Icons.edit_outlined));
+    final dayFormat = DateFormat.yMd('en');
+    await enterText(tester, find.widgetWithText(TextField, 'Start Date'), dayFormat.format(DateTime(lastMonth.year, lastMonth.month, 1)));
+    await enterText(tester, find.widgetWithText(TextField, 'End Date'), dayFormat.format(DateTime(lastMonth.year, lastMonth.month, 20)));
+    await tapText(tester, 'OK', last: true, frames: 10);
+    await applyFilters();
+    expectResults(1);
+    expect(tileAmount(800000), findsOneWidget, reason: 'a date range reaches outside the selected month');
+    expect(find.byType(MonthSwitcher), findsNothing, reason: 'the date filter replaces the month');
+    expect(find.byKey(const ValueKey('entries.filter.dates')), findsOneWidget);
+    await shoot(tester, 'entries_date_filter');
+    await clearAll();
+    expect(find.byType(EntryTile), findsNWidgets(4));
+    expect(find.byType(MonthSwitcher), findsOneWidget);
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    await enterText(tester, search, 'paneer');
+    expect(find.text('1 नतीजा'), findsOneWidget);
+    expect(find.text(hi.clearAll), findsOneWidget);
+    await shoot(tester, 'hi_entries_search');
+    await clearAll();
+    await openFilters();
+    expect(find.text(hi.filterEntries), findsOneWidget);
+    expect(find.text(hi.anyProject), findsOneWidget);
+    expect(find.text(hi.showResults), findsOneWidget);
+    await shoot(tester, 'hi_entry_filter_sheet');
+    await tapFinder(tester, find.byKey(const ValueKey('filter.apply')));
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
   });
 }

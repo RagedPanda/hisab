@@ -10,10 +10,12 @@ import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
 import '../../data/repositories/groups_repository.dart';
+import '../../data/repositories/projects_repository.dart';
 import '../../domain/accounts/account_label.dart';
 import '../../domain/budget/budget_math.dart';
 import '../../domain/categories/category_filter.dart';
 import '../../domain/ledger/personal_totals.dart';
+import '../../domain/projects/project_math.dart';
 import '../../domain/split/group_net.dart';
 import '../../domain/stats/category_shares.dart';
 import '../../domain/stats/month_summary.dart';
@@ -119,6 +121,20 @@ class BudgetsOverview {
 
   bool get isEmpty => shown.isEmpty;
 }
+
+class ProjectsOverview {
+  const ProjectsOverview({required this.shown, required this.more});
+  final List<ProjectView> shown;
+  final int more;
+
+  bool get isEmpty => shown.isEmpty;
+}
+
+/// Active projects for the dashboard card, most recently touched first.
+final projectsOverviewProvider = Provider<AsyncValue<ProjectsOverview>>((ref) => mapAsync(ref.watch(projectViewsProvider), (views) {
+      final rows = activeProjectRows(views, statusOf: (view) => view.status);
+      return ProjectsOverview(shown: rows.shown, more: rows.more);
+    }));
 
 final budgetsOverviewProvider = Provider<AsyncValue<BudgetsOverview>>((ref) {
   final lists = combineAsync(ref.watch(budgetsProvider), ref.watch(allCategoriesProvider), (budgets, categories) => (budgets: budgets, categories: categories));

@@ -85,6 +85,7 @@ class SettingsScreen extends ConsumerWidget {
               ListTile(leading: const Icon(Icons.account_balance_outlined), title: Text(l10n.accounts), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/accounts')),
               ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.categories), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/categories')),
               ListTile(leading: const Icon(Icons.savings_outlined), title: Text(l10n.budgets), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/budgets')),
+              ListTile(leading: const Icon(Icons.folder_outlined), title: Text(l10n.projects), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/projects')),
             ]),
           ),
           SectionHeader(l10n.automation),

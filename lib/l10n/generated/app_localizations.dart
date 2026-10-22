@@ -3421,6 +3421,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You owe {amount} in all'**
   String settleReminderYouOweTotal(String amount);
+
+  /// No description provided for @settleReminderSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me to settle up'**
+  String get settleReminderSheetTitle;
+
+  /// No description provided for @settleReminderWith.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settleReminderWith;
+
+  /// No description provided for @settleReminderEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get settleReminderEveryone;
+
+  /// No description provided for @settleReminderHowOften.
+  ///
+  /// In en, this message translates to:
+  /// **'How often'**
+  String get settleReminderHowOften;
+
+  /// No description provided for @settleReminderMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get settleReminderMonthly;
+
+  /// No description provided for @settleReminderWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get settleReminderWeekly;
+
+  /// No description provided for @settleReminderOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'On day'**
+  String get settleReminderOnDay;
+
+  /// No description provided for @settleReminderLastDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Last day'**
+  String get settleReminderLastDay;
+
+  /// No description provided for @settleReminderNextAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Next reminder: {date}'**
+  String settleReminderNextAt(String date);
+
+  /// No description provided for @settleReminderTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get settleReminderTurnOff;
+
+  /// No description provided for @settleReminderOffLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle-up reminder off'**
+  String get settleReminderOffLabel;
+
+  /// No description provided for @settleReminderMonthlySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder on day {day} every month'**
+  String settleReminderMonthlySummary(String day);
+
+  /// No description provided for @settleReminderWeeklySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder every {weekday}'**
+  String settleReminderWeeklySummary(String weekday);
+
+  /// No description provided for @settleReminderMonthlyLastDaySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder on the last day of every month'**
+  String get settleReminderMonthlyLastDaySummary;
 }
 
 class _AppLocalizationsDelegate

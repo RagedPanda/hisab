@@ -1,3 +1,6 @@
+import 'package:intl/intl.dart';
+
+import '../../domain/recurring/recurrence.dart';
 import '../../domain/split/debt_simplifier.dart';
 import '../../domain/split/settle_reminder.dart';
 import '../../domain/split/settle_up_links.dart';
@@ -68,3 +71,13 @@ String? settleReminderNudge(
   }
   return remindEveryoneMessage(l10n, transfers: [for (final transfer in transfers) wordsOf(transfer)], groupName: groupName);
 }
+
+/// Full weekday name for ISO [weekday] (1 = Monday) in [locale].
+String weekdayName(int weekday, String? locale) => DateFormat.EEEE(locale).format(DateTime(2024, 1, weekday));
+
+/// One line describing a settle-up schedule, e.g. "Reminder on day 1 every month".
+String settleScheduleSummary(AppLocalizations l10n, SettleReminderSchedule schedule, {String? locale}) => switch (schedule.frequency) {
+      RecurrenceFrequency.weekly => l10n.settleReminderWeeklySummary(weekdayName(schedule.weekday ?? DateTime.monday, locale)),
+      _ when schedule.dayOfMonth == kLastDayOfMonth => l10n.settleReminderMonthlyLastDaySummary,
+      _ => l10n.settleReminderMonthlySummary('${schedule.dayOfMonth ?? 1}'),
+    };

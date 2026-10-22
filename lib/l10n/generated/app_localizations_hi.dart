@@ -2005,4 +2005,53 @@ class AppLocalizationsHi extends AppLocalizations {
   String settleReminderYouOweTotal(String amount) {
     return 'आपको कुल $amount देने हैं';
   }
+
+  @override
+  String get settleReminderSheetTitle => 'हिसाब बराबर करने की याद दिलाएँ';
+
+  @override
+  String get settleReminderWith => 'किसके बारे में';
+
+  @override
+  String get settleReminderEveryone => 'सभी';
+
+  @override
+  String get settleReminderHowOften => 'कितनी बार';
+
+  @override
+  String get settleReminderMonthly => 'हर महीने';
+
+  @override
+  String get settleReminderWeekly => 'हर हफ़्ते';
+
+  @override
+  String get settleReminderOnDay => 'तारीख़';
+
+  @override
+  String get settleReminderLastDay => 'आख़िरी दिन';
+
+  @override
+  String settleReminderNextAt(String date) {
+    return 'अगली याद: $date';
+  }
+
+  @override
+  String get settleReminderTurnOff => 'बंद करें';
+
+  @override
+  String get settleReminderOffLabel => 'हिसाब की याद बंद है';
+
+  @override
+  String settleReminderMonthlySummary(String day) {
+    return 'हर महीने $day तारीख़ को याद';
+  }
+
+  @override
+  String settleReminderWeeklySummary(String weekday) {
+    return 'हर $weekday को याद';
+  }
+
+  @override
+  String get settleReminderMonthlyLastDaySummary =>
+      'हर महीने के आख़िरी दिन याद';
 }

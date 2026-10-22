@@ -577,5 +577,19 @@
   "settleReminderYouOwe": "आपको {name} को {amount} देने हैं",
   "settleReminderPeopleOweYou": "{count, plural, =1{1 व्यक्ति को आपको {amount} देने हैं} other{{count} लोगों को आपको {amount} देने हैं}}",
   "@settleReminderPeopleOweYou": {"placeholders": {"count": {"type": "int"}, "amount": {"type": "String"}}},
-  "settleReminderYouOweTotal": "आपको कुल {amount} देने हैं"
+  "settleReminderYouOweTotal": "आपको कुल {amount} देने हैं",
+  "settleReminderSheetTitle": "हिसाब बराबर करने की याद दिलाएँ",
+  "settleReminderWith": "किसके बारे में",
+  "settleReminderEveryone": "सभी",
+  "settleReminderHowOften": "कितनी बार",
+  "settleReminderMonthly": "हर महीने",
+  "settleReminderWeekly": "हर हफ़्ते",
+  "settleReminderOnDay": "तारीख़",
+  "settleReminderLastDay": "आख़िरी दिन",
+  "settleReminderNextAt": "अगली याद: {date}",
+  "settleReminderTurnOff": "बंद करें",
+  "settleReminderOffLabel": "हिसाब की याद बंद है",
+  "settleReminderMonthlySummary": "हर महीने {day} तारीख़ को याद",
+  "settleReminderWeeklySummary": "हर {weekday} को याद",
+  "settleReminderMonthlyLastDaySummary": "हर महीने के आख़िरी दिन याद"
 }

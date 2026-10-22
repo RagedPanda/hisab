@@ -675,5 +675,22 @@
   "settleReminderPeopleOweYou": "{count, plural, =1{1 person owes you {amount}} other{{count} people owe you {amount}}}",
   "@settleReminderPeopleOweYou": {"placeholders": {"count": {"type": "int"}, "amount": {"type": "String"}}},
   "settleReminderYouOweTotal": "You owe {amount} in all",
-  "@settleReminderYouOweTotal": {"placeholders": {"amount": {"type": "String"}}}
+  "@settleReminderYouOweTotal": {"placeholders": {"amount": {"type": "String"}}},
+  "settleReminderSheetTitle": "Remind me to settle up",
+  "settleReminderWith": "About",
+  "settleReminderEveryone": "Everyone",
+  "settleReminderHowOften": "How often",
+  "settleReminderMonthly": "Monthly",
+  "settleReminderWeekly": "Weekly",
+  "settleReminderOnDay": "On day",
+  "settleReminderLastDay": "Last day",
+  "settleReminderNextAt": "Next reminder: {date}",
+  "@settleReminderNextAt": {"placeholders": {"date": {"type": "String"}}},
+  "settleReminderTurnOff": "Turn off",
+  "settleReminderOffLabel": "Settle-up reminder off",
+  "settleReminderMonthlySummary": "Reminder on day {day} every month",
+  "@settleReminderMonthlySummary": {"placeholders": {"day": {"type": "String"}}},
+  "settleReminderWeeklySummary": "Reminder every {weekday}",
+  "@settleReminderWeeklySummary": {"placeholders": {"weekday": {"type": "String"}}},
+  "settleReminderMonthlyLastDaySummary": "Reminder on the last day of every month"
 }

@@ -2012,4 +2012,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String settleReminderYouOweTotal(String amount) {
     return 'You owe $amount in all';
   }
+
+  @override
+  String get settleReminderSheetTitle => 'Remind me to settle up';
+
+  @override
+  String get settleReminderWith => 'About';
+
+  @override
+  String get settleReminderEveryone => 'Everyone';
+
+  @override
+  String get settleReminderHowOften => 'How often';
+
+  @override
+  String get settleReminderMonthly => 'Monthly';
+
+  @override
+  String get settleReminderWeekly => 'Weekly';
+
+  @override
+  String get settleReminderOnDay => 'On day';
+
+  @override
+  String get settleReminderLastDay => 'Last day';
+
+  @override
+  String settleReminderNextAt(String date) {
+    return 'Next reminder: $date';
+  }
+
+  @override
+  String get settleReminderTurnOff => 'Turn off';
+
+  @override
+  String get settleReminderOffLabel => 'Settle-up reminder off';
+
+  @override
+  String settleReminderMonthlySummary(String day) {
+    return 'Reminder on day $day every month';
+  }
+
+  @override
+  String settleReminderWeeklySummary(String weekday) {
+    return 'Reminder every $weekday';
+  }
+
+  @override
+  String get settleReminderMonthlyLastDaySummary =>
+      'Reminder on the last day of every month';
 }

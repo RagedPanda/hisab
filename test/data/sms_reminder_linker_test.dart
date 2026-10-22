@@ -9,14 +9,14 @@ import 'package:hisab/domain/sms/parsed_transaction.dart';
 class FakeReminders implements ReminderPaymentPort {
   FakeReminders(this.pending);
   final List<ReminderMatchCandidate> pending;
-  final List<({String reminderId, String entryId, DateTime paidAt})> paid = [];
+  final List<({String reminderId, String entryId})> paid = [];
 
   @override
   Future<List<ReminderMatchCandidate>> pendingCandidates() async => pending;
 
   @override
-  Future<void> markPaidBySms({required String reminderId, required String entryId, required DateTime paidAt}) async {
-    paid.add((reminderId: reminderId, entryId: entryId, paidAt: paidAt));
+  Future<void> markPaidBySms({required String reminderId, required String entryId}) async {
+    paid.add((reminderId: reminderId, entryId: entryId));
     pending.removeWhere((candidate) => candidate.id == reminderId);
   }
 }
@@ -42,7 +42,7 @@ void main() {
     db = AppDatabase(NativeDatabase.memory());
     smsLog = SmsLogRepository(db);
     reminders = FakeReminders([
-      ReminderMatchCandidate(id: 'electricity', kind: 'bill', title: 'Electricity', payee: 'BESCOM', dueAt: DateTime(2026, 11, 5), amountMinor: 150000),
+      ReminderMatchCandidate(id: 'electricity', kind: 'bill', title: 'Electricity', matchKeywords: const ['bescom'], dueAt: DateTime(2026, 11, 5), amountMinor: 150000),
     ]);
     linker = SmsReminderLinker(smsLog: smsLog, reminders: reminders);
     await smsLog.record(id: 's1', sender: 'HDFCBK', body: bescomDebit.raw, receivedAt: paidAt, status: 'added', entryId: 'e1');
@@ -52,13 +52,13 @@ void main() {
 
   test('a matching SMS pays the reminder with its entry and is linked to it', () async {
     expect(await linker.linkEntry(smsId: 's1', parsed: bescomDebit, entryId: 'e1'), 'electricity');
-    expect(reminders.paid.single, (reminderId: 'electricity', entryId: 'e1', paidAt: paidAt));
+    expect(reminders.paid.single, (reminderId: 'electricity', entryId: 'e1'));
     expect((await smsLog.getById('s1'))!.matchedReminderId, 'electricity');
   });
 
   test('the same SMS never pays a second reminder', () async {
     await linker.linkEntry(smsId: 's1', parsed: bescomDebit, entryId: 'e1');
-    reminders.pending.add(ReminderMatchCandidate(id: 'water', kind: 'bill', title: 'Water', payee: 'BESCOM', dueAt: DateTime(2026, 11, 6), amountMinor: 150000));
+    reminders.pending.add(ReminderMatchCandidate(id: 'water', kind: 'bill', title: 'Water', matchKeywords: const ['bescom'], dueAt: DateTime(2026, 11, 6), amountMinor: 150000));
     expect(await linker.linkEntry(smsId: 's1', parsed: bescomDebit, entryId: 'e1'), isNull);
     expect(reminders.paid, hasLength(1));
   });

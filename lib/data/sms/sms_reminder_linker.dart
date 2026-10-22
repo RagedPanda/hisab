@@ -10,7 +10,7 @@ abstract interface class ReminderPaymentPort {
 
   /// Marks [reminderId] done by [entryId], records it in the reminder's
   /// history and advances it to its next due date.
-  Future<void> markPaidBySms({required String reminderId, required String entryId, required DateTime paidAt});
+  Future<void> markPaidBySms({required String reminderId, required String entryId});
 }
 
 /// After an SMS becomes an entry, pays the reminder it matches (if any) and
@@ -32,7 +32,7 @@ class SmsReminderLinker {
       policy: policy,
     );
     if (match == null) return null;
-    await reminders.markPaidBySms(reminderId: match.reminderId, entryId: entryId, paidAt: parsed.occurredAt);
+    await reminders.markPaidBySms(reminderId: match.reminderId, entryId: entryId);
     await smsLog.setMatchedReminder(smsId, match.reminderId);
     return match.reminderId;
   }

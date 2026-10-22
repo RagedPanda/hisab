@@ -15,6 +15,8 @@ import '../projects/project_templates_screen.dart';
 import '../projects/projects_screen.dart';
 import '../settings/settings_screen.dart';
 import '../reminders/reminders_screen.dart';
+import '../upcoming/upcoming_calendar_screen.dart';
+import '../upcoming/upcoming_routes.dart';
 import '../sms/sms_screen.dart';
 import '../transactions/transactions_screen.dart';
 import '../recurring/recurring_rule_form_screen.dart';
@@ -92,6 +94,7 @@ final appRouter = GoRouter(
     ),
     GoRoute(path: '/reminders', parentNavigatorKey: _rootKey, builder: (_, _) => const RemindersScreen()),
     GoRoute(path: '/reminders/:id', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: RemindersScreen(highlightId: state.pathParameters['id']))),
+    GoRoute(path: kUpcomingCalendarRoute, parentNavigatorKey: _rootKey, builder: (_, _) => const UpcomingCalendarScreen()),
     GoRoute(path: '/sms', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: SmsScreen(sharedText: state.uri.queryParameters['text']))),
   ],
 );

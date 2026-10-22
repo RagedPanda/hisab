@@ -2225,4 +2225,72 @@ class AppLocalizationsHi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get documentRemindersSection => 'दस्तावेज़ और नवीनीकरण';
+
+  @override
+  String get documentRemindersHint =>
+      'पीयूसी, बीमा, पासपोर्ट और अन्य समाप्ति तिथियाँ';
+
+  @override
+  String get documentPresetVehicleInsurance => 'वाहन बीमा';
+
+  @override
+  String get documentPresetPuc => 'पीयूसी प्रमाणपत्र';
+
+  @override
+  String get documentPresetRcRenewal => 'आरसी नवीनीकरण';
+
+  @override
+  String get documentPresetDrivingLicence => 'ड्राइविंग लाइसेंस';
+
+  @override
+  String get documentPresetPassport => 'पासपोर्ट';
+
+  @override
+  String get documentPresetHealthInsurance => 'स्वास्थ्य बीमा प्रीमियम';
+
+  @override
+  String get documentPresetLifeInsurance => 'जीवन बीमा प्रीमियम';
+
+  @override
+  String get documentPresetWarranty => 'वारंटी समाप्ति';
+
+  @override
+  String get documentPresetAmc => 'एएमसी नवीनीकरण';
+
+  @override
+  String get documentPresetFdMaturity => 'एफ़डी परिपक्वता';
+
+  @override
+  String get documentPresetPropertyTax => 'संपत्ति कर';
+
+  @override
+  String get documentPresetRentAgreement => 'किराया अनुबंध नवीनीकरण';
+
+  @override
+  String get documentNumberLabel => 'दस्तावेज़ संख्या (वैकल्पिक)';
+
+  @override
+  String get documentNumberHint => 'पॉलिसी, पंजीकरण या प्रमाणपत्र संख्या';
+
+  @override
+  String get documentRemindersOnProject => 'रिमाइंडर';
+
+  @override
+  String get reminderRepeatHalfYearly => 'हर 6 महीने';
+
+  @override
+  String get reminderRepeatElevenMonths => 'हर 11 महीने';
+
+  @override
+  String get reminderRepeatFiveYears => 'हर 5 साल';
+
+  @override
+  String get reminderRepeatTenYears => 'हर 10 साल';
+
+  @override
+  String get documentPucOlderVehicleHint =>
+      'पुराने वाहनों (BS-IV से पहले) को हर 6 महीने पीयूसी चाहिए।';
 }

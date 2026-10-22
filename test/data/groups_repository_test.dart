@@ -2,6 +2,7 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/ids.dart';
+import 'package:hisab/data/backup/backup_service.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/data/repositories/groups_repository.dart';
@@ -225,5 +226,18 @@ void main() {
     await groups.addMember(groupId, ' Rahul ', phone: '98100 12345', upiId: 'rahul@ybl');
     final rahul = (await groups.getMembers(groupId)).firstWhere((m) => m.name == 'Rahul');
     expect((rahul.phone, rahul.upiId), ('98100 12345', 'rahul@ybl'));
+  });
+
+  test('backup carries member UPI IDs and settle-up reminders', () async {
+    final groupId = await groups.createGroup(name: 'Goa', icon: 'flight', myName: 'Me');
+    final rahul = await groups.addMember(groupId, 'Rahul', upiId: 'rahul@ybl');
+    await groups.recordSettleUpReminder(groupId: groupId, memberId: rahul, channel: 'copy', message: 'pay up', sentAt: DateTime(2026, 10, 9));
+
+    final restored = AppDatabase(NativeDatabase.memory());
+    addTearDown(restored.close);
+    await BackupService(restored).importSnapshot(await BackupService(db).snapshot());
+    final restoredGroups = GroupsRepository(restored);
+    expect((await restoredGroups.getMembers(groupId)).firstWhere((member) => member.id == rahul).upiId, 'rahul@ybl');
+    expect((await restoredGroups.getGroupDetail(groupId))!.lastRemindedAt, {rahul: DateTime(2026, 10, 9)});
   });
 }

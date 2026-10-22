@@ -6,6 +6,7 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/groups_repository.dart';
+import '../../domain/split/debt_simplifier.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import 'member_display.dart';
@@ -27,9 +28,17 @@ IconData paymentMethodIcon(String method) => switch (method) {
       _ => Icons.payments_outlined,
     };
 
-/// How much [from] still owes [to] directly, before this payment.
-int owedBetween(GroupBalances balances, String from, String to) =>
-    balances.pairwise.where((transfer) => transfer.from == from && transfer.to == to).fold(0, (sum, transfer) => sum + transfer.amountMinor);
+/// How much [from] is expected to pay [to] before this payment: the larger of
+/// the direct (pairwise) debt and the settle-up suggestion, so a payment
+/// prefilled from a simplified suggestion is never flagged as an overpayment.
+int owedBetween(GroupBalances balances, String from, String to) {
+  int sumFor(List<Transfer> transfers) => transfers
+      .where((transfer) => transfer.from == from && transfer.to == to)
+      .fold(0, (sum, transfer) => sum + transfer.amountMinor);
+  final direct = sumFor(balances.pairwise);
+  final suggested = sumFor(balances.suggested);
+  return direct > suggested ? direct : suggested;
+}
 
 /// Bottom sheet to record (or edit, when [existing] is given) a payment
 /// between two members: direction, amount, date, method and note.

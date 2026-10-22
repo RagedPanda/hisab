@@ -60,6 +60,18 @@ Future<void> rewindToVersion4(File file) async {
   await db.close();
 }
 
+/// Rewinds a freshly created database to the schema shipped at version 5
+/// (generic reminders table without the due-reminder columns).
+Future<void> rewindToVersion5(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP INDEX reminders_status_due');
+  for (final column in dueReminderColumns(db.reminders)) {
+    await db.customStatement('ALTER TABLE reminders DROP COLUMN ${column.name}');
+  }
+  await db.customStatement('PRAGMA user_version = 5');
+  await db.close();
+}
+
 void main() {
   // The schema-equality test opens a second, independent in-memory database.
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -151,6 +163,27 @@ void main() {
     expect(reminder.channel, 'share');
     expect(reminder.message, '');
     expect(reminder.doneAt, isNull);
+    await db.close();
+  });
+
+  test('upgrading from schema 5 adds due-reminder columns and keeps settle-up rows', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.reminders).insert(RemindersCompanion.insert(id: 'r1', kind: 'settle_up', groupId: const Value('g1'), memberId: const Value('m1'), sentAt: Value(DateTime(2026, 10, 20))));
+    await seed.close();
+    await rewindToVersion5(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final settleUp = await db.select(db.reminders).getSingle();
+    expect(settleUp.kind, 'settle_up');
+    expect(settleUp.title, '');
+    expect(settleUp.status, 'pending');
+    expect(settleUp.repeat, 'once');
+    expect(settleUp.remindDaysBefore, '0');
+    expect(settleUp.notifyAtMinute, isNull);
+    final indexes = await db.customSelect("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'reminders'").get();
+    expect(indexes.map((row) => row.data['name']), contains('reminders_status_due'));
     await db.close();
   });
 

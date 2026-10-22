@@ -267,10 +267,11 @@ class EntryFieldValues extends Table with SyncColumns {
 /// Anything Hisab nudged someone about, or will. One generic table so settle-up
 /// reminders, recurring-expense prompts and the like share history and sync.
 @TableIndex(name: 'reminders_group_id', columns: {#groupId})
+@TableIndex(name: 'reminders_status_due', columns: {#status, #dueAt})
 class Reminders extends Table with SyncColumns {
   TextColumn get id => text()();
 
-  /// settle_up | recurring | ...
+  /// settle_up, or a due-reminder kind: bill | emi | card | subscription | insurance | document | custom
   TextColumn get kind => text()();
   TextColumn get groupId => text().nullable()();
 
@@ -286,6 +287,51 @@ class Reminders extends Table with SyncColumns {
   /// share | copy | whatsapp | sms | notification
   TextColumn get channel => text().withDefault(const Constant('share'))();
   TextColumn get message => text().withDefault(const Constant(''))();
+
+  // Due reminders (v6): bills, EMIs, card dues, subscriptions, insurance,
+  // documents and custom nudges. Kinds and values live in
+  // lib/domain/reminders/reminder_kind.dart.
+
+  /// What the notification says ("Electricity bill"); empty for settle_up rows.
+  TextColumn get title => text().withDefault(const Constant(''))();
+  TextColumn get notes => text().withDefault(const Constant(''))();
+
+  /// Expected amount, null for non-money reminders (documents, custom).
+  IntColumn get amountMinor => integer().nullable()();
+
+  /// Amount tolerance for SMS auto-match, in minor units.
+  IntColumn get toleranceMinor => integer().withDefault(const Constant(0))();
+
+  /// Lower-cased keywords matched against bank SMS: "tata power|tpddl".
+  TextColumn get matchKeywords => text().withDefault(const Constant(''))();
+  TextColumn get categoryId => text().nullable()();
+  TextColumn get accountId => text().nullable()();
+
+  /// Recurring rule that produced this reminder (recurring_rules.id).
+  TextColumn get recurringId => text().nullable()();
+
+  /// Insurance policy, document or asset the reminder is about.
+  TextColumn get assetId => text().nullable()();
+
+  /// once | weekly | monthly | quarterly | yearly
+  TextColumn get repeat => text().withDefault(const Constant('once'))();
+
+  /// Day of month a repeating reminder falls on, kept so 31 Jan -> 28 Feb -> 31 Mar.
+  IntColumn get repeatDay => integer().nullable()();
+
+  /// Days before dueAt to notify, comma separated ("3,0" = 3 days before and on the day).
+  TextColumn get remindDaysBefore => text().withDefault(const Constant('0'))();
+
+  /// Local time of day to notify, in minutes after midnight; null = no notification.
+  IntColumn get notifyAtMinute => integer().nullable()();
+
+  /// pending | done | skipped (snoozed = pending with [snoozedUntil] in the future)
+  TextColumn get status => text().withDefault(const Constant('pending'))();
+  DateTimeColumn get snoozedUntil => dateTime().nullable()();
+
+  /// The next occurrence spawned when this repeating reminder was paid or skipped,
+  /// so undo can remove it again.
+  TextColumn get nextId => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -384,7 +430,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -421,6 +467,13 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(entries, entries.recurringId);
             await m.createIndex(entriesRecurringId);
           }
+          // v7: due reminders (bills, EMIs, cards, documents) on the reminders table.
+          if (from < 7 && from >= 5) {
+            for (final column in dueReminderColumns(reminders)) {
+              await m.addColumn(reminders, column);
+            }
+          }
+          if (from < 7) await m.createIndex(remindersStatusDue);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -475,3 +528,23 @@ CategoriesCompanion seedCategoryRow(CategorySeed seed, {required String id, Stri
       sortOrder: Value(order),
       units: Value(seed.units.join(',')),
     );
+
+/// Columns v6 added to [Reminders]; a v5 database gains exactly these.
+List<GeneratedColumn> dueReminderColumns($RemindersTable table) => [
+      table.title,
+      table.notes,
+      table.amountMinor,
+      table.toleranceMinor,
+      table.matchKeywords,
+      table.categoryId,
+      table.accountId,
+      table.recurringId,
+      table.assetId,
+      table.repeat,
+      table.repeatDay,
+      table.remindDaysBefore,
+      table.notifyAtMinute,
+      table.status,
+      table.snoozedUntil,
+      table.nextId,
+    ];

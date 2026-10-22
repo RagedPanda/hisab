@@ -2315,4 +2315,279 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get salaryRuleName => 'Salary';
+
+  @override
+  String get remindersTitle => 'Reminders';
+
+  @override
+  String remindersUpcomingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count upcoming',
+      one: '1 upcoming',
+      zero: 'Nothing due',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get remindersNotificationsOn => 'notifications on';
+
+  @override
+  String get remindersNotificationsOff => 'notifications off';
+
+  @override
+  String remindersSettingsSubtitle(String count, String state) {
+    return '$count · $state';
+  }
+
+  @override
+  String get reminderTabHistory => 'History';
+
+  @override
+  String get reminderSectionOverdue => 'Overdue';
+
+  @override
+  String get reminderSectionThisWeek => 'This week';
+
+  @override
+  String get reminderSectionLater => 'Later';
+
+  @override
+  String get reminderAdd => 'Add reminder';
+
+  @override
+  String get reminderFab => 'Reminder';
+
+  @override
+  String get remindersEmptyTitle => 'No reminders yet';
+
+  @override
+  String get remindersEmptyBody =>
+      'Bills, rent, EMIs, renewals: add one and Hisab will nudge you before it\'s due.';
+
+  @override
+  String get reminderHistoryEmpty => 'Paid and skipped reminders show up here.';
+
+  @override
+  String get reminderSkip => 'Skip this time';
+
+  @override
+  String get reminderDeleted => 'Reminder deleted';
+
+  @override
+  String get reminderMarkedPaid => 'Marked paid';
+
+  @override
+  String get reminderMarkedDone => 'Marked done';
+
+  @override
+  String get reminderSkipped => 'Skipped this time';
+
+  @override
+  String reminderSnoozedUntil(String date) {
+    return 'Snoozed until $date';
+  }
+
+  @override
+  String get reminderAlreadyDone => 'Already marked paid';
+
+  @override
+  String reminderPaidOn(String date) {
+    return 'Paid $date';
+  }
+
+  @override
+  String reminderDoneOn(String date) {
+    return 'Done $date';
+  }
+
+  @override
+  String reminderSkippedOn(String date) {
+    return 'Skipped $date';
+  }
+
+  @override
+  String reminderNextDue(String date) {
+    return 'Next due $date';
+  }
+
+  @override
+  String get notifOffBanner =>
+      'Notifications are off. Reminders will only show in the app.';
+
+  @override
+  String get notifTurnOn => 'Turn on';
+
+  @override
+  String get reminderExactAlarmNote =>
+      'Alerts may come a few minutes late. Exact timing needs the Alarms & reminders permission.';
+
+  @override
+  String get notifPrePromptTitle => 'Get reminded before it\'s due';
+
+  @override
+  String get notifPrePromptBody =>
+      'Hisab sends a notification at the time you choose, only for your reminders. No marketing.';
+
+  @override
+  String reminderPaidSheetTitle(String title) {
+    return 'Paid $title?';
+  }
+
+  @override
+  String reminderPaidSheetBody(String amount) {
+    return 'Add an expense of $amount and mark this paid.';
+  }
+
+  @override
+  String get reminderAddEntryAndMark => 'Add entry & mark paid';
+
+  @override
+  String get reminderJustMark => 'Just mark paid';
+
+  @override
+  String get reminderNew => 'New reminder';
+
+  @override
+  String get reminderEditTitle => 'Edit reminder';
+
+  @override
+  String get reminderKindBill => 'Bill';
+
+  @override
+  String get reminderKindEmi => 'EMI';
+
+  @override
+  String get reminderKindCard => 'Card bill';
+
+  @override
+  String get reminderKindSubscription => 'Subscription';
+
+  @override
+  String get reminderKindInsurance => 'Insurance';
+
+  @override
+  String get reminderKindDocument => 'Document';
+
+  @override
+  String get reminderKindCustom => 'Other';
+
+  @override
+  String get reminderTitleLabel => 'Title';
+
+  @override
+  String get reminderTitleHint => 'e.g. Electricity bill';
+
+  @override
+  String get reminderTitleRequired => 'Enter a title';
+
+  @override
+  String get reminderAmountOptional => 'Amount (optional)';
+
+  @override
+  String get reminderDueDate => 'Due date';
+
+  @override
+  String get reminderRepeatLabel => 'Repeat';
+
+  @override
+  String get reminderRepeatOnce => 'Once';
+
+  @override
+  String get reminderRepeatWeekly => 'Every week';
+
+  @override
+  String get reminderRepeatMonthly => 'Every month';
+
+  @override
+  String get reminderRepeatQuarterly => 'Every 3 months';
+
+  @override
+  String get reminderRepeatYearly => 'Every year';
+
+  @override
+  String get reminderNotifyLabel => 'Remind me';
+
+  @override
+  String get reminderNotifyOnDay => 'On the day';
+
+  @override
+  String reminderNotifyDaysBefore(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days before',
+      one: '1 day before',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reminderNotifyEnabled => 'Notify me';
+
+  @override
+  String reminderNotifyAt(String time) {
+    return 'At $time';
+  }
+
+  @override
+  String reminderNotifyPreview(String when) {
+    return 'First alert: $when';
+  }
+
+  @override
+  String get reminderNoAlertsLeft =>
+      'All alert times have passed; it will show as due in the app.';
+
+  @override
+  String get reminderPickDaysError => 'Pick at least one day';
+
+  @override
+  String get reminderSave => 'Save reminder';
+
+  @override
+  String get reminderNoAccount => 'No account';
+
+  @override
+  String get reminderChannelName => 'Bill & due-date reminders';
+
+  @override
+  String get reminderChannelDescription =>
+      'Alerts before bills, EMIs, card dues and renewals are due';
+
+  @override
+  String get reminderMarkPaid => 'Mark paid';
+
+  @override
+  String get reminderMarkDone => 'Done';
+
+  @override
+  String get reminderSnoozeOneDay => 'Snooze 1 day';
+
+  @override
+  String get reminderDueToday => 'Due today';
+
+  @override
+  String reminderDueInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Due in $days days',
+      one: 'Due tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reminderOverdueDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Overdue by $days days',
+      one: 'Overdue by 1 day',
+    );
+    return '$_temp0';
+  }
 }

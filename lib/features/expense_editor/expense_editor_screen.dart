@@ -18,6 +18,7 @@ import '../../domain/projects/project_fields.dart';
 import '../../domain/projects/project_math.dart';
 import '../../domain/projects/project_picker.dart';
 import '../../domain/projects/project_templates.dart';
+import '../../domain/split/group_recurring.dart';
 import '../../domain/split/payers.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
@@ -673,9 +674,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                   entryId: id,
                   memberId: share.memberId,
                   amountMinor: share.amountMinor,
-                  shareValue: Value(_splitMethod == SplitMethod.exact || _splitMethod == SplitMethod.adjustment
-                      ? weights[share.memberId]?.amountMinor.toDouble()
-                      : weights[share.memberId]?.weight),
+                  shareValue: Value(shareValueFor(_splitMethod, weights[share.memberId])),
                 ),
           ],
           payers: _groupId == null

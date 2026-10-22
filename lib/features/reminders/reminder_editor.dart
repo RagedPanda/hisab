@@ -7,12 +7,14 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/reminders_repository.dart';
+import '../../domain/reminders/document_presets.dart';
 import '../../domain/reminders/reminder_draft.dart';
 import '../../domain/reminders/reminder_kind.dart';
 import '../../domain/reminders/reminder_schedule.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../categories/category_picker.dart';
+import '../projects/project_picker_sheet.dart';
 import '../shell/widgets/common.dart';
 import 'reminder_labels.dart';
 
@@ -54,6 +56,9 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
   late int _notifyMinute = widget.initial.notifyAtMinute ?? kDefaultNotifyMinute;
   late String? _categoryId = widget.initial.categoryId;
   late String? _accountId = widget.initial.accountId;
+  late final _documentNumberController = TextEditingController(text: widget.initial.documentNumber);
+  late String? _projectId = widget.initial.projectId;
+  late final DocumentPreset? _preset = documentPresetByKey(widget.initial.presetKey);
   var _submitted = false;
   var _saving = false;
 
@@ -64,6 +69,7 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
     _titleController.dispose();
     _amountController.dispose();
     _notesController.dispose();
+    _documentNumberController.dispose();
     super.dispose();
   }
 
@@ -83,7 +89,18 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
         notifyAtMinute: _notify ? _notifyMinute : null,
         matchKeywords: widget.initial.matchKeywords,
         toleranceMinor: widget.initial.toleranceMinor,
+        projectId: _projectId,
+        documentNumber: _hasDocumentNumber ? _documentNumberController.text.trim() : '',
+        presetKey: widget.initial.presetKey,
       );
+
+  /// Documents and policies have a number worth keeping; bills and EMIs do not.
+  bool get _hasDocumentNumber => _preset != null || _kind == ReminderKind.document || _kind == ReminderKind.insurance;
+
+  Future<void> _pickProject() async {
+    final choice = await showProjectPicker(context, selectedId: _projectId);
+    if (choice != null) setState(() => _projectId = choice.projectId);
+  }
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
@@ -168,7 +185,14 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
       notifyAtMinute: draft.notifyAtMinute,
       now: DateTime.now(),
     ).firstOrNull;
-    final dayChoices = {...(_kind == ReminderKind.document ? kDocumentRemindDaysBefore : kRemindDaysBeforeChoices), ..._daysBefore}.toList()..sort();
+    final dayChoices = remindDaysOptionsFor(
+      common: _kind == ReminderKind.document ? kDocumentRemindDaysBefore : kRemindDaysBeforeChoices,
+      preset: _preset,
+      current: _daysBefore.toList(),
+    );
+    final repeatChoices = repeatOptionsFor(common: kEditorRepeats, preset: _preset, current: _repeat);
+    final projects = ref.watch(projectViewsProvider).value ?? const [];
+    final project = projects.where((view) => view.project.id == _projectId).firstOrNull?.project;
     const gap = SizedBox(height: 12);
 
     return Padding(
@@ -229,19 +253,41 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButtonFormField<ReminderRepeat>(
-                          initialValue: kEditorRepeats.contains(_repeat) ? _repeat : ReminderRepeat.monthly,
+                          initialValue: _repeat,
                           isExpanded: true,
                           decoration: InputDecoration(labelText: l10n.reminderRepeatLabel, isDense: true),
                           items: [
-                            for (final repeat in {...kEditorRepeats, _repeat})
+                            for (final repeat in repeatChoices)
                               DropdownMenuItem(value: repeat, child: Text(reminderRepeatLabel(l10n, repeat), overflow: TextOverflow.ellipsis)),
                           ],
                           onChanged: (repeat) => setState(() => _repeat = repeat ?? _repeat),
                         ),
                       ),
                     ]),
+                    if (_preset?.key == 'puc') ...[
+                      const SizedBox(height: 4),
+                      Text(l10n.documentPucOlderVehicleHint, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    ],
+                    if (_hasDocumentNumber) ...[
+                      gap,
+                      TextField(
+                        key: const ValueKey('reminder-document-number'),
+                        controller: _documentNumberController,
+                        textCapitalization: TextCapitalization.characters,
+                        decoration: InputDecoration(labelText: l10n.documentNumberLabel, hintText: l10n.documentNumberHint),
+                      ),
+                    ],
                   ]),
                 ),
+                if (projects.isNotEmpty || _projectId != null)
+                  ListTile(
+                    key: const ValueKey('reminder-project'),
+                    leading: project == null ? const Icon(Icons.folder_outlined) : IconBadge(icon: project.icon, color: project.color),
+                    title: Text(project?.name ?? l10n.noProject, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    subtitle: Text(l10n.project),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: _pickProject,
+                  ),
                 SwitchListTile(
                   title: Text(l10n.reminderNotifyEnabled),
                   value: _notify,

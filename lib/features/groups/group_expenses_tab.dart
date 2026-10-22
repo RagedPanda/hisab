@@ -12,6 +12,7 @@ import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import 'expense_list_model.dart';
+import 'member_display.dart';
 import 'record_payment_sheet.dart';
 
 /// How one group's Expenses tab is being viewed. In memory only: a filter
@@ -143,7 +144,7 @@ class GroupExpensesTab extends ConsumerWidget {
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context).toString();
     final category = categoryById[entry.categoryId];
-    final payers = timeline.paidMinor.keys.map(nameOf).toList();
+    final payers = payerNamesLine(l10n, timeline.paidMinor.keys.toList(), myMemberId: myMemberId, nameOf: nameOf);
     final effect = expenseEffectFor(myMemberId, timeline);
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
     final (label, color) = switch (effect.kind) {
@@ -156,7 +157,7 @@ class GroupExpensesTab extends ConsumerWidget {
       leading: IconBadge(icon: category?.icon, color: category?.color ?? 0xFF607D8B),
       title: Text(entry.note.isNotEmpty ? entry.note : (entry.payee ?? category?.displayName(context) ?? l10n.kindExpense), maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
-        '${formatRowDate(entry.occurredAt, locale: locale)} · ${l10n.payerPaidAmount(payers.join(', '), formatMinor(entry.amountMinor, symbol: symbol))}',
+        '${formatRowDate(entry.occurredAt, locale: locale)} · ${l10n.payerPaidAmount(payers, formatMinor(entry.amountMinor, symbol: symbol))}',
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),

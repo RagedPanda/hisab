@@ -10,6 +10,10 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 /// Undoes every step above [version] on a database created at the current
 /// schema, newest first, so each rewind starts from the right shape.
 Future<void> dropStepsAbove(AppDatabase db, int version) async {
+  if (version < 8) {
+    await db.customStatement('ALTER TABLE recurring_rules DROP COLUMN group_id');
+    await db.customStatement('ALTER TABLE recurring_rules DROP COLUMN group_split');
+  }
   if (version < 7) {
     await db.customStatement('DROP TABLE recurring_rules');
     await db.customStatement('DROP INDEX IF EXISTS entries_recurring_id');
@@ -81,6 +85,15 @@ Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropStepsAbove(db, 5);
   await db.customStatement('PRAGMA user_version = 5');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 7
+/// (recurring rules, but none for groups).
+Future<void> rewindToVersion7(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropStepsAbove(db, 7);
+  await db.customStatement('PRAGMA user_version = 7');
   await db.close();
 }
 
@@ -223,6 +236,22 @@ void main() {
     expect(rule.isSubscription, isFalse);
     await (db.update(db.entries)..where((t) => t.id.equals('e1'))).write(const EntriesCompanion(recurringId: Value('r1')));
     expect((await db.select(db.entries).getSingle()).recurringId, 'r1');
+    await db.close();
+  });
+
+  test('upgrading from schema 7 lets recurring rules post into a group', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.recurringRules).insert(RecurringRulesCompanion.insert(id: 'r1', kind: 'expense', amountMinor: 1500000, frequency: 'monthly', startDate: DateTime(2026, 10, 1)));
+    await seed.close();
+    await rewindToVersion7(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final rule = await db.select(db.recurringRules).getSingle();
+    expect(rule.groupId, isNull, reason: 'existing rules stay personal');
+    expect(rule.groupSplit, isNull);
+    expect(rule.amountMinor, 1500000);
     await db.close();
   });
 

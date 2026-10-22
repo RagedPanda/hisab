@@ -9986,6 +9986,28 @@ class $RecurringRulesTable extends RecurringRules
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _groupSplitMeta = const VerificationMeta(
+    'groupSplit',
+  );
+  @override
+  late final GeneratedColumn<String> groupSplit = GeneratedColumn<String>(
+    'group_split',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
   late final GeneratedColumn<String> status = GeneratedColumn<String>(
@@ -10035,6 +10057,8 @@ class $RecurringRulesTable extends RecurringRules
     autoPost,
     remindDaysBefore,
     isSubscription,
+    groupId,
+    groupSplit,
     status,
     createdAt,
   ];
@@ -10225,6 +10249,18 @@ class $RecurringRulesTable extends RecurringRules
         ),
       );
     }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    }
+    if (data.containsKey('group_split')) {
+      context.handle(
+        _groupSplitMeta,
+        groupSplit.isAcceptableOrUnknown(data['group_split']!, _groupSplitMeta),
+      );
+    }
     if (data.containsKey('status')) {
       context.handle(
         _statusMeta,
@@ -10346,6 +10382,14 @@ class $RecurringRulesTable extends RecurringRules
         DriftSqlType.bool,
         data['${effectivePrefix}is_subscription'],
       )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      ),
+      groupSplit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_split'],
+      ),
       status: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}status'],
@@ -10409,6 +10453,12 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
   final String remindDaysBefore;
   final bool isSubscription;
 
+  /// Group a recurring group expense (rent, maid, wifi) is posted to.
+  final String? groupId;
+
+  /// How a group rule splits and who pays: `GroupExpenseTemplate` as JSON.
+  final String? groupSplit;
+
   /// active | paused | ended
   final String status;
   final DateTime createdAt;
@@ -10438,6 +10488,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     required this.autoPost,
     required this.remindDaysBefore,
     required this.isSubscription,
+    this.groupId,
+    this.groupSplit,
     required this.status,
     required this.createdAt,
   });
@@ -10491,6 +10543,12 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     map['auto_post'] = Variable<bool>(autoPost);
     map['remind_days_before'] = Variable<String>(remindDaysBefore);
     map['is_subscription'] = Variable<bool>(isSubscription);
+    if (!nullToAbsent || groupId != null) {
+      map['group_id'] = Variable<String>(groupId);
+    }
+    if (!nullToAbsent || groupSplit != null) {
+      map['group_split'] = Variable<String>(groupSplit);
+    }
     map['status'] = Variable<String>(status);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -10545,6 +10603,12 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       autoPost: Value(autoPost),
       remindDaysBefore: Value(remindDaysBefore),
       isSubscription: Value(isSubscription),
+      groupId: groupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(groupId),
+      groupSplit: groupSplit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(groupSplit),
       status: Value(status),
       createdAt: Value(createdAt),
     );
@@ -10581,6 +10645,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       autoPost: serializer.fromJson<bool>(json['autoPost']),
       remindDaysBefore: serializer.fromJson<String>(json['remindDaysBefore']),
       isSubscription: serializer.fromJson<bool>(json['isSubscription']),
+      groupId: serializer.fromJson<String?>(json['groupId']),
+      groupSplit: serializer.fromJson<String?>(json['groupSplit']),
       status: serializer.fromJson<String>(json['status']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -10614,6 +10680,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       'autoPost': serializer.toJson<bool>(autoPost),
       'remindDaysBefore': serializer.toJson<String>(remindDaysBefore),
       'isSubscription': serializer.toJson<bool>(isSubscription),
+      'groupId': serializer.toJson<String?>(groupId),
+      'groupSplit': serializer.toJson<String?>(groupSplit),
       'status': serializer.toJson<String>(status),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -10645,6 +10713,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     bool? autoPost,
     String? remindDaysBefore,
     bool? isSubscription,
+    Value<String?> groupId = const Value.absent(),
+    Value<String?> groupSplit = const Value.absent(),
     String? status,
     DateTime? createdAt,
   }) => RecurringRule(
@@ -10673,6 +10743,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     autoPost: autoPost ?? this.autoPost,
     remindDaysBefore: remindDaysBefore ?? this.remindDaysBefore,
     isSubscription: isSubscription ?? this.isSubscription,
+    groupId: groupId.present ? groupId.value : this.groupId,
+    groupSplit: groupSplit.present ? groupSplit.value : this.groupSplit,
     status: status ?? this.status,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -10717,6 +10789,10 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       isSubscription: data.isSubscription.present
           ? data.isSubscription.value
           : this.isSubscription,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      groupSplit: data.groupSplit.present
+          ? data.groupSplit.value
+          : this.groupSplit,
       status: data.status.present ? data.status.value : this.status,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -10750,6 +10826,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
           ..write('autoPost: $autoPost, ')
           ..write('remindDaysBefore: $remindDaysBefore, ')
           ..write('isSubscription: $isSubscription, ')
+          ..write('groupId: $groupId, ')
+          ..write('groupSplit: $groupSplit, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -10783,6 +10861,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     autoPost,
     remindDaysBefore,
     isSubscription,
+    groupId,
+    groupSplit,
     status,
     createdAt,
   ]);
@@ -10815,6 +10895,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
           other.autoPost == this.autoPost &&
           other.remindDaysBefore == this.remindDaysBefore &&
           other.isSubscription == this.isSubscription &&
+          other.groupId == this.groupId &&
+          other.groupSplit == this.groupSplit &&
           other.status == this.status &&
           other.createdAt == this.createdAt);
 }
@@ -10845,6 +10927,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
   final Value<bool> autoPost;
   final Value<String> remindDaysBefore;
   final Value<bool> isSubscription;
+  final Value<String?> groupId;
+  final Value<String?> groupSplit;
   final Value<String> status;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -10874,6 +10958,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     this.autoPost = const Value.absent(),
     this.remindDaysBefore = const Value.absent(),
     this.isSubscription = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.groupSplit = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -10904,6 +10990,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     this.autoPost = const Value.absent(),
     this.remindDaysBefore = const Value.absent(),
     this.isSubscription = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.groupSplit = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -10938,6 +11026,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     Expression<bool>? autoPost,
     Expression<String>? remindDaysBefore,
     Expression<bool>? isSubscription,
+    Expression<String>? groupId,
+    Expression<String>? groupSplit,
     Expression<String>? status,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -10968,6 +11058,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
       if (autoPost != null) 'auto_post': autoPost,
       if (remindDaysBefore != null) 'remind_days_before': remindDaysBefore,
       if (isSubscription != null) 'is_subscription': isSubscription,
+      if (groupId != null) 'group_id': groupId,
+      if (groupSplit != null) 'group_split': groupSplit,
       if (status != null) 'status': status,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -11000,6 +11092,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     Value<bool>? autoPost,
     Value<String>? remindDaysBefore,
     Value<bool>? isSubscription,
+    Value<String?>? groupId,
+    Value<String?>? groupSplit,
     Value<String>? status,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
@@ -11030,6 +11124,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
       autoPost: autoPost ?? this.autoPost,
       remindDaysBefore: remindDaysBefore ?? this.remindDaysBefore,
       isSubscription: isSubscription ?? this.isSubscription,
+      groupId: groupId ?? this.groupId,
+      groupSplit: groupSplit ?? this.groupSplit,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -11114,6 +11210,12 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     if (isSubscription.present) {
       map['is_subscription'] = Variable<bool>(isSubscription.value);
     }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (groupSplit.present) {
+      map['group_split'] = Variable<String>(groupSplit.value);
+    }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
     }
@@ -11154,6 +11256,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
           ..write('autoPost: $autoPost, ')
           ..write('remindDaysBefore: $remindDaysBefore, ')
           ..write('isSubscription: $isSubscription, ')
+          ..write('groupId: $groupId, ')
+          ..write('groupSplit: $groupSplit, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -16014,6 +16118,8 @@ typedef $$RecurringRulesTableCreateCompanionBuilder =
       Value<bool> autoPost,
       Value<String> remindDaysBefore,
       Value<bool> isSubscription,
+      Value<String?> groupId,
+      Value<String?> groupSplit,
       Value<String> status,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -16045,6 +16151,8 @@ typedef $$RecurringRulesTableUpdateCompanionBuilder =
       Value<bool> autoPost,
       Value<String> remindDaysBefore,
       Value<bool> isSubscription,
+      Value<String?> groupId,
+      Value<String?> groupSplit,
       Value<String> status,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -16181,6 +16289,16 @@ class $$RecurringRulesTableFilterComposer
 
   ColumnFilters<bool> get isSubscription => $composableBuilder(
     column: $table.isSubscription,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get groupSplit => $composableBuilder(
+    column: $table.groupSplit,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -16329,6 +16447,16 @@ class $$RecurringRulesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get groupSplit => $composableBuilder(
+    column: $table.groupSplit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get status => $composableBuilder(
     column: $table.status,
     builder: (column) => ColumnOrderings(column),
@@ -16438,6 +16566,14 @@ class $$RecurringRulesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get groupId =>
+      $composableBuilder(column: $table.groupId, builder: (column) => column);
+
+  GeneratedColumn<String> get groupSplit => $composableBuilder(
+    column: $table.groupSplit,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
@@ -16503,6 +16639,8 @@ class $$RecurringRulesTableTableManager
                 Value<bool> autoPost = const Value.absent(),
                 Value<String> remindDaysBefore = const Value.absent(),
                 Value<bool> isSubscription = const Value.absent(),
+                Value<String?> groupId = const Value.absent(),
+                Value<String?> groupSplit = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -16532,6 +16670,8 @@ class $$RecurringRulesTableTableManager
                 autoPost: autoPost,
                 remindDaysBefore: remindDaysBefore,
                 isSubscription: isSubscription,
+                groupId: groupId,
+                groupSplit: groupSplit,
                 status: status,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -16563,6 +16703,8 @@ class $$RecurringRulesTableTableManager
                 Value<bool> autoPost = const Value.absent(),
                 Value<String> remindDaysBefore = const Value.absent(),
                 Value<bool> isSubscription = const Value.absent(),
+                Value<String?> groupId = const Value.absent(),
+                Value<String?> groupSplit = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -16592,6 +16734,8 @@ class $$RecurringRulesTableTableManager
                 autoPost: autoPost,
                 remindDaysBefore: remindDaysBefore,
                 isSubscription: isSubscription,
+                groupId: groupId,
+                groupSplit: groupSplit,
                 status: status,
                 createdAt: createdAt,
                 rowid: rowid,

@@ -352,6 +352,12 @@ class RecurringRules extends Table with SyncColumns {
   TextColumn get remindDaysBefore => text().withDefault(const Constant(''))();
   BoolColumn get isSubscription => boolean().withDefault(const Constant(false))();
 
+  /// Group a recurring group expense (rent, maid, wifi) is posted to.
+  TextColumn get groupId => text().nullable()();
+
+  /// How a group rule splits and who pays: `GroupExpenseTemplate` as JSON.
+  TextColumn get groupSplit => text().nullable()();
+
   /// active | paused | ended
   TextColumn get status => text().withDefault(const Constant('active'))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -399,7 +405,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -440,6 +446,12 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(recurringRules);
             await m.addColumn(entries, entries.recurringId);
             await m.createIndex(entriesRecurringId);
+          }
+          // v8: recurring group expenses (groups parity). Below v7 the table
+          // was just created with these columns already.
+          if (from < 8 && from >= 7) {
+            await m.addColumn(recurringRules, recurringRules.groupId);
+            await m.addColumn(recurringRules, recurringRules.groupSplit);
           }
         },
         beforeOpen: (details) async {

@@ -38,7 +38,7 @@ class RecentCard extends ConsumerWidget {
             ? DashboardCard(
                 key: kRecentCardKey,
                 padding: EdgeInsets.zero,
-                child: data.hasEntriesInWindow
+                child: data.hasAnyEntries
                     ? EmptyState(icon: Icons.receipt_long_outlined, title: l10n.noEntriesThisMonthTitle, message: l10n.noEntriesThisMonthBody)
                     : EmptyState(
                         icon: Icons.receipt_long_outlined,

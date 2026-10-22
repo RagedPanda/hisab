@@ -126,6 +126,15 @@ class EntriesRepository {
 
   /// My ledger in [range] reduced to the fields the roll-ups need: one query,
   /// no item or split hydration, so dashboards stay cheap at thousands of rows.
+  /// Whether any live entry exists at all, for the first-run empty state.
+  Stream<bool> watchHasAnyEntries() {
+    final query = db.selectOnly(db.entries)
+      ..addColumns([db.entries.id])
+      ..where(db.entries.deletedAt.isNull())
+      ..limit(1);
+    return query.watch().map((rows) => rows.isNotEmpty);
+  }
+
   Stream<List<LedgerLine>> watchLedgerLines(DateRange range) => _filteredQuery(range: range, myLedger: true).watch().map(_toLedgerLines);
 
   List<LedgerLine> _toLedgerLines(List<TypedResult> rows) => [

@@ -181,28 +181,28 @@ final groupsOverviewProvider = Provider<AsyncValue<GroupsOverview>>((ref) => map
 // Recent ---------------------------------------------------------------------
 
 class RecentEntries {
-  const RecentEntries({required this.entries, required this.filter, required this.hasEntriesInWindow});
+  const RecentEntries({required this.entries, required this.filter, required this.hasAnyEntries});
   final List<EntryDetails> entries;
 
   /// The category the list is narrowed to, when the donut selected one.
   final Category? filter;
 
-  /// Whether the six-month window has any entry at all, which decides between
+  /// Whether any entry exists at all, which decides between
   /// "no entries this month" and the first-run empty state.
-  final bool hasEntriesInWindow;
+  final bool hasAnyEntries;
 }
 
 final recentEntriesProvider = Provider<AsyncValue<RecentEntries>>((ref) {
   final selected = ref.watch(selectedDashboardCategoryProvider);
   final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
-  return combineAsync(ref.watch(monthEntriesProvider), ref.watch(dashboardLedgerProvider), (entries, ledger) {
+  return combineAsync(ref.watch(monthEntriesProvider), ref.watch(hasAnyEntriesProvider), (entries, hasAnyEntries) {
     final matching = selected == null
         ? entries
         : entries.where((details) => matchesCategoryFilter(selectedId: selected, categoryId: details.category?.id, parentId: details.category?.parentId));
     return RecentEntries(
       entries: matching.take(kRecentEntryCount).toList(),
       filter: selected == null ? null : categories.where((category) => category.id == selected).firstOrNull,
-      hasEntriesInWindow: ledger.lines.isNotEmpty,
+      hasAnyEntries: hasAnyEntries,
     );
   });
 });

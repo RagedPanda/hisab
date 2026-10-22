@@ -102,6 +102,9 @@ final dashboardLedgerProvider = StreamProvider<DashboardLedger>((ref) {
   return ref.watch(entriesRepositoryProvider).watchLedgerLines(window).map((lines) => DashboardLedger(ranges: ranges, lines: lines));
 });
 
+/// Whether the user has recorded anything yet, independent of the month shown.
+final hasAnyEntriesProvider = StreamProvider<bool>((ref) => ref.watch(entriesRepositoryProvider).watchHasAnyEntries());
+
 final smsIngestServiceProvider = Provider((ref) => SmsIngestService(
       smsLog: ref.watch(smsLogRepositoryProvider),
       accounts: ref.watch(accountsRepositoryProvider),

@@ -638,6 +638,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         return;
       }
     }
+    messenger.hideCurrentSnackBar();
     setState(() => _saving = true);
     if (_source == 'sms' && _smsId != null && _accountId == null && _groupId == null) {
       _accountId = (await ref.read(smsIngestServiceProvider).ensureAccountForSms(_smsId!))?.id;

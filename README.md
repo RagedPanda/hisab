@@ -28,3 +28,6 @@ flutter run
 
 ## Contributing
 Issues and pull requests are welcome. Run `flutter test` before opening a PR, and add new user-facing strings to the ARB files rather than hardcoding them (see [docs/LOCALIZATION.md](docs/LOCALIZATION.md)).
+
+## License
+[MIT](LICENSE)

@@ -2198,4 +2198,213 @@ class AppLocalizationsHi extends AppLocalizations {
   String recurringIncrease(String label) {
     return '$label बढ़ाएँ';
   }
+
+  @override
+  String get subscriptions => 'सब्सक्रिप्शन';
+
+  @override
+  String get subscriptionsMonthlyTotal => 'हर महीने';
+
+  @override
+  String get subscriptionsYearlyTotal => 'हर साल';
+
+  @override
+  String subscriptionsActiveCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count चालू सब्सक्रिप्शन',
+      one: '1 चालू सब्सक्रिप्शन',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionsEmptyTitle => 'अभी कोई सब्सक्रिप्शन नहीं';
+
+  @override
+  String get subscriptionsEmptyBody =>
+      'Netflix, मोबाइल रिचार्ज या जिम जोड़ें और देखें कि हर महीने और हर साल कितना खर्च होता है।';
+
+  @override
+  String get subscriptionAdd => 'सब्सक्रिप्शन जोड़ें';
+
+  @override
+  String get subscriptionEdit => 'सब्सक्रिप्शन बदलें';
+
+  @override
+  String get subscriptionPickService => 'सेवा चुनें';
+
+  @override
+  String get subscriptionCustom => 'कुछ और';
+
+  @override
+  String get subscriptionPrice => 'हर रिन्यूअल की कीमत';
+
+  @override
+  String get subscriptionCycle => 'रिन्यू होता है';
+
+  @override
+  String get subscriptionNextRenewal => 'अगला रिन्यूअल';
+
+  @override
+  String get subscriptionAutoPost => 'हर रिन्यूअल पर खर्च में जोड़ें';
+
+  @override
+  String get subscriptionAutoPostHelp =>
+      'बंद: सिर्फ़ यहाँ दिखेगा, कोई एंट्री नहीं जुड़ेगी';
+
+  @override
+  String get subscriptionNameRequired => 'नाम डालें';
+
+  @override
+  String get subscriptionPriceRequired => 'कीमत डालें';
+
+  @override
+  String subscriptionRenewsOn(String date) {
+    return '$date को रिन्यू';
+  }
+
+  @override
+  String get subscriptionRenewsToday => 'आज रिन्यू';
+
+  @override
+  String subscriptionRenewsInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन में रिन्यू',
+      one: 'कल रिन्यू',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionOverdue(String date) {
+    return '$date को देय था';
+  }
+
+  @override
+  String get subscriptionPaused => 'रुका हुआ';
+
+  @override
+  String get subscriptionCancelled => 'रद्द';
+
+  @override
+  String get subscriptionPause => 'रोकें';
+
+  @override
+  String get subscriptionResume => 'फिर शुरू करें';
+
+  @override
+  String get subscriptionMarkCancelled => 'रद्द मार्क करें';
+
+  @override
+  String subscriptionCancelConfirm(String name) {
+    return '$name को रद्द मार्क करें?';
+  }
+
+  @override
+  String get subscriptionCancelConfirmBody =>
+      'नए खर्च नहीं जुड़ेंगे और यह कुल में नहीं गिना जाएगा। पुरानी एंट्री बनी रहेंगी।';
+
+  @override
+  String get subscriptionDeleted => 'सब्सक्रिप्शन हटाया गया';
+
+  @override
+  String subscriptionPerMonth(String amount) {
+    return '$amount/महीना';
+  }
+
+  @override
+  String get subscriptionSort => 'क्रम';
+
+  @override
+  String get subscriptionSortCostHigh => 'कीमत: ज़्यादा से कम';
+
+  @override
+  String get subscriptionSortCostLow => 'कीमत: कम से ज़्यादा';
+
+  @override
+  String get subscriptionSortRenewal => 'अगला रिन्यूअल';
+
+  @override
+  String get subscriptionSortName => 'नाम';
+
+  @override
+  String subscriptionEveryDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count दिन',
+      one: 'रोज़',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count हफ़्ते',
+      one: 'हर हफ़्ते',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count महीने',
+      one: 'हर महीने',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count साल',
+      one: 'हर साल',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionTemplateNetflix => 'Netflix';
+
+  @override
+  String get subscriptionTemplateAmazonPrime => 'Amazon Prime';
+
+  @override
+  String get subscriptionTemplateJiohotstar => 'JioHotstar';
+
+  @override
+  String get subscriptionTemplateSpotify => 'Spotify';
+
+  @override
+  String get subscriptionTemplateYoutubePremium => 'YouTube Premium';
+
+  @override
+  String get subscriptionTemplateMobileRecharge => 'मोबाइल रिचार्ज';
+
+  @override
+  String get subscriptionTemplateDth => 'DTH';
+
+  @override
+  String get subscriptionTemplateBroadband => 'ब्रॉडबैंड';
+
+  @override
+  String get subscriptionTemplateGym => 'जिम';
+
+  @override
+  String get subscriptionTemplateCloudStorage => 'क्लाउड स्टोरेज';
+
+  @override
+  String get subscriptionTemplateNewsApp => 'न्यूज़ ऐप';
 }

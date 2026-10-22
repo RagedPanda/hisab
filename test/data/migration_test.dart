@@ -7,10 +7,18 @@ import 'package:hisab/core/ids.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 
+/// Drops the group settings columns added in schema v7.
+Future<void> dropGroupSettingsColumns(AppDatabase db) async {
+  for (final column in ['type', 'default_split_method', 'notes', 'currency_label', 'archived_at']) {
+    await db.customStatement('ALTER TABLE "groups" DROP COLUMN $column');
+  }
+}
+
 /// Rewinds a freshly created database to the schema shipped at version 1 so
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropGroupSettingsColumns(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
@@ -30,6 +38,7 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropGroupSettingsColumns(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
@@ -44,6 +53,7 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropGroupSettingsColumns(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
@@ -57,6 +67,7 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropGroupSettingsColumns(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
@@ -68,8 +79,18 @@ Future<void> rewindToVersion4(File file) async {
 /// (reminders and UPI IDs, but only one payer per expense).
 Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropGroupSettingsColumns(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('PRAGMA user_version = 5');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 6
+/// (several payers, but no group settings).
+Future<void> rewindToVersion6(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropGroupSettingsColumns(db);
+  await db.customStatement('PRAGMA user_version = 6');
   await db.close();
 }
 
@@ -144,6 +165,21 @@ void main() {
     expect(field.choices, '[]');
     expect((await db.select(db.entryFieldValues).getSingle()).numberValue, 1200);
     expect((await db.select(db.projects).getSingle()).name, 'Scotty', reason: 'existing rows survive the upgrade');
+    await db.close();
+  });
+
+  test('upgrading from schema 6 adds group settings with defaults that keep today\'s behaviour', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.groups).insert(GroupsCompanion.insert(id: 'g1', name: 'Goa', simplifyDebts: const Value(false)));
+    await seed.close();
+    await rewindToVersion6(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final group = await db.select(db.groups).getSingle();
+    expect((group.type, group.defaultSplitMethod, group.notes, group.currencyLabel, group.archivedAt), ('other', 'equal', '', null, null));
+    expect((group.name, group.simplifyDebts), ('Goa', false), reason: 'existing rows survive the upgrade');
     await db.close();
   });
 

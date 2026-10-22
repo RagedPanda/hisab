@@ -120,6 +120,23 @@ class Groups extends Table with SyncColumns {
   TextColumn get projectId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
+  /// Trip, home, couple or other (see `GroupType`); sets the default icon and
+  /// the empty-state wording (v7, group settings).
+  TextColumn get type => text().withDefault(const Constant('other'))();
+
+  /// Split method pre-selected for new expenses: equal, shares or percent (v7).
+  TextColumn get defaultSplitMethod => text().withDefault(const Constant('equal'))();
+
+  /// Free-text notes shown as a card on the Expenses tab (v7).
+  TextColumn get notes => text().withDefault(const Constant(''))();
+
+  /// Currency symbol shown for this group's amounts; null follows the app
+  /// setting. A label only: amounts are never converted (v7).
+  TextColumn get currencyLabel => text().nullable()();
+
+  /// When the group was archived (or left); null while active (v7).
+  DateTimeColumn get archivedAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -339,7 +356,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -374,6 +391,14 @@ class AppDatabase extends _$AppDatabase {
           if (from < 6) {
             await m.createTable(entryPayers);
             await m.createIndex(entryPayersEntryId);
+          }
+          // v7: group type, default split, notes, currency label and archiving (groups parity, group settings).
+          if (from < 7) {
+            await m.addColumn(groups, groups.type);
+            await m.addColumn(groups, groups.defaultSplitMethod);
+            await m.addColumn(groups, groups.notes);
+            await m.addColumn(groups, groups.currencyLabel);
+            await m.addColumn(groups, groups.archivedAt);
           }
         },
         beforeOpen: (details) async {

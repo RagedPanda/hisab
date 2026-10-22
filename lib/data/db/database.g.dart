@@ -3346,6 +3346,60 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('other'),
+  );
+  static const VerificationMeta _defaultSplitMethodMeta =
+      const VerificationMeta('defaultSplitMethod');
+  @override
+  late final GeneratedColumn<String> defaultSplitMethod =
+      GeneratedColumn<String>(
+        'default_split_method',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('equal'),
+      );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _currencyLabelMeta = const VerificationMeta(
+    'currencyLabel',
+  );
+  @override
+  late final GeneratedColumn<String> currencyLabel = GeneratedColumn<String>(
+    'currency_label',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _archivedAtMeta = const VerificationMeta(
+    'archivedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> archivedAt = GeneratedColumn<DateTime>(
+    'archived_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -3358,6 +3412,11 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
     inviteCode,
     projectId,
     createdAt,
+    type,
+    defaultSplitMethod,
+    notes,
+    currencyLabel,
+    archivedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3435,6 +3494,42 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    }
+    if (data.containsKey('default_split_method')) {
+      context.handle(
+        _defaultSplitMethodMeta,
+        defaultSplitMethod.isAcceptableOrUnknown(
+          data['default_split_method']!,
+          _defaultSplitMethodMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('currency_label')) {
+      context.handle(
+        _currencyLabelMeta,
+        currencyLabel.isAcceptableOrUnknown(
+          data['currency_label']!,
+          _currencyLabelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('archived_at')) {
+      context.handle(
+        _archivedAtMeta,
+        archivedAt.isAcceptableOrUnknown(data['archived_at']!, _archivedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -3484,6 +3579,26 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      defaultSplitMethod: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}default_split_method'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      )!,
+      currencyLabel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_label'],
+      ),
+      archivedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}archived_at'],
+      ),
     );
   }
 
@@ -3508,6 +3623,23 @@ class Group extends DataClass implements Insertable<Group> {
   /// Project this group's expenses roll up into (no UI yet; see roadmap R1).
   final String? projectId;
   final DateTime createdAt;
+
+  /// Trip, home, couple or other (see `GroupType`); sets the default icon and
+  /// the empty-state wording (v7, group settings).
+  final String type;
+
+  /// Split method pre-selected for new expenses: equal, shares or percent (v7).
+  final String defaultSplitMethod;
+
+  /// Free-text notes shown as a card on the Expenses tab (v7).
+  final String notes;
+
+  /// Currency symbol shown for this group's amounts; null follows the app
+  /// setting. A label only: amounts are never converted (v7).
+  final String? currencyLabel;
+
+  /// When the group was archived (or left); null while active (v7).
+  final DateTime? archivedAt;
   const Group({
     required this.updatedAt,
     this.deletedAt,
@@ -3519,6 +3651,11 @@ class Group extends DataClass implements Insertable<Group> {
     this.inviteCode,
     this.projectId,
     required this.createdAt,
+    required this.type,
+    required this.defaultSplitMethod,
+    required this.notes,
+    this.currencyLabel,
+    this.archivedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3539,6 +3676,15 @@ class Group extends DataClass implements Insertable<Group> {
       map['project_id'] = Variable<String>(projectId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['type'] = Variable<String>(type);
+    map['default_split_method'] = Variable<String>(defaultSplitMethod);
+    map['notes'] = Variable<String>(notes);
+    if (!nullToAbsent || currencyLabel != null) {
+      map['currency_label'] = Variable<String>(currencyLabel);
+    }
+    if (!nullToAbsent || archivedAt != null) {
+      map['archived_at'] = Variable<DateTime>(archivedAt);
+    }
     return map;
   }
 
@@ -3560,6 +3706,15 @@ class Group extends DataClass implements Insertable<Group> {
           ? const Value.absent()
           : Value(projectId),
       createdAt: Value(createdAt),
+      type: Value(type),
+      defaultSplitMethod: Value(defaultSplitMethod),
+      notes: Value(notes),
+      currencyLabel: currencyLabel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(currencyLabel),
+      archivedAt: archivedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(archivedAt),
     );
   }
 
@@ -3579,6 +3734,13 @@ class Group extends DataClass implements Insertable<Group> {
       inviteCode: serializer.fromJson<String?>(json['inviteCode']),
       projectId: serializer.fromJson<String?>(json['projectId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      type: serializer.fromJson<String>(json['type']),
+      defaultSplitMethod: serializer.fromJson<String>(
+        json['defaultSplitMethod'],
+      ),
+      notes: serializer.fromJson<String>(json['notes']),
+      currencyLabel: serializer.fromJson<String?>(json['currencyLabel']),
+      archivedAt: serializer.fromJson<DateTime?>(json['archivedAt']),
     );
   }
   @override
@@ -3595,6 +3757,11 @@ class Group extends DataClass implements Insertable<Group> {
       'inviteCode': serializer.toJson<String?>(inviteCode),
       'projectId': serializer.toJson<String?>(projectId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'type': serializer.toJson<String>(type),
+      'defaultSplitMethod': serializer.toJson<String>(defaultSplitMethod),
+      'notes': serializer.toJson<String>(notes),
+      'currencyLabel': serializer.toJson<String?>(currencyLabel),
+      'archivedAt': serializer.toJson<DateTime?>(archivedAt),
     };
   }
 
@@ -3609,6 +3776,11 @@ class Group extends DataClass implements Insertable<Group> {
     Value<String?> inviteCode = const Value.absent(),
     Value<String?> projectId = const Value.absent(),
     DateTime? createdAt,
+    String? type,
+    String? defaultSplitMethod,
+    String? notes,
+    Value<String?> currencyLabel = const Value.absent(),
+    Value<DateTime?> archivedAt = const Value.absent(),
   }) => Group(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -3620,6 +3792,13 @@ class Group extends DataClass implements Insertable<Group> {
     inviteCode: inviteCode.present ? inviteCode.value : this.inviteCode,
     projectId: projectId.present ? projectId.value : this.projectId,
     createdAt: createdAt ?? this.createdAt,
+    type: type ?? this.type,
+    defaultSplitMethod: defaultSplitMethod ?? this.defaultSplitMethod,
+    notes: notes ?? this.notes,
+    currencyLabel: currencyLabel.present
+        ? currencyLabel.value
+        : this.currencyLabel,
+    archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
   );
   Group copyWithCompanion(GroupsCompanion data) {
     return Group(
@@ -3637,6 +3816,17 @@ class Group extends DataClass implements Insertable<Group> {
           : this.inviteCode,
       projectId: data.projectId.present ? data.projectId.value : this.projectId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      type: data.type.present ? data.type.value : this.type,
+      defaultSplitMethod: data.defaultSplitMethod.present
+          ? data.defaultSplitMethod.value
+          : this.defaultSplitMethod,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      currencyLabel: data.currencyLabel.present
+          ? data.currencyLabel.value
+          : this.currencyLabel,
+      archivedAt: data.archivedAt.present
+          ? data.archivedAt.value
+          : this.archivedAt,
     );
   }
 
@@ -3652,7 +3842,12 @@ class Group extends DataClass implements Insertable<Group> {
           ..write('simplifyDebts: $simplifyDebts, ')
           ..write('inviteCode: $inviteCode, ')
           ..write('projectId: $projectId, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('type: $type, ')
+          ..write('defaultSplitMethod: $defaultSplitMethod, ')
+          ..write('notes: $notes, ')
+          ..write('currencyLabel: $currencyLabel, ')
+          ..write('archivedAt: $archivedAt')
           ..write(')'))
         .toString();
   }
@@ -3669,6 +3864,11 @@ class Group extends DataClass implements Insertable<Group> {
     inviteCode,
     projectId,
     createdAt,
+    type,
+    defaultSplitMethod,
+    notes,
+    currencyLabel,
+    archivedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -3683,7 +3883,12 @@ class Group extends DataClass implements Insertable<Group> {
           other.simplifyDebts == this.simplifyDebts &&
           other.inviteCode == this.inviteCode &&
           other.projectId == this.projectId &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.type == this.type &&
+          other.defaultSplitMethod == this.defaultSplitMethod &&
+          other.notes == this.notes &&
+          other.currencyLabel == this.currencyLabel &&
+          other.archivedAt == this.archivedAt);
 }
 
 class GroupsCompanion extends UpdateCompanion<Group> {
@@ -3697,6 +3902,11 @@ class GroupsCompanion extends UpdateCompanion<Group> {
   final Value<String?> inviteCode;
   final Value<String?> projectId;
   final Value<DateTime> createdAt;
+  final Value<String> type;
+  final Value<String> defaultSplitMethod;
+  final Value<String> notes;
+  final Value<String?> currencyLabel;
+  final Value<DateTime?> archivedAt;
   final Value<int> rowid;
   const GroupsCompanion({
     this.updatedAt = const Value.absent(),
@@ -3709,6 +3919,11 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.inviteCode = const Value.absent(),
     this.projectId = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.type = const Value.absent(),
+    this.defaultSplitMethod = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.currencyLabel = const Value.absent(),
+    this.archivedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   GroupsCompanion.insert({
@@ -3722,6 +3937,11 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.inviteCode = const Value.absent(),
     this.projectId = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.type = const Value.absent(),
+    this.defaultSplitMethod = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.currencyLabel = const Value.absent(),
+    this.archivedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name);
@@ -3736,6 +3956,11 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     Expression<String>? inviteCode,
     Expression<String>? projectId,
     Expression<DateTime>? createdAt,
+    Expression<String>? type,
+    Expression<String>? defaultSplitMethod,
+    Expression<String>? notes,
+    Expression<String>? currencyLabel,
+    Expression<DateTime>? archivedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3749,6 +3974,12 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       if (inviteCode != null) 'invite_code': inviteCode,
       if (projectId != null) 'project_id': projectId,
       if (createdAt != null) 'created_at': createdAt,
+      if (type != null) 'type': type,
+      if (defaultSplitMethod != null)
+        'default_split_method': defaultSplitMethod,
+      if (notes != null) 'notes': notes,
+      if (currencyLabel != null) 'currency_label': currencyLabel,
+      if (archivedAt != null) 'archived_at': archivedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3764,6 +3995,11 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     Value<String?>? inviteCode,
     Value<String?>? projectId,
     Value<DateTime>? createdAt,
+    Value<String>? type,
+    Value<String>? defaultSplitMethod,
+    Value<String>? notes,
+    Value<String?>? currencyLabel,
+    Value<DateTime?>? archivedAt,
     Value<int>? rowid,
   }) {
     return GroupsCompanion(
@@ -3777,6 +4013,11 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       inviteCode: inviteCode ?? this.inviteCode,
       projectId: projectId ?? this.projectId,
       createdAt: createdAt ?? this.createdAt,
+      type: type ?? this.type,
+      defaultSplitMethod: defaultSplitMethod ?? this.defaultSplitMethod,
+      notes: notes ?? this.notes,
+      currencyLabel: currencyLabel ?? this.currencyLabel,
+      archivedAt: archivedAt ?? this.archivedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3814,6 +4055,21 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (defaultSplitMethod.present) {
+      map['default_split_method'] = Variable<String>(defaultSplitMethod.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (currencyLabel.present) {
+      map['currency_label'] = Variable<String>(currencyLabel.value);
+    }
+    if (archivedAt.present) {
+      map['archived_at'] = Variable<DateTime>(archivedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3833,6 +4089,11 @@ class GroupsCompanion extends UpdateCompanion<Group> {
           ..write('inviteCode: $inviteCode, ')
           ..write('projectId: $projectId, ')
           ..write('createdAt: $createdAt, ')
+          ..write('type: $type, ')
+          ..write('defaultSplitMethod: $defaultSplitMethod, ')
+          ..write('notes: $notes, ')
+          ..write('currencyLabel: $currencyLabel, ')
+          ..write('archivedAt: $archivedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -11238,6 +11499,11 @@ typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
   Value<String?> inviteCode,
   Value<String?> projectId,
   Value<DateTime> createdAt,
+  Value<String> type,
+  Value<String> defaultSplitMethod,
+  Value<String> notes,
+  Value<String?> currencyLabel,
+  Value<DateTime?> archivedAt,
   Value<int> rowid,
 });
 typedef $$GroupsTableUpdateCompanionBuilder = GroupsCompanion Function({
@@ -11251,6 +11517,11 @@ typedef $$GroupsTableUpdateCompanionBuilder = GroupsCompanion Function({
   Value<String?> inviteCode,
   Value<String?> projectId,
   Value<DateTime> createdAt,
+  Value<String> type,
+  Value<String> defaultSplitMethod,
+  Value<String> notes,
+  Value<String?> currencyLabel,
+  Value<DateTime?> archivedAt,
   Value<int> rowid,
 });
 
@@ -11310,6 +11581,31 @@ class $$GroupsTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get defaultSplitMethod => $composableBuilder(
+    column: $table.defaultSplitMethod,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyLabel => $composableBuilder(
+    column: $table.currencyLabel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -11372,6 +11668,31 @@ class $$GroupsTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get defaultSplitMethod => $composableBuilder(
+    column: $table.defaultSplitMethod,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyLabel => $composableBuilder(
+    column: $table.currencyLabel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$GroupsTableAnnotationComposer
@@ -11416,6 +11737,27 @@ class $$GroupsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get defaultSplitMethod => $composableBuilder(
+    column: $table.defaultSplitMethod,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get currencyLabel => $composableBuilder(
+    column: $table.currencyLabel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
+    builder: (column) => column,
+  );
 }
 
 class $$GroupsTableTableManager
@@ -11456,6 +11798,11 @@ class $$GroupsTableTableManager
                 Value<String?> inviteCode = const Value.absent(),
                 Value<String?> projectId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> defaultSplitMethod = const Value.absent(),
+                Value<String> notes = const Value.absent(),
+                Value<String?> currencyLabel = const Value.absent(),
+                Value<DateTime?> archivedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => GroupsCompanion(
                 updatedAt: updatedAt,
@@ -11468,6 +11815,11 @@ class $$GroupsTableTableManager
                 inviteCode: inviteCode,
                 projectId: projectId,
                 createdAt: createdAt,
+                type: type,
+                defaultSplitMethod: defaultSplitMethod,
+                notes: notes,
+                currencyLabel: currencyLabel,
+                archivedAt: archivedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -11482,6 +11834,11 @@ class $$GroupsTableTableManager
                 Value<String?> inviteCode = const Value.absent(),
                 Value<String?> projectId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> defaultSplitMethod = const Value.absent(),
+                Value<String> notes = const Value.absent(),
+                Value<String?> currencyLabel = const Value.absent(),
+                Value<DateTime?> archivedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => GroupsCompanion.insert(
                 updatedAt: updatedAt,
@@ -11494,6 +11851,11 @@ class $$GroupsTableTableManager
                 inviteCode: inviteCode,
                 projectId: projectId,
                 createdAt: createdAt,
+                type: type,
+                defaultSplitMethod: defaultSplitMethod,
+                notes: notes,
+                currencyLabel: currencyLabel,
+                archivedAt: archivedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

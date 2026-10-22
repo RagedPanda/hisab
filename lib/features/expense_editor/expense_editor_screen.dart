@@ -11,12 +11,16 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
+import '../../data/repositories/project_fields_repository.dart';
 import '../../domain/ledger/balance_effects.dart';
+import '../../domain/projects/project_fields.dart';
+import '../../domain/projects/project_templates.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
 import '../categories/category_picker.dart';
+import '../projects/project_field_inputs.dart';
 import '../shell/widgets/common.dart';
 import '../split/split_editor.dart';
 import 'item_row.dart';
@@ -51,6 +55,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   SplitMethod _splitMethod = SplitMethod.equal;
   List<SplitInput> _splitInputs = const [];
   List<ItemDraft> _items = [];
+
+  /// Entry-scope fields of the entry's project, and the values recorded for
+  /// them (plus any for fields since removed, kept so a save does not drop them).
+  List<ProjectField> _projectFields = const [];
+  Map<String, FieldReading> _fieldValues = const {};
   List<ItemSuggestion> _suggestions = const [];
   List<Member> _members = const [];
   String _source = 'manual';
@@ -120,8 +129,16 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         _splitInputs = defaultSplitInputs(_members, _splitMethod);
       }
     }
+    await _loadProjectFields();
     if (_category != null) await _refreshSuggestions();
     if (mounted) setState(() => _loaded = true);
+  }
+
+  Future<void> _loadProjectFields() async {
+    final repo = ref.read(projectFieldsRepositoryProvider);
+    if (_existingId != null) _fieldValues = await repo.valuesForEntry(_existingId!);
+    final fields = _projectId == null ? const <ProjectField>[] : await repo.getFields(_projectId!);
+    _projectFields = fields.where((field) => field.scope == ProjectFieldScope.entry.name).toList();
   }
 
   Future<void> _prefillFromSms(String smsId) async {
@@ -257,6 +274,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               },
             ),
           if (_kind == 'expense' && _groupId == null) _itemsSection(symbol, units),
+          if (_kind != 'transfer' && _projectFields.isNotEmpty) ...[
+            SectionHeader(l10n.projectDetails, padding: const EdgeInsets.fromLTRB(0, 16, 0, 8)),
+            ProjectFieldInputs(fields: _projectFields, values: _fieldValues, onChanged: (values) => setState(() => _fieldValues = values)),
+          ],
           // Group expenses are a ledger between people, not an account
           // movement, so they never pick (or touch) a personal account.
           if (_groupId == null) ...[
@@ -489,6 +510,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                       : weights[share.memberId]?.weight),
                 ),
           ],
+          fieldValues: _projectId == null || _kind == 'transfer' ? null : entryFieldValueRows(id, _fieldValues),
         );
     await _applyBalanceChange(amount);
     if (_smsId != null) await ref.read(smsLogRepositoryProvider).setStatus(_smsId!, 'added', entryId: id);

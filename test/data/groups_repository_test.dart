@@ -5,6 +5,7 @@ import 'package:hisab/core/ids.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/data/repositories/groups_repository.dart';
+import 'package:hisab/domain/split/debt_simplifier.dart';
 import 'package:drift/drift.dart' show Value;
 
 /// Reproduces AND-07 / IOS-02 / P1-1: group balance streams must keep
@@ -89,6 +90,48 @@ void main() {
     final balances = await groups.getBalances(groupId);
     expect(balances.net[bina], 0);
     expect(balances.suggested.where((t) => t.from == bina || t.to == bina), isNotEmpty);
+  });
+
+  test('with simplify on, a chain member nets to zero and leaves the simplified list but stays unsettled pairwise', () async {
+    final groupId = await groups.createGroup(name: 'Trip', icon: 'bag', myName: 'Me', otherMembers: ['Bina', 'Chetan']);
+    final members = await groups.getMembers(groupId);
+    final me = members.firstWhere((m) => m.isMe).id;
+    final bina = members.firstWhere((m) => m.name == 'Bina').id;
+    final chetan = members.firstWhere((m) => m.name == 'Chetan').id;
+    await addGroupExpense(groupId, me, {bina: 15000});
+    await addGroupExpense(groupId, bina, {chetan: 15000});
+
+    final balances = await groups.getBalances(groupId);
+    expect(balances.net[bina], 0);
+    expect(balances.suggested.where((t) => t.from == bina || t.to == bina), isEmpty, reason: 'simplified: Chetan pays Me directly');
+    expect(balances.pairwise.where((t) => t.from == bina || t.to == bina), hasLength(2));
+    expect(isMemberSettled(memberId: bina, net: balances.net, transfers: balances.suggested), isTrue, reason: 'the old guard let Bina go');
+    expect(isMemberSettled(memberId: bina, net: balances.net, transfers: balances.pairwise), isFalse, reason: 'the pairwise guard keeps her');
+    expect(balances.repaymentsSaved, 1);
+  });
+
+  test('group detail keeps removed members for name resolution but not in the member list', () async {
+    final groupId = await groups.createGroup(name: 'Trip', icon: 'bag', myName: 'Me', otherMembers: ['Bina']);
+    final members = await groups.getMembers(groupId);
+    final me = members.firstWhere((m) => m.isMe).id;
+    final bina = members.firstWhere((m) => m.name == 'Bina').id;
+    await addGroupExpense(groupId, bina, {me: 5000, bina: 5000});
+    await groups.addSettlement(groupId: groupId, fromMemberId: me, toMemberId: bina, amountMinor: 5000);
+    await groups.removeMember(bina);
+
+    final detail = (await groups.getGroupDetail(groupId))!;
+    expect(detail.members.map((m) => m.id), [me]);
+    expect(detail.allMembers.map((m) => m.name), containsAll(['Me', 'Bina']));
+    expect(detail.entries.single.$1.paidByMemberId, bina);
+    expect(detail.settlements.single.toMemberId, bina);
+    expect(detail.balances.pairwise, isEmpty);
+  });
+
+  test('group detail is null once the group is deleted', () async {
+    final groupId = await groups.createGroup(name: 'Gone', icon: 'bag', myName: 'Me', otherMembers: ['Bina']);
+    expect(await groups.getGroupDetail(groupId), isNotNull);
+    await groups.deleteGroup(groupId);
+    expect(await groups.getGroupDetail(groupId), isNull);
   });
 
   test('renaming yourself in Settings renames the me member of every group', () async {

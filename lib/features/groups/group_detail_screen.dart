@@ -16,11 +16,8 @@ import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import 'member_display.dart';
 
-final _groupProvider = StreamProvider.family((ref, String id) => ref.watch(groupsRepositoryProvider).watchGroup(id));
-final _membersProvider = StreamProvider.family((ref, String id) => ref.watch(groupsRepositoryProvider).watchMembers(id));
-final _entriesProvider = StreamProvider.family((ref, String id) => ref.watch(groupsRepositoryProvider).watchGroupEntries(id));
-final _settlementsProvider = StreamProvider.family((ref, String id) => ref.watch(groupsRepositoryProvider).watchSettlements(id));
-final _balancesProvider = StreamProvider.family((ref, String id) => ref.watch(groupsRepositoryProvider).watchBalances(id));
+/// One stream for the whole screen so every tab sees the same snapshot.
+final groupDetailProvider = StreamProvider.family((ref, String id) => ref.watch(groupsRepositoryProvider).watchGroupDetail(id));
 
 class GroupDetailScreen extends ConsumerWidget {
   const GroupDetailScreen({super.key, required this.groupId});
@@ -29,21 +26,24 @@ class GroupDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final group = ref.watch(_groupProvider(groupId)).value;
-    final members = ref.watch(_membersProvider(groupId)).value ?? const <Member>[];
-    final entries = ref.watch(_entriesProvider(groupId)).value ?? const <(Entry, List<Split>)>[];
-    final settlements = ref.watch(_settlementsProvider(groupId)).value ?? const <Settlement>[];
-    final balances = ref.watch(_balancesProvider(groupId)).value;
+    final detail = ref.watch(groupDetailProvider(groupId)).value;
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
     final symbol = ref.watch(settingsProvider).currencySymbol;
-    if (group == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    final memberById = {for (final m in members) m.id: m};
+    if (detail == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    final group = detail.group;
+    final members = detail.members;
+    final entries = detail.entries;
+    final settlements = detail.settlements;
+    final balances = detail.balances;
+    // Resolved from every member ever in the group, so history keeps the
+    // names of people who have since been removed.
+    final memberById = {for (final m in detail.allMembers) m.id: m};
     final categoryById = {for (final c in categories) c.id: c};
     String nameOf(String id) {
       final member = memberById[id];
       return member == null ? l10n.unknown : memberShortName(l10n, member);
     }
-    final myMemberId = members.where((member) => member.isMe).firstOrNull?.id;
+    final myMemberId = detail.me?.id;
 
     return DefaultTabController(
       length: 3,
@@ -100,13 +100,13 @@ class GroupDetailScreen extends ConsumerWidget {
     );
   }
 
-  static String _summaryText(AppLocalizations l10n, Group group, List<Member> members, GroupBalances? balances, String symbol) {
+  static String _summaryText(AppLocalizations l10n, Group group, List<Member> members, GroupBalances balances, String symbol) {
     final buffer = StringBuffer('${l10n.shareHeader(group.name)}\n');
     final byId = {for (final member in members) member.id: memberShortName(l10n, member)};
-    for (final transfer in balances?.suggested ?? const []) {
+    for (final transfer in balances.suggested) {
       buffer.writeln(l10n.sharePays(byId[transfer.from] ?? l10n.unknown, byId[transfer.to] ?? l10n.unknown, formatMinor(transfer.amountMinor, symbol: symbol)));
     }
-    if (balances == null || balances.suggested.isEmpty) buffer.writeln(l10n.allSettledUp);
+    if (balances.suggested.isEmpty) buffer.writeln(l10n.allSettledUp);
     buffer.writeln('\n${l10n.sharedFromHisab}');
     return buffer.toString();
   }
@@ -217,15 +217,14 @@ class _BalancesTab extends ConsumerWidget {
   final Group group;
   final List<Member> members;
   final List<Settlement> settlements;
-  final GroupBalances? balances;
+  final GroupBalances balances;
   final String Function(String) nameOf;
   final String symbol;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    if (balances == null) return const Center(child: CircularProgressIndicator());
-    final net = balances!.net;
+    final net = balances.net;
     final locale = Localizations.localeOf(context).toString();
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
@@ -247,12 +246,12 @@ class _BalancesTab extends ConsumerWidget {
           ]),
         ),
         SectionHeader(group.simplifyDebts ? l10n.settleUpSimplified : l10n.settleUp),
-        if (balances!.suggested.isEmpty)
+        if (balances.suggested.isEmpty)
           Card(child: ListTile(leading: const Icon(Icons.check_circle_outline), title: Text(l10n.everyoneSettled)))
         else
           Card(
             child: Column(children: [
-              for (final transfer in balances!.suggested)
+              for (final transfer in balances.suggested)
                 ListTile(
                   leading: const Icon(Icons.arrow_forward),
                   title: Text(l10n.transferArrow(nameOf(transfer.from), nameOf(transfer.to))),
@@ -312,7 +311,7 @@ class _MembersTab extends ConsumerWidget {
   const _MembersTab({required this.groupId, required this.members, required this.balances, required this.symbol});
   final String groupId;
   final List<Member> members;
-  final GroupBalances? balances;
+  final GroupBalances balances;
   final String symbol;
 
   @override
@@ -335,8 +334,9 @@ class _MembersTab extends ConsumerWidget {
                         tooltip: l10n.removeNamed(member.name),
                         icon: const Icon(Icons.person_remove_outlined),
                         onPressed: () async {
-                          final current = balances;
-                          final settled = current != null && isMemberSettled(memberId: member.id, net: current.net, transfers: current.suggested);
+                          // Pairwise debts, not the simplified ones: with simplify on a
+                          // member in the middle of a chain nets to zero yet still owes.
+                          final settled = isMemberSettled(memberId: member.id, net: balances.net, transfers: balances.pairwise);
                           if (!settled) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.settleBeforeRemove)));
                             return;

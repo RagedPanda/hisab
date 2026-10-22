@@ -19,9 +19,44 @@ class GroupSummary {
 }
 
 class GroupBalances {
-  const GroupBalances({required this.net, required this.suggested});
+  const GroupBalances({required this.net, required this.suggested, required this.pairwise});
   final Map<String, int> net;
+
+  /// Transfers shown under Settle up: simplified or pairwise per the group setting.
   final List<Transfer> suggested;
+
+  /// Direct debts regardless of the simplify setting; the removal guard uses
+  /// these so a member sitting inside a chain can never be removed (AND-08).
+  final List<Transfer> pairwise;
+
+  /// Repayments the simplify setting saves over paying every debt directly.
+  int get repaymentsSaved => pairwise.length - simplifyDebts(net).length;
+}
+
+/// Everything the group detail screen shows, recomputed as one unit so the
+/// tabs never mix snapshots taken at different times.
+class GroupDetail {
+  const GroupDetail({
+    required this.group,
+    required this.members,
+    required this.allMembers,
+    required this.entries,
+    required this.settlements,
+    required this.balances,
+  });
+  final Group group;
+
+  /// Current members, me first.
+  final List<Member> members;
+
+  /// Every member ever in the group, soft-deleted ones included, so names in
+  /// history never fall back to "Unknown".
+  final List<Member> allMembers;
+  final List<(Entry, List<Split>)> entries;
+  final List<Settlement> settlements;
+  final GroupBalances balances;
+
+  Member? get me => members.where((member) => member.isMe).firstOrNull;
 }
 
 class GroupsRepository {
@@ -51,6 +86,12 @@ class GroupsRepository {
   Stream<List<Member>> watchMembers(String groupId) => _membersQuery(groupId).watch();
   Future<List<Member>> getMembers(String groupId) => _membersQuery(groupId).get();
 
+  /// Members including soft-deleted ones, for resolving names in history.
+  Future<List<Member>> getAllMembers(String groupId) => (db.select(db.members)
+        ..where((t) => t.groupId.equals(groupId))
+        ..orderBy([(t) => OrderingTerm.desc(t.isMe), (t) => OrderingTerm.asc(t.name)]))
+      .get();
+
   Stream<List<Settlement>> watchSettlements(String groupId) => _settlementsQuery(groupId).watch();
   Future<List<Settlement>> getSettlements(String groupId) => _settlementsQuery(groupId).get();
 
@@ -74,13 +115,25 @@ class GroupsRepository {
 
   Stream<GroupBalances> watchBalances(String groupId) => db.watchTables(_ledgerTables, () => getBalances(groupId));
 
-  Future<GroupBalances> getBalances(String groupId) async {
-    final group = await (db.select(db.groups)..where((t) => t.id.equals(groupId))).getSingleOrNull();
-    return computeBalances(
-      members: await getMembers(groupId),
-      entries: await getGroupEntries(groupId),
-      settlements: await getSettlements(groupId),
-      simplify: group?.simplifyDebts ?? true,
+  Future<GroupBalances> getBalances(String groupId) async => (await getGroupDetail(groupId))?.balances ?? computeBalances(members: const [], entries: const [], settlements: const [], simplify: true);
+
+  Stream<GroupDetail?> watchGroupDetail(String groupId) => db.watchTables(_ledgerTables, () => getGroupDetail(groupId));
+
+  /// Null when the group does not exist (or was deleted and the screen is closing).
+  Future<GroupDetail?> getGroupDetail(String groupId) async {
+    final group = await (db.select(db.groups)..where((t) => t.id.equals(groupId) & t.deletedAt.isNull())).getSingleOrNull();
+    if (group == null) return null;
+    final allMembers = await getAllMembers(groupId);
+    final members = allMembers.where((member) => member.deletedAt == null).toList();
+    final entries = await getGroupEntries(groupId);
+    final settlements = await getSettlements(groupId);
+    return GroupDetail(
+      group: group,
+      members: members,
+      allMembers: allMembers,
+      entries: entries,
+      settlements: settlements,
+      balances: computeBalances(members: members, entries: entries, settlements: settlements, simplify: group.simplifyDebts),
     );
   }
 
@@ -103,8 +156,8 @@ class GroupsRepository {
         LedgerSettlement(fromMemberId: s.fromMemberId, toMemberId: s.toMemberId, amountMinor: s.amountMinor),
     ];
     final net = computeNetBalances(memberIds: members.map((m) => m.id), expenses: ledger, settlements: paid);
-    final suggested = simplify ? simplifyDebts(net) : pairwiseDebts(expenses: ledger, settlements: paid);
-    return GroupBalances(net: net, suggested: suggested);
+    final pairwise = pairwiseDebts(expenses: ledger, settlements: paid);
+    return GroupBalances(net: net, suggested: simplify ? simplifyDebts(net) : pairwise, pairwise: pairwise);
   }
 
   Stream<List<GroupSummary>> watchSummaries() => db.watchTables(_ledgerTables, getSummaries);

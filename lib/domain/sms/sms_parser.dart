@@ -71,10 +71,10 @@ ParsedTransaction? parseBankSms({
   required String body,
   required DateTime receivedAt,
 }) {
-  final text = normalizeMathGlyphs(body).replaceAll(RegExp(r'\s+'), ' ').trim();
+  final text = _normaliseSmsText(body);
   final lower = text.toLowerCase();
   if (text.isEmpty) return null;
-  if (_rejectPhrases.any(lower.contains) && !_isReversal(lower)) return null;
+  if (_isNonTransactional(lower)) return null;
 
   final balanceMatch = _balancePattern.firstMatch(text);
   final limitMatch = _limitPattern.firstMatch(text);
@@ -130,6 +130,8 @@ String normalizeMathGlyphs(String input) {
   }
   return out.toString();
 }
+
+bool _isNonTransactional(String lower) => _rejectPhrases.any(lower.contains) && !_isReversal(lower);
 
 bool _isReversal(String lower) =>
     (lower.contains('reversed') || lower.contains('reversal') || lower.contains('refund')) &&
@@ -284,3 +286,16 @@ String? _counterparty(String text, TxnDirection direction) {
   }
   return null;
 }
+
+/// Whether a message the parser could not read still looks like money moved:
+/// it names an amount and is not an OTP, offer, reminder or failure notice.
+/// Such messages go to the review queue instead of being dropped.
+bool looksLikeUnreadTransaction(String body) {
+  final text = _normaliseSmsText(body);
+  final lower = text.toLowerCase();
+  if (text.isEmpty) return false;
+  if (_isNonTransactional(lower)) return false;
+  return _amountPattern.hasMatch(text) || _bareAmountPattern.hasMatch(text);
+}
+
+String _normaliseSmsText(String body) => normalizeMathGlyphs(body).replaceAll(RegExp(r'\s+'), ' ').trim();

@@ -12,6 +12,7 @@ import 'dart:ui' as ui;
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show MethodCall, SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/money.dart';
 import 'package:hisab/core/dates.dart';
@@ -1327,6 +1328,86 @@ void main() {
     expect(find.text(hi.showResults), findsOneWidget);
     await shoot(tester, 'hi_entry_filter_sheet');
     await tapFinder(tester, find.byKey(const ValueKey('filter.apply')));
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+  });
+
+  testWidgets('23 fast entry: calculator keypad, save and add another, Add income link, Hindi', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    await pumpApp(tester, fresh);
+    Finder key(String id) => find.byKey(ValueKey(id));
+    String textOf(Finder finder) => tester.widget<Text>(finder).data!;
+    Future<void> press(String keys) async {
+      const ids = {'+': 'plus', '−': 'minus', '×': 'times', '÷': 'divide', '.': 'dot', '<': 'back'};
+      for (final char in keys.split('')) {
+        await tapFinder(tester, key('calc.key.${ids[char] ?? char}'), frames: 2);
+      }
+    }
+
+    Future<List<Entry>> entries() => fresh.db.select(fresh.db.entries).get();
+    Set<String> selectedKind() => tester.widget<SegmentedButton<String>>(find.byType(SegmentedButton<String>, skipOffstage: false)).selected;
+
+    await tapFinder(tester, find.byType(FloatingActionButton));
+    await tapFinder(tester, key('editor.calculator'), frames: 10);
+    expect(find.text('Calculator'), findsOneWidget);
+    await press('0120×3+45');
+    expect(textOf(key('calc.display')), '120×3+45', reason: 'a leading zero is replaced');
+    expect(textOf(key('calc.result')), '= ${formatMinor(40500)}', reason: 'times binds tighter than plus');
+    await shoot(tester, 'calculator_keypad');
+    await press('÷0');
+    expect(textOf(key('calc.result')), "Can't divide by zero");
+    expect(tester.widget<FilledButton>(key('calc.use')).onPressed, isNull);
+    await press('<<');
+    expect(textOf(key('calc.display')), '120×3+45');
+    await tapFinder(tester, key('calc.use'), frames: 10);
+    expect(tester.widget<TextField>(_amountField()).controller!.text, '405');
+
+    await _pickCategory(tester, 'groceries', 'Groceries');
+    await tapFinder(tester, key('editor.saveAndAddAnother'), frames: 10);
+    expect(find.text('Saved. Add the next one.'), findsOneWidget);
+    expect(find.byType(ExpenseEditorScreen), findsOneWidget, reason: 'the editor stays open for the next entry');
+    expect(tester.widget<TextField>(_amountField()).controller!.text, isEmpty);
+    expect(find.text('Choose category'), findsOneWidget);
+    expect(selectedKind(), {'expense'});
+    await shoot(tester, 'editor_saved_add_another');
+    final first = (await entries()).single;
+    expect(first.amountMinor, 40500);
+
+    await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
+    await enterText(tester, _amountField(), '60');
+    await _saveEntry(tester, formatMinor(6000));
+    expect(find.byType(ExpenseEditorScreen), findsNothing, reason: 'plain Save still closes the editor');
+    final saved = await entries();
+    expect(saved.map((entry) => entry.amountMinor).toSet(), {40500, 6000});
+    expect(saved.map((entry) => entry.accountId).toSet(), {first.accountId}, reason: 'the account carries over');
+    expect(saved.map((entry) => entry.occurredAt.day).toSet().length, 1, reason: 'the date carries over');
+
+    Future<void> platformNavigation(MethodCall call) async {
+      await tester.binding.defaultBinaryMessenger.handlePlatformMessage(SystemChannels.navigation.name, SystemChannels.navigation.codec.encodeMethodCall(call), (_) {});
+      await settle(tester, 10);
+    }
+
+    // The Android "Add income" launcher shortcut opens this link.
+    await platformNavigation(const MethodCall('pushRouteInformation', {'location': 'hisab://entry?kind=income', 'state': null}));
+    expect(find.byType(ExpenseEditorScreen), findsOneWidget);
+    expect(selectedKind(), {'income'});
+    await platformNavigation(const MethodCall('popRoute'));
+    expect(find.byType(ExpenseEditorScreen), findsNothing, reason: 'system back from a linked editor goes home');
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    await tapFinder(tester, find.byType(FloatingActionButton));
+    expect(find.text(hi.saveAndAddAnother), findsOneWidget);
+    await tapFinder(tester, key('editor.calculator'), frames: 10);
+    expect(find.text(hi.calculator), findsOneWidget);
+    await press('250÷4');
+    expect(find.text(hi.useAmount(formatMinor(6250))), findsOneWidget);
+    await shoot(tester, 'hi_calculator_keypad');
+    await tapFinder(tester, key('calc.use'), frames: 10);
+    await shoot(tester, 'hi_editor_add_another');
+    await goBack(tester);
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
     await settle(tester, 6);
   });

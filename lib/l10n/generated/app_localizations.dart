@@ -3217,6 +3217,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit member'**
   String get editMember;
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @filterEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter entries'**
+  String get filterEntries;
+
+  /// No description provided for @anyProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Any project'**
+  String get anyProject;
+
+  /// No description provided for @anyCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Any category'**
+  String get anyCategory;
+
+  /// No description provided for @anyDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Any date'**
+  String get anyDate;
+
+  /// No description provided for @minAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Min'**
+  String get minAmount;
+
+  /// No description provided for @maxAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Max'**
+  String get maxAmount;
+
+  /// No description provided for @dates.
+  ///
+  /// In en, this message translates to:
+  /// **'Dates'**
+  String get dates;
+
+  /// No description provided for @tags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get tags;
+
+  /// No description provided for @showResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Show results'**
+  String get showResults;
+
+  /// No description provided for @clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get clearAll;
+
+  /// No description provided for @resultsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 result} other{{count} results}}'**
+  String resultsCount(int count);
+
+  /// No description provided for @amountFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From {amount}'**
+  String amountFrom(String amount);
+
+  /// No description provided for @amountUpTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {amount}'**
+  String amountUpTo(String amount);
+
+  /// No description provided for @amountBetween.
+  ///
+  /// In en, this message translates to:
+  /// **'{min} – {max}'**
+  String amountBetween(String min, String max);
+
+  /// No description provided for @minAboveMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Min is more than max'**
+  String get minAboveMax;
 }
 
 class _AppLocalizationsDelegate

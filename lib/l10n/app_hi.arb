@@ -542,5 +542,21 @@
   "upiIdHint": "name@bank",
   "invalidUpiId": "name@bank जैसा UPI ID डालें",
   "memberContactLocal": "फ़ोन और UPI ID इसी डिवाइस पर रहते हैं। Hisab इनका इस्तेमाल सिर्फ़ रिमाइंडर और UPI भुगतान भरने के लिए करता है।",
-  "editMember": "सदस्य बदलें"
+  "editMember": "सदस्य बदलें",
+  "filters": "फ़िल्टर",
+  "filterEntries": "लेन-देन फ़िल्टर करें",
+  "anyProject": "कोई भी प्रोजेक्ट",
+  "anyCategory": "कोई भी श्रेणी",
+  "anyDate": "कोई भी तारीख़",
+  "minAmount": "कम से कम",
+  "maxAmount": "ज़्यादा से ज़्यादा",
+  "dates": "तारीख़ें",
+  "tags": "टैग",
+  "showResults": "नतीजे दिखाएँ",
+  "clearAll": "सब हटाएँ",
+  "resultsCount": "{count, plural, =1{1 नतीजा} other{{count} नतीजे}}",
+  "amountFrom": "{amount} से",
+  "amountUpTo": "{amount} तक",
+  "amountBetween": "{min} – {max}",
+  "minAboveMax": "कम से कम रकम ज़्यादा से ज़्यादा से बड़ी है"
 }

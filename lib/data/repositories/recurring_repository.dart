@@ -4,16 +4,12 @@ import '../../core/dates.dart';
 import '../../core/ids.dart';
 import '../../domain/ledger/balance_effects.dart';
 import '../../domain/recurring/recurrence.dart';
+import '../../domain/recurring/repeat_draft.dart';
 import '../db/database.dart';
 import 'accounts_repository.dart';
 import 'group_recurring_repository.dart';
 
-/// Rule lifecycle states stored in [RecurringRules.status].
-abstract final class RecurringStatus {
-  static const active = 'active';
-  static const paused = 'paused';
-  static const ended = 'ended';
-}
+export '../../domain/recurring/repeat_draft.dart' show RecurringStatus;
 
 /// A rule with the rows its list tile shows.
 class RecurringRuleView {

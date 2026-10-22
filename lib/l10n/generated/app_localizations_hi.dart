@@ -2054,4 +2054,242 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get settleReminderMonthlyLastDaySummary =>
       'हर महीने के आख़िरी दिन याद';
+
+  @override
+  String get recurringRepeat => 'दोहराएँ';
+
+  @override
+  String get recurringDoesNotRepeat => 'दोहराया नहीं जाता';
+
+  @override
+  String get recurringDaily => 'रोज़';
+
+  @override
+  String get recurringWeekly => 'हर हफ़्ते';
+
+  @override
+  String get recurringMonthly => 'हर महीने';
+
+  @override
+  String get recurringYearly => 'हर साल';
+
+  @override
+  String recurringEveryDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count दिन',
+      one: 'हर दिन',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count हफ़्ते',
+      one: 'हर हफ़्ते',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count महीने',
+      one: 'हर महीने',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count साल',
+      one: 'हर साल',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringOnDay(int day) {
+    return '$day तारीख़ को';
+  }
+
+  @override
+  String get recurringOnLastDay => 'आख़िरी दिन';
+
+  @override
+  String recurringOnWeekday(String weekday) {
+    return '$weekday को';
+  }
+
+  @override
+  String recurringOnDate(String date) {
+    return '$date को';
+  }
+
+  @override
+  String recurringUntil(String date) {
+    return '$date तक';
+  }
+
+  @override
+  String recurringTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count बार',
+      one: '1 बार',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recurringInterval => 'हर कितने में';
+
+  @override
+  String get recurringLastDayOfMonth => 'महीने के आख़िरी दिन';
+
+  @override
+  String get recurringEnds => 'कब ख़त्म हो';
+
+  @override
+  String get recurringEndNever => 'कभी नहीं';
+
+  @override
+  String get recurringEndOnDate => 'किसी तारीख़ को';
+
+  @override
+  String get recurringEndAfter => 'इतनी बार बाद';
+
+  @override
+  String get recurringOccurrences => 'कितनी बार';
+
+  @override
+  String get recurringAutoPost => 'अपने आप जोड़ें';
+
+  @override
+  String get recurringAutoPostHint =>
+      'बंद होने पर हर बार आपकी पुष्टि का इंतज़ार होगा';
+
+  @override
+  String get recurringStopRepeating => 'न दोहराएँ';
+
+  @override
+  String get recurringDone => 'हो गया';
+
+  @override
+  String get recurringEndBeforeStart => 'शुरुआत के बाद की तारीख़ चुनें';
+
+  @override
+  String get recurringPartOfRule => 'दोहराई जाने वाली एंट्री का हिस्सा';
+
+  @override
+  String get recurringTitle => 'दोहराई जाने वाली';
+
+  @override
+  String get recurringNew => 'नई दोहराई जाने वाली';
+
+  @override
+  String get recurringEdit => 'दोहराई जाने वाली बदलें';
+
+  @override
+  String get recurringEmptyTitle => 'अभी कुछ दोहराया नहीं जाता';
+
+  @override
+  String get recurringEmptyBody =>
+      'किराया, SIP, EMI या सैलरी: एक बार सेट करें, Hisab उसी दिन जोड़ देगा।';
+
+  @override
+  String get recurringSectionWaiting => 'आपका इंतज़ार';
+
+  @override
+  String get recurringSectionActive => 'चालू';
+
+  @override
+  String get recurringSectionPaused => 'रुकी हुई';
+
+  @override
+  String get recurringSectionEnded => 'ख़त्म';
+
+  @override
+  String recurringNext(String date) {
+    return 'अगली $date';
+  }
+
+  @override
+  String recurringDue(String date) {
+    return 'देय $date';
+  }
+
+  @override
+  String recurringMoreWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'और $count बाक़ी',
+      one: 'और 1 बाक़ी',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recurringConfirm => 'जोड़ें';
+
+  @override
+  String get recurringSkip => 'छोड़ें';
+
+  @override
+  String get recurringPause => 'रोकें';
+
+  @override
+  String get recurringResume => 'फिर शुरू करें';
+
+  @override
+  String get recurringDeleted => 'दोहराई जाने वाली एंट्री हटाई गई';
+
+  @override
+  String get recurringAdded => 'एंट्री जोड़ी गई';
+
+  @override
+  String get recurringSkipped => 'छोड़ दी गई';
+
+  @override
+  String recurringToConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count दोहराई जाने वाली एंट्री पुष्टि के लिए',
+      one: '1 दोहराई जाने वाली एंट्री पुष्टि के लिए',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringPostedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count बार जोड़ी गई',
+      one: 'एक बार जोड़ी गई',
+      zero: 'अभी नहीं जोड़ी गई',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recurringNameLabel => 'नाम (वैकल्पिक)';
+
+  @override
+  String get recurringNextOn => 'अगली तारीख़';
+
+  @override
+  String get recurringRuleMissing => 'यह दोहराई जाने वाली एंट्री हटा दी गई है';
 }

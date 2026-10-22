@@ -7,11 +7,41 @@ import 'core/theme.dart';
 import 'features/shell/router.dart';
 import 'l10n/generated/app_localizations.dart';
 
-class HisabApp extends ConsumerWidget {
+class HisabApp extends ConsumerStatefulWidget {
   const HisabApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HisabApp> createState() => _HisabAppState();
+}
+
+class _HisabAppState extends ConsumerState<HisabApp> {
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(onResume: _postDueRecurring);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _postDueRecurring());
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  /// Posts recurring entries that fell due while the app was closed or in
+  /// the background. Safe to run repeatedly: posting is idempotent.
+  Future<void> _postDueRecurring() async {
+    try {
+      await ref.read(recurringRepositoryProvider).postDue(now: DateTime.now(), monthStartDay: ref.read(settingsProvider).monthStartDay);
+    } catch (error, stack) {
+      FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'recurring', context: ErrorDescription('posting due recurring entries')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appName,

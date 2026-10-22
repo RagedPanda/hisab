@@ -773,6 +773,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get smsNotFound => 'इस टेक्स्ट में कोई लेन-देन नहीं मिला।';
 
   @override
+  String get smsNotificationTitle => 'नया बैंक लेन-देन';
+
+  @override
+  String smsNotificationBodyAmount(String amount, String sender) {
+    return '$sender से $amount। देखने के लिए टैप करें।';
+  }
+
+  @override
+  String smsNotificationBody(String sender) {
+    return '$sender से। देखने के लिए टैप करें।';
+  }
+
+  @override
   String get readBankSmsQuestion => 'बैंक एसएमएस पढ़ें?';
 
   @override

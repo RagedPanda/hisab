@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/providers.dart';
 import 'core/theme.dart';
 import 'features/shell/router.dart';
+import 'features/sms/sms_auto_sync.dart';
 import 'l10n/generated/app_localizations.dart';
 
 class HisabApp extends ConsumerWidget {
@@ -30,6 +31,7 @@ class HisabApp extends ConsumerWidget {
       themeAnimationDuration: const Duration(milliseconds: 300),
       themeAnimationCurve: Curves.easeOutCubic,
       routerConfig: appRouter,
+      builder: (context, child) => SmsAutoSync(child: child ?? const SizedBox.shrink()),
     );
   }
 }

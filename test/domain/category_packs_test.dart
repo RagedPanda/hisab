@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hisab/core/app_icons.dart';
 import 'package:hisab/domain/categories/category_catalog.dart';
 import 'package:hisab/domain/categories/category_packs.dart';
 import 'package:hisab/domain/projects/project_templates.dart';
@@ -70,6 +71,25 @@ void main() {
   });
 
   group('project templates', () {
+    test('the roadmap packs are all registered and every pack icon exists', () {
+      expect(categoryPacks.map((pack) => pack.key), containsAll(['baby', 'pet', 'farming', 'shop', 'medical', 'education', 'festival', 'event']));
+      for (final pack in categoryPacks) {
+        expect(appIcons, contains(pack.icon), reason: pack.key);
+        for (final seed in flattenCatalog(pack.roots)) {
+          expect(appIcons, contains(seed.icon), reason: '${pack.key}/${seed.key}');
+        }
+      }
+    });
+
+    test('packs nest under reused roots only, never under a catalog child', () {
+      final catalogChildKeys = {for (final root in categoryCatalog) for (final child in root.children) child.key};
+      for (final pack in categoryPacks) {
+        for (final root in pack.roots.where((root) => root.children.isNotEmpty)) {
+          expect(catalogChildKeys, isNot(contains(root.key)), reason: '${pack.key}/${root.key}');
+        }
+      }
+    });
+
     test('the five R1 templates each point at an existing pack', () {
       expect(projectTemplates.map((template) => template.key), ['vehicle', 'construction', 'renovation', 'trip', 'wedding']);
       for (final template in projectTemplates) {
@@ -94,6 +114,56 @@ void main() {
       expect(templateByKey('vehicle')!.pack, same(vehiclePack));
       expect(templateByKey(null), isNull);
       expect(templateByKey('blank'), isNull);
+    });
+  });
+
+  group('planPackRemoval', () {
+    PackCategoryRef ref(String id, {String? parent, String? pack = 'farming', bool archived = false, String? seed}) =>
+        PackCategoryRef(id: id, parentId: parent, packKey: pack, isArchived: archived, seedKey: seed);
+
+    test('archives unused categories and keeps used ones with their parent', () {
+      final removal = planPackRemoval(packKey: 'farming', usedIds: {'seeds'}, categories: [
+        ref('root'), ref('seeds', parent: 'root'), ref('fertiliser', parent: 'root'), ref('sale'),
+      ]);
+      expect(removal.archiveIds, unorderedEquals(['fertiliser', 'sale']));
+      expect(removal.keepIds, unorderedEquals(['root', 'seeds']));
+    });
+
+    test('a parent holding a user-made child stays, archived children do not count', () {
+      final removal = planPackRemoval(packKey: 'farming', usedIds: const {}, categories: [
+        ref('root'), ref('mine', parent: 'root', pack: null), ref('other'), ref('old', parent: 'other', pack: null, archived: true),
+      ]);
+      expect(removal.keepIds, ['root']);
+      expect(removal.archiveIds, ['other']);
+    });
+
+    test('ignores other packs and already archived categories', () {
+      final removal = planPackRemoval(packKey: 'farming', usedIds: const {}, categories: [
+        ref('a', pack: 'shop'), ref('b', archived: true), ref('c'),
+      ]);
+      expect(removal.archiveIds, ['c']);
+      expect(removal.keepIds, isEmpty);
+    });
+
+    test('hands a shared seed to another added pack instead of archiving it', () {
+      final removal = planPackRemoval(
+        packKey: 'construction',
+        usedIds: const {},
+        otherPacks: categoryPacks,
+        categories: [
+          ref('root', pack: 'construction', seed: 'construction'),
+          ref('cement', parent: 'root', pack: 'construction', seed: 'build_cement'),
+          ref('steel', parent: 'root', pack: 'construction', seed: 'build_steel'),
+          ref('reno', pack: 'renovation', seed: 'renovation'),
+        ],
+      );
+      expect(removal.handOver, {'cement': 'renovation'});
+      expect(removal.archiveIds, ['steel']);
+      expect(removal.keepIds, ['root']);
+    });
+
+    test('addedPackKeys skips archived and untagged categories', () {
+      expect(addedPackKeys([ref('a'), ref('b', pack: 'shop', archived: true), ref('c', pack: null)]), {'farming'});
     });
   });
 }

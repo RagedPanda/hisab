@@ -20,6 +20,7 @@ import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/debug/demo_plan.dart';
 import 'package:hisab/data/debug/demo_seed.dart';
 import 'package:hisab/domain/backup/backup_codec.dart';
+import 'package:hisab/domain/categories/category_packs.dart';
 import 'package:hisab/domain/split/debt_simplifier.dart';
 import 'package:hisab/domain/split/split_calculator.dart';
 import 'package:hisab/features/categories/categories_screen.dart';
@@ -943,6 +944,82 @@ void main() {
     expect(find.text(hi.fieldStage), findsOneWidget);
     await shoot(tester, 'hi_project_entry_fields');
     await goBack(tester);
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+  });
+
+  testWidgets('19 category packs: preview, add once, remove keeps used categories, Hindi', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    await pumpApp(tester, fresh);
+    Future<void> openPacks() async {
+      await goTab(tester, 'Settings');
+      await tapText(tester, 'Categories');
+      await tapFinder(tester, find.byKey(const ValueKey('categories.addPack')));
+    }
+
+    Finder addedChip(String packKey) => find.descendant(of: find.byKey(ValueKey('pack.$packKey')), matching: find.byType(Chip));
+    Future<void> closeSheet() async {
+      await tester.tapAt(const Offset(20, 120));
+      await settle(tester);
+    }
+
+    await openPacks();
+    expect(find.text('Category packs'), findsOneWidget);
+    expect(addedChip('farming'), findsNothing);
+    await shoot(tester, 'category_packs');
+    await scrollTo(tester, find.byKey(const ValueKey('pack.farming')));
+    await tapFinder(tester, find.byKey(const ValueKey('pack.farming')));
+    expect(find.text('Fertiliser'), findsOneWidget);
+    expect(find.text('Crop Sale'), findsOneWidget);
+    await shoot(tester, 'category_pack_preview');
+    final farmingCount = planPack(farmingPack, const {}).length;
+    await tapFinder(tester, find.byKey(const ValueKey('pack.add')), frames: 10);
+    expect(find.text('Pack added with $farmingCount new categories'), findsOneWidget);
+    expect(addedChip('farming'), findsOneWidget);
+    await shoot(tester, 'category_packs_added');
+
+    await tapFinder(tester, find.byKey(const ValueKey('pack.farming')));
+    expect(find.byKey(const ValueKey('pack.add')), findsNothing, reason: 'a pack can be added once');
+    expect(find.byKey(const ValueKey('pack.remove')), findsOneWidget);
+    await closeSheet();
+    await goBack(tester);
+    await goBack(tester);
+
+    await goTab(tester, 'Home');
+    await tapFinder(tester, find.byType(FloatingActionButton));
+    await _pickCategory(tester, 'seeds', 'Seeds');
+    await enterText(tester, _amountField(), '500');
+    await _saveEntry(tester, formatMinor(50000));
+
+    await openPacks();
+    await scrollTo(tester, find.byKey(const ValueKey('pack.farming')));
+    await tapFinder(tester, find.byKey(const ValueKey('pack.farming')));
+    await tapFinder(tester, find.byKey(const ValueKey('pack.remove')));
+    expect(find.text('Unused categories (${farmingCount - 2}) will be archived. Categories in use (2) stay as your own.'), findsOneWidget);
+    await shoot(tester, 'category_pack_remove');
+    await tapFinder(tester, find.widgetWithText(FilledButton, 'Remove'), frames: 10);
+    expect(find.text('Pack removed'), findsOneWidget);
+    expect(addedChip('farming'), findsNothing);
+    await goBack(tester);
+    await scrollTo(tester, find.text('Farming'), within: find.byType(CategoriesScreen));
+    expect(find.text('Farming'), findsOneWidget, reason: 'the parent of a used category stays');
+    await goBack(tester);
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    await tapText(tester, hi.categories);
+    expect(find.text(hi.addAPack), findsOneWidget);
+    await tapFinder(tester, find.byKey(const ValueKey('categories.addPack')));
+    expect(find.text(hi.categoryPacks), findsOneWidget);
+    expect(find.text(hindiCategoryNames['baby']!), findsOneWidget);
+    await shoot(tester, 'hi_category_packs');
+    await tapFinder(tester, find.byKey(const ValueKey('pack.baby')));
+    expect(find.text(hindiCategoryNames['baby_diapers']!), findsOneWidget);
+    expect(find.text(hi.addPack), findsOneWidget);
+    await shoot(tester, 'hi_category_pack_preview');
+    await closeSheet();
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
     await settle(tester, 6);
   });

@@ -70,12 +70,14 @@ class RecurringRepository {
 
   late final $AccountsTable _toAccounts = db.alias(db.accounts, 'rule_to_accounts');
 
-  JoinedSelectStatement<HasResultSet, dynamic> _viewsQuery() => db.select(db.recurringRules).join([
+  /// Personal rules when [groupId] is null, else that group's rules: group
+  /// rules are listed on their group's Expenses tab, not the personal list.
+  JoinedSelectStatement<HasResultSet, dynamic> _viewsQuery({String? groupId}) => db.select(db.recurringRules).join([
         leftOuterJoin(db.categories, db.categories.id.equalsExp(db.recurringRules.categoryId) & db.categories.deletedAt.isNull()),
         leftOuterJoin(db.accounts, db.accounts.id.equalsExp(db.recurringRules.accountId)),
         leftOuterJoin(_toAccounts, _toAccounts.id.equalsExp(db.recurringRules.toAccountId)),
       ])
-        ..where(db.recurringRules.deletedAt.isNull())
+        ..where(db.recurringRules.deletedAt.isNull() & (groupId == null ? db.recurringRules.groupId.isNull() : db.recurringRules.groupId.equals(groupId)))
         ..orderBy([OrderingTerm.asc(db.recurringRules.nextDue), OrderingTerm.asc(db.recurringRules.name)]);
 
   List<RecurringRuleView> _toViews(List<TypedResult> rows) => [
@@ -89,9 +91,9 @@ class RecurringRepository {
       ];
 
   /// Every live rule, soonest due first; the UI groups them by status.
-  Stream<List<RecurringRuleView>> watchViews() => _viewsQuery().watch().map(_toViews);
+  Stream<List<RecurringRuleView>> watchViews({String? groupId}) => _viewsQuery(groupId: groupId).watch().map(_toViews);
 
-  Future<List<RecurringRuleView>> getViews() async => _toViews(await _viewsQuery().get());
+  Future<List<RecurringRuleView>> getViews({String? groupId}) async => _toViews(await _viewsQuery(groupId: groupId).get());
 
   Future<RecurringRule?> getRule(String id) => (db.select(db.recurringRules)..where((t) => t.id.equals(id))).getSingleOrNull();
 

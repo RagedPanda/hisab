@@ -2567,4 +2567,11 @@ class AppLocalizationsHi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get groupRecurringAmountFixed =>
+      'इस बँटवारे में तय रकमें हैं, इसलिए यहाँ कुल रकम नहीं बदल सकती';
+
+  @override
+  String get groupRecurringUpcoming => 'दोहराए जाने वाले';
 }

@@ -2575,4 +2575,11 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get groupRecurringAmountFixed =>
+      'This split uses fixed amounts, so the total can\'t change here';
+
+  @override
+  String get groupRecurringUpcoming => 'Repeating';
 }

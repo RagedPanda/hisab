@@ -716,5 +716,7 @@
   "reminderSnoozeOneDay": "1 दिन टालें",
   "reminderDueToday": "आज देय",
   "reminderDueInDays": "{days, plural, =1{कल देय} other{{days} दिन में देय}}",
-  "reminderOverdueDays": "{days, plural, =1{1 दिन से बकाया} other{{days} दिन से बकाया}}"
+  "reminderOverdueDays": "{days, plural, =1{1 दिन से बकाया} other{{days} दिन से बकाया}}",
+  "groupRecurringAmountFixed": "इस बँटवारे में तय रकमें हैं, इसलिए यहाँ कुल रकम नहीं बदल सकती",
+  "groupRecurringUpcoming": "दोहराए जाने वाले"
 }

@@ -71,19 +71,4 @@ class GroupRecurringRepository {
     );
     return OccurrencePost.posted;
   }
-
-  /// Live recurring rules of one group, soonest due first, for its Upcoming row.
-  Stream<List<RecurringRule>> watchGroupRules(String groupId) => (db.select(db.recurringRules)
-        ..where((t) => t.groupId.equals(groupId) & t.deletedAt.isNull() & t.status.isNotValue(RecurringStatus.ended))
-        ..orderBy([(t) => OrderingTerm.asc(t.nextDue)]))
-      .watch();
-
-  /// Rule that posted [entryId], if any, for the editor to reload its Repeat choice.
-  Future<RecurringRule?> ruleOfEntry(String entryId) async {
-    final entry = await (db.select(db.entries)..where((t) => t.id.equals(entryId))).getSingleOrNull();
-    final ruleId = entry?.recurringId;
-    if (ruleId == null) return null;
-    return (db.select(db.recurringRules)..where((t) => t.id.equals(ruleId) & t.deletedAt.isNull())).getSingleOrNull();
-  }
 }
-

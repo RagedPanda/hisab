@@ -13,7 +13,6 @@ void main() {
   late AppDatabase db;
   late RecurringRepository recurring;
   late GroupsRepository groups;
-  late GroupRecurringRepository groupRecurring;
   late String groupId;
   late Map<String, String> memberIdByName;
 
@@ -21,7 +20,6 @@ void main() {
     db = AppDatabase(NativeDatabase.memory());
     recurring = RecurringRepository(db);
     groups = GroupsRepository(db);
-    groupRecurring = GroupRecurringRepository(db);
     groupId = await groups.createGroup(name: 'Flat 302', icon: 'home', myName: 'Me', otherMembers: ['Ravi', 'Priya']);
     memberIdByName = {for (final member in await groups.getMembers(groupId)) member.name: member.id};
   });
@@ -88,10 +86,11 @@ void main() {
     expect(await groupEntries(), hasLength(1));
   });
 
-  test('watchGroupRules lists only this group\'s live rules', () async {
+  test('views list group rules under their group and keep them off the personal list', () async {
     await saveRentRule(equalRent());
     await recurring.saveRule(RecurringRepository.newRule(kind: 'expense', amountMinor: 100, frequency: RecurrenceFrequency.monthly, startDate: DateTime(2026, 9, 1)));
-    final rules = await groupRecurring.watchGroupRules(groupId).first;
-    expect(rules.map((rule) => rule.name), ['Rent']);
+    final groupViews = await recurring.getViews(groupId: groupId);
+    expect(groupViews.map((view) => view.rule.name), ['Rent']);
+    expect((await recurring.getViews()).map((view) => view.rule.groupId), [null]);
   });
 }

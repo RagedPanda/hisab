@@ -4255,6 +4255,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{days, plural, =1{Overdue by 1 day} other{Overdue by {days} days}}'**
   String reminderOverdueDays(int days);
+
+  /// No description provided for @groupRecurringAmountFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'This split uses fixed amounts, so the total can\'t change here'**
+  String get groupRecurringAmountFixed;
+
+  /// No description provided for @groupRecurringUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeating'**
+  String get groupRecurringUpcoming;
 }
 
 class _AppLocalizationsDelegate

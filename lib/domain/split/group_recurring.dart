@@ -146,3 +146,11 @@ GroupOccurrence groupOccurrence(GroupExpenseTemplate template, {required int amo
     ],
   );
 }
+
+/// Whether [template] still splits [amountMinor] with everyone it names:
+/// exact amounts and several payers' shares are tied to the old total.
+bool templateFitsAmount(GroupExpenseTemplate template, int amountMinor) => groupOccurrence(
+      template,
+      amountMinor: amountMinor,
+      activeMemberIds: {template.paidByMemberId, for (final input in template.inputs) input.memberId, for (final payer in template.payers) payer.memberId},
+    ).canPost;

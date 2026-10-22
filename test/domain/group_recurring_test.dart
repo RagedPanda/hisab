@@ -116,4 +116,15 @@ void main() {
     expect(shareValueFor(SplitMethod.shares, input), 3);
     expect(shareValueFor(SplitMethod.equal, null), isNull);
   });
+
+  test('templateFitsAmount lets equal splits take a new amount but not exact ones', () {
+    expect(templateFitsAmount(equalRent, 1600000), isTrue);
+    const exactWifi = GroupExpenseTemplate(
+      method: SplitMethod.exact,
+      paidByMemberId: 'me',
+      inputs: [SplitInput(memberId: 'me', amountMinor: 50000), SplitInput(memberId: 'ravi', amountMinor: 50000)],
+    );
+    expect(templateFitsAmount(exactWifi, 100000), isTrue);
+    expect(templateFitsAmount(exactWifi, 120000), isFalse);
+  });
 }

@@ -130,4 +130,23 @@ void main() {
       expect(subscriptionTemplateByKey('missing'), isNull);
     });
   });
+
+  group('cycles', () {
+    test('presets are unique and include 28-day packs', () {
+      expect(subscriptionCycles.toSet().length, subscriptionCycles.length);
+      expect(subscriptionCycles, contains(const SubscriptionCycle(RecurrenceFrequency.daily, 28)));
+    });
+
+    test('every template cycle is a preset', () {
+      for (final template in subscriptionTemplates) {
+        expect(subscriptionCycles, contains(SubscriptionCycle(template.frequency, template.interval)), reason: template.key);
+      }
+    });
+
+    test('a rule on another cycle keeps it as an option', () {
+      const odd = SubscriptionCycle(RecurrenceFrequency.weekly, 2);
+      expect(cycleOptionsFor(odd).last, odd);
+      expect(cycleOptionsFor(subscriptionCycles.first), subscriptionCycles);
+    });
+  });
 }

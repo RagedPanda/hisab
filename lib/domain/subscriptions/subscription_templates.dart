@@ -47,3 +47,33 @@ SubscriptionTemplate? subscriptionTemplateByKey(String key) {
   }
   return null;
 }
+
+/// A billing cycle the add form offers: every [interval] [frequency].
+class SubscriptionCycle {
+  const SubscriptionCycle(this.frequency, this.interval);
+  final RecurrenceFrequency frequency;
+  final int interval;
+
+  @override
+  bool operator ==(Object other) => other is SubscriptionCycle && other.frequency == frequency && other.interval == interval;
+
+  @override
+  int get hashCode => Object.hash(frequency, interval);
+}
+
+/// Cycles Indian plans are sold in: monthly, quarterly, half-yearly, yearly,
+/// 28- and 84-day prepaid packs, and weekly.
+const List<SubscriptionCycle> subscriptionCycles = [
+  SubscriptionCycle(RecurrenceFrequency.monthly, 1),
+  SubscriptionCycle(RecurrenceFrequency.monthly, 3),
+  SubscriptionCycle(RecurrenceFrequency.monthly, 6),
+  SubscriptionCycle(RecurrenceFrequency.yearly, 1),
+  SubscriptionCycle(RecurrenceFrequency.daily, 28),
+  SubscriptionCycle(RecurrenceFrequency.daily, 84),
+  SubscriptionCycle(RecurrenceFrequency.weekly, 1),
+];
+
+/// The cycle list to offer for a rule already on [current]: the presets,
+/// plus [current] at the end when a rule made elsewhere uses another cycle.
+List<SubscriptionCycle> cycleOptionsFor(SubscriptionCycle current) =>
+    subscriptionCycles.contains(current) ? subscriptionCycles : [...subscriptionCycles, current];

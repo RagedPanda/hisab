@@ -293,6 +293,7 @@ class ActivityRecord {
 /// Ids of the log rows that should offer Restore: the latest deletion of each
 /// expense that is still deleted. Older deletions (later undone and deleted
 /// again) and payments never do; payments are restored through Undo only.
+/// [activities] are newest first, so on a timestamp tie the earlier item wins.
 Set<String> restorableActivityIds(List<ActivityRecord> activities, {required Set<String> deletedExpenseIds}) {
   final latestDeletion = <String, ActivityRecord>{};
   for (final activity in activities) {

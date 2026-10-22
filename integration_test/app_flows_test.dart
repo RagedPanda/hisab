@@ -1411,4 +1411,59 @@ void main() {
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
     await settle(tester, 6);
   });
+
+  testWidgets('24 subscriptions: add from templates, totals, sort by cost, pause, cancel, Hindi', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    await pumpApp(tester, fresh);
+
+    await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Subscriptions'));
+    await tapText(tester, 'Subscriptions');
+    expect(find.text('No subscriptions yet'), findsOneWidget);
+
+    Future<void> addFromTemplate(String template, String price) async {
+      await tapFinder(tester, find.byType(FloatingActionButton), frames: 10);
+      await tapFinder(tester, find.descendant(of: find.byType(DraggableScrollableSheet), matching: find.text(template)), frames: 10);
+      await enterText(tester, find.byKey(const Key('subscriptionPrice')), price);
+      await tapFinder(tester, _filled('Save'), frames: 12);
+    }
+
+    await addFromTemplate('Netflix', '649');
+    expect(find.text('₹649'), findsOneWidget, reason: 'monthly total');
+    expect(find.text('₹7,788'), findsOneWidget, reason: 'yearly total');
+    await addFromTemplate('Mobile recharge', '299');
+    expect(find.textContaining('Every 28 days'), findsOneWidget);
+    expect(find.text('₹974'), findsOneWidget, reason: '649 + 299 x 365 / 28 / 12');
+    expect(find.text('₹11,686'), findsOneWidget);
+    final rules = await fresh.db.select(fresh.db.recurringRules).get();
+    expect(rules.every((rule) => rule.isSubscription), isTrue);
+    expect(rules.firstWhere((rule) => rule.name == 'Mobile recharge').interval, 28);
+
+    double top(String text) => tester.getTopLeft(find.text(text)).dy;
+    expect(top('Netflix'), lessThan(top('Mobile recharge')), reason: 'cost high to low by default');
+    await tapFinder(tester, find.byIcon(Icons.sort));
+    await tapText(tester, 'Cost: low to high');
+    expect(top('Mobile recharge'), lessThan(top('Netflix')));
+
+    await tapText(tester, 'Netflix');
+    await tapText(tester, 'Pause');
+    expect(find.text('Paused'), findsOneWidget);
+    expect(find.text('₹325'), findsOneWidget, reason: 'paused subscriptions leave the totals');
+
+    await tapText(tester, 'Mobile recharge');
+    await tapText(tester, 'Mark as cancelled');
+    await tapText(tester, 'Mark as cancelled', last: true);
+    expect(find.text('Cancelled'), findsOneWidget);
+    expect(find.text('₹0'), findsNWidgets(2));
+    expect((await fresh.db.select(fresh.db.recurringRules).get()).map((rule) => rule.status).toSet(), {'paused', 'ended'});
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    expect(find.text(hi.subscriptions), findsOneWidget);
+    expect(find.text(hi.subscriptionPaused), findsOneWidget);
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+  });
 }

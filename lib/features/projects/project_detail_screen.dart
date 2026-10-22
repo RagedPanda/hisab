@@ -11,12 +11,14 @@ import '../../data/repositories/entries_repository.dart';
 import '../../data/repositories/projects_repository.dart';
 import '../../domain/categories/category_filter.dart';
 import '../../domain/projects/project_math.dart';
+import '../../domain/projects/project_metrics.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../dashboard/dashboard_providers.dart';
 import '../dashboard/widgets/category_donut.dart';
 import '../dashboard/widgets/trend_card.dart';
 import '../shell/widgets/common.dart';
+import 'project_fields_section.dart';
 import 'project_providers.dart';
 import 'project_widgets.dart';
 
@@ -40,6 +42,8 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     final entries = ref.watch(projectEntriesProvider(widget.projectId)).value ?? const <EntryDetails>[];
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
     final settings = ref.watch(settingsProvider);
+    final fields = ref.watch(projectFieldsProvider(widget.projectId)).value ?? const <ProjectField>[];
+    final metrics = ref.watch(projectMetricsProvider(widget.projectId)).value ?? const ProjectMetrics();
     final symbol = settings.currencySymbol;
     if (!viewValue.hasValue) return Scaffold(appBar: AppBar());
     final view = viewValue.value;
@@ -75,6 +79,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
           children: [
             _ProjectHero(view: view, symbol: symbol),
+            if (fields.isNotEmpty) ProjectMetricsSection(metrics: metrics, fields: fields, symbol: symbol),
             if (totals.spentMinor > 0) ...[
               SectionHeader(l10n.spendingByCategory, padding: const EdgeInsets.fromLTRB(4, 20, 4, 8)),
               Card(
@@ -99,6 +104,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 ),
               ],
             ],
+            ProjectFieldsSection(projectId: project.id, fields: fields),
             SectionHeader(
               l10n.entries,
               padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),

@@ -3,6 +3,9 @@
          the Play "SMS-based financial transaction tracking" exception; see docs/PERMISSIONS.md -->
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <!-- "New bank transaction" notification for SMS captured while Hisab is closed.
+         Requested when the user turns on Bank SMS; capture works without it. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:label="Hisab"
         android:name="${applicationName}"
@@ -46,6 +49,17 @@
             <meta-data android:name="flutter_deeplinking_enabled" android:value="true" />
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
+        <!-- Captures bank SMS while Hisab is closed (also after a reboot: SMS_RECEIVED
+             is exempt from the implicit-broadcast limits). Only the system, which holds
+             BROADCAST_SMS, may send to it. It does nothing until the user opts in. -->
+        <receiver
+            android:name=".sms.SmsReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -708,6 +708,7 @@ void main() {
     await shoot(tester, 'projects_empty');
 
     await tapText(tester, 'Start a project');
+    await tapText(tester, 'Blank project');
     await enterText(tester, find.widgetWithText(TextField, 'Project name'), 'Swift car');
     await enterText(tester, find.widgetWithText(TextField, 'Budget (optional)'), '50000');
     await shoot(tester, 'project_form');
@@ -772,5 +773,63 @@ void main() {
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
     await settle(tester, 6);
   });
-}
 
+  testWidgets('17 project templates: vehicle seeds its pack only when ticked, trip without, Hindi', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    await pumpApp(tester, fresh);
+    Future<List<Category>> packCategories(String packKey) =>
+        (fresh.db.select(fresh.db.categories)..where((t) => t.packKey.equals(packKey))).get();
+
+    await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Projects'));
+    await tapText(tester, 'Projects');
+    await tapText(tester, 'Start a project');
+    expect(find.text('Start from a template'), findsOneWidget);
+    await shoot(tester, 'project_templates');
+
+    await tapText(tester, 'Vehicle');
+    expect(find.widgetWithText(TextField, 'Vehicle'), findsOneWidget, reason: 'the template names the project');
+    await scrollTo(tester, find.byKey(const ValueKey('project.addSuggestedCategories')));
+    expect(find.text('Add suggested categories'), findsOneWidget);
+    await shoot(tester, 'project_template_form');
+    await tapFinder(tester, find.byKey(const ValueKey('project.addSuggestedCategories')));
+    await tapFinder(tester, _filled('Save'), frames: 12);
+    expect(find.text('Nothing spent yet'), findsOneWidget, reason: 'saving opens the new project');
+    final vehicle = (await fresh.db.select(fresh.db.projects).get()).single;
+    expect(vehicle.templateKey, 'vehicle');
+    final vehicleCategories = await packCategories('vehicle');
+    expect(vehicleCategories.map((c) => c.seedKey), containsAll(['vehicle', 'vehicle_tyres_battery', 'vehicle_puc']));
+    final fuelRows = (await fresh.db.select(fresh.db.categories).get()).where((c) => c.seedKey == 'fuel');
+    expect(fuelRows.length, 1, reason: 'fuel is reused, not duplicated');
+
+    await goBack(tester);
+    await tapText(tester, 'New project');
+    await tapText(tester, 'Trip');
+    await tapFinder(tester, _filled('Save'), frames: 12);
+    expect(await packCategories('trip'), isEmpty, reason: 'categories are added only when ticked');
+    expect((await fresh.db.select(fresh.db.projects).get()).map((p) => p.templateKey), containsAll(['vehicle', 'trip']));
+
+    await goBack(tester);
+    await tapText(tester, 'New project');
+    await tapText(tester, 'Vehicle');
+    await scrollTo(tester, find.byKey(const ValueKey('project.addSuggestedCategories')));
+    expect(find.text('All suggested categories are already in your list'), findsOneWidget);
+    await goBack(tester);
+    await tapText(tester, 'New project');
+    await tapText(tester, 'Home construction');
+    await scrollTo(tester, find.byKey(const ValueKey('project.addSuggestedCategories')));
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    expect(find.text(hi.addSuggestedCategories), findsOneWidget);
+    await shoot(tester, 'hi_project_template_form');
+    await goBack(tester);
+    await tapText(tester, hi.newProject);
+    expect(find.text(hi.templateConstruction), findsOneWidget);
+    await shoot(tester, 'hi_project_templates');
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+  });
+}

@@ -220,10 +220,7 @@ class _ProjectMenu extends ConsumerWidget {
     Future<void> changeStatus(ProjectStatus next, String message) async {
       await repo.setStatus(project.id, next);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(message),
-        action: SnackBarAction(label: l10n.undo, onPressed: () => repo.setStatus(project.id, status)),
-      ));
+      showUndoSnackBar(ScaffoldMessenger.of(context), message: message, undoLabel: l10n.undo, onUndo: () => repo.setStatus(project.id, status));
     }
 
     Future<void> delete() async {
@@ -232,10 +229,7 @@ class _ProjectMenu extends ConsumerWidget {
       final messenger = ScaffoldMessenger.of(context);
       await repo.delete(project.id);
       if (context.mounted) context.pop();
-      messenger.showSnackBar(SnackBar(
-        content: Text(l10n.projectDeleted),
-        action: SnackBarAction(label: l10n.undo, onPressed: () => repo.restore(project.id)),
-      ));
+      showUndoSnackBar(messenger, message: l10n.projectDeleted, undoLabel: l10n.undo, onUndo: () => repo.restore(project.id));
     }
 
     return PopupMenuButton<VoidCallback>(

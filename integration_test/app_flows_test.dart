@@ -30,6 +30,8 @@ import 'package:hisab/domain/split/split_calculator.dart';
 import 'package:hisab/features/categories/categories_screen.dart';
 import 'package:hisab/features/dashboard/dashboard_screen.dart';
 import 'package:hisab/features/expense_editor/expense_editor_screen.dart';
+import 'package:hisab/features/groups/activity_screen.dart';
+import 'package:hisab/features/groups/group_detail_screen.dart';
 import 'package:hisab/features/groups/settle_up_sheet.dart';
 import 'package:hisab/features/split/split_editor.dart';
 import 'package:hisab/features/shell/widgets/common.dart';
@@ -1483,5 +1485,65 @@ void main() {
     expect(tester.widget<ChoiceChip>(_chip('2+ people')).selected, isTrue, reason: 'editing keeps the payers');
     expect(tester.widget<TextFormField>(payerField(rahul)).initialValue, '600');
     expect(tester.widget<TextFormField>(payerField(me)).initialValue, '300');
+  });
+
+  testWidgets('25 groups: edit and delete an expense, undo, then restore it from the activity log', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final movieGroupId = await groups.createGroup(name: 'Movie night', icon: 'movie', myName: 'You', otherMembers: ['Rahul']);
+    const title = 'Restaurants & Cafes';
+    Finder expenseRow() => find.descendant(of: find.byType(GroupDetailScreen), matching: find.text(title));
+    Future<void> deleteFromEditor() async {
+      await tapFinder(tester, expenseRow(), frames: 12);
+      await tapFinder(tester, find.byIcon(Icons.delete_outline));
+      await tapFinder(tester, _filled('Delete'), frames: 12);
+    }
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Movie night');
+    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _pickCategory(tester, 'restaurants', title);
+    await enterText(tester, _amountField(), '600');
+    await _saveEntry(tester, formatMinor(60000));
+    await tapFinder(tester, expenseRow(), frames: 12);
+    await enterText(tester, _amountField(), '900');
+    await _saveEntry(tester, formatMinor(90000));
+
+    await deleteFromEditor();
+    expect(find.text('Expense deleted'), findsOneWidget);
+    expect(expenseRow(), findsNothing);
+    await shoot(tester, 'group_expense_undo');
+    await tapText(tester, 'Undo', frames: 12);
+    expect(expenseRow(), findsOneWidget, reason: 'Undo brings the expense back');
+    expect((await groups.getGroupDetail(movieGroupId))!.entries.single.$2, hasLength(2), reason: 'with both shares');
+
+    await deleteFromEditor();
+    expect(expenseRow(), findsNothing);
+    await tapFinder(tester, find.byType(PopupMenuButton<String>));
+    await tapText(tester, 'Activity', frames: 12);
+    expect(find.byType(ActivityScreen), findsOneWidget);
+    expect(find.text('You deleted “$title”'), findsNWidgets(2));
+    expect(find.text('You restored “$title”'), findsOneWidget);
+    expect(find.text('You edited “$title”'), findsOneWidget);
+    expect(find.text('You added “$title”'), findsOneWidget);
+    expect(find.text('Amount: ${formatMinor(60000)} → ${formatMinor(90000)}'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Restore'), findsOneWidget, reason: 'only the latest deletion offers Restore');
+    await shoot(tester, 'group_activity');
+
+    await tapFinder(tester, find.widgetWithText(TextButton, 'Restore'), frames: 12);
+    expect(find.text('Expense restored'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Restore'), findsNothing);
+    expect(find.text('You restored “$title”'), findsNWidgets(2));
+    expect((await groups.getGroupDetail(movieGroupId))!.entries.single.$1.amountMinor, 90000);
+
+    await goBack(tester);
+    expect(expenseRow(), findsOneWidget);
+    await goBack(tester);
+    await tapFinder(tester, find.byTooltip('Activity'), frames: 12);
+    expect(find.text('All groups'), findsOneWidget);
+    expect(find.textContaining('Movie night ·'), findsWidgets, reason: 'the overall feed names each row\'s group');
+    await shoot(tester, 'all_activity');
   });
 }

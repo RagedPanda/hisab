@@ -270,11 +270,11 @@ class _BalancesTab extends ConsumerWidget {
           ]),
         ),
         SectionHeader(group.simplifyDebts ? l10n.settleUpSimplified : l10n.settleUp),
-        if (balances.suggested.isEmpty)
-          Card(child: ListTile(leading: const Icon(Icons.check_circle_outline), title: Text(l10n.everyoneSettled)))
-        else
-          Card(
-            child: Column(children: [
+        Card(
+          child: Column(children: [
+            if (balances.suggested.isEmpty)
+              ListTile(leading: const Icon(Icons.check_circle_outline), title: Text(l10n.everyoneSettled))
+            else
               for (final transfer in balances.suggested)
                 ListTile(
                   leading: const Icon(Icons.arrow_forward),
@@ -286,15 +286,14 @@ class _BalancesTab extends ConsumerWidget {
                     child: Text(l10n.recordPayment),
                   ),
                 ),
-            ]),
-          ),
-        Card(
-          child: ListTile(
-            leading: const Icon(Icons.add_card_outlined),
-            title: Text(l10n.recordAPayment),
-            subtitle: Text(l10n.recordAPaymentHint),
-            onTap: () => openPayment(),
-          ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.add_card_outlined),
+              title: Text(l10n.recordAPayment),
+              subtitle: Text(l10n.recordAPaymentHint),
+              onTap: () => openPayment(),
+            ),
+          ]),
         ),
         if (settlements.isNotEmpty) ...[
           SectionHeader(l10n.settledPayments),

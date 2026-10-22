@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/providers.dart';
 import 'core/theme.dart';
+import 'features/salary/salary_reminder_watcher.dart';
 import 'features/shell/router.dart';
 import 'l10n/generated/app_localizations.dart';
 
@@ -60,6 +61,7 @@ class _HisabAppState extends ConsumerState<HisabApp> {
       themeAnimationDuration: const Duration(milliseconds: 300),
       themeAnimationCurve: Curves.easeOutCubic,
       routerConfig: appRouter,
+      builder: (context, child) => SalaryReminderWatcher(child: child ?? const SizedBox.shrink()),
     );
   }
 }

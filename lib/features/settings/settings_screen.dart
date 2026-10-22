@@ -7,9 +7,11 @@ import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
+import '../salary/salary_providers.dart';
 import '../shell/widgets/common.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -20,6 +22,7 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final salary = ref.watch(salarySettingsProvider);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
       body: ListView(
@@ -81,6 +84,17 @@ class SettingsScreen extends ConsumerWidget {
                   final day = int.tryParse(text ?? '');
                   if (day != null && day >= 1 && day <= 28) await notifier.update((s) => s.copyWith(monthStartDay: day));
                 },
+              ),
+              ListTile(
+                key: const Key('settingsSalary'),
+                leading: const Icon(Icons.payments_outlined),
+                title: Text(salary.isSetUp ? l10n.salaryTitle : l10n.salarySetUp),
+                subtitle: salary.isSetUp
+                    ? Text(l10n.salarySummary(formatMinor(salary.amountMinor, symbol: settings.currencySymbol), salary.salaryDay), maxLines: 1, overflow: TextOverflow.ellipsis)
+                    : null,
+                trailing: const Icon(Icons.chevron_right),
+                visualDensity: VisualDensity.compact,
+                onTap: () => context.push('/salary'),
               ),
               ListTile(leading: const Icon(Icons.account_balance_outlined), title: Text(l10n.accounts), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/accounts')),
               ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.categories), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/categories')),

@@ -38,6 +38,14 @@ class RemindersRepository {
   Future<Reminder?> getById(String id) => (db.select(db.reminders)..where((t) => t.id.equals(id) & _isLiveDue(t))).getSingleOrNull();
   Stream<Reminder?> watchById(String id) => (db.select(db.reminders)..where((t) => t.id.equals(id) & _isLiveDue(t))).watchSingleOrNull();
 
+  /// The latest live reminder of [kind] tied to [accountId] (any status), or
+  /// null. Card dues use it to update their one automatic reminder.
+  Future<Reminder?> latestForAccount(String accountId, {required ReminderKind kind}) => (db.select(db.reminders)
+        ..where((t) => _isLiveDue(t) & t.kind.equals(kind.key) & t.accountId.equals(accountId))
+        ..orderBy([(t) => OrderingTerm.desc(t.dueAt), (t) => OrderingTerm.desc(t.updatedAt)])
+        ..limit(1))
+      .getSingleOrNull();
+
   /// Creates or updates a reminder from [draft]; returns its id. Editing keeps
   /// status and history fields but clears a snooze, since the timing changed.
   Future<String> save(ReminderDraft draft) async {

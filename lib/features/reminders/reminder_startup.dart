@@ -5,6 +5,7 @@ import '../../core/notifications/notification_gateway.dart';
 import '../../core/notifications/reminder_payload.dart';
 import '../../core/notifications/reminder_tap_gate.dart';
 import '../../core/providers.dart';
+import '../accounts/card_reminder_sync.dart';
 import '../shell/router.dart';
 
 /// Drops the second delivery of a cold-start tap (launch details plus callback).
@@ -28,13 +29,15 @@ Future<void> handleReminderTap(ProviderContainer container, NotificationTap tap)
 /// Sets up notifications after the first frame: listens for taps, follows
 /// the tap that launched the app, and re-posts every pending reminder (this
 /// is what restores alerts after a reboot, an app update, a force stop or a
-/// time-zone change). Never throws: reminders still work in-app without it.
+/// time-zone change). Card due reminders are brought up to date first, so a
+/// card's next bill gets its reminder. Never throws: reminders still work in-app without it.
 Future<void> startReminderNotifications(ProviderContainer container) async {
   try {
     final service = container.read(notificationServiceProvider);
     await service.initialize(onTap: (tap) => handleReminderTap(container, tap));
     final launch = await service.launchTap();
     if (launch != null) await handleReminderTap(container, launch);
+    await syncCardReminderSafely(() => container.read(cardReminderSyncProvider).syncAll());
     await container.read(reminderSchedulerProvider).rescheduleAll();
   } catch (error, stack) {
     debugPrint('Hisab: reminder notifications unavailable: $error\n$stack');

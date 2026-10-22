@@ -6,11 +6,13 @@ import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/domain/cards/card_cycle.dart';
+import 'package:hisab/domain/reminders/reminder_kind.dart';
 import 'package:hisab/features/accounts/accounts_screen.dart';
 import 'package:hisab/features/accounts/card_account_screen.dart';
 import 'package:hisab/features/shell/router.dart';
 
 import '../app_flow_test.dart' show pumpApp, settle, enter;
+import '../core/fake_notification_gateway.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -56,8 +58,9 @@ void main() {
     expect(find.descendant(of: find.byKey(kCardCycleKey), matching: find.text('₹1,200')), findsOneWidget, reason: 'the bill payment is not spend');
   });
 
-  testWidgets('a card without details prompts to set the days, and the sheet saves them', (tester) async {
-    final container = await pumpApp(tester);
+  testWidgets('a card without details prompts to set the days, and the sheet saves them with a due reminder', (tester) async {
+    final gateway = FakeNotificationGateway();
+    final container = await pumpApp(tester, overrides: [notificationGatewayProvider.overrideWithValue(gateway)]);
     final db = container.read(databaseProvider);
     await db.into(db.accounts).insert(AccountsCompanion.insert(id: 'card', name: 'Amex', type: 'card', color: 0xFF1E88E5, balanceMinor: const Value(-50000)));
 
@@ -92,6 +95,11 @@ void main() {
     expect(find.text('Set statement and due days'), findsNothing);
     expect(find.byKey(kCardDueChipKey), findsOneWidget);
 
+    final reminder = await container.read(remindersRepositoryProvider).latestForAccount('card', kind: ReminderKind.card);
+    expect(reminder, isNotNull, reason: 'saving the due day creates the card due reminder');
+    expect(reminder!.title, 'Amex');
+    expect(reminder.amountMinor, 150000);
+    expect(reminder.dueAt, dueDateForStatement(saved.lastStatementAt!, 15));
   });
 
   test('card fields are cleared for other account types', () {

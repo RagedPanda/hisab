@@ -12,6 +12,7 @@ import '../../domain/accounts/account_label.dart';
 import '../../domain/cards/card_summary.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import 'card_reminder_sync.dart';
 
 /// (stored type value, icon name). Labels come from [_typeLabel].
 
@@ -144,6 +145,7 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                     onPressed: () async {
                       if (await confirmDialog(sheetContext, title: l10n.deleteNamed(existing.name))) {
                         await ref.read(accountsRepositoryProvider).delete(existing.id);
+                        await syncCardReminderSafely(() => ref.read(cardReminderSyncProvider).removeForAccount(existing.id));
                         if (sheetContext.mounted) Navigator.pop(sheetContext);
                       }
                     },
@@ -166,8 +168,9 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                       lastStatementText: lastStatementController.text,
                       existing: existing,
                     );
+                    final String accountId;
                     if (existing == null) {
-                      await repo.create(
+                      accountId = (await repo.create(
                         name: name,
                         type: type,
                         color: color,
@@ -178,8 +181,10 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                         creditLimitMinor: card.creditLimitMinor,
                         lastStatementMinor: card.lastStatementMinor,
                         lastStatementAt: card.lastStatementAt,
-                      );
+                      ))
+                          .id;
                     } else {
+                      accountId = existing.id;
                       await repo.update(AccountsCompanion(
                         id: Value(existing.id),
                         name: Value(name),
@@ -195,6 +200,7 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                         lastStatementAt: Value(card.lastStatementAt),
                       ));
                     }
+                    await syncCardReminderSafely(() => ref.read(cardReminderSyncProvider).syncAccountById(accountId));
                     if (sheetContext.mounted) Navigator.pop(sheetContext);
                   },
                   child: Text(l10n.save),

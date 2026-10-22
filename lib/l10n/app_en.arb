@@ -665,5 +665,20 @@
   "@payersMustTotal": {"placeholders": {"total": {"type": "String"}}},
   "namesAnd": "{first} and {last}",
   "@namesAnd": {"placeholders": {"first": {"type": "String"}, "last": {"type": "String"}}},
-  "youInList": "you"
+  "youInList": "you",
+  "groupTotalsTitle": "Group totals",
+  "groupTotalsAllTime": "All time",
+  "groupTotalsTotalSpent": "Total group spending",
+  "groupTotalsYouPaid": "You paid",
+  "groupTotalsYourShare": "Your share",
+  "groupTotalsNetChange": "Change in your balance",
+  "groupTotalsByMember": "Paid and share by member",
+  "groupTotalsPaid": "Paid",
+  "groupTotalsShare": "Share",
+  "groupTotalsEmpty": "No expenses in this period",
+  "groupTotalsExpenseCount": "{count, plural, =1{1 expense} other{{count} expenses}}",
+  "@groupTotalsExpenseCount": {"placeholders": {"count": {"type": "int"}}},
+  "groupTotalsMemberRow": "{name}: paid {paid}, share {share}",
+  "@groupTotalsMemberRow": {"placeholders": {"name": {"type": "String"}, "paid": {"type": "String"}, "share": {"type": "String"}}},
+  "groupTotalsOpen": "See totals"
 }

@@ -38,6 +38,17 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     }
   }
 
+  /// A second share or link while this screen is already open reuses it
+  /// with new text; ingest that too.
+  @override
+  void didUpdateWidget(SmsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final text = widget.sharedText;
+    if (text != null && text.trim().isNotEmpty && text != oldWidget.sharedText) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _ingestText(text));
+    }
+  }
+
   Future<void> _ingestText(String text) async {
     final service = ref.read(smsIngestServiceProvider);
     final status = await service.ingest(RawSms(sender: 'PASTED', body: text, receivedAt: DateTime.now()), autoAdd: false, force: true);

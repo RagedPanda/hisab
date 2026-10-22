@@ -4965,6 +4965,16 @@ class $SettlementsTable extends Settlements
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _methodMeta = const VerificationMeta('method');
+  @override
+  late final GeneratedColumn<String> method = GeneratedColumn<String>(
+    'method',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('cash'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -4976,6 +4986,7 @@ class $SettlementsTable extends Settlements
     amountMinor,
     occurredAt,
     note,
+    method,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5061,6 +5072,12 @@ class $SettlementsTable extends Settlements
         note.isAcceptableOrUnknown(data['note']!, _noteMeta),
       );
     }
+    if (data.containsKey('method')) {
+      context.handle(
+        _methodMeta,
+        method.isAcceptableOrUnknown(data['method']!, _methodMeta),
+      );
+    }
     return context;
   }
 
@@ -5106,6 +5123,10 @@ class $SettlementsTable extends Settlements
         DriftSqlType.string,
         data['${effectivePrefix}note'],
       )!,
+      method: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}method'],
+      )!,
     );
   }
 
@@ -5125,6 +5146,9 @@ class Settlement extends DataClass implements Insertable<Settlement> {
   final int amountMinor;
   final DateTime occurredAt;
   final String note;
+
+  /// cash | upi | bank | other
+  final String method;
   const Settlement({
     required this.updatedAt,
     this.deletedAt,
@@ -5135,6 +5159,7 @@ class Settlement extends DataClass implements Insertable<Settlement> {
     required this.amountMinor,
     required this.occurredAt,
     required this.note,
+    required this.method,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5150,6 +5175,7 @@ class Settlement extends DataClass implements Insertable<Settlement> {
     map['amount_minor'] = Variable<int>(amountMinor);
     map['occurred_at'] = Variable<DateTime>(occurredAt);
     map['note'] = Variable<String>(note);
+    map['method'] = Variable<String>(method);
     return map;
   }
 
@@ -5166,6 +5192,7 @@ class Settlement extends DataClass implements Insertable<Settlement> {
       amountMinor: Value(amountMinor),
       occurredAt: Value(occurredAt),
       note: Value(note),
+      method: Value(method),
     );
   }
 
@@ -5184,6 +5211,7 @@ class Settlement extends DataClass implements Insertable<Settlement> {
       amountMinor: serializer.fromJson<int>(json['amountMinor']),
       occurredAt: serializer.fromJson<DateTime>(json['occurredAt']),
       note: serializer.fromJson<String>(json['note']),
+      method: serializer.fromJson<String>(json['method']),
     );
   }
   @override
@@ -5199,6 +5227,7 @@ class Settlement extends DataClass implements Insertable<Settlement> {
       'amountMinor': serializer.toJson<int>(amountMinor),
       'occurredAt': serializer.toJson<DateTime>(occurredAt),
       'note': serializer.toJson<String>(note),
+      'method': serializer.toJson<String>(method),
     };
   }
 
@@ -5212,6 +5241,7 @@ class Settlement extends DataClass implements Insertable<Settlement> {
     int? amountMinor,
     DateTime? occurredAt,
     String? note,
+    String? method,
   }) => Settlement(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -5222,6 +5252,7 @@ class Settlement extends DataClass implements Insertable<Settlement> {
     amountMinor: amountMinor ?? this.amountMinor,
     occurredAt: occurredAt ?? this.occurredAt,
     note: note ?? this.note,
+    method: method ?? this.method,
   );
   Settlement copyWithCompanion(SettlementsCompanion data) {
     return Settlement(
@@ -5242,6 +5273,7 @@ class Settlement extends DataClass implements Insertable<Settlement> {
           ? data.occurredAt.value
           : this.occurredAt,
       note: data.note.present ? data.note.value : this.note,
+      method: data.method.present ? data.method.value : this.method,
     );
   }
 
@@ -5256,7 +5288,8 @@ class Settlement extends DataClass implements Insertable<Settlement> {
           ..write('toMemberId: $toMemberId, ')
           ..write('amountMinor: $amountMinor, ')
           ..write('occurredAt: $occurredAt, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('method: $method')
           ..write(')'))
         .toString();
   }
@@ -5272,6 +5305,7 @@ class Settlement extends DataClass implements Insertable<Settlement> {
     amountMinor,
     occurredAt,
     note,
+    method,
   );
   @override
   bool operator ==(Object other) =>
@@ -5285,7 +5319,8 @@ class Settlement extends DataClass implements Insertable<Settlement> {
           other.toMemberId == this.toMemberId &&
           other.amountMinor == this.amountMinor &&
           other.occurredAt == this.occurredAt &&
-          other.note == this.note);
+          other.note == this.note &&
+          other.method == this.method);
 }
 
 class SettlementsCompanion extends UpdateCompanion<Settlement> {
@@ -5298,6 +5333,7 @@ class SettlementsCompanion extends UpdateCompanion<Settlement> {
   final Value<int> amountMinor;
   final Value<DateTime> occurredAt;
   final Value<String> note;
+  final Value<String> method;
   final Value<int> rowid;
   const SettlementsCompanion({
     this.updatedAt = const Value.absent(),
@@ -5309,6 +5345,7 @@ class SettlementsCompanion extends UpdateCompanion<Settlement> {
     this.amountMinor = const Value.absent(),
     this.occurredAt = const Value.absent(),
     this.note = const Value.absent(),
+    this.method = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SettlementsCompanion.insert({
@@ -5321,6 +5358,7 @@ class SettlementsCompanion extends UpdateCompanion<Settlement> {
     required int amountMinor,
     required DateTime occurredAt,
     this.note = const Value.absent(),
+    this.method = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        groupId = Value(groupId),
@@ -5338,6 +5376,7 @@ class SettlementsCompanion extends UpdateCompanion<Settlement> {
     Expression<int>? amountMinor,
     Expression<DateTime>? occurredAt,
     Expression<String>? note,
+    Expression<String>? method,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5350,6 +5389,7 @@ class SettlementsCompanion extends UpdateCompanion<Settlement> {
       if (amountMinor != null) 'amount_minor': amountMinor,
       if (occurredAt != null) 'occurred_at': occurredAt,
       if (note != null) 'note': note,
+      if (method != null) 'method': method,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5364,6 +5404,7 @@ class SettlementsCompanion extends UpdateCompanion<Settlement> {
     Value<int>? amountMinor,
     Value<DateTime>? occurredAt,
     Value<String>? note,
+    Value<String>? method,
     Value<int>? rowid,
   }) {
     return SettlementsCompanion(
@@ -5376,6 +5417,7 @@ class SettlementsCompanion extends UpdateCompanion<Settlement> {
       amountMinor: amountMinor ?? this.amountMinor,
       occurredAt: occurredAt ?? this.occurredAt,
       note: note ?? this.note,
+      method: method ?? this.method,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5410,6 +5452,9 @@ class SettlementsCompanion extends UpdateCompanion<Settlement> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (method.present) {
+      map['method'] = Variable<String>(method.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5428,6 +5473,7 @@ class SettlementsCompanion extends UpdateCompanion<Settlement> {
           ..write('amountMinor: $amountMinor, ')
           ..write('occurredAt: $occurredAt, ')
           ..write('note: $note, ')
+          ..write('method: $method, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -9544,6 +9590,7 @@ typedef $$SettlementsTableCreateCompanionBuilder =
       required int amountMinor,
       required DateTime occurredAt,
       Value<String> note,
+      Value<String> method,
       Value<int> rowid,
     });
 typedef $$SettlementsTableUpdateCompanionBuilder =
@@ -9557,6 +9604,7 @@ typedef $$SettlementsTableUpdateCompanionBuilder =
       Value<int> amountMinor,
       Value<DateTime> occurredAt,
       Value<String> note,
+      Value<String> method,
       Value<int> rowid,
     });
 
@@ -9611,6 +9659,11 @@ class $$SettlementsTableFilterComposer
 
   ColumnFilters<String> get note => $composableBuilder(
     column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get method => $composableBuilder(
+    column: $table.method,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -9668,6 +9721,11 @@ class $$SettlementsTableOrderingComposer
     column: $table.note,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get method => $composableBuilder(
+    column: $table.method,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettlementsTableAnnotationComposer
@@ -9713,6 +9771,9 @@ class $$SettlementsTableAnnotationComposer
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get method =>
+      $composableBuilder(column: $table.method, builder: (column) => column);
 }
 
 class $$SettlementsTableTableManager
@@ -9755,6 +9816,7 @@ class $$SettlementsTableTableManager
                 Value<int> amountMinor = const Value.absent(),
                 Value<DateTime> occurredAt = const Value.absent(),
                 Value<String> note = const Value.absent(),
+                Value<String> method = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettlementsCompanion(
                 updatedAt: updatedAt,
@@ -9766,6 +9828,7 @@ class $$SettlementsTableTableManager
                 amountMinor: amountMinor,
                 occurredAt: occurredAt,
                 note: note,
+                method: method,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -9779,6 +9842,7 @@ class $$SettlementsTableTableManager
                 required int amountMinor,
                 required DateTime occurredAt,
                 Value<String> note = const Value.absent(),
+                Value<String> method = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettlementsCompanion.insert(
                 updatedAt: updatedAt,
@@ -9790,6 +9854,7 @@ class $$SettlementsTableTableManager
                 amountMinor: amountMinor,
                 occurredAt: occurredAt,
                 note: note,
+                method: method,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

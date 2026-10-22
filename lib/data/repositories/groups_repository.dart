@@ -230,6 +230,7 @@ class GroupsRepository {
     required int amountMinor,
     DateTime? occurredAt,
     String note = '',
+    String method = 'cash',
   }) async {
     final id = newId();
     await db.into(db.settlements).insert(SettlementsCompanion.insert(
@@ -240,6 +241,7 @@ class GroupsRepository {
           amountMinor: amountMinor,
           occurredAt: occurredAt ?? DateTime.now(),
           note: Value(note),
+          method: Value(method),
         ));
     return id;
   }

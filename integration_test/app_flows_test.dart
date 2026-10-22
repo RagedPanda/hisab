@@ -379,7 +379,9 @@ void main() {
     await scrollTo(tester, find.text('Splits ${formatMinor(30000)} across 3 people'), within: find.byType(ExpenseEditorScreen));
     await shoot(tester, 'group_split_equal');
     await _saveEntry(tester, formatMinor(30000));
-    expect(find.textContaining('You paid · 3 people'), findsOneWidget);
+    expect(find.textContaining('You paid ${formatMinor(30000)}'), findsOneWidget);
+    expect(find.text('you lent'), findsOneWidget);
+    expect(find.text(formatMinor(20000)), findsOneWidget, reason: 'I lent the other two their shares');
 
     // Expense 2: 500 paid by Rahul, exact amounts Me 300 / Rahul 100 / Priya 100.
     await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
@@ -400,7 +402,9 @@ void main() {
     final savedEntries = await shared.read(groupsRepositoryProvider).getGroupEntries(groupId);
     expect(savedEntries, hasLength(2));
     expect(savedEntries.map((pair) => pair.$1.paidByMemberId).toSet(), hasLength(2), reason: 'second expense paid by a different member');
-    expect(find.textContaining('Rahul paid · 3 people'), findsOneWidget);
+    expect(find.textContaining('Rahul paid ${formatMinor(50000)}'), findsOneWidget);
+    expect(find.text('you borrowed'), findsOneWidget);
+    expect(find.text(formatMinor(30000)), findsOneWidget, reason: 'my exact share of the stay');
     await shoot(tester, 'group_expenses');
 
     // Expected balances straight from the domain layer.
@@ -450,8 +454,18 @@ void main() {
     expect(find.text('settled'), findsNWidgets(3));
     await shoot(tester, 'group_settled');
     await tapText(tester, 'Expenses');
+    // Everyone is square, so the tab opens on Unsettled with history folded away.
+    expect(find.text('All settled up. New expenses will show here.'), findsOneWidget);
+    expect(find.textContaining('Settled up to'), findsOneWidget);
+    expect(find.text('Priya paid Rahul'), findsNothing);
+    await shoot(tester, 'group_expenses_settled');
+    await tapText(tester, 'Show 4 older entries');
     expect(find.text('Priya paid Rahul'), findsOneWidget);
     expect(find.text('You paid Rahul'), findsOneWidget);
+    await tapText(tester, 'Mine');
+    expect(find.text('Priya paid Rahul'), findsNothing, reason: 'Mine hides payments between other people');
+    expect(find.text('You paid Rahul'), findsOneWidget);
+    await shoot(tester, 'group_expenses_mine');
     await goBack(tester);
     expect(find.text('Goa trip'), findsOneWidget);
     expect(find.text('3 members · ${formatMinor(80000, showDecimals: false)} spent'), findsOneWidget);

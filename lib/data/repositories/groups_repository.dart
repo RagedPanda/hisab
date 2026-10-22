@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import '../../core/ids.dart';
 import '../../domain/split/debt_simplifier.dart';
 import '../../domain/split/group_timeline.dart';
+import '../../domain/split/group_totals.dart';
 import '../../domain/split/split_calculator.dart';
 import '../db/database.dart';
 import '../db/watch_tables.dart';
@@ -73,6 +74,12 @@ class GroupDetail {
   final Map<String, DateTime> lastRemindedAt;
 
   Member? get me => members.where((member) => member.isMe).firstOrNull;
+
+  /// Every expense with a payer, with its category, for the totals screen.
+  List<GroupTotalsExpense> get totalsExpenses => [
+        for (final (entry, _, _) in entries)
+          if (timelineByEntryId[entry.id] case final expense?) GroupTotalsExpense(expense: expense, categoryId: entry.categoryId),
+      ];
 }
 
 /// A group expense with its splits and, when several members paid, its payer

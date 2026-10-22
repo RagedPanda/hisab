@@ -3854,12 +3854,6 @@ abstract class AppLocalizations {
   /// **'It was expected on {date}. This clears by itself once it arrives.'**
   String salaryNotSeenBody(String date);
 
-  /// No description provided for @salaryNotificationChannel.
-  ///
-  /// In en, this message translates to:
-  /// **'Salary reminders'**
-  String get salaryNotificationChannel;
-
   /// No description provided for @salaryRuleName.
   ///
   /// In en, this message translates to:

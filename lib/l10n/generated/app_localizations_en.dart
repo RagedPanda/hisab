@@ -2311,9 +2311,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get salaryNotificationChannel => 'Salary reminders';
-
-  @override
   String get salaryRuleName => 'Salary';
 
   @override

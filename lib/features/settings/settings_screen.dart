@@ -12,6 +12,7 @@ import '../../core/providers.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
 import '../salary/salary_providers.dart';
+import '../salary/salary_reminder.dart';
 import '../shell/widgets/common.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -94,7 +95,7 @@ class SettingsScreen extends ConsumerWidget {
                     : null,
                 trailing: const Icon(Icons.chevron_right),
                 visualDensity: VisualDensity.compact,
-                onTap: () => context.push('/salary'),
+                onTap: () => context.push(kSalaryLocation),
               ),
               ListTile(leading: const Icon(Icons.account_balance_outlined), title: Text(l10n.accounts), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/accounts')),
               ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.categories), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/categories')),

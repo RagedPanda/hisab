@@ -2303,9 +2303,6 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get salaryNotificationChannel => 'वेतन रिमाइंडर';
-
-  @override
   String get salaryRuleName => 'वेतन';
 
   @override

@@ -521,9 +521,6 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get settlementSubtitle => 'भुगतान · हटाने के लिए टैप करें';
-
-  @override
   String get settledPayments => 'चुकाए गए भुगतान';
 
   @override
@@ -1321,4 +1318,65 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get yesterday => 'कल';
+
+  @override
+  String get savePayment => 'भुगतान सेव करें';
+
+  @override
+  String get recordAPayment => 'कोई भुगतान दर्ज करें';
+
+  @override
+  String get recordAPaymentHint =>
+      'कोई भी जोड़ी, कोई भी रकम — आंशिक भुगतान भी चलेगा';
+
+  @override
+  String get editPayment => 'भुगतान बदलें';
+
+  @override
+  String get paymentUpdated => 'भुगतान अपडेट हुआ';
+
+  @override
+  String get paymentFrom => 'किसने दिया';
+
+  @override
+  String get paymentTo => 'किसे मिला';
+
+  @override
+  String get swapDirection => 'उलटें';
+
+  @override
+  String get paymentMethod => 'तरीका';
+
+  @override
+  String get methodCash => 'नकद';
+
+  @override
+  String get methodUpi => 'UPI';
+
+  @override
+  String get methodBank => 'बैंक';
+
+  @override
+  String get methodOther => 'अन्य';
+
+  @override
+  String paymentOverOwed(String amount) {
+    return 'बकाया $amount से ज़्यादा; बाकी रकम क्रेडिट बन जाएगी';
+  }
+
+  @override
+  String paymentNoDebt(String from, String to) {
+    return '$from पर अभी $to का कुछ बकाया नहीं; यह भुगतान क्रेडिट बन जाएगा';
+  }
+
+  @override
+  String paymentVia(String method) {
+    return 'भुगतान · $method';
+  }
+
+  @override
+  String get samePersonError => 'दो अलग लोग चुनें';
+
+  @override
+  String get amountLabel => 'रकम';
 }

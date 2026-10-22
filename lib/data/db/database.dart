@@ -161,6 +161,9 @@ class Settlements extends Table with SyncColumns {
   DateTimeColumn get occurredAt => dateTime()();
   TextColumn get note => text().withDefault(const Constant(''))();
 
+  /// cash | upi | bank | other
+  TextColumn get method => text().withDefault(const Constant('cash'))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -239,7 +242,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -255,6 +258,8 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(groups, groups.projectId);
             await m.addColumn(categories, categories.packKey);
           }
+          // v3: payment method on settlements (groups parity, record payment).
+          if (from < 3) await m.addColumn(settlements, settlements.method);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');

@@ -521,9 +521,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get settlementSubtitle => 'Payment · tap to remove';
-
-  @override
   String get settledPayments => 'Settled payments';
 
   @override
@@ -1328,4 +1325,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get yesterday => 'Yesterday';
+
+  @override
+  String get savePayment => 'Save payment';
+
+  @override
+  String get recordAPayment => 'Record a payment';
+
+  @override
+  String get recordAPaymentHint =>
+      'Any pair, any amount — partial payments are fine';
+
+  @override
+  String get editPayment => 'Edit payment';
+
+  @override
+  String get paymentUpdated => 'Payment updated';
+
+  @override
+  String get paymentFrom => 'From';
+
+  @override
+  String get paymentTo => 'To';
+
+  @override
+  String get swapDirection => 'Swap';
+
+  @override
+  String get paymentMethod => 'Method';
+
+  @override
+  String get methodCash => 'Cash';
+
+  @override
+  String get methodUpi => 'UPI';
+
+  @override
+  String get methodBank => 'Bank';
+
+  @override
+  String get methodOther => 'Other';
+
+  @override
+  String paymentOverOwed(String amount) {
+    return 'More than the $amount owed; the extra becomes a credit';
+  }
+
+  @override
+  String paymentNoDebt(String from, String to) {
+    return '$from owes $to nothing right now; this payment becomes a credit';
+  }
+
+  @override
+  String paymentVia(String method) {
+    return 'Payment · $method';
+  }
+
+  @override
+  String get samePersonError => 'Pick two different people';
+
+  @override
+  String get amountLabel => 'Amount';
 }

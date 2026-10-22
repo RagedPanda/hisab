@@ -15,6 +15,7 @@ import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import 'member_display.dart';
+import 'record_payment_sheet.dart';
 
 /// One stream for the whole screen so every tab sees the same snapshot.
 final groupDetailProvider = StreamProvider.family((ref, String id) => ref.watch(groupsRepositoryProvider).watchGroupDetail(id));
@@ -44,6 +45,13 @@ class GroupDetailScreen extends ConsumerWidget {
       return member == null ? l10n.unknown : memberShortName(l10n, member);
     }
     final myMemberId = detail.me?.id;
+    // Members offered in the payment sheet: current ones, plus whoever an
+    // existing payment already names (they may have been removed since).
+    Future<void> openPaymentSheet({Settlement? existing, String? from, String? to, int? amountMinor}) {
+      final referenced = {existing?.fromMemberId, existing?.toMemberId};
+      final candidates = detail.allMembers.where((member) => member.deletedAt == null || referenced.contains(member.id)).toList();
+      return showRecordPaymentSheet(context, ref, group: group, members: candidates, balances: balances, symbol: symbol, existing: existing, fromMemberId: from, toMemberId: to, amountMinor: amountMinor);
+    }
 
     return DefaultTabController(
       length: 3,
@@ -91,8 +99,17 @@ class GroupDetailScreen extends ConsumerWidget {
         ),
         body: TabBarView(
           children: [
-            _ExpensesTab(entries: entries, settlements: settlements, nameOf: nameOf, categoryById: categoryById, symbol: symbol, groupId: groupId, myMemberId: myMemberId),
-            _BalancesTab(group: group, members: members, settlements: settlements, balances: balances, nameOf: nameOf, symbol: symbol),
+            _ExpensesTab(
+              entries: entries,
+              settlements: settlements,
+              nameOf: nameOf,
+              categoryById: categoryById,
+              symbol: symbol,
+              groupId: groupId,
+              myMemberId: myMemberId,
+              openPayment: (settlement) => openPaymentSheet(existing: settlement),
+            ),
+            _BalancesTab(group: group, members: members, settlements: settlements, balances: balances, nameOf: nameOf, symbol: symbol, openPayment: openPaymentSheet),
             _MembersTab(groupId: groupId, members: members, balances: balances, symbol: symbol),
           ],
         ),
@@ -121,10 +138,12 @@ class _ExpensesTab extends ConsumerWidget {
     required this.symbol,
     required this.groupId,
     required this.myMemberId,
+    required this.openPayment,
   });
   final List<(Entry, List<Split>)> entries;
   final List<Settlement> settlements;
   final String Function(String) nameOf;
+  final void Function(Settlement) openPayment;
   final Map<String, Category> categoryById;
   final String symbol;
   final String groupId;
@@ -152,9 +171,13 @@ class _ExpensesTab extends ConsumerWidget {
           ListTile(
             leading: const IconBadge(icon: 'handshake', color: 0xFF2E9E6B),
             title: Text(l10n.settlementLine(nameOf(settlement.fromMemberId), nameOf(settlement.toMemberId)), maxLines: 1, overflow: TextOverflow.ellipsis),
-            subtitle: Text(l10n.settlementSubtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle: Text(
+              [l10n.paymentVia(paymentMethodLabel(settlement.method, l10n)), if (settlement.note.isNotEmpty) settlement.note].join(' · '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             trailing: _AmountWithDate(amountMinor: settlement.amountMinor, date: settlement.occurredAt, symbol: symbol, locale: locale, color: kIncomeColor),
-            onTap: () => confirmRemoveSettlement(context, ref, settlement),
+            onTap: () => openPayment(settlement),
           )
         ),
     ]..sort((a, b) => b.$1.compareTo(a.$1));
@@ -213,8 +236,9 @@ Future<void> confirmRemoveSettlement(BuildContext context, WidgetRef ref, Settle
 }
 
 class _BalancesTab extends ConsumerWidget {
-  const _BalancesTab({required this.group, required this.members, required this.settlements, required this.balances, required this.nameOf, required this.symbol});
+  const _BalancesTab({required this.group, required this.members, required this.settlements, required this.balances, required this.nameOf, required this.symbol, required this.openPayment});
   final Group group;
+  final Future<void> Function({Settlement? existing, String? from, String? to, int? amountMinor}) openPayment;
   final List<Member> members;
   final List<Settlement> settlements;
   final GroupBalances balances;
@@ -246,11 +270,11 @@ class _BalancesTab extends ConsumerWidget {
           ]),
         ),
         SectionHeader(group.simplifyDebts ? l10n.settleUpSimplified : l10n.settleUp),
-        if (balances.suggested.isEmpty)
-          Card(child: ListTile(leading: const Icon(Icons.check_circle_outline), title: Text(l10n.everyoneSettled)))
-        else
-          Card(
-            child: Column(children: [
+        Card(
+          child: Column(children: [
+            if (balances.suggested.isEmpty)
+              ListTile(leading: const Icon(Icons.check_circle_outline), title: Text(l10n.everyoneSettled))
+            else
               for (final transfer in balances.suggested)
                 ListTile(
                   leading: const Icon(Icons.arrow_forward),
@@ -258,12 +282,19 @@ class _BalancesTab extends ConsumerWidget {
                   trailing: Text(formatMinor(transfer.amountMinor, symbol: symbol), style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: TextButton(
                     style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
-                    onPressed: () => _recordPayment(context, ref, transfer),
+                    onPressed: () => openPayment(from: transfer.from, to: transfer.to, amountMinor: transfer.amountMinor),
                     child: Text(l10n.recordPayment),
                   ),
                 ),
-            ]),
-          ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.add_card_outlined),
+              title: Text(l10n.recordAPayment),
+              subtitle: Text(l10n.recordAPaymentHint),
+              onTap: () => openPayment(),
+            ),
+          ]),
+        ),
         if (settlements.isNotEmpty) ...[
           SectionHeader(l10n.settledPayments),
           Card(
@@ -272,7 +303,8 @@ class _BalancesTab extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.handshake_outlined),
                   title: Text(l10n.transferArrow(nameOf(settlement.fromMemberId), nameOf(settlement.toMemberId)), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  subtitle: Text(formatRowDate(settlement.occurredAt, locale: locale)),
+                  subtitle: Text('${formatRowDate(settlement.occurredAt, locale: locale)} · ${paymentMethodLabel(settlement.method, l10n)}'),
+                  onTap: () => openPayment(existing: settlement),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -280,6 +312,7 @@ class _BalancesTab extends ConsumerWidget {
                       PopupMenuButton<void>(
                         tooltip: l10n.moreOptions,
                         itemBuilder: (context) => [
+                          PopupMenuItem(onTap: () => openPayment(existing: settlement), child: Text(l10n.editPayment)),
                           PopupMenuItem(onTap: () => confirmRemoveSettlement(context, ref, settlement), child: Text(l10n.removePayment)),
                         ],
                       ),
@@ -291,19 +324,6 @@ class _BalancesTab extends ConsumerWidget {
         ],
       ],
     );
-  }
-
-  Future<void> _recordPayment(BuildContext context, WidgetRef ref, Transfer transfer) async {
-    final l10n = context.l10n;
-    final amount = await promptAmount(context, title: l10n.recordPayment, initialMinor: transfer.amountMinor);
-    if (amount == null || amount <= 0 || !context.mounted) return;
-    final repo = ref.read(groupsRepositoryProvider);
-    final id = await repo.addSettlement(groupId: group.id, fromMemberId: transfer.from, toMemberId: transfer.to, amountMinor: amount);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(l10n.paymentRecorded(l10n.transferArrow(nameOf(transfer.from), nameOf(transfer.to)), formatMinor(amount, symbol: symbol))),
-      action: SnackBarAction(label: l10n.undo, onPressed: () => repo.deleteSettlement(id)),
-    ));
   }
 }
 

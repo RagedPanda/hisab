@@ -9,8 +9,10 @@ import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
 import '../../domain/categories/category_filter.dart';
+import '../../domain/projects/project_picker.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
+import '../projects/project_picker_sheet.dart';
 import '../shell/widgets/common.dart';
 
 class _SearchNotifier extends Notifier<String> {
@@ -25,6 +27,13 @@ class _KindFilterNotifier extends Notifier<String?> {
   void set(String? value) => state = value;
 }
 
+class _ProjectFilterNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+  void set(String? value) => state = value;
+}
+
+final _projectFilterProvider = NotifierProvider<_ProjectFilterNotifier, String?>(_ProjectFilterNotifier.new);
 final _searchProvider = NotifierProvider<_SearchNotifier, String>(_SearchNotifier.new);
 final _kindFilterProvider = NotifierProvider<_KindFilterNotifier, String?>(_KindFilterNotifier.new);
 
@@ -66,12 +75,14 @@ class TransactionsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final search = ref.watch(_searchProvider);
     final kindFilter = ref.watch(_kindFilterProvider);
+    final projectFilter = ref.watch(_projectFilterProvider);
     final symbol = ref.watch(settingsProvider).currencySymbol;
     final async = ref.watch(monthEntriesProvider);
     final routeFilters = RouteFilters.of(context);
     final entries = (async.value ?? const <EntryDetails>[]).where((d) {
       if (!routeFilters.matches(d)) return false;
       if (kindFilter != null && d.entry.kind != kindFilter) return false;
+      if (!matchesProjectFilter(selectedId: projectFilter, entryProjectId: d.entry.projectId)) return false;
       if (search.isEmpty) return true;
       final needle = search.toLowerCase();
       return d.entry.note.toLowerCase().contains(needle) ||
@@ -111,6 +122,7 @@ class TransactionsScreen extends ConsumerWidget {
                   label: _accountFilterLabel(ref, routeFilters.accountId!),
                   onDeleted: () => context.go(routeFilters.locationWithout(account: true)),
                 ),
+              _ProjectFilterChip(selectedId: projectFilter),
               for (final (label, value) in [(l10n.all, null), (l10n.kindExpenses, 'expense'), (l10n.income, 'income'), (l10n.kindTransfers, 'transfer')])
                 ChoiceChip(label: Text(label), selected: kindFilter == value, onSelected: (_) => ref.read(_kindFilterProvider.notifier).set(value)),
             ],
@@ -189,4 +201,35 @@ String _categoryFilterLabel(BuildContext context, WidgetRef ref, String category
 String _accountFilterLabel(WidgetRef ref, String accountId) {
   final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
   return accounts.where((account) => account.id == accountId).firstOrNull?.name ?? '';
+}
+
+/// Narrows Entries to one project; tapping picks, the cross clears.
+class _ProjectFilterChip extends ConsumerWidget {
+  const _ProjectFilterChip({required this.selectedId});
+  final String? selectedId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final views = ref.watch(projectViewsProvider).value ?? const [];
+    final name = views.where((view) => view.project.id == selectedId).firstOrNull?.project.name;
+    final notifier = ref.read(_projectFilterProvider.notifier);
+    Future<void> pick() async {
+      final choice = await showProjectPicker(context, selectedId: selectedId, includeCompleted: true);
+      if (choice != null) notifier.set(choice.projectId);
+    }
+
+    const key = ValueKey('entries.projectFilter');
+    if (selectedId == null || name == null) {
+      return ActionChip(key: key, avatar: const Icon(Icons.folder_outlined, size: 18), label: Text(l10n.project), onPressed: pick);
+    }
+    return InputChip(
+      key: key,
+      selected: true,
+      avatar: const Icon(Icons.folder, size: 18),
+      label: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 160), child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis)),
+      onPressed: pick,
+      onDeleted: () => notifier.set(null),
+    );
+  }
 }

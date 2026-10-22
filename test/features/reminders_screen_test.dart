@@ -172,6 +172,10 @@ void main() {
     await _settle(tester);
     await tester.scrollUntilVisible(find.text('Reminders'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('1 upcoming · notifications on'), findsOneWidget);
+    // Bring the row to the top so the bottom navigation bar cannot cover it
+    // however many rows other features add to Settings.
+    await tester.ensureVisible(find.text('Reminders'));
+    await _settle(tester);
     await tester.tap(find.text('Reminders'));
     await _settle(tester);
     expect(find.text('Electricity'), findsOneWidget);

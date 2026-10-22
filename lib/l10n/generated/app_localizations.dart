@@ -3823,6 +3823,438 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This recurring entry was deleted'**
   String get recurringRuleMissing;
+
+  /// No description provided for @remindersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get remindersTitle;
+
+  /// No description provided for @remindersUpcomingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing due} =1{1 upcoming} other{{count} upcoming}}'**
+  String remindersUpcomingCount(int count);
+
+  /// No description provided for @remindersNotificationsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'notifications on'**
+  String get remindersNotificationsOn;
+
+  /// No description provided for @remindersNotificationsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'notifications off'**
+  String get remindersNotificationsOff;
+
+  /// No description provided for @remindersSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} · {state}'**
+  String remindersSettingsSubtitle(String count, String state);
+
+  /// No description provided for @reminderTabHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get reminderTabHistory;
+
+  /// No description provided for @reminderSectionOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get reminderSectionOverdue;
+
+  /// No description provided for @reminderSectionThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get reminderSectionThisWeek;
+
+  /// No description provided for @reminderSectionLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get reminderSectionLater;
+
+  /// No description provided for @reminderAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add reminder'**
+  String get reminderAdd;
+
+  /// No description provided for @reminderFab.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder'**
+  String get reminderFab;
+
+  /// No description provided for @remindersEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No reminders yet'**
+  String get remindersEmptyTitle;
+
+  /// No description provided for @remindersEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills, rent, EMIs, renewals: add one and Hisab will nudge you before it\'s due.'**
+  String get remindersEmptyBody;
+
+  /// No description provided for @reminderHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid and skipped reminders show up here.'**
+  String get reminderHistoryEmpty;
+
+  /// No description provided for @reminderSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip this time'**
+  String get reminderSkip;
+
+  /// No description provided for @reminderDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder deleted'**
+  String get reminderDeleted;
+
+  /// No description provided for @reminderMarkedPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked paid'**
+  String get reminderMarkedPaid;
+
+  /// No description provided for @reminderMarkedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked done'**
+  String get reminderMarkedDone;
+
+  /// No description provided for @reminderSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped this time'**
+  String get reminderSkipped;
+
+  /// No description provided for @reminderSnoozedUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Snoozed until {date}'**
+  String reminderSnoozedUntil(String date);
+
+  /// No description provided for @reminderAlreadyDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Already marked paid'**
+  String get reminderAlreadyDone;
+
+  /// No description provided for @reminderPaidOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid {date}'**
+  String reminderPaidOn(String date);
+
+  /// No description provided for @reminderDoneOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Done {date}'**
+  String reminderDoneOn(String date);
+
+  /// No description provided for @reminderSkippedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped {date}'**
+  String reminderSkippedOn(String date);
+
+  /// No description provided for @reminderNextDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Next due {date}'**
+  String reminderNextDue(String date);
+
+  /// No description provided for @notifOffBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off. Reminders will only show in the app.'**
+  String get notifOffBanner;
+
+  /// No description provided for @notifTurnOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get notifTurnOn;
+
+  /// No description provided for @reminderExactAlarmNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts may come a few minutes late. Exact timing needs the Alarms & reminders permission.'**
+  String get reminderExactAlarmNote;
+
+  /// No description provided for @notifPrePromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get reminded before it\'s due'**
+  String get notifPrePromptTitle;
+
+  /// No description provided for @notifPrePromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Hisab sends a notification at the time you choose, only for your reminders. No marketing.'**
+  String get notifPrePromptBody;
+
+  /// No description provided for @reminderPaidSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid {title}?'**
+  String reminderPaidSheetTitle(String title);
+
+  /// No description provided for @reminderPaidSheetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an expense of {amount} and mark this paid.'**
+  String reminderPaidSheetBody(String amount);
+
+  /// No description provided for @reminderAddEntryAndMark.
+  ///
+  /// In en, this message translates to:
+  /// **'Add entry & mark paid'**
+  String get reminderAddEntryAndMark;
+
+  /// No description provided for @reminderJustMark.
+  ///
+  /// In en, this message translates to:
+  /// **'Just mark paid'**
+  String get reminderJustMark;
+
+  /// No description provided for @reminderNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New reminder'**
+  String get reminderNew;
+
+  /// No description provided for @reminderEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit reminder'**
+  String get reminderEditTitle;
+
+  /// No description provided for @reminderKindBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill'**
+  String get reminderKindBill;
+
+  /// No description provided for @reminderKindEmi.
+  ///
+  /// In en, this message translates to:
+  /// **'EMI'**
+  String get reminderKindEmi;
+
+  /// No description provided for @reminderKindCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Card bill'**
+  String get reminderKindCard;
+
+  /// No description provided for @reminderKindSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get reminderKindSubscription;
+
+  /// No description provided for @reminderKindInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Insurance'**
+  String get reminderKindInsurance;
+
+  /// No description provided for @reminderKindDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Document'**
+  String get reminderKindDocument;
+
+  /// No description provided for @reminderKindCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get reminderKindCustom;
+
+  /// No description provided for @reminderTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get reminderTitleLabel;
+
+  /// No description provided for @reminderTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Electricity bill'**
+  String get reminderTitleHint;
+
+  /// No description provided for @reminderTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a title'**
+  String get reminderTitleRequired;
+
+  /// No description provided for @reminderAmountOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (optional)'**
+  String get reminderAmountOptional;
+
+  /// No description provided for @reminderDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date'**
+  String get reminderDueDate;
+
+  /// No description provided for @reminderRepeatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get reminderRepeatLabel;
+
+  /// No description provided for @reminderRepeatOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Once'**
+  String get reminderRepeatOnce;
+
+  /// No description provided for @reminderRepeatWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every week'**
+  String get reminderRepeatWeekly;
+
+  /// No description provided for @reminderRepeatMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every month'**
+  String get reminderRepeatMonthly;
+
+  /// No description provided for @reminderRepeatQuarterly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 3 months'**
+  String get reminderRepeatQuarterly;
+
+  /// No description provided for @reminderRepeatYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every year'**
+  String get reminderRepeatYearly;
+
+  /// No description provided for @reminderNotifyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me'**
+  String get reminderNotifyLabel;
+
+  /// No description provided for @reminderNotifyOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'On the day'**
+  String get reminderNotifyOnDay;
+
+  /// No description provided for @reminderNotifyDaysBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day before} other{{days} days before}}'**
+  String reminderNotifyDaysBefore(int days);
+
+  /// No description provided for @reminderNotifyEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify me'**
+  String get reminderNotifyEnabled;
+
+  /// No description provided for @reminderNotifyAt.
+  ///
+  /// In en, this message translates to:
+  /// **'At {time}'**
+  String reminderNotifyAt(String time);
+
+  /// No description provided for @reminderNotifyPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'First alert: {when}'**
+  String reminderNotifyPreview(String when);
+
+  /// No description provided for @reminderNoAlertsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'All alert times have passed; it will show as due in the app.'**
+  String get reminderNoAlertsLeft;
+
+  /// No description provided for @reminderPickDaysError.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick at least one day'**
+  String get reminderPickDaysError;
+
+  /// No description provided for @reminderSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save reminder'**
+  String get reminderSave;
+
+  /// No description provided for @reminderNoAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'No account'**
+  String get reminderNoAccount;
+
+  /// No description provided for @reminderChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill & due-date reminders'**
+  String get reminderChannelName;
+
+  /// No description provided for @reminderChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts before bills, EMIs, card dues and renewals are due'**
+  String get reminderChannelDescription;
+
+  /// No description provided for @reminderMarkPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark paid'**
+  String get reminderMarkPaid;
+
+  /// No description provided for @reminderMarkDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get reminderMarkDone;
+
+  /// No description provided for @reminderSnoozeOneDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Snooze 1 day'**
+  String get reminderSnoozeOneDay;
+
+  /// No description provided for @reminderDueToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Due today'**
+  String get reminderDueToday;
+
+  /// No description provided for @reminderDueInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Due tomorrow} other{Due in {days} days}}'**
+  String reminderDueInDays(int days);
+
+  /// No description provided for @reminderOverdueDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Overdue by 1 day} other{Overdue by {days} days}}'**
+  String reminderOverdueDays(int days);
 }
 
 class _AppLocalizationsDelegate

@@ -10,6 +10,12 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 /// Undoes every step above [version] on a database created at the current
 /// schema, newest first, so each rewind starts from the right shape.
 Future<void> dropStepsAbove(AppDatabase db, int version) async {
+  if (version < 9) {
+    await db.customStatement('DROP INDEX reminders_status_due');
+    for (final column in dueReminderColumns(db.reminders)) {
+      await db.customStatement('ALTER TABLE reminders DROP COLUMN ${column.name}');
+    }
+  }
   if (version < 8) {
     await db.customStatement('ALTER TABLE recurring_rules DROP COLUMN group_id');
     await db.customStatement('ALTER TABLE recurring_rules DROP COLUMN group_split');
@@ -103,6 +109,15 @@ Future<void> rewindToVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropStepsAbove(db, 6);
   await db.customStatement('PRAGMA user_version = 6');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 8
+/// (recurring group expenses, generic reminders without due-reminder columns).
+Future<void> rewindToVersion8(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropStepsAbove(db, 8);
+  await db.customStatement('PRAGMA user_version = 8');
   await db.close();
 }
 
@@ -252,6 +267,27 @@ void main() {
     expect(rule.groupId, isNull, reason: 'existing rules stay personal');
     expect(rule.groupSplit, isNull);
     expect(rule.amountMinor, 1500000);
+    await db.close();
+  });
+
+  test('upgrading from schema 8 adds due-reminder columns and keeps settle-up rows', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.reminders).insert(RemindersCompanion.insert(id: 'r1', kind: 'settle_up', groupId: const Value('g1'), memberId: const Value('m1'), sentAt: Value(DateTime(2026, 10, 20))));
+    await seed.close();
+    await rewindToVersion8(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final settleUp = await db.select(db.reminders).getSingle();
+    expect(settleUp.kind, 'settle_up');
+    expect(settleUp.title, '');
+    expect(settleUp.status, 'pending');
+    expect(settleUp.repeat, 'once');
+    expect(settleUp.remindDaysBefore, '0');
+    expect(settleUp.notifyAtMinute, isNull);
+    final indexes = await db.customSelect("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'reminders'").get();
+    expect(indexes.map((row) => row.data['name']), contains('reminders_status_due'));
     await db.close();
   });
 

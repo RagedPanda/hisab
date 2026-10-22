@@ -35,6 +35,16 @@ void main() {
     expect(await entries.watchCategoryTotals(range).first, {'': 6000});
   });
 
+  test('watchEntries narrows to one project when projectId is given', () async {
+    await entries.saveEntry(EntriesRepository.newExpense(id: newId(), amountMinor: 1000, occurredAt: DateTime(2026, 10, 5), projectId: 'car'));
+    await entries.saveEntry(EntriesRepository.newExpense(id: newId(), amountMinor: 2000, occurredAt: DateTime(2026, 10, 6), projectId: 'house'));
+    await entries.saveEntry(EntriesRepository.newExpense(id: newId(), amountMinor: 3000, occurredAt: DateTime(2026, 10, 7)));
+
+    final car = await entries.watchEntries(projectId: 'car').first;
+    expect(car.map((details) => details.entry.amountMinor), [1000]);
+    expect((await entries.watchEntries(range: range, myLedger: true).first).length, 3, reason: 'no project filter keeps every entry');
+  });
+
   test('P2-1: my share of a group expense counts in month lists and totals', () async {
     final groups = GroupsRepository(db);
     final groupId = await groups.createGroup(name: 'Goa Trip', icon: 'beach', myName: 'Me', otherMembers: ['Priya']);

@@ -43,25 +43,7 @@ class BudgetRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 6),
-          Stack(
-            alignment: Alignment.centerLeft,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(
-                  value: progress.usedFraction.clamp(0, 1),
-                  color: barColor,
-                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                  minHeight: 6,
-                ),
-              ),
-              // Where the bar would be if spend tracked the calendar exactly.
-              Align(
-                alignment: Alignment(-1 + 2 * progress.elapsedFraction, 0),
-                child: Container(width: 1, height: 6, color: theme.colorScheme.outline),
-              ),
-            ],
-          ),
+          BudgetProgressBar(progress: progress),
           const SizedBox(height: 4),
           Text(caption, style: theme.textTheme.bodySmall?.tabular),
         ],
@@ -73,6 +55,39 @@ class BudgetRow extends StatelessWidget {
           ?trailing,
         ],
       ),
+    );
+  }
+}
+
+/// Spend-so-far bar coloured by budget band, with a tick where spend would be
+/// if it tracked the calendar exactly. Used by budget rows and projects.
+class BudgetProgressBar extends StatelessWidget {
+  const BudgetProgressBar({super.key, required this.progress, this.height = 6});
+  final BudgetProgress progress;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Stack(
+      alignment: Alignment.centerLeft,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(height / 2),
+          child: LinearProgressIndicator(
+            value: progress.usedFraction.clamp(0, 1),
+            color: budgetBandColor(progress.band, scheme),
+            backgroundColor: scheme.surfaceContainerHighest,
+            minHeight: height,
+          ),
+        ),
+        // Where the bar would be if spend tracked the calendar exactly.
+        if (progress.elapsedFraction < 1)
+          Align(
+            alignment: Alignment(-1 + 2 * progress.elapsedFraction, 0),
+            child: Container(width: 1, height: height, color: scheme.outline),
+          ),
+      ],
     );
   }
 }

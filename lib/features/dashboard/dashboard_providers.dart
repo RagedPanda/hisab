@@ -10,10 +10,12 @@ import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
 import '../../data/repositories/groups_repository.dart';
+import '../../data/repositories/projects_repository.dart';
 import '../../domain/accounts/account_label.dart';
 import '../../domain/budget/budget_math.dart';
 import '../../domain/categories/category_filter.dart';
 import '../../domain/ledger/personal_totals.dart';
+import '../../domain/projects/project_math.dart';
 import '../../domain/split/group_net.dart';
 import '../../domain/stats/category_shares.dart';
 import '../../domain/stats/month_summary.dart';
@@ -84,17 +86,20 @@ class CategoryBreakdown {
 final categoryBreakdownProvider = Provider<AsyncValue<CategoryBreakdown>>((ref) => combineAsync(
       ref.watch(dashboardLedgerProvider),
       ref.watch(allCategoriesProvider),
-      (ledger, categories) {
-        final totals = totalsByCategory(linesWithin(ledger.lines, ledger.range));
-        final rolled = rollUpToParents(totals, {for (final category in categories) category.id: category.parentId});
-        final shares = categoryShares(rolled);
-        return CategoryBreakdown(
-          shares: shares,
-          categoriesById: {for (final category in categories) category.id: category},
-          totalMinor: shares.fold(0, (sum, share) => sum + share.minor),
-        );
-      },
+      (ledger, categories) => buildCategoryBreakdown(totalsByCategory(linesWithin(ledger.lines, ledger.range)), categories),
     ));
+
+/// Expense per category rolled up to parents and cut to the top slices; the
+/// shape the category donut draws, for the dashboard month or a project.
+CategoryBreakdown buildCategoryBreakdown(Map<String, int> expenseByCategory, List<Category> categories) {
+  final rolled = rollUpToParents(expenseByCategory, {for (final category in categories) category.id: category.parentId});
+  final shares = categoryShares(rolled);
+  return CategoryBreakdown(
+    shares: shares,
+    categoriesById: {for (final category in categories) category.id: category},
+    totalMinor: shares.fold(0, (sum, share) => sum + share.minor),
+  );
+}
 
 /// The category the donut has selected; '' is "uncategorised", null is none.
 class SelectedDashboardCategory extends Notifier<String?> {
@@ -116,6 +121,20 @@ class BudgetsOverview {
 
   bool get isEmpty => shown.isEmpty;
 }
+
+class ProjectsOverview {
+  const ProjectsOverview({required this.shown, required this.more});
+  final List<ProjectView> shown;
+  final int more;
+
+  bool get isEmpty => shown.isEmpty;
+}
+
+/// Active projects for the dashboard card, most recently touched first.
+final projectsOverviewProvider = Provider<AsyncValue<ProjectsOverview>>((ref) => mapAsync(ref.watch(projectViewsProvider), (views) {
+      final rows = activeProjectRows(views, statusOf: (view) => view.status);
+      return ProjectsOverview(shown: rows.shown, more: rows.more);
+    }));
 
 final budgetsOverviewProvider = Provider<AsyncValue<BudgetsOverview>>((ref) {
   final lists = combineAsync(ref.watch(budgetsProvider), ref.watch(allCategoriesProvider), (budgets, categories) => (budgets: budgets, categories: categories));

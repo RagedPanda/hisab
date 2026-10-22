@@ -8,6 +8,9 @@ import '../dashboard/dashboard_screen.dart';
 import '../expense_editor/expense_editor_screen.dart';
 import '../groups/group_detail_screen.dart';
 import '../groups/groups_screen.dart';
+import '../projects/project_detail_screen.dart';
+import '../projects/project_form_screen.dart';
+import '../projects/projects_screen.dart';
 import '../settings/settings_screen.dart';
 import '../sms/sms_screen.dart';
 import '../transactions/transactions_screen.dart';
@@ -42,6 +45,7 @@ final appRouter = GoRouter(
           groupId: state.uri.queryParameters['group'],
           initialKind: state.uri.queryParameters['kind'],
           smsId: state.uri.queryParameters['sms'],
+          projectId: state.uri.queryParameters['project'],
         ),
       ),
     ),
@@ -49,6 +53,22 @@ final appRouter = GoRouter(
     GoRoute(path: '/categories', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoriesScreen()),
     GoRoute(path: '/accounts', parentNavigatorKey: _rootKey, builder: (_, _) => const AccountsScreen()),
     GoRoute(path: '/budgets', parentNavigatorKey: _rootKey, builder: (_, _) => const BudgetsScreen()),
+    GoRoute(
+      path: '/projects',
+      parentNavigatorKey: _rootKey,
+      builder: (_, _) => const ProjectsScreen(),
+      routes: [
+        GoRoute(path: 'new', parentNavigatorKey: _rootKey, builder: (_, _) => const ProjectFormScreen()),
+        GoRoute(
+          path: ':id',
+          parentNavigatorKey: _rootKey,
+          builder: (_, state) => ProjectDetailScreen(projectId: state.pathParameters['id']!),
+          routes: [
+            GoRoute(path: 'edit', parentNavigatorKey: _rootKey, builder: (_, state) => ProjectFormScreen(projectId: state.pathParameters['id']!)),
+          ],
+        ),
+      ],
+    ),
     GoRoute(path: '/sms', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: SmsScreen(sharedText: state.uri.queryParameters['text']))),
   ],
 );

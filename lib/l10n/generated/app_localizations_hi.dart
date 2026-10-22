@@ -1098,6 +1098,165 @@ class AppLocalizationsHi extends AppLocalizations {
   String get showAllCategories => 'सभी श्रेणियाँ दिखाएँ';
 
   @override
+  String get projects => 'प्रोजेक्ट';
+
+  @override
+  String get project => 'प्रोजेक्ट';
+
+  @override
+  String get newProject => 'नया प्रोजेक्ट';
+
+  @override
+  String get blankProject => 'खाली प्रोजेक्ट';
+
+  @override
+  String get editProject => 'प्रोजेक्ट संपादित करें';
+
+  @override
+  String get projectName => 'प्रोजेक्ट का नाम';
+
+  @override
+  String get noProjectsTitle => 'अभी कोई प्रोजेक्ट नहीं';
+
+  @override
+  String get noProjectsBody =>
+      'गाड़ी, घर की मरम्मत, यात्रा या शादी का खर्च उसके अपने बजट के साथ ट्रैक करें।';
+
+  @override
+  String get startProject => 'प्रोजेक्ट शुरू करें';
+
+  @override
+  String get projectsEmptyBody =>
+      'किसी बड़े खर्च को उसके बजट के साथ ट्रैक करने के लिए प्रोजेक्ट शुरू करें';
+
+  @override
+  String get projectStatusActive => 'चालू';
+
+  @override
+  String get projectStatusCompleted => 'पूरा';
+
+  @override
+  String get projectStatusArchived => 'संग्रहित';
+
+  @override
+  String get showArchived => 'संग्रहित दिखाएँ';
+
+  @override
+  String get hideArchived => 'संग्रहित छिपाएँ';
+
+  @override
+  String spentOfBudget(String spent, String budget) {
+    return '$budget में से $spent';
+  }
+
+  @override
+  String spentAmount(String amount) {
+    return '$amount खर्च';
+  }
+
+  @override
+  String leftOfBudget(String amount, String budget) {
+    return '$budget में से $amount बाकी';
+  }
+
+  @override
+  String receivedAmount(String amount) {
+    return '$amount वापस मिला';
+  }
+
+  @override
+  String get noBudgetSet => 'कोई बजट नहीं';
+
+  @override
+  String get allTime => 'कुल';
+
+  @override
+  String entryCountLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count प्रविष्टियाँ',
+      one: '1 प्रविष्टि',
+      zero: 'कोई प्रविष्टि नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noProjectEntriesTitle => 'अभी कोई खर्च नहीं';
+
+  @override
+  String get noProjectEntriesBody =>
+      'यहाँ से प्रविष्टि जोड़ें, वह इस प्रोजेक्ट में गिनी जाएगी';
+
+  @override
+  String get markCompleted => 'पूरा हुआ';
+
+  @override
+  String get reopenProject => 'फिर से खोलें';
+
+  @override
+  String get archiveProject => 'संग्रहित करें';
+
+  @override
+  String get deleteProject => 'प्रोजेक्ट हटाएँ';
+
+  @override
+  String get deleteProjectBody =>
+      'प्रविष्टियाँ आपके खाते में रहेंगी, बस इस प्रोजेक्ट से हट जाएँगी।';
+
+  @override
+  String get projectDeleted => 'प्रोजेक्ट हटाया गया';
+
+  @override
+  String get startDate => 'शुरुआत';
+
+  @override
+  String get endDate => 'समाप्ति';
+
+  @override
+  String get notSet => 'तय नहीं';
+
+  @override
+  String get budgetOptional => 'बजट (वैकल्पिक)';
+
+  @override
+  String get notes => 'नोट्स';
+
+  @override
+  String get projectNotFound => 'यह प्रोजेक्ट हटा दिया गया';
+
+  @override
+  String get spentSoFar => 'अब तक खर्च';
+
+  @override
+  String get spendingByMonth => 'महीनेवार खर्च';
+
+  @override
+  String get projectMarkedCompleted => 'पूरा चिह्नित किया';
+
+  @override
+  String get projectArchivedSnack => 'प्रोजेक्ट संग्रहित किया';
+
+  @override
+  String get projectReopened => 'प्रोजेक्ट फिर से खोला';
+
+  @override
+  String projectDates(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String sinceDate(String date) {
+    return '$date से';
+  }
+
+  @override
+  String untilDate(String date) {
+    return '$date तक';
+  }
+
+  @override
   String get today => 'आज';
 
   @override

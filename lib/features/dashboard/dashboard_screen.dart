@@ -11,6 +11,7 @@ import 'widgets/category_donut.dart';
 import 'widgets/dashboard_card.dart';
 import 'widgets/groups_card.dart';
 import 'widgets/hero_card.dart';
+import 'widgets/projects_card.dart';
 import 'widgets/recent_card.dart';
 import 'widgets/trend_card.dart';
 import 'widgets/upcoming_card.dart';
@@ -33,6 +34,7 @@ class DashboardScreen extends ConsumerWidget {
       const TrendCard(),
       const CategoryDonutCard(),
       const BudgetsCard(),
+      const ProjectsCard(),
       const UpcomingCard(),
       const AccountsCard(),
       const GroupsCard(),

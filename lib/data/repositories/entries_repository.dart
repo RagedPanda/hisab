@@ -82,10 +82,11 @@ class EntriesRepository {
     bool myLedger = false,
     String? accountId,
     String? categoryId,
+    String? projectId,
     String? search,
     int? limit,
   }) =>
-      _filteredQuery(range: range, groupId: groupId, myLedger: myLedger, accountId: accountId, categoryId: categoryId, search: search, limit: limit)
+      _filteredQuery(range: range, groupId: groupId, myLedger: myLedger, accountId: accountId, categoryId: categoryId, projectId: projectId, search: search, limit: limit)
           .watch()
           .asyncMap(_hydrate);
 
@@ -96,6 +97,7 @@ class EntriesRepository {
     bool myLedger = false,
     String? accountId,
     String? categoryId,
+    String? projectId,
     String? search,
     int? limit,
   }) {
@@ -111,6 +113,7 @@ class EntriesRepository {
       conditions.add(db.entries.accountId.equals(accountId) | db.entries.toAccountId.equals(accountId));
     }
     if (categoryId != null) conditions.add(db.entries.categoryId.equals(categoryId));
+    if (projectId != null) conditions.add(db.entries.projectId.equals(projectId));
     if (search != null && search.trim().isNotEmpty) {
       final like = '%${search.trim().toLowerCase()}%';
       conditions.add(db.entries.note.lower().like(like) |

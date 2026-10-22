@@ -692,4 +692,85 @@ void main() {
     expect(find.byType(EntryTile), findsWidgets);
     await shoot(tester, 'dashboard_seeded_bottom');
   });
+
+  testWidgets('16 projects: create, add an entry, dashboard card, complete with undo, delete with undo, Hindi', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    const fuelMinor = 250000;
+    const budgetMinor = 5000000;
+    await pumpApp(tester, fresh);
+
+    await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Projects'));
+    await tapText(tester, 'Projects');
+    expect(find.text('No projects yet'), findsOneWidget);
+    await shoot(tester, 'projects_empty');
+
+    await tapText(tester, 'Start a project');
+    await enterText(tester, find.widgetWithText(TextField, 'Project name'), 'Swift car');
+    await enterText(tester, find.widgetWithText(TextField, 'Budget (optional)'), '50000');
+    await shoot(tester, 'project_form');
+    await tapFinder(tester, _filled('Save'), frames: 12);
+    expect(find.text('Swift car'), findsWidgets, reason: 'saving opens the new project');
+    expect(find.text('Nothing spent yet'), findsOneWidget);
+    await shoot(tester, 'project_detail_empty');
+
+    await tapText(tester, 'Add entry');
+    await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
+    await enterText(tester, _amountField(), '2500');
+    await _saveEntry(tester, formatMinor(fuelMinor));
+    await waitFor(tester, find.byType(EntryTile));
+    expect(find.byType(EntryTile), findsOneWidget, reason: 'the entry is tagged to the project');
+    expect(find.text(formatMinor(fuelMinor, showDecimals: false)), findsWidgets, reason: 'hero shows the spend');
+    expect(find.text('${formatMinor(budgetMinor - fuelMinor, showDecimals: false)} of ${formatMinor(budgetMinor, showDecimals: false)} left · 1 entry'), findsOneWidget);
+    expect(find.text('Spending by category'), findsOneWidget);
+    await shoot(tester, 'project_detail');
+    final stored = await fresh.db.select(fresh.db.entries).get();
+    expect(stored.single.projectId, isNotNull);
+
+    await goBack(tester);
+    expect(find.text('Swift car'), findsOneWidget);
+    expect(find.text('${formatMinor(fuelMinor, showDecimals: false)} spent'), findsOneWidget);
+    await shoot(tester, 'projects_list');
+    await goBack(tester);
+    await goTab(tester, 'Home');
+    await scrollTo(tester, find.byKey(kProjectsCardKey));
+    expect(find.descendant(of: find.byKey(kProjectsCardKey), matching: find.text('Swift car')), findsOneWidget);
+    await shoot(tester, 'dashboard_projects_card');
+    await tapFinder(tester, find.byKey(kProjectsCardKey));
+    expect(find.byType(BackButton), findsOneWidget, reason: 'the card opens the Projects screen');
+    await tapText(tester, 'Swift car');
+
+    await tapFinder(tester, find.byType(PopupMenuButton<VoidCallback>));
+    await tapText(tester, 'Mark completed');
+    expect(find.text('Completed'), findsOneWidget);
+    await tapText(tester, 'Undo');
+    await settle(tester, 6);
+    expect(find.text('Active'), findsOneWidget, reason: 'undo restores the previous status');
+    await tapFinder(tester, find.byType(PopupMenuButton<VoidCallback>));
+    await tapText(tester, 'Mark completed');
+    await settle(tester, 6);
+
+    await tapFinder(tester, find.byType(PopupMenuButton<VoidCallback>));
+    await tapText(tester, 'Delete project');
+    await tapText(tester, 'Delete', last: true, frames: 12);
+    expect(find.text('Project deleted'), findsOneWidget);
+    await tapText(tester, 'Undo');
+    await settle(tester, 6);
+    expect(find.text('Swift car'), findsOneWidget, reason: 'undo brings the project back');
+    expect(find.text('Completed'), findsWidgets, reason: 'completed projects get their own section');
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    expect(find.text(hi.projects), findsWidgets);
+    await shoot(tester, 'hi_projects_list');
+    await tapText(tester, 'Swift car');
+    expect(find.text(hi.projectStatusCompleted), findsWidgets);
+    expect(find.text(hi.spendingByCategory), findsOneWidget);
+    await shoot(tester, 'hi_project_detail');
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+  });
 }
+

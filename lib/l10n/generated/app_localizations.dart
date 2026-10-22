@@ -1946,6 +1946,270 @@ abstract class AppLocalizations {
   /// **'Show all categories'**
   String get showAllCategories;
 
+  /// No description provided for @projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects'**
+  String get projects;
+
+  /// No description provided for @project.
+  ///
+  /// In en, this message translates to:
+  /// **'Project'**
+  String get project;
+
+  /// No description provided for @newProject.
+  ///
+  /// In en, this message translates to:
+  /// **'New project'**
+  String get newProject;
+
+  /// No description provided for @blankProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Blank project'**
+  String get blankProject;
+
+  /// No description provided for @editProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit project'**
+  String get editProject;
+
+  /// No description provided for @projectName.
+  ///
+  /// In en, this message translates to:
+  /// **'Project name'**
+  String get projectName;
+
+  /// No description provided for @noProjectsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No projects yet'**
+  String get noProjectsTitle;
+
+  /// No description provided for @noProjectsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Track a car, a renovation, a trip or a wedding against its own budget.'**
+  String get noProjectsBody;
+
+  /// No description provided for @startProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a project'**
+  String get startProject;
+
+  /// No description provided for @projectsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a project to track a big spend against its budget'**
+  String get projectsEmptyBody;
+
+  /// No description provided for @projectStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get projectStatusActive;
+
+  /// No description provided for @projectStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get projectStatusCompleted;
+
+  /// No description provided for @projectStatusArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get projectStatusArchived;
+
+  /// No description provided for @showArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Show archived'**
+  String get showArchived;
+
+  /// No description provided for @hideArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide archived'**
+  String get hideArchived;
+
+  /// No description provided for @spentOfBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'{spent} of {budget}'**
+  String spentOfBudget(String spent, String budget);
+
+  /// No description provided for @spentAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} spent'**
+  String spentAmount(String amount);
+
+  /// No description provided for @leftOfBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} of {budget} left'**
+  String leftOfBudget(String amount, String budget);
+
+  /// No description provided for @receivedAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} came back'**
+  String receivedAmount(String amount);
+
+  /// No description provided for @noBudgetSet.
+  ///
+  /// In en, this message translates to:
+  /// **'No budget set'**
+  String get noBudgetSet;
+
+  /// No description provided for @allTime.
+  ///
+  /// In en, this message translates to:
+  /// **'all time'**
+  String get allTime;
+
+  /// No description provided for @entryCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No entries} =1{1 entry} other{{count} entries}}'**
+  String entryCountLabel(int count);
+
+  /// No description provided for @noProjectEntriesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing spent yet'**
+  String get noProjectEntriesTitle;
+
+  /// No description provided for @noProjectEntriesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an entry from here and it counts towards this project'**
+  String get noProjectEntriesBody;
+
+  /// No description provided for @markCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark completed'**
+  String get markCompleted;
+
+  /// No description provided for @reopenProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen'**
+  String get reopenProject;
+
+  /// No description provided for @archiveProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archiveProject;
+
+  /// No description provided for @deleteProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete project'**
+  String get deleteProject;
+
+  /// No description provided for @deleteProjectBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries stay in your ledger; they just leave this project.'**
+  String get deleteProjectBody;
+
+  /// No description provided for @projectDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Project deleted'**
+  String get projectDeleted;
+
+  /// No description provided for @startDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get startDate;
+
+  /// No description provided for @endDate.
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get endDate;
+
+  /// No description provided for @notSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get notSet;
+
+  /// No description provided for @budgetOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget (optional)'**
+  String get budgetOptional;
+
+  /// No description provided for @notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notes;
+
+  /// No description provided for @projectNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This project was deleted'**
+  String get projectNotFound;
+
+  /// No description provided for @spentSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent so far'**
+  String get spentSoFar;
+
+  /// No description provided for @spendingByMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending by month'**
+  String get spendingByMonth;
+
+  /// No description provided for @projectMarkedCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked completed'**
+  String get projectMarkedCompleted;
+
+  /// No description provided for @projectArchivedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Project archived'**
+  String get projectArchivedSnack;
+
+  /// No description provided for @projectReopened.
+  ///
+  /// In en, this message translates to:
+  /// **'Project reopened'**
+  String get projectReopened;
+
+  /// No description provided for @projectDates.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} – {end}'**
+  String projectDates(String start, String end);
+
+  /// No description provided for @sinceDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Since {date}'**
+  String sinceDate(String date);
+
+  /// No description provided for @untilDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Until {date}'**
+  String untilDate(String date);
+
   /// No description provided for @today.
   ///
   /// In en, this message translates to:

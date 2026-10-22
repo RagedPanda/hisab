@@ -1254,6 +1254,66 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get startFromTemplate => 'टेम्पलेट से शुरू करें';
+
+  @override
+  String get blankProjectHint => 'नाम दें और कुछ भी ट्रैक करें';
+
+  @override
+  String get templateVehicle => 'वाहन';
+
+  @override
+  String get templateVehicleHint => 'पेट्रोल, सर्विस, बीमा और प्रति किमी खर्च';
+
+  @override
+  String get templateConstruction => 'घर निर्माण';
+
+  @override
+  String get templateConstructionHint =>
+      'सामग्री, मज़दूरी, चरण और प्रति वर्ग फ़ुट खर्च';
+
+  @override
+  String get templateRenovation => 'मरम्मत / रिनोवेशन';
+
+  @override
+  String get templateRenovationHint => 'कमरेवार खर्च, सामान और कारीगर';
+
+  @override
+  String get templateTrip => 'यात्रा';
+
+  @override
+  String get templateTripHint => 'सफ़र, ठहरना, खाना और घूमना';
+
+  @override
+  String get templateWedding => 'शादी';
+
+  @override
+  String get templateWeddingHint => 'वेन्यू, खानपान, कपड़े, वेंडर और शगुन';
+
+  @override
+  String get addSuggestedCategories => 'सुझाई गई श्रेणियाँ जोड़ें';
+
+  @override
+  String suggestedCategoriesNew(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count नई श्रेणियाँ',
+      one: '1 नई श्रेणी',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String suggestedCategoriesReused(int count) {
+    return '$count पहले से आपकी सूची में';
+  }
+
+  @override
+  String get suggestedCategoriesAllPresent =>
+      'सुझाई गई सभी श्रेणियाँ पहले से आपकी सूची में हैं';
+
+  @override
   String get today => 'आज';
 
   @override

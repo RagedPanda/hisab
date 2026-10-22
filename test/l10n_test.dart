@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/domain/categories/category_catalog.dart';
+import 'package:hisab/domain/categories/category_packs.dart';
 import 'package:hisab/l10n/category_names.dart';
 
 void main() {
@@ -26,7 +27,7 @@ void main() {
       }
     });
     test('$language category names cover every seed key', () {
-      final seedKeys = flattenCatalog().map((seed) => seed.key).toSet();
+      final seedKeys = [...flattenCatalog(), ...packOnlySeeds()].map((seed) => seed.key).toSet();
       final names = localizedCategoryNames[language]!;
       expect(seedKeys.difference(names.keys.toSet()), isEmpty);
       expect(names.keys.toSet().difference(seedKeys), isEmpty);

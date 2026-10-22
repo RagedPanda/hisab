@@ -1260,6 +1260,67 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get startFromTemplate => 'Start from a template';
+
+  @override
+  String get blankProjectHint => 'Name it and track anything';
+
+  @override
+  String get templateVehicle => 'Vehicle';
+
+  @override
+  String get templateVehicleHint => 'Fuel, service, insurance and cost per km';
+
+  @override
+  String get templateConstruction => 'Home construction';
+
+  @override
+  String get templateConstructionHint =>
+      'Materials, labour, stages and cost per sq ft';
+
+  @override
+  String get templateRenovation => 'Renovation';
+
+  @override
+  String get templateRenovationHint => 'Room by room, materials and workers';
+
+  @override
+  String get templateTrip => 'Trip';
+
+  @override
+  String get templateTripHint => 'Travel, stay, food and sightseeing';
+
+  @override
+  String get templateWedding => 'Wedding';
+
+  @override
+  String get templateWeddingHint =>
+      'Venue, catering, outfits, vendors and shagun';
+
+  @override
+  String get addSuggestedCategories => 'Add suggested categories';
+
+  @override
+  String suggestedCategoriesNew(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new categories',
+      one: '1 new category',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String suggestedCategoriesReused(int count) {
+    return '$count already in your list';
+  }
+
+  @override
+  String get suggestedCategoriesAllPresent =>
+      'All suggested categories are already in your list';
+
+  @override
   String get today => 'Today';
 
   @override

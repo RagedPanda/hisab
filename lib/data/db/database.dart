@@ -279,11 +279,11 @@ class AppDatabase extends _$AppDatabase {
       for (final parent in categoryCatalog) {
         final parentId = newId();
         if (!existing.contains(parent.key)) {
-          b.insert(categories, _seedRow(parent, parentId, null, order++));
+          b.insert(categories, seedCategoryRow(parent, id: parentId, order: order++));
         }
         for (final child in parent.children) {
           if (!existing.contains(child.key)) {
-            b.insert(categories, _seedRow(child, newId(), parentId, order++));
+            b.insert(categories, seedCategoryRow(child, id: newId(), parentId: parentId, order: order++));
           }
         }
       }
@@ -298,17 +298,19 @@ class AppDatabase extends _$AppDatabase {
       ));
     }
   }
-
-  CategoriesCompanion _seedRow(CategorySeed seed, String id, String? parentId, int order) =>
-      CategoriesCompanion.insert(
-        id: id,
-        seedKey: Value(seed.key),
-        name: seed.name,
-        icon: seed.icon,
-        color: seed.color,
-        kind: seed.kind.name,
-        parentId: Value(parentId),
-        sortOrder: Value(order),
-        units: Value(seed.units.join(',')),
-      );
 }
+
+/// Insert row for a catalog or pack seed. [packKey] marks categories a pack created.
+CategoriesCompanion seedCategoryRow(CategorySeed seed, {required String id, String? parentId, required int order, String? packKey}) =>
+    CategoriesCompanion.insert(
+      id: id,
+      seedKey: Value(seed.key),
+      packKey: Value(packKey),
+      name: seed.name,
+      icon: seed.icon,
+      color: seed.color,
+      kind: seed.kind.name,
+      parentId: Value(parentId),
+      sortOrder: Value(order),
+      units: Value(seed.units.join(',')),
+    );

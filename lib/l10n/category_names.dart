@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../data/db/database.dart';
 import '../domain/categories/category_catalog.dart';
+import '../domain/categories/category_packs.dart';
 import 'category_names_hi.dart';
 
 /// Translated names for the built-in categories, keyed by language code and
@@ -13,7 +14,7 @@ const Map<String, Map<String, String>> localizedCategoryNames = {
 };
 
 final Map<String, String> _englishNameBySeedKey = {
-  for (final seed in flattenCatalog()) seed.key: seed.name,
+  for (final seed in [...flattenCatalog(), ...packOnlySeeds()]) seed.key: seed.name,
 };
 
 /// Display name for a category in [locale]: the user's own name if they
@@ -25,6 +26,10 @@ String categoryDisplayName(Category category, Locale locale) {
   if (english != null && english != category.name) return category.name;
   return localizedCategoryNames[locale.languageCode]?[seedKey] ?? category.name;
 }
+
+/// Display name for a catalog or pack seed that may not be in the database yet.
+String seedDisplayName(CategorySeed seed, Locale locale) =>
+    localizedCategoryNames[locale.languageCode]?[seed.key] ?? seed.name;
 
 extension CategoryDisplayName on Category {
   String displayName(BuildContext context) => categoryDisplayName(this, Localizations.localeOf(context));

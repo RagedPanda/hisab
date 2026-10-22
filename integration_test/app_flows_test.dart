@@ -76,9 +76,17 @@ int _expectedSeededSpend(DateTime now, {required int entryCount}) {
 /// The summary card headline; the same figure also appears in the donut centre
 /// and account cards, so it is read through its key rather than by text.
 Future<void> _expectSpent(WidgetTester tester, String amount, {String? reason}) async {
-  await waitFor(tester, find.byKey(kSummarySpentKey));
-  await settle(tester, 4); // the headline tweens to a new value over 300 ms
-  expect(tester.widget<Text>(find.byKey(kSummarySpentKey)).data, amount, reason: reason);
+  // The home list keeps its scroll offset between tests, so bring the hero back on stage first.
+  await scrollTo(tester, find.byKey(kSummarySpentKey), up: true);
+  String shown() => tester.widget<Text>(find.byKey(kSummarySpentKey)).data ?? '';
+  // The ledger stream delivers asynchronously and the headline tweens to the new value over 300 ms.
+  var waited = 0;
+  while (shown() != amount && waited < 40) {
+    await tester.pump(const Duration(milliseconds: 100));
+    waited++;
+  }
+  if (waited > 0) debugPrint('SPENT-DIAG waited ${waited * 100}ms for $amount');
+  expect(shown(), amount, reason: reason);
 }
 
 Future<void> _pickCategory(WidgetTester tester, String query, String name) async {
@@ -270,6 +278,8 @@ void main() {
 
   testWidgets('05 month navigation', (tester) async {
     await pumpApp(tester, shared);
+    // Later tests share this app and expect the current month, whatever happens here.
+    addTearDown(() => shared.container.read(selectedMonthProvider.notifier).reset());
     final now = DateTime.now();
     final previous = DateFormat('MMMM yyyy').format(DateTime(now.year, now.month - 1, 15));
     final current = DateFormat('MMMM yyyy').format(now);
@@ -297,7 +307,7 @@ void main() {
     await enterText(tester, _dialogField(), '1000');
     await tapFinder(tester, _filled('Save'));
     expect(find.text('Overall'), findsOneWidget);
-    expect(find.textContaining('Over ${formatMinor(_overallBudgetMinor, showDecimals: false)} by '), findsOneWidget);
+    await waitFor(tester, find.textContaining('Over ${formatMinor(_overallBudgetMinor, showDecimals: false)} by '));
 
     await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Budget'));
     await tapText(tester, 'Budget for a category');

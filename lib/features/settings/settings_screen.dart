@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/providers.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
+import '../reminders/reminders_settings_tile.dart';
 import '../shell/widgets/common.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -99,6 +100,7 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => context.push('/sms'),
             ),
           ),
+          const Card(child: RemindersSettingsTile()),
           SectionHeader(l10n.groups),
           Card(
             child: ListTile(
@@ -201,6 +203,7 @@ class SettingsScreen extends ConsumerWidget {
     if (passphrase == null || !context.mounted) return;
     try {
       final written = await ref.read(backupServiceProvider).importEncrypted(data, passphrase);
+      await ref.read(reminderSchedulerProvider).rescheduleAll();
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(written))));
     } catch (error) {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoreFailed('$error'))));

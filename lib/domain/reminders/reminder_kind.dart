@@ -20,6 +20,9 @@ enum ReminderKind {
     }
     return null;
   }
+
+  /// [fromKey] for stored rows, treating an unknown key as [custom].
+  static ReminderKind of(String key) => fromKey(key) ?? custom;
 }
 
 /// Every stored [ReminderKind.key], for queries that must skip settle_up rows.

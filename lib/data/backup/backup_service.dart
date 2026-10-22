@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 
 import '../../domain/backup/backup_codec.dart';
 import '../db/database.dart';
+import '../repositories/reminders_repository.dart';
 
 /// Exports and imports every table as JSON wrapped in the encrypted container.
 class BackupService {
@@ -90,7 +91,7 @@ class BackupService {
       await restore(db.projects, 'projects', Project.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.projectFields, 'projectFields', ProjectField.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.entryFieldValues, 'entryFieldValues', EntryFieldValue.fromJson, (r) => r.id, (r) => r.updatedAt);
-      await restore(db.reminders, 'reminders', Reminder.fromJson, (r) => r.id, (r) => r.updatedAt);
+      await restore(db.reminders, 'reminders', (json) => Reminder.fromJson(reminderJsonWithDefaults(json)), (r) => r.id, (r) => r.updatedAt);
     });
     return written;
   }

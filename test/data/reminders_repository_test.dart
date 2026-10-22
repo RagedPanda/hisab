@@ -132,4 +132,66 @@ void main() {
     expect(restored.amountMinor, 2500000);
     expect(restored.remindDaysBefore, '3,0');
   });
+
+  test('reminderDraftFrom keeps every field so an editor save is lossless', () async {
+    final id = await reminders.save(ReminderDraft(
+      kind: ReminderKind.card,
+      title: 'HDFC card',
+      dueAt: DateTime(2026, 11, 5),
+      amountMinor: 1234500,
+      accountId: 'acc1',
+      categoryId: 'cat1',
+      recurringId: 'rule1',
+      assetId: 'asset1',
+      repeat: ReminderRepeat.monthly,
+      remindDaysBefore: const [3, 0],
+      notifyAtMinute: 600,
+      matchKeywords: 'hdfc',
+      toleranceMinor: 500,
+      notes: 'autopay off',
+    ));
+    final draft = reminderDraftFrom((await reminders.getById(id))!);
+    expect(draft.id, id);
+    expect(draft.kind, ReminderKind.card);
+    expect(draft.recurringId, 'rule1');
+    expect(draft.assetId, 'asset1');
+    expect(draft.remindDaysBefore, [3, 0]);
+    expect(draft.notifyAtMinute, 600);
+    expect(draft.toleranceMinor, 500);
+    expect(draft.notes, 'autopay off');
+    await reminders.save(draft);
+    final again = (await reminders.getById(id))!;
+    expect(again.recurringId, 'rule1');
+    expect(again.matchKeywords, 'hdfc');
+  });
+
+  test('a pre-v6 backup reminder restores with column defaults', () async {
+    final legacy = {
+      'id': 'old1',
+      'kind': 'settle_up',
+      'groupId': 'g1',
+      'memberId': 'm1',
+      'dueAt': DateTime(2026, 10, 1).millisecondsSinceEpoch,
+      'channel': 'share',
+      'message': 'Pay up',
+      'updatedAt': DateTime(2026, 10, 1).millisecondsSinceEpoch,
+    };
+    final filled = reminderJsonWithDefaults(legacy);
+    expect(filled['title'], '');
+    expect(filled['status'], ReminderStatus.pending);
+    expect(filled['message'], 'Pay up');
+    expect(reminderJsonWithDefaults({...legacy, 'title': 'Kept'})['title'], 'Kept');
+
+    final written = await BackupService(db).importSnapshot({'app': 'hisab', 'reminders': [legacy]});
+    expect(written, greaterThan(0));
+    final row = await (db.select(db.reminders)..where((t) => t.id.equals('old1'))).getSingle();
+    expect(row.kind, 'settle_up');
+    expect(row.repeat, 'once');
+    expect(await reminders.getById('old1'), isNull, reason: 'settle-up rows stay out of due reminders');
+  });
+
+  test('ReminderKind.of treats unknown keys as custom', () {
+    expect(ReminderKind.of('emi'), ReminderKind.emi);
+    expect(ReminderKind.of('mystery'), ReminderKind.custom);
+  });
 }

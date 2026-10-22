@@ -140,3 +140,36 @@ class RemindersRepository {
   Future<void> restore(String id) => (db.update(db.reminders)..where((t) => t.id.equals(id)))
       .write(RemindersCompanion(deletedAt: const Value(null), updatedAt: Value(_clock())));
 }
+
+/// The editable draft of a stored [reminder], keeping every link a feature
+/// set (recurring rule, asset, keywords) so a save from the editor is lossless.
+ReminderDraft reminderDraftFrom(Reminder reminder) => ReminderDraft(
+      id: reminder.id,
+      kind: ReminderKind.of(reminder.kind),
+      title: reminder.title,
+      dueAt: reminder.dueAt ?? reminder.updatedAt,
+      notes: reminder.notes,
+      amountMinor: reminder.amountMinor,
+      categoryId: reminder.categoryId,
+      accountId: reminder.accountId,
+      recurringId: reminder.recurringId,
+      assetId: reminder.assetId,
+      repeat: ReminderRepeat.fromKey(reminder.repeat),
+      remindDaysBefore: parseRemindDaysBefore(reminder.remindDaysBefore),
+      notifyAtMinute: reminder.notifyAtMinute,
+      matchKeywords: reminder.matchKeywords,
+      toleranceMinor: reminder.toleranceMinor,
+    );
+
+/// Fills the due-reminder fields a pre-v6 backup row lacks with their column
+/// defaults, so older backups still restore.
+Map<String, dynamic> reminderJsonWithDefaults(Map<String, dynamic> json) => {
+      'title': '',
+      'notes': '',
+      'toleranceMinor': 0,
+      'matchKeywords': '',
+      'repeat': ReminderRepeat.once.key,
+      'remindDaysBefore': '0',
+      'status': ReminderStatus.pending,
+      ...json,
+    };

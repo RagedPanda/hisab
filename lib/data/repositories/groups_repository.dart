@@ -230,6 +230,7 @@ class GroupsRepository {
     required int amountMinor,
     DateTime? occurredAt,
     String note = '',
+    String method = 'cash',
   }) async {
     final id = newId();
     await db.into(db.settlements).insert(SettlementsCompanion.insert(
@@ -240,9 +241,31 @@ class GroupsRepository {
           amountMinor: amountMinor,
           occurredAt: occurredAt ?? DateTime.now(),
           note: Value(note),
+          method: Value(method),
         ));
     return id;
   }
+
+  /// Edits a recorded payment in place; every field is rewritten so the row
+  /// mirrors the sheet exactly.
+  Future<void> updateSettlement({
+    required String id,
+    required String fromMemberId,
+    required String toMemberId,
+    required int amountMinor,
+    required DateTime occurredAt,
+    required String note,
+    required String method,
+  }) =>
+      (db.update(db.settlements)..where((t) => t.id.equals(id))).write(SettlementsCompanion(
+        fromMemberId: Value(fromMemberId),
+        toMemberId: Value(toMemberId),
+        amountMinor: Value(amountMinor),
+        occurredAt: Value(occurredAt),
+        note: Value(note),
+        method: Value(method),
+        updatedAt: Value(DateTime.now()),
+      ));
 
   Future<void> deleteSettlement(String id) => _setSettlementDeleted(id, DateTime.now());
 

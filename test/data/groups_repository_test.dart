@@ -134,6 +134,28 @@ void main() {
     expect(await groups.getGroupDetail(groupId), isNull);
   });
 
+  test('a payment stores its method and can be edited in place', () async {
+    final groupId = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'Me', otherMembers: ['Bina']);
+    final members = await groups.getMembers(groupId);
+    final me = members.firstWhere((m) => m.isMe).id;
+    final bina = members.firstWhere((m) => m.name == 'Bina').id;
+    final id = await groups.addSettlement(groupId: groupId, fromMemberId: bina, toMemberId: me, amountMinor: 1000, method: 'upi', note: 'rent');
+    var saved = (await groups.getSettlements(groupId)).single;
+    expect(saved.method, 'upi');
+    expect(saved.note, 'rent');
+
+    await groups.updateSettlement(id: id, fromMemberId: me, toMemberId: bina, amountMinor: 2500, occurredAt: DateTime(2026, 10, 2), note: '', method: 'bank');
+    saved = (await groups.getSettlements(groupId)).single;
+    expect(saved.fromMemberId, me);
+    expect(saved.toMemberId, bina);
+    expect(saved.amountMinor, 2500);
+    expect(saved.occurredAt, DateTime(2026, 10, 2));
+    expect(saved.method, 'bank');
+    final balances = await groups.getBalances(groupId);
+    expect(balances.net[bina], -2500, reason: 'paying Bina without any expense means she now owes it back');
+    expect(balances.net[me], 2500);
+  });
+
   test('renaming yourself in Settings renames the me member of every group', () async {
     final goa = await groups.createGroup(name: 'Goa', icon: 'beach', myName: 'You', otherMembers: ['Rahul']);
     final flat = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'You', otherMembers: ['Priya']);

@@ -167,6 +167,9 @@ Future<void> shoot(WidgetTester tester, String name) async {
   await settle(tester, 3);
   final numbered = '${(_shotIndex++).toString().padLeft(2, '0')}_$name';
   await _requestDeviceShot(numbered);
+  // On Android a real device capture (adb screencap through the watcher) is
+  // the screenshot, so the in-process capture below is skipped.
+  if (Platform.isAndroid && _watcherAlive == true) return;
   if (Platform.isAndroid && !_surfaceConverted) {
     // Android renders to a SurfaceView that cannot be read back until it is
     // swapped for an image-backed surface; the binding reverts it after

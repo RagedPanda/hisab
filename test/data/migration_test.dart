@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/ids.dart';
@@ -11,6 +11,8 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP TABLE reminders');
+  await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
   await db.customStatement('DROP TABLE entry_field_values');
   await db.customStatement('ALTER TABLE settlements DROP COLUMN method');
@@ -27,6 +29,8 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP TABLE reminders');
+  await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
   await db.customStatement('DROP TABLE entry_field_values');
   await db.customStatement('ALTER TABLE settlements DROP COLUMN method');
@@ -38,9 +42,21 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP TABLE reminders');
+  await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
   await db.customStatement('DROP TABLE entry_field_values');
   await db.customStatement('PRAGMA user_version = 3');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 4
+/// (no member UPI IDs, no reminders).
+Future<void> rewindToVersion4(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await db.customStatement('DROP TABLE reminders');
+  await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
+  await db.customStatement('PRAGMA user_version = 4');
   await db.close();
 }
 
@@ -115,6 +131,26 @@ void main() {
     expect(field.choices, '[]');
     expect((await db.select(db.entryFieldValues).getSingle()).numberValue, 1200);
     expect((await db.select(db.projects).getSingle()).name, 'Scotty', reason: 'existing rows survive the upgrade');
+    await db.close();
+  });
+
+  test('upgrading from schema 4 adds member UPI IDs and the reminders table', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.members).insert(MembersCompanion.insert(id: 'm1', groupId: 'g1', name: 'Rahul', phone: const Value('98100 00000')));
+    await seed.close();
+    await rewindToVersion4(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final member = await db.select(db.members).getSingle();
+    expect(member.upiId, isNull);
+    expect(member.phone, '98100 00000', reason: 'existing rows survive the upgrade');
+    await db.into(db.reminders).insert(RemindersCompanion.insert(id: 'r1', kind: 'settle_up', groupId: const Value('g1'), memberId: const Value('m1'), sentAt: Value(DateTime(2026, 10, 20))));
+    final reminder = await db.select(db.reminders).getSingle();
+    expect(reminder.channel, 'share');
+    expect(reminder.message, '');
+    expect(reminder.doneAt, isNull);
     await db.close();
   });
 

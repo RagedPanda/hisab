@@ -167,8 +167,19 @@ Future<void> shoot(WidgetTester tester, String name) async {
   await settle(tester, 3);
   final numbered = '${(_shotIndex++).toString().padLeft(2, '0')}_$name';
   await _requestDeviceShot(numbered);
+  if (Platform.isAndroid && !_surfaceConverted) {
+    // Android renders to a SurfaceView that cannot be read back until it is
+    // swapped for an image-backed surface; the binding reverts it after
+    // every test, so convert once per test.
+    await binding.convertFlutterSurfaceToImage();
+    _surfaceConverted = true;
+    addTearDown(() => _surfaceConverted = false);
+    await tester.pump();
+  }
   await binding.takeScreenshot(numbered);
 }
+
+bool _surfaceConverted = false;
 
 bool? _watcherAlive;
 

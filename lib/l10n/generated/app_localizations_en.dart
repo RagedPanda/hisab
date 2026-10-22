@@ -1726,6 +1726,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get addToProject => 'Add to project';
+
+  @override
+  String get chooseProject => 'Choose project';
+
+  @override
+  String get noProject => 'No project';
+
+  @override
+  String get noActiveProjects =>
+      'No active projects. Start one from the Projects screen.';
+
+  @override
   String get remindAction => 'Remind';
 
   @override

@@ -12,8 +12,11 @@ import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
 import '../../data/repositories/project_fields_repository.dart';
+import '../../data/repositories/projects_repository.dart';
 import '../../domain/ledger/balance_effects.dart';
 import '../../domain/projects/project_fields.dart';
+import '../../domain/projects/project_math.dart';
+import '../../domain/projects/project_picker.dart';
 import '../../domain/projects/project_templates.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
@@ -21,6 +24,7 @@ import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
 import '../categories/category_picker.dart';
 import '../projects/project_field_inputs.dart';
+import '../projects/project_picker_sheet.dart';
 import '../shell/widgets/common.dart';
 import '../split/split_editor.dart';
 import 'item_row.dart';
@@ -123,6 +127,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     } else {
       final accounts = await ref.read(accountsRepositoryProvider).getAll();
       _accountId ??= accounts.firstOrNull?.id;
+      final projects = await ref.read(projectsRepositoryProvider).getAll(includeArchived: false);
+      _projectId = initialEntryProjectId(
+        explicitId: widget.projectId,
+        lastUsedId: ref.read(lastProjectIdProvider),
+        activeIds: {for (final project in projects) if (ProjectStatus.parse(project.status) == ProjectStatus.active) project.id},
+        isGroup: _groupId != null,
+      );
       if (_groupId != null) {
         await _loadMembers();
         _paidByMemberId = _members.where((m) => m.isMe).firstOrNull?.id ?? _members.firstOrNull?.id;
@@ -137,8 +148,51 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   Future<void> _loadProjectFields() async {
     final repo = ref.read(projectFieldsRepositoryProvider);
     if (_existingId != null) _fieldValues = await repo.valuesForEntry(_existingId!);
-    final fields = _projectId == null ? const <ProjectField>[] : await repo.getFields(_projectId!);
-    _projectFields = fields.where((field) => field.scope == ProjectFieldScope.entry.name).toList();
+    _projectFields = await _entryFieldsOf(_projectId);
+  }
+
+  Future<List<ProjectField>> _entryFieldsOf(String? projectId) async {
+    if (projectId == null) return const [];
+    final fields = await ref.read(projectFieldsRepositoryProvider).getFields(projectId);
+    return fields.where((field) => field.scope == ProjectFieldScope.entry.name).toList();
+  }
+
+  /// Moves the entry to another project (or none), keeping only the field
+  /// readings the new project also asks for.
+  Future<void> _setProject(String? projectId) async {
+    final fields = await _entryFieldsOf(projectId);
+    if (!mounted) return;
+    setState(() {
+      _projectId = projectId;
+      _projectFields = fields;
+      _fieldValues = keepFieldValues(_fieldValues, fields.map((field) => field.key));
+    });
+  }
+
+  Future<void> _pickProject() async {
+    final choice = await showProjectPicker(context, selectedId: _projectId);
+    if (choice != null && choice.projectId != _projectId) await _setProject(choice.projectId);
+  }
+
+  Widget _projectChip(AppLocalizations l10n, List<ProjectView> views) {
+    final name = views.where((view) => view.project.id == _projectId).firstOrNull?.project.name;
+    const key = ValueKey('editor.project');
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: name == null
+          ? ActionChip(key: key, avatar: const Icon(Icons.create_new_folder_outlined, size: 18), label: Text(l10n.addToProject), onPressed: _pickProject)
+          : InputChip(
+              key: key,
+              avatar: const Icon(Icons.folder_outlined, size: 18),
+              label: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width - 140),
+                child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+              onPressed: _pickProject,
+              onDeleted: () => _setProject(null),
+              deleteIcon: const Icon(Icons.close, size: 18),
+            ),
+    );
   }
 
   Future<void> _prefillFromSms(String smsId) async {
@@ -273,10 +327,14 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                 }
               },
             ),
+          if (_kind != 'transfer' && _groupId == null) ...[
+            const SizedBox(height: 8),
+            _projectChip(l10n, ref.watch(projectViewsProvider).value ?? const <ProjectView>[]),
+          ],
           if (_kind == 'expense' && _groupId == null) _itemsSection(symbol, units),
           if (_kind != 'transfer' && _projectFields.isNotEmpty) ...[
             SectionHeader(l10n.projectDetails, padding: const EdgeInsets.fromLTRB(0, 16, 0, 8)),
-            ProjectFieldInputs(fields: _projectFields, values: _fieldValues, onChanged: (values) => setState(() => _fieldValues = values)),
+            ProjectFieldInputs(key: ValueKey('fields.$_projectId'), fields: _projectFields, values: _fieldValues, onChanged: (values) => setState(() => _fieldValues = values)),
           ],
           // Group expenses are a ledger between people, not an account
           // movement, so they never pick (or touch) a personal account.
@@ -477,6 +535,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _accountId = (await ref.read(smsIngestServiceProvider).ensureAccountForSms(_smsId!))?.id;
     }
     final id = _existingId ?? newId();
+    final projectId = _kind == 'transfer' ? null : _projectId;
     final entry = EntriesRepository.newExpense(
       id: id,
       kind: _kind,
@@ -491,7 +550,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       groupId: _groupId,
       paidByMemberId: _paidByMemberId,
       splitMethod: _groupId == null ? null : _splitMethod.name,
-      projectId: _projectId,
+      projectId: projectId,
     ).copyWith(toAccountId: Value(_kind == 'transfer' ? _toAccountId : null));
     final weights = {for (final i in _splitInputs) i.memberId: i};
     await ref.read(entriesRepositoryProvider).saveEntry(
@@ -510,8 +569,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                       : weights[share.memberId]?.weight),
                 ),
           ],
-          fieldValues: _projectId == null || _kind == 'transfer' ? null : entryFieldValueRows(id, _fieldValues),
+          fieldValues: projectId == null ? const [] : entryFieldValueRows(id, _fieldValues),
         );
+    if (!_isEditing && _groupId == null && _kind != 'transfer') ref.read(lastProjectIdProvider.notifier).set(projectId);
     await _applyBalanceChange(amount);
     if (_smsId != null) await ref.read(smsLogRepositoryProvider).setStatus(_smsId!, 'added', entryId: id);
     if (mounted) popOrGoHome(context);

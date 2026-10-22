@@ -2984,6 +2984,30 @@ abstract class AppLocalizations {
   /// **'{name} paid you'**
   String namePaidYou(String name);
 
+  /// No description provided for @addToProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to project'**
+  String get addToProject;
+
+  /// No description provided for @chooseProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose project'**
+  String get chooseProject;
+
+  /// No description provided for @noProject.
+  ///
+  /// In en, this message translates to:
+  /// **'No project'**
+  String get noProject;
+
+  /// No description provided for @noActiveProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'No active projects. Start one from the Projects screen.'**
+  String get noActiveProjects;
+
   /// No description provided for @remindAction.
   ///
   /// In en, this message translates to:

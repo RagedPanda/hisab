@@ -58,6 +58,17 @@ class SelectedMonthNotifier extends Notifier<DateTime> {
 
 final selectedMonthProvider = NotifierProvider<SelectedMonthNotifier, DateTime>(SelectedMonthNotifier.new);
 
+/// The project the last saved entry went to, remembered for this app session
+/// only so a run of entries for one project needs no re-picking.
+class LastProjectNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void set(String? projectId) => state = projectId;
+}
+
+final lastProjectIdProvider = NotifierProvider<LastProjectNotifier, String?>(LastProjectNotifier.new);
+
 final selectedRangeProvider = Provider<DateRange>((ref) {
   final anchor = ref.watch(selectedMonthProvider);
   final startDay = ref.watch(settingsProvider).monthStartDay;

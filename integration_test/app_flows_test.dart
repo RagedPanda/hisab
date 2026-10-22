@@ -7,6 +7,8 @@
 /// Hindi, backup) have realistic data on screen; test 1 and 9 use their own.
 library;
 
+import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:ui' as ui;
 
 import 'package:drift/drift.dart' show Value;
@@ -15,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show MethodCall, SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/money.dart';
+import 'package:hisab/core/notifications/reminder_payload.dart';
 import 'package:hisab/core/dates.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/backup/backup_service.dart';
@@ -24,6 +27,8 @@ import 'package:hisab/data/debug/demo_plan.dart';
 import 'package:hisab/data/debug/demo_seed.dart';
 import 'package:hisab/domain/backup/backup_codec.dart';
 import 'package:hisab/domain/categories/category_packs.dart';
+import 'package:hisab/domain/reminders/reminder_draft.dart';
+import 'package:hisab/domain/reminders/reminder_kind.dart';
 import 'package:hisab/domain/projects/project_math.dart';
 import 'package:hisab/domain/salary/salary_schedule.dart';
 import 'package:hisab/domain/split/debt_simplifier.dart';
@@ -31,6 +36,7 @@ import 'package:hisab/domain/split/split_calculator.dart';
 import 'package:hisab/features/categories/categories_screen.dart';
 import 'package:hisab/features/dashboard/dashboard_screen.dart';
 import 'package:hisab/features/expense_editor/expense_editor_screen.dart';
+import 'package:hisab/features/reminders/reminder_startup.dart';
 import 'package:hisab/features/groups/settle_up_sheet.dart';
 import 'package:hisab/features/salary/salary_providers.dart';
 import 'package:hisab/features/salary/salary_reminder.dart';
@@ -1416,7 +1422,101 @@ void main() {
     await settle(tester, 6);
   });
 
-  testWidgets('24 salary day: set up from Settings, align month start, reminder clears when an SMS salary arrives, Hindi', (tester) async {
+  testWidgets('24 reminders: create, real OS scheduling, mark paid with a prefilled entry, history, dark, Hindi', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final gateway = fresh.read(notificationGatewayProvider);
+    // iOS: ask for the notification permission through the plugin (the system
+    // alert stays up; synthetic taps still reach Flutter underneath it).
+    if (Platform.isIOS) unawaited(gateway.requestPermission());
+    await startReminderNotifications(fresh.container);
+    await pumpApp(tester, fresh);
+    final now = DateTime.now();
+    DateTime inDays(int days) => DateTime(now.year, now.month, now.day + days);
+
+    await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Reminders'));
+    expect(find.textContaining('Nothing due'), findsOneWidget);
+    await tapText(tester, 'Reminders');
+    expect(find.text('No reminders yet'), findsOneWidget);
+    await shoot(tester, 'reminders_empty');
+
+    await tapText(tester, 'Add reminder');
+    await enterText(tester, find.byKey(const ValueKey('reminder-title')), 'Electricity bill');
+    await enterText(tester, find.byKey(const ValueKey('reminder-amount')), '2100');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await settle(tester);
+    await shoot(tester, 'reminder_editor');
+    await tapFinder(tester, find.byKey(const ValueKey('reminder-save')), frames: 12);
+    if (hasText("Get reminded before it's due")) {
+      await shoot(tester, 'reminder_permission_sheet');
+      await tapText(tester, 'Not now', frames: 12);
+    }
+    await waitFor(tester, find.text('Electricity bill'));
+    final electricity = (await fresh.read(remindersRepositoryProvider).getUpcoming()).single;
+    expect(electricity.amountMinor, 210000);
+
+    // The alert is really with the OS: AlarmManager on Android, UNUserNotificationCenter on iOS.
+    var pending = await gateway.pending();
+    expect(pending.where((alert) => alert.payload == reminderPayload(electricity.id)), isNotEmpty, reason: 'scheduled with the OS');
+
+    final scheduler = fresh.read(reminderSchedulerProvider);
+    final card = await scheduler.save(ReminderDraft(kind: ReminderKind.card, title: 'HDFC credit card', dueAt: inDays(-2), amountMinor: 1845000, repeat: ReminderRepeat.monthly));
+    await scheduler.save(ReminderDraft(kind: ReminderKind.emi, title: 'Car loan EMI', dueAt: inDays(12), amountMinor: 1250000, repeat: ReminderRepeat.monthly, remindDaysBefore: const [3, 0]));
+    await scheduler.save(ReminderDraft(kind: ReminderKind.document, title: 'Passport renewal', dueAt: inDays(40), remindDaysBefore: const [30, 7, 1, 0], repeat: ReminderRepeat.once));
+    await settle(tester, 12);
+    expect(find.text('Overdue'), findsOneWidget);
+    expect(find.text('Later'), findsOneWidget);
+    await shoot(tester, 'reminders_list');
+
+    await tapFinder(tester, find.descendant(of: find.ancestor(of: find.text('Electricity bill'), matching: find.byType(ListTile)), matching: find.byIcon(Icons.check_circle_outline)), frames: 12);
+    expect(find.text('Paid Electricity bill?'), findsOneWidget);
+    await shoot(tester, 'reminder_paid_sheet');
+    await tapText(tester, 'Add entry & mark paid', frames: 16);
+    expect(find.byType(ExpenseEditorScreen), findsOneWidget);
+    expect(find.widgetWithText(TextField, '2100'), findsOneWidget);
+    await shoot(tester, 'reminder_paid_entry');
+    await tapFinder(tester, find.textContaining('Save').last, frames: 16);
+    final paid = (await fresh.read(remindersRepositoryProvider).getById(electricity.id))!;
+    expect(paid.status, 'done');
+    expect(paid.entryId, isNotNull);
+    pending = await gateway.pending();
+    expect(pending.where((alert) => alert.payload == reminderPayload(electricity.id)), isEmpty, reason: 'paid reminder alerts cancelled');
+
+    await scheduler.skip(card);
+    await tapText(tester, 'History');
+    expect(find.textContaining('Paid '), findsOneWidget);
+    await shoot(tester, 'reminders_history');
+    await tapText(tester, 'Upcoming');
+
+    await fresh.read(settingsProvider.notifier).update((s) => s.copyWith(themeMode: ThemeMode.dark));
+    await settle(tester, 8);
+    await shoot(tester, 'dark_reminders_list');
+    await tapFinder(tester, find.byType(FloatingActionButton), frames: 12);
+    await shoot(tester, 'dark_reminder_editor');
+    await goBack(tester);
+
+    await fresh.read(settingsProvider.notifier).update((s) => s.copyWith(localeCode: 'hi'));
+    await settle(tester, 8);
+    final hi = AppLocalizationsHi();
+    expect(find.text(hi.remindersTitle), findsOneWidget);
+    await shoot(tester, 'hi_dark_reminders_list');
+    await fresh.read(settingsProvider.notifier).update((s) => s.copyWith(themeMode: ThemeMode.light));
+    await settle(tester, 8);
+    await shoot(tester, 'hi_reminders_list');
+    await tapFinder(tester, find.byType(FloatingActionButton), frames: 12);
+    await shoot(tester, 'hi_reminder_editor');
+    await goBack(tester);
+    await tapText(tester, hi.reminderTabHistory);
+    await shoot(tester, 'hi_reminders_history');
+    await fresh.read(settingsProvider.notifier).update((s) => s.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+    for (final reminder in await fresh.read(remindersRepositoryProvider).getUpcoming()) {
+      await scheduler.delete(reminder.id);
+    }
+  });
+
+  testWidgets('25 salary day: set up from Settings, align month start, reminder clears when an SMS salary arrives, Hindi', (tester) async {
     final alerts = _RecordingSalaryAlerts();
     final fresh = await createApp(overrides: [salaryAlertSinkProvider.overrideWithValue(alerts)]);
     addTearDown(fresh.container.dispose);

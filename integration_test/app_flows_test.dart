@@ -26,6 +26,7 @@ import 'package:hisab/domain/split/split_calculator.dart';
 import 'package:hisab/features/categories/categories_screen.dart';
 import 'package:hisab/features/dashboard/dashboard_screen.dart';
 import 'package:hisab/features/expense_editor/expense_editor_screen.dart';
+import 'package:hisab/features/groups/settle_up_sheet.dart';
 import 'package:hisab/features/split/split_editor.dart';
 import 'package:hisab/features/shell/widgets/common.dart';
 import 'package:hisab/l10n/category_names_hi.dart';
@@ -57,7 +58,10 @@ Finder _amountField() => find.descendant(of: find.byType(ExpenseEditorScreen), m
 Finder _dialogField() => find.descendant(of: find.byType(AlertDialog), matching: find.byType(TextField));
 Finder _chip(String label) => find.widgetWithText(ChoiceChip, label, skipOffstage: false);
 Finder _filled(String label) => find.widgetWithText(FilledButton, label);
-Finder _accountCardAmount(String name, String amount) => find.descendant(of: find.ancestor(of: find.text(name), matching: find.byType(InkWell)).first, matching: find.text(amount));
+Finder _accountCardAmount(String name, String amount) => find.descendant(
+  of: find.ancestor(of: find.text(name), matching: find.byType(InkWell)).first,
+  matching: find.text(amount),
+);
 Finder _entryAmount(String title, String amount) => find.descendant(of: find.widgetWithText(EntryTile, title), matching: find.text(amount));
 
 /// Hero card caption, "Spent in October", for the month on screen.
@@ -68,9 +72,7 @@ String _spentIn(DateTime anchor, {String? locale}) => locale == null ? 'Spent in
 int _expectedSeededSpend(DateTime now, {required int entryCount}) {
   final range = monthRange(now);
   final hotelDate = now.subtract(const Duration(days: 3));
-  final planned = planDemoEntries(count: entryCount, now: now)
-      .where((item) => item.kind == 'expense' && range.contains(item.occurredAt))
-      .fold(0, (sum, item) => sum + item.amountMinor);
+  final planned = planDemoEntries(count: entryCount, now: now).where((item) => item.kind == 'expense' && range.contains(item.occurredAt)).fold(0, (sum, item) => sum + item.amountMinor);
   return planned + (range.contains(hotelDate) ? 300000 : 0);
 }
 
@@ -149,16 +151,33 @@ Future<void> _recordPayment(WidgetTester tester, String transferLine) async {
 }
 
 Finder _splitField(String memberLabel) => find.descendant(
-      of: find.ancestor(of: find.descendant(of: find.byType(SplitEditor), matching: find.text(memberLabel)), matching: find.byType(Row)).first,
-      matching: find.byType(TextFormField),
-    );
+  of: find
+      .ancestor(
+        of: find.descendant(of: find.byType(SplitEditor), matching: find.text(memberLabel)),
+        matching: find.byType(Row),
+      )
+      .first,
+  matching: find.byType(TextFormField),
+);
 
 void main() {
   binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   late AppHandle shared;
   late String groupId;
+  final launchedLinks = <Uri>[];
+  var linksOpen = true;
 
-  setUpAll(() async => shared = await createApp());
+  // No UPI app on a simulator: the fake launcher records the link and says it opened.
+  setUpAll(
+    () async => shared = await createApp(
+      overrides: [
+        linkLauncherProvider.overrideWithValue((uri) async {
+          launchedLinks.add(uri);
+          return linksOpen;
+        }),
+      ],
+    ),
+  );
   tearDownAll(() => shared.container.dispose());
 
   testWidgets('01 home shows the empty state with the seeded Cash account', (tester) async {
@@ -411,8 +430,7 @@ void main() {
     // Expected balances straight from the domain layer.
     final entries = await shared.read(groupsRepositoryProvider).getGroupEntries(groupId);
     final ledger = [
-      for (final (entry, splits) in entries)
-        LedgerExpense(paidByMemberId: entry.paidByMemberId!, shares: [for (final s in splits) SplitShare(s.memberId, s.amountMinor)]),
+      for (final (entry, splits) in entries) LedgerExpense(paidByMemberId: entry.paidByMemberId!, shares: [for (final s in splits) SplitShare(s.memberId, s.amountMinor)]),
     ];
     final net = computeNetBalances(memberIds: members.map((m) => m.id), expenses: ledger, settlements: const []);
     final nameOf = {for (final m in members) m.id: m.isMe ? 'You' : m.name};
@@ -435,7 +453,11 @@ void main() {
     for (final transfer in suggested) {
       final line = '${nameOf[transfer.from]} → ${nameOf[transfer.to]}';
       final tile = find.ancestor(of: find.text(line), matching: find.byType(ListTile)).first;
-      expect(find.descendant(of: tile, matching: find.text(formatMinor(transfer.amountMinor))), findsOneWidget, reason: 'suggested transfer $line');
+      expect(
+        find.descendant(of: tile, matching: find.text(formatMinor(transfer.amountMinor))),
+        findsOneWidget,
+        reason: 'suggested transfer $line',
+      );
     }
     await shoot(tester, 'group_balances');
 
@@ -445,13 +467,42 @@ void main() {
     expect(find.text('Priya'), findsOneWidget);
     await shoot(tester, 'group_members');
 
+    await tapText(tester, 'Rahul');
+    expect(find.text('Edit member'), findsOneWidget);
+    await enterText(tester, find.widgetWithText(TextField, 'Phone (optional)'), '98765 43210');
+    await enterText(tester, find.widgetWithText(TextField, 'UPI ID (optional)'), 'rahul');
+    expect(find.text('Enter a UPI ID like name@bank'), findsOneWidget);
+    expect(tester.widget<FilledButton>(_filled('Save')).onPressed, isNull, reason: 'an invalid UPI ID blocks saving');
+    await enterText(tester, find.widgetWithText(TextField, 'UPI ID (optional)'), 'Rahul.K@okicici');
+    await shoot(tester, 'member_sheet');
+    await _saveSheet(tester);
+    expect(find.text('98765 43210 · rahul.k@okicici'), findsOneWidget, reason: 'the UPI ID is stored normalised');
+
     await tapText(tester, 'Balances');
     await _recordPayment(tester, 'Priya → Rahul');
     expect(_pendingTransfer('Priya → Rahul'), findsNothing);
     expect(_pendingTransfer('You → Rahul'), findsOneWidget);
     expect(find.text('Settled payments'), findsOneWidget, reason: 'recorded payments are listed under Settle up');
-    await _recordPayment(tester, 'You → Rahul');
-    expect(find.text('Everyone is settled up'), findsOneWidget);
+
+    const youOweRahul = 10000;
+    await tapFinder(tester, find.descendant(of: _pendingTransfer('You → Rahul'), matching: find.text('Pay')), frames: 12);
+    expect(find.text('Pay Rahul'), findsOneWidget);
+    expect(find.text('WhatsApp'), findsOneWidget, reason: 'Rahul has a phone number');
+    await shoot(tester, 'pay_sheet');
+    linksOpen = false;
+    await tapFinder(tester, _filled('Pay with UPI'), frames: 12);
+    expect(find.text('No UPI app on this phone. Pay another way, then record it.'), findsOneWidget, reason: 'the failure shows inside the sheet');
+    expect(find.text('Did the payment go through?'), findsNothing);
+    linksOpen = true;
+    launchedLinks.clear();
+    await tapFinder(tester, _filled('Pay with UPI'), frames: 12);
+    final upiLink = launchedLinks.single;
+    expect(upiLink.scheme, 'upi');
+    expect(upiLink.queryParameters['pa'], 'rahul.k@okicici');
+    expect(upiLink.queryParameters['am'], (youOweRahul / 100).toStringAsFixed(2));
+    expect(find.text('Did the payment go through?'), findsOneWidget);
+    await tapFinder(tester, find.widgetWithText(FilledButton, 'Yes, record it'), frames: 12);
+    expect(find.text('Everyone is settled up. Nothing to remind or pay.'), findsOneWidget);
     expect(find.text('settled'), findsNWidgets(3));
     await shoot(tester, 'group_settled');
     await tapText(tester, 'Expenses');
@@ -492,9 +543,9 @@ void main() {
     expect(find.text('Chai'), findsOneWidget);
 
     Finder menuFor(String name) => find.descendant(
-          of: find.ancestor(of: find.text(name), matching: find.byType(ExpansionTile)).first,
-          matching: find.byType(PopupMenuButton<String>),
-        );
+      of: find.ancestor(of: find.text(name), matching: find.byType(ExpansionTile)).first,
+      matching: find.byType(PopupMenuButton<String>),
+    );
     await tapFinder(tester, menuFor('Chai'));
     expect(find.text('Delete'), findsOneWidget, reason: 'custom categories can be deleted');
     await tapText(tester, 'Edit');
@@ -585,7 +636,11 @@ void main() {
     await tapText(tester, 'हिन्दी', frames: 12);
     expect(find.text(hi.settings), findsWidgets);
     for (final tab in [hi.tabHome, hi.tabEntries, hi.tabGroups, hi.tabSettings]) {
-      expect(find.descendant(of: find.byType(NavigationBar), matching: find.text(tab)), findsOneWidget, reason: 'tab $tab');
+      expect(
+        find.descendant(of: find.byType(NavigationBar), matching: find.text(tab)),
+        findsOneWidget,
+        reason: 'tab $tab',
+      );
     }
     await shoot(tester, 'hi_settings');
     await scrollTo(tester, find.text(hi.about));
@@ -664,8 +719,11 @@ void main() {
     await _createAccount(tester, name: 'Axis Bank', balance: '5000', includeInTotal: false, screenshot: 'account_form_excluded');
     await shoot(tester, 'accounts_excluded');
     final accounts = await fresh.read(accountsRepositoryProvider).getAll();
-    expect({for (final account in accounts) account.name: account.includeInTotal}, {'Cash': true, 'HDFC Savings': true, 'Axis Bank': false},
-        reason: 'the switch must apply to the account being created, not to whichever account sorts last');
+    expect(
+      {for (final account in accounts) account.name: account.includeInTotal},
+      {'Cash': true, 'HDFC Savings': true, 'Axis Bank': false},
+      reason: 'the switch must apply to the account being created, not to whichever account sorts last',
+    );
     final axisTile = find.ancestor(of: find.text('Axis Bank'), matching: find.byType(ListTile)).first;
     expect(find.descendant(of: axisTile, matching: find.textContaining('excluded from total')), findsOneWidget);
     await goBack(tester);
@@ -794,8 +852,7 @@ void main() {
     addTearDown(fresh.container.dispose);
     final hi = AppLocalizationsHi();
     await pumpApp(tester, fresh);
-    Future<List<Category>> packCategories(String packKey) =>
-        (fresh.db.select(fresh.db.categories)..where((t) => t.packKey.equals(packKey))).get();
+    Future<List<Category>> packCategories(String packKey) => (fresh.db.select(fresh.db.categories)..where((t) => t.packKey.equals(packKey))).get();
 
     await goTab(tester, 'Settings');
     await scrollTo(tester, find.text('Projects'));
@@ -1022,5 +1079,37 @@ void main() {
     await closeSheet();
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
     await settle(tester, 6);
+  });
+
+  testWidgets('20 groups: remind a debtor by copying the message, then the tile says reminded today', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final remindGroupId = await groups.createGroup(name: 'Lunch club', icon: 'restaurant', myName: 'You', otherMembers: ['Rahul']);
+    final members = await groups.getMembers(remindGroupId);
+    await groups.addSettlement(
+      groupId: remindGroupId,
+      fromMemberId: members.firstWhere((member) => member.isMe).id,
+      toMemberId: members.firstWhere((member) => member.name == 'Rahul').id,
+      amountMinor: 50000,
+      occurredAt: DateTime.now(),
+    );
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Lunch club');
+    await tapText(tester, 'Balances');
+    expect(find.text('Rahul → You'), findsOneWidget);
+    await tapText(tester, 'Remind');
+    expect(find.text('Remind Rahul'), findsOneWidget);
+    expect(find.text('WhatsApp'), findsNothing, reason: 'no phone number, so only share and copy');
+    final message = tester.widget<TextField>(find.descendant(of: find.byType(BottomSheet), matching: find.byType(TextField))).controller!.text;
+    expect(message, contains('Lunch club'));
+    expect(message, contains(formatMinor(50000)));
+    await shoot(tester, 'remind_sheet');
+    await tapText(tester, 'Copy', frames: 12);
+    expect(find.text('Copied. Paste it into any chat.'), findsOneWidget);
+    expect(find.text('Reminded today'), findsOneWidget);
+    expect(find.text('Remind again'), findsOneWidget);
+    await shoot(tester, 'reminded_today');
   });
 }

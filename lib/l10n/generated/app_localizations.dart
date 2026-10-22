@@ -3355,6 +3355,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved. Add the next one.'**
   String get savedAddAnother;
+
+  /// No description provided for @smsHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS history'**
+  String get smsHistoryTitle;
+
+  /// No description provided for @smsHistoryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Every message Hisab processed and what happened to it'**
+  String get smsHistoryHelp;
+
+  /// No description provided for @smsOutcomeAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get smsOutcomeAdded;
+
+  /// No description provided for @smsOutcomeDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get smsOutcomeDuplicate;
+
+  /// No description provided for @smsOutcomeIgnored.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignored'**
+  String get smsOutcomeIgnored;
+
+  /// No description provided for @smsOutcomeUnparsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreadable'**
+  String get smsOutcomeUnparsed;
+
+  /// No description provided for @smsOutcomePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get smsOutcomePending;
+
+  /// No description provided for @smsOutcomeUndone.
+  ///
+  /// In en, this message translates to:
+  /// **'Undone'**
+  String get smsOutcomeUndone;
+
+  /// No description provided for @smsHistoryNotBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a bank message'**
+  String get smsHistoryNotBank;
+
+  /// No description provided for @smsHistoryDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismissed from review'**
+  String get smsHistoryDismissed;
+
+  /// No description provided for @smsHistoryUnparsedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'No transaction found in the text'**
+  String get smsHistoryUnparsedDetail;
+
+  /// No description provided for @smsHistoryDuplicateDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Same message already processed'**
+  String get smsHistoryDuplicateDetail;
+
+  /// No description provided for @smsHistoryOpenEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Open entry'**
+  String get smsHistoryOpenEntry;
+
+  /// No description provided for @smsHistoryReprocess.
+  ///
+  /// In en, this message translates to:
+  /// **'Process again'**
+  String get smsHistoryReprocess;
+
+  /// No description provided for @smsHistoryClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear history'**
+  String get smsHistoryClear;
+
+  /// No description provided for @smsHistoryClearQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear SMS history?'**
+  String get smsHistoryClearQuestion;
+
+  /// No description provided for @smsHistoryClearBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes the text of {count} processed messages from this device. Your entries and messages waiting for review stay, and cleared messages are never imported again.'**
+  String smsHistoryClearBody(int count);
+
+  /// No description provided for @smsHistoryClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get smsHistoryClearConfirm;
+
+  /// No description provided for @smsHistoryCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS history cleared'**
+  String get smsHistoryCleared;
+
+  /// No description provided for @smsHistoryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages processed yet'**
+  String get smsHistoryEmptyTitle;
+
+  /// No description provided for @smsHistoryEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank SMS that Hisab reads or that you paste show up here.'**
+  String get smsHistoryEmptyBody;
+
+  /// No description provided for @smsHistoryEmptyFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages with this outcome'**
+  String get smsHistoryEmptyFiltered;
 }
 
 class _AppLocalizationsDelegate

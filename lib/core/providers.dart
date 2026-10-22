@@ -88,6 +88,7 @@ final projectViewsProvider = StreamProvider<List<ProjectView>>((ref) {
   return ref.watch(projectsRepositoryProvider).watchViews(monthStartDay: monthStartDay);
 });
 final pendingSmsProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryProvider).watchPending());
+final smsHistoryProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryProvider).watchHistory());
 
 final monthEntriesProvider = StreamProvider((ref) {
   final range = ref.watch(selectedRangeProvider);

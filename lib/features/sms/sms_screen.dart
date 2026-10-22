@@ -151,6 +151,13 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
                   if (text != null && text.isNotEmpty) await _ingestText(text);
                 },
               ),
+              ListTile(
+                leading: const Icon(Icons.history),
+                title: Text(l10n.smsHistoryTitle),
+                subtitle: Text(l10n.smsHistoryHelp),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/sms/history'),
+              ),
             ]),
           ),
           if (_lastResult != null) Padding(padding: const EdgeInsets.all(12), child: Text(_lastResult!, style: Theme.of(context).textTheme.bodyMedium)),

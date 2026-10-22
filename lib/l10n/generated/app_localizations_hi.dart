@@ -1950,4 +1950,73 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get savedAddAnother => 'सेव हो गया। अगला जोड़ें।';
+
+  @override
+  String get smsHistoryTitle => 'SMS इतिहास';
+
+  @override
+  String get smsHistoryHelp => 'Hisab ने जो भी मैसेज देखे और उनका क्या हुआ';
+
+  @override
+  String get smsOutcomeAdded => 'जोड़ा गया';
+
+  @override
+  String get smsOutcomeDuplicate => 'दोहराया गया';
+
+  @override
+  String get smsOutcomeIgnored => 'छोड़ा गया';
+
+  @override
+  String get smsOutcomeUnparsed => 'पढ़ा नहीं जा सका';
+
+  @override
+  String get smsOutcomePending => 'समीक्षा बाकी';
+
+  @override
+  String get smsOutcomeUndone => 'वापस लिया';
+
+  @override
+  String get smsHistoryNotBank => 'बैंक का मैसेज नहीं';
+
+  @override
+  String get smsHistoryDismissed => 'समीक्षा से हटाया गया';
+
+  @override
+  String get smsHistoryUnparsedDetail => 'मैसेज में कोई लेनदेन नहीं मिला';
+
+  @override
+  String get smsHistoryDuplicateDetail => 'यही मैसेज पहले आ चुका है';
+
+  @override
+  String get smsHistoryOpenEntry => 'एंट्री खोलें';
+
+  @override
+  String get smsHistoryReprocess => 'फिर से जाँचें';
+
+  @override
+  String get smsHistoryClear => 'इतिहास साफ़ करें';
+
+  @override
+  String get smsHistoryClearQuestion => 'SMS इतिहास साफ़ करें?';
+
+  @override
+  String smsHistoryClearBody(int count) {
+    return 'इस डिवाइस से $count मैसेज का टेक्स्ट हट जाएगा। आपकी एंट्री और समीक्षा के लिए बाकी मैसेज बने रहेंगे, और साफ़ किए गए मैसेज दोबारा नहीं जोड़े जाएँगे।';
+  }
+
+  @override
+  String get smsHistoryClearConfirm => 'साफ़ करें';
+
+  @override
+  String get smsHistoryCleared => 'SMS इतिहास साफ़ हो गया';
+
+  @override
+  String get smsHistoryEmptyTitle => 'अभी तक कोई मैसेज नहीं';
+
+  @override
+  String get smsHistoryEmptyBody =>
+      'Hisab जो बैंक SMS पढ़ता है या आप पेस्ट करते हैं, वे यहाँ दिखेंगे।';
+
+  @override
+  String get smsHistoryEmptyFiltered => 'इस नतीजे वाला कोई मैसेज नहीं';
 }

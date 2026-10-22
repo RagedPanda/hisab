@@ -1950,4 +1950,28 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get savedAddAnother => 'सेव हो गया। अगला जोड़ें।';
+
+  @override
+  String get payersMultiple => '2+ लोग';
+
+  @override
+  String get payersHelp => 'हर व्यक्ति ने कितना दिया, लिखें।';
+
+  @override
+  String payersAssigned(String assigned, String total) {
+    return '$total में से $assigned दर्ज';
+  }
+
+  @override
+  String payersMustTotal(String total) {
+    return 'दी गई रकम का जोड़ $total होना चाहिए';
+  }
+
+  @override
+  String namesAnd(String first, String last) {
+    return '$first और $last';
+  }
+
+  @override
+  String get youInList => 'आप';
 }

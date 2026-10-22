@@ -565,5 +565,11 @@
   "calcNegative": "नतीजा शून्य से कम है",
   "calcTooLarge": "नतीजा बहुत बड़ा है",
   "saveAndAddAnother": "सेव करके और जोड़ें",
-  "savedAddAnother": "सेव हो गया। अगला जोड़ें।"
+  "savedAddAnother": "सेव हो गया। अगला जोड़ें।",
+  "payersMultiple": "2+ लोग",
+  "payersHelp": "हर व्यक्ति ने कितना दिया, लिखें।",
+  "payersAssigned": "{total} में से {assigned} दर्ज",
+  "payersMustTotal": "दी गई रकम का जोड़ {total} होना चाहिए",
+  "namesAnd": "{first} और {last}",
+  "youInList": "आप"
 }

@@ -656,5 +656,14 @@
   "calcNegative": "The result is below zero",
   "calcTooLarge": "The result is too large",
   "saveAndAddAnother": "Save & add another",
-  "savedAddAnother": "Saved. Add the next one."
+  "savedAddAnother": "Saved. Add the next one.",
+  "payersMultiple": "2+ people",
+  "payersHelp": "Enter how much each person paid.",
+  "payersAssigned": "{assigned} of {total} assigned",
+  "@payersAssigned": {"placeholders": {"assigned": {"type": "String"}, "total": {"type": "String"}}},
+  "payersMustTotal": "Amounts paid must add up to {total}",
+  "@payersMustTotal": {"placeholders": {"total": {"type": "String"}}},
+  "namesAnd": "{first} and {last}",
+  "@namesAnd": {"placeholders": {"first": {"type": "String"}, "last": {"type": "String"}}},
+  "youInList": "you"
 }

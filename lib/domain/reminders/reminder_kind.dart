@@ -34,12 +34,22 @@ enum ReminderRepeat {
   weekly('weekly'),
   monthly('monthly'),
   quarterly('quarterly'),
-  yearly('yearly');
+  halfYearly('half_yearly'),
+  yearly('yearly'),
+
+  /// Renewal cycles from document presets (rent agreement, RC, passport);
+  /// the editor offers them only when a preset suggests them.
+  everyElevenMonths('every_11_months'),
+  everyFiveYears('every_5_years'),
+  everyTenYears('every_10_years');
 
   const ReminderRepeat(this.key);
   final String key;
 
   bool get repeats => this != once;
+
+  /// The everyday choices the editor always shows; the rest come from presets.
+  static const List<ReminderRepeat> common = [once, weekly, monthly, quarterly, yearly];
 
   static ReminderRepeat fromKey(String key) {
     for (final repeat in values) {

@@ -35,7 +35,7 @@ import 'calculator_sheet.dart';
 import 'item_row.dart';
 
 class ExpenseEditorScreen extends ConsumerStatefulWidget {
-  const ExpenseEditorScreen({super.key, this.entryId, this.groupId, this.initialKind, this.smsId, this.projectId});
+  const ExpenseEditorScreen({super.key, this.entryId, this.groupId, this.initialKind, this.smsId, this.projectId, this.reminderId});
   final String? entryId;
   final String? groupId;
 
@@ -43,6 +43,10 @@ class ExpenseEditorScreen extends ConsumerStatefulWidget {
   final String? projectId;
   final String? initialKind;
   final String? smsId;
+
+  /// Due reminder this entry pays (notification "Mark paid"); prefills the
+  /// form and marks the reminder paid on save.
+  final String? reminderId;
 
   @override
   ConsumerState<ExpenseEditorScreen> createState() => _ExpenseEditorScreenState();
@@ -92,7 +96,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   /// "Save & add another" is offered for new entries typed by hand; SMS
   /// entries and edits close the editor on save.
-  bool get _canAddAnother => !_isEditing && widget.smsId == null && _source != 'sms';
+  bool get _canAddAnother => !_isEditing && widget.smsId == null && widget.reminderId == null && _source != 'sms';
 
   /// Repeat is offered on new personal entries typed by hand. Group
   /// expenses are shared with others, and SMS entries record what happened.
@@ -146,6 +150,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     } else if (widget.smsId != null) {
       await _prefillFromSms(widget.smsId!);
     } else {
+      if (widget.reminderId != null) await _prefillFromReminder(widget.reminderId!);
       final accounts = await ref.read(accountsRepositoryProvider).getAll();
       _accountId ??= accounts.firstOrNull?.id;
       final projects = await ref.read(projectsRepositoryProvider).getAll(includeArchived: false);
@@ -229,6 +234,17 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     if (categoryKey != null) _category = await ref.read(categoriesRepositoryProvider).findBySeedKey(categoryKey);
     final accountKey = parsed['accountKey'] as String?;
     if (accountKey != null) _accountId = (await ref.read(accountsRepositoryProvider).findBySmsKey(accountKey))?.id;
+  }
+
+  Future<void> _prefillFromReminder(String reminderId) async {
+    final reminder = await ref.read(remindersRepositoryProvider).getById(reminderId);
+    if (reminder == null) return;
+    _kind = 'expense';
+    if (reminder.amountMinor != null) _amountController.text = amountInputText(reminder.amountMinor!);
+    _payeeController.text = reminder.title;
+    if (reminder.notes.isNotEmpty) _noteController.text = reminder.notes;
+    if (reminder.categoryId != null) _category = await ref.read(categoriesRepositoryProvider).byId(reminder.categoryId!);
+    _accountId = reminder.accountId ?? _accountId;
   }
 
   Future<void> _loadMembers() async {
@@ -650,6 +666,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     await _applyBalanceChange(amount);
     if (_canRepeat && _repeat != null) await _startRule(_repeat!, entry);
     if (_smsId != null) await ref.read(smsLogRepositoryProvider).setStatus(_smsId!, 'added', entryId: id);
+    if (widget.reminderId != null && !_isEditing) {
+      await ref.read(reminderSchedulerProvider).markDone(widget.reminderId!, entryId: id);
+      messenger.showSnackBar(SnackBar(content: Text(l10n.reminderMarkedPaid)));
+    }
     if (!mounted) return;
     if (addAnother) {
       _startNextEntry();

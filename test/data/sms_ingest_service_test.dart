@@ -87,6 +87,13 @@ void main() {
       expect(source.queue, isEmpty, reason: 'draining empties the native queue');
     });
 
+    test('#40: a debit-like SMS from a phone number in the inbox is ignored', () async {
+      source.inbox.add(RawSms(sender: '+19876500011', body: 'Rs.500 debited from A/c XX1234 - send me the money bro', receivedAt: morning));
+      final result = await service.sync(autoAdd: false, now: now);
+      expect(result.pending, 0);
+      expect(await db.select(db.smsLog).get(), isEmpty);
+    });
+
     test('a message both queued and in the inbox is ingested once', () async {
       final sms = RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: morning);
       source.queue.add(sms);

@@ -91,7 +91,7 @@ class SmsIngestService {
   Future<IngestStatus> ingest(RawSms message, {required bool autoAdd, bool force = false}) async {
     final id = SmsLogRepository.idFor(message.sender, message.body, message.receivedAt);
     if (await smsLog.exists(id)) return IngestStatus.duplicate;
-    if (!force && !looksLikeBankSender(message.sender) && !_looksFinancial(message.body)) return IngestStatus.notBank;
+    if (!force && !_worthIngesting(message)) return IngestStatus.notBank;
 
     final parsed = parseBankSms(sender: message.sender, body: message.body, receivedAt: message.receivedAt);
     if (parsed == null) {
@@ -181,4 +181,8 @@ class SmsIngestService {
 
   static final _financialHint = RegExp(r'(debited|credited|spent|withdrawn|a/c|acct|upi|card|rs\.?\s?\d|inr\s?\d|₹)', caseSensitive: false);
   static bool _looksFinancial(String body) => _financialHint.hasMatch(body);
+
+  /// Personal chats are never ingested, however much they read like a debit.
+  static bool _worthIngesting(RawSms message) =>
+      isBusinessSender(message.sender) && (looksLikeBankSender(message.sender) || _looksFinancial(message.body));
 }

@@ -74,7 +74,9 @@ void main() {
     await tester.tap(find.text('All'));
     await pumpFrames();
     expect(find.text('Not a bank message'), findsOneWidget);
-    expect(find.text('Process again'), findsWidgets);
+    expect(find.text('Message text not kept'), findsOneWidget, reason: 'the not-bank message has no stored text');
+    expect(find.text('Your order has shipped'), findsNothing);
+    expect(find.text('Process again'), findsOneWidget, reason: 'only the unreadable bank message; a not-bank row has no text to process');
     expect(tester.takeException(), isNull, reason: 'no overflow at 360dp');
   });
 }

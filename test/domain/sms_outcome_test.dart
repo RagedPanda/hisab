@@ -21,6 +21,19 @@ void main() {
     expect(reprocessable, {SmsOutcome.ignored, SmsOutcome.unparsed});
   });
 
+  test('not-bank messages never keep their text; others do', () {
+    expect(storedSmsBody(SmsLogStatus.notBank, 'Your OTP is 123456'), isEmpty);
+    for (final status in [SmsLogStatus.added, SmsLogStatus.pending, SmsLogStatus.skipped, SmsLogStatus.duplicate, SmsLogStatus.ignored]) {
+      expect(storedSmsBody(status, 'Rs.10 debited'), 'Rs.10 debited', reason: status);
+    }
+  });
+
+  test('re-deliveries of not-bank messages are not logged', () {
+    expect(logsDuplicateOf(SmsLogStatus.notBank), isFalse);
+    expect(logsDuplicateOf(SmsLogStatus.added), isTrue);
+    expect(logsDuplicateOf(SmsLogStatus.skipped), isTrue);
+  });
+
   group('isSameDelivery', () {
     final logged = DateTime(2026, 10, 21, 10, 0, 0);
     test('a few seconds apart is one delivery read twice', () {

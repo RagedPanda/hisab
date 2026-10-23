@@ -76,7 +76,29 @@ void main() {
     test('a non-bank message from a business sender is logged as not a bank message', () async {
       final status = await service.ingest(RawSms(sender: 'AMAZON', body: 'Your order has shipped', receivedAt: received), autoAdd: true);
       expect(status, IngestStatus.notBank);
-      expect((await history()).single.log.status, SmsLogStatus.notBank);
+      final row = (await history()).single.log;
+      expect(row.status, SmsLogStatus.notBank);
+      expect(row.sender, 'AMAZON');
+      expect(row.receivedAt, received);
+      expect(row.body, isEmpty, reason: 'the text of OTPs and promotions is never stored');
+    });
+
+    test('a not-bank message is still recognised without its text and its re-delivery is not logged', () async {
+      const otp = 'Your OTP for login is 482913. Do not share it.';
+      await service.ingest(RawSms(sender: 'AMAZON', body: otp, receivedAt: received), autoAdd: true);
+      final again = await service.ingest(RawSms(sender: 'AMAZON', body: otp, receivedAt: received.add(const Duration(hours: 2))), autoAdd: true);
+      expect(again, IngestStatus.duplicate);
+      final rows = await history();
+      expect(rows.single.log.status, SmsLogStatus.notBank);
+      expect(rows.single.log.body, isEmpty);
+    });
+
+    test('not-bank text stored by an earlier build is wiped when the database opens', () async {
+      await db.into(db.smsLog).insert(SmsLogCompanion.insert(id: 'old', sender: 'AMAZON', body: 'Your OTP is 123456', receivedAt: received, status: SmsLogStatus.notBank));
+      await db.into(db.smsLog).insert(SmsLogCompanion.insert(id: 'bank', sender: 'HDFCBK', body: _upiDebit, receivedAt: received, status: SmsLogStatus.skipped));
+      await db.wipeNotBankSmsText();
+      expect((await smsLog.getById('old'))!.body, isEmpty);
+      expect((await smsLog.getById('bank'))!.body, _upiDebit, reason: 'bank messages keep their text');
     });
 
     test('a message from a person is never kept', () async {
@@ -122,9 +144,11 @@ void main() {
       expect(row.status, SmsLogStatus.pending);
     });
 
-    test('re-processing a not-bank message forces it through the parser', () async {
-      await service.ingest(RawSms(sender: 'AMAZON', body: 'Your order has shipped', receivedAt: received), autoAdd: true);
-      final status = await service.reprocess((await history()).single.log, autoAdd: true);
+    test('re-processing an unreadable bank message forces it through the parser again', () async {
+      await service.ingest(RawSms(sender: 'HDFCBK', body: 'Your statement is ready on NetBanking.', receivedAt: received), autoAdd: true);
+      final row = (await history()).single.log;
+      expect(row.status, SmsLogStatus.skipped);
+      final status = await service.reprocess(row, autoAdd: true);
       expect(status, IngestStatus.unparsed);
       expect((await history()).single.log.status, SmsLogStatus.skipped);
     });

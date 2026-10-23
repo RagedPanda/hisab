@@ -64,11 +64,14 @@ Future<void> smsHistoryFlow(WidgetTester tester) async {
   expect(find.text('Not a bank message'), findsNothing);
   await shoot(tester, 'sms_history_unreadable');
 
-  await tapChip('Ignored 1');
   await tapText(tester, 'Process again', frames: 10);
   expect(find.text('Could not find a transaction in that text.'), findsOneWidget);
-  expect(find.text('No messages with this outcome'), findsOneWidget);
-  expect(await chip('Unreadable 2'), findsOneWidget, reason: 'the forced parse found nothing either');
+  expect(await chip('Unreadable 1'), findsOneWidget, reason: 'the forced parse found nothing either');
+
+  await tapChip('Ignored 1');
+  expect(find.text('Not a bank message'), findsOneWidget);
+  expect(find.text('Message text not kept'), findsOneWidget, reason: 'OTP and promo text is never stored');
+  expect(find.text('Process again'), findsNothing, reason: 'nothing to process without the text');
 
   await tapChip('Added 1');
   await tapText(tester, 'Open entry', frames: 10);

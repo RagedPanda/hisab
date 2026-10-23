@@ -5,7 +5,7 @@ enum Instrument { upi, card, netbanking, atm, neft, imps, rtgs, emi, wallet, che
 /// What kind of money movement the message describes. [general] is an
 /// ordinary payment or receipt; the rest are the types worth telling apart
 /// for categories and account mapping.
-enum TxnKind { general, salary, refund, atmWithdrawal, emi, autopay, cardSpend, cardPayment, walletTopUp }
+enum TxnKind { general, salary, refund, atmWithdrawal, emi, autopay, cardSpend, walletTopUp }
 
 /// What the SMS parser extracted from one bank message. Immutable.
 class ParsedTransaction {

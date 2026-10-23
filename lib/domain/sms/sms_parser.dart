@@ -93,7 +93,10 @@ final _mandateSetup = RegExp(
   caseSensitive: false,
 );
 
-/// "Payment of Rs X received on your Credit Card": money into the card.
+/// "Payment of Rs X received on your Credit Card": the card issuer
+/// acknowledging a bill payment. The money already left as a bank-side
+/// debit (an expense), so this message is skipped: it must never become
+/// income and the payment must not count twice.
 final _cardPaymentReceived = RegExp(
   r'\breceived (?:a |your )?payment\b|\bpayment\b(?:[^.;!]|\.(?=\d)){0,90}?\b(?:received|credited|has been posted)\b|\bthank you for (?:the |your )?payment\b',
   caseSensitive: false,
@@ -135,16 +138,15 @@ ParsedTransaction? parseBankSms({
   if (amountMinor == null || amountMinor == 0) return null;
 
   final reversal = _isReversal(lower);
-  final cardPaymentReceived = _cardPaymentReceived.hasMatch(text) && lower.contains('card');
-  final direction = cardPaymentReceived || (reversal && _reversalIsCredit(lower)) ? TxnDirection.credit : _direction(lower);
+  if (!reversal && _isCardPaymentAcknowledgement(text, lower)) return null;
+  final direction = reversal && _reversalIsCredit(lower) ? TxnDirection.credit : _direction(lower);
   if (direction == null) return null;
 
   final currency = amountMatch == null
       ? 'INR'
       : _foreignCurrency.firstMatch(amountMatch.group(0)!)?.group(1)?.toUpperCase() ?? 'INR';
 
-  final isCreditCard = cardPaymentReceived ||
-      (lower.contains('credit card') && !_paysCardBillFromAccount(lower)) ||
+  final isCreditCard = (lower.contains('credit card') && !_paysCardBillFromAccount(lower)) ||
       lower.contains('credit limit') ||
       limitMatch != null ||
       (RegExp(r'\bcard\b').hasMatch(lower) && !lower.contains('debit card') && !lower.contains('a/c'));
@@ -154,7 +156,6 @@ ParsedTransaction? parseBankSms({
     direction: direction,
     instrument: instrument,
     isCreditCard: isCreditCard,
-    cardPaymentReceived: cardPaymentReceived,
     reversal: reversal,
   );
 
@@ -201,6 +202,9 @@ final _bankAccountWord = RegExp(r'\ba/c|\bacct\b|\baccount\b|\bac\b');
 /// the payee, the money left a bank account.
 bool _paysCardBillFromAccount(String lower) => _cardBillPayee.hasMatch(lower) && _bankAccountWord.hasMatch(lower);
 
+bool _isCardPaymentAcknowledgement(String text, String lower) =>
+    _cardPaymentReceived.hasMatch(text) && lower.contains('card') && !_paysCardBillFromAccount(lower);
+
 /// OTPs, promotions, set-up notices and other messages that move no money.
 bool _isIgnorable(String sender, String lower) {
   if (isPromotionalSender(sender)) return true;
@@ -219,11 +223,9 @@ TxnKind _kind({
   required TxnDirection direction,
   required Instrument instrument,
   required bool isCreditCard,
-  required bool cardPaymentReceived,
   required bool reversal,
 }) {
   final isDebit = direction == TxnDirection.debit;
-  if (cardPaymentReceived) return TxnKind.cardPayment;
   if (reversal && !isDebit) return TxnKind.refund;
   if (!isDebit && _salaryWords.hasMatch(lower)) return TxnKind.salary;
   if (_walletProvider.hasMatch(lower) && _walletLoad.hasMatch(lower)) return TxnKind.walletTopUp;

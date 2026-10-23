@@ -99,7 +99,6 @@ const Map<TxnKind, String> _kindCategories = {
   TxnKind.atmWithdrawal: 'cash_withdrawal',
   TxnKind.emi: 'loan_emi',
   TxnKind.walletTopUp: 'wallet_topup',
-  TxnKind.cardPayment: 'credit_card_payment',
 };
 
 /// Index of [keyword] in [haystack] as a whole word (letters/digits on

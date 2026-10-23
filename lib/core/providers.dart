@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/backup/backup_service.dart';
@@ -11,7 +12,9 @@ import '../data/repositories/groups_repository.dart';
 import '../data/repositories/project_fields_repository.dart';
 import '../data/repositories/projects_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
+import '../data/sms/sms_channel.dart';
 import '../data/sms/sms_ingest_service.dart';
+import '../data/sms/sms_notification_prompt.dart';
 import '../data/sms/sms_sync_cursor.dart';
 import '../domain/entries/entry_filter.dart';
 import '../domain/stats/dashboard_ledger.dart';
@@ -141,6 +144,14 @@ final smsIngestServiceProvider = Provider((ref) => SmsIngestService(
       categories: ref.watch(categoriesRepositoryProvider),
       entries: ref.watch(entriesRepositoryProvider),
       cursor: SmsSyncCursor(ref.watch(sharedPreferencesProvider)),
+    ));
+
+/// Requests POST_NOTIFICATIONS for Bank SMS notifications; a no-op off Android.
+final smsNotificationPromptProvider = Provider((ref) => SmsNotificationPrompt(
+      ref.watch(sharedPreferencesProvider),
+      request: () async {
+        if (SmsChannel.isSupported) await Permission.notification.request();
+      },
     ));
 
 final backupServiceProvider = Provider((ref) => BackupService(ref.watch(databaseProvider)));

@@ -56,13 +56,6 @@ class SmsIngestService {
 
   Future<bool> hasPermission() async => SmsChannel.isSupported && await Permission.sms.isGranted;
 
-  /// Asks for POST_NOTIFICATIONS (Android 13+) so SMS captured while the
-  /// app is closed can be announced. Capture works whatever the answer.
-  Future<void> requestNotificationPermission() async {
-    if (!SmsChannel.isSupported) return;
-    await Permission.notification.request();
-  }
-
   /// Runs everything captured since the last sync through [ingest]: first the
   /// messages the background receiver queued, then an inbox scan from the
   /// stored cursor (or [lookback] on a first scan) for anything it missed.

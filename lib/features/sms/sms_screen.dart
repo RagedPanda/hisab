@@ -90,7 +90,7 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
       }
       return;
     }
-    await ref.read(smsIngestServiceProvider).requestNotificationPermission();
+    await ref.read(smsNotificationPromptProvider).ask();
     await notifier.update((s) => s.copyWith(smsEnabled: true));
     await _scan();
   }

@@ -81,6 +81,8 @@ class _SmsAutoSyncState extends ConsumerState<SmsAutoSync> with WidgetsBindingOb
     if (!SmsChannel.isSupported || !settings.smsEnabled) return;
     final service = ref.read(smsIngestServiceProvider);
     if (!await service.hasPermission()) return;
+    // Users upgrading with Bank SMS already on were never asked (#42).
+    await ref.read(smsNotificationPromptProvider).askOnce();
     await service.sync(autoAdd: settings.smsAutoAdd);
   }
 

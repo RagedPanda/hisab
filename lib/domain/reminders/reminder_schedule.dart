@@ -108,9 +108,38 @@ List<PlannedAlert> planAlerts({
   ]..sort((a, b) => a.fireAt.compareTo(b.fireAt));
 }
 
+/// First slot of the later occurrences in [planOccurrenceAlerts]; the first
+/// occurrence uses slot 0, like an on-the-day alert.
+const int kOccurrenceSlotBase = 1000;
+
+/// Most occurrences [planOccurrenceAlerts] posts ahead for one reminder.
+const int kMaxOccurrencesAhead = 8;
+
+/// Notification slot of the occurrence at [index] in [planOccurrenceAlerts].
+int occurrenceSlot(int index) => index == 0 ? 0 : kOccurrenceSlotBase + index;
+
+/// One alert per time in [fireTimes] (several occurrences of a repeating
+/// reminder posted ahead), keeping only future ones. A snooze replaces every
+/// alert before it, as in [planAlerts].
+List<PlannedAlert> planOccurrenceAlerts({
+  required String reminderId,
+  required List<DateTime> fireTimes,
+  DateTime? snoozedUntil,
+  required DateTime now,
+}) {
+  final snoozed = snoozedUntil != null && snoozedUntil.isAfter(now);
+  return [
+    for (final (index, fireAt) in fireTimes.take(kMaxOccurrencesAhead).indexed)
+      if (fireAt.isAfter(now) && (!snoozed || fireAt.isAfter(snoozedUntil)))
+        PlannedAlert(notificationId: notificationIdFor(reminderId, occurrenceSlot(index)), fireAt: fireAt, daysBefore: 0),
+    if (snoozed) PlannedAlert(notificationId: notificationIdFor(reminderId, kSnoozeSlot), fireAt: snoozedUntil, daysBefore: kSnoozeSlot),
+  ]..sort((a, b) => a.fireAt.compareTo(b.fireAt));
+}
+
 /// Every notification id a reminder can ever use, so cancelling needs no lookup.
 List<int> allNotificationIdsFor(String reminderId, Iterable<int> daysBefore) => {
       for (final days in {...daysBefore, ...kRemindDaysBeforeChoices, ...kDocumentRemindDaysBefore}) notificationIdFor(reminderId, days),
+      for (var index = 1; index < kMaxOccurrencesAhead; index++) notificationIdFor(reminderId, occurrenceSlot(index)),
       notificationIdFor(reminderId, kSnoozeSlot),
     }.toList();
 

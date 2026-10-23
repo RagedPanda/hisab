@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/domain/recurring/recurrence.dart';
 import 'package:hisab/domain/split/debt_simplifier.dart';
 import 'package:hisab/domain/split/settle_reminder.dart';
+import 'package:hisab/features/groups/group_detail_screen.dart' show groupDetailInitialTab;
 
 void main() {
   group('nextSettleReminderAt', () {
@@ -74,6 +75,40 @@ void main() {
       expect(groupIdOfSettleSchedule(settleScheduleReminderId('flat')), 'flat');
       expect(groupIdOfSettleSchedule('some-bill'), isNull);
       expect(groupIdOfSettleSchedule('settle_schedule_'), isNull);
+    });
+  });
+
+  group('settle-up alerts ahead', () {
+    const weeklyMonday = SettleReminderSchedule(frequency: RecurrenceFrequency.weekly, weekday: DateTime.monday);
+    const onTheFirst = SettleReminderSchedule(frequency: RecurrenceFrequency.monthly, dayOfMonth: 1);
+
+    test('settleReminderTimesFrom lists the next weeks or months from the first', () {
+      final firstMonday = DateTime(2026, 10, 26, kSettleReminderHour);
+      expect(settleReminderTimesFrom(weeklyMonday, firstMonday), [
+        firstMonday,
+        DateTime(2026, 11, 2, kSettleReminderHour),
+        DateTime(2026, 11, 9, kSettleReminderHour),
+        DateTime(2026, 11, 16, kSettleReminderHour),
+      ]);
+      expect(settleReminderTimesFrom(onTheFirst, DateTime(2026, 11, 1, kSettleReminderHour), count: 2), [
+        DateTime(2026, 11, 1, kSettleReminderHour),
+        DateTime(2026, 12, 1, kSettleReminderHour),
+      ]);
+    });
+
+    test('settleAlertTimesOfRow reads stored rows and ignores other reminders', () {
+      final due = DateTime(2026, 10, 26, kSettleReminderHour);
+      expect(settleAlertTimesOfRow(reminderId: settleScheduleReminderId('g1'), repeat: 'weekly', repeatDay: DateTime.monday, dueAt: due), hasLength(kSettleAlertsAhead));
+      expect(settleAlertTimesOfRow(reminderId: 'rent', repeat: 'weekly', repeatDay: DateTime.monday, dueAt: due), isNull);
+      expect(settleAlertTimesOfRow(reminderId: settleScheduleReminderId('g1'), repeat: 'yearly', dueAt: due), isNull);
+    });
+
+    test('settleUpLocationFor opens the group on Balances', () {
+      final location = Uri.parse(settleUpLocationFor('g1'));
+      expect(location.path, '/groups/g1');
+      expect(groupDetailInitialTab(location.queryParameters['tab']), 1, reason: 'Expenses, Balances, Members');
+      expect(groupDetailInitialTab(null), 0);
+      expect(groupDetailInitialTab('members'), 2);
     });
   });
 }

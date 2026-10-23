@@ -137,18 +137,19 @@ void main() {
       expect(settleReminderTextFor(english, (await groups.getGroupDetail(settledId))!, currencySymbol: '₹'), isNull);
     });
 
-    test('setSchedule posts the alert at 9:00 on the next date and opens the group on tap', () async {
+    test('setSchedule posts alerts at 9:00 on the next dates and opens the group\'s Balances on tap', () async {
       final (groupId, ravi, _) = await flat();
       await service.setSchedule(groupId, SettleReminderSchedule(frequency: RecurrenceFrequency.monthly, dayOfMonth: 1, memberId: ravi));
       final payload = reminderPayload(settleScheduleReminderId(groupId));
       final alerts = gateway.alertsFor(payload);
-      expect(alerts, hasLength(1));
-      expect(alerts.single.fireAt, DateTime(2026, 11, 1, 9));
-      expect(alerts.single.title, 'Settle up: Flat 302');
-      expect(alerts.single.body, 'Ravi owes you ₹500');
-      expect(alerts.single.isMoney, isFalse);
-      expect(reminderLocationFor(payload: payload, actionId: null), '/groups/$groupId');
-      expect(reminderLocationFor(payload: payload, actionId: kMarkPaidActionId), '/groups/$groupId');
+      expect(alerts.map((alert) => alert.fireAt).toSet(), {for (final month in [11, 12, 13, 14]) DateTime(2026, month, 1, 9)});
+      expect(alerts.map((alert) => alert.id).toSet(), hasLength(kSettleAlertsAhead));
+      final first = alerts.firstWhere((alert) => alert.fireAt == DateTime(2026, 11, 1, 9));
+      expect(first.title, 'Settle up: Flat 302');
+      expect(first.body, 'Ravi owes you ₹500');
+      expect(first.isMoney, isFalse);
+      expect(reminderLocationFor(payload: payload, actionId: null), '/groups/$groupId?tab=balances');
+      expect(reminderLocationFor(payload: payload, actionId: kMarkPaidActionId), '/groups/$groupId?tab=balances');
       expect(reminderLocationFor(payload: payload, actionId: kSnoozeActionId), isNull);
     });
 
@@ -171,7 +172,7 @@ void main() {
       await service.setSchedule(groupId, monthlyOnFirst);
       await groups.addSettlement(groupId: groupId, fromMemberId: ravi, toMemberId: me, amountMinor: 20000);
       await service.refreshGroup(groupId);
-      expect(gateway.alertsFor(reminderPayload(settleScheduleReminderId(groupId))).single.body, 'Ravi owes you ₹300');
+      expect(gateway.alertsFor(reminderPayload(settleScheduleReminderId(groupId))).map((alert) => alert.body).toSet(), {'Ravi owes you ₹300'});
     });
 
     test('refreshAll then rescheduleAll rolls a passed schedule on and posts it again', () async {
@@ -180,7 +181,21 @@ void main() {
       now = DateTime(2026, 11, 2, 8);
       await service.refreshAll();
       await scheduler.rescheduleAll();
-      expect(gateway.alertsFor(reminderPayload(settleScheduleReminderId(groupId))).single.fireAt, DateTime(2026, 12, 1, 9));
+      final fireTimes = gateway.alertsFor(reminderPayload(settleScheduleReminderId(groupId))).map((alert) => alert.fireAt).toList()..sort();
+      expect(fireTimes.first, DateTime(2026, 12, 1, 9));
+      expect(fireTimes, hasLength(kSettleAlertsAhead));
+    });
+
+    test('a weekly schedule already has next week posted when this week\'s alert fires', () async {
+      final (groupId, _, _) = await flat();
+      await service.setSchedule(groupId, const SettleReminderSchedule(frequency: RecurrenceFrequency.weekly, weekday: DateTime.monday));
+      final fireTimes = gateway.alertsFor(reminderPayload(settleScheduleReminderId(groupId))).map((alert) => alert.fireAt).toList()..sort();
+      expect(fireTimes, hasLength(kSettleAlertsAhead));
+      for (var index = 1; index < fireTimes.length; index++) {
+        expect(fireTimes[index].difference(fireTimes[index - 1]).inDays, 7);
+        expect(fireTimes[index].weekday, DateTime.monday);
+        expect(fireTimes[index].hour, kSettleReminderHour);
+      }
     });
 
     test('snooze from the notification moves the alert a day on', () async {
@@ -188,8 +203,10 @@ void main() {
       await service.setSchedule(groupId, monthlyOnFirst);
       now = DateTime(2026, 11, 1, 9, 5);
       await scheduler.snooze(settleScheduleReminderId(groupId));
-      final fireAt = gateway.alertsFor(reminderPayload(settleScheduleReminderId(groupId))).single.fireAt;
-      expect(fireAt.isAfter(now), isTrue);
+      final fireTimes = gateway.alertsFor(reminderPayload(settleScheduleReminderId(groupId))).map((alert) => alert.fireAt).toList()..sort();
+      expect(fireTimes.first.isAfter(now), isTrue);
+      expect(fireTimes.first.isBefore(DateTime(2026, 12, 1)), isTrue);
+      expect(fireTimes, contains(DateTime(2026, 12, 1, 9)));
     });
 
     test('settleScheduleNudgeFor names people by their own names and is null when settled', () async {

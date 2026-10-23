@@ -1,6 +1,7 @@
 import '../../data/db/database.dart';
 import '../../domain/reminders/reminder_kind.dart';
 import '../../domain/reminders/reminder_schedule.dart';
+import '../../domain/split/settle_reminder.dart';
 import 'notification_gateway.dart';
 import 'reminder_payload.dart';
 
@@ -82,6 +83,14 @@ class NotificationService {
   List<PlannedAlert> _plan(Reminder reminder) {
     final schedulable = reminder.deletedAt == null && reminder.status == ReminderStatus.pending && reminder.dueAt != null;
     if (!schedulable) return const [];
+    // A group's settle-up schedule posts its next few occurrences, so one
+    // firing while the app stays closed never leaves the following week bare.
+    final occurrenceTimes = reminder.notifyAtMinute == null
+        ? null
+        : settleAlertTimesOfRow(reminderId: reminder.id, repeat: reminder.repeat, repeatDay: reminder.repeatDay, dueAt: reminder.dueAt!);
+    if (occurrenceTimes != null) {
+      return planOccurrenceAlerts(reminderId: reminder.id, fireTimes: occurrenceTimes, snoozedUntil: reminder.snoozedUntil, now: _clock());
+    }
     return planAlerts(
       reminderId: reminder.id,
       dueAt: reminder.dueAt!,

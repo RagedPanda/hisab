@@ -8,7 +8,7 @@ import '../../core/money.dart';
 import 'bank_senders.dart';
 import 'parsed_transaction.dart';
 
-const _currencyPrefix = r'(?:rs\.?|inr|₹|amt[:.]?|usd|eur|gbp|aed|sgd|aud|cad|\$|€|£)';
+const _currencyPrefix = r'(?:rs\.?|inr|₹|amt[:.]?|usd|eur|gbp|aed|sgd|aud|cad|jpy|\$|€|£)';
 const _number = r'([0-9][0-9,]*(?:\.\d{1,2})?)';
 
 final _amountPattern = RegExp('$_currencyPrefix\\s*:?\\s*$_number', caseSensitive: false);
@@ -16,7 +16,12 @@ final _bareAmountPattern = RegExp(
   '(?:debited|credited|withdrawn|spent)\\s+(?:by|with|for|of)?\\s*$_number',
   caseSensitive: false,
 );
-final _foreignCurrency = RegExp(r'\b(USD|EUR|GBP|AED|SGD|AUD|CAD|JPY)\s*[0-9]', caseSensitive: false);
+final _currencyMarker = RegExp(_currencyPrefix, caseSensitive: false);
+const _markerCodes = {
+  'rs': 'INR', 'inr': 'INR', '₹': 'INR',
+  'usd': 'USD', r'$': 'USD', 'eur': 'EUR', '€': 'EUR', 'gbp': 'GBP', '£': 'GBP',
+  'aed': 'AED', 'sgd': 'SGD', 'aud': 'AUD', 'cad': 'CAD', 'jpy': 'JPY',
+};
 
 final _balancePattern = RegExp(
   '(?:avl(?:bl)?\\.?|avb|available|avail|updated|clear|net|total|closing|new)?\\s*(?:bal(?:ance)?)\\s*(?:is|:|-|of)?\\s*$_currencyPrefix?\\s*:?\\s*$_number',
@@ -87,9 +92,7 @@ ParsedTransaction? parseBankSms({
   final direction = _direction(lower);
   if (direction == null) return null;
 
-  final currency = amountMatch == null
-      ? 'INR'
-      : _foreignCurrency.firstMatch(amountMatch.group(0)!)?.group(1)?.toUpperCase() ?? 'INR';
+  final currency = (amountMatch == null ? null : _currencyCodeOf(amountMatch)) ?? 'INR';
 
   final isCreditCard = lower.contains('credit card') ||
       lower.contains('credit limit') ||
@@ -137,6 +140,23 @@ bool _isReversal(String lower) =>
     (lower.contains('reversed') || lower.contains('reversal') || lower.contains('refund')) &&
     !lower.contains('otp') &&
     !lower.contains('will be');
+
+/// ISO code of the currency marker in front of an amount, or null when the
+/// marker names no currency (such as "Amt").
+String? _currencyCodeOf(RegExpMatch amountMatch) {
+  final marker = _currencyMarker.matchAsPrefix(amountMatch.group(0)!)?.group(0);
+  if (marker == null) return null;
+  return _markerCodes[marker.toLowerCase().replaceAll(RegExp(r'[.:]'), '')];
+}
+
+/// ISO code of the currency the SMS amount is in, or null when the amount
+/// has no currency marker. Works on SMS the parser cannot read in full.
+String? smsCurrencyCode(String body) {
+  final text = _normaliseSmsText(body);
+  final amountMatch = _firstAmountOutside(text, [_balancePattern.firstMatch(text), _limitPattern.firstMatch(text)]) ??
+      _amountPattern.firstMatch(text);
+  return amountMatch == null ? null : _currencyCodeOf(amountMatch);
+}
 
 RegExpMatch? _firstAmountOutside(String text, List<RegExpMatch?> excluded) {
   for (final match in _amountPattern.allMatches(text)) {

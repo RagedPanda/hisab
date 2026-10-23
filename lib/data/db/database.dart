@@ -159,6 +159,20 @@ class Splits extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
+/// Who paid what when several members paid one group expense. Single-payer
+/// entries have no rows here; `Entries.paidByMemberId` always holds the main
+/// payer so older readers keep working.
+@TableIndex(name: 'entry_payers_entry_id', columns: {#entryId})
+class EntryPayers extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get entryId => text()();
+  TextColumn get memberId => text()();
+  IntColumn get amountMinor => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class Settlements extends Table with SyncColumns {
   TextColumn get id => text()();
   TextColumn get groupId => text()();
@@ -328,6 +342,9 @@ class RecurringRules extends Table with SyncColumns {
   /// Occurrences already posted or skipped, counted against [maxCount].
   IntColumn get postedCount => integer().withDefault(const Constant(0))();
 
+  /// How many of [postedCount] were skipped rather than added.
+  IntColumn get skippedCount => integer().withDefault(const Constant(0))();
+
   /// Next occurrence not yet posted or skipped; null once the rule ended.
   DateTimeColumn get nextDue => dateTime().nullable()();
 
@@ -378,13 +395,14 @@ class SmsLog extends Table {
   ProjectFields,
   EntryFieldValues,
   Reminders,
+  EntryPayers,
   RecurringRules,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -415,8 +433,13 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(reminders);
             await m.createIndex(remindersGroupId);
           }
-          // v6: recurring rules and the entries they post (R2, recurring entries).
+          // v6: several payers on one group expense (groups parity, multiple payers).
           if (from < 6) {
+            await m.createTable(entryPayers);
+            await m.createIndex(entryPayersEntryId);
+          }
+          // v7: recurring rules and the entries they post (R2, recurring entries).
+          if (from < 7) {
             await m.createTable(recurringRules);
             await m.addColumn(entries, entries.recurringId);
             await m.createIndex(entriesRecurringId);

@@ -104,7 +104,7 @@ void main() {
   test('a ledger expense becomes one payer of the summed shares', () {
     final timeline = timelineExpenseOf(
       DateTime(2026, 10, 1),
-      const LedgerExpense(paidByMemberId: 'me', shares: [SplitShare('me', 250), SplitShare('rahul', 250), SplitShare('rahul', 100)]),
+      LedgerExpense(paidByMemberId: 'me', shares: [SplitShare('me', 250), SplitShare('rahul', 250), SplitShare('rahul', 100)]),
     );
     expect(timeline.paidMinor, {'me': 600});
     expect(timeline.shareMinor, {'me': 250, 'rahul': 350});

@@ -74,4 +74,11 @@ void main() {
     expect(waitingCount(spec, nextDue: DateTime(2026, 7, 5, 9), now: DateTime(2026, 10, 6), postedCount: 0), 4);
     expect(waitingCount(spec, nextDue: DateTime(2026, 11, 5, 9), now: DateTime(2026, 10, 6), postedCount: 0), 0);
   });
+
+  test('recurringTally splits used slots into added and skipped', () {
+    expect(recurringTally(postedCount: 3, skippedCount: 1), (added: 2, skipped: 1));
+    expect(recurringTally(postedCount: 2, skippedCount: 0), (added: 2, skipped: 0));
+    expect(recurringTally(postedCount: 2, skippedCount: 5), (added: 0, skipped: 2), reason: 'skips never exceed used slots');
+    expect(recurringTally(postedCount: -1, skippedCount: -1), (added: 0, skipped: 0));
+  });
 }

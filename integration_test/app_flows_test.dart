@@ -12,7 +12,7 @@ import 'dart:ui' as ui;
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show MethodCall, SystemChannels;
+import 'package:flutter/services.dart' show Clipboard, MethodCall, SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/money.dart';
 import 'package:hisab/core/dates.dart';
@@ -30,6 +30,7 @@ import 'package:hisab/domain/split/split_calculator.dart';
 import 'package:hisab/features/categories/categories_screen.dart';
 import 'package:hisab/features/dashboard/dashboard_screen.dart';
 import 'package:hisab/features/expense_editor/expense_editor_screen.dart';
+import 'package:hisab/features/groups/group_export.dart';
 import 'package:hisab/features/groups/settle_up_sheet.dart';
 import 'package:hisab/features/split/split_editor.dart';
 import 'package:hisab/features/shell/widgets/common.dart';
@@ -434,7 +435,7 @@ void main() {
     // Expected balances straight from the domain layer.
     final entries = await shared.read(groupsRepositoryProvider).getGroupEntries(groupId);
     final ledger = [
-      for (final (entry, splits) in entries) LedgerExpense(paidByMemberId: entry.paidByMemberId!, shares: [for (final s in splits) SplitShare(s.memberId, s.amountMinor)]),
+      for (final (entry, splits, _) in entries) LedgerExpense(paidByMemberId: entry.paidByMemberId!, shares: [for (final s in splits) SplitShare(s.memberId, s.amountMinor)]),
     ];
     final net = computeNetBalances(memberIds: members.map((m) => m.id), expenses: ledger, settlements: const []);
     final nameOf = {for (final m in members) m.id: m.isMe ? 'You' : m.name};
@@ -1120,7 +1121,11 @@ void main() {
     expect(await projectOf(250000), carId);
 
     await tapFinder(tester, find.byType(FloatingActionButton));
-    expect(find.descendant(of: projectChip, matching: find.text('Swift car')), findsOneWidget, reason: 'the last project is remembered');
+    expect(
+      find.descendant(of: projectChip, matching: find.text('Swift car')),
+      findsOneWidget,
+      reason: 'the last project is remembered',
+    );
     await shoot(tester, 'editor_project_remembered');
     await tapFinder(tester, projectChip);
     await tapFinder(tester, option(kitchenId));
@@ -1218,7 +1223,16 @@ void main() {
       EntriesRepository.newExpense(id: milkId, amountMinor: 45000, occurredAt: thisMonth, categoryId: categoryOf('groceries'), payee: 'Sharma Dairy', note: 'Morning milk'),
       items: [EntryItemsCompanion.insert(id: 'paneer', entryId: milkId, name: 'Paneer', unitPriceMinor: 45000, amountMinor: 45000)],
     );
-    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 250000, occurredAt: thisMonth, categoryId: categoryOf('fuel'), accountId: hdfc.id, projectId: carId, note: 'Highway fill').copyWith(tags: const Value('#trip')));
+    await entries.saveEntry(
+      EntriesRepository.newExpense(
+        amountMinor: 250000,
+        occurredAt: thisMonth,
+        categoryId: categoryOf('fuel'),
+        accountId: hdfc.id,
+        projectId: carId,
+        note: 'Highway fill',
+      ).copyWith(tags: const Value('#trip')),
+    );
     await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 12000, occurredAt: thisMonth, note: 'Chai').copyWith(tags: const Value('#office')));
     await entries.saveEntry(EntriesRepository.newExpense(kind: 'income', amountMinor: 5000000, occurredAt: thisMonth, categoryId: categoryOf('salary'), payee: 'Acme'));
     await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 800000, occurredAt: lastMonth, categoryId: categoryOf('rent'), note: 'Old rent'));
@@ -1250,7 +1264,11 @@ void main() {
     expectResults(1);
     await clearAll();
     expect(find.byType(EntryTile), findsNWidgets(4));
-    expect(find.descendant(of: search, matching: find.text('chai')), findsNothing, reason: 'clear all empties the search box');
+    expect(
+      find.descendant(of: search, matching: find.text('chai')),
+      findsNothing,
+      reason: 'clear all empties the search box',
+    );
 
     await openFilters();
     expect(find.text('Filter entries'), findsOneWidget);
@@ -1265,7 +1283,11 @@ void main() {
     expectResults(1);
     expect(find.byKey(const ValueKey('entries.filter.account')), findsOneWidget);
     expect(find.byKey(const ValueKey('entries.filter.amount')), findsOneWidget);
-    expect(find.descendant(of: find.byKey(const ValueKey('entries.filters')), matching: find.text('2')), findsOneWidget, reason: 'the badge counts active filters');
+    expect(
+      find.descendant(of: find.byKey(const ValueKey('entries.filters')), matching: find.text('2')),
+      findsOneWidget,
+      reason: 'the badge counts active filters',
+    );
     await shoot(tester, 'entries_filtered');
     await tapFinder(tester, find.descendant(of: find.byKey(const ValueKey('entries.filter.account')), matching: find.byIcon(Icons.close)));
     expectResults(1);
@@ -1412,7 +1434,113 @@ void main() {
     await settle(tester, 6);
   });
 
-  testWidgets('24 subscriptions: add from templates, totals, sort by cost, pause, cancel, Hindi', (tester) async {
+  testWidgets('24 groups: two members pay one dinner, the editor blocks a wrong total and the list says who paid', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final dinnerGroupId = await groups.createGroup(name: 'Dinner club', icon: 'restaurant', myName: 'You', otherMembers: ['Rahul', 'Priya']);
+    final members = await groups.getMembers(dinnerGroupId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => member.name == 'Rahul').id;
+    final priya = members.firstWhere((member) => member.name == 'Priya').id;
+    Finder payerField(String memberId) => find.byKey(Key('payer-amount-$memberId'));
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Dinner club');
+    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
+    await enterText(tester, _amountField(), '900');
+    await scrollTo(tester, _chip('2+ people'), within: find.byType(ExpenseEditorScreen));
+    await tapFinder(tester, _chip('2+ people'));
+    expect(tester.widget<ChoiceChip>(_chip('2+ people')).selected, isTrue);
+    expect(tester.widget<ChoiceChip>(_chip('You')).selected, isFalse, reason: 'single payer chips clear in multi-payer mode');
+    expect(find.text('${formatMinor(90000)} of ${formatMinor(90000)} assigned'), findsOneWidget, reason: 'the current payer starts covering the whole bill');
+
+    await scrollTo(tester, payerField(rahul), within: find.byType(ExpenseEditorScreen));
+    await enterText(tester, payerField(rahul), '600');
+    expect(find.text('${formatMinor(150000)} of ${formatMinor(90000)} assigned'), findsOneWidget);
+    await _saveEntry(tester, formatMinor(90000));
+    expect(find.text('Amounts paid must add up to ${formatMinor(90000)}'), findsOneWidget, reason: 'save is blocked until the payers cover the bill');
+    expect(find.byType(ExpenseEditorScreen), findsOneWidget);
+
+    await enterText(tester, payerField(me), '300');
+    expect(find.text('${formatMinor(90000)} of ${formatMinor(90000)} assigned'), findsOneWidget);
+    await scrollTo(tester, find.text('Paid by'), within: find.byType(ExpenseEditorScreen), up: true);
+    await shoot(tester, 'group_multiple_payers');
+    await _saveEntry(tester, formatMinor(90000));
+    expect(find.textContaining('Rahul and you paid ${formatMinor(90000)}'), findsOneWidget);
+    await shoot(tester, 'group_expenses_multiple_payers');
+
+    final detail = (await groups.getGroupDetail(dinnerGroupId))!;
+    expect(detail.balances.net, {me: 0, rahul: 30000, priya: -30000});
+    expect(detail.entries.single.$1.paidByMemberId, rahul, reason: 'the biggest payer is kept as the main payer');
+
+    await tapText(tester, 'Balances');
+    expect(find.text('Priya → Rahul'), findsOneWidget);
+    await tapText(tester, 'Expenses');
+    await tapFinder(tester, find.textContaining('Rahul and you paid'), frames: 12);
+    await scrollTo(tester, _chip('2+ people'), within: find.byType(ExpenseEditorScreen));
+    expect(tester.widget<ChoiceChip>(_chip('2+ people')).selected, isTrue, reason: 'editing keeps the payers');
+    expect(tester.widget<TextFormField>(payerField(rahul)).initialValue, '600');
+    expect(tester.widget<TextFormField>(payerField(me)).initialValue, '300');
+  });
+
+  testWidgets('25 groups: copy a WhatsApp summary and export the ledger as CSV', (tester) async {
+    final exports = <({String fileName, String csv, String subject})>[];
+    final fresh = await createApp(overrides: [
+      csvFileSharerProvider.overrideWithValue(({required fileName, required csv, required subject}) async {
+        exports.add((fileName: fileName, csv: csv, subject: subject));
+        return true;
+      }),
+    ]);
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final entries = fresh.read(entriesRepositoryProvider);
+    final tripId = await groups.createGroup(name: 'Goa trip', icon: 'beach', myName: 'You', otherMembers: ['Rahul', 'Priya']);
+    final members = await groups.getMembers(tripId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => member.name == 'Rahul').id;
+    final priya = members.firstWhere((member) => member.name == 'Priya').id;
+    final today = DateTime.now();
+    await entries.saveEntry(
+      EntriesRepository.newExpense(id: 'export-hotel', amountMinor: 90000, occurredAt: today, groupId: tripId, paidByMemberId: rahul, splitMethod: 'equal', note: 'Hotel, sea view'),
+      splits: [for (final member in [me, rahul, priya]) SplitsCompanion.insert(id: 'export-hotel-$member', entryId: 'export-hotel', memberId: member, amountMinor: 30000)],
+      payers: [
+        EntryPayersCompanion.insert(id: 'export-hotel-rahul', entryId: 'export-hotel', memberId: rahul, amountMinor: 60000),
+        EntryPayersCompanion.insert(id: 'export-hotel-me', entryId: 'export-hotel', memberId: me, amountMinor: 30000),
+      ],
+    );
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Goa trip');
+    await tapFinder(tester, find.byTooltip('Share summary'));
+    expect(find.text('Export as CSV'), findsOneWidget);
+    await shoot(tester, 'group_share_options');
+    await tapText(tester, 'Copy as text', frames: 12);
+    final copied = (await Clipboard.getData('text/plain'))?.text ?? '';
+    expect(copied, startsWith('*Goa trip — balances*'));
+    expect(copied, contains('Priya owes Rahul ${formatMinor(30000)}'));
+    expect(copied, contains('Rahul gets back ${formatMinor(30000)}'));
+    expect(copied, contains('Group total: ${formatMinor(90000)}'));
+    expect(copied, contains('Your share: ${formatMinor(30000)}'));
+
+    await tapFinder(tester, find.byTooltip('Share summary'));
+    await tapFinder(tester, find.byKey(const Key('group-export-csv')), frames: 12);
+    expect(exports, hasLength(1));
+    final export = exports.single;
+    expect(export.fileName, endsWith('.csv'));
+    expect(export.fileName, startsWith('goa-trip-'));
+    expect(export.subject, 'Goa trip expenses');
+    final lines = export.csv.split('\r\n');
+    expect(lines.first, startsWith('Date,Description,Category,Cost,Paid by,You paid,'));
+    expect(lines[1], contains('"Hotel, sea view"'));
+    expect(lines[1], contains(',Rahul 600.00; You 300.00,'));
+    expect(lines[2], startsWith(',Total,,900.00,'), reason: 'a closing total row follows the last expense');
+  });
+
+  testWidgets('26 subscriptions: add from templates, totals, sort by cost, pause, cancel, Hindi', (tester) async {
     final fresh = await createApp();
     addTearDown(fresh.container.dispose);
     final hi = AppLocalizationsHi();

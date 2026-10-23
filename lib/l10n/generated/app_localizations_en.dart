@@ -2420,4 +2420,141 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscriptionTemplateNewsApp => 'News app';
+
+  @override
+  String get payersMultiple => '2+ people';
+
+  @override
+  String get payersHelp => 'Enter how much each person paid.';
+
+  @override
+  String payersAssigned(String assigned, String total) {
+    return '$assigned of $total assigned';
+  }
+
+  @override
+  String payersMustTotal(String total) {
+    return 'Amounts paid must add up to $total';
+  }
+
+  @override
+  String namesAnd(String first, String last) {
+    return '$first and $last';
+  }
+
+  @override
+  String get youInList => 'you';
+
+  @override
+  String recurringAddedSkipped(int added, int skipped) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added added',
+      one: '1 added',
+      zero: 'None added',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: '$skipped skipped',
+      one: '1 skipped',
+    );
+    return '$_temp0, $_temp1';
+  }
+
+  @override
+  String get groupExportCsv => 'Export as CSV';
+
+  @override
+  String groupExportCsvSubject(String group) {
+    return '$group expenses';
+  }
+
+  @override
+  String get groupExportFailed => 'Couldn\'t export the CSV';
+
+  @override
+  String get groupCsvDate => 'Date';
+
+  @override
+  String get groupCsvDescription => 'Description';
+
+  @override
+  String get groupCsvCost => 'Cost';
+
+  @override
+  String get groupCsvPaidBy => 'Paid by';
+
+  @override
+  String groupCsvPaidColumn(String name) {
+    return '$name paid';
+  }
+
+  @override
+  String groupCsvShareColumn(String name) {
+    return '$name share';
+  }
+
+  @override
+  String groupCsvBalanceColumn(String name) {
+    return '$name balance';
+  }
+
+  @override
+  String get groupCsvPayment => 'Payment';
+
+  @override
+  String get groupSummaryWhoPaysWhom => 'Who pays whom';
+
+  @override
+  String get groupSummaryStandings => 'Where everyone stands';
+
+  @override
+  String groupSummaryYouOwe(String name, String amount) {
+    return 'You owe $name $amount';
+  }
+
+  @override
+  String groupSummaryOwesYou(String name, String amount) {
+    return '$name owes you $amount';
+  }
+
+  @override
+  String groupSummaryGetsBack(String name, String amount) {
+    return '$name gets back $amount';
+  }
+
+  @override
+  String groupSummaryOwesInTotal(String name, String amount) {
+    return '$name owes $amount in total';
+  }
+
+  @override
+  String groupSummaryYouGetBack(String amount) {
+    return 'You get back $amount';
+  }
+
+  @override
+  String groupSummaryYouOweInTotal(String amount) {
+    return 'You owe $amount in total';
+  }
+
+  @override
+  String get groupCsvTotal => 'Total';
+
+  @override
+  String groupSummaryGroupTotal(String amount) {
+    return 'Group total: $amount';
+  }
+
+  @override
+  String groupSummaryYourShare(String amount) {
+    return 'Your share: $amount';
+  }
+
+  @override
+  String groupSummaryMemberShare(String name, String amount) {
+    return '$name\'s share: $amount';
+  }
 }

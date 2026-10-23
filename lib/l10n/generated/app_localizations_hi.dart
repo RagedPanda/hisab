@@ -2412,4 +2412,141 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get subscriptionTemplateNewsApp => 'न्यूज़ ऐप';
+
+  @override
+  String get payersMultiple => '2+ लोग';
+
+  @override
+  String get payersHelp => 'हर व्यक्ति ने कितना दिया, लिखें।';
+
+  @override
+  String payersAssigned(String assigned, String total) {
+    return '$total में से $assigned दर्ज';
+  }
+
+  @override
+  String payersMustTotal(String total) {
+    return 'दी गई रकम का जोड़ $total होना चाहिए';
+  }
+
+  @override
+  String namesAnd(String first, String last) {
+    return '$first और $last';
+  }
+
+  @override
+  String get youInList => 'आप';
+
+  @override
+  String recurringAddedSkipped(int added, int skipped) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added जोड़ी गईं',
+      one: '1 जोड़ी गई',
+      zero: 'कोई नहीं जोड़ी गई',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: '$skipped छोड़ी गईं',
+      one: '1 छोड़ी गई',
+    );
+    return '$_temp0, $_temp1';
+  }
+
+  @override
+  String get groupExportCsv => 'CSV फ़ाइल के रूप में एक्सपोर्ट करें';
+
+  @override
+  String groupExportCsvSubject(String group) {
+    return '$group के खर्च';
+  }
+
+  @override
+  String get groupExportFailed => 'CSV एक्सपोर्ट नहीं हो सका';
+
+  @override
+  String get groupCsvDate => 'तारीख';
+
+  @override
+  String get groupCsvDescription => 'विवरण';
+
+  @override
+  String get groupCsvCost => 'राशि';
+
+  @override
+  String get groupCsvPaidBy => 'किसने दिया';
+
+  @override
+  String groupCsvPaidColumn(String name) {
+    return '$name ने दिया';
+  }
+
+  @override
+  String groupCsvShareColumn(String name) {
+    return '$name का हिस्सा';
+  }
+
+  @override
+  String groupCsvBalanceColumn(String name) {
+    return '$name का बैलेंस';
+  }
+
+  @override
+  String get groupCsvPayment => 'भुगतान';
+
+  @override
+  String get groupSummaryWhoPaysWhom => 'किसे किसको देना है';
+
+  @override
+  String get groupSummaryStandings => 'किसका कितना हिसाब';
+
+  @override
+  String groupSummaryYouOwe(String name, String amount) {
+    return 'आपको $name को $amount देने हैं';
+  }
+
+  @override
+  String groupSummaryOwesYou(String name, String amount) {
+    return '$name को आपको $amount देने हैं';
+  }
+
+  @override
+  String groupSummaryGetsBack(String name, String amount) {
+    return '$name को $amount वापस मिलेंगे';
+  }
+
+  @override
+  String groupSummaryOwesInTotal(String name, String amount) {
+    return '$name को कुल $amount देने हैं';
+  }
+
+  @override
+  String groupSummaryYouGetBack(String amount) {
+    return 'आपको $amount वापस मिलेंगे';
+  }
+
+  @override
+  String groupSummaryYouOweInTotal(String amount) {
+    return 'आपको कुल $amount देने हैं';
+  }
+
+  @override
+  String get groupCsvTotal => 'कुल';
+
+  @override
+  String groupSummaryGroupTotal(String amount) {
+    return 'ग्रुप का कुल खर्च: $amount';
+  }
+
+  @override
+  String groupSummaryYourShare(String amount) {
+    return 'आपका हिस्सा: $amount';
+  }
+
+  @override
+  String groupSummaryMemberShare(String name, String amount) {
+    return '$name का हिस्सा: $amount';
+  }
 }

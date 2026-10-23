@@ -5,6 +5,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/ids.dart';
 import 'package:hisab/data/db/database.dart';
+import 'package:hisab/data/db/migration_helpers.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 
 /// Undoes the v6 step (recurring rules, entries.recurring_id) on a database
@@ -97,6 +98,38 @@ Future<void> rewindToVersion5(File file) async {
   await dropVersion6(db);
   await db.customStatement('PRAGMA user_version = 5');
   await db.close();
+}
+
+/// Rewinds a freshly created database to the version 6 that the reminders
+/// branch (#28) shipped: due-reminder columns present, no recurring rules.
+Future<void> rewindToRemindersVersion6(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion6(db);
+  await db.customStatement('PRAGMA user_version = 6');
+  await db.close();
+}
+
+/// Table name to sorted column list for every user table.
+Future<Map<String, String>> _schemaOf(AppDatabase database) async {
+  final rows = await database.customSelect("SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").get();
+  return {for (final row in rows) row.read<String>('name'): _columnsOf(row.read<String>('sql'))};
+}
+
+/// Index names on user tables.
+Future<Set<String>> _indexesOf(AppDatabase database) async {
+  final rows = await database.customSelect("SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'").get();
+  return {for (final row in rows) row.read<String>('name')};
+}
+
+/// Expects [upgraded] to have the same tables, columns and indexes as [fresh].
+Future<void> _expectSameSchema(AppDatabase upgraded, AppDatabase fresh) async {
+  final upgradedSchema = await _schemaOf(upgraded);
+  final createdSchema = await _schemaOf(fresh);
+  expect(upgradedSchema.keys.toSet(), createdSchema.keys.toSet());
+  for (final table in createdSchema.keys) {
+    expect(upgradedSchema[table], createdSchema[table], reason: 'columns of $table differ after migration');
+  }
+  expect(await _indexesOf(upgraded), await _indexesOf(fresh));
 }
 
 void main() {
@@ -238,6 +271,43 @@ void main() {
     await db.close();
   });
 
+  test('a v6 file from the reminders branch still gains recurring rules and the entry link', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await EntriesRepository(seed).saveEntry(EntriesRepository.newExpense(id: 'e1', amountMinor: 1500000, occurredAt: DateTime(2026, 10, 5)));
+    await seed.close();
+    await rewindToRemindersVersion6(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    addTearDown(db.close);
+    final fresh = AppDatabase(NativeDatabase.memory());
+    addTearDown(fresh.close);
+    expect((await db.select(db.entries).getSingle()).amountMinor, 1500000);
+    await _expectSameSchema(db, fresh);
+  });
+
+  test('an upgrade over steps the file already has re-adds nothing', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.reminders).insert(RemindersCompanion.insert(id: 'r1', kind: 'bill', title: const Value('Rent')));
+    await seed.customStatement('PRAGMA user_version = 1');
+    await seed.close();
+
+    final db = AppDatabase(NativeDatabase(file));
+    addTearDown(db.close);
+    final fresh = AppDatabase(NativeDatabase.memory());
+    addTearDown(fresh.close);
+    expect((await db.select(db.reminders).getSingle()).title, 'Rent', reason: 'every step ran over a complete schema without failing');
+    await _expectSameSchema(db, fresh);
+  });
+
+  test('missingColumns keeps only the columns the stored table lacks', () {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final wanted = dueReminderColumns(db.reminders);
+    expect(missingColumns({}, wanted), wanted);
+    expect(missingColumns({for (final column in wanted) column.name}, wanted), isEmpty);
+    expect(missingColumns({'title', 'notes'}, wanted).map((column) => column.name), isNot(contains('title')));
+  });
+
   // Opens a real v1 database (schema dumped from the shipped app into
   // `fixtures/schema_v1.sql`) with a few rows, then lets [AppDatabase] run
   // onUpgrade so every step runs on existing data, not on createAll().
@@ -281,17 +351,7 @@ void main() {
     test('a fresh database and an upgraded one end with the same tables and columns', () async {
       final fresh = AppDatabase(NativeDatabase.memory());
       addTearDown(fresh.close);
-      Future<Map<String, String>> schemaOf(AppDatabase database) async {
-        final rows = await database.customSelect("SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").get();
-        return {for (final row in rows) row.read<String>('name'): _columnsOf(row.read<String>('sql'))};
-      }
-
-      final upgraded = await schemaOf(db);
-      final created = await schemaOf(fresh);
-      expect(upgraded.keys.toSet(), created.keys.toSet());
-      for (final table in created.keys) {
-        expect(upgraded[table], created[table], reason: 'columns of $table differ after migration');
-      }
+      await _expectSameSchema(db, fresh);
     });
   });
 }

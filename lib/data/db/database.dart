@@ -3,6 +3,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../core/ids.dart';
 import '../../domain/categories/category_catalog.dart';
+import 'migration_helpers.dart';
 
 part 'database.g.dart';
 
@@ -438,42 +439,35 @@ class AppDatabase extends _$AppDatabase {
           await m.createAll();
           await seedDefaults();
         },
+        // Every step is ensured rather than gated on `from`: feature branches
+        // shipped different steps under the same version number, so a file at
+        // any version may already have some of them. The comments record which
+        // version introduced what.
         onUpgrade: (m, from, to) async {
-          if (from < 2) {
-            await m.createTable(projects);
-            await m.addColumn(entries, entries.projectId);
-            await m.createIndex(entriesProjectId);
-            await m.addColumn(groups, groups.projectId);
-            await m.addColumn(categories, categories.packKey);
-          }
+          // v2: projects.
+          await ensureTable(m, this, projects);
+          await ensureColumns(m, this, entries, [entries.projectId]);
+          await ensureIndex(m, this, entriesProjectId);
+          await ensureColumns(m, this, groups, [groups.projectId]);
+          await ensureColumns(m, this, categories, [categories.packKey]);
           // v3: payment method on settlements (groups parity, record payment).
-          if (from < 3) await m.addColumn(settlements, settlements.method);
+          await ensureColumns(m, this, settlements, [settlements.method]);
           // v4: project fields and the values entries record for them.
-          if (from < 4) {
-            await m.createTable(projectFields);
-            await m.createIndex(projectFieldsProjectId);
-            await m.createTable(entryFieldValues);
-            await m.createIndex(entryFieldValuesEntryId);
-          }
+          await ensureTable(m, this, projectFields);
+          await ensureIndex(m, this, projectFieldsProjectId);
+          await ensureTable(m, this, entryFieldValues);
+          await ensureIndex(m, this, entryFieldValuesEntryId);
           // v5: member UPI IDs and the generic reminders table (groups parity, reminders).
-          if (from < 5) {
-            await m.addColumn(members, members.upiId);
-            await m.createTable(reminders);
-            await m.createIndex(remindersGroupId);
-          }
+          await ensureColumns(m, this, members, [members.upiId]);
+          await ensureTable(m, this, reminders);
+          await ensureIndex(m, this, remindersGroupId);
           // v6: recurring rules and the entries they post (R2, recurring entries).
-          if (from < 6) {
-            await m.createTable(recurringRules);
-            await m.addColumn(entries, entries.recurringId);
-            await m.createIndex(entriesRecurringId);
-          }
+          await ensureTable(m, this, recurringRules);
+          await ensureColumns(m, this, entries, [entries.recurringId]);
+          await ensureIndex(m, this, entriesRecurringId);
           // v7: due reminders (bills, EMIs, cards, documents) on the reminders table.
-          if (from < 7 && from >= 5) {
-            for (final column in dueReminderColumns(reminders)) {
-              await m.addColumn(reminders, column);
-            }
-          }
-          if (from < 7) await m.createIndex(remindersStatusDue);
+          await ensureColumns(m, this, reminders, dueReminderColumns(reminders));
+          await ensureIndex(m, this, remindersStatusDue);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -529,7 +523,7 @@ CategoriesCompanion seedCategoryRow(CategorySeed seed, {required String id, Stri
       units: Value(seed.units.join(',')),
     );
 
-/// Columns v7 added to [Reminders]; a v5 database gains exactly these.
+/// Columns v7 added to [Reminders]; an upgrade adds whichever are missing.
 List<GeneratedColumn> dueReminderColumns($RemindersTable table) => [
       table.title,
       table.notes,

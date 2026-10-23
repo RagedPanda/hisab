@@ -58,14 +58,51 @@ void main() {
     expect(written, greaterThanOrEqualTo(2), reason: 'the rule row and the salary block');
   });
 
-  test('an older backup does not overwrite a newer local setup', () async {
-    await saveSetup(savedAt: DateTime(2026, 10, 1), tolerancePercent: 10);
+  test('export, remove salary, restore: the setup and its rule come back together', () async {
+    final saved = await saveSetup(savedAt: DateTime(2026, 10, 22, 9));
     final payload = await backupFor(db).snapshot();
-    final newer = SalarySettings.fromPrefs(prefs).copyWith(tolerancePercent: 30, updatedAt: DateTime(2026, 10, 20));
+
+    // Remove salary as the screen does: the rule is deleted, the setup reset.
+    await SalaryService(db).removeSalaryRule(saved.ruleId);
+    await const SalarySettings().writeTo(prefs);
+    expect((await SalaryService(db).recurring.getRule(saved.ruleId))!.deletedAt, isNotNull);
+
+    await backupFor(db).importSnapshot(payload);
+    final restored = SalarySettings.fromPrefs(prefs);
+    expect(restored.ruleId, saved.ruleId);
+    final rule = (await SalaryService(db).recurring.getRule(saved.ruleId))!;
+    expect(rule.deletedAt, isNull, reason: 'the newer local delete does not win over the restore');
+    expect(rule.nextDue, isNotNull);
+    expect((await SalaryService(db).recurring.watchViews().first).map((view) => view.rule.id), contains(saved.ruleId), reason: 'Recurring lists the salary again');
+  });
+
+  test('a backup restores over a newer local setup and replaces its rule, so only one salary rule is live', () async {
+    final backedUp = await saveSetup(savedAt: DateTime(2026, 10, 1), tolerancePercent: 10);
+    final payload = await backupFor(db).snapshot();
+    await SalaryService(db).removeSalaryRule(backedUp.ruleId);
+    final newer = await SalaryService(db).saveSalaryRule(
+      settings: const SalarySettings(amountMinor: 9000000, salaryDay: 5, tolerancePercent: 30).copyWith(updatedAt: DateTime(2026, 10, 20)),
+      today: DateTime(2026, 10, 22),
+    );
     await newer.writeTo(prefs);
 
+    await backupFor(db).importSnapshot(payload);
+    final restored = SalarySettings.fromPrefs(prefs);
+    expect((restored.ruleId, restored.tolerancePercent), (backedUp.ruleId, 10));
+    expect((await SalaryService(db).recurring.getRule(backedUp.ruleId))!.deletedAt, isNull);
+    expect((await SalaryService(db).recurring.getRule(newer.ruleId))!.deletedAt, isNotNull);
+  });
+
+  test('a backup whose rule row is missing still leaves a live rule for the setup', () async {
+    final saved = await saveSetup(savedAt: DateTime(2026, 10, 22, 9));
+    final payload = await backupFor(db).snapshot()
+      ..['recurringRules'] = [];
+    await prefs.clear();
     await backupFor(restoredDb).importSnapshot(payload);
-    expect(SalarySettings.fromPrefs(prefs).tolerancePercent, 30);
+    final restored = SalarySettings.fromPrefs(prefs);
+    expect(restored.isSetUp, isTrue);
+    expect(restored.salaryDay, saved.salaryDay);
+    expect((await SalaryService(restoredDb).recurring.getRule(restored.ruleId))!.dayOfMonth, saved.salaryDay);
   });
 
   test('no salary block when salary is not set up, and older backups without one restore fine', () async {

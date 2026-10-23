@@ -100,7 +100,7 @@ class BackupService {
       await restore(db.recurringRules, 'recurringRules', RecurringRule.fromJson, (r) => r.id, (r) => r.updatedAt);
     });
     for (final section in sections) {
-      if (payload[section.key] case final Map block) written += await section.restore(Map<String, dynamic>.from(block));
+      if (payload[section.key] case final Map block) written += await section.restore(Map<String, dynamic>.from(block), db: db, payload: payload);
     }
     return written;
   }

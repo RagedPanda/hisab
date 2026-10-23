@@ -100,25 +100,10 @@ void main() {
     });
   });
 
-  group('restore decision', () {
-    final older = SalarySettings(ruleId: 'a', updatedAt: DateTime(2026, 10, 1));
-    final newer = SalarySettings(ruleId: 'b', updatedAt: DateTime(2026, 10, 20));
-
-    test('a newer backup replaces the local setup, an older one does not', () {
-      expect(shouldRestoreSalarySettings(local: older, incoming: newer), isTrue);
-      expect(shouldRestoreSalarySettings(local: newer, incoming: older), isFalse);
-      expect(shouldRestoreSalarySettings(local: newer, incoming: newer), isFalse);
-    });
-
-    test('fills an empty device, never clears a setup', () {
-      expect(shouldRestoreSalarySettings(local: const SalarySettings(), incoming: older), isTrue);
-      expect(shouldRestoreSalarySettings(local: older, incoming: const SalarySettings()), isFalse);
-    });
-
-    test('an undated local setup counts as oldest, an undated backup never wins', () {
-      expect(shouldRestoreSalarySettings(local: const SalarySettings(ruleId: 'x'), incoming: older), isTrue);
-      expect(shouldRestoreSalarySettings(local: older, incoming: const SalarySettings(ruleId: 'y')), isFalse);
-    });
+  test('restore takes any set-up backup, whatever its age, and never clears a setup', () {
+    expect(shouldRestoreSalarySettings(incoming: SalarySettings(ruleId: 'a', updatedAt: DateTime(2026, 10, 1))), isTrue);
+    expect(shouldRestoreSalarySettings(incoming: const SalarySettings(ruleId: 'y')), isTrue, reason: 'an undated backup still counts');
+    expect(shouldRestoreSalarySettings(incoming: const SalarySettings()), isFalse);
   });
 
   test('the rule anchor and a declined alignment round trip through preferences and JSON', () async {

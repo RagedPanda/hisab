@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/settings.dart';
 import '../../domain/salary/salary_schedule.dart';
+import '../db/database.dart';
 import 'backup_section.dart';
 
 /// The "Month starts on" day read from a backup block, or null when it is
@@ -30,7 +31,7 @@ class MonthStartBackupSection implements BackupSection {
   Map<String, dynamic>? export() => {'monthStartDay': _prefs.getInt(kMonthStartDayPref) ?? 1};
 
   @override
-  Future<int> restore(Map<String, dynamic> json) async {
+  Future<int> restore(Map<String, dynamic> json, {required AppDatabase db, required Map<String, dynamic> payload}) async {
     final incoming = parseBackedUpMonthStartDay(json);
     if (!shouldRestoreMonthStartDay(local: _prefs.getInt(kMonthStartDayPref) ?? 1, incoming: incoming)) return 0;
     await _prefs.setInt(kMonthStartDayPref, incoming!);

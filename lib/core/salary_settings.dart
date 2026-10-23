@@ -220,14 +220,8 @@ class SalarySettings {
   }
 }
 
-/// Whether a backup's salary setup ([incoming]) should replace the [local]
-/// one: only a set-up backup, and only when it is newer (a local setup saved
-/// before timestamps existed counts as oldest). Same newer-wins rule as rows.
-bool shouldRestoreSalarySettings({required SalarySettings local, required SalarySettings incoming}) {
-  if (!incoming.isSetUp) return false;
-  if (!local.isSetUp) return true;
-  final localAt = local.updatedAt;
-  final incomingAt = incoming.updatedAt;
-  if (incomingAt == null) return false;
-  return localAt == null || incomingAt.isAfter(localAt);
-}
+/// Whether a backup's salary setup ([incoming]) should replace the local
+/// one. A restore is the user asking for their saved state back, so any
+/// set-up block wins, whatever its timestamp (like "Month starts on"); a
+/// backup made without salary leaves the local setup alone.
+bool shouldRestoreSalarySettings({required SalarySettings incoming}) => incoming.isSetUp;

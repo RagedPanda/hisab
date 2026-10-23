@@ -2063,8 +2063,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifTurnOn => 'Turn on';
 
   @override
-  String get reminderExactAlarmNote =>
-      'Alerts may come a few minutes late. Exact timing needs the Alarms & reminders permission.';
+  String get remindersLateNote =>
+      'Reminders may arrive late. Allow Alarms & reminders';
+
+  @override
+  String get exactAlarmPromptTitle => 'Get reminders on time';
+
+  @override
+  String get exactAlarmPromptBody =>
+      'To alert you at the exact time you set, Android needs Hisab\'s \"Alarms & reminders\" setting. Without it, reminders may arrive late.';
 
   @override
   String get notifPrePromptTitle => 'Get reminded before it\'s due';

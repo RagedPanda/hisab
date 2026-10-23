@@ -2,11 +2,13 @@ import 'package:hisab/core/notifications/notification_gateway.dart';
 
 /// In-memory [NotificationGateway]: records what would be posted.
 class FakeNotificationGateway implements NotificationGateway {
-  FakeNotificationGateway({this.notificationsAllowed = true, this.exactAlarmsAllowed = true, this.grantOnRequest = true});
+  FakeNotificationGateway({this.notificationsAllowed = true, this.exactAlarmsAllowed = true, this.grantOnRequest = true, this.grantExactOnRequest = false});
 
   bool notificationsAllowed;
   bool exactAlarmsAllowed;
   bool grantOnRequest;
+  bool grantExactOnRequest;
+  int exactRequests = 0;
   final Map<int, AlertRequest> scheduled = {};
   final Map<int, bool> exactById = {};
   final List<int> cancelled = [];
@@ -47,7 +49,11 @@ class FakeNotificationGateway implements NotificationGateway {
   }
 
   @override
-  Future<bool> requestExactAlarms() async => exactAlarmsAllowed;
+  Future<bool> requestExactAlarms() async {
+    exactRequests++;
+    if (grantExactOnRequest) exactAlarmsAllowed = true;
+    return exactAlarmsAllowed;
+  }
 
   /// Alerts posted for [payload], earliest first.
   List<AlertRequest> alertsFor(String payload) =>

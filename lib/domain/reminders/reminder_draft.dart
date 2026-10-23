@@ -1,6 +1,10 @@
 import 'reminder_kind.dart';
 import 'reminder_schedule.dart';
 
+/// A reminder amount as stored and shown: 0 means "no amount" (owner
+/// decision 23), so it becomes null and nothing shows an amount for it.
+int? reminderAmountOrNone(int? amountMinor) => amountMinor == null || amountMinor == 0 ? null : amountMinor;
+
 /// Everything the editor (or another feature) supplies to create or update a
 /// due reminder. [id] null creates a new one.
 class ReminderDraft {

@@ -2056,8 +2056,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get notifTurnOn => 'चालू करें';
 
   @override
-  String get reminderExactAlarmNote =>
-      'सूचना कुछ मिनट देर से आ सकती है। सही समय के लिए \"अलार्म और रिमाइंडर\" अनुमति चाहिए।';
+  String get remindersLateNote =>
+      'रिमाइंडर देर से आ सकते हैं। \"अलार्म और रिमाइंडर\" की अनुमति दें';
+
+  @override
+  String get exactAlarmPromptTitle => 'रिमाइंडर समय पर पाएँ';
+
+  @override
+  String get exactAlarmPromptBody =>
+      'आपके चुने हुए सही समय पर सूचना देने के लिए Android को हिसाब की \"अलार्म और रिमाइंडर\" सेटिंग चाहिए। इसके बिना रिमाइंडर देर से आ सकते हैं।';
 
   @override
   String get notifPrePromptTitle => 'देय तारीख़ से पहले याद पाएँ';

@@ -195,6 +195,14 @@ void main() {
     expect(ReminderKind.of('mystery'), ReminderKind.custom);
   });
 
+  test('an amount of 0 is stored as no amount (owner decision 23)', () async {
+    final id = await reminders.save(ReminderDraft(kind: ReminderKind.bill, title: 'Water', amountMinor: 0, dueAt: DateTime(2026, 11, 2), remindDaysBefore: const [0]));
+    expect((await reminders.getById(id))!.amountMinor, isNull);
+    expect(reminderAmountOrNone(0), isNull);
+    expect(reminderAmountOrNone(null), isNull);
+    expect(reminderAmountOrNone(15000), 15000);
+  });
+
   group('document reminders', () {
     ReminderDraft puc({String? id, String? projectId = 'scotty'}) => ReminderDraft(
           id: id,

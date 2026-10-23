@@ -1,6 +1,7 @@
 import '../../data/db/database.dart';
 import '../../domain/reminders/reminder_kind.dart';
 import '../../domain/reminders/reminder_schedule.dart';
+import 'alarm_timing.dart';
 import 'notification_gateway.dart';
 import 'reminder_payload.dart';
 
@@ -11,8 +12,9 @@ typedef AlertBuilder = AlertRequest Function(Reminder reminder, PlannedAlert ale
 /// due-date nudge stores a reminder row and calls [schedule] (or goes through
 /// ReminderScheduler, which does both); nothing else talks to the plugin.
 ///
-/// Exact alarms are used when the OS allows them; otherwise alerts are posted
-/// inexact (a few minutes late is fine for bills) and nothing is blocked.
+/// Alerts are posted as exact alarms when the OS allows them (see
+/// alarm_timing.dart); otherwise they fall back to inexact and the Reminders
+/// screen asks for "Alarms & reminders". Nothing is blocked either way.
 class NotificationService {
   NotificationService(this._gateway, {required this.buildAlert, DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
 
@@ -42,7 +44,7 @@ class NotificationService {
     await cancel(reminder.id, daysBefore: parseRemindDaysBefore(reminder.remindDaysBefore));
     final alerts = _plan(reminder);
     if (alerts.isEmpty) return alerts;
-    final exact = (await _gateway.permissionState()).exactAlarmsAllowed;
+    final exact = useExactAlarms(await _gateway.permissionState());
     for (final alert in alerts) {
       await _gateway.schedule(buildAlert(reminder, alert), exact: exact);
     }
@@ -68,7 +70,7 @@ class NotificationService {
     for (final pending in await _gateway.pending()) {
       if (reminderIdFromPayload(pending.payload) != null) await _gateway.cancel(pending.id);
     }
-    final exact = (await _gateway.permissionState()).exactAlarmsAllowed;
+    final exact = useExactAlarms(await _gateway.permissionState());
     var posted = 0;
     for (final reminder in reminders) {
       for (final alert in _plan(reminder)) {

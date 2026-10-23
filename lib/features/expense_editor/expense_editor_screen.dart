@@ -11,6 +11,7 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
+import '../../data/repositories/entry_removal.dart';
 import '../../data/repositories/project_fields_repository.dart';
 import '../../data/repositories/projects_repository.dart';
 import '../../domain/ledger/balance_effects.dart';
@@ -18,6 +19,7 @@ import '../../domain/projects/project_fields.dart';
 import '../../domain/projects/project_math.dart';
 import '../../domain/projects/project_picker.dart';
 import '../../domain/projects/project_templates.dart';
+import '../../domain/reminders/reminder_draft.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
@@ -117,14 +119,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         _paidByMemberId = entry.paidByMemberId;
         _source = entry.source;
         _smsId = entry.smsId;
-        _previousSnapshot = EntrySnapshot(
-          kind: entry.kind,
-          amountMinor: entry.amountMinor,
-          accountId: entry.accountId,
-          toAccountId: entry.toAccountId,
-          source: entry.source,
-          groupId: entry.groupId,
-        );
+        _previousSnapshot = snapshotOfEntry(entry);
         _splitMethod = SplitMethod.values.firstWhere((m) => m.name == entry.splitMethod, orElse: () => SplitMethod.equal);
         _items = details.items.map(ItemDraft.fromRow).toList();
         if (_groupId != null) {
@@ -225,7 +220,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     final reminder = await ref.read(remindersRepositoryProvider).getById(reminderId);
     if (reminder == null) return;
     _kind = 'expense';
-    if (reminder.amountMinor != null) _amountController.text = amountInputText(reminder.amountMinor!);
+    final amount = reminderAmountOrNone(reminder.amountMinor);
+    if (amount != null) _amountController.text = amountInputText(amount);
     _payeeController.text = reminder.title;
     if (reminder.notes.isNotEmpty) _noteController.text = reminder.notes;
     if (reminder.categoryId != null) _category = await ref.read(categoriesRepositoryProvider).byId(reminder.categoryId!);

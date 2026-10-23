@@ -5,6 +5,10 @@ import 'package:flutter/services.dart';
 /// Raw SMS as delivered by the platform.
 class RawSms {
   const RawSms({required this.sender, required this.body, required this.receivedAt});
+
+  /// Sender recorded for messages the user pasted or shared into Hisab.
+  /// Their receive time is the paste time, not an inbox time.
+  static const pastedSender = 'PASTED';
   final String sender;
   final String body;
   final DateTime receivedAt;

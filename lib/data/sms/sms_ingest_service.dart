@@ -26,12 +26,14 @@ class SmsIngestService {
     required this.accounts,
     required this.categories,
     required this.entries,
+    this.readInbox = SmsChannel.readInbox,
   });
 
   final SmsLogRepository smsLog;
   final AccountsRepository accounts;
   final CategoriesRepository categories;
   final EntriesRepository entries;
+  final Future<List<RawSms>> Function({required DateTime since, int limit}) readInbox;
 
   StreamSubscription<RawSms>? _liveSubscription;
 
@@ -43,11 +45,12 @@ class SmsIngestService {
 
   Future<bool> hasPermission() async => SmsChannel.isSupported && await Permission.sms.isGranted;
 
-  /// Scans the inbox for bank messages newer than the last one we logged
-  /// (or [lookback] if the log is empty). Returns how many were queued/added.
+  /// Scans the inbox for bank messages newer than the last inbox message we
+  /// logged (or [lookback] if there is none). Pasted messages carry the paste
+  /// time, so they never move the start (#95). Returns how many were queued/added.
   Future<({int scanned, int pending, int added})> scanInbox({Duration lookback = const Duration(days: 90), required bool autoAdd}) async {
-    final since = (await smsLog.latestReceivedAt()) ?? DateTime.now().subtract(lookback);
-    final messages = await SmsChannel.readInbox(since: since.subtract(const Duration(minutes: 1)));
+    final since = (await smsLog.latestReceivedAt(excludingSender: RawSms.pastedSender)) ?? DateTime.now().subtract(lookback);
+    final messages = await readInbox(since: since.subtract(const Duration(minutes: 1)));
     var pending = 0;
     var added = 0;
     for (final message in messages) {

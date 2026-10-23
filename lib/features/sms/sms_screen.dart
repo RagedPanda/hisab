@@ -51,7 +51,7 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
 
   Future<void> _ingestText(String text) async {
     final service = ref.read(smsIngestServiceProvider);
-    final status = await service.ingest(RawSms(sender: 'PASTED', body: text, receivedAt: DateTime.now()), autoAdd: false, force: true);
+    final status = await service.ingest(RawSms(sender: RawSms.pastedSender, body: text, receivedAt: DateTime.now()), autoAdd: false, force: true);
     if (!mounted) return;
     final l10n = context.l10n;
     setState(() => _lastResult = switch (status) {

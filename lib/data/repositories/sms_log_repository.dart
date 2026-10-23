@@ -53,9 +53,12 @@ class SmsLogRepository {
       (db.update(db.smsLog)..where((t) => t.id.equals(id)))
           .write(SmsLogCompanion(status: Value(status), entryId: Value(entryId)));
 
-  Future<DateTime?> latestReceivedAt() async {
+  /// Newest receive time in the log, optionally ignoring one sender's rows.
+  Future<DateTime?> latestReceivedAt({String? excludingSender}) async {
     final max = db.smsLog.receivedAt.max();
-    final row = await (db.selectOnly(db.smsLog)..addColumns([max])).getSingle();
+    final query = db.selectOnly(db.smsLog)..addColumns([max]);
+    if (excludingSender != null) query.where(db.smsLog.sender.equals(excludingSender).not());
+    final row = await query.getSingle();
     return row.read(max);
   }
 }

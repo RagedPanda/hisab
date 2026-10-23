@@ -261,7 +261,9 @@ void main() {
 
     test('shows at once when already due', () {
       final now = DateTime(2026, 11, 2, 8);
-      expect(planSalaryNotification(status(), reminderEnabled: true, now: now), ScheduleSalaryNotification(at: now, expected: DateTime(2026, 10, 30)));
+      final plan = planSalaryNotification(status(), reminderEnabled: true, now: now);
+      expect(plan, ScheduleSalaryNotification(at: now.add(kSalaryAlertLead), expected: DateTime(2026, 10, 30), overdue: true));
+      expect((plan as ScheduleSalaryNotification).at.isAfter(now), isTrue, reason: 'the OS rejects a time that is not in the future');
     });
 
     test('cancels when seen, disabled, not set up or long stale', () {
@@ -269,6 +271,106 @@ void main() {
       expect(planSalaryNotification(status(), reminderEnabled: false, now: DateTime(2026, 11, 2)), isA<CancelSalaryNotification>());
       expect(planSalaryNotification(null, reminderEnabled: true, now: DateTime(2026, 11, 2)), isA<CancelSalaryNotification>());
       expect(planSalaryNotification(status(), reminderEnabled: true, now: DateTime(2026, 11, 20)), isA<CancelSalaryNotification>());
+    });
+  });
+
+  group('alert fire time and repeats', () {
+    final overdue = ScheduleSalaryNotification(at: DateTime(2026, 11, 2, 8, 0, 5), expected: DateTime(2026, 10, 30), overdue: true);
+    final ahead = ScheduleSalaryNotification(at: DateTime(2026, 11, 1, 10), expected: DateTime(2026, 10, 30));
+
+    test('never in the past, and a moment ahead when the moment is now', () {
+      final now = DateTime(2026, 11, 2, 8);
+      expect(salaryAlertFireAt(DateTime(2026, 11, 1, 10), now: now), now.add(kSalaryAlertLead));
+      expect(salaryAlertFireAt(now, now: now), now.add(kSalaryAlertLead));
+      expect(salaryAlertFireAt(DateTime(2026, 11, 3, 10), now: now), DateTime(2026, 11, 3, 10));
+    });
+
+    test('an overdue alert posts once per cycle and language', () {
+      final marker = salaryAlertMarker(overdue, locale: 'en');
+      expect(shouldApplySalaryPlan(overdue, postedMarker: null, locale: 'en'), isTrue);
+      expect(shouldApplySalaryPlan(overdue, postedMarker: marker, locale: 'en'), isFalse);
+      expect(shouldApplySalaryPlan(overdue, postedMarker: marker, locale: 'hi'), isTrue, reason: 'a language change refreshes the text');
+      expect(shouldApplySalaryPlan(ahead, postedMarker: salaryAlertMarker(ahead, locale: 'en'), locale: 'en'), isTrue);
+      expect(shouldApplySalaryPlan(const CancelSalaryNotification(), postedMarker: marker, locale: 'en'), isTrue);
+    });
+  });
+
+  group('early salary and status lines', () {
+    IncomeCandidate income(DateTime at, int amount) => IncomeCandidate(occurredAt: at, amountMinor: amount);
+
+    test('an early salary settles the next cycle as soon as it arrives', () {
+      final status = evaluateSalary(
+        now: DateTime(2026, 11, 28, 12),
+        salaryDay: 30,
+        expectedMinor: 100000,
+        incomes: [income(DateTime(2026, 10, 30), 100000), income(DateTime(2026, 11, 27, 10), 100000)],
+      );
+      expect(status.isSeen, isTrue);
+      expect(status.expected, DateTime(2026, 11, 30));
+      expect(status.next, DateTime(2026, 12, 30));
+      expect(status.reminderState, SalaryReminderState.seen);
+    });
+
+    test('a missed cycle is late and remembers the last salary received', () {
+      final status = evaluateSalary(
+        now: DateTime(2026, 12, 5, 12),
+        salaryDay: 30,
+        expectedMinor: 100000,
+        incomes: [income(DateTime(2026, 10, 30, 9), 99000)],
+      );
+      expect(status.isSeen, isFalse);
+      expect(status.isLate, isTrue);
+      expect(status.expected, DateTime(2026, 11, 30));
+      expect(status.lastReceived?.occurredAt, DateTime(2026, 10, 30, 9));
+    });
+
+    test('not late before the reminder moment', () {
+      final status = evaluateSalary(now: DateTime(2026, 11, 30, 12), salaryDay: 30, expectedMinor: 100000, incomes: const []);
+      expect(status.isLate, isFalse);
+      expect(status.lastReceived, isNull);
+    });
+  });
+
+  group('salary rule due date', () {
+    test('the cycle of a shifted or unshifted date is the nearest unshifted one', () {
+      expect(nominalSalaryCycleOf(DateTime(2026, 10, 30, 9), salaryDay: 1), DateTime(2026, 11, 1));
+      expect(nominalSalaryCycleOf(DateTime(2026, 11, 2, 9), salaryDay: 31), DateTime(2026, 10, 31));
+      expect(nominalSalaryCycleOf(DateTime(2026, 10, 31), salaryDay: 31), DateTime(2026, 10, 31));
+    });
+
+    test('applies the weekend shift and keeps the time of day', () {
+      final anchor = salaryRuleAnchorFor(DateTime(2026, 10, 31, 9), postedCount: 0, salaryDay: 31);
+      expect(alignedSalaryRuleDue(DateTime(2026, 10, 31, 9), postedCount: 0, salaryDay: 31, anchor: anchor, shift: SalaryShift.previousWorkingDay), DateTime(2026, 10, 30, 9));
+      expect(alignedSalaryRuleDue(DateTime(2026, 10, 31, 9), postedCount: 0, salaryDay: 31, anchor: anchor), DateTime(2026, 10, 31, 9));
+    });
+
+    test('follows the lifetime count after the engine steps a shifted date', () {
+      final anchor = salaryRuleAnchorFor(DateTime(2026, 11, 1, 9), postedCount: 0, salaryDay: 1);
+      // Engine stepped from Friday 30 Oct to 1 Nov; one occurrence was consumed.
+      expect(alignedSalaryRuleDue(DateTime(2026, 11, 1, 9), postedCount: 1, salaryDay: 1, anchor: anchor, shift: SalaryShift.previousWorkingDay), DateTime(2026, 12, 1, 9));
+    });
+
+    test('falls back to the nearest cycle without an anchor', () {
+      expect(alignedSalaryRuleDue(DateTime(2026, 10, 31, 9), postedCount: 3, salaryDay: 31, shift: SalaryShift.previousWorkingDay), DateTime(2026, 10, 30, 9));
+    });
+
+    test('an anchor round trips and rejects junk', () {
+      final anchor = SalaryRuleAnchor(nominal: DateTime(2026, 10, 31), postedCount: 2);
+      expect(SalaryRuleAnchor.fromJson(anchor.toJson()), anchor);
+      expect(SalaryRuleAnchor.fromJson({'nominal': 'x', 'postedCount': 1}), isNull);
+      expect(SalaryRuleAnchor.fromJson('nope'), isNull);
+    });
+
+    test('claims only the cycle the income settled', () {
+      final status = SalaryStatus(
+        expected: DateTime(2026, 11, 30),
+        next: DateTime(2026, 12, 30),
+        received: IncomeCandidate(id: 'early', occurredAt: DateTime(2026, 11, 27), amountMinor: 1),
+        reminderState: SalaryReminderState.seen,
+        reminderAt: DateTime(2026, 12, 2, 10),
+      );
+      expect(shouldClaimSalaryOccurrence(status, ruleNextDue: DateTime(2026, 11, 30, 9), ruleId: 'r'), isTrue);
+      expect(shouldClaimSalaryOccurrence(status, ruleNextDue: DateTime(2026, 10, 30, 9), ruleId: 'r'), isFalse, reason: 'a missed cycle stays waiting');
     });
   });
 }

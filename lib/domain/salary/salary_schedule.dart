@@ -60,6 +60,10 @@ double salaryToleranceFraction(int percent) => clampSalaryTolerancePercent(perce
 /// Default days after the expected date before reminding.
 const int kDefaultSalaryReminderDelayDays = 2;
 
+/// Stored name of the salary recurring rule. Kept untranslated so it reads
+/// right after a language change; lists show it via `localizedRuleName`.
+const String kSalaryRuleName = 'Salary';
+
 /// Saturday and Sunday are not working days.
 bool isWeekend(DateTime date) => date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
 
@@ -91,17 +95,92 @@ DateTime shiftToWorkingDay(DateTime date, SalaryShift shift, {Set<DateTime> holi
 DateTime expectedSalaryDate(int year, int month, {required int salaryDay, SalaryShift shift = SalaryShift.sameDay, Set<DateTime> holidays = const {}}) =>
     shiftToWorkingDay(nominalSalaryDate(year, month, salaryDay), shift, holidays: holidays);
 
-/// The most recent expected salary date on or before the day of [now]
-/// (the current pay cycle), and the one after it.
-({DateTime current, DateTime next}) salaryCycle(DateTime now, {required int salaryDay, SalaryShift shift = SalaryShift.sameDay, Set<DateTime> holidays = const {}}) {
+/// The expected salary dates around [now]: the cycle before the current one,
+/// the current one (the most recent on or before the day of [now]), the
+/// next one and the one after it.
+({DateTime previous, DateTime current, DateTime next, DateTime afterNext}) salaryCycles(DateTime now, {required int salaryDay, SalaryShift shift = SalaryShift.sameDay, Set<DateTime> holidays = const {}}) {
   final today = startOfDay(now);
   DateTime expectedIn(int monthOffset) =>
       expectedSalaryDate(today.year, today.month + monthOffset, salaryDay: salaryDay, shift: shift, holidays: holidays);
   // A shift can pull next month's date into this month or push this month's
-  // into the next, so look two months back and two ahead.
-  final candidates = [for (var offset = -2; offset <= 2; offset++) expectedIn(offset)];
+  // into the next, so look three months back and three ahead.
+  final candidates = [for (var offset = -3; offset <= 3; offset++) expectedIn(offset)];
   final currentIndex = candidates.lastIndexWhere((date) => !date.isAfter(today));
-  return (current: candidates[currentIndex], next: candidates[currentIndex + 1]);
+  return (
+    previous: candidates[currentIndex - 1],
+    current: candidates[currentIndex],
+    next: candidates[currentIndex + 1],
+    afterNext: candidates[currentIndex + 2],
+  );
+}
+
+/// The most recent expected salary date on or before the day of [now]
+/// (the current pay cycle), and the one after it.
+({DateTime current, DateTime next}) salaryCycle(DateTime now, {required int salaryDay, SalaryShift shift = SalaryShift.sameDay, Set<DateTime> holidays = const {}}) {
+  final cycles = salaryCycles(now, salaryDay: salaryDay, shift: shift, holidays: holidays);
+  return (current: cycles.current, next: cycles.next);
+}
+
+/// The unshifted salary date of the pay cycle that [due] belongs to: the
+/// one nearest to [due]. A shift moves a date by at most two weeks, so a
+/// shifted or unshifted due date both map to their own cycle.
+DateTime nominalSalaryCycleOf(DateTime due, {required int salaryDay}) {
+  final day = startOfDay(due);
+  DateTime nominalIn(int monthOffset) => nominalSalaryDate(day.year, day.month + monthOffset, salaryDay);
+  int distance(int monthOffset) => nominalIn(monthOffset).difference(day).inDays.abs();
+  return nominalIn([-1, 0, 1].reduce((best, offset) => distance(offset) < distance(best) ? offset : best));
+}
+
+/// Ties the salary rule's lifetime count to a pay cycle, so its due date
+/// can be placed on the right cycle after the recurring engine (which steps
+/// on unshifted dates) confirms or skips an occurrence. Written when the
+/// salary rule is saved.
+class SalaryRuleAnchor {
+  const SalaryRuleAnchor({required this.nominal, required this.postedCount});
+
+  /// Unshifted salary date of the cycle that was due at [postedCount].
+  final DateTime nominal;
+  final int postedCount;
+
+  Map<String, dynamic> toJson() => {'nominal': nominal.toIso8601String(), 'postedCount': postedCount};
+
+  /// Null for anything that is not a valid anchor.
+  static SalaryRuleAnchor? fromJson(Object? json) {
+    if (json is! Map) return null;
+    final nominal = DateTime.tryParse('${json['nominal']}');
+    final postedCount = json['postedCount'];
+    if (nominal == null || postedCount is! int) return null;
+    return SalaryRuleAnchor(nominal: startOfDay(nominal), postedCount: postedCount);
+  }
+
+  @override
+  bool operator ==(Object other) => other is SalaryRuleAnchor && other.nominal == nominal && other.postedCount == postedCount;
+
+  @override
+  int get hashCode => Object.hash(nominal, postedCount);
+}
+
+/// The anchor for a salary rule just saved with [nextDue] and [postedCount].
+SalaryRuleAnchor salaryRuleAnchorFor(DateTime nextDue, {required int postedCount, required int salaryDay}) =>
+    SalaryRuleAnchor(nominal: nominalSalaryCycleOf(nextDue, salaryDay: salaryDay), postedCount: postedCount);
+
+/// The due date the salary rule should hold, with the weekend and holiday
+/// shift applied. The cycle is [anchor]'s moved on by the occurrences the
+/// rule consumed since ([postedCount]); without a usable anchor it is the
+/// cycle nearest to [storedDue]. Keeps the time of day of [storedDue].
+DateTime alignedSalaryRuleDue(
+  DateTime storedDue, {
+  required int postedCount,
+  required int salaryDay,
+  SalaryRuleAnchor? anchor,
+  SalaryShift shift = SalaryShift.sameDay,
+  Set<DateTime> holidays = const {},
+}) {
+  final nominal = anchor == null || postedCount < anchor.postedCount
+      ? nominalSalaryCycleOf(storedDue, salaryDay: salaryDay)
+      : nominalSalaryDate(anchor.nominal.year, anchor.nominal.month + postedCount - anchor.postedCount, salaryDay);
+  final expected = shiftToWorkingDay(nominal, shift, holidays: holidays);
+  return DateTime(expected.year, expected.month, expected.day, storedDue.hour, storedDue.minute);
 }
 
 /// The "month starts on" value that matches a salary day. The setting only
@@ -208,9 +287,10 @@ int daysUntilSalary(DateTime nextExpected, {required DateTime now}) =>
 
 /// Everything the dashboard and reminder need about the current pay cycle.
 class SalaryStatus {
-  const SalaryStatus({required this.expected, required this.next, required this.received, required this.reminderState, required this.reminderAt});
+  const SalaryStatus({required this.expected, required this.next, required this.received, required this.reminderState, required this.reminderAt, this.lastReceived});
 
-  /// Expected date of the current cycle (on or before today).
+  /// Expected date of the cycle being tracked: the current one (on or before
+  /// today), or the next one once its salary arrived early.
   final DateTime expected;
 
   /// Expected date of the next cycle.
@@ -223,7 +303,13 @@ class SalaryStatus {
   /// When the reminder for [expected] is (or was) due.
   final DateTime reminderAt;
 
+  /// The latest salary recognised: [received], else the previous cycle's.
+  final IncomeCandidate? lastReceived;
+
   bool get isSeen => received != null;
+
+  /// The salary has not arrived and its reminder moment has passed.
+  bool get isLate => reminderState == SalaryReminderState.due;
 }
 
 /// Evaluates the current pay cycle for a salary of [expectedMinor] on
@@ -240,24 +326,32 @@ SalaryStatus evaluateSalary({
   int windowDays = kSalaryMatchWindowDays,
   double tolerance = kSalaryAmountTolerance,
 }) {
-  final cycle = salaryCycle(now, salaryDay: salaryDay, shift: shift, holidays: holidays);
-  final received = findSalaryIncome(
-    incomes,
-    expected: cycle.current,
-    expectedMinor: expectedMinor,
-    now: now,
-    nextExpected: cycle.next,
-    accountId: accountId,
-    windowDays: windowDays,
-    tolerance: tolerance,
-  );
-  return SalaryStatus(
-    expected: cycle.current,
-    next: cycle.next,
-    received: received,
-    reminderState: salaryReminderState(expected: cycle.current, now: now, seen: received != null, delayDays: reminderDelayDays),
-    reminderAt: salaryReminderAt(cycle.current, delayDays: reminderDelayDays),
-  );
+  final cycles = salaryCycles(now, salaryDay: salaryDay, shift: shift, holidays: holidays);
+  IncomeCandidate? findFor(DateTime expected, DateTime nextExpected) => findSalaryIncome(
+        incomes,
+        expected: expected,
+        expectedMinor: expectedMinor,
+        now: now,
+        nextExpected: nextExpected,
+        accountId: accountId,
+        windowDays: windowDays,
+        tolerance: tolerance,
+      );
+  SalaryStatus statusFor(DateTime expected, DateTime next, IncomeCandidate? received, IncomeCandidate? previous) => SalaryStatus(
+        expected: expected,
+        next: next,
+        received: received,
+        lastReceived: received ?? previous,
+        reminderState: salaryReminderState(expected: expected, now: now, seen: received != null, delayDays: reminderDelayDays),
+        reminderAt: salaryReminderAt(expected, delayDays: reminderDelayDays),
+      );
+
+  // A salary that came early, inside the next cycle's window, settles that
+  // cycle straight away instead of waiting for its expected date.
+  final early = findFor(cycles.next, cycles.afterNext);
+  if (early != null) return statusFor(cycles.next, cycles.afterNext, early, null);
+  final current = findFor(cycles.current, cycles.next);
+  return statusFor(cycles.current, cycles.next, current, current == null ? findFor(cycles.previous, cycles.current) : null);
 }
 
 /// Earliest income date [evaluateSalary] can look at for [now], so callers
@@ -269,13 +363,16 @@ DateTime salaryLookbackStart(DateTime now, {int windowDays = kMaxSalaryMatchWind
 /// Whether the salary rule's waiting occurrence ([ruleNextDue]) should be
 /// consumed by the income [status] recognised, so the rule does not ask the
 /// user to confirm a salary that already arrived (by SMS or by hand). Only
-/// an occurrence that belongs to the current cycle is claimed, and only by
-/// an income not already tied to the rule.
+/// an occurrence of the cycle the income settled is claimed (an older one
+/// the salary missed stays waiting), and only by an income not already tied
+/// to the rule.
 bool shouldClaimSalaryOccurrence(SalaryStatus status, {required DateTime? ruleNextDue, required String ruleId, int windowDays = kSalaryMatchWindowDays}) {
   final received = status.received;
   if (received == null || ruleNextDue == null || received.recurringId == ruleId) return false;
+  final cycleWindowStart = DateTime(status.expected.year, status.expected.month, status.expected.day - windowDays);
   final nextCycleWindowStart = DateTime(status.next.year, status.next.month, status.next.day - windowDays);
-  return startOfDay(ruleNextDue).isBefore(nextCycleWindowStart);
+  final due = startOfDay(ruleNextDue);
+  return !due.isBefore(cycleWindowStart) && due.isBefore(nextCycleWindowStart);
 }
 
 /// What the notification layer should do about the salary reminder.
@@ -288,26 +385,58 @@ class CancelSalaryNotification extends SalaryNotificationPlan {
   const CancelSalaryNotification();
 }
 
-/// Have "Salary not seen yet" for [expected] appear at [at] (now or later).
+/// Have "Salary not seen yet" for [expected] appear at [at] (always in the
+/// future, as the OS scheduler requires). [overdue] means its moment already
+/// passed, so it shows within seconds.
 class ScheduleSalaryNotification extends SalaryNotificationPlan {
-  const ScheduleSalaryNotification({required this.at, required this.expected});
+  const ScheduleSalaryNotification({required this.at, required this.expected, this.overdue = false});
   final DateTime at;
   final DateTime expected;
+  final bool overdue;
 
   @override
-  bool operator ==(Object other) => other is ScheduleSalaryNotification && other.at == at && other.expected == expected;
+  bool operator ==(Object other) => other is ScheduleSalaryNotification && other.at == at && other.expected == expected && other.overdue == overdue;
 
   @override
-  int get hashCode => Object.hash(at, expected);
+  int get hashCode => Object.hash(at, expected, overdue);
+}
+
+/// How far ahead an overdue alert is scheduled: the OS rejects a time that
+/// is not in the future, and a few seconds still reads as "now".
+const Duration kSalaryAlertLead = Duration(seconds: 5);
+
+/// When to fire an alert meant for [reminderAt]: then, or a moment from
+/// [now] when that has already passed.
+DateTime salaryAlertFireAt(DateTime reminderAt, {required DateTime now}) {
+  final earliest = now.add(kSalaryAlertLead);
+  return reminderAt.isAfter(earliest) ? reminderAt : earliest;
 }
 
 /// Decides the reminder for [status]: nothing when the salary is not set up,
 /// the reminder is off or the salary was seen; otherwise the current cycle's
-/// reminder (shown at once when it is already due). A cycle whose reminder
-/// moment passed more than [staleAfterDays] ago is not nagged about again.
+/// reminder (shown within seconds when it is already due). A cycle whose
+/// reminder moment passed more than [staleAfterDays] ago is not nagged
+/// about again.
 SalaryNotificationPlan planSalaryNotification(SalaryStatus? status, {required bool reminderEnabled, required DateTime now, int staleAfterDays = 10}) {
   if (status == null || !reminderEnabled || status.isSeen) return const CancelSalaryNotification();
   final stale = now.isAfter(status.reminderAt.add(Duration(days: staleAfterDays)));
   if (stale) return const CancelSalaryNotification();
-  return ScheduleSalaryNotification(at: status.reminderAt.isAfter(now) ? status.reminderAt : now, expected: status.expected);
+  return ScheduleSalaryNotification(
+    at: salaryAlertFireAt(status.reminderAt, now: now),
+    expected: status.expected,
+    overdue: !status.reminderAt.isAfter(now),
+  );
 }
+
+/// Identifies one posted alert: its cycle and the language of its text.
+String salaryAlertMarker(ScheduleSalaryNotification plan, {required String locale}) => '${startOfDay(plan.expected).toIso8601String()}|$locale';
+
+/// Whether [plan] needs to reach the notification layer. An overdue alert
+/// already posted for the same cycle and language ([postedMarker]) is left
+/// alone, so it is not shown again on every app resume; a new language
+/// re-posts it with fresh text. Cancels and future alerts always apply.
+bool shouldApplySalaryPlan(SalaryNotificationPlan plan, {required String? postedMarker, required String locale}) => switch (plan) {
+      CancelSalaryNotification() => true,
+      ScheduleSalaryNotification(overdue: false) => true,
+      ScheduleSalaryNotification() => postedMarker != salaryAlertMarker(plan, locale: locale),
+    };

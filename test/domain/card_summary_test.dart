@@ -235,7 +235,7 @@ void main() {
   });
 
   group('lastStatementExceedsAmountDue', () {
-    test('flags a statement above the amount due', () {
+    test('flags a new statement above the amount due', () {
       expect(lastStatementExceedsAmountDue(lastStatementMinor: 500000, amountDueMinor: 200000), isTrue);
     });
 
@@ -243,6 +243,16 @@ void main() {
       expect(lastStatementExceedsAmountDue(lastStatementMinor: 200000, amountDueMinor: 200000), isFalse);
       expect(lastStatementExceedsAmountDue(lastStatementMinor: 100000, amountDueMinor: 200000), isFalse);
       expect(lastStatementExceedsAmountDue(lastStatementMinor: null, amountDueMinor: 0), isFalse);
+    });
+
+    test('an unchanged statement on a paid, part-paid or credit card is never blocked (#97)', () {
+      expect(lastStatementExceedsAmountDue(lastStatementMinor: 500000, previousStatementMinor: 500000, amountDueMinor: 0), isFalse);
+      expect(lastStatementExceedsAmountDue(lastStatementMinor: 500000, previousStatementMinor: 500000, amountDueMinor: 200000), isFalse);
+    });
+
+    test('payments since the statement count towards what is still unpaid', () {
+      expect(lastStatementExceedsAmountDue(lastStatementMinor: 500000, amountDueMinor: 200000, paidSinceStatementMinor: 300000), isFalse);
+      expect(lastStatementExceedsAmountDue(lastStatementMinor: 600000, previousStatementMinor: 500000, amountDueMinor: 200000, paidSinceStatementMinor: 300000), isTrue);
     });
   });
 }

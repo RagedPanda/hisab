@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:drift/drift.dart' show TableUpdateQuery;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,6 +19,10 @@ import 'card_providers.dart';
 /// statement day, due day and last statement. The decision is the pure
 /// [planCardReminder]; this class only reads the rows it needs and applies
 /// the result through [ReminderScheduler] so notifications follow.
+///
+/// Every public call runs one at a time (in call order), so an explicit sync
+/// after a save and a live sync from [watchChanges] never both see "no
+/// reminder yet" and create two.
 class CardReminderSync {
   CardReminderSync({
     required this.accounts,
@@ -31,8 +38,35 @@ class CardReminderSync {
   final ReminderScheduler scheduler;
   final DateTime Function() _clock;
 
+  /// Tail of the queue that serialises every sync.
+  Future<void> _tail = Future<void>.value();
+
+  /// Whether a live sync is queued but has not started yet (bursts of table
+  /// changes then share it).
+  bool _liveSyncQueued = false;
+
+  Future<void> _serial(Future<void> Function() task) {
+    final run = _tail.then((_) => task());
+    _tail = run.catchError((Object _) {});
+    return run;
+  }
+
+  /// Re-syncs every card whenever [changes] fires (account or entry writes),
+  /// so a payment, an edit or a new spend updates the reminder's date and
+  /// amount without waiting for a restart. Cancel the result to stop.
+  StreamSubscription<void> watchChanges(Stream<void> changes) => changes.listen((_) {
+        if (_liveSyncQueued) return;
+        _liveSyncQueued = true;
+        syncCardReminderSafely(() => _serial(() {
+              _liveSyncQueued = false;
+              return _syncAll();
+            }));
+      });
+
   /// Syncs one account after it is saved; a non-card loses its reminder.
-  Future<void> syncAccount(Account account) async {
+  Future<void> syncAccount(Account account) => _serial(() => _syncAccount(account));
+
+  Future<void> _syncAccount(Account account) async {
     final today = _clock();
     final isCard = account.type == 'card';
     final movements = isCard ? await entries.getAccountMovements(account.id, since: cardMovementsSince(account, today)) : const <CardMovement>[];
@@ -42,25 +76,29 @@ class CardReminderSync {
 
   /// Syncs the account with [id] as stored now (or removes its reminder
   /// when it is gone).
-  Future<void> syncAccountById(String id) async {
-    final account = await accounts.getById(id);
-    if (account == null) return removeForAccount(id);
-    return syncAccount(account);
-  }
+  Future<void> syncAccountById(String id) => _serial(() async {
+        final account = await accounts.getById(id);
+        if (account == null) return _removeForAccount(id);
+        return _syncAccount(account);
+      });
 
   /// Removes every pending card reminder of an account that was deleted.
-  Future<void> removeForAccount(String accountId) => _apply(accountId, '', due: null);
+  Future<void> removeForAccount(String accountId) => _serial(() => _removeForAccount(accountId));
+
+  Future<void> _removeForAccount(String accountId) => _apply(accountId, '', due: null);
 
   /// Syncs every live card (run at startup, so due dates roll forward) and
   /// drops pending card reminders left behind by cards that are gone.
-  Future<void> syncAll() async {
+  Future<void> syncAll() => _serial(_syncAll);
+
+  Future<void> _syncAll() async {
     final cards = [for (final account in await accounts.getAll()) if (account.type == 'card') account];
     for (final card in cards) {
-      await syncAccount(card);
+      await _syncAccount(card);
     }
     final pending = await reminders.getUpcoming();
     for (final accountId in orphanedCardReminderAccounts(pending, liveCardIds: {for (final card in cards) card.id})) {
-      await removeForAccount(accountId);
+      await _removeForAccount(accountId);
     }
   }
 
@@ -96,6 +134,17 @@ final cardReminderSyncProvider = Provider((ref) => CardReminderSync(
       reminders: ref.watch(remindersRepositoryProvider),
       scheduler: ref.watch(reminderSchedulerProvider),
     ));
+
+/// Keeps card reminders live while the app runs: accounts and entries table
+/// writes trigger [CardReminderSync.watchChanges]. Read it once at startup;
+/// the subscription ends when the container is disposed.
+final cardReminderLiveSyncProvider = Provider<StreamSubscription<void>>((ref) {
+  final db = ref.watch(databaseProvider);
+  final changes = db.tableUpdates(TableUpdateQuery.onAllTables([db.accounts, db.entries]));
+  final subscription = ref.watch(cardReminderSyncProvider).watchChanges(changes);
+  ref.onDispose(subscription.cancel);
+  return subscription;
+});
 
 /// Runs a reminder sync after an account write without letting a failure
 /// (say, notifications unavailable) undo or block that write.

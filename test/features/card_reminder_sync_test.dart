@@ -220,4 +220,37 @@ void main() {
     final alerts = gateway.alertsFor(reminderPayload(moved.id));
     expect(alerts.map((alert) => alert.fireAt), containsAll([DateTime(2026, 10, 13, 20), DateTime(2026, 10, 19, 20)]));
   });
+
+  Future<void> eventually(Future<bool> Function() condition) async {
+    for (var attempt = 0; attempt < 100; attempt++) {
+      if (await condition()) return;
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+    fail('condition not met in time');
+  }
+
+  test('a payment updates the reminder amount live, without a restart or syncAll', () async {
+    final card = await addCard();
+    await sync.syncAccount(card);
+    final live = sync.watchChanges(db.tableUpdates(TableUpdateQuery.onAllTables([db.accounts, db.entries])));
+    addTearDown(live.cancel);
+
+    await EntriesRepository(db).saveEntry(EntriesRepository.newExpense(kind: 'transfer', amountMinor: 1000000, occurredAt: DateTime(2026, 10, 7), accountId: 'bank')
+        .copyWith(toAccountId: Value(card.id)));
+    await eventually(() async => (await pendingCardReminders()).single.amountMinor == 1500000);
+
+    await accounts.update(AccountsCompanion(id: Value(card.id), dueDay: const Value(20)));
+    await eventually(() async => (await pendingCardReminders()).single.dueAt == DateTime(2026, 10, 20));
+    expect(await pendingCardReminders(), hasLength(1));
+  });
+
+  test('explicit and live syncs racing on a new card still make one reminder', () async {
+    final card = await addCard();
+    final live = sync.watchChanges(db.tableUpdates(TableUpdateQuery.onAllTables([db.accounts, db.entries])));
+    addTearDown(live.cancel);
+    await Future.wait([sync.syncAccount(card), sync.syncAccountById(card.id), sync.syncAll(), sync.syncAll()]);
+    await accounts.update(AccountsCompanion(id: Value(card.id), name: const Value('HDFC')));
+    await eventually(() async => (await pendingCardReminders()).single.title == 'HDFC');
+    expect(await cardReminders(), hasLength(1));
+  });
 }

@@ -30,7 +30,8 @@ Future<void> handleReminderTap(ProviderContainer container, NotificationTap tap)
 /// the tap that launched the app, and re-posts every pending reminder (this
 /// is what restores alerts after a reboot, an app update, a force stop or a
 /// time-zone change). Card due reminders are brought up to date first, so a
-/// card's next bill gets its reminder. Never throws: reminders still work in-app without it.
+/// card's next bill gets its reminder, and then kept live as accounts and
+/// entries change. Never throws: reminders still work in-app without it.
 Future<void> startReminderNotifications(ProviderContainer container) async {
   try {
     final service = container.read(notificationServiceProvider);
@@ -38,6 +39,7 @@ Future<void> startReminderNotifications(ProviderContainer container) async {
     final launch = await service.launchTap();
     if (launch != null) await handleReminderTap(container, launch);
     await syncCardReminderSafely(() => container.read(cardReminderSyncProvider).syncAll());
+    container.read(cardReminderLiveSyncProvider);
     await container.read(reminderSchedulerProvider).rescheduleAll();
   } catch (error, stack) {
     debugPrint('Hisab: reminder notifications unavailable: $error\n$stack');

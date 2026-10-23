@@ -10,6 +10,7 @@ import '../data/repositories/entries_repository.dart';
 import '../data/repositories/groups_repository.dart';
 import '../data/repositories/project_fields_repository.dart';
 import '../data/repositories/projects_repository.dart';
+import '../data/repositories/recurring_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
 import '../data/sms/sms_ingest_service.dart';
 import '../domain/entries/entry_filter.dart';
@@ -34,6 +35,7 @@ final budgetsRepositoryProvider = Provider((ref) => BudgetsRepository(ref.watch(
 final projectsRepositoryProvider = Provider((ref) => ProjectsRepository(ref.watch(databaseProvider)));
 final projectFieldsRepositoryProvider = Provider((ref) => ProjectFieldsRepository(ref.watch(databaseProvider)));
 final smsLogRepositoryProvider = Provider((ref) => SmsLogRepository(ref.watch(databaseProvider)));
+final recurringRepositoryProvider = Provider((ref) => RecurringRepository(ref.watch(databaseProvider)));
 
 class SettingsNotifier extends Notifier<AppSettings> {
   @override
@@ -87,6 +89,7 @@ final projectViewsProvider = StreamProvider<List<ProjectView>>((ref) {
   final monthStartDay = ref.watch(settingsProvider).monthStartDay;
   return ref.watch(projectsRepositoryProvider).watchViews(monthStartDay: monthStartDay);
 });
+final recurringViewsProvider = StreamProvider((ref) => ref.watch(recurringRepositoryProvider).watchViews());
 final pendingSmsProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryProvider).watchPending());
 final smsHistoryProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryProvider).watchHistory());
 

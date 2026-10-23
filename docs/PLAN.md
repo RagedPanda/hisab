@@ -34,6 +34,10 @@ Rule: anything that can be a pure function lives in `lib/domain` with a test.
 - **entries** expense / income / transfer; `source` manual | sms | import; optional `groupId`
 - **entry_items** name, quantity, unit, unit price → remembered-item suggestions per category
 - **groups, members, splits, settlements** Splitwise model; balances computed, never stored
+- **entry_payers** who paid what when several members paid one group expense; empty for a
+  single payer, and `entries.paidByMemberId` keeps the biggest payer as the main one
+- **reminders** generic reminder log (kind, group, member, channel, sent time); settle-up
+  reminders use it today
 - **budgets** overall or per category, monthly
 - **sms_log** every parsed SMS with status pending | added | ignored | skipped (dedupe by hash)
 
@@ -82,9 +86,12 @@ Groups need a relay both members can reach regardless of platform:
 - Free tier of Firebase Firestore or Supabase. Each group has a random 256-bit group key,
   exchanged out-of-band through the invite link (`hisab:///join?g=<id>&k=<key>`), so the relay
   stores only ciphertext.
-- Every group entry / split / settlement is pushed as an encrypted row keyed by UUID with
-  `updatedAt`; clients merge with LWW. Conflicts are rare (one editor per expense) and the
-  split rows are recomputed from the entry's method on the client.
+- Every group entry / split / payer / item assignment / settlement is pushed as an encrypted
+  row keyed by UUID with `updatedAt`; clients merge with LWW. Conflicts are rare (one editor
+  per expense). An expense travels as one unit: the entry row plus its `entry_payers` rows
+  (several payers) and, for a by-item split, its item rows and their member assignments, so
+  a client never applies the payers or assignments of one version against the total of
+  another. Split rows are recomputed from the entry's method on the client.
 - Members without the app see a read-only web summary generated from the share text.
 - Identity: anonymous Firebase auth bound to the device; the member record holds a display
   name. No phone number or contacts upload.

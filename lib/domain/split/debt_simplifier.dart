@@ -3,11 +3,31 @@ library;
 
 import 'split_calculator.dart';
 
-/// One expense in a group ledger: who paid, and what each member owes.
+/// One expense in a group ledger: who paid how much, and what each member owes.
 class LedgerExpense {
-  const LedgerExpense({required this.paidByMemberId, required this.shares});
-  final String paidByMemberId;
+  /// One member paid the whole bill: the sum of the shares.
+  LedgerExpense({required String paidByMemberId, required this.shares}) : payers = [SplitShare(paidByMemberId, _sumOf(shares))];
+
+  /// Several members chipped in; their amounts add up to the bill.
+  const LedgerExpense.multi({required this.payers, required this.shares});
+
+  /// Who paid and how much.
+  final List<SplitShare> payers;
   final List<SplitShare> shares;
+
+  static int _sumOf(List<SplitShare> amounts) => amounts.fold(0, (sum, amount) => sum + amount.amountMinor);
+
+  /// What each member is up or down on this expense alone (paid minus share).
+  Map<String, int> get netByMember {
+    final net = <String, int>{};
+    for (final payer in payers) {
+      net.update(payer.memberId, (value) => value + payer.amountMinor, ifAbsent: () => payer.amountMinor);
+    }
+    for (final share in shares) {
+      net.update(share.memberId, (value) => value - share.amountMinor, ifAbsent: () => -share.amountMinor);
+    }
+    return net;
+  }
 }
 
 /// A payment from one member to another that settles debt.
@@ -53,10 +73,7 @@ Map<String, int> computeNetBalances({
   void add(String id, int delta) => net.update(id, (v) => v + delta, ifAbsent: () => delta);
 
   for (final expense in expenses) {
-    for (final share in expense.shares) {
-      add(expense.paidByMemberId, share.amountMinor);
-      add(share.memberId, -share.amountMinor);
-    }
+    expense.netByMember.forEach(add);
   }
   for (final s in settlements) {
     add(s.fromMemberId, s.amountMinor);
@@ -94,8 +111,9 @@ List<Transfer> simplifyDebts(Map<String, int> net) {
   return transfers;
 }
 
-/// Direct pairwise debts without simplification: for every expense each
-/// non-payer owes the payer their share; settlements reduce the debt.
+/// Direct pairwise debts without simplification: within every expense the
+/// members who are down pay the members who are up (with one payer, each
+/// sharer owes the payer their share); settlements reduce the debt.
 List<Transfer> pairwiseDebts({
   required List<LedgerExpense> expenses,
   required List<LedgerSettlement> settlements,
@@ -110,9 +128,9 @@ List<Transfer> pairwiseDebts({
     owed.update(key, (v) => v + signed, ifAbsent: () => signed);
   }
 
-  for (final e in expenses) {
-    for (final share in e.shares) {
-      add(share.memberId, e.paidByMemberId, share.amountMinor);
+  for (final expense in expenses) {
+    for (final transfer in simplifyDebts(expense.netByMember)) {
+      add(transfer.from, transfer.to, transfer.amountMinor);
     }
   }
   for (final s in settlements) {

@@ -404,10 +404,16 @@ void popOrGoHome(BuildContext context) {
 /// Replaces whatever snackbar is showing with [message] and an Undo action.
 /// It times out like a plain snackbar instead of persisting, so a run of
 /// quick actions never queues stale messages behind each other.
-void showUndoSnackBar(ScaffoldMessengerState messenger, {required String message, required String undoLabel, required VoidCallback onUndo}) {
+void showUndoSnackBar(
+  ScaffoldMessengerState messenger, {
+  required String message,
+  required String undoLabel,
+  required VoidCallback onUndo,
+  Duration duration = const Duration(milliseconds: 4000),
+}) {
   messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message), persist: false, action: SnackBarAction(label: undoLabel, onPressed: onUndo)));
+    ..showSnackBar(SnackBar(content: Text(message), duration: duration, persist: false, action: SnackBarAction(label: undoLabel, onPressed: onUndo)));
 }
 
 /// Makes the system Back gesture return to Home instead of leaving the app

@@ -49,6 +49,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:intl/intl.dart';
 
 import 'harness.dart';
+import 'recording_notification_gateway.dart';
 
 const _milkTotalMinor = 20000; // 2 L @ 70 + 1 L @ 60
 const _restaurantMinor = 125000;
@@ -1423,7 +1424,8 @@ void main() {
   });
 
   testWidgets('24 reminders: create, real OS scheduling, mark paid with a prefilled entry, history, dark, Hindi', (tester) async {
-    final fresh = await createApp();
+    final gatewayLog = GatewayCallLog();
+    final fresh = await createApp(overrides: [recordingGatewayOverride(gatewayLog)]);
     addTearDown(fresh.container.dispose);
     final gateway = fresh.read(notificationGatewayProvider);
     // iOS: ask for the notification permission through the plugin (the system
@@ -1457,8 +1459,16 @@ void main() {
     expect(electricity.amountMinor, 210000);
 
     // The alert is really with the OS: AlarmManager on Android, UNUserNotificationCenter on iOS.
-    var pending = await gateway.pending();
-    expect(pending.where((alert) => alert.payload == reminderPayload(electricity.id)), isNotEmpty, reason: 'scheduled with the OS');
+    // A fresh iOS simulator never grants permission headlessly and iOS then
+    // drops the request, so there check the schedule call instead (#60).
+    final osObservable = osPendingIsObservable(isIOS: Platform.isIOS, notificationsAllowed: (await gateway.permissionState()).notificationsAllowed);
+    final electricityPayload = reminderPayload(electricity.id);
+    if (osObservable) {
+      final pending = await gateway.pending();
+      expect(pending.where((alert) => alert.payload == electricityPayload), isNotEmpty, reason: 'scheduled with the OS');
+    } else {
+      expect(gatewayLog.liveIdsFor(electricityPayload), isNotEmpty, reason: 'scheduled through the gateway (iOS without permission)');
+    }
 
     final scheduler = fresh.read(reminderSchedulerProvider);
     final card = await scheduler.save(ReminderDraft(kind: ReminderKind.card, title: 'HDFC credit card', dueAt: inDays(-2), amountMinor: 1845000, repeat: ReminderRepeat.monthly));
@@ -1480,8 +1490,11 @@ void main() {
     final paid = (await fresh.read(remindersRepositoryProvider).getById(electricity.id))!;
     expect(paid.status, 'done');
     expect(paid.entryId, isNotNull);
-    pending = await gateway.pending();
-    expect(pending.where((alert) => alert.payload == reminderPayload(electricity.id)), isEmpty, reason: 'paid reminder alerts cancelled');
+    if (osObservable) {
+      final pending = await gateway.pending();
+      expect(pending.where((alert) => alert.payload == electricityPayload), isEmpty, reason: 'paid reminder alerts cancelled');
+    }
+    expect(gatewayLog.liveIdsFor(electricityPayload), isEmpty, reason: 'paid reminder alerts cancelled through the gateway');
 
     await scheduler.skip(card);
     await tapText(tester, 'History');

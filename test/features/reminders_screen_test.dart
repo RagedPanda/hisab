@@ -106,6 +106,23 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('#54 the Undo snackbar after mark paid goes away on its own', (tester) async {
+    final gateway = FakeNotificationGateway();
+    final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');
+    await _addBill(container);
+    appRouter.push('/reminders');
+    await _settle(tester);
+
+    await tester.tap(find.byTooltip('Mark paid'));
+    await _settle(tester);
+    await tester.tap(find.text('Just mark paid'));
+    await _settle(tester);
+    expect(find.byType(SnackBar), findsOneWidget);
+    await _settle(tester, 80);
+    expect(find.byType(SnackBar), findsNothing, reason: 'Marked paid snackbar times out after 6 s');
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('just mark paid moves the bill to history and Undo reopens it', (tester) async {
     final gateway = FakeNotificationGateway();
     final (container, db) = await _pumpReminders(tester, gateway, location: '/settings');

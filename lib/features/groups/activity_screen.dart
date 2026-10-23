@@ -126,7 +126,9 @@ class _ActivityTile extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = context.l10n;
     await ref.read(groupsRepositoryProvider).restoreGroupExpense(activity.subjectId);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.activityExpenseRestoredSnack)));
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l10n.activityExpenseRestoredSnack)));
   }
 
   static IconData _iconFor(ActivityRecord activity) => switch (activity.action) {

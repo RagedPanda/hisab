@@ -713,10 +713,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     final l10n = context.l10n;
     final groups = ref.read(groupsRepositoryProvider);
     await groups.deleteGroupExpense(entryId);
-    messenger.showSnackBar(SnackBar(
-      content: Text(l10n.activityExpenseDeletedSnack),
-      action: SnackBarAction(label: l10n.undo, onPressed: () => groups.restoreGroupExpense(entryId)),
-    ));
+    showUndoSnackBar(messenger, message: l10n.activityExpenseDeletedSnack, undoLabel: l10n.undo, onUndo: () => groups.restoreGroupExpense(entryId));
   }
 
   /// Manual entries move the account's running balance; SMS and group

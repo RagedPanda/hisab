@@ -76,7 +76,7 @@ class SmsIngestService {
       await _recordDuplicate(existing, message);
       return IngestStatus.duplicate;
     }
-    if (!force && !looksLikeBankSender(message.sender) && !_looksFinancial(message.body)) {
+    if (!force && !looksLikeBankSender(message.sender) && !hasTransactionSignal(message.body)) {
       if (!isPersonalSender(message.sender)) {
         await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.notBank);
       }
@@ -85,7 +85,7 @@ class SmsIngestService {
 
     final parsed = parseBankSms(sender: message.sender, body: message.body, receivedAt: message.receivedAt);
     if (parsed == null) {
-      if (force || looksLikeBankSender(message.sender)) {
+      if (!isPersonalSender(message.sender)) {
         await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.skipped);
       }
       return IngestStatus.unparsed;
@@ -192,6 +192,4 @@ class SmsIngestService {
     return created;
   }
 
-  static final _financialHint = RegExp(r'(debited|credited|spent|withdrawn|a/c|acct|upi|card|rs\.?\s?\d|inr\s?\d|₹)', caseSensitive: false);
-  static bool _looksFinancial(String body) => _financialHint.hasMatch(body);
 }

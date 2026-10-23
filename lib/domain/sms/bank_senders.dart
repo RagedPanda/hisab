@@ -79,5 +79,7 @@ String? bankFromSender(String sender) {
   return null;
 }
 
-bool looksLikeBankSender(String sender) =>
-    bankFromSender(sender) != null || RegExp(r'^[A-Z]{2}-[A-Z0-9]{6}(-[A-Z])?$').hasMatch(sender.toUpperCase());
+/// Only a known bank or payment app header counts. Any 6-character DLT
+/// header (VM-SWIGGY, JM-MYNTRA) is not enough on its own: an unknown sender
+/// must carry a transaction signal in the text instead (see the parser).
+bool looksLikeBankSender(String sender) => bankFromSender(sender) != null;

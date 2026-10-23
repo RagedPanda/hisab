@@ -52,7 +52,16 @@ const _otpPhrases = ['otp', 'one time password', 'verification code', 'do not sh
 const _promotionPhrases = [
   'pre-approved', 'pre approved', 'apply now', 'offer', 'cashback upto', 'cashback up to',
   'eligible', 'congratulations', 'voucher', 'reward points',
+  '% off', 'use code', 'promo code', 'coupon', 'shop now', 'buy now', 'order now', 'book now',
+  'hurry', 'limited period', 'limited time', 't&c apply', 'tnc apply', 'sale is live',
 ];
+
+/// Wording only a real account or card movement carries: a debit or credit
+/// verb, an account reference, or a masked card or account number.
+final _transactionSignal = RegExp(
+  r'\b(?:debited|credited|withdrawn|spent)\b|\b(?:a/c|acct)\b|(?:[xX*]{2,}\s?\d{3,6}\b)|\bending\s*(?:with|in)?\s*[:\-]?\s*\d{4}\b',
+  caseSensitive: false,
+);
 
 const _rejectPhrases = [
   ..._otpPhrases,
@@ -131,6 +140,11 @@ bool isOtpOrPromotionSms(String body) {
   final lower = _normalizedText(body).toLowerCase();
   return [..._otpPhrases, ..._promotionPhrases].any(lower.contains) && !_isReversal(lower);
 }
+
+/// True when [body] reads like a real transaction, so a message from a
+/// sender that is not a known bank still gets parsed. OTPs and promotions
+/// never count, even when they mention an amount being credited.
+bool hasTransactionSignal(String body) => _transactionSignal.hasMatch(_normalizedText(body)) && !isOtpOrPromotionSms(body);
 
 /// Some banks (SBI Card) send letters from the Unicode Mathematical
 /// Alphanumeric block (𝗌𝗉𝖾𝗇𝗍) to dodge filters. Map them back to ASCII.

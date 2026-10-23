@@ -124,4 +124,35 @@ void main() {
     await settle(tester);
     expect(Theme.of(tester.element(find.text('Settings').first)).brightness, Brightness.light);
   });
+
+  testWidgets('subscription added from a template shows monthly and yearly totals', (tester) async {
+    final container = await pumpApp(tester);
+    appRouter.push('/subscriptions');
+    await settle(tester);
+    expect(find.text('No subscriptions yet'), findsOneWidget);
+
+    await tester.tap(find.text('Add subscription'));
+    await settle(tester);
+    await tester.tap(find.text('JioHotstar'));
+    await settle(tester);
+    expect(find.text('Every 3 months'), findsOneWidget);
+    await enter(tester, find.byKey(const Key('subscriptionPrice')), '299');
+    await tester.tap(find.text('Save'));
+    await settle(tester);
+
+    final rules = await container.read(databaseProvider).select(container.read(databaseProvider).recurringRules).get();
+    expect(rules.single.isSubscription, isTrue);
+    expect(rules.single.interval, 3);
+    expect(find.text('JioHotstar'), findsOneWidget);
+    expect(find.text('₹100'), findsOneWidget);
+    expect(find.text('₹1,196'), findsOneWidget);
+    expect(find.text('₹100/month'), findsOneWidget);
+
+    await tester.tap(find.text('JioHotstar'));
+    await settle(tester);
+    await tester.tap(find.text('Pause'));
+    await settle(tester);
+    expect(find.text('Paused'), findsOneWidget);
+    expect(find.text('₹0'), findsNWidgets(2));
+  });
 }

@@ -15,6 +15,8 @@ import '../projects/project_templates_screen.dart';
 import '../projects/projects_screen.dart';
 import '../settings/settings_screen.dart';
 import '../sms/sms_screen.dart';
+import '../subscriptions/subscription_form_screen.dart';
+import '../subscriptions/subscriptions_screen.dart';
 import '../transactions/transactions_screen.dart';
 import '../recurring/recurring_rule_form_screen.dart';
 import '../recurring/recurring_screen.dart';
@@ -65,6 +67,15 @@ final appRouter = GoRouter(
       routes: [
         GoRoute(path: 'new', parentNavigatorKey: _rootKey, builder: (_, _) => const RecurringRuleFormScreen()),
         GoRoute(path: ':id', parentNavigatorKey: _rootKey, builder: (_, state) => RecurringRuleFormScreen(ruleId: state.pathParameters['id']!)),
+      ],
+    ),
+    GoRoute(
+      path: '/subscriptions',
+      parentNavigatorKey: _rootKey,
+      builder: (_, _) => const SubscriptionsScreen(),
+      routes: [
+        GoRoute(path: 'new', parentNavigatorKey: _rootKey, builder: (_, state) => SubscriptionFormScreen(templateKey: state.uri.queryParameters['template'])),
+        GoRoute(path: ':id/edit', parentNavigatorKey: _rootKey, builder: (_, state) => SubscriptionFormScreen(ruleId: state.pathParameters['id']!)),
       ],
     ),
     GoRoute(

@@ -2208,6 +2208,220 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get subscriptions => 'Subscriptions';
+
+  @override
+  String get subscriptionsMonthlyTotal => 'Per month';
+
+  @override
+  String get subscriptionsYearlyTotal => 'Per year';
+
+  @override
+  String subscriptionsActiveCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count active subscriptions',
+      one: '1 active subscription',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionsEmptyTitle => 'No subscriptions yet';
+
+  @override
+  String get subscriptionsEmptyBody =>
+      'Add Netflix, your phone recharge or the gym to see what they cost you each month and year.';
+
+  @override
+  String get subscriptionAdd => 'Add subscription';
+
+  @override
+  String get subscriptionEdit => 'Edit subscription';
+
+  @override
+  String get subscriptionPickService => 'Pick a service';
+
+  @override
+  String get subscriptionCustom => 'Something else';
+
+  @override
+  String get subscriptionPrice => 'Price per renewal';
+
+  @override
+  String get subscriptionCycle => 'Renews';
+
+  @override
+  String get subscriptionNextRenewal => 'Next renewal';
+
+  @override
+  String subscriptionStartedOn(String date) {
+    return 'Started $date';
+  }
+
+  @override
+  String get subscriptionAutoPost => 'Add to expenses on each renewal';
+
+  @override
+  String get subscriptionAutoPostHelp =>
+      'Off: tracked here only, no entries are added';
+
+  @override
+  String get subscriptionNameRequired => 'Enter a name';
+
+  @override
+  String get subscriptionPriceRequired => 'Enter the price';
+
+  @override
+  String subscriptionRenewsOn(String date) {
+    return 'Renews $date';
+  }
+
+  @override
+  String get subscriptionRenewsToday => 'Renews today';
+
+  @override
+  String subscriptionRenewsInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Renews in $days days',
+      one: 'Renews tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionOverdue(String date) {
+    return 'Was due $date';
+  }
+
+  @override
+  String get subscriptionPaused => 'Paused';
+
+  @override
+  String get subscriptionCancelled => 'Cancelled';
+
+  @override
+  String get subscriptionPause => 'Pause';
+
+  @override
+  String get subscriptionResume => 'Resume';
+
+  @override
+  String get subscriptionMarkCancelled => 'Mark as cancelled';
+
+  @override
+  String subscriptionCancelConfirm(String name) {
+    return 'Mark $name as cancelled?';
+  }
+
+  @override
+  String get subscriptionCancelConfirmBody =>
+      'No new charges are added and it leaves the totals. Past entries stay.';
+
+  @override
+  String get subscriptionDeleted => 'Subscription deleted';
+
+  @override
+  String subscriptionPerMonth(String amount) {
+    return '$amount/month';
+  }
+
+  @override
+  String get subscriptionSort => 'Sort';
+
+  @override
+  String get subscriptionSortCostHigh => 'Cost: high to low';
+
+  @override
+  String get subscriptionSortCostLow => 'Cost: low to high';
+
+  @override
+  String get subscriptionSortRenewal => 'Next renewal';
+
+  @override
+  String get subscriptionSortName => 'Name';
+
+  @override
+  String subscriptionEveryDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count days',
+      one: 'Every day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count weeks',
+      one: 'Every week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count months',
+      one: 'Every month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count years',
+      one: 'Every year',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionTemplateNetflix => 'Netflix';
+
+  @override
+  String get subscriptionTemplateAmazonPrime => 'Amazon Prime';
+
+  @override
+  String get subscriptionTemplateJiohotstar => 'JioHotstar';
+
+  @override
+  String get subscriptionTemplateSpotify => 'Spotify';
+
+  @override
+  String get subscriptionTemplateYoutubePremium => 'YouTube Premium';
+
+  @override
+  String get subscriptionTemplateMobileRecharge => 'Mobile recharge';
+
+  @override
+  String get subscriptionTemplateDth => 'DTH';
+
+  @override
+  String get subscriptionTemplateBroadband => 'Broadband';
+
+  @override
+  String get subscriptionTemplateGym => 'Gym';
+
+  @override
+  String get subscriptionTemplateCloudStorage => 'Cloud storage';
+
+  @override
+  String get subscriptionTemplateNewsApp => 'News app';
+
+  @override
   String get payersMultiple => '2+ people';
 
   @override

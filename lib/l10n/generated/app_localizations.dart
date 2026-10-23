@@ -3686,6 +3686,312 @@ abstract class AppLocalizations {
   /// **'Increase {label}'**
   String recurringIncrease(String label);
 
+  /// No description provided for @subscriptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscriptions'**
+  String get subscriptions;
+
+  /// No description provided for @subscriptionsMonthlyTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Per month'**
+  String get subscriptionsMonthlyTotal;
+
+  /// No description provided for @subscriptionsYearlyTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Per year'**
+  String get subscriptionsYearlyTotal;
+
+  /// No description provided for @subscriptionsActiveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 active subscription} other{{count} active subscriptions}}'**
+  String subscriptionsActiveCount(int count);
+
+  /// No description provided for @subscriptionsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No subscriptions yet'**
+  String get subscriptionsEmptyTitle;
+
+  /// No description provided for @subscriptionsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Netflix, your phone recharge or the gym to see what they cost you each month and year.'**
+  String get subscriptionsEmptyBody;
+
+  /// No description provided for @subscriptionAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add subscription'**
+  String get subscriptionAdd;
+
+  /// No description provided for @subscriptionEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit subscription'**
+  String get subscriptionEdit;
+
+  /// No description provided for @subscriptionPickService.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a service'**
+  String get subscriptionPickService;
+
+  /// No description provided for @subscriptionCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get subscriptionCustom;
+
+  /// No description provided for @subscriptionPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per renewal'**
+  String get subscriptionPrice;
+
+  /// No description provided for @subscriptionCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews'**
+  String get subscriptionCycle;
+
+  /// No description provided for @subscriptionNextRenewal.
+  ///
+  /// In en, this message translates to:
+  /// **'Next renewal'**
+  String get subscriptionNextRenewal;
+
+  /// No description provided for @subscriptionStartedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Started {date}'**
+  String subscriptionStartedOn(String date);
+
+  /// No description provided for @subscriptionAutoPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to expenses on each renewal'**
+  String get subscriptionAutoPost;
+
+  /// No description provided for @subscriptionAutoPostHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: tracked here only, no entries are added'**
+  String get subscriptionAutoPostHelp;
+
+  /// No description provided for @subscriptionNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get subscriptionNameRequired;
+
+  /// No description provided for @subscriptionPriceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the price'**
+  String get subscriptionPriceRequired;
+
+  /// No description provided for @subscriptionRenewsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews {date}'**
+  String subscriptionRenewsOn(String date);
+
+  /// No description provided for @subscriptionRenewsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews today'**
+  String get subscriptionRenewsToday;
+
+  /// No description provided for @subscriptionRenewsInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Renews tomorrow} other{Renews in {days} days}}'**
+  String subscriptionRenewsInDays(int days);
+
+  /// No description provided for @subscriptionOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Was due {date}'**
+  String subscriptionOverdue(String date);
+
+  /// No description provided for @subscriptionPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get subscriptionPaused;
+
+  /// No description provided for @subscriptionCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get subscriptionCancelled;
+
+  /// No description provided for @subscriptionPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get subscriptionPause;
+
+  /// No description provided for @subscriptionResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get subscriptionResume;
+
+  /// No description provided for @subscriptionMarkCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as cancelled'**
+  String get subscriptionMarkCancelled;
+
+  /// No description provided for @subscriptionCancelConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark {name} as cancelled?'**
+  String subscriptionCancelConfirm(String name);
+
+  /// No description provided for @subscriptionCancelConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No new charges are added and it leaves the totals. Past entries stay.'**
+  String get subscriptionCancelConfirmBody;
+
+  /// No description provided for @subscriptionDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription deleted'**
+  String get subscriptionDeleted;
+
+  /// No description provided for @subscriptionPerMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount}/month'**
+  String subscriptionPerMonth(String amount);
+
+  /// No description provided for @subscriptionSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get subscriptionSort;
+
+  /// No description provided for @subscriptionSortCostHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost: high to low'**
+  String get subscriptionSortCostHigh;
+
+  /// No description provided for @subscriptionSortCostLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost: low to high'**
+  String get subscriptionSortCostLow;
+
+  /// No description provided for @subscriptionSortRenewal.
+  ///
+  /// In en, this message translates to:
+  /// **'Next renewal'**
+  String get subscriptionSortRenewal;
+
+  /// No description provided for @subscriptionSortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get subscriptionSortName;
+
+  /// No description provided for @subscriptionEveryDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every day} other{Every {count} days}}'**
+  String subscriptionEveryDays(int count);
+
+  /// No description provided for @subscriptionEveryWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every week} other{Every {count} weeks}}'**
+  String subscriptionEveryWeeks(int count);
+
+  /// No description provided for @subscriptionEveryMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every month} other{Every {count} months}}'**
+  String subscriptionEveryMonths(int count);
+
+  /// No description provided for @subscriptionEveryYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every year} other{Every {count} years}}'**
+  String subscriptionEveryYears(int count);
+
+  /// No description provided for @subscriptionTemplateNetflix.
+  ///
+  /// In en, this message translates to:
+  /// **'Netflix'**
+  String get subscriptionTemplateNetflix;
+
+  /// No description provided for @subscriptionTemplateAmazonPrime.
+  ///
+  /// In en, this message translates to:
+  /// **'Amazon Prime'**
+  String get subscriptionTemplateAmazonPrime;
+
+  /// No description provided for @subscriptionTemplateJiohotstar.
+  ///
+  /// In en, this message translates to:
+  /// **'JioHotstar'**
+  String get subscriptionTemplateJiohotstar;
+
+  /// No description provided for @subscriptionTemplateSpotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify'**
+  String get subscriptionTemplateSpotify;
+
+  /// No description provided for @subscriptionTemplateYoutubePremium.
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube Premium'**
+  String get subscriptionTemplateYoutubePremium;
+
+  /// No description provided for @subscriptionTemplateMobileRecharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile recharge'**
+  String get subscriptionTemplateMobileRecharge;
+
+  /// No description provided for @subscriptionTemplateDth.
+  ///
+  /// In en, this message translates to:
+  /// **'DTH'**
+  String get subscriptionTemplateDth;
+
+  /// No description provided for @subscriptionTemplateBroadband.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadband'**
+  String get subscriptionTemplateBroadband;
+
+  /// No description provided for @subscriptionTemplateGym.
+  ///
+  /// In en, this message translates to:
+  /// **'Gym'**
+  String get subscriptionTemplateGym;
+
+  /// No description provided for @subscriptionTemplateCloudStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud storage'**
+  String get subscriptionTemplateCloudStorage;
+
+  /// No description provided for @subscriptionTemplateNewsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'News app'**
+  String get subscriptionTemplateNewsApp;
+
   /// No description provided for @payersMultiple.
   ///
   /// In en, this message translates to:

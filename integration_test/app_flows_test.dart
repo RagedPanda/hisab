@@ -5,6 +5,13 @@
 ///
 /// Tests 2..8 share one in-memory database so later flows (groups, dark mode,
 /// Hindi, backup) have realistic data on screen; test 1 and 9 use their own.
+///
+/// Android, flow 25 (salary day): the notification permission must be granted
+/// before the flow, or the Android 13+ system prompt covers the align dialog
+/// (#86). The driver does this with
+/// `adb shell pm grant com.sarv.hisab android.permission.POST_NOTIFICATIONS`;
+/// with several devices attached, set `ANDROID_SERIAL` to the `-d` device.
+/// Run another way, grant it by hand first. The flow checks it up front.
 library;
 
 import 'dart:async';
@@ -1536,6 +1543,11 @@ void main() {
     final hi = AppLocalizationsHi();
     Finder key(String id) => find.byKey(ValueKey(id));
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(monthStartDay: 25));
+    if (Platform.isAndroid) {
+      // Granted by the driver (see the header), so saving shows no system prompt.
+      final permission = await fresh.read(notificationGatewayProvider).permissionState();
+      expect(permission.notificationsAllowed, isTrue, reason: 'grant POST_NOTIFICATIONS before flow 25; see the file header');
+    }
     await pumpApp(tester, fresh);
 
     await goTab(tester, 'Settings');

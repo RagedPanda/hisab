@@ -10,6 +10,7 @@
 library;
 
 import '../../core/dates.dart';
+import 'expense_totals.dart';
 import 'group_timeline.dart';
 
 /// One group expense as the totals see it: the timeline form (who paid how
@@ -101,27 +102,29 @@ int expenseTotalMinor(TimelineExpense expense) {
 GroupTotals computeGroupTotals({required List<GroupTotalsExpense> expenses, List<TimelinePayment> payments = const [], String? myMemberId, DateRange? range}) {
   final inRange = range == null ? expenses : expenses.where((item) => range.contains(item.occurredAt)).toList();
   final paymentsInRange = range == null ? payments : payments.where((payment) => range.contains(payment.occurredAt));
-  final paidByMember = <String, int>{};
-  final shareByMember = <String, int>{};
-  final byCategory = <String, int>{};
-  var total = 0;
-  for (final item in inRange) {
-    final bill = item.billMinor;
-    total += bill;
-    _addAll(paidByMember, item.expense.paidMinor);
-    _addAll(shareByMember, item.expense.shareMinor);
-    if (bill > 0) byCategory.update(item.categoryId ?? '', (value) => value + bill, ifAbsent: () => bill);
-  }
+  final sums = sumExpenses([for (final item in inRange) (billMinor: item.billMinor, paidMinor: item.expense.paidMinor, shareMinor: item.expense.shareMinor)]);
+  int myPayments(bool Function(TimelinePayment payment) isMine) =>
+      myMemberId == null ? 0 : paymentsInRange.where(isMine).fold(0, (sum, payment) => sum + payment.amountMinor);
   return GroupTotals(
-    totalSpentMinor: total,
-    myPaidMinor: myMemberId == null ? 0 : paidByMember[myMemberId] ?? 0,
-    myShareMinor: myMemberId == null ? 0 : shareByMember[myMemberId] ?? 0,
-    byMember: memberSpendOf(paidByMember, shareByMember),
-    byCategory: byCategory,
+    totalSpentMinor: sums.totalMinor,
+    myPaidMinor: myMemberId == null ? 0 : sums.paidByMember[myMemberId] ?? 0,
+    myShareMinor: myMemberId == null ? 0 : sums.shareByMember[myMemberId] ?? 0,
+    byMember: memberSpendOf(sums.paidByMember, sums.shareByMember),
+    byCategory: spendByCategory(inRange),
     expenseCount: inRange.length,
-    myPaymentsSentMinor: myMemberId == null ? 0 : _sum(paymentsInRange.where((payment) => payment.fromMemberId == myMemberId).map((payment) => payment.amountMinor)),
-    myPaymentsReceivedMinor: myMemberId == null ? 0 : _sum(paymentsInRange.where((payment) => payment.toMemberId == myMemberId).map((payment) => payment.amountMinor)),
+    myPaymentsSentMinor: myPayments((payment) => payment.fromMemberId == myMemberId),
+    myPaymentsReceivedMinor: myPayments((payment) => payment.toMemberId == myMemberId),
   );
+}
+
+/// Group spend per category id ('' for expenses without a category);
+/// categories with nothing spent are left out.
+Map<String, int> spendByCategory(Iterable<GroupTotalsExpense> expenses) {
+  final byCategory = <String, int>{};
+  for (final item in expenses.where((item) => item.billMinor > 0)) {
+    byCategory.update(item.categoryId ?? '', (value) => value + item.billMinor, ifAbsent: () => item.billMinor);
+  }
+  return byCategory;
 }
 
 /// One row per member who paid or owed anything, biggest share first, then
@@ -148,6 +151,3 @@ List<DateTime> monthsWithExpenses(Iterable<GroupTotalsExpense> expenses) {
 
 int _sum(Iterable<int> amounts) => amounts.fold(0, (sum, amount) => sum + amount);
 
-void _addAll(Map<String, int> into, Map<String, int> amounts) {
-  amounts.forEach((memberId, amount) => into.update(memberId, (value) => value + amount, ifAbsent: () => amount));
-}

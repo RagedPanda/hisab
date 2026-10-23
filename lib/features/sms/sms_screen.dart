@@ -84,10 +84,12 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     final granted = await ref.read(smsIngestServiceProvider).requestPermission();
     if (!granted) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(context.l10n.smsPermissionDenied),
-          action: SnackBarAction(label: context.l10n.settings, onPressed: openAppSettings),
-        ));
+        showActionSnackBar(
+          ScaffoldMessenger.of(context),
+          message: context.l10n.smsPermissionDenied,
+          actionLabel: context.l10n.settings,
+          onAction: openAppSettings,
+        );
       }
       return;
     }

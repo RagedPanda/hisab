@@ -401,14 +401,20 @@ void popOrGoHome(BuildContext context) {
   }
 }
 
-/// Replaces whatever snackbar is showing with [message] and an Undo action.
-/// It times out like a plain snackbar instead of persisting, so a run of
-/// quick actions never queues stale messages behind each other.
-void showUndoSnackBar(ScaffoldMessengerState messenger, {required String message, required String undoLabel, required VoidCallback onUndo}) {
+/// Replaces whatever snackbar is showing with [message] and one action
+/// button. Since Flutter 3.29 a snackbar with an action stays up until it is
+/// dismissed; this one times out like a plain snackbar instead (#47, #72), so
+/// every snackbar with an action in the app goes through here.
+void showActionSnackBar(ScaffoldMessengerState messenger, {required String message, required String actionLabel, required VoidCallback onAction}) {
   messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message), persist: false, action: SnackBarAction(label: undoLabel, onPressed: onUndo)));
+    ..showSnackBar(SnackBar(content: Text(message), persist: false, action: SnackBarAction(label: actionLabel, onPressed: onAction)));
 }
+
+/// [showActionSnackBar] with an Undo action, so a run of quick actions never
+/// queues stale messages behind each other.
+void showUndoSnackBar(ScaffoldMessengerState messenger, {required String message, required String undoLabel, required VoidCallback onUndo}) =>
+    showActionSnackBar(messenger, message: message, actionLabel: undoLabel, onAction: onUndo);
 
 /// Makes the system Back gesture return to Home instead of leaving the app
 /// when the wrapped screen is the only route on the stack (P2-3).

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/providers.dart';
@@ -145,6 +146,13 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
                   final text = await promptText(context, title: l10n.pasteBankSms, hint: l10n.pasteBankSmsHint);
                   if (text != null && text.isNotEmpty) await _ingestText(text);
                 },
+              ),
+              ListTile(
+                leading: const Icon(Icons.history),
+                title: Text(l10n.smsHistoryTitle),
+                subtitle: Text(l10n.smsHistoryHelp),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/sms/history'),
               ),
             ]),
           ),

@@ -3362,6 +3362,780 @@ abstract class AppLocalizations {
   /// **'Saved. Add the next one.'**
   String get savedAddAnother;
 
+  /// No description provided for @smsHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS history'**
+  String get smsHistoryTitle;
+
+  /// No description provided for @smsHistoryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Every message Hisab processed and what happened to it'**
+  String get smsHistoryHelp;
+
+  /// No description provided for @smsOutcomeAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get smsOutcomeAdded;
+
+  /// No description provided for @smsOutcomeDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get smsOutcomeDuplicate;
+
+  /// No description provided for @smsOutcomeIgnored.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignored'**
+  String get smsOutcomeIgnored;
+
+  /// No description provided for @smsOutcomeUnparsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreadable'**
+  String get smsOutcomeUnparsed;
+
+  /// No description provided for @smsOutcomePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get smsOutcomePending;
+
+  /// No description provided for @smsOutcomeUndone.
+  ///
+  /// In en, this message translates to:
+  /// **'Undone'**
+  String get smsOutcomeUndone;
+
+  /// No description provided for @smsHistoryNotBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a bank message'**
+  String get smsHistoryNotBank;
+
+  /// No description provided for @smsHistoryDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismissed from review'**
+  String get smsHistoryDismissed;
+
+  /// No description provided for @smsHistoryUnparsedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'No transaction found in the text'**
+  String get smsHistoryUnparsedDetail;
+
+  /// No description provided for @smsHistoryDuplicateDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Same message already processed'**
+  String get smsHistoryDuplicateDetail;
+
+  /// No description provided for @smsHistoryOpenEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Open entry'**
+  String get smsHistoryOpenEntry;
+
+  /// No description provided for @smsHistoryReprocess.
+  ///
+  /// In en, this message translates to:
+  /// **'Process again'**
+  String get smsHistoryReprocess;
+
+  /// No description provided for @smsHistoryClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear history'**
+  String get smsHistoryClear;
+
+  /// No description provided for @smsHistoryClearQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear SMS history?'**
+  String get smsHistoryClearQuestion;
+
+  /// No description provided for @smsHistoryClearBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes the text of {count} processed messages from this device. Your entries and messages waiting for review stay, and cleared messages are never imported again.'**
+  String smsHistoryClearBody(int count);
+
+  /// No description provided for @smsHistoryClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get smsHistoryClearConfirm;
+
+  /// No description provided for @smsHistoryCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS history cleared'**
+  String get smsHistoryCleared;
+
+  /// No description provided for @smsHistoryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages processed yet'**
+  String get smsHistoryEmptyTitle;
+
+  /// No description provided for @smsHistoryEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank SMS that Hisab reads or that you paste show up here.'**
+  String get smsHistoryEmptyBody;
+
+  /// No description provided for @smsHistoryEmptyFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages with this outcome'**
+  String get smsHistoryEmptyFiltered;
+
+  /// No description provided for @smsHistoryTextNotKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Message text not kept'**
+  String get smsHistoryTextNotKept;
+
+  /// No description provided for @recurringRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get recurringRepeat;
+
+  /// No description provided for @recurringDoesNotRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Does not repeat'**
+  String get recurringDoesNotRepeat;
+
+  /// No description provided for @recurringDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get recurringDaily;
+
+  /// No description provided for @recurringWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get recurringWeekly;
+
+  /// No description provided for @recurringMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get recurringMonthly;
+
+  /// No description provided for @recurringYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get recurringYearly;
+
+  /// No description provided for @recurringEveryDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every day} other{Every {count} days}}'**
+  String recurringEveryDays(int count);
+
+  /// No description provided for @recurringEveryWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every week} other{Every {count} weeks}}'**
+  String recurringEveryWeeks(int count);
+
+  /// No description provided for @recurringEveryMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every month} other{Every {count} months}}'**
+  String recurringEveryMonths(int count);
+
+  /// No description provided for @recurringEveryYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every year} other{Every {count} years}}'**
+  String recurringEveryYears(int count);
+
+  /// No description provided for @recurringOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'on day {day}'**
+  String recurringOnDay(int day);
+
+  /// No description provided for @recurringOnLastDay.
+  ///
+  /// In en, this message translates to:
+  /// **'on the last day'**
+  String get recurringOnLastDay;
+
+  /// No description provided for @recurringOnWeekday.
+  ///
+  /// In en, this message translates to:
+  /// **'on {weekday}'**
+  String recurringOnWeekday(String weekday);
+
+  /// No description provided for @recurringOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'on {date}'**
+  String recurringOnDate(String date);
+
+  /// No description provided for @recurringUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'until {date}'**
+  String recurringUntil(String date);
+
+  /// No description provided for @recurringTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 time} other{{count} times}}'**
+  String recurringTimes(int count);
+
+  /// No description provided for @recurringInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat every'**
+  String get recurringInterval;
+
+  /// No description provided for @recurringLastDayOfMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'On the last day of the month'**
+  String get recurringLastDayOfMonth;
+
+  /// No description provided for @recurringEnds.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends'**
+  String get recurringEnds;
+
+  /// No description provided for @recurringEndNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get recurringEndNever;
+
+  /// No description provided for @recurringEndOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'On a date'**
+  String get recurringEndOnDate;
+
+  /// No description provided for @recurringEndAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'After'**
+  String get recurringEndAfter;
+
+  /// No description provided for @recurringOccurrences.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of times'**
+  String get recurringOccurrences;
+
+  /// No description provided for @recurringAutoPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Add automatically'**
+  String get recurringAutoPost;
+
+  /// No description provided for @recurringAutoPostHint.
+  ///
+  /// In en, this message translates to:
+  /// **'When off, each one waits for you to confirm'**
+  String get recurringAutoPostHint;
+
+  /// No description provided for @recurringStopRepeating.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t repeat'**
+  String get recurringStopRepeating;
+
+  /// No description provided for @recurringDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get recurringDone;
+
+  /// No description provided for @recurringEndBeforeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an end date on or after the start'**
+  String get recurringEndBeforeStart;
+
+  /// No description provided for @recurringPartOfRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Part of a recurring entry'**
+  String get recurringPartOfRule;
+
+  /// No description provided for @recurringTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring'**
+  String get recurringTitle;
+
+  /// No description provided for @recurringNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New recurring'**
+  String get recurringNew;
+
+  /// No description provided for @recurringEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit recurring'**
+  String get recurringEdit;
+
+  /// No description provided for @recurringEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing repeats yet'**
+  String get recurringEmptyTitle;
+
+  /// No description provided for @recurringEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Rent, SIP, EMI or salary: set it once and Hisab adds it on the day.'**
+  String get recurringEmptyBody;
+
+  /// No description provided for @recurringSectionWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for you'**
+  String get recurringSectionWaiting;
+
+  /// No description provided for @recurringSectionActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get recurringSectionActive;
+
+  /// No description provided for @recurringSectionPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get recurringSectionPaused;
+
+  /// No description provided for @recurringSectionEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get recurringSectionEnded;
+
+  /// No description provided for @recurringNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next {date}'**
+  String recurringNext(String date);
+
+  /// No description provided for @recurringDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date}'**
+  String recurringDue(String date);
+
+  /// No description provided for @recurringMoreWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{and 1 more waiting} other{and {count} more waiting}}'**
+  String recurringMoreWaiting(int count);
+
+  /// No description provided for @recurringConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get recurringConfirm;
+
+  /// No description provided for @recurringSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get recurringSkip;
+
+  /// No description provided for @recurringPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get recurringPause;
+
+  /// No description provided for @recurringResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get recurringResume;
+
+  /// No description provided for @recurringDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring entry deleted'**
+  String get recurringDeleted;
+
+  /// No description provided for @recurringAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry added'**
+  String get recurringAdded;
+
+  /// No description provided for @recurringSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get recurringSkipped;
+
+  /// No description provided for @recurringToConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recurring entry to confirm} other{{count} recurring entries to confirm}}'**
+  String recurringToConfirm(int count);
+
+  /// No description provided for @recurringPostedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Not added yet} =1{Added once} other{Added {count} times}}'**
+  String recurringPostedCount(int count);
+
+  /// No description provided for @recurringNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (optional)'**
+  String get recurringNameLabel;
+
+  /// No description provided for @recurringNextOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Next on'**
+  String get recurringNextOn;
+
+  /// No description provided for @recurringRuleMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This recurring entry was deleted'**
+  String get recurringRuleMissing;
+
+  /// No description provided for @recurringDecrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease {label}'**
+  String recurringDecrease(String label);
+
+  /// No description provided for @recurringIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase {label}'**
+  String recurringIncrease(String label);
+
+  /// No description provided for @subscriptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscriptions'**
+  String get subscriptions;
+
+  /// No description provided for @subscriptionsMonthlyTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Per month'**
+  String get subscriptionsMonthlyTotal;
+
+  /// No description provided for @subscriptionsYearlyTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Per year'**
+  String get subscriptionsYearlyTotal;
+
+  /// No description provided for @subscriptionsActiveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 active subscription} other{{count} active subscriptions}}'**
+  String subscriptionsActiveCount(int count);
+
+  /// No description provided for @subscriptionsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No subscriptions yet'**
+  String get subscriptionsEmptyTitle;
+
+  /// No description provided for @subscriptionsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Netflix, your phone recharge or the gym to see what they cost you each month and year.'**
+  String get subscriptionsEmptyBody;
+
+  /// No description provided for @subscriptionAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add subscription'**
+  String get subscriptionAdd;
+
+  /// No description provided for @subscriptionEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit subscription'**
+  String get subscriptionEdit;
+
+  /// No description provided for @subscriptionPickService.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a service'**
+  String get subscriptionPickService;
+
+  /// No description provided for @subscriptionCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get subscriptionCustom;
+
+  /// No description provided for @subscriptionPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per renewal'**
+  String get subscriptionPrice;
+
+  /// No description provided for @subscriptionCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews'**
+  String get subscriptionCycle;
+
+  /// No description provided for @subscriptionNextRenewal.
+  ///
+  /// In en, this message translates to:
+  /// **'Next renewal'**
+  String get subscriptionNextRenewal;
+
+  /// No description provided for @subscriptionStartedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Started {date}'**
+  String subscriptionStartedOn(String date);
+
+  /// No description provided for @subscriptionAutoPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to expenses on each renewal'**
+  String get subscriptionAutoPost;
+
+  /// No description provided for @subscriptionAutoPostHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: tracked here only, no entries are added'**
+  String get subscriptionAutoPostHelp;
+
+  /// No description provided for @subscriptionNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get subscriptionNameRequired;
+
+  /// No description provided for @subscriptionPriceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the price'**
+  String get subscriptionPriceRequired;
+
+  /// No description provided for @subscriptionRenewsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews {date}'**
+  String subscriptionRenewsOn(String date);
+
+  /// No description provided for @subscriptionRenewsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews today'**
+  String get subscriptionRenewsToday;
+
+  /// No description provided for @subscriptionRenewsInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Renews tomorrow} other{Renews in {days} days}}'**
+  String subscriptionRenewsInDays(int days);
+
+  /// No description provided for @subscriptionOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Was due {date}'**
+  String subscriptionOverdue(String date);
+
+  /// No description provided for @subscriptionPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get subscriptionPaused;
+
+  /// No description provided for @subscriptionCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get subscriptionCancelled;
+
+  /// No description provided for @subscriptionPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get subscriptionPause;
+
+  /// No description provided for @subscriptionResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get subscriptionResume;
+
+  /// No description provided for @subscriptionMarkCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as cancelled'**
+  String get subscriptionMarkCancelled;
+
+  /// No description provided for @subscriptionCancelConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark {name} as cancelled?'**
+  String subscriptionCancelConfirm(String name);
+
+  /// No description provided for @subscriptionCancelConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No new charges are added and it leaves the totals. Past entries stay.'**
+  String get subscriptionCancelConfirmBody;
+
+  /// No description provided for @subscriptionDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription deleted'**
+  String get subscriptionDeleted;
+
+  /// No description provided for @subscriptionPerMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount}/month'**
+  String subscriptionPerMonth(String amount);
+
+  /// No description provided for @subscriptionSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get subscriptionSort;
+
+  /// No description provided for @subscriptionSortCostHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost: high to low'**
+  String get subscriptionSortCostHigh;
+
+  /// No description provided for @subscriptionSortCostLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost: low to high'**
+  String get subscriptionSortCostLow;
+
+  /// No description provided for @subscriptionSortRenewal.
+  ///
+  /// In en, this message translates to:
+  /// **'Next renewal'**
+  String get subscriptionSortRenewal;
+
+  /// No description provided for @subscriptionSortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get subscriptionSortName;
+
+  /// No description provided for @subscriptionEveryDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every day} other{Every {count} days}}'**
+  String subscriptionEveryDays(int count);
+
+  /// No description provided for @subscriptionEveryWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every week} other{Every {count} weeks}}'**
+  String subscriptionEveryWeeks(int count);
+
+  /// No description provided for @subscriptionEveryMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every month} other{Every {count} months}}'**
+  String subscriptionEveryMonths(int count);
+
+  /// No description provided for @subscriptionEveryYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every year} other{Every {count} years}}'**
+  String subscriptionEveryYears(int count);
+
+  /// No description provided for @subscriptionTemplateNetflix.
+  ///
+  /// In en, this message translates to:
+  /// **'Netflix'**
+  String get subscriptionTemplateNetflix;
+
+  /// No description provided for @subscriptionTemplateAmazonPrime.
+  ///
+  /// In en, this message translates to:
+  /// **'Amazon Prime'**
+  String get subscriptionTemplateAmazonPrime;
+
+  /// No description provided for @subscriptionTemplateJiohotstar.
+  ///
+  /// In en, this message translates to:
+  /// **'JioHotstar'**
+  String get subscriptionTemplateJiohotstar;
+
+  /// No description provided for @subscriptionTemplateSpotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify'**
+  String get subscriptionTemplateSpotify;
+
+  /// No description provided for @subscriptionTemplateYoutubePremium.
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube Premium'**
+  String get subscriptionTemplateYoutubePremium;
+
+  /// No description provided for @subscriptionTemplateMobileRecharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile recharge'**
+  String get subscriptionTemplateMobileRecharge;
+
+  /// No description provided for @subscriptionTemplateDth.
+  ///
+  /// In en, this message translates to:
+  /// **'DTH'**
+  String get subscriptionTemplateDth;
+
+  /// No description provided for @subscriptionTemplateBroadband.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadband'**
+  String get subscriptionTemplateBroadband;
+
+  /// No description provided for @subscriptionTemplateGym.
+  ///
+  /// In en, this message translates to:
+  /// **'Gym'**
+  String get subscriptionTemplateGym;
+
+  /// No description provided for @subscriptionTemplateCloudStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud storage'**
+  String get subscriptionTemplateCloudStorage;
+
+  /// No description provided for @subscriptionTemplateNewsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'News app'**
+  String get subscriptionTemplateNewsApp;
+
   /// No description provided for @payersMultiple.
   ///
   /// In en, this message translates to:
@@ -3397,6 +4171,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'you'**
   String get youInList;
+
+  /// No description provided for @recurringAddedSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{added, plural, =0{None added} =1{1 added} other{{added} added}}, {skipped, plural, =1{1 skipped} other{{skipped} skipped}}'**
+  String recurringAddedSkipped(int added, int skipped);
 
   /// No description provided for @groupExportCsv.
   ///

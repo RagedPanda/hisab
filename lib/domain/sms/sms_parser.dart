@@ -1,7 +1,8 @@
 /// Parses Indian bank / UPI / card transaction SMS into [ParsedTransaction].
 /// Pure, regex based, tolerant of the many formats banks use. Returns null
-/// for OTPs, promotions, payment requests, mandates, failures and anything
-/// without a clear amount and direction.
+/// for OTPs, promotions, balance-only alerts, payment requests, mandate
+/// set-up and pre-debit notices, failures and anything without a clear
+/// amount and direction.
 library;
 
 import '../../core/money.dart';
@@ -32,43 +33,113 @@ final _limitPattern = RegExp(
   caseSensitive: false,
 );
 
+final _bankAccountPattern =
+    RegExp(r'\b(?:a/c|acct|account|acc|ac)\.?\s*(?:no\.?)?\s*(?:ending|ending with|ending in|xx+|x+|\*+)?\s*[-:]?\s*(?:\d{0,6}[xX*]+)?(\d{3,8})\b', caseSensitive: false);
 final _accountPatterns = [
-  RegExp(r'\b(?:a/c|acct|account|acc|ac)\.?\s*(?:no\.?)?\s*(?:ending|ending with|ending in|xx+|x+|\*+)?\s*[-:]?\s*[xX*]*(\d{3,8})\b', caseSensitive: false),
-  RegExp(r'(?:card|credit card|debit card)\s*(?:no\.?|number)?\s*(?:ending|ending with|ending in)?\s*[xX*]*(\d{4,8})\b', caseSensitive: false),
-  RegExp(r'\b(?:xx|x{2,}|\*{2,})(\d{4,8})\b', caseSensitive: false),
+  _bankAccountPattern,
+  // "4xxx xxxx xxxx 1234": a card number masked in groups of four.
+  RegExp(r'\b[0-9xX*]{4}[ -][xX*]{4}[ -][xX*]{4}[ -](\d{4})\b'),
+  RegExp(r'(?:card|credit card|debit card)\s*(?:no\.?|number)?\s*(?:ending|ending with|ending in)?\s*[:\-]?\s*[xX*]*\s?(\d{4,8})\b', caseSensitive: false),
+  RegExp(r'\bending\s*(?:with|in)?\s*[:\-]?\s*[xX*]*(\d{4})\b', caseSensitive: false),
+  RegExp(r'\b(?:xx|x{2,}|\*{2,})\s?(\d{4,8})\b', caseSensitive: false),
 ];
+
+/// A loan account named next to the paying account ("EMI for Loan A/c XX9876
+/// debited from A/c XX1234") is not the account the money left.
+final _loanAccountPrefix = RegExp(r'\bloan\s*(?:account\s*)?$', caseSensitive: false);
 
 final _refPatterns = [
   RegExp(r'(?:ref(?:erence)?|rrn)\s*(?:no\.?|number|id)?\s*[:.\-]?\s*(\d{6,})', caseSensitive: false),
-  RegExp(r'\b(?:upi|imps|neft|rtgs)\s*[:/\-]\s*(\d{9,})', caseSensitive: false),
+  RegExp(r'\b(?:upi|imps|neft|rtgs)\s*[:/\-]?\s*(\d{9,})', caseSensitive: false),
   RegExp(r'\b(?:ref|rrn)\s*[:.\-]?\s*([A-Z0-9]{8,})', caseSensitive: false),
 ];
 
 final _numericDate = RegExp(r'\b(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})\b');
-final _namedDate = RegExp(r'\b(\d{1,2})[-/ ]?([A-Za-z]{3})[-/ ]?(\d{2,4})\b');
+final _namedDate = RegExp(
+  r'\b(\d{1,2})[-/ ]?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[-/ ,]*(\d{2,4})\b',
+  caseSensitive: false,
+);
 final _isoDate = RegExp(r'\b(\d{4})-(\d{2})-(\d{2})\b');
-final _clockTime = RegExp(r'\b([01]?\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\b');
+final _clockTime = RegExp(r'\b([01]?\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\b(?:\s*([ap])\.?m\b\.?)?', caseSensitive: false);
 const _months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
+/// One-time codes and login secrets. Their text is never stored.
+const _otpPhrases = ['otp', 'one time password', 'verification code', 'do not share', 'never share', 'password'];
+
+/// Marketing. Its text is never stored.
+const _promotionPhrases = [
+  'pre-approved', 'pre approved', 'apply now', 'offer', 'cashback upto', 'cashback up to',
+  'eligible', 'congratulations', 'voucher', 'reward points',
+  '% off', 'use code', 'promo code', 'coupon', 'shop now', 'buy now', 'order now', 'book now',
+  'hurry', 'limited period', 'limited time', 't&c apply', 'tnc apply', 'sale is live',
+];
+
+/// Wording only a real account or card movement carries: a debit or credit
+/// verb, an account reference, or a masked card or account number.
+final _transactionSignal = RegExp(
+  r'\b(?:debited|credited|withdrawn|spent)\b|\b(?:a/c|acct)\b|(?:[xX*]{2,}\s?\d{3,6}\b)|\bending\s*(?:with|in)?\s*[:\-]?\s*\d{4}\b',
+  caseSensitive: false,
+);
+
 const _rejectPhrases = [
-  'otp', 'one time password', 'verification code', 'do not share',
+  ..._otpPhrases,
+  ..._promotionPhrases,
   'will be debited', 'will be credited', 'is due', 'due on', 'due by', 'overdue',
   'has requested', 'payment request', 'requested money', 'collect request', 'requesting',
   'declined', 'failed', 'unsuccessful', 'could not be', 'not completed', 'pending',
-  'pre-approved', 'pre approved', 'apply now', 'offer', 'cashback upto', 'cashback up to',
   'minimum amount due', 'total amount due', 'statement', 'bill generated', 'has been generated',
-  'eligible', 'congratulations', 'voucher', 'logged in', 'password', 'kyc', 'block your card',
-  'mandate', 'for processing', 'low balance', 'insufficient', 'reminder', 'reward points',
+  'logged in', 'kyc', 'block your card',
+  'for processing', 'low balance', 'insufficient', 'reminder',
   'maintain minimum', 'minimum balance',
 ];
+
+/// Marketing wording, matched as whole words so a merchant such as
+/// "ERWIN STORES" is not mistaken for "win".
+final _promotion = RegExp(
+  r'\b(?:t&c|tnc apply|shop now|hurry|limited period|get flat|get upto|get up to|enjoy|exclusive|upgrade now|'
+  r'invest now|avail now|lowest interest|instant loan|limit enhancement|limit increase|win|lucky draw)\b',
+  caseSensitive: false,
+);
+
+/// "call from your registered mobile" appears in real debit alerts and says
+/// nothing about a mandate being set up.
+final _registeredContact = RegExp(r'registered (?:mobile|email|e-mail|number|no)', caseSensitive: false);
+
+/// Autopay / NACH / e-mandate wording. The debit itself is a transaction;
+/// setting the mandate up, changing it or warning before it runs is not.
+final _autopayContext = RegExp(
+  r'auto[- ]?pay|auto[- ]?debit|\bnach\b|\bach[- ]?d(?:r|ebit)\b|e-?mandate|\bmandate\b|standing instruction|\bumrn\b',
+  caseSensitive: false,
+);
+final _mandateSetup = RegExp(
+  r'registered|registration|created|\bset ?up\b|revoked|cancel+ed|paused|modified|upcoming|scheduled|pre-?debit|\brequest',
+  caseSensitive: false,
+);
+
+/// "Payment of Rs X received on your Credit Card": the card issuer
+/// acknowledging a bill payment. The money already left as a bank-side
+/// debit (an expense), so this message is skipped: it must never become
+/// income and the payment must not count twice.
+final _cardPaymentReceived = RegExp(
+  r'\breceived (?:a |your )?payment\b|\bpayment\b(?:[^.;!]|\.(?=\d)){0,90}?\b(?:received|credited|has been posted)\b|\bthank you for (?:the |your )?payment\b',
+  caseSensitive: false,
+);
+final _salaryWords = RegExp(r'\bsalary\b|\bsal\b|\bsal[-/]|payroll|\bsalaries\b', caseSensitive: false);
+final _emiWords = RegExp(r'\bemi\b|\bloan\b', caseSensitive: false);
+final _walletProvider = RegExp(r'wallet|paytm|mobikwik|amazon pay|phonepe|freecharge|airtel money', caseSensitive: false);
+final _walletLoad = RegExp(
+  r'add(?:ed)? money|\badded to\b|top[- ]?up|\bload(?:ed)? (?:money|wallet)|wallet load',
+  caseSensitive: false,
+);
 
 const _debitWords = [
   'debited', 'spent', 'withdrawn', 'paid', 'sent', 'purchase', 'debit of', 'dr.', 'deducted',
   'transferred from', 'txn of', 'payment of', 'charged', 'debit card', 'done at',
+  'debit by', 'has a debit', 'txn rs', 'txn inr', 'withdrawal of', 'used for', 'used at',
 ];
 const _creditWords = [
   'credited', 'received', 'deposited', 'refund', 'cashback', 'cr.', 'credit of', 'reversed',
-  'reversal', 'added to',
+  'reversal', 'added to', 'credit by', 'has a credit',
 ];
 
 ParsedTransaction? parseBankSms({
@@ -76,10 +147,10 @@ ParsedTransaction? parseBankSms({
   required String body,
   required DateTime receivedAt,
 }) {
-  final text = _normaliseSmsText(body);
+  final text = _normalizedText(body);
   final lower = text.toLowerCase();
   if (text.isEmpty) return null;
-  if (_isNonTransactional(lower)) return null;
+  if (_isIgnorable(sender, lower)) return null;
 
   final balanceMatch = _balancePattern.firstMatch(text);
   final limitMatch = _limitPattern.firstMatch(text);
@@ -89,24 +160,35 @@ ParsedTransaction? parseBankSms({
   final amountMinor = parseAmountToMinor(amountText);
   if (amountMinor == null || amountMinor == 0) return null;
 
-  final direction = _direction(lower);
+  final reversal = _isReversal(lower);
+  if (!reversal && _isCardPaymentAcknowledgement(text, lower)) return null;
+  final direction = reversal && _reversalIsCredit(lower) ? TxnDirection.credit : _direction(lower);
   if (direction == null) return null;
 
   final currency = (amountMatch == null ? null : _currencyCodeOf(amountMatch)) ?? 'INR';
 
-  final isCreditCard = lower.contains('credit card') ||
+  final isCreditCard = (lower.contains('credit card') && !_paysCardBillFromAccount(lower)) ||
       lower.contains('credit limit') ||
       limitMatch != null ||
       (RegExp(r'\bcard\b').hasMatch(lower) && !lower.contains('debit card') && !lower.contains('a/c'));
+  final instrument = _instrument(lower);
+  final kind = _kind(
+    lower: lower,
+    direction: direction,
+    instrument: instrument,
+    isCreditCard: isCreditCard,
+    reversal: reversal,
+  );
 
   return ParsedTransaction(
     direction: direction,
     amountMinor: amountMinor,
     currency: currency,
-    instrument: _instrument(lower),
+    kind: kind,
+    instrument: kind == TxnKind.walletTopUp && instrument == Instrument.unknown ? Instrument.wallet : instrument,
     occurredAt: transactionTime(text, receivedAt),
     raw: text,
-    bank: bankFromSender(sender),
+    bank: bankFromSender(sender) ?? bankFromBody(text),
     accountLast4: _account(text),
     isCreditCard: isCreditCard,
     counterparty: _counterparty(text, direction),
@@ -115,6 +197,21 @@ ParsedTransaction? parseBankSms({
     reference: _reference(text),
   );
 }
+
+String _normalizedText(String body) => normalizeMathGlyphs(body).replaceAll(RegExp(r'\s+'), ' ').trim();
+
+/// True when [body] is an OTP or a promotion by the same wording the parser
+/// rejects, whatever the sender. A refund or reversal is never flagged, so
+/// the parser and this check always agree on what can become an entry.
+bool isOtpOrPromotionSms(String body) {
+  final lower = _normalizedText(body).toLowerCase();
+  return [..._otpPhrases, ..._promotionPhrases].any(lower.contains) && !_isReversal(lower);
+}
+
+/// True when [body] reads like a real transaction, so a message from a
+/// sender that is not a known bank still gets parsed. OTPs and promotions
+/// never count, even when they mention an amount being credited.
+bool hasTransactionSignal(String body) => _transactionSignal.hasMatch(_normalizedText(body)) && !isOtpOrPromotionSms(body);
 
 /// Some banks (SBI Card) send letters from the Unicode Mathematical
 /// Alphanumeric block (𝗌𝗉𝖾𝗇𝗍) to dodge filters. Map them back to ASCII.
@@ -134,7 +231,46 @@ String normalizeMathGlyphs(String input) {
   return out.toString();
 }
 
-bool _isNonTransactional(String lower) => _rejectPhrases.any(lower.contains) && !_isReversal(lower);
+final _cardBillPayee = RegExp(r'credit card (?:bill|payment|dues)|card bill|towards [^.;]{0,30}credit card');
+final _bankAccountWord = RegExp(r'\ba/c|\bacct\b|\baccount\b|\bac\b');
+
+/// "Rs 15,000 debited from A/c XX7781 towards credit card bill": the card is
+/// the payee, the money left a bank account.
+bool _paysCardBillFromAccount(String lower) => _cardBillPayee.hasMatch(lower) && _bankAccountWord.hasMatch(lower);
+
+bool _isCardPaymentAcknowledgement(String text, String lower) =>
+    _cardPaymentReceived.hasMatch(text) && lower.contains('card') && !_paysCardBillFromAccount(lower);
+
+/// OTPs, promotions, set-up notices and other messages that move no money.
+bool _isIgnorable(String sender, String lower) {
+  if (isPromotionalSender(sender)) return true;
+  if (_autopayContext.hasMatch(lower) && _mandateSetup.hasMatch(lower.replaceAll(_registeredContact, ''))) return true;
+  if (_promotion.hasMatch(lower)) return true;
+  return _rejectPhrases.any(lower.contains) && !_isReversal(lower);
+}
+
+/// A refund or reversal puts money back unless the bank says it debited
+/// you ("Rs 100 debited as reversal of an erroneous credit").
+bool _reversalIsCredit(String lower) =>
+    !lower.contains('debited') || lower.contains('credited') || lower.contains('reversed to') || lower.contains('refunded');
+
+TxnKind _kind({
+  required String lower,
+  required TxnDirection direction,
+  required Instrument instrument,
+  required bool isCreditCard,
+  required bool reversal,
+}) {
+  final isDebit = direction == TxnDirection.debit;
+  if (reversal && !isDebit) return TxnKind.refund;
+  if (!isDebit && _salaryWords.hasMatch(lower)) return TxnKind.salary;
+  if (_walletProvider.hasMatch(lower) && _walletLoad.hasMatch(lower)) return TxnKind.walletTopUp;
+  if (isDebit && instrument == Instrument.atm) return TxnKind.atmWithdrawal;
+  if (isDebit && _emiWords.hasMatch(lower)) return TxnKind.emi;
+  if (isDebit && _autopayContext.hasMatch(lower)) return TxnKind.autopay;
+  if (isDebit && (isCreditCard || instrument == Instrument.card)) return TxnKind.cardSpend;
+  return TxnKind.general;
+}
 
 bool _isReversal(String lower) =>
     (lower.contains('reversed') || lower.contains('reversal') || lower.contains('refund')) &&
@@ -152,7 +288,7 @@ String? _currencyCodeOf(RegExpMatch amountMatch) {
 /// ISO code of the currency the SMS amount is in, or null when the amount
 /// has no currency marker. Works on SMS the parser cannot read in full.
 String? smsCurrencyCode(String body) {
-  final text = _normaliseSmsText(body);
+  final text = _normalizedText(body);
   final amountMatch = _firstAmountOutside(text, [_balancePattern.firstMatch(text), _limitPattern.firstMatch(text)]) ??
       _amountPattern.firstMatch(text);
   return amountMatch == null ? null : _currencyCodeOf(amountMatch);
@@ -192,7 +328,7 @@ Instrument _instrument(String lower) {
   if (lower.contains('imps')) return Instrument.imps;
   if (lower.contains('rtgs')) return Instrument.rtgs;
   if (lower.contains('cheque') || lower.contains('chq')) return Instrument.cheque;
-  if (lower.contains('wallet')) return Instrument.wallet;
+  if (lower.contains('wallet') || lower.contains('amazon pay balance')) return Instrument.wallet;
   if (lower.contains('card') || lower.contains('pos ')) return Instrument.card;
   if (lower.contains('netbanking') || lower.contains('net banking') || lower.contains('internet banking')) {
     return Instrument.netbanking;
@@ -202,8 +338,9 @@ Instrument _instrument(String lower) {
 
 String? _account(String text) {
   for (final pattern in _accountPatterns) {
-    final match = pattern.firstMatch(text);
-    if (match != null) {
+    for (final match in pattern.allMatches(text)) {
+      final isLoanAccount = pattern == _bankAccountPattern && _loanAccountPrefix.hasMatch(text.substring(0, match.start));
+      if (isLoanAccount) continue;
       final digits = match.group(1)!;
       return digits.length > 4 ? digits.substring(digits.length - 4) : digits;
     }
@@ -230,10 +367,19 @@ DateTime transactionTime(String text, DateTime receivedAt) {
   // Look for the clock after the date so "2026-08-21:05:20:26" reads 05:20:26.
   final clock = _clockTime.firstMatch(text.substring(span.end)) ?? _clockTime.firstMatch(text.substring(0, span.start));
   if (clock != null) {
-    return DateTime(date.year, date.month, date.day, int.parse(clock.group(1)!), int.parse(clock.group(2)!), int.parse(clock.group(3) ?? '0'));
+    return DateTime(date.year, date.month, date.day, _hour24(clock), int.parse(clock.group(2)!), int.parse(clock.group(3) ?? '0'));
   }
   final sameDay = date.year == receivedAt.year && date.month == receivedAt.month && date.day == receivedAt.day;
   return sameDay ? receivedAt : date;
+}
+
+/// "08:15 PM" -> 20, "12:05 AM" -> 0; a 24-hour clock is kept as is.
+int _hour24(Match clock) {
+  final hour = int.parse(clock.group(1)!);
+  final meridiem = clock.group(4)?.toLowerCase();
+  if (meridiem == null || hour > 12) return hour;
+  if (meridiem == 'p') return hour == 12 ? 12 : hour + 12;
+  return hour == 12 ? 0 : hour;
 }
 
 (DateTime, Match)? _dateMatch(String text) {
@@ -244,8 +390,7 @@ DateTime transactionTime(String text, DateTime receivedAt) {
     final year = _year(numeric.group(3)!);
     if (month >= 1 && month <= 12 && day >= 1 && day <= 31) return (DateTime(year, month, day), numeric);
   }
-  final named = _namedDate.firstMatch(text);
-  if (named != null) {
+  for (final named in _namedDate.allMatches(text)) {
     final month = _months.indexOf(named.group(2)!.toLowerCase()) + 1;
     final day = int.parse(named.group(1)!);
     if (month > 0 && day >= 1 && day <= 31) return (DateTime(_year(named.group(3)!), month, day), named);
@@ -264,13 +409,13 @@ int _year(String raw) {
 
 const _name = r"([A-Za-z][A-Za-z0-9 .&\-'*]{2,40}?)";
 const _nameEnd =
-    r"(?=\s+(?:on|upi|via|using|vide|thru|through|with|avl|avbl|available|bal|dt|dated|not|if|call|sms|info|at|for)\b|\s+(?:ref|rrn|txn|trxn)\w*|\s+\d|[.,;:(]|$)";
+    r"(?=\s+(?:on|upi|via|using|vide|thru|through|with|avl|avbl|available|bal|dt|dated|not|if|call|sms|info|at|for|credited|debited|has|is|was)\b|\s+(?:ref|rrn|txn|trxn)\w*|\s+\d|[.,;:(]|$)";
 
 final _sharedCounterparty = <RegExp>[
-  RegExp(r'\bto\s+vpa\s+([\w.\-]+@[\w]+)', caseSensitive: false),
+  RegExp(r'\b(?:to|from|by)?\s*vpa\s*[:\-]?\s*([\w.\-]+@[\w]+)', caseSensitive: false),
   RegExp(r'\b(?:to|from|by)\s+([\w.\-]+@[\w]+)', caseSensitive: false),
   RegExp(';\\s*$_name\\s+credited', caseSensitive: false),
-  RegExp('\\bupi[-/]\\d+[-/]$_name(?=[.,/]|\\s|\$)', caseSensitive: false),
+  RegExp('\\bupi[-/]\\d+[-/]$_name(?:(?=/)|$_nameEnd)', caseSensitive: false),
   RegExp('\\bneft\\s*cr[-/]\\w+[-/]$_name(?=[-/.]|\$)', caseSensitive: false),
   RegExp('\\binfo\\s*[:\\-]?\\s*(?:[A-Za-z]{2,5}[*/\\-])?(?:\\w*[*/\\-])?$_name(?=[*/.]|\\s+(?:on|avl|available|bal)\\b|\$)', caseSensitive: false),
 ];
@@ -285,6 +430,9 @@ final _creditCounterparty = <RegExp>[
   RegExp('\\b(?:from|by)\\s+$_name$_nameEnd', caseSensitive: false),
 ];
 
+/// "towards UPI to SHIV DAIRY": the payment rail is not part of the name.
+final _railPrefix = RegExp(r'^(?:upi|imps|neft|vpa)\s+(?:(?:to|from|by)\s+)?', caseSensitive: false);
+
 const _counterpartyNoise = ['ist', 'your', 'you', 'a/c', 'ac', 'acct', 'account', 'card', 'bank', 'vpa', 'upi', 'the', 'rs', 'inr', 'dispute', 'processing', 'merchant'];
 
 String? _counterparty(String text, TxnDirection direction) {
@@ -295,12 +443,16 @@ String? _counterparty(String text, TxnDirection direction) {
   for (final pattern in patterns) {
     for (final match in pattern.allMatches(text)) {
       var value = match.group(1)!.trim();
-      value = value.replaceAll(RegExp(r'\s+'), ' ').replaceAll(RegExp(r'[.\-*\s]+$'), '');
+      value = value
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .replaceAll(RegExp(r'[.\-*\s]+$'), '')
+          .replaceFirst(_railPrefix, '');
       final lower = value.toLowerCase();
       if (value.length < 3) continue;
       if (_counterpartyNoise.contains(lower)) continue;
       if (lower.startsWith('your ') || lower.startsWith('a/c') || lower.contains(' bank') || lower.startsWith('bank ')) continue;
       if (RegExp(r'^\d+$').hasMatch(value)) continue;
+      if (RegExp(r'^(?:rs|inr)\.?\s*\d', caseSensitive: false).hasMatch(value)) continue;
       return value;
     }
   }
@@ -309,13 +461,13 @@ String? _counterparty(String text, TxnDirection direction) {
 
 /// Whether a message the parser could not read still looks like money moved:
 /// it names an amount and is not an OTP, offer, reminder or failure notice.
-/// Such messages go to the review queue instead of being dropped.
-bool looksLikeUnreadTransaction(String body) {
-  final text = _normaliseSmsText(body);
+/// Such messages go to the review queue instead of being dropped. [sender]
+/// lets a promotional DLT header count as an offer.
+bool looksLikeUnreadTransaction(String body, {String sender = ''}) {
+  final text = _normalizedText(body);
   final lower = text.toLowerCase();
   if (text.isEmpty) return false;
-  if (_isNonTransactional(lower)) return false;
+  if (_isIgnorable(sender, lower)) return false;
   return _amountPattern.hasMatch(text) || _bareAmountPattern.hasMatch(text);
 }
 
-String _normaliseSmsText(String body) => normalizeMathGlyphs(body).replaceAll(RegExp(r'\s+'), ' ').trim();

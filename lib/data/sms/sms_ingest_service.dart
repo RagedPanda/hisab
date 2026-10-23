@@ -11,6 +11,7 @@ import '../../domain/sms/payee_normaliser.dart';
 import '../../domain/sms/sms_categorizer.dart';
 import '../../domain/sms/sms_confidence.dart';
 import '../../domain/sms/sms_currency.dart';
+import '../../domain/sms/sms_outcome.dart';
 import '../../domain/sms/sms_parser.dart';
 import '../db/database.dart';
 import '../repositories/accounts_repository.dart';
@@ -93,24 +94,33 @@ class SmsIngestService {
   /// Handles one message end to end. Safe to call repeatedly for the same SMS.
   Future<IngestStatus> ingest(RawSms message, {required bool autoAdd, bool force = false}) async {
     final id = SmsLogRepository.idFor(message.sender, message.body, message.receivedAt);
-    if (await smsLog.exists(id)) return IngestStatus.duplicate;
-    if (!force && !looksLikeBankSender(message.sender) && !_looksFinancial(message.body)) return IngestStatus.notBank;
+    final existing = await smsLog.getById(id);
+    if (existing != null) {
+      await _recordDuplicate(existing, message);
+      return IngestStatus.duplicate;
+    }
+    if (!force && !looksLikeBankSender(message.sender) && !hasTransactionSignal(message.body)) {
+      if (!isPersonalSender(message.sender)) {
+        await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.notBank);
+      }
+      return IngestStatus.notBank;
+    }
     if (isForeignCurrency(smsCurrencyCode(message.body), homeCurrencyCode())) {
       // Cross-currency is not supported: logged so it is not read again, but
       // neither added nor queued for review.
-      await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'skipped');
+      await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.skipped);
       return IngestStatus.foreignCurrency;
     }
 
     final parsed = parseBankSms(sender: message.sender, body: message.body, receivedAt: message.receivedAt);
     if (parsed == null) {
-      final route = routeForSms(parsed: null, autoAddEnabled: autoAdd, possibleTransaction: looksLikeUnreadTransaction(message.body));
+      final route = routeForSms(parsed: null, autoAddEnabled: autoAdd, possibleTransaction: looksLikeUnreadTransaction(message.body, sender: message.sender));
       if (route == SmsRoute.review) {
-        await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'pending');
+        await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.pending);
         return IngestStatus.pending;
       }
-      if (force || looksLikeBankSender(message.sender)) {
-        await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'skipped');
+      if (!isPersonalSender(message.sender)) {
+        await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.skipped);
       }
       return IngestStatus.unparsed;
     }
@@ -128,12 +138,12 @@ class SmsIngestService {
       ..['accountId'] = known?.id;
 
     if (routeForSms(parsed: parsed, autoAddEnabled: autoAdd, possibleTransaction: true) != SmsRoute.autoAdd) {
-      await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'pending', parsed: payload);
+      await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.pending, parsed: payload);
       return IngestStatus.pending;
     }
     final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(id, parsed, categoryKey, account?.id);
-    await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'added', parsed: payload, entryId: entryId);
+    await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.added, parsed: payload, entryId: entryId);
     _autoAddedController.add(SmsAutoAdded(
       smsId: id,
       entryId: entryId,
@@ -148,7 +158,30 @@ class SmsIngestService {
   /// ignored, so it does not come back in the review queue.
   Future<void> undoAutoAdd(SmsAutoAdded added) async {
     await entries.deleteEntry(added.entryId);
-    await smsLog.setStatus(added.smsId, 'ignored');
+    await smsLog.setStatus(added.smsId, SmsLogStatus.ignored);
+  }
+
+  /// Runs an ignored or unparsed message through ingest again, e.g. after
+  /// the parser learned a new format. The old row is replaced.
+  Future<IngestStatus> reprocess(SmsLogData row, {required bool autoAdd}) async {
+    await smsLog.delete(row.id);
+    return ingest(RawSms(sender: row.sender, body: row.body, receivedAt: row.receivedAt), autoAdd: autoAdd, force: true);
+  }
+
+  /// A re-read of the same inbox message is silent; a bank re-delivery at a
+  /// different time gets its own history row, linked to the original's entry.
+  Future<void> _recordDuplicate(SmsLogData original, RawSms message) async {
+    if (!logsDuplicateOf(original.status, message.body) || isSameDelivery(original.receivedAt, message.receivedAt)) return;
+    final duplicateId = SmsLogRepository.duplicateIdFor(original.id, message.receivedAt);
+    if (await smsLog.exists(duplicateId)) return;
+    await smsLog.record(
+      id: duplicateId,
+      sender: message.sender,
+      body: message.body,
+      receivedAt: message.receivedAt,
+      status: SmsLogStatus.duplicate,
+      entryId: original.entryId,
+    );
   }
 
   /// Approves a pending log row into an entry with the suggested values.
@@ -157,7 +190,7 @@ class SmsIngestService {
     if (parsed == null) return null;
     final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(row.id, parsed, suggestCategoryKey(parsed), account?.id);
-    await smsLog.setStatus(row.id, 'added', entryId: entryId);
+    await smsLog.setStatus(row.id, SmsLogStatus.added, entryId: entryId);
     return entryId;
   }
 
@@ -209,6 +242,4 @@ class SmsIngestService {
     return created;
   }
 
-  static final _financialHint = RegExp(r'(debited|credited|spent|withdrawn|a/c|acct|upi|card|rs\.?\s?\d|inr\s?\d|₹)', caseSensitive: false);
-  static bool _looksFinancial(String body) => _financialHint.hasMatch(body);
 }

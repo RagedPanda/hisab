@@ -8,6 +8,7 @@ import 'package:hisab/core/ids.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
+import 'package:hisab/domain/split/group_activity.dart';
 import 'package:hisab/features/groups/activity_screen.dart';
 import 'package:hisab/features/shell/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,18 +39,61 @@ Future<String> seedActivity(ProviderContainer container) async {
   return groupId;
 }
 
+/// An app container on a fresh in-memory database, disposed after the test.
+Future<ProviderContainer> createContainer() async {
+  SharedPreferences.setMockInitialValues({'onboarded': true});
+  final prefs = await SharedPreferences.getInstance();
+  final container = ProviderContainer(overrides: [
+    sharedPreferencesProvider.overrideWithValue(prefs),
+    databaseProvider.overrideWithValue(AppDatabase(NativeDatabase.memory())),
+  ]);
+  addTearDown(container.dispose);
+  return container;
+}
+
+/// Pumps fixed frames; text fields and snackbars keep pumpAndSettle busy.
+Future<void> settle(WidgetTester tester) async {
+  for (var frame = 0; frame < 12; frame++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
 
+  testWidgets('deleting a group offers an Undo that times out and brings the group back', (tester) async {
+    final container = await createContainer();
+    final groups = container.read(groupsRepositoryProvider);
+    final groupId = (await tester.runAsync(() => groups.createGroup(name: 'Book club', icon: 'book', myName: 'You', otherMembers: ['Rahul'])))!;
+    appRouter.go('/groups');
+    await tester.pumpWidget(UncontrolledProviderScope(container: container, child: const HisabApp()));
+    await settle(tester);
+    appRouter.push('/groups/$groupId');
+    await settle(tester);
+
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await settle(tester);
+    await tester.tap(find.text('Delete group'));
+    await settle(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete').hitTestable().first);
+    await settle(tester);
+    expect(find.text('Group deleted'), findsOneWidget);
+    expect(tester.widget<SnackBar>(find.byType(SnackBar)).persist, isFalse, reason: 'the Undo must time out');
+    expect(await tester.runAsync(() => groups.getSummaries()), isEmpty);
+
+    await tester.tap(find.text('Undo'));
+    await settle(tester);
+    final summaries = (await tester.runAsync(() => groups.getSummaries()))!;
+    expect(summaries.map((summary) => summary.group.id), [groupId]);
+    final log = (await tester.runAsync(() => groups.getActivityFeed()))!.activities;
+    expect([for (final activity in log) (activity.subject, activity.action)], [(ActivitySubject.group, ActivityAction.restored), (ActivitySubject.group, ActivityAction.deleted)]);
+    appRouter.go('/home');
+    await tester.pump();
+  });
+
   for (final locale in ['en', 'hi']) {
     testWidgets('activity screens fit a 360dp phone in $locale', (tester) async {
-      SharedPreferences.setMockInitialValues({'onboarded': true});
-      final prefs = await SharedPreferences.getInstance();
-      final container = ProviderContainer(overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-        databaseProvider.overrideWithValue(AppDatabase(NativeDatabase.memory())),
-      ]);
-      addTearDown(container.dispose);
+      final container = await createContainer();
       final groupId = (await tester.runAsync(() => seedActivity(container)))!;
       await container.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: locale));
       await tester.binding.setSurfaceSize(const Size(360, 740));
@@ -57,16 +101,12 @@ void main() {
 
       appRouter.go('/groups/$groupId/activity');
       await tester.pumpWidget(UncontrolledProviderScope(container: container, child: const HisabApp()));
-      for (var frame = 0; frame < 12; frame++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
+      await settle(tester);
       expect(find.byType(ActivityScreen), findsOneWidget);
       expect(find.byType(ListTile), findsWidgets);
 
       appRouter.go('/activity');
-      for (var frame = 0; frame < 12; frame++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
+      await settle(tester);
       expect(find.byType(ListTile), findsWidgets);
       expect(find.byType(TextButton), findsNWidgets(3), reason: 'the scooter, the payment and the deleted group each offer Restore');
       expect(tester.takeException(), isNull);

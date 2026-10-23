@@ -2144,6 +2144,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get activityGroupRestoredSnack => 'ग्रुप वापस आ गया';
 
   @override
+  String get activityGroupDeletedSnack => 'ग्रुप हटाया गया';
+
+  @override
   String get groupExportCsv => 'CSV फ़ाइल के रूप में एक्सपोर्ट करें';
 
   @override

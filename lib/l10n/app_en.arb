@@ -728,6 +728,7 @@
   "@activityGroupLine": {"placeholders": {"count": {"type": "int"}}},
   "activityPaymentRestoredSnack": "Payment restored",
   "activityGroupRestoredSnack": "Group restored",
+  "activityGroupDeletedSnack": "Group deleted",
   "groupExportCsv": "Export as CSV",
   "groupExportCsvSubject": "{group} expenses",
   "@groupExportCsvSubject": {"placeholders": {"group": {"type": "String"}}},

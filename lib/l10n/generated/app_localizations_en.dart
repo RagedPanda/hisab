@@ -2151,6 +2151,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityGroupRestoredSnack => 'Group restored';
 
   @override
+  String get activityGroupDeletedSnack => 'Group deleted';
+
+  @override
   String get groupExportCsv => 'Export as CSV';
 
   @override

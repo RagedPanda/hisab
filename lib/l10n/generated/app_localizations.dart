@@ -3608,6 +3608,12 @@ abstract class AppLocalizations {
   /// **'Group restored'**
   String get activityGroupRestoredSnack;
 
+  /// No description provided for @activityGroupDeletedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Group deleted'**
+  String get activityGroupDeletedSnack;
+
   /// No description provided for @groupExportCsv.
   ///
   /// In en, this message translates to:

@@ -61,5 +61,12 @@ void main() {
       expect(repeatSummary(en, const RepeatDraft(frequency: RecurrenceFrequency.daily), start, locale: 'en'), 'Every day');
       expect(repeatSummary(en, RepeatDraft(frequency: RecurrenceFrequency.yearly, end: RepeatEnd.onDate, endDate: DateTime(2030, 7, 5)), start, locale: 'en'), 'Every year on 5 Jul, until 5 Jul 2030');
     });
+
+    test('a saved rule reads its configured day, not a shifted or clamped due date', () {
+      // A day-31 salary due on 30 Nov (short month) or 2 Nov (weekend shift).
+      expect(repeatSummary(en, const RepeatDraft(), DateTime(2026, 11, 30, 9), locale: 'en', dayOfMonth: 31), 'Every month on day 31');
+      expect(repeatSummary(en, const RepeatDraft(), DateTime(2026, 11, 2, 9), locale: 'en', dayOfMonth: 31), 'Every month on day 31');
+      expect(repeatSummary(en, const RepeatDraft(lastDayOfMonth: true), DateTime(2026, 11, 30, 9), locale: 'en', dayOfMonth: kLastDayOfMonth), 'Every month on the last day');
+    });
   });
 }

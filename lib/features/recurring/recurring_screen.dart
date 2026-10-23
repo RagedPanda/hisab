@@ -85,7 +85,7 @@ class RecurringRuleCard extends ConsumerWidget {
     final category = view.category;
     final repository = ref.read(recurringRepositoryProvider);
     final monthStartDay = ref.watch(settingsProvider).monthStartDay;
-    final summary = repeatSummary(l10n, RepeatDraft.fromSpec(specOf(rule), autoPost: rule.autoPost), rule.nextDue ?? rule.startDate, locale: locale);
+    final summary = repeatSummary(l10n, RepeatDraft.fromSpec(specOf(rule), autoPost: rule.autoPost), rule.nextDue ?? rule.startDate, locale: locale, dayOfMonth: rule.dayOfMonth);
     final nextDue = rule.nextDue;
     final when = switch (item.section) {
       RecurringSection.waiting => l10n.recurringDue(formatRowDate(nextDue!, locale: locale)),

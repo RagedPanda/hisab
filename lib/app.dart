@@ -25,6 +25,8 @@ class _HisabAppState extends ConsumerState<HisabApp> {
     super.initState();
     _lifecycle = AppLifecycleListener(onResume: _catchUp.trigger);
     WidgetsBinding.instance.addPostFrameCallback((_) => _catchUp.trigger());
+    // A new, edited, paused or resumed rule can move the next wake earlier.
+    ref.listenManual(recurringViewsProvider, (_, _) => _catchUp.trigger());
   }
 
   @override
@@ -35,15 +37,18 @@ class _HisabAppState extends ConsumerState<HisabApp> {
   }
 
   /// Posts recurring entries that fell due while the app was closed, in the
-  /// background, or past midnight in the foreground, then refreshes the
+  /// background, or since the last wake in the foreground, then refreshes the
   /// Recurring list. Safe to run repeatedly: posting is idempotent.
-  Future<void> _postDueRecurring(DateTime now) async {
-    if (!mounted) return;
+  /// Returns when the next occurrence falls due, so the open app wakes then.
+  Future<DateTime?> _postDueRecurring(DateTime now) async {
+    if (!mounted) return null;
     try {
-      await ref.read(recurringRepositoryProvider).postDue(now: now, monthStartDay: ref.read(settingsProvider).monthStartDay);
+      final wake = await ref.read(recurringRepositoryProvider).catchUp(now: now, monthStartDay: ref.read(settingsProvider).monthStartDay);
       if (mounted) ref.read(recurringLastCatchUpProvider.notifier).set(now);
+      return wake;
     } catch (error, stack) {
       FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'recurring', context: ErrorDescription('posting due recurring entries')));
+      return null;
     }
   }
 

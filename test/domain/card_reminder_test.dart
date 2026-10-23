@@ -150,6 +150,22 @@ void main() {
       expect(result.deleteIds, ['p1', 'p2']);
     });
 
+    test('a paid bill moves the pending reminder on to the next bill', () {
+      final paid = CardDue(dueDate: DateTime(2026, 11, 15), daysLeft: 10, state: CardDueState.paid, amountDueMinor: 0, nextDueDate: DateTime(2026, 12, 15));
+      final result = plan(cardDue: paid, existing: [stored(id: 'p1')]);
+      expect(result.save!.id, 'p1');
+      expect(result.save!.dueAt, DateTime(2026, 12, 15));
+      expect(result.save!.amountMinor, isNull);
+      expect(result.deleteIds, isEmpty);
+    });
+
+    test('a paid bill with no known next due date clears the pending reminder', () {
+      final paid = CardDue(dueDate: DateTime(2026, 11, 15), daysLeft: 10, state: CardDueState.paid, amountDueMinor: 0);
+      final result = plan(cardDue: paid, existing: [stored(id: 'p1')]);
+      expect(result.save, isNull);
+      expect(result.deleteIds, ['p1']);
+    });
+
     test('keeps closed reminders in history when the due date goes away', () {
       expect(plan(existing: [stored(status: ReminderStatus.done)]).isEmpty, isTrue);
       expect(plan().isEmpty, isTrue);

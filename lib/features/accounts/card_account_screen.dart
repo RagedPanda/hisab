@@ -7,6 +7,7 @@ import '../../core/format.dart';
 import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
+import '../../data/db/database.dart';
 import '../../domain/cards/card_summary.dart';
 import '../../l10n/l10n.dart';
 import '../dashboard/widgets/dashboard_card.dart';
@@ -47,7 +48,7 @@ class CardAccountScreen extends ConsumerWidget {
         appBar: AppBar(
           title: Text(account.name),
           actions: [
-            IconButton(tooltip: l10n.edit, icon: const Icon(Icons.edit_outlined), onPressed: () => showAccountForm(context, ref, existing: account)),
+            IconButton(tooltip: l10n.edit, icon: const Icon(Icons.edit_outlined), onPressed: () => _edit(context, ref, account)),
           ],
         ),
         body: ListView(
@@ -55,7 +56,7 @@ class CardAccountScreen extends ConsumerWidget {
           children: [
             _OutstandingCard(overview: overview, symbol: symbol),
             const SizedBox(height: kDashboardCardGap),
-            _DueCard(overview: overview, symbol: symbol, locale: locale, onSetUp: () => showAccountForm(context, ref, existing: account)),
+            _DueCard(overview: overview, symbol: symbol, locale: locale, onSetUp: () => _edit(context, ref, account)),
             const SizedBox(height: kDashboardCardGap),
             IntrinsicHeight(
               child: Row(
@@ -97,6 +98,19 @@ class CardAccountScreen extends ConsumerWidget {
   }
 }
 
+/// Opens the account sheet; when the account is no longer a card afterwards
+/// (type changed or deleted) the card screen is left for the Accounts list.
+Future<void> _edit(BuildContext context, WidgetRef ref, Account account) async {
+  await showAccountForm(context, ref, existing: account);
+  final saved = await ref.read(accountsRepositoryProvider).getById(account.id);
+  if (!context.mounted || isCardAccount(saved)) return;
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go('/accounts');
+  }
+}
+
 /// Outstanding amount, utilisation bar and available limit.
 class _OutstandingCard extends StatelessWidget {
   const _OutstandingCard({required this.overview, required this.symbol});
@@ -117,16 +131,23 @@ class _OutstandingCard extends StatelessWidget {
         children: [
           Text(l10n.cardOutstanding, style: theme.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant)),
           const SizedBox(height: 4),
-          Text(formatMinor(overview.outstandingMinor, symbol: symbol), style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700).tabular),
+          Text(
+            overview.creditMinor > 0 ? l10n.cardInCredit(formatMinor(overview.creditMinor, symbol: symbol)) : formatMinor(overview.outstandingMinor, symbol: symbol),
+            style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700, color: overview.creditMinor > 0 ? kIncomeColor : null).tabular,
+          ),
           if (overview.hasLimit) ...[
             const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: overview.utilisation.clamp(0, 1),
-                minHeight: 8,
-                color: budgetBandColor(band, scheme),
-                backgroundColor: scheme.surfaceContainerHighest,
+            // The "% of limit used" line below says the same in words; the bare
+            // bar value would otherwise lead the card's spoken label.
+            ExcludeSemantics(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: overview.utilisation.clamp(0, 1),
+                  minHeight: 8,
+                  color: budgetBandColor(band, scheme),
+                  backgroundColor: scheme.surfaceContainerHighest,
+                ),
               ),
             ),
             const SizedBox(height: 6),
@@ -196,6 +217,10 @@ class _DueCard extends StatelessWidget {
               CardDueChip(due: due),
             ],
           ),
+          if (due.state == CardDueState.paid && due.nextDueDate != null) ...[
+            const SizedBox(height: 8),
+            Text(l10n.cardNextDue(formatShortDate(due.nextDueDate!, locale: locale)), style: theme.textTheme.bodyMedium?.tabular),
+          ],
           if (amountDue != null && amountDue > 0) ...[
             const SizedBox(height: 8),
             Text(l10n.cardAmountLeftToPay(formatMinor(amountDue, symbol: symbol)), style: theme.textTheme.bodyMedium?.tabular),

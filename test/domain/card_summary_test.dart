@@ -51,6 +51,12 @@ void main() {
       expect(outstandingMinor(500), 0, reason: 'overpaid card owes nothing');
     });
 
+    test('credit is the positive balance of an overpaid card', () {
+      expect(cardCreditMinor(50000), 50000);
+      expect(cardCreditMinor(0), 0);
+      expect(cardCreditMinor(-25000), 0);
+    });
+
     CardOverview overview(int limit, int balance) =>
         buildCardOverview(cardId: card, today: DateTime(2026, 10, 22), balanceMinor: balance, movements: const [], creditLimitMinor: limit);
 
@@ -186,17 +192,26 @@ void main() {
       expect(overdue.amountDueMinor, 80000);
     });
 
-    test('a paid statement shows paid with the next bill due date', () {
+    test('a paid statement shows the paid bill date, with the next bill due date alongside', () {
       final due = cardDue(today: today, statementDay: 15, dueDay: 3, lastStatementMinor: 80000, lastStatementAt: DateTime(2026, 10, 15), paidSinceStatementMinor: 80000)!;
       expect(due.state, CardDueState.paid);
       expect(due.amountDueMinor, 0);
-      expect(due.dueDate, DateTime(2026, 12, 3));
-      expect(due.daysLeft, 42);
+      expect(due.dueDate, DateTime(2026, 11, 3), reason: 'the bill that was paid');
+      expect(due.daysLeft, 12);
+      expect(due.nextDueDate, DateTime(2026, 12, 3));
+      expect(due.reminderDate, DateTime(2026, 12, 3), reason: 'reminders move on to the next bill');
     });
 
-    test('paid on statement day itself does not show that statement due date', () {
+    test('an unpaid bill has no next due date and reminds on its own due date', () {
+      final due = cardDue(today: today, statementDay: 15, dueDay: 3, lastStatementMinor: 80000, lastStatementAt: DateTime(2026, 10, 15))!;
+      expect(due.nextDueDate, isNull);
+      expect(due.reminderDate, DateTime(2026, 11, 3));
+    });
+
+    test('paid on statement day itself moves the next due date past that statement', () {
       final due = cardDue(today: DateTime(2026, 10, 15, 18), statementDay: 15, dueDay: 3, lastStatementMinor: 1000, lastStatementAt: DateTime(2026, 10, 15), paidSinceStatementMinor: 1000)!;
-      expect(due.dueDate, DateTime(2026, 12, 3));
+      expect(due.dueDate, DateTime(2026, 11, 3));
+      expect(due.nextDueDate, DateTime(2026, 12, 3));
     });
 
     test('statement day 31 in a leap year', () {
@@ -214,6 +229,8 @@ void main() {
       final due = cardDue(today: today, statementDay: null, dueDay: 3, lastStatementMinor: 100, lastStatementAt: DateTime(2026, 10, 15), paidSinceStatementMinor: 100)!;
       expect(due.state, CardDueState.paid);
       expect(due.dueDate, DateTime(2026, 11, 3));
+      expect(due.nextDueDate, isNull);
+      expect(due.reminderDate, isNull);
     });
   });
 }

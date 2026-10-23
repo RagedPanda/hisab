@@ -80,7 +80,7 @@ void main() {
     await tester.tap(find.text('15').last);
     await settle(tester);
     await enter(tester, find.byKey(const ValueKey('account.creditLimit')), '100000');
-    await enter(tester, find.byKey(const ValueKey('account.lastStatement')), '1500');
+    await enter(tester, find.byKey(const ValueKey('account.lastStatement')), '400');
     await tester.ensureVisible(find.text('Save'));
     await tester.tap(find.text('Save'));
     await settle(tester);
@@ -89,7 +89,7 @@ void main() {
     expect(saved.statementDay, 5);
     expect(saved.dueDay, 15);
     expect(saved.creditLimitMinor, 10000000);
-    expect(saved.lastStatementMinor, 150000);
+    expect(saved.lastStatementMinor, 40000);
     expect(saved.lastStatementAt, previousStatementDate(startOfDay(DateTime.now()), 5));
     expect(saved.balanceMinor, -50000, reason: 'balance untouched');
     expect(find.text('Set statement and due days'), findsNothing);
@@ -99,8 +99,40 @@ void main() {
     expect(reminders, hasLength(1), reason: 'saving the due day creates the card due reminder');
     final reminder = reminders.single;
     expect(reminder.title, 'Amex');
-    expect(reminder.amountMinor, 150000);
+    expect(reminder.amountMinor, 40000);
     expect(reminder.dueAt, dueDateForStatement(saved.lastStatementAt!, 15));
+  });
+
+  testWidgets('an overpaid card shows its credit, and changing its type leaves the card screen', (tester) async {
+    final container = await pumpApp(tester);
+    final db = container.read(databaseProvider);
+    await db.into(db.accounts).insert(AccountsCompanion.insert(
+          id: 'card',
+          name: 'Amex',
+          type: 'card',
+          color: 0xFF1E88E5,
+          balanceMinor: const Value(50000),
+          creditLimitMinor: const Value(10000000),
+        ));
+
+    appRouter.push('/accounts');
+    await settle(tester);
+    await tester.tap(find.text('Amex'));
+    await settle(tester);
+    expect(find.descendant(of: find.byKey(kCardOutstandingKey), matching: find.text('₹500 credit')), findsOneWidget);
+    final semantics = tester.getSemantics(find.byKey(kCardOutstandingKey));
+    expect(semantics.label, startsWith('Outstanding'));
+    expect(semantics.value, isEmpty, reason: 'TalkBack reads a value first; the bare utilisation number must not lead the card');
+
+    await tester.tap(find.byTooltip('Edit'));
+    await settle(tester);
+    await tester.tap(find.text('Bank account'));
+    await settle(tester);
+    await tester.ensureVisible(find.text('Save'));
+    await tester.tap(find.text('Save'));
+    await settle(tester);
+    expect(find.byType(CardAccountScreen), findsNothing);
+    expect(find.text('Amex'), findsOneWidget, reason: 'back on the Accounts list');
   });
 
   test('card fields are cleared for other account types', () {

@@ -658,5 +658,11 @@
   "cardAmountLeftToPay": "{amount} चुकाना बाकी",
   "cardSetUpDays": "स्टेटमेंट और ड्यू तारीख सेट करें",
   "cardViewTransactions": "लेन-देन देखें",
-  "cardNotFound": "यह कार्ड हटा दिया गया है"
+  "cardNotFound": "यह कार्ड हटा दिया गया है",
+  "cardNextDue": "अगला ड्यू {date}",
+  "@cardNextDue": {"placeholders": {"date": {"type": "String"}}},
+  "cardInCredit": "{amount} क्रेडिट",
+  "@cardInCredit": {"placeholders": {"amount": {"type": "String"}}},
+  "cardStatementOverAmountDue": "बकाया राशि ({amount}) से ज़्यादा है। इसे उतना करें जितना अभी चुकाना बाकी है।",
+  "@cardStatementOverAmountDue": {"placeholders": {"amount": {"type": "String"}}}
 }

@@ -2308,4 +2308,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cardNotFound => 'This card was deleted';
+
+  @override
+  String cardNextDue(String date) {
+    return 'Next due $date';
+  }
+
+  @override
+  String cardInCredit(String amount) {
+    return '$amount credit';
+  }
+
+  @override
+  String cardStatementOverAmountDue(String amount) {
+    return 'More than the amount due ($amount). Lower it to what is still unpaid.';
+  }
 }

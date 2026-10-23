@@ -37,7 +37,7 @@ ReminderDraft cardReminderDraft({required String accountId, required String card
     kind: ReminderKind.card,
     title: cardName,
     accountId: accountId,
-    dueAt: startOfDay(due.dueDate),
+    dueAt: startOfDay(due.reminderDate ?? due.dueDate),
     amountMinor: amountDue != null && amountDue > 0 ? amountDue : null,
     remindDaysBefore: kCardReminderDaysBefore,
   );
@@ -72,8 +72,10 @@ ReminderDraft cardReminderUpdate(ReminderDraft stored, {required String cardName
 /// the card ends up with at most one pending reminder.
 ///
 /// [existing] is every live card reminder of the account, any status.
-/// - No due date (due day cleared, card deleted or no longer a card): every
-///   pending reminder is deleted; closed ones stay in history.
+/// - No due date (due day cleared, card deleted or no longer a card), or a
+///   paid bill whose next due date is unknown: every pending reminder is
+///   deleted; closed ones stay in history. A paid bill otherwise moves the
+///   reminder on to the next bill ([CardDue.reminderDate]).
 /// - A reminder the user already marked paid or skipped for this same due
 ///   date settles it: nothing is re-raised and stray pending ones go.
 /// - Otherwise one pending reminder (the one on the due date if there is
@@ -89,10 +91,11 @@ CardReminderPlan planCardReminder({
 }) {
   final pending = [for (final reminder in existing) if (reminder.isPending) reminder];
   final allPendingIds = [for (final reminder in pending) reminder.id];
-  if (due == null) return CardReminderPlan(deleteIds: allPendingIds);
-  final settled = existing.any((reminder) => !reminder.isPending && isSameDay(reminder.dueAt, due.dueDate));
+  final reminderDate = due?.reminderDate;
+  if (due == null || reminderDate == null) return CardReminderPlan(deleteIds: allPendingIds);
+  final settled = existing.any((reminder) => !reminder.isPending && isSameDay(reminder.dueAt, reminderDate));
   if (settled) return CardReminderPlan(deleteIds: allPendingIds);
-  final kept = _pick(pending, due.dueDate);
+  final kept = _pick(pending, reminderDate);
   final draft = kept == null
       ? cardReminderDraft(accountId: accountId, cardName: cardName, due: due)
       : cardReminderUpdate(kept.draft, cardName: cardName, due: due);

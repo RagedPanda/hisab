@@ -28,3 +28,6 @@ CardOverview cardOverviewFor(Account account, List<CardMovement> movements, Date
 /// The window of movements [cardOverviewFor] needs for [account].
 DateTime cardMovementsSince(Account account, DateTime today) =>
     movementsSince(today: today, statementDay: account.statementDay, lastStatementAt: account.lastStatementAt);
+
+/// Whether [account] is a live credit card (the card screen only fits those).
+bool isCardAccount(Account? account) => account != null && account.type == 'card';

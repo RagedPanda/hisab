@@ -2301,4 +2301,19 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get cardNotFound => 'यह कार्ड हटा दिया गया है';
+
+  @override
+  String cardNextDue(String date) {
+    return 'अगला ड्यू $date';
+  }
+
+  @override
+  String cardInCredit(String amount) {
+    return '$amount क्रेडिट';
+  }
+
+  @override
+  String cardStatementOverAmountDue(String amount) {
+    return 'बकाया राशि ($amount) से ज़्यादा है। इसे उतना करें जितना अभी चुकाना बाकी है।';
+  }
 }

@@ -40,6 +40,9 @@ int paymentsSinceMinor(Iterable<CardMovement> movements, {required String cardId
 /// Amount owed on a card: card balances are stored negative. Never negative.
 int outstandingMinor(int balanceMinor) => balanceMinor < 0 ? -balanceMinor : 0;
 
+/// Credit on a card (overpaid or refunded beyond what was owed). Never negative.
+int cardCreditMinor(int balanceMinor) => balanceMinor > 0 ? balanceMinor : 0;
+
 /// From this share of the limit utilisation is shown as high (above 30%
 /// is what lenders and credit bureaus treat as heavy use).
 const double kCardHighUtilisation = 0.3;
@@ -74,8 +77,18 @@ DateTime? lastStatementDateAfterEdit({
 enum CardDueState { upcoming, dueToday, overdue, paid }
 
 class CardDue {
-  const CardDue({required this.dueDate, required this.daysLeft, required this.state, this.amountDueMinor});
+  const CardDue({required this.dueDate, required this.daysLeft, required this.state, this.amountDueMinor, this.nextDueDate});
+
+  /// The bill's due date; for a paid bill, the date of the bill that was paid.
   final DateTime dueDate;
+
+  /// Paid bills only: when the next bill falls due (null without a
+  /// statement day). Reminders move on to this date.
+  final DateTime? nextDueDate;
+
+  /// The date the next alert belongs to: [nextDueDate] once paid, else [dueDate].
+  /// Null when the bill is paid and the next one is not known yet.
+  DateTime? get reminderDate => state == CardDueState.paid ? nextDueDate : dueDate;
 
   /// Calendar days from today to [dueDate]; negative when overdue.
   final int daysLeft;
@@ -89,8 +102,9 @@ class CardDue {
 ///
 /// With a recorded statement: its unpaid remainder is due on the due day that
 /// follows it, overdue once that passes; when fully paid the card shows paid
-/// with the next cycle's due date (if the statement day is known). Without a
-/// statement only the next due date is known.
+/// with that bill's due date, plus the next cycle's due date when the
+/// statement day is known. Without a statement only the next due date is
+/// known.
 CardDue? cardDue({
   required DateTime today,
   required int? statementDay,
@@ -107,8 +121,8 @@ CardDue? cardDue({
       final daysLeft = calendarDaysBetween(today, billedDue);
       return CardDue(dueDate: billedDue, daysLeft: daysLeft, state: _stateFor(daysLeft), amountDueMinor: remaining);
     }
-    final nextDue = statementDay == null ? billedDue : dueDateForStatement(nextStatementDate(_later(today, lastStatementAt), statementDay), dueDay);
-    return CardDue(dueDate: nextDue, daysLeft: calendarDaysBetween(today, nextDue), state: CardDueState.paid, amountDueMinor: 0);
+    final nextDue = statementDay == null ? null : dueDateForStatement(nextStatementDate(_later(today, lastStatementAt), statementDay), dueDay);
+    return CardDue(dueDate: billedDue, daysLeft: calendarDaysBetween(today, billedDue), state: CardDueState.paid, amountDueMinor: 0, nextDueDate: nextDue);
   }
   if (statementDay == null) return null;
   final due = upcomingDueDate(today, statementDay: statementDay, dueDay: dueDay);
@@ -134,6 +148,7 @@ DateTime _later(DateTime today, DateTime statementAt) {
 class CardOverview {
   const CardOverview({
     required this.outstandingMinor,
+    this.creditMinor = 0,
     this.cycle,
     this.cycleSpendMinor,
     this.creditLimitMinor,
@@ -141,6 +156,9 @@ class CardOverview {
   });
 
   final int outstandingMinor;
+
+  /// Credit on the card; when positive, [outstandingMinor] is 0.
+  final int creditMinor;
 
   /// Current billing cycle; null without a statement day.
   final DateRange? cycle;
@@ -181,6 +199,7 @@ CardOverview buildCardOverview({
   final paid = lastStatementAt == null ? 0 : paymentsSinceMinor(movements, cardId: cardId, since: lastStatementAt);
   return CardOverview(
     outstandingMinor: outstandingMinor(balanceMinor),
+    creditMinor: cardCreditMinor(balanceMinor),
     cycle: cycle,
     cycleSpendMinor: cycle == null ? null : cycleSpendMinor(movements, cardId: cardId, range: cycle),
     creditLimitMinor: creditLimitMinor,

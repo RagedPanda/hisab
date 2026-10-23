@@ -3913,6 +3913,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This card was deleted'**
   String get cardNotFound;
+
+  /// No description provided for @cardNextDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Next due {date}'**
+  String cardNextDue(String date);
+
+  /// No description provided for @cardInCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} credit'**
+  String cardInCredit(String amount);
+
+  /// No description provided for @cardStatementOverAmountDue.
+  ///
+  /// In en, this message translates to:
+  /// **'More than the amount due ({amount}). Lower it to what is still unpaid.'**
+  String cardStatementOverAmountDue(String amount);
 }
 
 class _AppLocalizationsDelegate

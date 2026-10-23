@@ -1957,4 +1957,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savedAddAnother => 'Saved. Add the next one.';
+
+  @override
+  String get payersMultiple => '2+ people';
+
+  @override
+  String get payersHelp => 'Enter how much each person paid.';
+
+  @override
+  String payersAssigned(String assigned, String total) {
+    return '$assigned of $total assigned';
+  }
+
+  @override
+  String payersMustTotal(String total) {
+    return 'Amounts paid must add up to $total';
+  }
+
+  @override
+  String namesAnd(String first, String last) {
+    return '$first and $last';
+  }
+
+  @override
+  String get youInList => 'you';
 }

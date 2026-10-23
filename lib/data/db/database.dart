@@ -155,6 +155,20 @@ class Splits extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
+/// Who paid what when several members paid one group expense. Single-payer
+/// entries have no rows here; `Entries.paidByMemberId` always holds the main
+/// payer so older readers keep working.
+@TableIndex(name: 'entry_payers_entry_id', columns: {#entryId})
+class EntryPayers extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get entryId => text()();
+  TextColumn get memberId => text()();
+  IntColumn get amountMinor => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class Settlements extends Table with SyncColumns {
   TextColumn get id => text()();
   TextColumn get groupId => text()();
@@ -319,12 +333,13 @@ class SmsLog extends Table {
   ProjectFields,
   EntryFieldValues,
   Reminders,
+  EntryPayers,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -354,6 +369,11 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(members, members.upiId);
             await m.createTable(reminders);
             await m.createIndex(remindersGroupId);
+          }
+          // v6: several payers on one group expense (groups parity, multiple payers).
+          if (from < 6) {
+            await m.createTable(entryPayers);
+            await m.createIndex(entryPayersEntryId);
           }
         },
         beforeOpen: (details) async {

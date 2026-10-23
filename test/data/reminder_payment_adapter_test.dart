@@ -9,6 +9,7 @@ import 'package:hisab/data/repositories/accounts_repository.dart';
 import 'package:hisab/data/repositories/reminders_repository.dart';
 import 'package:hisab/data/repositories/sms_log_repository.dart';
 import 'package:hisab/data/sms/reminder_payment_adapter.dart';
+import 'package:hisab/data/sms/sms_linked_reminder_scheduler.dart';
 import 'package:hisab/data/sms/sms_reminder_linker.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
@@ -32,8 +33,9 @@ void main() {
     accounts = AccountsRepository(db);
     smsLog = SmsLogRepository(db);
     gateway = FakeNotificationGateway();
-    scheduler = ReminderScheduler(
+    scheduler = SmsLinkedReminderScheduler(
       reminders: reminders,
+      smsLog: smsLog,
       notifications: NotificationService(gateway,
           buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, notificationLocalizations('en'), currencySymbol: '₹'), clock: () => now),
       clock: () => now,
@@ -107,6 +109,20 @@ void main() {
     expect(gateway.alertsFor(reminderPayload(reminderId)).map((alert) => alert.fireAt), alertsBefore, reason: 'its alerts are rescheduled');
     expect(gateway.alertsFor(reminderPayload(nextId)), isEmpty);
     expect((await smsLog.getById('s1'))!.matchedReminderId, isNull, reason: 'a later payment may pay it again');
+  });
+
+  test('Undo from History forgets the SMS that paid it, so another SMS can pay it', () async {
+    final reminderId = await carLoan();
+    await smsLog.record(id: 's1', sender: 'HDFCBK', body: 'emi', receivedAt: now, status: 'added', entryId: 'e1');
+    await linker.linkEntry(smsId: 's1', parsed: emiDebit(1234500), entryId: 'e1');
+
+    await scheduler.undoDone(reminderId);
+
+    expect((await smsLog.getById('s1'))!.matchedReminderId, isNull, reason: 'decision 9: Undo leaves no trace of the payment');
+    expect(await smsLog.matchedReminderIds(), isEmpty);
+    await smsLog.record(id: 's2', sender: 'HDFCBK', body: 'emi again', receivedAt: now, status: 'added', entryId: 'e2');
+    expect(await linker.linkEntry(smsId: 's2', parsed: emiDebit(1234500), entryId: 'e2'), reminderId);
+    expect((await reminders.getById(reminderId))!.entryId, 'e2');
   });
 
   test('undo leaves a reminder alone that was since paid by another entry', () async {

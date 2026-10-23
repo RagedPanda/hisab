@@ -15,6 +15,7 @@ import '../data/repositories/reminders_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
 import '../data/sms/reminder_payment_adapter.dart';
 import '../data/sms/sms_ingest_service.dart';
+import '../data/sms/sms_linked_reminder_scheduler.dart';
 import '../data/sms/sms_reminder_linker.dart';
 import '../domain/entries/entry_filter.dart';
 import '../domain/stats/dashboard_ledger.dart';
@@ -184,9 +185,10 @@ final notificationServiceProvider = Provider((ref) {
 });
 
 /// Reminder writes that keep notifications in step; what features call.
-final reminderSchedulerProvider = Provider((ref) => ReminderScheduler(
+final reminderSchedulerProvider = Provider<ReminderScheduler>((ref) => SmsLinkedReminderScheduler(
       reminders: ref.watch(remindersRepositoryProvider),
       notifications: ref.watch(notificationServiceProvider),
+      smsLog: ref.watch(smsLogRepositoryProvider),
       removeEntry: (entryId) => deleteEntryReversingBalances(
         entries: ref.read(entriesRepositoryProvider),
         accounts: ref.read(accountsRepositoryProvider),

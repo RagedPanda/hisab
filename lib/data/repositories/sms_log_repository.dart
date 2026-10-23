@@ -67,6 +67,10 @@ class SmsLogRepository {
   Future<void> setMatchedReminder(String smsId, String? reminderId) =>
       (db.update(db.smsLog)..where((t) => t.id.equals(smsId))).write(SmsLogCompanion(matchedReminderId: Value(reminderId)));
 
+  /// Forgets every SMS link to [reminderId] once it is no longer paid.
+  Future<void> clearMatchedReminder(String reminderId) =>
+      (db.update(db.smsLog)..where((t) => t.matchedReminderId.equals(reminderId))).write(const SmsLogCompanion(matchedReminderId: Value(null)));
+
   JoinedSelectStatement<$SmsLogTable, SmsLogData> _matchedReminderIdsQuery() => db.selectOnly(db.smsLog)
     ..addColumns([db.smsLog.matchedReminderId])
     ..where(db.smsLog.matchedReminderId.isNotNull());

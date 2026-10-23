@@ -44,6 +44,26 @@ void main() {
       expect(rect.right <= 360 && rect.left >= 0, isTrue, reason: '${method.name} chip is on screen');
     }
     expect(tester.widget<ChoiceChip>(find.byKey(const Key('split-method-byItem'))).selected, isTrue);
+    final chipKeys = tester.widgetList<ChoiceChip>(find.byType(ChoiceChip)).map((chip) => chip.key).toList();
+    expect(chipKeys.first, const Key('split-method-byItem'), reason: 'By item is the first option when there are items');
     expect(tester.takeException(), isNull, reason: 'no overflow at 360dp');
+  });
+
+  test('By item comes first when the expense has items, and is hidden otherwise', () {
+    expect(splitMethodOptions(hasItems: true), [
+      SplitMethod.byItem,
+      SplitMethod.equal,
+      SplitMethod.exact,
+      SplitMethod.percent,
+      SplitMethod.shares,
+      SplitMethod.adjustment,
+    ]);
+    expect(splitMethodOptions(hasItems: false), [
+      SplitMethod.equal,
+      SplitMethod.exact,
+      SplitMethod.percent,
+      SplitMethod.shares,
+      SplitMethod.adjustment,
+    ]);
   });
 }

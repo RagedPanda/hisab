@@ -45,6 +45,14 @@ String splitErrorMessage(SplitError error, AppLocalizations l10n, String symbol)
   };
 }
 
+/// Split methods in the order the chips show them. By item needs items, and
+/// when there are some it comes first, since that is what they are for.
+List<SplitMethod> splitMethodOptions({required bool hasItems}) => [
+      if (hasItems) SplitMethod.byItem,
+      for (final method in SplitMethod.values)
+        if (method != SplitMethod.byItem) method,
+    ];
+
 String splitMethodHelp(SplitMethod method, AppLocalizations l10n) => switch (method) {
       SplitMethod.equal => l10n.splitHelpEqual,
       SplitMethod.exact => l10n.splitHelpExact,
@@ -100,7 +108,7 @@ class SplitEditor extends StatelessWidget {
           spacing: 8,
           runSpacing: 4,
           children: [
-            for (final option in SplitMethod.values.where((m) => m != SplitMethod.byItem || items.isNotEmpty))
+            for (final option in splitMethodOptions(hasItems: items.isNotEmpty))
               ChoiceChip(
                 key: Key('split-method-${option.name}'),
                 label: Text(splitMethodLabel(option, l10n)),

@@ -72,16 +72,20 @@ class CategoryDonutCard extends ConsumerWidget {
 
 /// A share resolved to what the chart draws.
 class _Slice {
-  const _Slice({required this.share, required this.name, required this.color});
+  const _Slice({required this.share, required this.name, required this.color, required this.percent});
   final CategoryShare share;
   final String name;
   final Color color;
+
+  /// Whole percent; the slices' percents total 100.
+  final int percent;
 }
 
 List<_Slice> _slices(BuildContext context, CategoryBreakdown data) {
   final scheme = Theme.of(context).colorScheme;
   final fallback = chartFallbackColors(scheme);
   final l10n = context.l10n;
+  final percents = sharePercents(data.shares);
   return [
     for (var index = 0; index < data.shares.length; index++)
       () {
@@ -89,6 +93,7 @@ List<_Slice> _slices(BuildContext context, CategoryBreakdown data) {
         final category = data.categoryOf(share);
         return _Slice(
           share: share,
+          percent: percents[index],
           name: share.isOthers ? l10n.others : category?.displayName(context) ?? l10n.uncategorised,
           color: share.isOthers
               ? scheme.outline
@@ -140,7 +145,7 @@ class CategoryDonut extends StatelessWidget {
         for (final slice in slices) _LegendRow(slice: slice, selected: slice == selected, symbol: symbol, onTap: () => onTap(slice)),
       ],
     );
-    final semantics = '${l10n.spendingByCategory}: ${slices.map((slice) => '${slice.name} ${l10n.percentOf(sharePercent(slice.share))}').join(', ')}';
+    final semantics = '${l10n.spendingByCategory}: ${slices.map((slice) => '${slice.name} ${l10n.percentOf(slice.percent)}').join(', ')}';
     return Semantics(
       label: semantics,
       child: LayoutBuilder(
@@ -248,7 +253,7 @@ class _LegendRow extends StatelessWidget {
             Expanded(child: Text(slice.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium)),
             SizedBox(
               width: 44,
-              child: Text(l10n.percentOf(sharePercent(slice.share)), textAlign: TextAlign.end, style: theme.textTheme.labelLarge?.tabular),
+              child: Text(l10n.percentOf(slice.percent), textAlign: TextAlign.end, style: theme.textTheme.labelLarge?.tabular),
             ),
             ConstrainedBox(
               constraints: const BoxConstraints(minWidth: 72),

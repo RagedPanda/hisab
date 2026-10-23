@@ -198,3 +198,26 @@ Future<void> _requestDeviceShot(String name) async {
     await Future<void>.delayed(const Duration(milliseconds: 100));
   }
 }
+
+/// Hides the soft keyboard, so it covers neither a shot nor the buttons at
+/// the foot of a sheet.
+Future<void> dropKeyboard(WidgetTester tester) async {
+  FocusManager.instance.primaryFocus?.unfocus();
+  await settle(tester, 6);
+}
+
+/// Pops the top bottom sheet without relying on where its scrim is: a tall
+/// sheet (Hindi, large text, a 360dp phone) leaves no scrim to tap.
+Future<void> popSheet(WidgetTester tester) async {
+  Navigator.of(tester.element(find.byType(BottomSheet).last)).pop();
+  await settle(tester, 10);
+}
+
+/// Answers "Not now" to the notification and "Alarms & reminders" sheets
+/// that saving a reminder can bring up, depending on what the device has
+/// already granted.
+Future<void> declineReminderPermissionSheets(WidgetTester tester) async {
+  for (final title in ["Get reminded before it's due", 'Get reminders on time']) {
+    if (hasText(title)) await tapText(tester, 'Not now', frames: 12);
+  }
+}

@@ -41,8 +41,12 @@ void main() {
     await tapText(tester, '15', last: true);
     await enterText(tester, find.byKey(const ValueKey('account.creditLimit')), '200000');
     await enterText(tester, find.byKey(const ValueKey('account.lastStatement')), '30000');
-    await tapText(tester, 'Save');
-    await settle(tester, 10);
+    // With the keyboard up, Save at the foot of the sheet is not built yet.
+    await dropKeyboard(tester);
+    await scrollTo(tester, find.text('Save'), within: find.byType(BottomSheet));
+    await tapText(tester, 'Save', frames: 12);
+    await declineReminderPermissionSheets(tester);
+    await waitFor(tester, find.byKey(kCardDueKey));
 
     expect(find.byKey(kCardDueKey), findsOneWidget);
     expect(find.byKey(kCardDueChipKey), findsOneWidget);
@@ -68,11 +72,10 @@ void main() {
         expect(tester.takeException(), isNull, reason: 'no overflow on $tag');
         await shoot(tester, 'card_account_$tag');
         await tapFinder(tester, find.byIcon(Icons.edit_outlined));
-        await scrollTo(tester, find.byKey(const ValueKey('account.lastStatement')));
+        await scrollTo(tester, find.byKey(const ValueKey('account.lastStatement')), within: find.byType(BottomSheet));
         await shoot(tester, 'card_editor_$tag');
-        // Dismiss the editor sheet by tapping its barrier above it.
-        await tester.tapAt(const Offset(20, 40));
-        await settle(tester);
+        await popSheet(tester);
+        expect(find.byType(BottomSheet), findsNothing, reason: 'editor closed on $tag');
       }
     }
   });

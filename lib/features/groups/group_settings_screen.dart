@@ -253,7 +253,7 @@ class _WeightRow extends StatelessWidget {
       ),
       SizedBox(
         width: 72,
-        child: Text(l10n.groupSettingsWeightValue(formatQuantity(weight, null)), textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w600).tabular),
+        child: Text(l10n.groupSettingsWeightValue(weight, formatQuantity(weight, null)), textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w600).tabular),
       ),
       IconButton(
         tooltip: l10n.groupSettingsWeightMore(name),

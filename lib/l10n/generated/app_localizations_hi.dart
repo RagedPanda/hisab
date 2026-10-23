@@ -2007,8 +2007,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get groupSettingsWeights => 'हर सदस्य के हिस्से';
 
   @override
-  String groupSettingsWeightValue(String weight) {
-    return '$weight हिस्से';
+  String groupSettingsWeightValue(num count, String weight) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$weight हिस्से',
+      one: '1 हिस्सा',
+    );
+    return '$_temp0';
   }
 
   @override

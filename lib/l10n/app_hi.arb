@@ -582,7 +582,7 @@
   "groupSettingsDefaultSplit": "डिफ़ॉल्ट बँटवारा",
   "groupSettingsDefaultSplitHint": "नए खर्चों के लिए पहले से चुना रहेगा। पहले से जोड़े गए खर्चों का बँटवारा नहीं बदलेगा।",
   "groupSettingsWeights": "हर सदस्य के हिस्से",
-  "groupSettingsWeightValue": "{weight} हिस्से",
+  "groupSettingsWeightValue": "{count, plural, =1{1 हिस्सा} other{{weight} हिस्से}}",
   "groupSettingsWeightLess": "{name} के हिस्से घटाएँ",
   "groupSettingsWeightMore": "{name} के हिस्से बढ़ाएँ",
   "groupSettingsCurrency": "मुद्रा चिह्न",

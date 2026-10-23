@@ -2014,8 +2014,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupSettingsWeights => 'Shares per member';
 
   @override
-  String groupSettingsWeightValue(String weight) {
-    return '$weight shares';
+  String groupSettingsWeightValue(num count, String weight) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$weight shares',
+      one: '1 share',
+    );
+    return '$_temp0';
   }
 
   @override

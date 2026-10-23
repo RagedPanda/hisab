@@ -3452,11 +3452,11 @@ abstract class AppLocalizations {
   /// **'Shares per member'**
   String get groupSettingsWeights;
 
-  /// No description provided for @groupSettingsWeightValue.
+  /// A member's share weight; count is the weight as a number, weight is it formatted (1.5).
   ///
   /// In en, this message translates to:
-  /// **'{weight} shares'**
-  String groupSettingsWeightValue(String weight);
+  /// **'{count, plural, =1{1 share} other{{weight} shares}}'**
+  String groupSettingsWeightValue(num count, String weight);
 
   /// No description provided for @groupSettingsWeightLess.
   ///

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/providers.dart';
 import 'core/theme.dart';
+import 'features/recurring/recurring_catch_up.dart';
+import 'features/recurring/recurring_list_model.dart';
 import 'features/shell/router.dart';
 import 'l10n/generated/app_localizations.dart';
 
@@ -16,25 +18,30 @@ class HisabApp extends ConsumerStatefulWidget {
 
 class _HisabAppState extends ConsumerState<HisabApp> {
   late final AppLifecycleListener _lifecycle;
+  late final RecurringCatchUp _catchUp = RecurringCatchUp(run: _postDueRecurring);
 
   @override
   void initState() {
     super.initState();
-    _lifecycle = AppLifecycleListener(onResume: _postDueRecurring);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _postDueRecurring());
+    _lifecycle = AppLifecycleListener(onResume: _catchUp.trigger);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _catchUp.trigger());
   }
 
   @override
   void dispose() {
+    _catchUp.dispose();
     _lifecycle.dispose();
     super.dispose();
   }
 
-  /// Posts recurring entries that fell due while the app was closed or in
-  /// the background. Safe to run repeatedly: posting is idempotent.
-  Future<void> _postDueRecurring() async {
+  /// Posts recurring entries that fell due while the app was closed, in the
+  /// background, or past midnight in the foreground, then refreshes the
+  /// Recurring list. Safe to run repeatedly: posting is idempotent.
+  Future<void> _postDueRecurring(DateTime now) async {
+    if (!mounted) return;
     try {
-      await ref.read(recurringRepositoryProvider).postDue(now: DateTime.now(), monthStartDay: ref.read(settingsProvider).monthStartDay);
+      await ref.read(recurringRepositoryProvider).postDue(now: now, monthStartDay: ref.read(settingsProvider).monthStartDay);
+      if (mounted) ref.read(recurringLastCatchUpProvider.notifier).set(now);
     } catch (error, stack) {
       FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'recurring', context: ErrorDescription('posting due recurring entries')));
     }

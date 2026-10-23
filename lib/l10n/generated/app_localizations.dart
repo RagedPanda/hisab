@@ -3407,7 +3407,7 @@ abstract class AppLocalizations {
   /// No description provided for @groupTotalsTotalSpent.
   ///
   /// In en, this message translates to:
-  /// **'Total group spending'**
+  /// **'Group total'**
   String get groupTotalsTotalSpent;
 
   /// No description provided for @groupTotalsYouPaid.
@@ -3427,6 +3427,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change in your balance'**
   String get groupTotalsNetChange;
+
+  /// No description provided for @groupTotalsPaymentsMade.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you made'**
+  String get groupTotalsPaymentsMade;
+
+  /// No description provided for @groupTotalsPaymentsReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you received'**
+  String get groupTotalsPaymentsReceived;
 
   /// No description provided for @groupTotalsByMember.
   ///

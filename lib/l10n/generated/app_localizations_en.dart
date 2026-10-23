@@ -1989,7 +1989,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupTotalsAllTime => 'All time';
 
   @override
-  String get groupTotalsTotalSpent => 'Total group spending';
+  String get groupTotalsTotalSpent => 'Group total';
 
   @override
   String get groupTotalsYouPaid => 'You paid';
@@ -1999,6 +1999,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupTotalsNetChange => 'Change in your balance';
+
+  @override
+  String get groupTotalsPaymentsMade => 'Payments you made';
+
+  @override
+  String get groupTotalsPaymentsReceived => 'Payments you received';
 
   @override
   String get groupTotalsByMember => 'Paid and share by member';

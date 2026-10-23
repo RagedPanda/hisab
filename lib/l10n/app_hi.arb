@@ -578,6 +578,8 @@
   "groupTotalsYouPaid": "आपने चुकाया",
   "groupTotalsYourShare": "आपका हिस्सा",
   "groupTotalsNetChange": "आपके बैलेंस में बदलाव",
+  "groupTotalsPaymentsMade": "आपके किए भुगतान",
+  "groupTotalsPaymentsReceived": "आपको मिले भुगतान",
   "groupTotalsByMember": "सदस्यवार चुकाया और हिस्सा",
   "groupTotalsPaid": "चुकाया",
   "groupTotalsShare": "हिस्सा",

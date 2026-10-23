@@ -1994,6 +1994,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get groupTotalsNetChange => 'आपके बैलेंस में बदलाव';
 
   @override
+  String get groupTotalsPaymentsMade => 'आपके किए भुगतान';
+
+  @override
+  String get groupTotalsPaymentsReceived => 'आपको मिले भुगतान';
+
+  @override
   String get groupTotalsByMember => 'सदस्यवार चुकाया और हिस्सा';
 
   @override

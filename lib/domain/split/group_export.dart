@@ -18,6 +18,7 @@ class ExportRow {
     required this.costMinor,
     required this.paidMinor,
     required this.shareMinor,
+    this.isPayment = false,
   });
   final DateTime occurredAt;
   final String description;
@@ -29,6 +30,27 @@ class ExportRow {
 
   /// Amount each member owes for this row, by member id.
   final Map<String, int> shareMinor;
+
+  /// A payment between members: it moves balances but is not spending, so
+  /// it stays out of the totals.
+  final bool isPayment;
+}
+
+/// What the group spent overall, and what each member paid and owed of it.
+/// Payments between members are left out: they settle debt, they are not
+/// spending.
+typedef ExpenseTotals = ({int totalMinor, Map<String, int> paidByMember, Map<String, int> shareByMember});
+
+ExpenseTotals expenseTotals(Iterable<ExportRow> rows) {
+  var total = 0;
+  final paid = <String, int>{};
+  final share = <String, int>{};
+  for (final row in rows.where((row) => !row.isPayment)) {
+    total += row.costMinor;
+    row.paidMinor.forEach((id, amount) => paid.update(id, (value) => value + amount, ifAbsent: () => amount));
+    row.shareMinor.forEach((id, amount) => share.update(id, (value) => value + amount, ifAbsent: () => amount));
+  }
+  return (totalMinor: total, paidByMember: paid, shareByMember: share);
 }
 
 /// Header words, localised by the caller.
@@ -42,6 +64,7 @@ class GroupCsvLabels {
     required this.paidColumn,
     required this.shareColumn,
     required this.balanceColumn,
+    required this.total,
   });
   final String date;
   final String description;
@@ -53,6 +76,9 @@ class GroupCsvLabels {
   final String Function(String memberName) paidColumn;
   final String Function(String memberName) shareColumn;
   final String Function(String memberName) balanceColumn;
+
+  /// Description of the closing total row.
+  final String total;
 }
 
 /// A row with every member's balance after it (positive = the group owes
@@ -85,7 +111,9 @@ Map<String, int> applyRow(Map<String, int> balances, ExportRow row) {
   return next;
 }
 
-/// The whole CSV: a header line, then one line per row in date order.
+/// The whole CSV: a header line, one line per row in date order, then a
+/// total line: the group's spend, what each member paid and owed in all,
+/// and everyone's final balance.
 /// Lines end in CRLF (RFC 4180). Amounts are plain decimals ("-12.50") so
 /// spreadsheets read them as numbers.
 String buildGroupCsv({required List<ExportMember> members, required List<ExportRow> rows, required GroupCsvLabels labels}) {
@@ -100,9 +128,12 @@ String buildGroupCsv({required List<ExportMember> members, required List<ExportR
     for (final member in members) labels.balanceColumn(member.name),
   ].map(csvTextCell);
   final nameById = {for (final member in members) member.id: member.name};
+  final ordered = withRunningBalances(rows, members.map((member) => member.id));
+  final totals = expenseTotals(rows);
+  final finalBalances = ordered.isEmpty ? const <String, int>{} : ordered.last.balances;
   final lines = [
     header.join(','),
-    for (final (:row, :balances) in withRunningBalances(rows, members.map((member) => member.id)))
+    for (final (:row, :balances) in ordered)
       [
         isoDate(row.occurredAt),
         csvTextCell(row.description),
@@ -113,6 +144,16 @@ String buildGroupCsv({required List<ExportMember> members, required List<ExportR
         for (final member in members) decimalAmount(row.shareMinor[member.id] ?? 0),
         for (final member in members) decimalAmount(balances[member.id] ?? 0),
       ].join(','),
+    [
+      '',
+      csvTextCell(labels.total),
+      '',
+      decimalAmount(totals.totalMinor),
+      '',
+      for (final member in members) decimalAmount(totals.paidByMember[member.id] ?? 0),
+      for (final member in members) decimalAmount(totals.shareByMember[member.id] ?? 0),
+      for (final member in members) decimalAmount(finalBalances[member.id] ?? 0),
+    ].join(','),
   ];
   return '${lines.join('\r\n')}\r\n';
 }

@@ -10,10 +10,11 @@ GroupCsvLabels get labels => GroupCsvLabels(
       paidColumn: (name) => '$name paid',
       shareColumn: (name) => '$name share',
       balanceColumn: (name) => '$name balance',
+      total: 'Total',
     );
 
-ExportRow row(DateTime when, String description, int cost, Map<String, int> paid, Map<String, int> share, {String category = 'Food'}) =>
-    ExportRow(occurredAt: when, description: description, category: category, costMinor: cost, paidMinor: paid, shareMinor: share);
+ExportRow row(DateTime when, String description, int cost, Map<String, int> paid, Map<String, int> share, {String category = 'Food', bool isPayment = false}) =>
+    ExportRow(occurredAt: when, description: description, category: category, costMinor: cost, paidMinor: paid, shareMinor: share, isPayment: isPayment);
 
 List<String> linesOf(String csv) => csv.split('\r\n')..removeLast();
 
@@ -84,7 +85,10 @@ void main() {
 
     test('header lists paid, share and balance columns per member', () {
       final csv = buildGroupCsv(members: members, rows: const [], labels: labels);
-      expect(linesOf(csv), ['Date,Description,Category,Cost,Paid by,You paid,Rahul paid,You share,Rahul share,You balance,Rahul balance']);
+      expect(linesOf(csv), [
+        'Date,Description,Category,Cost,Paid by,You paid,Rahul paid,You share,Rahul share,You balance,Rahul balance',
+        ',Total,,0.00,,0.00,0.00,0.00,0.00,0.00,0.00',
+      ]);
       expect(csv.endsWith('\r\n'), isTrue);
     });
 
@@ -118,7 +122,7 @@ void main() {
     test('a description with a line break stays one CSV record', () {
       final csv = buildGroupCsv(members: members, rows: [row(DateTime(2026, 10, 5), 'Groceries\nand milk', 100, {'a': 100}, {'b': 100})], labels: labels);
       expect(csv, contains('"Groceries\nand milk"'));
-      expect(linesOf(csv), hasLength(2));
+      expect(linesOf(csv), hasLength(3));
     });
 
     test('a payment row settles the running balance to zero', () {
@@ -126,11 +130,41 @@ void main() {
         members: members,
         rows: [
           row(DateTime(2026, 10, 1), 'Dinner', 1000, {'a': 1000}, {'a': 500, 'b': 500}),
-          row(DateTime(2026, 10, 2), 'Rahul paid You', 500, {'b': 500}, {'a': 500}, category: 'Payment'),
+          row(DateTime(2026, 10, 2), 'Rahul paid You', 500, {'b': 500}, {'a': 500}, category: 'Payment', isPayment: true),
         ],
         labels: labels,
       );
       expect(linesOf(csv)[2], endsWith(',0.00,0.00'));
+    });
+  });
+
+  group('totals', () {
+    final rows = [
+      row(DateTime(2026, 10, 1), 'Flights', 20000000, {'b': 20000000}, {'b': 10000000, 'c': 10000000}),
+      row(DateTime(2026, 10, 2), 'Hotel', 10000000, {'a': 10000000}, {'a': 5000000, 'b': 2500000, 'c': 2500000}),
+      row(DateTime(2026, 10, 3), 'Payment', 2500000, {'c': 2500000}, {'a': 2500000}, isPayment: true),
+    ];
+
+    test('expenseTotals counts expenses only: the group total and each member\'s own share', () {
+      final totals = expenseTotals(rows);
+      expect(totals.totalMinor, 30000000, reason: 'Rs 3,00,000 spent; the payment is not spending');
+      expect(totals.shareByMember, {'a': 5000000, 'b': 12500000, 'c': 12500000}, reason: 'a was not on the flights, so their share is Rs 50,000');
+      expect(totals.paidByMember, {'a': 10000000, 'b': 20000000});
+    });
+
+    test('the CSV ends with a total row: spend, paid, share and final balance per member', () {
+      const three = [(id: 'a', name: 'You'), (id: 'b', name: 'Rahul'), (id: 'c', name: 'Asha')];
+      final lines = linesOf(buildGroupCsv(members: three, rows: rows, labels: labels));
+      expect(lines, hasLength(5));
+      expect(lines.last, ',Total,,300000.00,,100000.00,200000.00,0.00,50000.00,125000.00,125000.00,25000.00,75000.00,-100000.00');
+    });
+
+    test('a localised total label is escaped like any text cell', () {
+      final hindi = GroupCsvLabels(
+        date: 'तारीख', description: 'विवरण', category: 'श्रेणी', cost: 'राशि', paidBy: 'किसने दिया',
+        paidColumn: (name) => name, shareColumn: (name) => name, balanceColumn: (name) => name, total: 'कुल, सब',
+      );
+      expect(linesOf(buildGroupCsv(members: const [], rows: const [], labels: hindi)).last, ',"कुल, सब",,0.00,');
     });
   });
 

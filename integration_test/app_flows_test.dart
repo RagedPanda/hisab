@@ -14,6 +14,7 @@
 /// first, otherwise iOS keeps the denial and flow 24 fails its first expect.
 library;
 
+import 'dart:io' show Platform;
 import 'dart:ui' as ui;
 
 import 'package:drift/drift.dart' show Value;
@@ -587,6 +588,7 @@ void main() {
     await shoot(tester, 'categories_income');
   });
 
+  // iOS only: Android offers SMS reading on this screen, so the flow is skipped there.
   testWidgets('10 bank SMS screen on iOS: reading disabled, paste still works', (tester) async {
     await pumpApp(tester, shared);
     await goTab(tester, 'Settings');
@@ -610,7 +612,7 @@ void main() {
     final accountNames = (await shared.read(accountsRepositoryProvider).getAll()).map((a) => a.name).toList();
     debugPrint('SMS-DIAG accounts after pasting and ignoring an SMS: $accountNames');
     await goBack(tester);
-  });
+  }, skip: !Platform.isIOS);
 
   testWidgets('11 settings: dark theme on every tab', (tester) async {
     addTearDown(() => shared.read(settingsProvider.notifier).update((s) => s.copyWith(themeMode: ThemeMode.light)));

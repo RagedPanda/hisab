@@ -7,7 +7,7 @@ import 'card_summary.dart';
 /// and on the day itself.
 const kCardReminderDaysBefore = [3, 0];
 
-/// The card-due reminder already stored for a card (the latest one).
+/// One card-due reminder already stored for a card.
 class ExistingCardReminder {
   const ExistingCardReminder({required this.id, required this.dueAt, required this.status, this.title = '', this.amountMinor});
   final String id;
@@ -19,26 +19,15 @@ class ExistingCardReminder {
   bool get isPending => status == ReminderStatus.pending;
 }
 
-/// What to do with a card's automatic "card due" reminder.
-sealed class CardReminderAction {
-  const CardReminderAction();
-}
+/// The writes that bring a card's reminders in line: at most one save
+/// (create when its id is null, else update in place) and the pending
+/// reminders to delete.
+class CardReminderPlan {
+  const CardReminderPlan({this.save, this.deleteIds = const []});
+  final ReminderDraft? save;
+  final List<String> deleteIds;
 
-/// The stored reminder already matches; nothing to write.
-class KeepCardReminder extends CardReminderAction {
-  const KeepCardReminder();
-}
-
-/// Create (draft.id null) or update (draft.id set) the reminder.
-class SaveCardReminder extends CardReminderAction {
-  const SaveCardReminder(this.draft);
-  final ReminderDraft draft;
-}
-
-/// Remove the pending reminder: the card has no due day any more or is gone.
-class DeleteCardReminder extends CardReminderAction {
-  const DeleteCardReminder(this.id);
-  final String id;
+  bool get isEmpty => save == null && deleteIds.isEmpty;
 }
 
 /// The reminder a card should have for [due]; [existingId] updates in place.
@@ -55,33 +44,39 @@ ReminderDraft cardReminderDraft({required String accountId, required String card
   );
 }
 
-/// Decides how to bring a card's reminder in line with its [due] date.
+/// Decides how to bring a card's reminders in line with its [due] date, so
+/// the card ends up with at most one pending reminder.
 ///
-/// - No due date (due day cleared, card deleted or no longer a card): a
+/// [existing] is every live card reminder of the account, any status.
+/// - No due date (due day cleared, card deleted or no longer a card): every
 ///   pending reminder is deleted; closed ones stay in history.
 /// - A reminder the user already marked paid or skipped for this same due
-///   date is left alone, so it is not re-raised.
-/// - Otherwise the pending reminder is updated when its date, amount or name
-///   changed, or a new one is created when there is none or the last one
-///   is closed.
-CardReminderAction planCardReminder({
+///   date settles it: nothing is re-raised and stray pending ones go.
+/// - Otherwise one pending reminder (the one on the due date if there is
+///   one) is kept and updated when its date, amount or name changed, any
+///   other pending ones are deleted, and a new one is created when none is
+///   pending.
+CardReminderPlan planCardReminder({
   required String accountId,
   required String cardName,
   required CardDue? due,
-  required ExistingCardReminder? existing,
+  required List<ExistingCardReminder> existing,
 }) {
-  if (due == null) {
-    return existing != null && existing.isPending ? DeleteCardReminder(existing.id) : const KeepCardReminder();
-  }
-  if (existing != null && !existing.isPending && isSameDay(existing.dueAt, due.dueDate)) return const KeepCardReminder();
-  final draft = cardReminderDraft(
-    accountId: accountId,
-    cardName: cardName,
-    due: due,
-    existingId: existing != null && existing.isPending ? existing.id : null,
-  );
-  if (existing != null && existing.isPending && _matches(existing, draft)) return const KeepCardReminder();
-  return SaveCardReminder(draft);
+  final pending = [for (final reminder in existing) if (reminder.isPending) reminder];
+  final allPendingIds = [for (final reminder in pending) reminder.id];
+  if (due == null) return CardReminderPlan(deleteIds: allPendingIds);
+  final settled = existing.any((reminder) => !reminder.isPending && isSameDay(reminder.dueAt, due.dueDate));
+  if (settled) return CardReminderPlan(deleteIds: allPendingIds);
+  final kept = _pick(pending, due.dueDate);
+  final draft = cardReminderDraft(accountId: accountId, cardName: cardName, due: due, existingId: kept?.id);
+  final extraIds = [for (final id in allPendingIds) if (id != kept?.id) id];
+  return CardReminderPlan(save: kept != null && _matches(kept, draft) ? null : draft, deleteIds: extraIds);
+}
+
+/// The pending reminder to keep: the one already on [dueDate], else the first.
+ExistingCardReminder? _pick(List<ExistingCardReminder> pending, DateTime dueDate) {
+  if (pending.isEmpty) return null;
+  return pending.firstWhere((reminder) => isSameDay(reminder.dueAt, dueDate), orElse: () => pending.first);
 }
 
 bool _matches(ExistingCardReminder existing, ReminderDraft draft) =>

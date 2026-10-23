@@ -95,9 +95,10 @@ void main() {
     expect(find.text('Set statement and due days'), findsNothing);
     expect(find.byKey(kCardDueChipKey), findsOneWidget);
 
-    final reminder = await container.read(remindersRepositoryProvider).latestForAccount('card', kind: ReminderKind.card);
-    expect(reminder, isNotNull, reason: 'saving the due day creates the card due reminder');
-    expect(reminder!.title, 'Amex');
+    final reminders = await container.read(remindersRepositoryProvider).forAccount('card', kind: ReminderKind.card);
+    expect(reminders, hasLength(1), reason: 'saving the due day creates the card due reminder');
+    final reminder = reminders.single;
+    expect(reminder.title, 'Amex');
     expect(reminder.amountMinor, 150000);
     expect(reminder.dueAt, dueDateForStatement(saved.lastStatementAt!, 15));
   });

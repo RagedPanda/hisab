@@ -48,34 +48,43 @@ class CardReminderSync {
     return syncAccount(account);
   }
 
-  /// Removes the pending reminder of an account that was deleted.
+  /// Removes every pending card reminder of an account that was deleted.
   Future<void> removeForAccount(String accountId) => _apply(accountId, '', due: null);
 
-  /// Syncs every live card (run at startup, so due dates roll forward).
+  /// Syncs every live card (run at startup, so due dates roll forward) and
+  /// drops pending card reminders left behind by cards that are gone.
   Future<void> syncAll() async {
-    for (final account in await accounts.getAll()) {
-      if (account.type == 'card') await syncAccount(account);
+    final cards = [for (final account in await accounts.getAll()) if (account.type == 'card') account];
+    for (final card in cards) {
+      await syncAccount(card);
+    }
+    final pending = await reminders.getUpcoming();
+    for (final accountId in orphanedCardReminderAccounts(pending, liveCardIds: {for (final card in cards) card.id})) {
+      await removeForAccount(accountId);
     }
   }
 
   Future<void> _apply(String accountId, String cardName, {required CardDue? due}) async {
-    final stored = await reminders.latestForAccount(accountId, kind: ReminderKind.card);
-    final action = planCardReminder(
+    final stored = await reminders.forAccount(accountId, kind: ReminderKind.card);
+    final plan = planCardReminder(
       accountId: accountId,
       cardName: cardName,
       due: due,
-      existing: stored == null ? null : existingCardReminderOf(stored),
+      existing: [for (final row in stored) existingCardReminderOf(row)],
     );
-    switch (action) {
-      case KeepCardReminder():
-        return;
-      case SaveCardReminder(:final draft):
-        await scheduler.save(draft);
-      case DeleteCardReminder(:final id):
-        await scheduler.delete(id);
+    for (final id in plan.deleteIds) {
+      await scheduler.delete(id);
     }
+    final draft = plan.save;
+    if (draft != null) await scheduler.save(draft);
   }
 }
+
+/// Accounts that still have pending card reminders but are no longer live cards.
+Set<String> orphanedCardReminderAccounts(List<Reminder> pending, {required Set<String> liveCardIds}) => {
+      for (final reminder in pending)
+        if (reminder.kind == ReminderKind.card.key && reminder.accountId != null && !liveCardIds.contains(reminder.accountId)) reminder.accountId!,
+    };
 
 /// The planner's view of a stored reminder row.
 ExistingCardReminder existingCardReminderOf(Reminder row) =>

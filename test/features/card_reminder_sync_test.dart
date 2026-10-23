@@ -8,6 +8,8 @@ import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/accounts_repository.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/data/repositories/reminders_repository.dart';
+import 'package:hisab/core/notifications/reminder_payload.dart';
+import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
 import 'package:hisab/features/accounts/card_reminder_sync.dart';
 
@@ -117,5 +119,72 @@ void main() {
     await sync.syncAccount(bank);
     await sync.syncAll();
     expect(await cardReminders(), isEmpty);
+  });
+
+  Future<List<Reminder>> pendingCardReminders() async =>
+      [for (final row in await cardReminders()) if (row.status == ReminderStatus.pending) row];
+
+  Future<void> editCard(String id, AccountsCompanion changes) async {
+    await accounts.update(changes.copyWith(id: Value(id)));
+    await sync.syncAccountById(id);
+  }
+
+  Future<Account> cardWithNewerPaidReminder() async {
+    final card = await addCard(dueDay: 25);
+    await EntriesRepository(db).saveEntry(EntriesRepository.newExpense(kind: 'transfer', amountMinor: 2500000, occurredAt: DateTime(2026, 10, 7), accountId: 'bank')
+        .copyWith(toAccountId: Value(card.id)));
+    await sync.syncAll();
+    final nextBill = (await pendingCardReminders()).single;
+    expect(nextBill.dueAt, DateTime(2026, 11, 25), reason: 'paid: next cycle');
+    await reminders.markDone(nextBill.id);
+    return card;
+  }
+
+  test('editing a card with a newer paid reminder updates one pending reminder in place (#59)', () async {
+    final card = await cardWithNewerPaidReminder();
+    await editCard(card.id, const AccountsCompanion(lastStatementMinor: Value(3000000)));
+    final first = (await pendingCardReminders()).single;
+    expect(first.dueAt, DateTime(2026, 10, 25));
+    for (final dueDay in [20, 23, 24, 31]) {
+      await editCard(card.id, AccountsCompanion(dueDay: Value(dueDay)));
+      final pending = await pendingCardReminders();
+      expect(pending, hasLength(1), reason: 'due day $dueDay');
+      expect(pending.single.id, first.id);
+      expect(pending.single.dueAt, DateTime(2026, 10, dueDay));
+    }
+    expect((await cardReminders()).where((row) => row.status == ReminderStatus.done), hasLength(1), reason: 'paid one stays in history');
+  });
+
+  test('clearing the due day removes the pending reminder despite a newer paid one, and cancels alerts (#59)', () async {
+    final card = await cardWithNewerPaidReminder();
+    await editCard(card.id, const AccountsCompanion(lastStatementMinor: Value(3000000)));
+    final pendingId = (await pendingCardReminders()).single.id;
+    expect(gateway.alertsFor(reminderPayload(pendingId)), isNotEmpty);
+    await editCard(card.id, const AccountsCompanion(dueDay: Value(null)));
+    expect(await pendingCardReminders(), isEmpty);
+    expect(gateway.alertsFor(reminderPayload(pendingId)), isEmpty);
+  });
+
+  test('deleting a card removes all its pending reminders and their alerts (#59)', () async {
+    final card = await cardWithNewerPaidReminder();
+    await editCard(card.id, const AccountsCompanion(lastStatementMinor: Value(3000000)));
+    final pendingId = (await pendingCardReminders()).single.id;
+    await accounts.delete(card.id);
+    await sync.removeForAccount(card.id);
+    expect(await pendingCardReminders(), isEmpty);
+    expect(gateway.alertsFor(reminderPayload(pendingId)), isEmpty);
+  });
+
+  test('startup collapses duplicates and clears reminders of cards deleted earlier (#59)', () async {
+    final card = await addCard();
+    final gone = await addCard();
+    for (final account in [card, gone, card]) {
+      await reminders.save(ReminderDraft(kind: ReminderKind.card, title: account.name, accountId: account.id, dueAt: DateTime(2026, 10, 15)));
+    }
+    await accounts.delete(gone.id);
+    await sync.syncAll();
+    final pending = await pendingCardReminders();
+    expect(pending, hasLength(1));
+    expect(pending.single.accountId, card.id);
   });
 }

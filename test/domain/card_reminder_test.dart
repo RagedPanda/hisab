@@ -7,11 +7,11 @@ import 'package:hisab/domain/reminders/reminder_schedule.dart';
 void main() {
   final due = CardDue(dueDate: DateTime(2026, 11, 15), daysLeft: 10, state: CardDueState.upcoming, amountDueMinor: 2500000);
 
-  CardReminderAction plan({CardDue? cardDue, ExistingCardReminder? existing, String name = 'HDFC Millennia'}) =>
+  CardReminderPlan plan({CardDue? cardDue, List<ExistingCardReminder> existing = const [], String name = 'HDFC Millennia'}) =>
       planCardReminder(accountId: 'card', cardName: name, due: cardDue, existing: existing);
 
-  ExistingCardReminder stored({String status = ReminderStatus.pending, DateTime? dueAt, int? amountMinor = 2500000, String title = 'HDFC Millennia'}) =>
-      ExistingCardReminder(id: 'r1', dueAt: dueAt ?? DateTime(2026, 11, 15), status: status, title: title, amountMinor: amountMinor);
+  ExistingCardReminder stored({String id = 'r1', String status = ReminderStatus.pending, DateTime? dueAt, int? amountMinor = 2500000, String title = 'HDFC Millennia'}) =>
+      ExistingCardReminder(id: id, dueAt: dueAt ?? DateTime(2026, 11, 15), status: status, title: title, amountMinor: amountMinor);
 
   group('cardReminderDraft', () {
     test('is a one-off card reminder on the due day, 3 days ahead and on the day', () {
@@ -42,13 +42,14 @@ void main() {
 
   group('planCardReminder', () {
     test('creates a reminder when the card has none', () {
-      final action = plan(cardDue: due);
-      expect(action, isA<SaveCardReminder>());
-      expect((action as SaveCardReminder).draft.id, isNull);
+      final result = plan(cardDue: due);
+      expect(result.save, isNotNull);
+      expect(result.save!.id, isNull);
+      expect(result.deleteIds, isEmpty);
     });
 
     test('keeps a pending reminder that already matches', () {
-      expect(plan(cardDue: due, existing: stored()), isA<KeepCardReminder>());
+      expect(plan(cardDue: due, existing: [stored()]).isEmpty, isTrue);
     });
 
     test('updates the pending reminder in place when the date, amount or name changes', () {
@@ -57,33 +58,59 @@ void main() {
         stored(amountMinor: 1000000),
         stored(title: 'Old name'),
       ]) {
-        final action = plan(cardDue: due, existing: existing);
-        expect(action, isA<SaveCardReminder>());
-        expect((action as SaveCardReminder).draft.id, 'r1');
-        expect(action.draft.dueAt, DateTime(2026, 11, 15));
+        final result = plan(cardDue: due, existing: [existing]);
+        expect(result.save!.id, 'r1');
+        expect(result.save!.dueAt, DateTime(2026, 11, 15));
+        expect(result.deleteIds, isEmpty);
       }
     });
 
+    test('a newer closed reminder does not stop the pending one being updated in place (#59)', () {
+      final result = plan(cardDue: due, existing: [
+        stored(id: 'done-nov-28', status: ReminderStatus.done, dueAt: DateTime(2026, 11, 28), amountMinor: null),
+        stored(id: 'pending', dueAt: DateTime(2026, 10, 20)),
+      ]);
+      expect(result.save!.id, 'pending');
+      expect(result.save!.dueAt, DateTime(2026, 11, 15));
+      expect(result.deleteIds, isEmpty);
+    });
+
+    test('collapses duplicate pending reminders into one, keeping the one on the due date (#59)', () {
+      final result = plan(cardDue: due, existing: [
+        stored(id: 'a', dueAt: DateTime(2026, 10, 20)),
+        stored(id: 'b', dueAt: DateTime(2026, 11, 15)),
+        stored(id: 'c', dueAt: DateTime(2026, 10, 31)),
+      ]);
+      expect(result.save, isNull, reason: 'b already matches');
+      expect(result.deleteIds, ['a', 'c']);
+    });
+
     test('does not re-raise a reminder already marked paid or skipped for this due date', () {
-      expect(plan(cardDue: due, existing: stored(status: ReminderStatus.done)), isA<KeepCardReminder>());
-      expect(plan(cardDue: due, existing: stored(status: ReminderStatus.skipped)), isA<KeepCardReminder>());
+      expect(plan(cardDue: due, existing: [stored(status: ReminderStatus.done)]).isEmpty, isTrue);
+      expect(plan(cardDue: due, existing: [stored(status: ReminderStatus.skipped)]).isEmpty, isTrue);
+      final withStray = plan(cardDue: due, existing: [stored(status: ReminderStatus.done), stored(id: 'stray', dueAt: DateTime(2026, 10, 20))]);
+      expect(withStray.save, isNull);
+      expect(withStray.deleteIds, ['stray']);
     });
 
     test('starts a new reminder for the next bill once the last one is closed', () {
-      final action = plan(cardDue: due, existing: stored(status: ReminderStatus.done, dueAt: DateTime(2026, 10, 15)));
-      expect(action, isA<SaveCardReminder>());
-      expect((action as SaveCardReminder).draft.id, isNull);
+      final result = plan(cardDue: due, existing: [stored(status: ReminderStatus.done, dueAt: DateTime(2026, 10, 15))]);
+      expect(result.save!.id, isNull);
     });
 
-    test('deletes the pending reminder when the due date goes away', () {
-      final action = plan(existing: stored());
-      expect(action, isA<DeleteCardReminder>());
-      expect((action as DeleteCardReminder).id, 'r1');
+    test('deletes every pending reminder when the due date goes away, even with a newer closed one (#59)', () {
+      final result = plan(existing: [
+        stored(id: 'done', status: ReminderStatus.done, dueAt: DateTime(2026, 11, 28)),
+        stored(id: 'p1', dueAt: DateTime(2026, 10, 20)),
+        stored(id: 'p2', dueAt: DateTime(2026, 10, 31)),
+      ]);
+      expect(result.save, isNull);
+      expect(result.deleteIds, ['p1', 'p2']);
     });
 
     test('keeps closed reminders in history when the due date goes away', () {
-      expect(plan(existing: stored(status: ReminderStatus.done)), isA<KeepCardReminder>());
-      expect(plan(), isA<KeepCardReminder>());
+      expect(plan(existing: [stored(status: ReminderStatus.done)]).isEmpty, isTrue);
+      expect(plan().isEmpty, isTrue);
     });
   });
 }

@@ -49,9 +49,10 @@ void main() {
     expect(find.text('₹30,000'), findsWidgets, reason: 'last statement');
     expect(find.text('₹1,57,500'), findsOneWidget, reason: 'available limit');
 
-    final reminder = await app.read(remindersRepositoryProvider).latestForAccount(card.id, kind: ReminderKind.card);
-    expect(reminder, isNotNull);
-    expect(reminder!.amountMinor, 3000000);
+    final reminders = await app.read(remindersRepositoryProvider).forAccount(card.id, kind: ReminderKind.card);
+    expect(reminders, hasLength(1));
+    final reminder = reminders.single;
+    expect(reminder.amountMinor, 3000000);
     expect(reminder.dueAt, dueDateForStatement(previousStatementDate(startOfDay(DateTime.now()), 5), 15));
 
     for (final narrow in [false, true]) {

@@ -142,7 +142,8 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
   Future<void> _save() async {
     setState(() => _submitted = true);
     final draft = _draft;
-    if (draft.error != null || (_notify && _daysBefore.isEmpty) || _saving) return;
+    final amountInvalid = _kind.isMoney && amountErrorText(context, _amountController.text) != null;
+    if (draft.error != null || amountInvalid || (_notify && _daysBefore.isEmpty) || _saving) return;
     setState(() => _saving = true);
     if (_notify) await _askPermissionIfNeeded();
     final id = await ref.read(reminderSchedulerProvider).save(draft);
@@ -213,7 +214,13 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
                         key: const ValueKey('reminder-amount'),
                         controller: _amountController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: InputDecoration(labelText: l10n.reminderAmountOptional, prefixText: '$symbol '),
+                        inputFormatters: amountInputFormatters,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          labelText: l10n.reminderAmountOptional,
+                          prefixText: '$symbol ',
+                          errorText: amountErrorText(context, _amountController.text),
+                        ),
                       ),
                     ],
                     gap,

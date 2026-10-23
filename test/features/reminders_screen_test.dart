@@ -85,6 +85,27 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('#44 amount field drops letters and blocks saving an amount it cannot read', (tester) async {
+    final gateway = FakeNotificationGateway();
+    final (_, db) = await _pumpReminders(tester, gateway);
+    await tester.tap(find.text('Add reminder'));
+    await _settle(tester);
+    await tester.enterText(find.byKey(const ValueKey('reminder-title')), 'Rent');
+
+    await tester.enterText(find.byKey(const ValueKey('reminder-amount')), 'abc15x00');
+    await tester.pump();
+    expect(tester.widget<TextField>(find.byKey(const ValueKey('reminder-amount'))).controller!.text, '1500');
+
+    await tester.enterText(find.byKey(const ValueKey('reminder-amount')), '1.2.3');
+    await tester.pump();
+    expect(find.text('Enter a valid amount, e.g. 250 or 99.50'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('reminder-save')));
+    await _settle(tester);
+    expect(await db.select(db.reminders).get(), isEmpty, reason: 'nothing saved with an unreadable amount');
+    expect(find.text('New reminder'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('just mark paid moves the bill to history and Undo reopens it', (tester) async {
     final gateway = FakeNotificationGateway();
     final (container, db) = await _pumpReminders(tester, gateway, location: '/settings');

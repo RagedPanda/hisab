@@ -11,6 +11,7 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
+import '../../data/repositories/entry_removal.dart';
 import '../../data/repositories/project_fields_repository.dart';
 import '../../data/repositories/projects_repository.dart';
 import '../../data/repositories/recurring_repository.dart';
@@ -132,14 +133,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         _source = entry.source;
         _smsId = entry.smsId;
         _recurringId = entry.recurringId;
-        _previousSnapshot = EntrySnapshot(
-          kind: entry.kind,
-          amountMinor: entry.amountMinor,
-          accountId: entry.accountId,
-          toAccountId: entry.toAccountId,
-          source: entry.source,
-          groupId: entry.groupId,
-        );
+        _previousSnapshot = snapshotOfEntry(entry);
         _splitMethod = SplitMethod.values.firstWhere((m) => m.name == entry.splitMethod, orElse: () => SplitMethod.equal);
         _items = details.items.map(ItemDraft.fromRow).toList();
         if (_groupId != null) {

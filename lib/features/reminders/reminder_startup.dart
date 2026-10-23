@@ -3,13 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/notifications/notification_gateway.dart';
 import '../../core/notifications/reminder_payload.dart';
+import '../../core/notifications/reminder_tap_gate.dart';
 import '../../core/providers.dart';
 import '../salary/salary_reminder.dart';
 import '../shell/router.dart';
 
+/// Drops the second delivery of a cold-start tap (launch details plus callback).
+final _tapGate = ReminderTapGate();
+
 /// Opens the screen a reminder notification (or its Mark paid button) points
-/// at; Snooze is applied in place without opening anything.
+/// at; Snooze is applied in place without opening anything. A tap delivered
+/// twice is handled once.
 Future<void> handleReminderTap(ProviderContainer container, NotificationTap tap) async {
+  if (!_tapGate.admit(tap)) return;
   if (tap.payload == kSalaryAlertPayload) {
     appRouter.push(kSalaryLocation);
     return;

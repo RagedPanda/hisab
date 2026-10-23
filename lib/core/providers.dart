@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../data/backup/backup_service.dart';
 import '../data/db/database.dart';
 import '../data/repositories/accounts_repository.dart';
+import '../data/repositories/entry_removal.dart';
 import '../data/repositories/budgets_repository.dart';
 import '../data/repositories/categories_repository.dart';
 import '../data/repositories/entries_repository.dart';
@@ -179,6 +180,11 @@ final notificationServiceProvider = Provider((ref) {
 final reminderSchedulerProvider = Provider((ref) => ReminderScheduler(
       reminders: ref.watch(remindersRepositoryProvider),
       notifications: ref.watch(notificationServiceProvider),
+      removeEntry: (entryId) => deleteEntryReversingBalances(
+        entries: ref.read(entriesRepositoryProvider),
+        accounts: ref.read(accountsRepositoryProvider),
+        entryId: entryId,
+      ),
     ));
 
 /// Pending due reminders, earliest (overdue) first.

@@ -29,9 +29,9 @@ String? reminderLocationFor({required String? payload, required String? actionId
   final id = reminderIdFromPayload(payload);
   if (id == null) return null;
   if (actionId == kSnoozeActionId) return null;
-  // A group's settle-up reminder opens the group, whichever button was used.
+  // A group's settle-up reminder opens the group's Balances tab, whichever button was used.
   final settleGroupId = groupIdOfSettleSchedule(id);
-  if (settleGroupId != null) return '/groups/$settleGroupId';
+  if (settleGroupId != null) return settleUpLocationFor(settleGroupId);
   if (actionId == kMarkPaidActionId) return '/entry?reminder=$id';
   return '/reminders/$id';
 }

@@ -101,3 +101,31 @@ SettleReminderSchedule? settleScheduleFromStored({required String repeat, int? r
       'monthly' => SettleReminderSchedule(frequency: RecurrenceFrequency.monthly, dayOfMonth: repeatDay ?? 1, memberId: memberId),
       _ => null,
     };
+
+/// Query value that opens a group straight on its Balances tab.
+const kGroupBalancesTab = 'balances';
+
+/// Where a settle-up alert lands: the group's Balances tab, where the debts are.
+String settleUpLocationFor(String groupId) => '/groups/$groupId?tab=$kGroupBalancesTab';
+
+/// How many settle-up reminders are posted ahead, so a week (or month) is
+/// never skipped while the app stays closed after one fires.
+const int kSettleAlertsAhead = 4;
+
+/// The next [count] times [schedule] fires, starting with [firstAt].
+List<DateTime> settleReminderTimesFrom(SettleReminderSchedule schedule, DateTime firstAt, {int count = kSettleAlertsAhead}) {
+  final spec = schedule.specFrom(firstAt);
+  final times = <DateTime>[];
+  for (var fireAt = firstAt; times.length < count; fireAt = nextAfter(spec, fireAt)) {
+    times.add(fireAt);
+  }
+  return times;
+}
+
+/// The alert times of a stored settle-up row due at [dueAt]; null when
+/// [reminderId] is not a settle-up schedule or its repeat is unknown.
+List<DateTime>? settleAlertTimesOfRow({required String reminderId, required String repeat, int? repeatDay, required DateTime dueAt}) {
+  if (groupIdOfSettleSchedule(reminderId) == null) return null;
+  final schedule = settleScheduleFromStored(repeat: repeat, repeatDay: repeatDay);
+  return schedule == null ? null : settleReminderTimesFrom(schedule, dueAt);
+}

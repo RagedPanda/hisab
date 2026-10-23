@@ -203,6 +203,9 @@ final smsPaidReminderIdsProvider = StreamProvider((ref) => ref.watch(smsLogRepos
 /// Paid and skipped reminders, latest first.
 final reminderHistoryProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchHistory());
 
+/// The amount each paid reminder's entry recorded, by reminder id.
+final reminderPaidAmountsProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchPaidAmounts());
+
 /// Whether notifications and exact alarms are allowed; invalidate after asking.
 final notificationPermissionProvider = FutureProvider((ref) => ref.watch(notificationServiceProvider).checkPermission());
 

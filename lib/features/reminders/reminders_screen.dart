@@ -222,6 +222,7 @@ class _HistoryList extends ConsumerWidget {
     final locale = Localizations.localeOf(context).toString();
     final symbol = ref.watch(settingsProvider).currencySymbol;
     final paidBySms = ref.watch(smsPaidReminderIdsProvider).value ?? const <String>{};
+    final paidAmounts = ref.watch(reminderPaidAmountsProvider).value ?? const <String, int>{};
     final now = DateTime.now();
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
@@ -229,7 +230,7 @@ class _HistoryList extends ConsumerWidget {
         Card(
           clipBehavior: Clip.antiAlias,
           child: Column(children: [
-            for (final reminder in history) _historyTile(context, ref, reminder, now: now, locale: locale, symbol: symbol, l10n: l10n, paidBySms: paidBySms.contains(reminder.id)),
+            for (final reminder in history) _historyTile(context, ref, reminder, now: now, locale: locale, symbol: symbol, l10n: l10n, paidBySms: paidBySms.contains(reminder.id), paidAmountMinor: paidAmounts[reminder.id]),
           ]),
         ),
       ],
@@ -237,7 +238,7 @@ class _HistoryList extends ConsumerWidget {
   }
 
   Widget _historyTile(BuildContext context, WidgetRef ref, Reminder reminder,
-      {required DateTime now, required String locale, required String symbol, required AppLocalizations l10n, required bool paidBySms}) {
+      {required DateTime now, required String locale, required String symbol, required AppLocalizations l10n, required bool paidBySms, int? paidAmountMinor}) {
     final kind = ReminderKind.of(reminder.kind);
     final closedAt = reminder.doneAt ?? reminder.updatedAt;
     final date = formatRowDate(closedAt, locale: locale);
@@ -246,7 +247,9 @@ class _HistoryList extends ConsumerWidget {
         : kind.isMoney
             ? l10n.reminderPaidOn(date)
             : l10n.reminderDoneOn(date);
-    final caption = reminder.amountMinor == null ? status : '$status · ${formatMinor(reminder.amountMinor!, symbol: symbol)}';
+    // What the linked entry paid wins over the reminder's expected amount.
+    final shownAmountMinor = paidAmountMinor ?? reminder.amountMinor;
+    final caption = shownAmountMinor == null ? status : '$status · ${formatMinor(shownAmountMinor, symbol: symbol)}';
     final canUndo = now.difference(closedAt) <= kReminderUndoWindow;
     return ListTile(
       leading: CircleAvatar(child: Icon(reminderKindIcon(kind), size: 20)),

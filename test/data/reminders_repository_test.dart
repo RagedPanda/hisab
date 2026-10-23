@@ -3,6 +3,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/data/backup/backup_service.dart';
 import 'package:hisab/data/db/database.dart';
+import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/data/repositories/reminders_repository.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
@@ -30,6 +31,24 @@ void main() {
         remindDaysBefore: const [0, 3],
         matchKeywords: 'Landlord|NEFT',
       );
+
+  test('paid amounts come from the linked entry, not the reminder (decision 16)', () async {
+    final entries = EntriesRepository(db);
+    await entries.saveEntry(EntriesRepository.newExpense(id: 'paid-more', amountMinor: 2550000, occurredAt: now));
+    await entries.saveEntry(EntriesRepository.newExpense(id: 'removed', amountMinor: 999, occurredAt: now));
+    final paid = await reminders.save(rent());
+    final skipped = await reminders.save(rent(repeat: ReminderRepeat.once));
+    final deletedEntry = await reminders.save(rent(repeat: ReminderRepeat.once));
+    final unlinked = await reminders.save(rent(repeat: ReminderRepeat.once));
+    await reminders.markDone(paid, entryId: 'paid-more');
+    await reminders.skip(skipped);
+    await reminders.markDone(deletedEntry, entryId: 'removed');
+    await entries.deleteEntry('removed');
+    await reminders.markDone(unlinked);
+
+    expect(await reminders.watchPaidAmounts().first, {paid: 2550000},
+        reason: 'skipped, unlinked and deleted-entry reminders fall back to their own amount');
+  });
 
   test('save stores a normalised row and update keeps the id', () async {
     final id = await reminders.save(rent());

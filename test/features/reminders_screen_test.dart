@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/app.dart';
+import 'package:hisab/core/money.dart';
 import 'package:hisab/core/notifications/reminder_payload.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
@@ -178,6 +179,11 @@ void main() {
     expect(find.text('Electricity'), findsOneWidget);
     expect(find.text('Rent'), findsOneWidget);
     expect(find.text('Paid via SMS'), findsOneWidget, reason: 'only the SMS-paid reminder carries the label');
+    final electricityTile = find.widgetWithText(ListTile, 'Electricity');
+    expect(find.descendant(of: electricityTile, matching: find.textContaining(formatMinor(215000))), findsOneWidget,
+        reason: 'History shows what the SMS paid (decision 16)');
+    expect(find.descendant(of: electricityTile, matching: find.textContaining(formatMinor(210000))), findsNothing,
+        reason: 'not the bill amount it was due for');
     expect(tester.takeException(), isNull);
   });
 

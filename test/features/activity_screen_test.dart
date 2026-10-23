@@ -32,6 +32,9 @@ Future<String> seedActivity(ProviderContainer container) async {
   await groups.deleteGroupExpense('scooter');
   final paymentId = await groups.addSettlement(groupId: groupId, fromMemberId: priya, toMemberId: rahul, amountMinor: 100000);
   await groups.updateSettlement(id: paymentId, fromMemberId: priya, toMemberId: rahul, amountMinor: 120000, occurredAt: DateTime.now(), note: 'GPay', method: 'upi');
+  await groups.deleteSettlement(paymentId);
+  final flatId = await groups.createGroup(name: 'Flat share in Indiranagar', icon: 'home', myName: 'You', otherMembers: ['Amit']);
+  await groups.deleteGroup(flatId);
   return groupId;
 }
 
@@ -65,6 +68,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 100));
       }
       expect(find.byType(ListTile), findsWidgets);
+      expect(find.byType(TextButton), findsNWidgets(3), reason: 'the scooter, the payment and the deleted group each offer Restore');
       expect(tester.takeException(), isNull);
       appRouter.go('/home');
       await tester.pump();

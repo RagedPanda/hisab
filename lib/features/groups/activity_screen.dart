@@ -125,10 +125,15 @@ class _ActivityTile extends ConsumerWidget {
   Future<void> _restore(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = context.l10n;
-    await ref.read(groupsRepositoryProvider).restoreGroupExpense(activity.subjectId);
+    await ref.read(groupsRepositoryProvider).restoreDeleted(activity);
+    final restored = switch (activity.subject) {
+      ActivitySubject.expense => l10n.activityExpenseRestoredSnack,
+      ActivitySubject.payment => l10n.activityPaymentRestoredSnack,
+      ActivitySubject.group => l10n.activityGroupRestoredSnack,
+    };
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(l10n.activityExpenseRestoredSnack)));
+      ..showSnackBar(SnackBar(content: Text(restored)));
   }
 
   static IconData _iconFor(ActivityRecord activity) => switch (activity.action) {

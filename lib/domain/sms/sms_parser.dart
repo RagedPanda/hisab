@@ -45,15 +45,24 @@ final _isoDate = RegExp(r'\b(\d{4})-(\d{2})-(\d{2})\b');
 final _clockTime = RegExp(r'\b([01]?\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\b');
 const _months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
+/// One-time codes and login secrets. Their text is never stored.
+const _otpPhrases = ['otp', 'one time password', 'verification code', 'do not share', 'password'];
+
+/// Marketing. Its text is never stored.
+const _promotionPhrases = [
+  'pre-approved', 'pre approved', 'apply now', 'offer', 'cashback upto', 'cashback up to',
+  'eligible', 'congratulations', 'voucher', 'reward points',
+];
+
 const _rejectPhrases = [
-  'otp', 'one time password', 'verification code', 'do not share',
+  ..._otpPhrases,
+  ..._promotionPhrases,
   'will be debited', 'will be credited', 'is due', 'due on', 'due by', 'overdue',
   'has requested', 'payment request', 'requested money', 'collect request', 'requesting',
   'declined', 'failed', 'unsuccessful', 'could not be', 'not completed', 'pending',
-  'pre-approved', 'pre approved', 'apply now', 'offer', 'cashback upto', 'cashback up to',
   'minimum amount due', 'total amount due', 'statement', 'bill generated', 'has been generated',
-  'eligible', 'congratulations', 'voucher', 'logged in', 'password', 'kyc', 'block your card',
-  'mandate', 'for processing', 'low balance', 'insufficient', 'reminder', 'reward points',
+  'logged in', 'kyc', 'block your card',
+  'mandate', 'for processing', 'low balance', 'insufficient', 'reminder',
   'maintain minimum', 'minimum balance',
 ];
 
@@ -71,7 +80,7 @@ ParsedTransaction? parseBankSms({
   required String body,
   required DateTime receivedAt,
 }) {
-  final text = normalizeMathGlyphs(body).replaceAll(RegExp(r'\s+'), ' ').trim();
+  final text = _normalizedText(body);
   final lower = text.toLowerCase();
   if (text.isEmpty) return null;
   if (_rejectPhrases.any(lower.contains) && !_isReversal(lower)) return null;
@@ -111,6 +120,16 @@ ParsedTransaction? parseBankSms({
     availableLimitMinor: limitMatch == null ? null : parseAmountToMinor(limitMatch.group(1)!),
     reference: _reference(text),
   );
+}
+
+String _normalizedText(String body) => normalizeMathGlyphs(body).replaceAll(RegExp(r'\s+'), ' ').trim();
+
+/// True when [body] is an OTP or a promotion by the same wording the parser
+/// rejects, whatever the sender. A refund or reversal is never flagged, so
+/// the parser and this check always agree on what can become an entry.
+bool isOtpOrPromotionSms(String body) {
+  final lower = _normalizedText(body).toLowerCase();
+  return [..._otpPhrases, ..._promotionPhrases].any(lower.contains) && !_isReversal(lower);
 }
 
 /// Some banks (SBI Card) send letters from the Unicode Mathematical

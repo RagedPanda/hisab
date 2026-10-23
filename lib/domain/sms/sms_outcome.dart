@@ -1,3 +1,5 @@
+import 'sms_parser.dart';
+
 /// What happened to one processed SMS, as shown in the SMS history.
 enum SmsOutcome { added, duplicate, ignored, unparsed, pending, undone }
 
@@ -22,13 +24,18 @@ abstract final class SmsLogStatus {
   static const undone = 'undone';
 }
 
-/// The text the log keeps for a message with [status]. Not-bank messages
-/// (OTPs, promotions) never keep their text: only sender, time and outcome.
-String storedSmsBody(String status, String body) => status == SmsLogStatus.notBank ? '' : body;
+/// Whether the log may keep [body] for a message with [status]. Only text
+/// that may be a real transaction is kept: never a not-bank message, and
+/// never an OTP or a promotion, even from a sender that looks like a bank.
+bool keepsSmsText(String status, String body) => status != SmsLogStatus.notBank && !isOtpOrPromotionSms(body);
 
-/// A re-delivery of a not-bank message is not logged at all, so its text
-/// cannot end up in a duplicate row.
-bool logsDuplicateOf(String originalStatus) => originalStatus != SmsLogStatus.notBank;
+/// The text the log stores for a message with [status]: [body], or nothing
+/// when [keepsSmsText] says no. Only sender, time and outcome remain then.
+String storedSmsBody(String status, String body) => keepsSmsText(status, body) ? body : '';
+
+/// A re-delivery is logged only when its text could be kept, so an OTP or
+/// promotion never gains a duplicate row.
+bool logsDuplicateOf(String originalStatus, String incomingBody) => keepsSmsText(originalStatus, incomingBody);
 
 /// Maps a stored status to the outcome the history screen shows.
 SmsOutcome smsOutcomeFor(String status) => switch (status) {

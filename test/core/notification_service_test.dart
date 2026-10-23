@@ -59,6 +59,12 @@ void main() {
     expect(gateway.exactById.values, everyElement(isTrue));
   });
 
+  test('a 0 amount (as in an old row) shows no amount in the notification text', () {
+    final due = DateTime(2026, 11, 5);
+    expect(reminderDueCaption(english, dueAt: due, at: DateTime(2026, 11, 5, 9), amountMinor: 0, currencySymbol: '₹'), 'Due today');
+    expect(reminderDueCaption(english, dueAt: due, at: DateTime(2026, 11, 5, 9), amountMinor: 210000, currencySymbol: '₹'), 'Due today · ₹2,100');
+  });
+
   test('documents say Done; Hindi texts come from the hi dictionary', () async {
     final hindi = NotificationService(gateway, buildAlert: (r, a) => alertRequestFor(r, a, notificationLocalizations('hi'), currencySymbol: '₹'), clock: () => now);
     final id = await repository.save(electricity(kind: ReminderKind.document));

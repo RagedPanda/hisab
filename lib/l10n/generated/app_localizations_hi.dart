@@ -384,7 +384,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get smsEntryNotice =>
-      'बैंक एसएमएस से बना है। इसे बदलने से बैंक बैलेंस नहीं बदलेगा।';
+      'एसएमएस से जोड़ा गया। इसे बदलने से बैंक बैलेंस नहीं बदलेगा।';
 
   @override
   String get saving => 'सेव हो रहा है…';
@@ -799,11 +799,11 @@ class AppLocalizationsHi extends AppLocalizations {
       'iOS पर उपलब्ध नहीं। शॉर्टकट इस्तेमाल करें या नीचे पेस्ट करें।';
 
   @override
-  String get smsAutoAddTitle => 'बिना समीक्षा के लेन-देन जोड़ें';
+  String get smsAutoAddTitle => 'साफ़ लेन-देन अपने-आप जोड़ें';
 
   @override
   String get smsAutoAddHelp =>
-      'बंद: नए एसएमएस नीचे समीक्षा सूची में रुकते हैं।';
+      'चालू: साफ़ बैंक एसएमएस तुरंत जुड़ते हैं, पूर्ववत करने के विकल्प के साथ। अस्पष्ट एसएमएस समीक्षा के लिए रुकते हैं।';
 
   @override
   String get scanInboxNow => 'अभी इनबॉक्स स्कैन करें';
@@ -2228,4 +2228,36 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get smsReminderPaidViaSms => 'एसएमएस से भुगतान हुआ';
+
+  @override
+  String get smsAddedMarker => 'एसएमएस से जोड़ा गया';
+
+  @override
+  String smsAutoAddedOne(String amount) {
+    return 'एसएमएस से $amount जोड़ा गया';
+  }
+
+  @override
+  String smsAutoAddedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'एसएमएस से $count एंट्री जोड़ी गईं',
+      one: 'एसएमएस से 1 एंट्री जोड़ी गई',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get smsReviewTitle => 'समीक्षा के लिए एसएमएस';
+
+  @override
+  String get smsReviewHelp =>
+      'ये संदेश अपने-आप जोड़ने लायक साफ़ नहीं थे। हर एक को जोड़ें, बदलें या अनदेखा करें।';
+
+  @override
+  String get smsReviewUnread => 'रकम पढ़ी नहीं जा सकी';
+
+  @override
+  String get smsReviewAddManually => 'खुद जोड़ें';
 }

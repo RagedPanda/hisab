@@ -581,7 +581,7 @@ void main() {
     await shoot(tester, 'categories_income');
   });
 
-  testWidgets('10 bank SMS screen on iOS: reading disabled, paste still works', (tester) async {
+  testWidgets('10 bank SMS screen on iOS: reading disabled, paste auto-adds with Undo, unclear SMS wait for review', (tester) async {
     await pumpApp(tester, shared);
     await goTab(tester, 'Settings');
     await shoot(tester, 'settings');
@@ -595,14 +595,30 @@ void main() {
     await tapText(tester, 'Paste an SMS');
     await enterText(tester, _dialogField(), 'Rs.500.00 debited from A/c XX1234 on 20-Oct-25 to merchant@upi (UPI Ref No 123456789012)');
     await tapFinder(tester, _filled('Save'), frames: 12);
-    expect(find.text('Transaction found. Review it below.'), findsOneWidget);
+    expect(find.text('Transaction added.'), findsOneWidget, reason: 'auto-add is on by default and this SMS names the account');
+    await waitFor(tester, find.textContaining('Added ${formatMinor(50000, showDecimals: false)} from SMS'));
+    await shoot(tester, 'sms_auto_added_undo');
+    await tapText(tester, 'Undo', frames: 12);
+    expect(find.text('To review (0)'), findsOneWidget, reason: 'Undo ignores the SMS; it does not come back for review');
+    await shoot(tester, 'sms_after_undo');
+
+    await tapText(tester, 'Paste an SMS');
+    await enterText(tester, _dialogField(), 'Paid Rs 250 to Ramesh');
+    await tapFinder(tester, _filled('Save'), frames: 12);
+    expect(find.text('Transaction found. Review it below.'), findsOneWidget, reason: 'no bank or account: not confident enough to add alone');
     expect(find.text('To review (1)'), findsOneWidget);
-    expect(find.text('Add ${formatMinor(50000, showDecimals: false)}'), findsOneWidget);
-    await shoot(tester, 'sms_pending');
-    await tapText(tester, 'Ignore');
-    expect(find.text('To review (0)'), findsOneWidget);
     final accountNames = (await shared.read(accountsRepositoryProvider).getAll()).map((a) => a.name).toList();
-    debugPrint('SMS-DIAG accounts after pasting and ignoring an SMS: $accountNames');
+    debugPrint('SMS-DIAG accounts after undo and an unclear SMS: $accountNames');
+    await goBack(tester);
+    await goTab(tester, 'Home');
+    await waitFor(tester, find.text('1 SMS to review'));
+    await shoot(tester, 'sms_home_review_row');
+    await tapText(tester, '1 SMS to review');
+    expect(find.text('SMS to review'), findsWidgets);
+    expect(find.text('Add ${formatMinor(25000, showDecimals: false)}'), findsOneWidget);
+    await shoot(tester, 'sms_review_queue');
+    await tapText(tester, 'Ignore');
+    expect(find.text('Nothing waiting'), findsOneWidget);
     await goBack(tester);
   });
 

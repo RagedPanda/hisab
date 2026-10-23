@@ -743,7 +743,7 @@ abstract class AppLocalizations {
   /// No description provided for @smsEntryNotice.
   ///
   /// In en, this message translates to:
-  /// **'Created from a bank SMS. Editing it will not change your bank balance.'**
+  /// **'Added from SMS. Editing it will not change your bank balance.'**
   String get smsEntryNotice;
 
   /// No description provided for @saving.
@@ -1469,13 +1469,13 @@ abstract class AppLocalizations {
   /// No description provided for @smsAutoAddTitle.
   ///
   /// In en, this message translates to:
-  /// **'Add transactions without review'**
+  /// **'Add clear transactions automatically'**
   String get smsAutoAddTitle;
 
   /// No description provided for @smsAutoAddHelp.
   ///
   /// In en, this message translates to:
-  /// **'Off: new SMS wait in the review list below.'**
+  /// **'On: clear bank SMS are added right away with Undo. Unclear ones wait for review.'**
   String get smsAutoAddHelp;
 
   /// No description provided for @scanInboxNow.
@@ -3793,6 +3793,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paid via SMS'**
   String get smsReminderPaidViaSms;
+
+  /// No description provided for @smsAddedMarker.
+  ///
+  /// In en, this message translates to:
+  /// **'Added from SMS'**
+  String get smsAddedMarker;
+
+  /// No description provided for @smsAutoAddedOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {amount} from SMS'**
+  String smsAutoAddedOne(String amount);
+
+  /// No description provided for @smsAutoAddedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Added 1 entry from SMS} other{Added {count} entries from SMS}}'**
+  String smsAutoAddedMany(int count);
+
+  /// No description provided for @smsReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS to review'**
+  String get smsReviewTitle;
+
+  /// No description provided for @smsReviewHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'These messages were not clear enough to add on their own. Add, edit or ignore each one.'**
+  String get smsReviewHelp;
+
+  /// No description provided for @smsReviewUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the amount'**
+  String get smsReviewUnread;
+
+  /// No description provided for @smsReviewAddManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Add manually'**
+  String get smsReviewAddManually;
 }
 
 class _AppLocalizationsDelegate

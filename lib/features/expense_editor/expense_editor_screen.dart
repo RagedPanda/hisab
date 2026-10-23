@@ -202,7 +202,12 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   Future<void> _prefillFromSms(String smsId) async {
     final log = await ref.read(smsLogRepositoryProvider).getById(smsId);
-    if (log == null || log.parsedJson == null) return;
+    if (log == null) return;
+    _source = 'sms';
+    if (log.parsedJson == null) {
+      _occurredAt = log.receivedAt;
+      return;
+    }
     final parsed = Map<String, dynamic>.from(jsonDecode(log.parsedJson!) as Map);
     _kind = parsed['direction'] == 'credit' ? 'income' : 'expense';
     _amountController.text = amountInputText(parsed['amountMinor'] as int);
@@ -407,7 +412,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           if (_source == 'sms')
             Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: Text(l10n.smsEntryNotice, style: Theme.of(context).textTheme.bodySmall),
+              child: Row(children: [
+                Icon(Icons.sms_outlined, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                const SizedBox(width: 8),
+                Expanded(child: Text(l10n.smsEntryNotice, style: Theme.of(context).textTheme.bodySmall)),
+              ]),
             ),
           ],
         ),

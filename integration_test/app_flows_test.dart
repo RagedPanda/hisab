@@ -1505,8 +1505,8 @@ void main() {
     var group = (await groups.getGroup(flatId))!;
     expect((group.type, group.icon), ('home', 'home'), reason: 'the generic icon follows the new type');
 
-    await scrollTo(tester, _chip('Shares'));
-    await tapFinder(tester, _chip('Shares'));
+    await scrollTo(tester, _chip('Shares / ratio'));
+    await tapFinder(tester, _chip('Shares / ratio'));
     await scrollTo(tester, find.byTooltip('More shares for Rahul'));
     await tapFinder(tester, find.byTooltip('More shares for Rahul'));
     expect(find.text('1.5 shares'), findsOneWidget);
@@ -1531,8 +1531,8 @@ void main() {
     await goBack(tester);
     expect(find.text('Rent is due on the 1st'), findsOneWidget, reason: 'notes show on the Expenses tab');
     await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'), frames: 12);
-    await scrollTo(tester, _chip('Shares'), within: find.byType(ExpenseEditorScreen));
-    expect(tester.widget<ChoiceChip>(_chip('Shares')).selected, isTrue, reason: 'new expenses start from the default split');
+    await scrollTo(tester, _chip('Shares / ratio'), within: find.byType(ExpenseEditorScreen));
+    expect(tester.widget<ChoiceChip>(_chip('Shares / ratio')).selected, isTrue, reason: 'new expenses start from the default split');
     expect(find.textContaining('€'), findsWidgets, reason: 'the editor shows the group currency label');
     await goBack(tester);
 

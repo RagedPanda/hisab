@@ -3,6 +3,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../core/ids.dart';
 import '../../domain/categories/category_catalog.dart';
+import '../../domain/categories/category_packs.dart';
 
 part 'database.g.dart';
 
@@ -378,6 +379,7 @@ class AppDatabase extends _$AppDatabase {
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
+          if (!details.wasCreated) await recolourRetiredSeeds();
         },
       );
 
@@ -412,6 +414,24 @@ class AppDatabase extends _$AppDatabase {
         color: 0xFF43A047,
       ));
     }
+  }
+
+  /// Moves seeded categories still on a retired default colour to the
+  /// current palette; colours the user picked are left alone. Writes nothing
+  /// once every row is current.
+  Future<int> recolourRetiredSeeds() async {
+    final seedColors = {for (final seed in [...flattenCatalog(), ...packOnlySeeds()]) seed.key: seed.color};
+    final seeded = await (select(categories)..where((t) => t.seedKey.isNotNull())).get();
+    var recoloured = 0;
+    for (final category in seeded) {
+      final seedColor = seedColors[category.seedKey];
+      final target = seedColor == null ? null : recolouredSeed(current: category.color, seedColor: seedColor);
+      if (target == null) continue;
+      await (update(categories)..where((t) => t.id.equals(category.id)))
+          .write(CategoriesCompanion(color: Value(target), updatedAt: Value(DateTime.now())));
+      recoloured++;
+    }
+    return recoloured;
   }
 }
 

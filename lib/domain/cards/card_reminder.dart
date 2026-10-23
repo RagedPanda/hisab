@@ -32,13 +32,12 @@ class CardReminderPlan {
 
 /// A new reminder for a card's bill [due], with the default alert days.
 ReminderDraft cardReminderDraft({required String accountId, required String cardName, required CardDue due}) {
-  final amountDue = due.amountDueMinor;
   return ReminderDraft(
     kind: ReminderKind.card,
     title: cardName,
     accountId: accountId,
     dueAt: startOfDay(due.reminderDate ?? due.dueDate),
-    amountMinor: amountDue != null && amountDue > 0 ? amountDue : null,
+    amountMinor: reminderAmountOrNone(due.amountDueMinor),
     remindDaysBefore: kCardReminderDaysBefore,
   );
 }

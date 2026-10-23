@@ -9,6 +9,7 @@ import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../domain/cards/card_summary.dart';
+import '../../domain/reminders/reminder_draft.dart';
 import '../../l10n/l10n.dart';
 import '../dashboard/widgets/dashboard_card.dart';
 import '../shell/widgets/budget_row.dart';
@@ -200,7 +201,7 @@ class _DueCard extends StatelessWidget {
         ),
       );
     }
-    final amountDue = due.amountDueMinor;
+    final amountDue = reminderAmountOrNone(due.amountDueMinor);
     return DashboardCard(
       key: kCardDueKey,
       child: Column(
@@ -221,7 +222,7 @@ class _DueCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(l10n.cardNextDue(formatShortDate(due.nextDueDate!, locale: locale)), style: theme.textTheme.bodyMedium?.tabular),
           ],
-          if (amountDue != null && amountDue > 0) ...[
+          if (amountDue != null) ...[
             const SizedBox(height: 8),
             Text(l10n.cardAmountLeftToPay(formatMinor(amountDue, symbol: symbol)), style: theme.textTheme.bodyMedium?.tabular),
           ],

@@ -92,14 +92,17 @@ class SalaryService {
   }
 
   /// Moves the rule's due date onto its pay cycle's shifted date (the
-  /// recurring engine only knows the unshifted day of month).
+  /// recurring engine only knows the unshifted day of month). The cycle uses
+  /// the rule's own day, so a setup out of step with its rule cannot move
+  /// the rule onto a day it does not repeat on.
   Future<void> _alignDue(SalarySettings settings, RecurringRule rule) async {
     final stored = rule.nextDue;
     if (stored == null) return;
+    final ruleDay = rule.dayOfMonth;
     final aligned = alignedSalaryRuleDue(
       stored,
       postedCount: rule.postedCount,
-      salaryDay: settings.salaryDay,
+      salaryDay: ruleDay != null && ruleDay > 0 ? ruleDay : settings.salaryDay,
       anchor: settings.ruleAnchor,
       shift: settings.shift,
       holidays: settings.holidaySet,

@@ -144,4 +144,16 @@ void main() {
     final status = (await salary.reconcile(onSaturday, now: DateTime(2026, 10, 31, 12)))!;
     expect((status.expected, status.isLate), (DateTime(2026, 11, 30), false));
   });
+
+  test('a setup whose day differs from its rule aligns on the rule\'s own day and still links the salary', () async {
+    // The rule repeats on the 1st; the setup was saved on day 20 without it.
+    final settings = await setUpSalary(salaryDay: 1, shift: SalaryShift.sameDay);
+    expect((await salary.recurring.getRule(settings.ruleId))!.nextDue, DateTime(2026, 11, 1, 9));
+    final drifted = settings.copyWith(salaryDay: 20, trackedSince: DateTime(2026, 10, 1));
+    await addIncome('sms-salary', DateTime(2026, 11, 2, 10), 10000000);
+    await salary.reconcile(drifted, now: DateTime(2026, 11, 2, 12));
+    final rule = (await salary.recurring.getRule(settings.ruleId))!;
+    expect(rule.dayOfMonth, 1);
+    expect(rule.nextDue!.day, 1, reason: 'never moved onto the 20th');
+  });
 }

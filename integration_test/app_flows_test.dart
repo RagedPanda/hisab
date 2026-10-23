@@ -1564,9 +1564,17 @@ void main() {
     expect(find.text('${formatMinor(8500000)} on day 1'), findsOneWidget);
 
     // Expected three days ago, reminder one day after: "Salary not seen yet" is due now.
+    // The day change goes through the service like a save on the screen, as if
+    // made the day before the salary was due, so the rule and the setup agree
+    // and that cycle counts (nothing before the rule's start is late).
     final now = DateTime.now();
     final expected = DateTime(now.year, now.month, now.day - 3);
-    await fresh.read(salarySettingsProvider.notifier).save(salary.copyWith(salaryDay: expected.day, shift: SalaryShift.sameDay, reminderDelayDays: 1));
+    final moved = await fresh.read(salaryServiceProvider).saveSalaryRule(
+          settings: salary.copyWith(salaryDay: expected.day, shift: SalaryShift.sameDay, reminderDelayDays: 1),
+          today: DateTime(expected.year, expected.month, expected.day - 1),
+          monthStartDay: fresh.read(settingsProvider).monthStartDay,
+        );
+    await fresh.read(salarySettingsProvider.notifier).save(moved);
     await settle(tester, 10);
     expect(alerts.last, isA<ScheduleSalaryNotification>());
     expect((alerts.last as ScheduleSalaryNotification).expected, expected);

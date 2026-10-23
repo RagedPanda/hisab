@@ -109,7 +109,7 @@ void main() {
       expect(await smsLog.watchPending().first, isEmpty);
     });
 
-    test('Undo deletes the entry and puts the SMS back in the review queue', () async {
+    test('Undo deletes the entry and marks the SMS ignored, not back in the review queue', () async {
       final announced = <SmsAutoAdded>[];
       final subscription = service.autoAdded.listen(announced.add);
       await service.ingest(RawSms(sender: 'VM-HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
@@ -119,9 +119,12 @@ void main() {
       await service.undoAutoAdd(announced.single);
       final entry = await EntriesRepository(db).getEntry(announced.single.entryId);
       expect(entry == null || entry.entry.deletedAt != null, isTrue);
-      final row = (await smsLog.watchPending().first).single;
+      expect(await smsLog.watchPending().first, isEmpty);
+      final row = await smsLog.getById(announced.single.smsId);
+      expect(row!.status, 'ignored');
       expect(row.entryId, isNull);
-      expect(await service.approvePending(row), isNotNull, reason: 'it can be added again from the queue');
+      final again = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
+      expect(again, IngestStatus.duplicate, reason: 'a rescan must not add the undone SMS again');
     });
   });
 }

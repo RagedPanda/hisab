@@ -133,11 +133,11 @@ class SmsIngestService {
     return IngestStatus.added;
   }
 
-  /// Reverses an automatic add: the entry is deleted and the SMS goes back
-  /// to the review queue, where it can be edited, added again or ignored.
+  /// Reverses an automatic add: the entry is deleted and the SMS is marked
+  /// ignored, so it does not come back in the review queue.
   Future<void> undoAutoAdd(SmsAutoAdded added) async {
     await entries.deleteEntry(added.entryId);
-    await smsLog.setStatus(added.smsId, 'pending');
+    await smsLog.setStatus(added.smsId, 'ignored');
   }
 
   /// Approves a pending log row into an entry with the suggested values.

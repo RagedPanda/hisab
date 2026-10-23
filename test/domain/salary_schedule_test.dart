@@ -176,7 +176,47 @@ void main() {
     });
 
     test('lookback covers the earliest possible match window', () {
-      expect(salaryLookbackStart(DateTime(2026, 11, 3)), DateTime(2026, 8, 30));
+      expect(salaryLookbackStart(DateTime(2026, 11, 3), windowDays: 4), DateTime(2026, 8, 30));
+      expect(salaryLookbackStart(DateTime(2026, 11, 3)), DateTime(2026, 8, 27), reason: 'defaults to the widest window the user can pick');
+    });
+
+    test('a wider window and tolerance from the settings catch an early, smaller salary', () {
+      final early = [income(DateTime(2026, 9, 25), 80000)];
+      final strict = evaluateSalary(now: DateTime(2026, 10, 2), salaryDay: 1, expectedMinor: 100000, incomes: early);
+      expect(strict.isSeen, isFalse, reason: '6 days early and 20% short misses the 4-day, 15% defaults');
+      final windowOnly = evaluateSalary(now: DateTime(2026, 10, 2), salaryDay: 1, expectedMinor: 100000, incomes: early, windowDays: 7);
+      expect(windowOnly.isSeen, isFalse, reason: 'still 20% short');
+
+      final relaxed = evaluateSalary(
+        now: DateTime(2026, 10, 2),
+        salaryDay: 1,
+        expectedMinor: 100000,
+        incomes: early,
+        windowDays: 7,
+        tolerance: salaryToleranceFraction(20),
+      );
+      expect(relaxed.isSeen, isTrue);
+    });
+
+    test('a zero tolerance needs the exact amount', () {
+      final status = evaluateSalary(now: DateTime(2026, 10, 2), salaryDay: 1, expectedMinor: 100000, incomes: [income(DateTime(2026, 10, 1), 99999)], tolerance: salaryToleranceFraction(0));
+      expect(status.isSeen, isFalse);
+    });
+  });
+
+  group('detection bounds', () {
+    test('match window is kept between 1 and 7 days', () {
+      expect(clampSalaryMatchWindowDays(0), 1);
+      expect(clampSalaryMatchWindowDays(4), 4);
+      expect(clampSalaryMatchWindowDays(30), 7);
+    });
+
+    test('tolerance is kept between 0 and 50 percent and becomes a fraction', () {
+      expect(clampSalaryTolerancePercent(-5), 0);
+      expect(clampSalaryTolerancePercent(90), 50);
+      expect(salaryToleranceFraction(15), closeTo(0.15, 1e-9));
+      expect(salaryToleranceFraction(200), closeTo(0.5, 1e-9));
+      expect(kSalaryTolerancePercentChoices, contains(kDefaultSalaryTolerancePercent));
     });
   });
 

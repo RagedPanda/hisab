@@ -23,11 +23,32 @@ enum SalaryShift {
 /// Highest day the "month starts on" setting supports (see [monthRange]).
 const int kMaxMonthStartDay = 28;
 
-/// Days either side of the expected date an income still counts as salary.
+/// Default days either side of the expected date an income still counts as salary.
 const int kSalaryMatchWindowDays = 4;
 
-/// Share of the expected amount an income may differ by and still count.
-const double kSalaryAmountTolerance = 0.15;
+/// User bounds for the match window. A week either side is the most a monthly
+/// cycle can take before it reaches into the neighbouring payday.
+const int kMinSalaryMatchWindowDays = 1;
+const int kMaxSalaryMatchWindowDays = 7;
+
+/// Default share, in percent, the amount may differ by and still count.
+const int kDefaultSalaryTolerancePercent = 15;
+
+/// Amount tolerance choices offered to the user, in percent. Bounded at 50%
+/// so a small unrelated income never passes for the salary.
+const List<int> kSalaryTolerancePercentChoices = [0, 5, 10, 15, 20, 25, 30, 40, 50];
+
+/// Default share of the expected amount an income may differ by and still count.
+const double kSalaryAmountTolerance = kDefaultSalaryTolerancePercent / 100;
+
+/// [days] within the match-window bounds.
+int clampSalaryMatchWindowDays(int days) => days.clamp(kMinSalaryMatchWindowDays, kMaxSalaryMatchWindowDays);
+
+/// [percent] within the tolerance bounds (0 .. the highest choice).
+int clampSalaryTolerancePercent(int percent) => percent.clamp(0, kSalaryTolerancePercentChoices.last);
+
+/// A tolerance in percent as the fraction [isAmountWithinTolerance] takes.
+double salaryToleranceFraction(int percent) => clampSalaryTolerancePercent(percent) / 100;
 
 /// Default days after the expected date before reminding.
 const int kDefaultSalaryReminderDelayDays = 2;
@@ -209,9 +230,20 @@ SalaryStatus evaluateSalary({
   Set<DateTime> holidays = const {},
   String? accountId,
   int reminderDelayDays = kDefaultSalaryReminderDelayDays,
+  int windowDays = kSalaryMatchWindowDays,
+  double tolerance = kSalaryAmountTolerance,
 }) {
   final cycle = salaryCycle(now, salaryDay: salaryDay, shift: shift, holidays: holidays);
-  final received = findSalaryIncome(incomes, expected: cycle.current, expectedMinor: expectedMinor, now: now, nextExpected: cycle.next, accountId: accountId);
+  final received = findSalaryIncome(
+    incomes,
+    expected: cycle.current,
+    expectedMinor: expectedMinor,
+    now: now,
+    nextExpected: cycle.next,
+    accountId: accountId,
+    windowDays: windowDays,
+    tolerance: tolerance,
+  );
   return SalaryStatus(
     expected: cycle.current,
     next: cycle.next,
@@ -222,8 +254,9 @@ SalaryStatus evaluateSalary({
 }
 
 /// Earliest income date [evaluateSalary] can look at for [now], so callers
-/// load only the entries that matter.
-DateTime salaryLookbackStart(DateTime now, {int windowDays = kSalaryMatchWindowDays}) =>
+/// load only the entries that matter. Defaults to the widest window the user
+/// can pick, so the loaded range never depends on the setting.
+DateTime salaryLookbackStart(DateTime now, {int windowDays = kMaxSalaryMatchWindowDays}) =>
     DateTime(now.year, now.month - 2, now.day - windowDays);
 
 /// Whether the salary rule's waiting occurrence ([ruleNextDue]) should be

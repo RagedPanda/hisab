@@ -159,7 +159,6 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
     final category = categories.where((c) => c.id == _categoryId).firstOrNull;
-    final permission = ref.watch(notificationPermissionProvider).value;
     final draft = _draft;
     final titleError = _submitted && draft.error == ReminderDraftError.missingTitle ? l10n.reminderTitleRequired : null;
     final firstAlert = planAlerts(
@@ -287,20 +286,6 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
                       style: theme.textTheme.bodySmall?.copyWith(color: _submitted && _daysBefore.isEmpty ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant),
                     ),
                   ),
-                  if (permission != null && permission.notificationsAllowed && !permission.exactAlarmsAllowed)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 8, 0),
-                      child: Row(children: [
-                        Expanded(child: Text(l10n.reminderExactAlarmNote, style: theme.textTheme.bodySmall)),
-                        TextButton(
-                          onPressed: () async {
-                            await ref.read(notificationServiceProvider).requestExactAlarms();
-                            ref.invalidate(notificationPermissionProvider);
-                          },
-                          child: Text(l10n.notifTurnOn),
-                        ),
-                      ]),
-                    ),
                 ],
                 if (_kind.isMoney) ...[
                   gap,

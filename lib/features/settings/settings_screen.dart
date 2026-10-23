@@ -218,6 +218,7 @@ class SettingsScreen extends ConsumerWidget {
     if (passphrase == null || !context.mounted) return;
     try {
       final written = await ref.read(backupServiceProvider).importEncrypted(data, passphrase);
+      ref.invalidate(salarySettingsProvider);
       await ref.read(reminderSchedulerProvider).rescheduleAll();
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(written))));
     } catch (error) {

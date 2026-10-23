@@ -5,11 +5,14 @@ import 'package:drift/drift.dart';
 import '../../domain/backup/backup_codec.dart';
 import '../db/database.dart';
 import '../repositories/reminders_repository.dart';
+import 'backup_section.dart';
 
-/// Exports and imports every table as JSON wrapped in the encrypted container.
+/// Exports and imports every table, plus any settings [sections], as JSON
+/// wrapped in the encrypted container.
 class BackupService {
-  BackupService(this.db);
+  BackupService(this.db, {this.sections = const []});
   final AppDatabase db;
+  final List<BackupSection> sections;
 
   Future<Map<String, dynamic>> snapshot() async {
     Future<List<Map<String, dynamic>>> dump<D extends DataClass>(TableInfo<Table, D> table) async {
@@ -36,6 +39,7 @@ class BackupService {
       'entryFieldValues': await dump(db.entryFieldValues),
       'reminders': await dump(db.reminders),
       'recurringRules': await dump(db.recurringRules),
+      for (final section in sections) section.key: ?section.export(),
     };
   }
 
@@ -95,6 +99,9 @@ class BackupService {
       await restore(db.reminders, 'reminders', (json) => Reminder.fromJson(reminderJsonWithDefaults(json)), (r) => r.id, (r) => r.updatedAt);
       await restore(db.recurringRules, 'recurringRules', RecurringRule.fromJson, (r) => r.id, (r) => r.updatedAt);
     });
+    for (final section in sections) {
+      if (payload[section.key] case final Map block) written += await section.restore(Map<String, dynamic>.from(block));
+    }
     return written;
   }
 }

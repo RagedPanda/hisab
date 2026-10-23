@@ -13,6 +13,7 @@ import '../data/repositories/projects_repository.dart';
 import '../data/repositories/recurring_repository.dart';
 import '../data/repositories/reminders_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
+import '../data/salary/salary_backup.dart';
 import '../data/sms/sms_ingest_service.dart';
 import '../domain/entries/entry_filter.dart';
 import '../domain/stats/dashboard_ledger.dart';
@@ -151,7 +152,9 @@ final smsIngestServiceProvider = Provider((ref) => SmsIngestService(
       entries: ref.watch(entriesRepositoryProvider),
     ));
 
-final backupServiceProvider = Provider((ref) => BackupService(ref.watch(databaseProvider)));
+final backupServiceProvider = Provider(
+  (ref) => BackupService(ref.watch(databaseProvider), sections: [SalaryBackupSection(ref.watch(sharedPreferencesProvider))]),
+);
 
 // Reminders and notifications ------------------------------------------------
 

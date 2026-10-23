@@ -699,6 +699,8 @@
   "@activityChangeCategory": {"placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
   "activityChangePayers": "Paid by: {from} → {to}",
   "@activityChangePayers": {"placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
+  "activityPayerAmount": "{name} {amount}",
+  "@activityPayerAmount": {"description": "One payer and what they paid, in a list of several payers.", "placeholders": {"name": {"type": "String"}, "amount": {"type": "String"}}},
   "activityChangeShare": "{name}'s share: {from} → {to}",
   "@activityChangeShare": {"placeholders": {"name": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}},
   "activityChangeMyShare": "Your share: {from} → {to}",

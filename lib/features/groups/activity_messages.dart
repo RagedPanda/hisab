@@ -72,7 +72,7 @@ String changeLine(AppLocalizations l10n, ActivityChange change, ActivityFormatte
       DateChange(:final from, :final to) => l10n.activityChangeDate(format.date(from), format.date(to)),
       DescriptionChange(:final from, :final to) => l10n.activityChangeDescription(_orNone(l10n, from), _orNone(l10n, to)),
       CategoryChange(:final fromId, :final toId) => l10n.activityChangeCategory(format.categoryNameOf(fromId), format.categoryNameOf(toId)),
-      PayersChange(:final fromMemberIds, :final toMemberIds) => l10n.activityChangePayers(_payers(l10n, fromMemberIds, format), _payers(l10n, toMemberIds, format)),
+      PayersChange(:final from, :final to) => l10n.activityChangePayers(_payerAmounts(l10n, from, format), _payerAmounts(l10n, to, format)),
       ShareChange(:final memberId, :final fromMinor, :final toMinor) => memberId == format.myMemberId
           ? l10n.activityChangeMyShare(format.money(fromMinor), format.money(toMinor))
           : l10n.activityChangeShare(format.nameOf(memberId), format.money(fromMinor), format.money(toMinor)),
@@ -86,6 +86,14 @@ String changeLine(AppLocalizations l10n, ActivityChange change, ActivityFormatte
 
 String _payers(AppLocalizations l10n, List<String> memberIds, ActivityFormatters format) =>
     memberIds.isEmpty ? l10n.activityNone : payerNamesLine(l10n, memberIds, myMemberId: format.myMemberId, nameOf: format.nameOf);
+
+/// A lone payer reads as their name (they paid it all); several read as
+/// "You ₹500, Rahul ₹700", me first.
+String _payerAmounts(AppLocalizations l10n, List<MemberAmount> payers, ActivityFormatters format) {
+  if (payers.length < 2) return _payers(l10n, [for (final payer in payers) payer.memberId], format);
+  final mineFirst = [...payers.where((payer) => payer.memberId == format.myMemberId), ...payers.where((payer) => payer.memberId != format.myMemberId)];
+  return mineFirst.map((payer) => l10n.activityPayerAmount(format.nameOf(payer.memberId), format.money(payer.amountMinor))).join(', ');
+}
 
 String _orNone(AppLocalizations l10n, String text) => text.isEmpty ? l10n.activityNone : text;
 

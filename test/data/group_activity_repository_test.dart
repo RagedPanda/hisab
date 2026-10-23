@@ -62,6 +62,18 @@ void main() {
     expect(await feed(), hasLength(1));
   });
 
+  test('an edit that only changes what each payer paid is logged', () async {
+    List<EntryPayersCompanion> paidBy(int mine, int rahuls) => [
+          EntryPayersCompanion.insert(id: newId(), entryId: 'e1', memberId: meId, amountMinor: mine),
+          EntryPayersCompanion.insert(id: newId(), entryId: 'e1', memberId: rahulId, amountMinor: rahuls),
+        ];
+    await saveExpense('e1', amountMinor: 120000, payers: paidBy(40000, 80000));
+    await saveExpense('e1', amountMinor: 120000, payers: paidBy(50000, 70000));
+    final activities = await feed();
+    expect(activities.map((activity) => activity.action), [ActivityAction.edited, ActivityAction.added]);
+    expect(activities.first.changes.single, isA<PayersChange>());
+  });
+
   test('a deleted expense comes back with the splits and payers it had', () async {
     await saveExpense('e1', payers: [
       EntryPayersCompanion.insert(id: 'p1', entryId: 'e1', memberId: meId, amountMinor: 50000),

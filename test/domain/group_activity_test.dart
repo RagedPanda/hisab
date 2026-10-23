@@ -88,6 +88,35 @@ void main() {
       expect(change.toMemberIds, ['me', 'rahul']);
     });
 
+    test('moving money between several payers is a payer change', () {
+      ExpenseSnapshot paidBy(int mine, int rahuls) => ExpenseSnapshot(
+            amountMinor: 120000,
+            occurredAt: dinner.occurredAt,
+            note: 'Dinner',
+            categoryId: 'food',
+            payers: [MemberAmount(memberId: 'rahul', amountMinor: rahuls), MemberAmount(memberId: 'me', amountMinor: mine)],
+            shares: dinner.shares,
+          );
+      final changes = diffSnapshots(paidBy(40000, 80000), paidBy(50000, 70000));
+      final change = changes.whereType<PayersChange>().single;
+      expect([for (final payer in change.from) (payer.memberId, payer.amountMinor)], [('me', 40000), ('rahul', 80000)]);
+      expect([for (final payer in change.to) (payer.memberId, payer.amountMinor)], [('me', 50000), ('rahul', 70000)]);
+      expect(isMeaningfulEdit(paidBy(40000, 80000), paidBy(50000, 70000)), isTrue);
+    });
+
+    test('a lone payer paying a new total is only an amount change', () {
+      final pricier = ExpenseSnapshot(
+        amountMinor: 120000,
+        occurredAt: dinner.occurredAt,
+        note: 'Dinner',
+        categoryId: 'food',
+        payers: const [MemberAmount(memberId: 'me', amountMinor: 120000)],
+        shares: dinner.shares,
+      );
+      expect(diffSnapshots(dinner, pricier).whereType<PayersChange>(), isEmpty);
+      expect(diffSnapshots(dinner, pricier).whereType<AmountChange>(), hasLength(1));
+    });
+
     test('share changes list who moved, who joined and who left', () {
       final reshared = ExpenseSnapshot(
         amountMinor: 90000,

@@ -2068,6 +2068,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String activityPayerAmount(String name, String amount) {
+    return '$name $amount';
+  }
+
+  @override
   String activityChangeShare(String name, String from, String to) {
     return '$name\'s share: $from → $to';
   }

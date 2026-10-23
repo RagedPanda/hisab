@@ -53,6 +53,19 @@ void main() {
     expect(activityWords(l10n, record(ActivityAction.restored, after: untitled), format).headline, 'You restored “Travel”');
   });
 
+  test('an edit that only moves money between payers shows each amount', () {
+    ExpenseSnapshot paidBy(int mine, int rahuls) => ExpenseSnapshot(
+          amountMinor: 120000,
+          occurredAt: DateTime(2026, 10, 20),
+          note: 'Dinner',
+          categoryId: 'food',
+          payers: [MemberAmount(memberId: 'me', amountMinor: mine), MemberAmount(memberId: 'rahul', amountMinor: rahuls)],
+          shares: const [MemberAmount(memberId: 'me', amountMinor: 60000), MemberAmount(memberId: 'rahul', amountMinor: 60000)],
+        );
+    final words = activityWords(l10n, record(ActivityAction.edited, before: paidBy(40000, 80000), after: paidBy(50000, 70000)), format);
+    expect(words.details.last, 'Paid by: You ₹400, Rahul ₹800 → You ₹500, Rahul ₹700');
+  });
+
   test('an edited expense lists each change as before → after', () {
     final edited = ExpenseSnapshot(
       amountMinor: 120000,
@@ -68,7 +81,7 @@ void main() {
       'Amount: ₹900 → ₹1200',
       'Date: 20 Oct → 21 Oct',
       'Category: Food → Travel',
-      'Paid by: Rahul → Rahul and you',
+      'Paid by: Rahul → You ₹600, Rahul ₹600',
       "Your share: ₹450 → ₹400",
       "Rahul's share: ₹450 → ₹400",
       "Priya's share: ₹0 → ₹400",

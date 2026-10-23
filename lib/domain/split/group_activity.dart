@@ -169,10 +169,14 @@ class CategoryChange extends ActivityChange {
   final String? toId;
 }
 
+/// Who paid and, when several people paid, how much each paid. [from] and
+/// [to] hold one total per member, sorted by member id.
 class PayersChange extends ActivityChange {
-  const PayersChange(this.fromMemberIds, this.toMemberIds);
-  final List<String> fromMemberIds;
-  final List<String> toMemberIds;
+  const PayersChange(this.from, this.to);
+  final List<MemberAmount> from;
+  final List<MemberAmount> to;
+  List<String> get fromMemberIds => [for (final payer in from) payer.memberId];
+  List<String> get toMemberIds => [for (final payer in to) payer.memberId];
 }
 
 /// One member's share of an expense; 0 means not in the split.
@@ -216,14 +220,14 @@ List<ActivityChange> diffSnapshots(ActivitySnapshot before, ActivitySnapshot aft
     };
 
 List<ActivityChange> _diffExpenses(ExpenseSnapshot before, ExpenseSnapshot after) {
-  final payersBefore = _sortedMemberIds(before.payers);
-  final payersAfter = _sortedMemberIds(after.payers);
+  final payersBefore = _payerTotals(before.payers);
+  final payersAfter = _payerTotals(after.payers);
   return [
     if (expenseDescription(before) != expenseDescription(after)) DescriptionChange(expenseDescription(before), expenseDescription(after)),
     if (before.amountMinor != after.amountMinor) AmountChange(before.amountMinor, after.amountMinor),
     if (!isSameDay(before.occurredAt, after.occurredAt)) DateChange(before.occurredAt, after.occurredAt),
     if (before.categoryId != after.categoryId) CategoryChange(before.categoryId, after.categoryId),
-    if (!_sameList(payersBefore, payersAfter)) PayersChange(payersBefore, payersAfter),
+    if (_payersChanged(payersBefore, payersAfter)) PayersChange(payersBefore, payersAfter),
     ..._shareChanges(before.shares, after.shares),
   ];
 }
@@ -257,9 +261,21 @@ Map<String, int> _totalsByMember(List<MemberAmount> amounts) {
   return totals;
 }
 
-List<String> _sortedMemberIds(List<MemberAmount> amounts) => ({for (final amount in amounts) amount.memberId}.toList()..sort());
+/// One total per payer, sorted by member id.
+List<MemberAmount> _payerTotals(List<MemberAmount> payers) {
+  final totals = _totalsByMember(payers);
+  return [for (final memberId in totals.keys.toList()..sort()) MemberAmount(memberId: memberId, amountMinor: totals[memberId]!)];
+}
 
-bool _sameList(List<String> first, List<String> second) => first.length == second.length && first.indexed.every((pair) => second[pair.$1] == pair.$2);
+/// Payers changed when someone else paid, or when several people paid and
+/// any of their amounts moved. A lone payer always pays the whole amount,
+/// which [AmountChange] already reports.
+bool _payersChanged(List<MemberAmount> before, List<MemberAmount> after) {
+  final sameMembers = before.length == after.length && before.indexed.every((pair) => after[pair.$1].memberId == pair.$2.memberId);
+  if (!sameMembers) return true;
+  final splitPayment = before.length > 1 || after.length > 1;
+  return splitPayment && before.indexed.any((pair) => after[pair.$1].amountMinor != pair.$2.amountMinor);
+}
 
 /// A log row as the feed needs it, already decoded.
 class ActivityRecord {

@@ -590,6 +590,7 @@
   "activityChangeDescription": "विवरण: {from} → {to}",
   "activityChangeCategory": "श्रेणी: {from} → {to}",
   "activityChangePayers": "भुगतान किया: {from} → {to}",
+  "activityPayerAmount": "{name} {amount}",
   "activityChangeShare": "{name} का हिस्सा: {from} → {to}",
   "activityChangeMyShare": "आपका हिस्सा: {from} → {to}",
   "activityChangeParties": "किसने किसे दिया: {from} → {to}",

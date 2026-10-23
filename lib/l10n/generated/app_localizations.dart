@@ -3500,6 +3500,12 @@ abstract class AppLocalizations {
   /// **'Paid by: {from} → {to}'**
   String activityChangePayers(String from, String to);
 
+  /// One payer and what they paid, in a list of several payers.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {amount}'**
+  String activityPayerAmount(String name, String amount);
+
   /// No description provided for @activityChangeShare.
   ///
   /// In en, this message translates to:

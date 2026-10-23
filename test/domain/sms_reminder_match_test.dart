@@ -126,6 +126,26 @@ void main() {
       expect(bankMatches(smsBank: null, smsLast4: null, reminderBank: 'HDFC Bank', reminderLast4: null), isFalse);
     });
 
+    test('a payee match from another account of the linked bank does not pay it (decision 17)', () {
+      final linked = reminder(payee: 'BESCOM', bankName: 'HDFC Bank', last4: '1234', dueAt: due);
+      expect(matchSmsToReminder(debitSms(amountMinor: 150000, occurredAt: due, counterparty: 'BESCOM', last4: '9999'), [linked]), isNull);
+      expect(matchSmsToReminder(debitSms(amountMinor: 150000, occurredAt: due, counterparty: 'BESCOM', last4: '1234'), [linked])?.reminderId, 'r1');
+    });
+
+    test('payee alone still pays when either side has no account digits', () {
+      final unlinked = reminder(payee: 'BESCOM', dueAt: due);
+      final linked = reminder(payee: 'BESCOM', bankName: 'HDFC Bank', last4: '1234', dueAt: due);
+      expect(matchSmsToReminder(debitSms(amountMinor: 150000, occurredAt: due, counterparty: 'BESCOM', last4: '9999'), [unlinked])?.reminderId, 'r1');
+      expect(matchSmsToReminder(debitSms(amountMinor: 150000, occurredAt: due, counterparty: 'BESCOM', last4: null), [linked])?.reminderId, 'r1');
+    });
+
+    test('account digits compare on the last four digits only', () {
+      expect(accountDigitsConflict(smsLast4: 'XX1234', reminderLast4: '1234'), isFalse);
+      expect(accountDigitsConflict(smsLast4: '1234', reminderLast4: '9999'), isTrue);
+      expect(accountDigitsConflict(smsLast4: null, reminderLast4: '9999'), isFalse);
+      expect(accountDigitsConflict(smsLast4: '12', reminderLast4: '9999'), isFalse, reason: 'too few digits to tell');
+    });
+
     test('right amount and date but neither payee nor bank is not a match', () {
       final bill = reminder(payee: 'BESCOM', bankName: 'SBI', dueAt: due);
       expect(matchSmsToReminder(debitSms(amountMinor: 150000, occurredAt: due, counterparty: 'Swiggy'), [bill]), isNull);

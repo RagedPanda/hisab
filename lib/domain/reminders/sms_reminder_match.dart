@@ -169,8 +169,22 @@ bool bankMatches({required String? smsBank, required String? smsLast4, required 
   if (smsBank == null || reminderBank == null) return false;
   final smsKey = _bankKey(smsBank);
   if (smsKey.isEmpty || smsKey != _bankKey(reminderBank)) return false;
-  if (smsLast4 != null && reminderLast4 != null) return smsLast4 == reminderLast4;
-  return true;
+  return !accountDigitsConflict(smsLast4: smsLast4, reminderLast4: reminderLast4);
+}
+
+/// True when the SMS names a card or account whose last 4 digits differ from
+/// the account the reminder is linked to: the payment came from another
+/// account, so it never pays this reminder, even when the payee matches.
+/// Unknown digits on either side are no conflict.
+bool accountDigitsConflict({required String? smsLast4, required String? reminderLast4}) {
+  final smsDigits = _lastFourDigits(smsLast4);
+  final reminderDigits = _lastFourDigits(reminderLast4);
+  return smsDigits != null && reminderDigits != null && smsDigits != reminderDigits;
+}
+
+String? _lastFourDigits(String? value) {
+  final digits = (value ?? '').replaceAll(RegExp(r'\D'), '');
+  return digits.length < 4 ? null : digits.substring(digits.length - 4);
 }
 
 /// Evaluates one candidate; null when any rule fails.
@@ -186,6 +200,7 @@ ReminderMatch? evaluateCandidate(ParsedTransaction parsed, ReminderMatchCandidat
   if ((parsed.amountMinor - expected).abs() > allowed) return null;
   final dayOffset = calendarDayOffset(dueAt: candidate.dueAt, paidAt: parsed.occurredAt);
   if (!withinDueWindow(dayOffset, policy)) return null;
+  if (accountDigitsConflict(smsLast4: parsed.accountLast4, reminderLast4: candidate.accountLast4)) return null;
   final partyOk = payeeMatches(counterparty: parsed.counterparty, keywords: candidate.matchKeywords, reminderTitle: candidate.title) ||
       bankMatches(smsBank: parsed.bank, smsLast4: parsed.accountLast4, reminderBank: candidate.bankName, reminderLast4: candidate.accountLast4);
   if (!partyOk) return null;

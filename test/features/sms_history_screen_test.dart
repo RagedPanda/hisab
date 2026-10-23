@@ -8,6 +8,7 @@ import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/sms/sms_channel.dart';
 import 'package:hisab/data/sms/sms_ingest_service.dart';
+import 'package:hisab/data/sms/sms_sync_cursor.dart';
 import 'package:hisab/features/shell/widgets/common.dart';
 import 'package:hisab/features/sms/sms_history_screen.dart';
 import 'package:hisab/l10n/generated/app_localizations.dart';
@@ -19,7 +20,7 @@ const _atmDebit = 'Rs.4,000.00 withdrawn from A/c XX1234 at ATM on 21-10-26. Avl
 /// Holds re-processing open after the row is deleted, as a slow device
 /// does, so the list rebuilds without the tapped card before the result.
 class _GatedIngestService extends SmsIngestService {
-  _GatedIngestService({required super.smsLog, required super.accounts, required super.categories, required super.entries, required super.homeCurrencyCode});
+  _GatedIngestService({required super.smsLog, required super.accounts, required super.categories, required super.entries, required super.homeCurrencyCode, required super.cursor});
 
   final gate = Completer<void>();
 
@@ -120,6 +121,7 @@ void main() {
             categories: ref.watch(categoriesRepositoryProvider),
             entries: ref.watch(entriesRepositoryProvider),
             homeCurrencyCode: () => 'INR',
+            cursor: SmsSyncCursor(ref.watch(sharedPreferencesProvider)),
           )),
     ]);
     final service = container.read(smsIngestServiceProvider) as _GatedIngestService;

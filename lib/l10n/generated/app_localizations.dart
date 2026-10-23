@@ -1430,6 +1430,24 @@ abstract class AppLocalizations {
   /// **'Could not find a transaction in that text.'**
   String get smsNotFound;
 
+  /// No description provided for @smsNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New bank transaction'**
+  String get smsNotificationTitle;
+
+  /// No description provided for @smsNotificationBodyAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} from {sender}. Tap to review.'**
+  String smsNotificationBodyAmount(String amount, String sender);
+
+  /// No description provided for @smsNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'From {sender}. Tap to review.'**
+  String smsNotificationBody(String sender);
+
   /// No description provided for @readBankSmsQuestion.
   ///
   /// In en, this message translates to:

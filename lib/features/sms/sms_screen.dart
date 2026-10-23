@@ -61,7 +61,6 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
   Future<void> _toggleSms(bool enable) async {
     final notifier = ref.read(settingsProvider.notifier);
     if (!enable) {
-      ref.read(smsIngestServiceProvider).stopListening();
       await notifier.update((s) => s.copyWith(smsEnabled: false));
       return;
     }
@@ -87,6 +86,7 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
       }
       return;
     }
+    await ref.read(smsNotificationPromptProvider).ask();
     await notifier.update((s) => s.copyWith(smsEnabled: true));
     await _scan();
   }
@@ -95,8 +95,7 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     setState(() => _busy = true);
     final settings = ref.read(settingsProvider);
     final service = ref.read(smsIngestServiceProvider);
-    final result = await service.scanInbox(autoAdd: settings.smsAutoAdd);
-    service.startListening(autoAdd: () => ref.read(settingsProvider).smsAutoAdd);
+    final result = await service.sync(autoAdd: settings.smsAutoAdd);
     if (mounted) {
       setState(() {
         _busy = false;

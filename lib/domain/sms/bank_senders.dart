@@ -154,3 +154,8 @@ String? bankFromBody(String body) {
   }
   return best;
 }
+
+/// Banks send from alphanumeric DLT headers ("AD-HDFCBK"); people send from
+/// phone numbers. Mirrors `SmsCapturePolicy.isBankLikeSender` on Android so
+/// the receiver and the inbox catch-up agree on which messages to look at.
+bool isBusinessSender(String sender) => RegExp(r'[A-Za-z]').hasMatch(sender);

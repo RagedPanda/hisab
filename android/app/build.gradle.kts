@@ -48,3 +48,9 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // NotificationCompat for the bank SMS notification (also pulled in by plugins).
+    implementation("androidx.core:core:1.13.1")
+    testImplementation("junit:junit:4.13.2")
+}

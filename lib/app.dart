@@ -6,6 +6,7 @@ import 'core/providers.dart';
 import 'core/theme.dart';
 import 'features/shell/router.dart';
 import 'features/sms/sms_auto_add_snackbar.dart';
+import 'features/sms/sms_auto_sync.dart';
 import 'l10n/generated/app_localizations.dart';
 
 class HisabApp extends ConsumerStatefulWidget {
@@ -62,9 +63,9 @@ class _HisabAppState extends ConsumerState<HisabApp> {
       themeAnimationCurve: Curves.easeOutCubic,
       routerConfig: appRouter,
       // Above the navigator so the SMS Undo snackbar shows on every route,
-      // including Bank SMS opened directly from a hisab://sms link.
-      builder: (context, child) =>
-          SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink()),
+      // including Bank SMS opened directly from a hisab://sms link. SmsAutoSync
+      // drains queued SMS and catches up on the inbox on start and resume.
+      builder: (context, child) => SmsAutoSync(child: SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink())),
     );
   }
 }

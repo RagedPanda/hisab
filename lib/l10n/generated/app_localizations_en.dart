@@ -777,6 +777,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsNotFound => 'Could not find a transaction in that text.';
 
   @override
+  String get smsNotificationTitle => 'New bank transaction';
+
+  @override
+  String smsNotificationBodyAmount(String amount, String sender) {
+    return '$amount from $sender. Tap to review.';
+  }
+
+  @override
+  String smsNotificationBody(String sender) {
+    return 'From $sender. Tap to review.';
+  }
+
+  @override
   String get readBankSmsQuestion => 'Read bank SMS?';
 
   @override

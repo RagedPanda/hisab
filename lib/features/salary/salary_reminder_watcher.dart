@@ -1,12 +1,14 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/providers.dart';
 import 'salary_providers.dart';
 import 'salary_reminder.dart';
 
 /// Keeps the salary reminder in step with the data: on launch, on resume
 /// (the day may have changed) and whenever an income is added, edited or
-/// removed, including entries added from SMS. Renders [child] unchanged.
+/// removed, including entries added from SMS. A language change re-posts the
+/// alert so its text follows the app. Renders [child] unchanged.
 class SalaryReminderWatcher extends ConsumerStatefulWidget {
   const SalaryReminderWatcher({super.key, required this.child});
   final Widget child;
@@ -57,6 +59,7 @@ class _SalaryReminderWatcherState extends ConsumerState<SalaryReminderWatcher> {
       if (next.hasValue) sync();
     });
     ref.listen(salarySettingsProvider, (_, _) => sync());
+    ref.listen(settingsProvider.select((settings) => settings.localeCode), (_, _) => sync());
     return widget.child;
   }
 }

@@ -15,7 +15,11 @@ import 'salary_providers.dart';
 
 /// Shows, schedules or removes the single "Salary not seen yet" alert.
 abstract interface class SalaryAlertSink {
-  Future<void> apply(SalaryNotificationPlan plan);
+  /// True once the plan reached the OS; false when it failed (already logged).
+  Future<bool> apply(SalaryNotificationPlan plan);
+
+  /// Language of the alert text, for [salaryAlertMarker].
+  String get locale;
 }
 
 /// Payload of the salary alert; a tap opens the salary screen.
@@ -43,17 +47,20 @@ AlertRequest salaryAlertRequest(ScheduleSalaryNotification plan, AppLocalization
 
 /// Posts the salary alert through the shared notification gateway.
 class GatewaySalaryAlerts implements SalaryAlertSink {
-  const GatewaySalaryAlerts(this._gateway, this._l10n, {this.locale});
+  const GatewaySalaryAlerts(this._gateway, this._l10n, {required this.locale});
 
   final NotificationGateway _gateway;
   final AppLocalizations _l10n;
 
   /// Date format locale for the body.
-  final String? locale;
-
-  /// Never throws: a failed alert must not break salary detection.
   @override
-  Future<void> apply(SalaryNotificationPlan plan) async {
+  final String locale;
+
+  /// Never throws: a failed alert must not break salary detection. When an
+  /// exact alarm is refused it falls back to an inexact one; a failure is
+  /// logged and reported, so the caller retries on the next sync.
+  @override
+  Future<bool> apply(SalaryNotificationPlan plan) async {
     try {
       switch (plan) {
         case CancelSalaryNotification():
@@ -61,11 +68,20 @@ class GatewaySalaryAlerts implements SalaryAlertSink {
         case ScheduleSalaryNotification():
           // Alerts can be planned before any localized widget has loaded date symbols.
           await initializeDateFormatting(locale);
+          final request = salaryAlertRequest(plan, _l10n, locale: locale);
           final exact = (await _gateway.permissionState()).exactAlarmsAllowed;
-          await _gateway.schedule(salaryAlertRequest(plan, _l10n, locale: locale), exact: exact);
+          try {
+            await _gateway.schedule(request, exact: exact);
+          } catch (error) {
+            if (!exact) rethrow;
+            debugPrint('Hisab: exact salary alert refused, scheduling inexact: $error');
+            await _gateway.schedule(request, exact: false);
+          }
       }
+      return true;
     } catch (error) {
-      debugPrint('Hisab: salary alert not updated: $error');
+      debugPrint('Hisab: salary alert not updated, will retry on next sync: $error');
+      return false;
     }
   }
 }
@@ -76,15 +92,29 @@ final salaryAlertSinkProvider = Provider<SalaryAlertSink>((ref) {
   return GatewaySalaryAlerts(ref.watch(notificationGatewayProvider), l10n, locale: l10n.localeName);
 });
 
+/// Preference holding [salaryAlertMarker] of the alert last posted.
+const String kSalaryAlertPostedKey = 'salaryAlertPostedFor';
+
 /// Re-evaluates the salary cycle: claims the rule's waiting occurrence when
 /// the salary arrived on its own, then schedules or dismisses the reminder.
-/// Safe to call often (app start, resume, after SMS ingest, after saving).
+/// Safe to call often (app start, resume, after SMS ingest, after saving,
+/// after a language change): an overdue alert is posted once per cycle and
+/// language, and a failed post is retried on the next call.
 /// Pass `ref.read` from a widget or a provider.
 Future<SalaryNotificationPlan> syncSalaryReminder(ProviderReader read, {required DateTime now}) async {
   final settings = read(salarySettingsProvider);
   final status = await read(salaryServiceProvider).reconcile(settings, now: now, monthStartDay: read(settingsProvider).monthStartDay);
   final plan = planSalaryNotification(status, reminderEnabled: settings.reminderEnabled, now: now);
-  await read(salaryAlertSinkProvider).apply(plan);
+  final sink = read(salaryAlertSinkProvider);
+  final prefs = read(sharedPreferencesProvider);
+  if (!shouldApplySalaryPlan(plan, postedMarker: prefs.getString(kSalaryAlertPostedKey), locale: sink.locale)) return plan;
+  if (!await sink.apply(plan)) return plan;
+  switch (plan) {
+    case CancelSalaryNotification():
+      await prefs.remove(kSalaryAlertPostedKey);
+    case ScheduleSalaryNotification():
+      await prefs.setString(kSalaryAlertPostedKey, salaryAlertMarker(plan, locale: sink.locale));
+  }
   return plan;
 }
 

@@ -1594,5 +1594,11 @@ class _RecordingSalaryAlerts implements SalaryAlertSink {
   SalaryNotificationPlan? get last => plans.isEmpty ? null : plans.last;
 
   @override
-  Future<void> apply(SalaryNotificationPlan plan) async => plans.add(plan);
+  String get locale => 'en';
+
+  @override
+  Future<bool> apply(SalaryNotificationPlan plan) async {
+    plans.add(plan);
+    return true;
+  }
 }

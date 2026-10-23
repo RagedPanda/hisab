@@ -1534,6 +1534,10 @@ void main() {
     expect(find.text('Your month starts on day 25, salary arrives on day 1'), findsOneWidget);
     await enterText(tester, key('salaryAmount'), '85000');
     await shoot(tester, 'salary_setup');
+    await scrollTo(tester, key('salaryTolerance'), within: find.byType(SalarySetupScreen));
+    expect(find.text('Up to 4 days'), findsOneWidget, reason: 'default match window');
+    expect(find.text('Up to 15%'), findsOneWidget, reason: 'default amount tolerance');
+    await shoot(tester, 'salary_detection');
     await tapFinder(tester, key('salarySave'), frames: 10);
     expect(find.text('Start months on day 1?'), findsOneWidget);
     await tapText(tester, 'Align', last: true, frames: 10);
@@ -1575,6 +1579,8 @@ void main() {
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
     await settle(tester, 10);
     expect(find.text(hi.salaryTitle), findsWidgets);
+    await scrollTo(tester, key('salaryReminderSwitch'), within: find.byType(SalarySetupScreen));
+    expect(find.text(hi.salaryTolerance), findsOneWidget);
     expect(find.text(hi.salaryReminder), findsOneWidget);
     await shoot(tester, 'hi_salary_setup');
     await goBack(tester);

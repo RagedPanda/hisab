@@ -22,7 +22,7 @@ void main() {
     db = AppDatabase(NativeDatabase.memory());
     accounts = AccountsRepository(db);
     smsLog = SmsLogRepository(db);
-    service = SmsIngestService(smsLog: smsLog, accounts: accounts, categories: CategoriesRepository(db), entries: EntriesRepository(db));
+    service = SmsIngestService(smsLog: smsLog, accounts: accounts, categories: CategoriesRepository(db), entries: EntriesRepository(db), homeCurrencyCode: () => 'INR');
   });
 
   tearDown(() => db.close());
@@ -67,6 +67,110 @@ void main() {
     final morning = DateTime(2026, 10, 21, 9, 0);
     expect(SmsLogRepository.idFor('HDFCBK', _upiDebit, morning), SmsLogRepository.idFor('HDFCBK', _upiDebit, morning.add(const Duration(hours: 5))));
     expect(SmsLogRepository.idFor('HDFCBK', _upiDebit, morning), isNot(SmsLogRepository.idFor('HDFCBK', _upiDebit, morning.add(const Duration(days: 1)))));
+  });
+
+  group('auto-add', () {
+    final received = DateTime(2026, 10, 21, 10, 0);
+
+    test('a confident bank SMS is added straight away and announced', () async {
+      final announced = <SmsAutoAdded>[];
+      final subscription = service.autoAdded.listen(announced.add);
+      final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
+      await Future<void>.delayed(Duration.zero);
+      await subscription.cancel();
+
+      expect(status, IngestStatus.added);
+      expect(announced, hasLength(1));
+      expect(announced.single.amountMinor, 45900);
+      expect(announced.single.isDebit, isTrue);
+      final entry = await EntriesRepository(db).getEntry(announced.single.entryId);
+      expect(entry!.entry.source, 'sms', reason: 'the entry carries the Added from SMS marker');
+      expect(await smsLog.watchPending().first, isEmpty);
+    });
+
+    test('a parse without bank or account waits for review even with auto-add on', () async {
+      final status = await service.ingest(RawSms(sender: 'PASTED', body: 'Paid Rs 250 to Ramesh', receivedAt: received), autoAdd: true, force: true);
+      expect(status, IngestStatus.pending);
+      final row = (await smsLog.watchPending().first).single;
+      expect(row.parsedJson, isNotNull);
+    });
+
+    test('a bank SMS that names an amount but cannot be read goes to the review queue', () async {
+      const unread = 'A/c XX1234: transaction of INR 1,200.00 on 21-10-26. Ref 998877';
+      final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: unread, receivedAt: received), autoAdd: true);
+      expect(status, IngestStatus.pending);
+      final row = (await smsLog.watchPending().first).single;
+      expect(row.parsedJson, isNull);
+      expect(await service.approvePending(row), isNull, reason: 'nothing to add without an amount; the card offers Add manually');
+    });
+
+    test('an OTP from a bank is logged as skipped, not queued', () async {
+      final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: 'Your OTP for txn of Rs 500 is 123456. Do not share.', receivedAt: received), autoAdd: true);
+      expect(status, IngestStatus.unparsed);
+      expect(await smsLog.watchPending().first, isEmpty);
+    });
+
+    test('Undo deletes the entry and marks the SMS ignored, not back in the review queue', () async {
+      final announced = <SmsAutoAdded>[];
+      final subscription = service.autoAdded.listen(announced.add);
+      await service.ingest(RawSms(sender: 'VM-HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
+      await Future<void>.delayed(Duration.zero);
+      await subscription.cancel();
+
+      await service.undoAutoAdd(announced.single);
+      final entry = await EntriesRepository(db).getEntry(announced.single.entryId);
+      expect(entry == null || entry.entry.deletedAt != null, isTrue);
+      expect(await smsLog.watchPending().first, isEmpty);
+      final row = await smsLog.getById(announced.single.smsId);
+      expect(row!.status, 'ignored');
+      expect(row.entryId, isNull);
+      final again = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
+      expect(again, IngestStatus.duplicate, reason: 'a rescan must not add the undone SMS again');
+    });
+  });
+  group('foreign currency', () {
+    final received = DateTime(2026, 10, 21, 10, 0);
+    const foreign = {
+      'USD': 'USD 25.00 spent on your HDFC Bank Credit Card XX1234 at AMAZON US on 21-10-26.',
+      'EUR': 'EUR 40.00 spent on your HDFC Bank Credit Card XX1234 at ZARA PARIS on 21-10-26.',
+      'AED': 'AED 120.50 spent on your HDFC Bank Credit Card XX1234 at DUBAI MALL on 21-10-26.',
+    };
+    const home = {
+      'INR': 'INR 459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl.',
+      'Rs': 'Rs.459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl.',
+      '₹': '₹459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl.',
+      'no marker': 'A/c XX1234 debited by 459.00 on 21-10-26 to swiggy@ybl.',
+    };
+
+    for (final MapEntry(key: code, value: body) in foreign.entries) {
+      test('a $code SMS is ignored: not added and not queued for review', () async {
+        final announced = <SmsAutoAdded>[];
+        final subscription = service.autoAdded.listen(announced.add);
+        final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: body, receivedAt: received), autoAdd: true);
+        await Future<void>.delayed(Duration.zero);
+        await subscription.cancel();
+
+        expect(status, IngestStatus.foreignCurrency);
+        expect(announced, isEmpty);
+        expect(await smsLog.watchPending().first, isEmpty);
+        expect(await EntriesRepository(db).watchHasAnyEntries().first, isFalse);
+        final again = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: body, receivedAt: received), autoAdd: true);
+        expect(again, IngestStatus.duplicate, reason: 'a rescan must not read it again');
+      });
+    }
+
+    test('a foreign SMS is ignored with auto-add off too', () async {
+      final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: foreign['USD']!, receivedAt: received), autoAdd: false);
+      expect(status, IngestStatus.foreignCurrency);
+      expect(await smsLog.watchPending().first, isEmpty);
+    });
+
+    for (final MapEntry(key: marker, value: body) in home.entries) {
+      test('an SMS with $marker is processed', () async {
+        final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: body, receivedAt: received), autoAdd: true);
+        expect(status, IngestStatus.added);
+      });
+    }
   });
 
   group('SMS history', () {

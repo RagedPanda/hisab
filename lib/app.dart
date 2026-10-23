@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/providers.dart';
 import 'core/theme.dart';
 import 'features/shell/router.dart';
+import 'features/sms/sms_auto_add_snackbar.dart';
 import 'l10n/generated/app_localizations.dart';
 
 class HisabApp extends ConsumerStatefulWidget {
@@ -60,6 +61,10 @@ class _HisabAppState extends ConsumerState<HisabApp> {
       themeAnimationDuration: const Duration(milliseconds: 300),
       themeAnimationCurve: Curves.easeOutCubic,
       routerConfig: appRouter,
+      // Above the navigator so the SMS Undo snackbar shows on every route,
+      // including Bank SMS opened directly from a hisab://sms link.
+      builder: (context, child) =>
+          SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink()),
     );
   }
 }

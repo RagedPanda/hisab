@@ -19,7 +19,7 @@ const _atmDebit = 'Rs.4,000.00 withdrawn from A/c XX1234 at ATM on 21-10-26. Avl
 /// Holds re-processing open after the row is deleted, as a slow device
 /// does, so the list rebuilds without the tapped card before the result.
 class _GatedIngestService extends SmsIngestService {
-  _GatedIngestService({required super.smsLog, required super.accounts, required super.categories, required super.entries});
+  _GatedIngestService({required super.smsLog, required super.accounts, required super.categories, required super.entries, required super.homeCurrencyCode});
 
   final gate = Completer<void>();
 
@@ -119,6 +119,7 @@ void main() {
             accounts: ref.watch(accountsRepositoryProvider),
             categories: ref.watch(categoriesRepositoryProvider),
             entries: ref.watch(entriesRepositoryProvider),
+            homeCurrencyCode: () => 'INR',
           )),
     ]);
     final service = container.read(smsIngestServiceProvider) as _GatedIngestService;

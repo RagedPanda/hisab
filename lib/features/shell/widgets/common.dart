@@ -93,11 +93,11 @@ class EntryTile extends StatelessWidget {
         color: category?.color ?? 0xFF607D8B,
       ),
       title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: subtitleParts.isEmpty
+      subtitle: subtitleParts.isEmpty && entry.source != 'sms'
           ? null
           : Row(children: [
               if (entry.source == 'sms') ...[
-                Icon(Icons.sms_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant, semanticLabel: l10n.sourceSms),
+                Icon(Icons.sms_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant, semanticLabel: l10n.smsAddedMarker),
                 const SizedBox(width: 4),
               ],
               Expanded(child: Text(subtitleParts.join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis)),
@@ -404,10 +404,16 @@ void popOrGoHome(BuildContext context) {
 /// Replaces whatever snackbar is showing with [message] and an Undo action.
 /// It times out like a plain snackbar instead of persisting, so a run of
 /// quick actions never queues stale messages behind each other.
-void showUndoSnackBar(ScaffoldMessengerState messenger, {required String message, required String undoLabel, required VoidCallback onUndo}) {
+void showUndoSnackBar(
+  ScaffoldMessengerState messenger, {
+  required String message,
+  required String undoLabel,
+  required VoidCallback onUndo,
+  Duration duration = const Duration(milliseconds: 4000),
+}) {
   messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message), persist: false, action: SnackBarAction(label: undoLabel, onPressed: onUndo)));
+    ..showSnackBar(SnackBar(content: Text(message), persist: false, duration: duration, action: SnackBarAction(label: undoLabel, onPressed: onUndo)));
 }
 
 /// Replaces whatever snackbar is showing with [message]. It times out, so a

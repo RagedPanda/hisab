@@ -365,7 +365,7 @@ class AppDatabase extends _$AppDatabase {
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
-          await wipeNotBankSmsText();
+          await wipeUnkeptSmsText();
         },
       );
 
@@ -374,12 +374,15 @@ class AppDatabase extends _$AppDatabase {
         native: const DriftNativeOptions(shareAcrossIsolates: true),
       );
 
-  /// Drops the text of not-bank SMS (OTPs, promotions) that an earlier build
-  /// or a restored backup stored. Idempotent and cheap, so it runs on open.
-  Future<void> wipeNotBankSmsText() => customStatement(
-        "UPDATE sms_log SET body = '' WHERE status = ? AND body <> ''",
-        [SmsLogStatus.notBank],
-      );
+  /// Drops SMS text the log may not keep ([keepsSmsText]: not-bank messages,
+  /// OTPs and promotions) that an earlier build or a restored backup stored.
+  /// Idempotent, so it runs on every open.
+  Future<void> wipeUnkeptSmsText() async {
+    final rows = await (select(smsLog)..where((row) => row.body.equals('').not())).get();
+    final wipeIds = [for (final row in rows) if (!keepsSmsText(row.status, row.body)) row.id];
+    if (wipeIds.isEmpty) return;
+    await (update(smsLog)..where((row) => row.id.isIn(wipeIds))).write(const SmsLogCompanion(body: Value('')));
+  }
 
   /// Inserts the category catalog and a Cash account. Idempotent by seedKey.
   Future<void> seedDefaults() async {

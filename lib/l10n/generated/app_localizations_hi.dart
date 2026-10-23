@@ -1144,6 +1144,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get upcomingCalendarNextMonth => 'अगला महीना';
 
   @override
+  String get upcomingConfirm => 'पुष्टि करें';
+
+  @override
+  String get upcomingConfirmPrompt =>
+      'यह आपकी पुष्टि का इंतज़ार कर रहा है। इसे अभी अपनी एंट्री में जोड़ें?';
+
+  @override
   String upcomingCalendarDueCount(int count) {
     return '$count देय';
   }

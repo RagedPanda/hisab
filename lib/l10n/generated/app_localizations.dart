@@ -2000,6 +2000,18 @@ abstract class AppLocalizations {
   /// **'Next month'**
   String get upcomingCalendarNextMonth;
 
+  /// No description provided for @upcomingConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get upcomingConfirm;
+
+  /// No description provided for @upcomingConfirmPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'This is waiting for you to confirm. Add it to your entries now?'**
+  String get upcomingConfirmPrompt;
+
   /// No description provided for @upcomingCalendarDueCount.
   ///
   /// In en, this message translates to:

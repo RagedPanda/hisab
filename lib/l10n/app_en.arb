@@ -392,6 +392,8 @@
   "upcomingCalendarDayEmpty": "Nothing due on this day",
   "upcomingCalendarPreviousMonth": "Previous month",
   "upcomingCalendarNextMonth": "Next month",
+  "upcomingConfirm": "Confirm",
+  "upcomingConfirmPrompt": "This is waiting for you to confirm. Add it to your entries now?",
   "upcomingCalendarDueCount": "{count, plural, =1{1 due} other{{count} due}}",
   "@upcomingCalendarDueCount": {"placeholders": {"count": {"type": "int"}}},
   "memberCount": "{count, plural, =1{1 member} other{{count} members}}",

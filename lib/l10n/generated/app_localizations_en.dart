@@ -1155,6 +1155,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upcomingCalendarNextMonth => 'Next month';
 
   @override
+  String get upcomingConfirm => 'Confirm';
+
+  @override
+  String get upcomingConfirmPrompt =>
+      'This is waiting for you to confirm. Add it to your entries now?';
+
+  @override
   String upcomingCalendarDueCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

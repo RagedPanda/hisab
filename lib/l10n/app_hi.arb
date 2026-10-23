@@ -319,6 +319,8 @@
   "upcomingCalendarDayEmpty": "इस दिन कुछ देय नहीं",
   "upcomingCalendarPreviousMonth": "पिछला महीना",
   "upcomingCalendarNextMonth": "अगला महीना",
+  "upcomingConfirm": "पुष्टि करें",
+  "upcomingConfirmPrompt": "यह आपकी पुष्टि का इंतज़ार कर रहा है। इसे अभी अपनी एंट्री में जोड़ें?",
   "upcomingCalendarDueCount": "{count} देय",
   "memberCount": "{count, plural, =1{1 सदस्य} other{{count} सदस्य}}",
   "noEntriesYetTitle": "अभी कोई प्रविष्टि नहीं",

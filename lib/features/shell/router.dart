@@ -43,6 +43,9 @@ final appRouter = GoRouter(
       parentNavigatorKey: _rootKey,
       builder: (_, state) => HomeFallbackPop(
         child: ExpenseEditorScreen(
+          // A new key per URI, so going from one entry to another rebuilds the
+          // editor instead of keeping the previous entry's state.
+          key: ValueKey(state.uri.toString()),
           entryId: state.uri.queryParameters['id'],
           groupId: state.uri.queryParameters['group'],
           initialKind: state.uri.queryParameters['kind'],

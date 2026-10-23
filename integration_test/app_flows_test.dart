@@ -1545,7 +1545,7 @@ void main() {
     await shoot(tester, 'upcoming_card_week');
     await tapFinder(tester, key('upcoming.window.month'), frames: 10);
     expect(find.text('Electricity'), findsOneWidget, reason: 'the 30-day window brings the bill in');
-    expect(find.text('Rent'), findsOneWidget);
+    expect(find.text('Rent'), findsNWidgets(2), reason: 'the overdue Rent and next month\'s Rent are two occurrences, each listed once');
     await shoot(tester, 'upcoming_card_month');
 
     await tapFinder(tester, key('upcoming.calendar'), frames: 10);

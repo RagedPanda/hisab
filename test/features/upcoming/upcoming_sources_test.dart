@@ -52,6 +52,12 @@ void main() {
     expect(inputs.map((input) => '${input.title} ${input.dueAt.day}'), ['Rent 5']);
   });
 
+  test('an overdue monthly rule lists the missed and the next occurrence once each', () async {
+    await recurring.saveRule(rule('Rent', frequency: RecurrenceFrequency.monthly, dayOfMonth: 19, start: DateTime(2026, 10, 19, 9), autoPost: false));
+    final inputs = recurringOccurrenceInputs(await recurring.getViews(), today: today, start: today, end: DateTime(2026, 11, 22));
+    expect(inputs.map((input) => input.dueAt), [DateTime(2026, 10, 19, 9), DateTime(2026, 11, 19, 9)]);
+  });
+
   test('paused rules are left out and an unnamed rule falls back to its payee', () async {
     final pausedId = await recurring.saveRule(rule('Gym', frequency: RecurrenceFrequency.monthly, start: DateTime(2026, 10, 25)));
     await recurring.setStatus(pausedId, RecurringStatus.paused);

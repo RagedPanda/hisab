@@ -2019,4 +2019,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get smsHistoryEmptyFiltered => 'इस नतीजे वाला कोई मैसेज नहीं';
+
+  @override
+  String get smsHistoryTextNotKept => 'मैसेज का टेक्स्ट नहीं रखा गया';
 }

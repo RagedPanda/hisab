@@ -679,5 +679,6 @@
   "smsHistoryCleared": "SMS history cleared",
   "smsHistoryEmptyTitle": "No messages processed yet",
   "smsHistoryEmptyBody": "Bank SMS that Hisab reads or that you paste show up here.",
-  "smsHistoryEmptyFiltered": "No messages with this outcome"
+  "smsHistoryEmptyFiltered": "No messages with this outcome",
+  "smsHistoryTextNotKept": "Message text not kept"
 }

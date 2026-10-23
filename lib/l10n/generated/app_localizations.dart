@@ -3487,6 +3487,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No messages with this outcome'**
   String get smsHistoryEmptyFiltered;
+
+  /// No description provided for @smsHistoryTextNotKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Message text not kept'**
+  String get smsHistoryTextNotKept;
 }
 
 class _AppLocalizationsDelegate

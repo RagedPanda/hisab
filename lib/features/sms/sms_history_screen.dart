@@ -130,7 +130,10 @@ class _SmsHistoryCard extends ConsumerWidget {
               const SizedBox(width: 8),
             ]),
             const SizedBox(height: 4),
-            Text(smsBodyPreview(log.body), maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            if (log.body.isEmpty)
+              Text(l10n.smsHistoryTextNotKept, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontStyle: FontStyle.italic))
+            else
+              Text(smsBodyPreview(log.body), maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
             const SizedBox(height: 4),
             Wrap(
               crossAxisAlignment: WrapCrossAlignment.center,

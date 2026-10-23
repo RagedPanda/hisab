@@ -587,5 +587,6 @@
   "smsHistoryCleared": "SMS इतिहास साफ़ हो गया",
   "smsHistoryEmptyTitle": "अभी तक कोई मैसेज नहीं",
   "smsHistoryEmptyBody": "Hisab जो बैंक SMS पढ़ता है या आप पेस्ट करते हैं, वे यहाँ दिखेंगे।",
-  "smsHistoryEmptyFiltered": "इस नतीजे वाला कोई मैसेज नहीं"
+  "smsHistoryEmptyFiltered": "इस नतीजे वाला कोई मैसेज नहीं",
+  "smsHistoryTextNotKept": "मैसेज का टेक्स्ट नहीं रखा गया"
 }

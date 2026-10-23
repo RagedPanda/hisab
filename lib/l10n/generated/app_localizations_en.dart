@@ -2027,4 +2027,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smsHistoryEmptyFiltered => 'No messages with this outcome';
+
+  @override
+  String get smsHistoryTextNotKept => 'Message text not kept';
 }

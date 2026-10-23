@@ -30,6 +30,7 @@ void main() {
       matchWindowDays: 6,
       tolerancePercent: 25,
       updatedAt: DateTime(2026, 10, 23, 9),
+      trackedSince: DateTime(2026, 10, 23),
     );
     await saved.writeTo(prefs);
     final loaded = SalarySettings.fromPrefs(prefs);
@@ -43,6 +44,7 @@ void main() {
     expect(loaded.reminderDelayDays, 4);
     expect(loaded.matchWindowDays, 6);
     expect(loaded.tolerancePercent, 25);
+    expect(loaded.trackedSince, DateTime(2026, 10, 23));
     expect(loaded.updatedAt, DateTime(2026, 10, 23, 9));
     expect(loaded.copyWith(clearAccount: true).accountId, isNull);
   });
@@ -64,6 +66,7 @@ void main() {
       matchWindowDays: 2,
       tolerancePercent: 5,
       updatedAt: DateTime(2026, 10, 23, 9, 30),
+      trackedSince: DateTime(2026, 10, 23),
     );
 
     test('round trips through JSON', () {

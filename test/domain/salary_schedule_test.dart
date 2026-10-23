@@ -373,4 +373,48 @@ void main() {
       expect(shouldClaimSalaryOccurrence(status, ruleNextDue: DateTime(2026, 10, 30, 9), ruleId: 'r'), isFalse, reason: 'a missed cycle stays waiting');
     });
   });
+
+  group('tracking starts with the rule', () {
+    // Set up on Friday 23 Oct 2026 with day 31; 30 Sep was the previous cycle.
+    SalaryStatus evaluateOn(DateTime now, {DateTime? trackedSince, Iterable<IncomeCandidate> incomes = const []}) => evaluateSalary(
+          now: now,
+          salaryDay: 31,
+          expectedMinor: 10000000,
+          incomes: incomes,
+          shift: SalaryShift.sameDay,
+          reminderDelayDays: 1,
+          trackedSince: trackedSince,
+        );
+
+    test('a cycle before the setup day is never late', () {
+      final status = evaluateOn(DateTime(2026, 10, 23, 12), trackedSince: DateTime(2026, 10, 23));
+      expect(status.expected, DateTime(2026, 10, 31), reason: 'the first expected date on or after setup');
+      expect(status.isLate, isFalse);
+      expect(status.next, DateTime(2026, 11, 30));
+    });
+
+    test('without a start date (older setups) the previous cycle still counts', () {
+      final status = evaluateOn(DateTime(2026, 10, 23, 12));
+      expect(status.expected, DateTime(2026, 9, 30));
+      expect(status.isLate, isTrue);
+    });
+
+    test('once the first cycle passes it is tracked and can be late', () {
+      final status = evaluateOn(DateTime(2026, 11, 3, 12), trackedSince: DateTime(2026, 10, 23));
+      expect(status.expected, DateTime(2026, 10, 31));
+      expect(status.isLate, isTrue);
+    });
+
+    test('a salary expected on the setup day itself is tracked', () {
+      expect(isBeforeSalaryTracking(DateTime(2026, 10, 23), trackedSince: DateTime(2026, 10, 23, 15)), isFalse);
+      expect(isBeforeSalaryTracking(DateTime(2026, 10, 22), trackedSince: DateTime(2026, 10, 23)), isTrue);
+      expect(isBeforeSalaryTracking(DateTime(2020, 1, 1), trackedSince: null), isFalse);
+    });
+  });
+
+  test('only a new rule or a changed salary day restarts the rule', () {
+    expect(shouldRestartSalaryRule(ruleDay: 31, salaryDay: 31), isFalse);
+    expect(shouldRestartSalaryRule(ruleDay: 31, salaryDay: 25), isTrue);
+    expect(shouldRestartSalaryRule(ruleDay: null, salaryDay: 25), isTrue);
+  });
 }

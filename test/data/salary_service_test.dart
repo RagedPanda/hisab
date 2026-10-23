@@ -98,4 +98,50 @@ void main() {
   test('nothing to evaluate when the salary is not set up', () async {
     expect(await salary.reconcile(const SalarySettings(), now: DateTime(2026, 11, 2)), isNull);
   });
+
+  group('editing the setup', () {
+    test('a save with the same day keeps the waiting occurrence and its due date', () async {
+      final settings = await setUpSalary();
+      // 30 Oct passed with no salary: the occurrence is waiting in Recurring.
+      final before = (await salary.recurring.getRule(settings.ruleId))!;
+      final edited = await salary.saveSalaryRule(settings: settings.copyWith(amountMinor: 11000000), today: DateTime(2026, 11, 3));
+      final after = (await salary.recurring.getRule(settings.ruleId))!;
+      expect(after.nextDue, DateTime(2026, 10, 30, 9), reason: 'not moved to next month');
+      expect((after.postedCount, after.startDate), (before.postedCount, before.startDate));
+      expect(after.amountMinor, 11000000);
+      expect(edited.ruleId, settings.ruleId);
+      expect(edited.trackedSince, DateTime(2026, 10, 22), reason: 'still tracked from the original setup');
+      final status = (await salary.reconcile(edited, now: DateTime(2026, 11, 3, 12)))!;
+      expect((status.expected, status.isLate), (DateTime(2026, 10, 30), true));
+    });
+
+    test('a changed salary day rebuilds the rule from the save day', () async {
+      final settings = await setUpSalary();
+      final edited = await salary.saveSalaryRule(settings: settings.copyWith(salaryDay: 5), today: DateTime(2026, 11, 3));
+      final rule = (await salary.recurring.getRule(edited.ruleId))!;
+      expect(edited.ruleId, settings.ruleId);
+      expect(rule.dayOfMonth, 5);
+      expect(rule.nextDue, DateTime(2026, 11, 5, 9));
+      expect(edited.trackedSince, DateTime(2026, 11, 3));
+    });
+
+    test('a changed shift moves only the waiting due date', () async {
+      final settings = await setUpSalary();
+      final edited = await salary.saveSalaryRule(settings: settings.copyWith(shift: SalaryShift.nextWorkingDay), today: DateTime(2026, 11, 3));
+      // 31 Oct 2026 is a Saturday, the next working day is Monday 2 Nov.
+      expect((await salary.recurring.getRule(edited.ruleId))!.nextDue, DateTime(2026, 11, 2, 9));
+    });
+  });
+
+  test('a new rule is tracked from its setup day and never waits for an earlier cycle', () async {
+    final settings = await setUpSalary();
+    expect(settings.trackedSince, DateTime(2026, 10, 22));
+    expect((await salary.reconcile(settings, now: DateTime(2026, 10, 23, 12)))!.expected, DateTime(2026, 10, 30), reason: 'not 30 Sep');
+
+    // Saturday 31 Oct: the shifted date (Friday 30th) is already behind.
+    final onSaturday = await salary.saveSalaryRule(settings: const SalarySettings(amountMinor: 10000000, salaryDay: 31), today: DateTime(2026, 10, 31));
+    expect((await salary.recurring.getRule(onSaturday.ruleId))!.nextDue, DateTime(2026, 11, 30, 9));
+    final status = (await salary.reconcile(onSaturday, now: DateTime(2026, 10, 31, 12)))!;
+    expect((status.expected, status.isLate), (DateTime(2026, 11, 30), false));
+  });
 }

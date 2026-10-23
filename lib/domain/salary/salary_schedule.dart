@@ -313,7 +313,9 @@ class SalaryStatus {
 }
 
 /// Evaluates the current pay cycle for a salary of [expectedMinor] on
-/// [salaryDay] against [incomes] (recent income entries).
+/// [salaryDay] against [incomes] (recent income entries). A cycle expected
+/// before [trackedSince] (the day the salary rule started) is never tracked
+/// or late: the first one tracked is the first on or after that day.
 SalaryStatus evaluateSalary({
   required DateTime now,
   required int salaryDay,
@@ -325,6 +327,7 @@ SalaryStatus evaluateSalary({
   int reminderDelayDays = kDefaultSalaryReminderDelayDays,
   int windowDays = kSalaryMatchWindowDays,
   double tolerance = kSalaryAmountTolerance,
+  DateTime? trackedSince,
 }) {
   final cycles = salaryCycles(now, salaryDay: salaryDay, shift: shift, holidays: holidays);
   IncomeCandidate? findFor(DateTime expected, DateTime nextExpected) => findSalaryIncome(
@@ -350,9 +353,23 @@ SalaryStatus evaluateSalary({
   // cycle straight away instead of waiting for its expected date.
   final early = findFor(cycles.next, cycles.afterNext);
   if (early != null) return statusFor(cycles.next, cycles.afterNext, early, null);
+  if (isBeforeSalaryTracking(cycles.current, trackedSince: trackedSince)) {
+    return statusFor(cycles.next, cycles.afterNext, null, findFor(cycles.current, cycles.next));
+  }
   final current = findFor(cycles.current, cycles.next);
   return statusFor(cycles.current, cycles.next, current, current == null ? findFor(cycles.previous, cycles.current) : null);
 }
+
+/// Whether the cycle [expected] on that date predates the salary rule
+/// ([trackedSince]), so it is not tracked. Without a start date (setups made
+/// before it was stored) every cycle counts.
+bool isBeforeSalaryTracking(DateTime expected, {required DateTime? trackedSince}) =>
+    trackedSince != null && startOfDay(expected).isBefore(startOfDay(trackedSince));
+
+/// Whether saving the salary setup must rebuild its rule from today: only a
+/// new rule or a changed salary day. Any other edit keeps the rule's due
+/// date and its waiting occurrence.
+bool shouldRestartSalaryRule({required int? ruleDay, required int salaryDay}) => ruleDay != salaryDay;
 
 /// Earliest income date [evaluateSalary] can look at for [now], so callers
 /// load only the entries that matter. Defaults to the widest window the user

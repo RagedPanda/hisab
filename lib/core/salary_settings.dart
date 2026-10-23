@@ -23,6 +23,7 @@ class SalarySettings {
     this.updatedAt,
     this.ruleAnchor,
     this.alignDeclinedRuleId = '',
+    this.trackedSince,
   });
 
   /// Recurring income rule created by the salary setup; empty when not set up.
@@ -58,6 +59,10 @@ class SalarySettings {
   /// suggestion is not offered again on every save.
   final String alignDeclinedRuleId;
 
+  /// Day the salary rule started (or its salary day last changed); no cycle
+  /// before it counts as late. Null for setups saved before it was stored.
+  final DateTime? trackedSince;
+
   bool get isSetUp => ruleId.isNotEmpty;
   Set<DateTime> get holidaySet => holidays.toSet();
 
@@ -76,6 +81,7 @@ class SalarySettings {
     DateTime? updatedAt,
     SalaryRuleAnchor? ruleAnchor,
     String? alignDeclinedRuleId,
+    DateTime? trackedSince,
   }) =>
       SalarySettings(
         ruleId: ruleId ?? this.ruleId,
@@ -91,6 +97,7 @@ class SalarySettings {
         updatedAt: updatedAt ?? this.updatedAt,
         ruleAnchor: ruleAnchor ?? this.ruleAnchor,
         alignDeclinedRuleId: alignDeclinedRuleId ?? this.alignDeclinedRuleId,
+        trackedSince: trackedSince ?? this.trackedSince,
       );
 
   /// Whether to offer aligning "Month starts on" after saving: the setting
@@ -110,15 +117,21 @@ class SalarySettings {
         reminderDelayDays: reminderDelayDays,
         windowDays: clampSalaryMatchWindowDays(matchWindowDays),
         tolerance: salaryToleranceFraction(tolerancePercent),
+        trackedSince: trackedSince,
       );
 
   static String _dateKey(DateTime date) =>
       '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
-  /// Stored holiday strings ("2026-10-30") back to dates; bad ones dropped.
+  /// A stored date string ("2026-10-30") back to a date; null when bad.
+  static DateTime? parseDateKey(String? stored) => switch (DateTime.tryParse(stored ?? '')) {
+        final date? => DateTime(date.year, date.month, date.day),
+        null => null,
+      };
+
+  /// Stored holiday strings back to dates; bad ones dropped.
   static List<DateTime> parseHolidays(List<String> stored) => [
-        for (final value in stored)
-          if (DateTime.tryParse(value) case final date?) DateTime(date.year, date.month, date.day),
+        for (final value in stored) ?parseDateKey(value),
       ];
 
   /// The backup form. Holidays are plain dates, [updatedAt] is ISO 8601.
@@ -136,6 +149,7 @@ class SalarySettings {
         'updatedAt': updatedAt?.toIso8601String(),
         'ruleAnchor': ruleAnchor?.toJson(),
         'alignDeclinedRuleId': alignDeclinedRuleId,
+        'trackedSince': trackedSince == null ? null : _dateKey(trackedSince!),
       };
 
   /// Reads [toJson] output. Missing or mistyped values fall back to the
@@ -158,6 +172,7 @@ class SalarySettings {
       updatedAt: DateTime.tryParse(read<String>('updatedAt') ?? ''),
       ruleAnchor: SalaryRuleAnchor.fromJson(json['ruleAnchor']),
       alignDeclinedRuleId: read<String>('alignDeclinedRuleId') ?? '',
+      trackedSince: parseDateKey(read<String>('trackedSince')),
     );
   }
 
@@ -175,6 +190,7 @@ class SalarySettings {
         'updatedAt': prefs.getString('salaryUpdatedAt'),
         'ruleAnchor': _decodeJson(prefs.getString('salaryRuleAnchor')),
         'alignDeclinedRuleId': prefs.getString('salaryAlignDeclinedFor'),
+        'trackedSince': prefs.getString('salaryTrackedSince'),
       });
 
   static Object? _decodeJson(String? stored) {
@@ -200,6 +216,7 @@ class SalarySettings {
     if (updatedAt case final savedAt?) await prefs.setString('salaryUpdatedAt', savedAt.toIso8601String());
     await prefs.setString('salaryRuleAnchor', ruleAnchor == null ? '' : jsonEncode(ruleAnchor!.toJson()));
     await prefs.setString('salaryAlignDeclinedFor', alignDeclinedRuleId);
+    await prefs.setString('salaryTrackedSince', trackedSince == null ? '' : _dateKey(trackedSince!));
   }
 }
 

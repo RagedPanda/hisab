@@ -384,7 +384,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get smsEntryNotice =>
-      'बैंक एसएमएस से बना है। इसे बदलने से बैंक बैलेंस नहीं बदलेगा।';
+      'एसएमएस से जोड़ा गया। इसे बदलने से बैंक बैलेंस नहीं बदलेगा।';
 
   @override
   String get saving => 'सेव हो रहा है…';
@@ -770,6 +770,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get smsDuplicate => 'पहले ही जोड़ा जा चुका है।';
 
   @override
+  String get smsForeignCurrency =>
+      'केवल आपकी मुख्य मुद्रा वाले SMS समर्थित हैं, इसलिए यह SMS छोड़ दिया गया।';
+
+  @override
   String get smsNotFound => 'इस टेक्स्ट में कोई लेन-देन नहीं मिला।';
 
   @override
@@ -812,11 +816,11 @@ class AppLocalizationsHi extends AppLocalizations {
       'iOS पर उपलब्ध नहीं। शॉर्टकट इस्तेमाल करें या नीचे पेस्ट करें।';
 
   @override
-  String get smsAutoAddTitle => 'बिना समीक्षा के लेन-देन जोड़ें';
+  String get smsAutoAddTitle => 'साफ़ लेन-देन अपने-आप जोड़ें';
 
   @override
   String get smsAutoAddHelp =>
-      'बंद: नए एसएमएस नीचे समीक्षा सूची में रुकते हैं।';
+      'चालू: साफ़ बैंक एसएमएस तुरंत जुड़ते हैं, पूर्ववत करने के विकल्प के साथ। अस्पष्ट एसएमएस समीक्षा के लिए रुकते हैं।';
 
   @override
   String get scanInboxNow => 'अभी इनबॉक्स स्कैन करें';
@@ -1963,4 +1967,707 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get savedAddAnother => 'सेव हो गया। अगला जोड़ें।';
+
+  @override
+  String get smsHistoryTitle => 'SMS इतिहास';
+
+  @override
+  String get smsHistoryHelp => 'Hisab ने जो भी मैसेज देखे और उनका क्या हुआ';
+
+  @override
+  String get smsOutcomeAdded => 'जोड़ा गया';
+
+  @override
+  String get smsOutcomeDuplicate => 'दोहराया गया';
+
+  @override
+  String get smsOutcomeIgnored => 'छोड़ा गया';
+
+  @override
+  String get smsOutcomeUnparsed => 'पढ़ा नहीं जा सका';
+
+  @override
+  String get smsOutcomePending => 'समीक्षा बाकी';
+
+  @override
+  String get smsOutcomeUndone => 'वापस लिया';
+
+  @override
+  String get smsHistoryNotBank => 'बैंक का मैसेज नहीं';
+
+  @override
+  String get smsHistoryDismissed => 'समीक्षा से हटाया गया';
+
+  @override
+  String get smsHistoryUnparsedDetail => 'मैसेज में कोई लेनदेन नहीं मिला';
+
+  @override
+  String get smsHistoryDuplicateDetail => 'यही मैसेज पहले आ चुका है';
+
+  @override
+  String get smsHistoryOpenEntry => 'एंट्री खोलें';
+
+  @override
+  String get smsHistoryReprocess => 'फिर से जाँचें';
+
+  @override
+  String get smsHistoryClear => 'इतिहास साफ़ करें';
+
+  @override
+  String get smsHistoryClearQuestion => 'SMS इतिहास साफ़ करें?';
+
+  @override
+  String smsHistoryClearBody(int count) {
+    return 'इस डिवाइस से $count मैसेज का टेक्स्ट हट जाएगा। आपकी एंट्री और समीक्षा के लिए बाकी मैसेज बने रहेंगे, और साफ़ किए गए मैसेज दोबारा नहीं जोड़े जाएँगे।';
+  }
+
+  @override
+  String get smsHistoryClearConfirm => 'साफ़ करें';
+
+  @override
+  String get smsHistoryCleared => 'SMS इतिहास साफ़ हो गया';
+
+  @override
+  String get smsHistoryEmptyTitle => 'अभी तक कोई मैसेज नहीं';
+
+  @override
+  String get smsHistoryEmptyBody =>
+      'Hisab जो बैंक SMS पढ़ता है या आप पेस्ट करते हैं, वे यहाँ दिखेंगे।';
+
+  @override
+  String get smsHistoryEmptyFiltered => 'इस नतीजे वाला कोई मैसेज नहीं';
+
+  @override
+  String get smsHistoryTextNotKept => 'मैसेज का टेक्स्ट नहीं रखा गया';
+
+  @override
+  String get recurringRepeat => 'दोहराएँ';
+
+  @override
+  String get recurringDoesNotRepeat => 'दोहराया नहीं जाता';
+
+  @override
+  String get recurringDaily => 'रोज़';
+
+  @override
+  String get recurringWeekly => 'हर हफ़्ते';
+
+  @override
+  String get recurringMonthly => 'हर महीने';
+
+  @override
+  String get recurringYearly => 'हर साल';
+
+  @override
+  String recurringEveryDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count दिन',
+      one: 'हर दिन',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count हफ़्ते',
+      one: 'हर हफ़्ते',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count महीने',
+      one: 'हर महीने',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count साल',
+      one: 'हर साल',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringOnDay(int day) {
+    return '$day तारीख़ को';
+  }
+
+  @override
+  String get recurringOnLastDay => 'आख़िरी दिन';
+
+  @override
+  String recurringOnWeekday(String weekday) {
+    return '$weekday को';
+  }
+
+  @override
+  String recurringOnDate(String date) {
+    return '$date को';
+  }
+
+  @override
+  String recurringUntil(String date) {
+    return '$date तक';
+  }
+
+  @override
+  String recurringTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count बार',
+      one: '1 बार',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recurringInterval => 'हर कितने में';
+
+  @override
+  String get recurringLastDayOfMonth => 'महीने के आख़िरी दिन';
+
+  @override
+  String get recurringEnds => 'कब ख़त्म हो';
+
+  @override
+  String get recurringEndNever => 'कभी नहीं';
+
+  @override
+  String get recurringEndOnDate => 'किसी तारीख़ को';
+
+  @override
+  String get recurringEndAfter => 'इतनी बार बाद';
+
+  @override
+  String get recurringOccurrences => 'कितनी बार';
+
+  @override
+  String get recurringAutoPost => 'अपने आप जोड़ें';
+
+  @override
+  String get recurringAutoPostHint =>
+      'बंद होने पर हर बार आपकी पुष्टि का इंतज़ार होगा';
+
+  @override
+  String get recurringStopRepeating => 'न दोहराएँ';
+
+  @override
+  String get recurringDone => 'हो गया';
+
+  @override
+  String get recurringEndBeforeStart => 'शुरुआत के बाद की तारीख़ चुनें';
+
+  @override
+  String get recurringPartOfRule => 'दोहराई जाने वाली एंट्री का हिस्सा';
+
+  @override
+  String get recurringTitle => 'दोहराई जाने वाली';
+
+  @override
+  String get recurringNew => 'नई दोहराई जाने वाली';
+
+  @override
+  String get recurringEdit => 'दोहराई जाने वाली बदलें';
+
+  @override
+  String get recurringEmptyTitle => 'अभी कुछ दोहराया नहीं जाता';
+
+  @override
+  String get recurringEmptyBody =>
+      'किराया, SIP, EMI या सैलरी: एक बार सेट करें, Hisab उसी दिन जोड़ देगा।';
+
+  @override
+  String get recurringSectionWaiting => 'आपका इंतज़ार';
+
+  @override
+  String get recurringSectionActive => 'चालू';
+
+  @override
+  String get recurringSectionPaused => 'रुकी हुई';
+
+  @override
+  String get recurringSectionEnded => 'ख़त्म';
+
+  @override
+  String recurringNext(String date) {
+    return 'अगली $date';
+  }
+
+  @override
+  String recurringDue(String date) {
+    return 'देय $date';
+  }
+
+  @override
+  String recurringMoreWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'और $count बाक़ी',
+      one: 'और 1 बाक़ी',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recurringConfirm => 'जोड़ें';
+
+  @override
+  String get recurringSkip => 'छोड़ें';
+
+  @override
+  String get recurringPause => 'रोकें';
+
+  @override
+  String get recurringResume => 'फिर शुरू करें';
+
+  @override
+  String get recurringDeleted => 'दोहराई जाने वाली एंट्री हटाई गई';
+
+  @override
+  String get recurringAdded => 'एंट्री जोड़ी गई';
+
+  @override
+  String get recurringSkipped => 'छोड़ दी गई';
+
+  @override
+  String recurringToConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count दोहराई जाने वाली एंट्री पुष्टि के लिए',
+      one: '1 दोहराई जाने वाली एंट्री पुष्टि के लिए',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringPostedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count बार जोड़ी गई',
+      one: 'एक बार जोड़ी गई',
+      zero: 'अभी नहीं जोड़ी गई',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recurringNameLabel => 'नाम (वैकल्पिक)';
+
+  @override
+  String get recurringNextOn => 'अगली तारीख़';
+
+  @override
+  String get recurringRuleMissing => 'यह दोहराई जाने वाली एंट्री हटा दी गई है';
+
+  @override
+  String recurringDecrease(String label) {
+    return '$label घटाएँ';
+  }
+
+  @override
+  String recurringIncrease(String label) {
+    return '$label बढ़ाएँ';
+  }
+
+  @override
+  String get subscriptions => 'सब्सक्रिप्शन';
+
+  @override
+  String get subscriptionsMonthlyTotal => 'हर महीने';
+
+  @override
+  String get subscriptionsYearlyTotal => 'हर साल';
+
+  @override
+  String subscriptionsActiveCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count चालू सब्सक्रिप्शन',
+      one: '1 चालू सब्सक्रिप्शन',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionsEmptyTitle => 'अभी कोई सब्सक्रिप्शन नहीं';
+
+  @override
+  String get subscriptionsEmptyBody =>
+      'Netflix, मोबाइल रिचार्ज या जिम जोड़ें और देखें कि हर महीने और हर साल कितना खर्च होता है।';
+
+  @override
+  String get subscriptionAdd => 'सब्सक्रिप्शन जोड़ें';
+
+  @override
+  String get subscriptionEdit => 'सब्सक्रिप्शन बदलें';
+
+  @override
+  String get subscriptionPickService => 'सेवा चुनें';
+
+  @override
+  String get subscriptionCustom => 'कुछ और';
+
+  @override
+  String get subscriptionPrice => 'हर रिन्यूअल की कीमत';
+
+  @override
+  String get subscriptionCycle => 'रिन्यू होता है';
+
+  @override
+  String get subscriptionNextRenewal => 'अगला रिन्यूअल';
+
+  @override
+  String subscriptionStartedOn(String date) {
+    return '$date से शुरू';
+  }
+
+  @override
+  String get subscriptionAutoPost => 'हर रिन्यूअल पर खर्च में जोड़ें';
+
+  @override
+  String get subscriptionAutoPostHelp =>
+      'बंद: सिर्फ़ यहाँ दिखेगा, कोई एंट्री नहीं जुड़ेगी';
+
+  @override
+  String get subscriptionNameRequired => 'नाम डालें';
+
+  @override
+  String get subscriptionPriceRequired => 'कीमत डालें';
+
+  @override
+  String subscriptionRenewsOn(String date) {
+    return '$date को रिन्यू';
+  }
+
+  @override
+  String get subscriptionRenewsToday => 'आज रिन्यू';
+
+  @override
+  String subscriptionRenewsInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन में रिन्यू',
+      one: 'कल रिन्यू',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionOverdue(String date) {
+    return '$date को देय था';
+  }
+
+  @override
+  String get subscriptionPaused => 'रुका हुआ';
+
+  @override
+  String get subscriptionCancelled => 'रद्द';
+
+  @override
+  String get subscriptionPause => 'रोकें';
+
+  @override
+  String get subscriptionResume => 'फिर शुरू करें';
+
+  @override
+  String get subscriptionMarkCancelled => 'रद्द मार्क करें';
+
+  @override
+  String subscriptionCancelConfirm(String name) {
+    return '$name को रद्द मार्क करें?';
+  }
+
+  @override
+  String get subscriptionCancelConfirmBody =>
+      'नए खर्च नहीं जुड़ेंगे और यह कुल में नहीं गिना जाएगा। पुरानी एंट्री बनी रहेंगी।';
+
+  @override
+  String get subscriptionDeleted => 'सब्सक्रिप्शन हटाया गया';
+
+  @override
+  String subscriptionPerMonth(String amount) {
+    return '$amount/महीना';
+  }
+
+  @override
+  String get subscriptionSort => 'क्रम';
+
+  @override
+  String get subscriptionSortCostHigh => 'कीमत: ज़्यादा से कम';
+
+  @override
+  String get subscriptionSortCostLow => 'कीमत: कम से ज़्यादा';
+
+  @override
+  String get subscriptionSortRenewal => 'अगला रिन्यूअल';
+
+  @override
+  String get subscriptionSortName => 'नाम';
+
+  @override
+  String subscriptionEveryDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count दिन',
+      one: 'रोज़',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count हफ़्ते',
+      one: 'हर हफ़्ते',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count महीने',
+      one: 'हर महीने',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count साल',
+      one: 'हर साल',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionTemplateNetflix => 'Netflix';
+
+  @override
+  String get subscriptionTemplateAmazonPrime => 'Amazon Prime';
+
+  @override
+  String get subscriptionTemplateJiohotstar => 'JioHotstar';
+
+  @override
+  String get subscriptionTemplateSpotify => 'Spotify';
+
+  @override
+  String get subscriptionTemplateYoutubePremium => 'YouTube Premium';
+
+  @override
+  String get subscriptionTemplateMobileRecharge => 'मोबाइल रिचार्ज';
+
+  @override
+  String get subscriptionTemplateDth => 'DTH';
+
+  @override
+  String get subscriptionTemplateBroadband => 'ब्रॉडबैंड';
+
+  @override
+  String get subscriptionTemplateGym => 'जिम';
+
+  @override
+  String get subscriptionTemplateCloudStorage => 'क्लाउड स्टोरेज';
+
+  @override
+  String get subscriptionTemplateNewsApp => 'न्यूज़ ऐप';
+
+  @override
+  String get payersMultiple => '2+ लोग';
+
+  @override
+  String get payersHelp => 'हर व्यक्ति ने कितना दिया, लिखें।';
+
+  @override
+  String payersAssigned(String assigned, String total) {
+    return '$total में से $assigned दर्ज';
+  }
+
+  @override
+  String payersMustTotal(String total) {
+    return 'दी गई रकम का जोड़ $total होना चाहिए';
+  }
+
+  @override
+  String namesAnd(String first, String last) {
+    return '$first और $last';
+  }
+
+  @override
+  String get youInList => 'आप';
+
+  @override
+  String recurringAddedSkipped(int added, int skipped) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added जोड़ी गईं',
+      one: '1 जोड़ी गई',
+      zero: 'कोई नहीं जोड़ी गई',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: '$skipped छोड़ी गईं',
+      one: '1 छोड़ी गई',
+    );
+    return '$_temp0, $_temp1';
+  }
+
+  @override
+  String get groupExportCsv => 'CSV फ़ाइल के रूप में एक्सपोर्ट करें';
+
+  @override
+  String groupExportCsvSubject(String group) {
+    return '$group के खर्च';
+  }
+
+  @override
+  String get groupExportFailed => 'CSV एक्सपोर्ट नहीं हो सका';
+
+  @override
+  String get groupCsvDate => 'तारीख';
+
+  @override
+  String get groupCsvDescription => 'विवरण';
+
+  @override
+  String get groupCsvCost => 'राशि';
+
+  @override
+  String get groupCsvPaidBy => 'किसने दिया';
+
+  @override
+  String groupCsvPaidColumn(String name) {
+    return '$name ने दिया';
+  }
+
+  @override
+  String groupCsvShareColumn(String name) {
+    return '$name का हिस्सा';
+  }
+
+  @override
+  String groupCsvBalanceColumn(String name) {
+    return '$name का बैलेंस';
+  }
+
+  @override
+  String get groupCsvPayment => 'भुगतान';
+
+  @override
+  String get groupSummaryWhoPaysWhom => 'किसे किसको देना है';
+
+  @override
+  String get groupSummaryStandings => 'किसका कितना हिसाब';
+
+  @override
+  String groupSummaryYouOwe(String name, String amount) {
+    return 'आपको $name को $amount देने हैं';
+  }
+
+  @override
+  String groupSummaryOwesYou(String name, String amount) {
+    return '$name को आपको $amount देने हैं';
+  }
+
+  @override
+  String groupSummaryGetsBack(String name, String amount) {
+    return '$name को $amount वापस मिलेंगे';
+  }
+
+  @override
+  String groupSummaryOwesInTotal(String name, String amount) {
+    return '$name को कुल $amount देने हैं';
+  }
+
+  @override
+  String groupSummaryYouGetBack(String amount) {
+    return 'आपको $amount वापस मिलेंगे';
+  }
+
+  @override
+  String groupSummaryYouOweInTotal(String amount) {
+    return 'आपको कुल $amount देने हैं';
+  }
+
+  @override
+  String get groupCsvTotal => 'कुल';
+
+  @override
+  String groupSummaryGroupTotal(String amount) {
+    return 'ग्रुप का कुल खर्च: $amount';
+  }
+
+  @override
+  String groupSummaryYourShare(String amount) {
+    return 'आपका हिस्सा: $amount';
+  }
+
+  @override
+  String groupSummaryMemberShare(String name, String amount) {
+    return '$name का हिस्सा: $amount';
+  }
+
+  @override
+  String get smsAddedMarker => 'एसएमएस से जोड़ा गया';
+
+  @override
+  String smsAutoAddedOne(String amount) {
+    return 'एसएमएस से $amount जोड़ा गया';
+  }
+
+  @override
+  String smsAutoAddedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'एसएमएस से $count एंट्री जोड़ी गईं',
+      one: 'एसएमएस से 1 एंट्री जोड़ी गई',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get smsReviewTitle => 'समीक्षा के लिए एसएमएस';
+
+  @override
+  String get smsReviewHelp =>
+      'ये संदेश अपने-आप जोड़ने लायक साफ़ नहीं थे। हर एक को जोड़ें, बदलें या अनदेखा करें।';
+
+  @override
+  String get smsReviewUnread => 'रकम पढ़ी नहीं जा सकी';
+
+  @override
+  String get smsReviewAddManually => 'खुद जोड़ें';
 }

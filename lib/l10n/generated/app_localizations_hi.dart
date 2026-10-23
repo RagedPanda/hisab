@@ -790,6 +790,16 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String smsNotificationBodyAmountAutoAdd(String amount, String sender) {
+    return '$sender से $amount। जोड़ने के लिए हिसाब खोलें।';
+  }
+
+  @override
+  String smsNotificationBodyAutoAdd(String sender) {
+    return '$sender से। जोड़ने के लिए हिसाब खोलें।';
+  }
+
+  @override
   String get readBankSmsQuestion => 'बैंक एसएमएस पढ़ें?';
 
   @override

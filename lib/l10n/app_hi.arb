@@ -225,6 +225,8 @@
   "smsNotificationTitle": "नया बैंक लेन-देन",
   "smsNotificationBodyAmount": "{sender} से {amount}। देखने के लिए टैप करें।",
   "smsNotificationBody": "{sender} से। देखने के लिए टैप करें।",
+  "smsNotificationBodyAmountAutoAdd": "{sender} से {amount}। जोड़ने के लिए हिसाब खोलें।",
+  "smsNotificationBodyAutoAdd": "{sender} से। जोड़ने के लिए हिसाब खोलें।",
   "readBankSmsQuestion": "बैंक एसएमएस पढ़ें?",
   "smsConsentBody": "लेन-देन दर्ज करने और खाते का बैलेंस दिखाने के लिए हिसाब आपके बैंक और UPI ऐप के एसएमएस पढ़ता है। संदेश सिर्फ़ इसी डिवाइस पर पढ़े जाते हैं और कभी अपलोड नहीं होते।",
   "smsPermissionDenied": "एसएमएस की अनुमति नहीं मिली",

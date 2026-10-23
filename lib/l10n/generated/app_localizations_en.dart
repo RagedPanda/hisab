@@ -790,6 +790,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String smsNotificationBodyAmountAutoAdd(String amount, String sender) {
+    return '$amount from $sender. Open Hisab to add it.';
+  }
+
+  @override
+  String smsNotificationBodyAutoAdd(String sender) {
+    return 'From $sender. Open Hisab to add it.';
+  }
+
+  @override
   String get readBankSmsQuestion => 'Read bank SMS?';
 
   @override

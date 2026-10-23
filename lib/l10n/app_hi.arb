@@ -309,7 +309,6 @@
   "noEntriesYetBody": "+ से जोड़ें या बैंक एसएमएस चालू करें ताकि ये अपने आप दर्ज हों",
   "addEntry": "प्रविष्टि जोड़ें",
   "showAllCategories": "सभी श्रेणियाँ दिखाएँ",
-
   "projects": "प्रोजेक्ट",
   "project": "प्रोजेक्ट",
   "newProject": "नया प्रोजेक्ट",
@@ -346,7 +345,6 @@
   "budgetOptional": "बजट (वैकल्पिक)",
   "notes": "नोट्स",
   "projectNotFound": "यह प्रोजेक्ट हटा दिया गया",
-
   "spentSoFar": "अब तक खर्च",
   "spendingByMonth": "महीनेवार खर्च",
   "projectMarkedCompleted": "पूरा चिह्नित किया",
@@ -355,7 +353,6 @@
   "projectDates": "{start} – {end}",
   "sinceDate": "{date} से",
   "untilDate": "{date} तक",
-
   "startFromTemplate": "टेम्पलेट से शुरू करें",
   "blankProjectHint": "नाम दें और कुछ भी ट्रैक करें",
   "templateVehicle": "वाहन",
@@ -742,5 +739,8 @@
   "groupCsvTotal": "कुल",
   "groupSummaryGroupTotal": "ग्रुप का कुल खर्च: {amount}",
   "groupSummaryYourShare": "आपका हिस्सा: {amount}",
-  "groupSummaryMemberShare": "{name} का हिस्सा: {amount}"
+  "groupSummaryMemberShare": "{name} का हिस्सा: {amount}",
+  "recurringDecrease": "{label} घटाएँ",
+  "recurringIncrease": "{label} बढ़ाएँ",
+  "recurringAddedSkipped": "{added, plural, =0{कोई नहीं जोड़ी गई} =1{1 जोड़ी गई} other{{added} जोड़ी गईं}}, {skipped, plural, =1{1 छोड़ी गई} other{{skipped} छोड़ी गईं}}"
 }

@@ -107,11 +107,15 @@ void main() {
     expect(find.text('Does not repeat'), findsOneWidget);
     await tapFinder(tester, _key('editor.repeat'), frames: 10);
     await waitFor(tester, _key('repeat.done'));
+    // Let the keyboard finish closing so the footer has stopped moving
+    // before Done is tapped.
     await settle(tester, 10);
-    expect(find.textContaining('Every month on day $today'), findsWidgets);
-    await shoot(tester, 'repeat_sheet');
-    await tapFinder(tester, _key('repeat.done'), frames: 10);
+    expect(find.byKey(const ValueKey('repeat.summary')), findsOneWidget);
     expect(find.textContaining('Every month on day $today'), findsOneWidget);
+    await tapFinder(tester, _key('repeat.done'), frames: 10);
+    await waitForGone(tester, _key('repeat.done'));
+    await waitFor(tester, find.descendant(of: _key('editor.repeat'), matching: find.textContaining('Every month on day $today')));
+    await shoot(tester, 'repeat_tile');
     await tapFinder(tester, find.widgetWithText(FilledButton, 'Save ${formatMinor(1500000)}'), frames: 12);
     final rule = (await repository.getViews()).single.rule;
     expect(rule.postedCount, 1, reason: 'the saved entry is the first occurrence');

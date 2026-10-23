@@ -2680,4 +2680,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String groupSummaryMemberShare(String name, String amount) {
     return '$name\'s share: $amount';
   }
+
+  @override
+  String recurringDecrease(String label) {
+    return 'Decrease $label';
+  }
+
+  @override
+  String recurringIncrease(String label) {
+    return 'Increase $label';
+  }
+
+  @override
+  String recurringAddedSkipped(int added, int skipped) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added added',
+      one: '1 added',
+      zero: 'None added',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: '$skipped skipped',
+      one: '1 skipped',
+    );
+    return '$_temp0, $_temp1';
+  }
 }

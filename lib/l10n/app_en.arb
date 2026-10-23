@@ -1,12 +1,10 @@
 {
   "@@locale": "en",
-
   "appName": "Hisab",
   "tabHome": "Home",
   "tabEntries": "Entries",
   "tabGroups": "Groups",
   "tabSettings": "Settings",
-
   "cancel": "Cancel",
   "save": "Save",
   "delete": "Delete",
@@ -29,7 +27,6 @@
   "required": "Required",
   "seeAll": "See all",
   "manage": "Manage",
-
   "kindExpense": "Expense",
   "kindIncome": "Income",
   "kindTransfer": "Transfer",
@@ -41,7 +38,6 @@
   "sourceSms": "SMS",
   "itemCount": "{count, plural, =1{1 item} other{{count} items}}",
   "@itemCount": {"placeholders": {"count": {"type": "int"}}},
-
   "accountTypeBank": "Bank account",
   "accountTypeCard": "Credit card",
   "accountTypeWallet": "Wallet / UPI",
@@ -63,7 +59,6 @@
   "noAccountsBody": "Bank accounts detected from SMS are added automatically with their reported balance. Manual entries adjust the balance of the account you pick.",
   "deleteNamed": "Delete {name}?",
   "@deleteNamed": {"placeholders": {"name": {"type": "String"}}},
-
   "budgets": "Budgets",
   "budget": "Budget",
   "overall": "Overall",
@@ -85,7 +80,6 @@
   "setOpeningBalance": "Set opening balance",
   "setBudget": "Set a budget",
   "startGroup": "Start a group",
-
   "categories": "Categories",
   "unitsLabel": "Units: {units}",
   "@unitsLabel": {"placeholders": {"units": {"type": "String"}}},
@@ -107,7 +101,6 @@
   "@moreCount": {"placeholders": {"count": {"type": "int"}}},
   "expand": "Expand",
   "collapse": "Collapse",
-
   "smsToReview": "{count, plural, =1{1 SMS to review} other{{count} SMS to review}}",
   "@smsToReview": {"placeholders": {"count": {"type": "int"}}},
   "spentThisMonth": "Spent this month",
@@ -119,7 +112,6 @@
   "recent": "Recent",
   "noEntriesThisMonthTitle": "No entries this month",
   "noEntriesThisMonthBody": "Tap + to add your first expense, or turn on SMS reading in Settings.",
-
   "newEntry": "New entry",
   "editEntry": "Edit entry",
   "groupExpense": "Group expense",
@@ -155,7 +147,6 @@
   "pricePerUnit": "Price per {unit}",
   "@pricePerUnit": {"placeholders": {"unit": {"type": "String"}}},
   "genericUnit": "unit",
-
   "shareSummary": "Share summary",
   "renameGroup": "Rename group",
   "deleteGroupBody": "All expenses in this group will be removed.",
@@ -217,7 +208,6 @@
   "@groupSubtitle": {"placeholders": {"count": {"type": "int"}, "amount": {"type": "String"}}},
   "youGet": "you get",
   "youOweLower": "you owe",
-
   "settings": "Settings",
   "appearance": "Appearance",
   "themeSystem": "System",
@@ -256,7 +246,6 @@
   "@restoredRecords": {"placeholders": {"count": {"type": "int"}}},
   "restoreFailed": "Restore failed: {error}",
   "@restoreFailed": {"placeholders": {"error": {"type": "String"}}},
-
   "pasted": "PASTED",
   "smsFoundReview": "Transaction found. Review it below.",
   "smsAdded": "Transaction added.",
@@ -286,7 +275,6 @@
   "couldNotAddUseEdit": "Could not add this one; use Edit",
   "addAmount": "Add {amount}",
   "@addAmount": {"placeholders": {"amount": {"type": "String"}}},
-
   "splitDoesNotAddUp": "Split does not add up",
   "splitsAcross": "Splits {amount} across {count} people",
   "@splitsAcross": {"placeholders": {"amount": {"type": "String"}, "count": {"type": "int"}}},
@@ -302,15 +290,12 @@
   "splitHelpShares": "Enter shares, e.g. 2 for a couple and 1 for a single.",
   "splitHelpAdjustment": "Extras are charged first, the rest is split equally among ticked people.",
   "splitHelpByItem": "Each item is split among the people who shared it.",
-
   "entries": "Entries",
   "searchEntriesHint": "Search payee, note, item or category",
   "noEntriesTitle": "Nothing here yet",
   "noEntriesBody": "Entries for this month will appear grouped by day.",
-
   "settled": "settled",
   "unitsHint": "L, ml, kg",
-
   "splitErrorNegativeTotal": "Amount cannot be negative",
   "splitErrorNobodyIncluded": "Select at least one person",
   "splitErrorNegativeAmounts": "Amounts cannot be negative",
@@ -334,7 +319,6 @@
   "splitErrorItemUnassigned": "Assign \"{item}\" to someone",
   "@splitErrorItemUnassigned": {"placeholders": {"item": {"type": "String"}}},
   "genericItem": "item",
-
   "spentInMonth": "Spent in {month}",
   "@spentInMonth": {"placeholders": {"month": {"type": "String"}}},
   "vsLastMonthUp": "\u25b2 {percent}% vs {month}",
@@ -376,7 +360,6 @@
   "noEntriesYetBody": "Add one with + or turn on Bank SMS to capture them automatically",
   "addEntry": "Add entry",
   "showAllCategories": "Show all categories",
-
   "projects": "Projects",
   "project": "Project",
   "newProject": "New project",
@@ -418,7 +401,6 @@
   "budgetOptional": "Budget (optional)",
   "notes": "Notes",
   "projectNotFound": "This project was deleted",
-
   "spentSoFar": "Spent so far",
   "spendingByMonth": "Spending by month",
   "projectMarkedCompleted": "Marked completed",
@@ -430,7 +412,6 @@
   "@sinceDate": {"placeholders": {"date": {"type": "String"}}},
   "untilDate": "Until {date}",
   "@untilDate": {"placeholders": {"date": {"type": "String"}}},
-
   "startFromTemplate": "Start from a template",
   "blankProjectHint": "Name it and track anything",
   "templateVehicle": "Vehicle",
@@ -884,5 +865,11 @@
   "groupSummaryYourShare": "Your share: {amount}",
   "@groupSummaryYourShare": {"placeholders": {"amount": {"type": "String"}}},
   "groupSummaryMemberShare": "{name}'s share: {amount}",
-  "@groupSummaryMemberShare": {"placeholders": {"name": {"type": "String"}, "amount": {"type": "String"}}}
+  "@groupSummaryMemberShare": {"placeholders": {"name": {"type": "String"}, "amount": {"type": "String"}}},
+  "recurringDecrease": "Decrease {label}",
+  "@recurringDecrease": {"placeholders": {"label": {"type": "String"}}},
+  "recurringIncrease": "Increase {label}",
+  "@recurringIncrease": {"placeholders": {"label": {"type": "String"}}},
+  "recurringAddedSkipped": "{added, plural, =0{None added} =1{1 added} other{{added} added}}, {skipped, plural, =1{1 skipped} other{{skipped} skipped}}",
+  "@recurringAddedSkipped": {"placeholders": {"added": {"type": "int"}, "skipped": {"type": "int"}}}
 }

@@ -2672,4 +2672,32 @@ class AppLocalizationsHi extends AppLocalizations {
   String groupSummaryMemberShare(String name, String amount) {
     return '$name का हिस्सा: $amount';
   }
+
+  @override
+  String recurringDecrease(String label) {
+    return '$label घटाएँ';
+  }
+
+  @override
+  String recurringIncrease(String label) {
+    return '$label बढ़ाएँ';
+  }
+
+  @override
+  String recurringAddedSkipped(int added, int skipped) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added जोड़ी गईं',
+      one: '1 जोड़ी गई',
+      zero: 'कोई नहीं जोड़ी गई',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: '$skipped छोड़ी गईं',
+      one: '1 छोड़ी गई',
+    );
+    return '$_temp0, $_temp1';
+  }
 }

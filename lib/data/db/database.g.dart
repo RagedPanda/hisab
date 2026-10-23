@@ -10750,6 +10750,18 @@ class $RecurringRulesTable extends RecurringRules
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _skippedCountMeta = const VerificationMeta(
+    'skippedCount',
+  );
+  @override
+  late final GeneratedColumn<int> skippedCount = GeneratedColumn<int>(
+    'skipped_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _nextDueMeta = const VerificationMeta(
     'nextDue',
   );
@@ -10870,6 +10882,7 @@ class $RecurringRulesTable extends RecurringRules
     endDate,
     maxCount,
     postedCount,
+    skippedCount,
     nextDue,
     autoPost,
     remindDaysBefore,
@@ -11036,6 +11049,15 @@ class $RecurringRulesTable extends RecurringRules
         ),
       );
     }
+    if (data.containsKey('skipped_count')) {
+      context.handle(
+        _skippedCountMeta,
+        skippedCount.isAcceptableOrUnknown(
+          data['skipped_count']!,
+          _skippedCountMeta,
+        ),
+      );
+    }
     if (data.containsKey('next_due')) {
       context.handle(
         _nextDueMeta,
@@ -11183,6 +11205,10 @@ class $RecurringRulesTable extends RecurringRules
         DriftSqlType.int,
         data['${effectivePrefix}posted_count'],
       )!,
+      skippedCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}skipped_count'],
+      )!,
       nextDue: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}next_due'],
@@ -11260,6 +11286,9 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
   /// Occurrences already posted or skipped, counted against [maxCount].
   final int postedCount;
 
+  /// How many of [postedCount] were skipped rather than added.
+  final int skippedCount;
+
   /// Next occurrence not yet posted or skipped; null once the rule ended.
   final DateTime? nextDue;
 
@@ -11301,6 +11330,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     this.endDate,
     this.maxCount,
     required this.postedCount,
+    required this.skippedCount,
     this.nextDue,
     required this.autoPost,
     required this.remindDaysBefore,
@@ -11354,6 +11384,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       map['max_count'] = Variable<int>(maxCount);
     }
     map['posted_count'] = Variable<int>(postedCount);
+    map['skipped_count'] = Variable<int>(skippedCount);
     if (!nullToAbsent || nextDue != null) {
       map['next_due'] = Variable<DateTime>(nextDue);
     }
@@ -11414,6 +11445,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
           ? const Value.absent()
           : Value(maxCount),
       postedCount: Value(postedCount),
+      skippedCount: Value(skippedCount),
       nextDue: nextDue == null && nullToAbsent
           ? const Value.absent()
           : Value(nextDue),
@@ -11458,6 +11490,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       endDate: serializer.fromJson<DateTime?>(json['endDate']),
       maxCount: serializer.fromJson<int?>(json['maxCount']),
       postedCount: serializer.fromJson<int>(json['postedCount']),
+      skippedCount: serializer.fromJson<int>(json['skippedCount']),
       nextDue: serializer.fromJson<DateTime?>(json['nextDue']),
       autoPost: serializer.fromJson<bool>(json['autoPost']),
       remindDaysBefore: serializer.fromJson<String>(json['remindDaysBefore']),
@@ -11493,6 +11526,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       'endDate': serializer.toJson<DateTime?>(endDate),
       'maxCount': serializer.toJson<int?>(maxCount),
       'postedCount': serializer.toJson<int>(postedCount),
+      'skippedCount': serializer.toJson<int>(skippedCount),
       'nextDue': serializer.toJson<DateTime?>(nextDue),
       'autoPost': serializer.toJson<bool>(autoPost),
       'remindDaysBefore': serializer.toJson<String>(remindDaysBefore),
@@ -11526,6 +11560,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     Value<DateTime?> endDate = const Value.absent(),
     Value<int?> maxCount = const Value.absent(),
     int? postedCount,
+    int? skippedCount,
     Value<DateTime?> nextDue = const Value.absent(),
     bool? autoPost,
     String? remindDaysBefore,
@@ -11556,6 +11591,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     endDate: endDate.present ? endDate.value : this.endDate,
     maxCount: maxCount.present ? maxCount.value : this.maxCount,
     postedCount: postedCount ?? this.postedCount,
+    skippedCount: skippedCount ?? this.skippedCount,
     nextDue: nextDue.present ? nextDue.value : this.nextDue,
     autoPost: autoPost ?? this.autoPost,
     remindDaysBefore: remindDaysBefore ?? this.remindDaysBefore,
@@ -11598,6 +11634,9 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       postedCount: data.postedCount.present
           ? data.postedCount.value
           : this.postedCount,
+      skippedCount: data.skippedCount.present
+          ? data.skippedCount.value
+          : this.skippedCount,
       nextDue: data.nextDue.present ? data.nextDue.value : this.nextDue,
       autoPost: data.autoPost.present ? data.autoPost.value : this.autoPost,
       remindDaysBefore: data.remindDaysBefore.present
@@ -11639,6 +11678,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
           ..write('endDate: $endDate, ')
           ..write('maxCount: $maxCount, ')
           ..write('postedCount: $postedCount, ')
+          ..write('skippedCount: $skippedCount, ')
           ..write('nextDue: $nextDue, ')
           ..write('autoPost: $autoPost, ')
           ..write('remindDaysBefore: $remindDaysBefore, ')
@@ -11674,6 +11714,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     endDate,
     maxCount,
     postedCount,
+    skippedCount,
     nextDue,
     autoPost,
     remindDaysBefore,
@@ -11708,6 +11749,7 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
           other.endDate == this.endDate &&
           other.maxCount == this.maxCount &&
           other.postedCount == this.postedCount &&
+          other.skippedCount == this.skippedCount &&
           other.nextDue == this.nextDue &&
           other.autoPost == this.autoPost &&
           other.remindDaysBefore == this.remindDaysBefore &&
@@ -11740,6 +11782,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
   final Value<DateTime?> endDate;
   final Value<int?> maxCount;
   final Value<int> postedCount;
+  final Value<int> skippedCount;
   final Value<DateTime?> nextDue;
   final Value<bool> autoPost;
   final Value<String> remindDaysBefore;
@@ -11771,6 +11814,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     this.endDate = const Value.absent(),
     this.maxCount = const Value.absent(),
     this.postedCount = const Value.absent(),
+    this.skippedCount = const Value.absent(),
     this.nextDue = const Value.absent(),
     this.autoPost = const Value.absent(),
     this.remindDaysBefore = const Value.absent(),
@@ -11803,6 +11847,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     this.endDate = const Value.absent(),
     this.maxCount = const Value.absent(),
     this.postedCount = const Value.absent(),
+    this.skippedCount = const Value.absent(),
     this.nextDue = const Value.absent(),
     this.autoPost = const Value.absent(),
     this.remindDaysBefore = const Value.absent(),
@@ -11839,6 +11884,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     Expression<DateTime>? endDate,
     Expression<int>? maxCount,
     Expression<int>? postedCount,
+    Expression<int>? skippedCount,
     Expression<DateTime>? nextDue,
     Expression<bool>? autoPost,
     Expression<String>? remindDaysBefore,
@@ -11871,6 +11917,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
       if (endDate != null) 'end_date': endDate,
       if (maxCount != null) 'max_count': maxCount,
       if (postedCount != null) 'posted_count': postedCount,
+      if (skippedCount != null) 'skipped_count': skippedCount,
       if (nextDue != null) 'next_due': nextDue,
       if (autoPost != null) 'auto_post': autoPost,
       if (remindDaysBefore != null) 'remind_days_before': remindDaysBefore,
@@ -11905,6 +11952,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     Value<DateTime?>? endDate,
     Value<int?>? maxCount,
     Value<int>? postedCount,
+    Value<int>? skippedCount,
     Value<DateTime?>? nextDue,
     Value<bool>? autoPost,
     Value<String>? remindDaysBefore,
@@ -11937,6 +11985,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
       endDate: endDate ?? this.endDate,
       maxCount: maxCount ?? this.maxCount,
       postedCount: postedCount ?? this.postedCount,
+      skippedCount: skippedCount ?? this.skippedCount,
       nextDue: nextDue ?? this.nextDue,
       autoPost: autoPost ?? this.autoPost,
       remindDaysBefore: remindDaysBefore ?? this.remindDaysBefore,
@@ -12015,6 +12064,9 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     if (postedCount.present) {
       map['posted_count'] = Variable<int>(postedCount.value);
     }
+    if (skippedCount.present) {
+      map['skipped_count'] = Variable<int>(skippedCount.value);
+    }
     if (nextDue.present) {
       map['next_due'] = Variable<DateTime>(nextDue.value);
     }
@@ -12069,6 +12121,7 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
           ..write('endDate: $endDate, ')
           ..write('maxCount: $maxCount, ')
           ..write('postedCount: $postedCount, ')
+          ..write('skippedCount: $skippedCount, ')
           ..write('nextDue: $nextDue, ')
           ..write('autoPost: $autoPost, ')
           ..write('remindDaysBefore: $remindDaysBefore, ')
@@ -17256,6 +17309,7 @@ typedef $$RecurringRulesTableCreateCompanionBuilder =
       Value<DateTime?> endDate,
       Value<int?> maxCount,
       Value<int> postedCount,
+      Value<int> skippedCount,
       Value<DateTime?> nextDue,
       Value<bool> autoPost,
       Value<String> remindDaysBefore,
@@ -17289,6 +17343,7 @@ typedef $$RecurringRulesTableUpdateCompanionBuilder =
       Value<DateTime?> endDate,
       Value<int?> maxCount,
       Value<int> postedCount,
+      Value<int> skippedCount,
       Value<DateTime?> nextDue,
       Value<bool> autoPost,
       Value<String> remindDaysBefore,
@@ -17411,6 +17466,11 @@ class $$RecurringRulesTableFilterComposer
 
   ColumnFilters<int> get postedCount => $composableBuilder(
     column: $table.postedCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get skippedCount => $composableBuilder(
+    column: $table.skippedCount,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -17569,6 +17629,11 @@ class $$RecurringRulesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get skippedCount => $composableBuilder(
+    column: $table.skippedCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get nextDue => $composableBuilder(
     column: $table.nextDue,
     builder: (column) => ColumnOrderings(column),
@@ -17692,6 +17757,11 @@ class $$RecurringRulesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get skippedCount => $composableBuilder(
+    column: $table.skippedCount,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get nextDue =>
       $composableBuilder(column: $table.nextDue, builder: (column) => column);
 
@@ -17777,6 +17847,7 @@ class $$RecurringRulesTableTableManager
                 Value<DateTime?> endDate = const Value.absent(),
                 Value<int?> maxCount = const Value.absent(),
                 Value<int> postedCount = const Value.absent(),
+                Value<int> skippedCount = const Value.absent(),
                 Value<DateTime?> nextDue = const Value.absent(),
                 Value<bool> autoPost = const Value.absent(),
                 Value<String> remindDaysBefore = const Value.absent(),
@@ -17808,6 +17879,7 @@ class $$RecurringRulesTableTableManager
                 endDate: endDate,
                 maxCount: maxCount,
                 postedCount: postedCount,
+                skippedCount: skippedCount,
                 nextDue: nextDue,
                 autoPost: autoPost,
                 remindDaysBefore: remindDaysBefore,
@@ -17841,6 +17913,7 @@ class $$RecurringRulesTableTableManager
                 Value<DateTime?> endDate = const Value.absent(),
                 Value<int?> maxCount = const Value.absent(),
                 Value<int> postedCount = const Value.absent(),
+                Value<int> skippedCount = const Value.absent(),
                 Value<DateTime?> nextDue = const Value.absent(),
                 Value<bool> autoPost = const Value.absent(),
                 Value<String> remindDaysBefore = const Value.absent(),
@@ -17872,6 +17945,7 @@ class $$RecurringRulesTableTableManager
                 endDate: endDate,
                 maxCount: maxCount,
                 postedCount: postedCount,
+                skippedCount: skippedCount,
                 nextDue: nextDue,
                 autoPost: autoPost,
                 remindDaysBefore: remindDaysBefore,

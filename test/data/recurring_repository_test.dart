@@ -99,7 +99,22 @@ void main() {
     final rule = (await recurring.getRule(id))!;
     expect(rule.nextDue, DateTime(2026, 9, 5, 9));
     expect(rule.postedCount, 2, reason: 'a skipped occurrence still uses one of the repeat count');
+    expect(rule.skippedCount, 1, reason: 'confirming does not count as a skip');
     expect((await recurringEntries()).length, 1);
+  });
+
+  test('skips count toward "after N times": skipping the last slot ends the rule', () async {
+    final id = await recurring.saveRule(rent(autoPost: false, maxCount: 2));
+    await recurring.skipNext(id);
+    await recurring.skipNext(id);
+    final rule = (await recurring.getRule(id))!;
+    expect(rule.postedCount, 2);
+    expect(rule.skippedCount, 2);
+    expect(rule.status, RecurringStatus.ended);
+    expect(rule.nextDue, isNull);
+    expect((await recurringEntries()), isEmpty);
+    await recurring.postDue(now: DateTime(2027, 1, 1));
+    expect((await recurringEntries()), isEmpty, reason: 'an ended rule never posts again');
   });
 
   test('resuming skips occurrences missed while paused', () async {

@@ -117,6 +117,7 @@ class RecurringRepository {
     await db.into(db.recurringRules).insertOnConflictUpdate(rule.copyWith(
           id: Value(id),
           postedCount: Value(postedCount),
+          skippedCount: Value(existing?.skippedCount ?? 0),
           nextDue: Value(allowed ? nextDue : null),
           status: Value(status),
           updatedAt: Value(DateTime.now()),
@@ -193,7 +194,7 @@ class RecurringRepository {
   Future<void> skipNext(String id, {int monthStartDay = 1}) => db.transaction(() async {
         final rule = await getRule(id);
         if (rule == null || rule.nextDue == null) return;
-        await _advance(rule, consumed: 1, monthStartDay: monthStartDay);
+        await _advance(rule, consumed: 1, skipped: 1, monthStartDay: monthStartDay);
       });
 
   /// Writes the entry for one occurrence unless it already exists, and moves
@@ -211,11 +212,12 @@ class RecurringRepository {
     return OccurrencePost.posted;
   }
 
-  Future<void> _advance(RecurringRule rule, {required int consumed, required int monthStartDay}) async {
+  Future<void> _advance(RecurringRule rule, {required int consumed, int skipped = 0, required int monthStartDay}) async {
     final next = advance(specOf(rule), nextDue: rule.nextDue!, postedCount: rule.postedCount, consumed: consumed, monthStartDay: monthStartDay);
     await (db.update(db.recurringRules)..where((t) => t.id.equals(rule.id))).write(RecurringRulesCompanion(
           nextDue: Value(next.nextDue),
           postedCount: Value(next.postedCount),
+          skippedCount: skipped == 0 ? const Value.absent() : Value(rule.skippedCount + skipped),
           status: next.nextDue == null ? const Value(RecurringStatus.ended) : const Value.absent(),
           updatedAt: Value(DateTime.now()),
         ));

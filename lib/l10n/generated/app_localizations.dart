@@ -4411,6 +4411,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name}\'s share: {amount}'**
   String groupSummaryMemberShare(String name, String amount);
+
+  /// No description provided for @recurringDecrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease {label}'**
+  String recurringDecrease(String label);
+
+  /// No description provided for @recurringIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase {label}'**
+  String recurringIncrease(String label);
+
+  /// No description provided for @recurringAddedSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{added, plural, =0{None added} =1{1 added} other{{added} added}}, {skipped, plural, =1{1 skipped} other{{skipped} skipped}}'**
+  String recurringAddedSkipped(int added, int skipped);
 }
 
 class _AppLocalizationsDelegate

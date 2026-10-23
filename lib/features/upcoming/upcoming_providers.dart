@@ -51,9 +51,16 @@ typedef UpcomingRange = ({DateTime start, DateTime end});
 final upcomingInputsProvider = Provider.family<AsyncValue<UpcomingInputs>, UpcomingRange>((ref, range) {
   final today = ref.watch(upcomingTodayProvider);
   final monthStartDay = ref.watch(settingsProvider).monthStartDay;
+  // Paid and skipped reminders come along so a closed reminder still hides
+  // its rule's occurrence for that day; the aggregator never lists them.
+  final reminders = combineAsync(
+    ref.watch(upcomingRemindersProvider),
+    ref.watch(reminderHistoryProvider),
+    (pending, closed) => [...pending, ...closed],
+  );
   return combineAsync(
     ref.watch(recurringViewsProvider),
-    ref.watch(upcomingRemindersProvider),
+    reminders,
     (views, reminders) => UpcomingInputs(
       recurring: recurringOccurrenceInputs(views, today: today, start: range.start, end: range.end, monthStartDay: monthStartDay),
       reminders: reminderInputs(reminders, end: range.end),

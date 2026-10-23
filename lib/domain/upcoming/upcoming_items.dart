@@ -185,7 +185,9 @@ int compareUpcoming(UpcomingItem first, UpcomingItem second) {
 /// Items due on days `fromDay..throughDay` (inclusive, counted from
 /// [today]) are kept; with [includeOverdue] anything before today is kept as
 /// well. Done reminders are dropped, and a recurring occurrence is dropped
-/// when a reminder for the same rule falls on the same day.
+/// when a reminder for the same rule falls on the same day, whether that
+/// reminder is still pending or already paid or skipped: the reminder owns
+/// that occurrence either way.
 List<UpcomingItem> mergeUpcoming({
   required DateTime today,
   required int throughDay,
@@ -197,7 +199,7 @@ List<UpcomingItem> mergeUpcoming({
 }) {
   final pendingReminders = reminders.where((reminder) => !reminder.isDone).toList();
   final remindedOccurrences = {
-    for (final reminder in pendingReminders)
+    for (final reminder in reminders)
       if (reminder.recurringId != null) '${reminder.recurringId}@${_dayKey(reminder.dueAt)}',
   };
   final candidates = [

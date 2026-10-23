@@ -87,6 +87,16 @@ void main() {
       expect(items.last.recurringId, 'rent');
     });
 
+    test('a paid or skipped reminder for a rule still hides that rule occurrence on its day', () {
+      final items = upcomingWithin(
+        today: today,
+        window: UpcomingWindow.month,
+        recurring: [rule('rent', DateTime(2026, 10, 20, 9)), rule('rent', DateTime(2026, 11, 20, 9))],
+        reminders: [reminder('rent-oct', DateTime(2026, 10, 20), recurringId: 'rent', done: true)],
+      );
+      expect(items.map((item) => '${item.source.name}:${item.dueAt.month}'), ['recurring:11'], reason: 'October is paid; only November remains');
+    });
+
     test('same day ties break by time, then source, then title', () {
       final items = upcomingWithin(
         today: today,

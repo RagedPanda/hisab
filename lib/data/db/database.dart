@@ -3,6 +3,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../core/ids.dart';
 import '../../domain/categories/category_catalog.dart';
+import '../../domain/sms/sms_outcome.dart';
 
 part 'database.g.dart';
 
@@ -364,12 +365,20 @@ class AppDatabase extends _$AppDatabase {
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
+          await wipeNotBankSmsText();
         },
       );
 
   static QueryExecutor _openConnection() => driftDatabase(
         name: 'hisab',
         native: const DriftNativeOptions(shareAcrossIsolates: true),
+      );
+
+  /// Drops the text of not-bank SMS (OTPs, promotions) that an earlier build
+  /// or a restored backup stored. Idempotent and cheap, so it runs on open.
+  Future<void> wipeNotBankSmsText() => customStatement(
+        "UPDATE sms_log SET body = '' WHERE status = ? AND body <> ''",
+        [SmsLogStatus.notBank],
       );
 
   /// Inserts the category catalog and a Cash account. Idempotent by seedKey.

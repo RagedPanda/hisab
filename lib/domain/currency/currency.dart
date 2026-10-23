@@ -14,6 +14,6 @@ class Currency {
   /// Digits after the decimal point in ISO 4217 (JPY 0, INR 2, KWD 3).
   final int minorDigits;
 
-  /// ISO 3166 alpha-2 regions that use it; a region's first listing is its default.
+  /// ISO 3166 alpha-2 regions that use it, for country-name search.
   final List<String> regions;
 }

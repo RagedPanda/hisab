@@ -56,23 +56,6 @@ void main() {
     }
   });
 
-  group('device region default', () {
-    const cases = <(String?, String)>[
-      ('IN', 'INR'),
-      ('US', 'USD'),
-      ('GB', 'GBP'),
-      ('DE', 'EUR'),
-      ('CH', 'CHF'),
-      ('AE', 'AED'),
-      ('jp', 'JPY'),
-      ('ZZ', 'INR'),
-      (null, 'INR'),
-    ];
-    for (final (region, code) in cases) {
-      test('${region ?? 'null'} -> $code', () => expect(currencyCodeForRegion(region), code));
-    }
-  });
-
   group('search', () {
     List<String> codes(String query) => searchCurrencies(query).map((currency) => currency.code).toList();
     test('empty query returns the whole table', () => expect(codes('  ').length, kCurrencies.length));

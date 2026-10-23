@@ -6,20 +6,17 @@ import '../../domain/currency/currency_lookup.dart';
 import '../../l10n/l10n.dart';
 import 'currency_picker.dart';
 
-/// Shown once on a fresh install, before Home. The device region's currency
-/// (or INR) is preselected, so a single tap on Continue confirms it.
+/// Shown once on a fresh install, before Home. The rupee is preselected, so a
+/// single tap on Continue confirms it.
 class FirstLaunchCurrencyScreen extends ConsumerStatefulWidget {
-  const FirstLaunchCurrencyScreen({super.key, required this.deviceRegion});
-
-  /// The device locale's country code, e.g. "IN" or "GB"; null if unknown.
-  final String? deviceRegion;
+  const FirstLaunchCurrencyScreen({super.key});
 
   @override
   ConsumerState<FirstLaunchCurrencyScreen> createState() => _FirstLaunchCurrencyScreenState();
 }
 
 class _FirstLaunchCurrencyScreenState extends ConsumerState<FirstLaunchCurrencyScreen> {
-  late String _selectedCode = currencyCodeForRegion(widget.deviceRegion);
+  String _selectedCode = kDefaultCurrencyCode;
   bool _saving = false;
 
   Future<void> _confirm() async {
@@ -62,12 +59,10 @@ class _FirstLaunchCurrencyScreenState extends ConsumerState<FirstLaunchCurrencyS
 /// Holds the first-launch screen in its own navigator so text fields and
 /// overlays work while the app's router waits behind it.
 class FirstLaunchCurrencyGate extends StatelessWidget {
-  const FirstLaunchCurrencyGate({super.key, required this.deviceRegion});
-
-  final String? deviceRegion;
+  const FirstLaunchCurrencyGate({super.key});
 
   @override
   Widget build(BuildContext context) => Navigator(
-        onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => FirstLaunchCurrencyScreen(deviceRegion: deviceRegion)),
+        onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const FirstLaunchCurrencyScreen()),
       );
 }

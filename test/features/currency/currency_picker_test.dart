@@ -37,27 +37,20 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('first launch', () {
-    testWidgets('fresh install asks once, defaulting to the device region', (tester) async {
+    testWidgets('fresh install asks once with INR preselected, even with a UK locale', (tester) async {
       tester.platformDispatcher.localeTestValue = const Locale('en', 'GB');
       addTearDown(tester.platformDispatcher.clearLocaleTestValue);
       final (container, prefs) = await pumpApp(tester, {});
       expect(find.text('Choose your currency'), findsOneWidget);
-      expect(find.text('Continue with £ GBP'), findsOneWidget);
+      expect(find.text('Continue with \u20b9 INR'), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('currency-continue')));
       await settle(tester);
       expect(find.text('Choose your currency'), findsNothing);
       expect(find.text('Hisab'), findsOneWidget);
-      expect(prefs.getString(kCurrencyCodeKey), 'GBP');
-      expect(container.read(homeCurrencyCodeProvider), 'GBP');
-      expect(container.read(settingsProvider).currencySymbol, '£');
-    });
-
-    testWidgets('unknown region falls back to INR', (tester) async {
-      tester.platformDispatcher.localeTestValue = const Locale('en');
-      addTearDown(tester.platformDispatcher.clearLocaleTestValue);
-      await pumpApp(tester, {});
-      expect(find.text('Continue with ₹ INR'), findsOneWidget);
+      expect(prefs.getString(kCurrencyCodeKey), 'INR');
+      expect(container.read(homeCurrencyCodeProvider), 'INR');
+      expect(container.read(settingsProvider).currencySymbol, '\u20b9');
     });
 
     testWidgets('search by country, tap to select, then confirm', (tester) async {

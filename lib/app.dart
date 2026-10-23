@@ -35,7 +35,7 @@ class HisabApp extends ConsumerWidget {
       // location (and any deep link) and shows it once the choice is saved.
       builder: (context, child) => settings.currencyConfirmed
           ? child ?? const SizedBox.shrink()
-          : FirstLaunchCurrencyGate(deviceRegion: WidgetsBinding.instance.platformDispatcher.locale.countryCode),
+          : const FirstLaunchCurrencyGate(),
     );
   }
 }

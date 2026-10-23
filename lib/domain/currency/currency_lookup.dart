@@ -6,11 +6,6 @@ const String kDefaultCurrencyCode = 'INR';
 
 final Map<String, Currency> _byCode = {for (final currency in kCurrencies) currency.code: currency};
 
-final Map<String, String> _codeByRegion = {
-  for (final currency in kCurrencies.reversed)
-    for (final region in currency.regions) region: currency.code,
-};
-
 /// Free-text symbols people typed into the old setting that do not match a
 /// table symbol exactly.
 const Map<String, String> _legacyAliases = {
@@ -48,10 +43,6 @@ String currencyCodeForLegacySymbol(String? symbol) {
   }
   return kDefaultCurrencyCode;
 }
-
-/// Currency of a device region ("GB" -> GBP), or INR when the region is
-/// missing or unknown.
-String currencyCodeForRegion(String? regionCode) => _codeByRegion[regionCode?.trim().toUpperCase()] ?? kDefaultCurrencyCode;
 
 /// Countries that use [currency], by English name.
 List<String> countryNamesFor(Currency currency) => [

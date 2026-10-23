@@ -53,6 +53,12 @@ class ExpenseEditorScreen extends ConsumerStatefulWidget {
 class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   final _amountController = TextEditingController();
   final _amountFocus = FocusNode();
+
+  /// The amount field autofocuses only when the editor opens. The ListView
+  /// builds it lazily, so a field rebuilt after scrolling back (or after the
+  /// keyboard closes and the list grows) must not grab focus again: that
+  /// reopened the keyboard and scrolled the editor away from the Repeat tile.
+  bool _autofocusAmount = true;
   final _noteController = TextEditingController();
   final _payeeController = TextEditingController();
 
@@ -112,6 +118,12 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _projectId = widget.projectId;
     _smsId = widget.smsId;
     _load();
+    _amountFocus.addListener(_stopAmountAutofocus);
+  }
+
+  /// Once the amount field has had focus, a rebuilt field never autofocuses.
+  void _stopAmountAutofocus() {
+    if (_amountFocus.hasFocus) _autofocusAmount = false;
   }
 
   Future<void> _load() async {
@@ -332,7 +344,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             controller: _amountController,
             focusNode: _amountFocus,
             readOnly: _hasItems,
-            autofocus: !_isEditing && !_hasItems,
+            autofocus: _autofocusAmount && !_isEditing && !_hasItems,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: amountInputFormatters,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),

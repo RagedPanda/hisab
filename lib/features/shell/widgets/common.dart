@@ -401,20 +401,32 @@ void popOrGoHome(BuildContext context) {
   }
 }
 
-/// Replaces whatever snackbar is showing with [message] and an Undo action.
-/// It times out like a plain snackbar instead of persisting, so a run of
-/// quick actions never queues stale messages behind each other.
+/// Replaces whatever snackbar is showing with [message] and one action
+/// button. Since Flutter 3.29 a snackbar with an action stays up until it is
+/// dismissed; this one times out like a plain snackbar instead (#47, #72), so
+/// every snackbar with an action in the app goes through here.
+void showActionSnackBar(
+  ScaffoldMessengerState messenger, {
+  required String message,
+  required String actionLabel,
+  required VoidCallback onAction,
+  Duration duration = const Duration(milliseconds: 4000),
+}) {
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message), persist: false, duration: duration, action: SnackBarAction(label: actionLabel, onPressed: onAction)));
+}
+
+/// [showActionSnackBar] with an Undo action, so a run of quick actions never
+/// queues stale messages behind each other.
 void showUndoSnackBar(
   ScaffoldMessengerState messenger, {
   required String message,
   required String undoLabel,
   required VoidCallback onUndo,
   Duration duration = const Duration(milliseconds: 4000),
-}) {
-  messenger
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message), persist: false, duration: duration, action: SnackBarAction(label: undoLabel, onPressed: onUndo)));
-}
+}) =>
+    showActionSnackBar(messenger, message: message, actionLabel: undoLabel, onAction: onUndo, duration: duration);
 
 /// Replaces whatever snackbar is showing with [message]. It times out, so a
 /// result never lingers or queues behind an older one.

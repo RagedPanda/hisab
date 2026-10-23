@@ -37,6 +37,7 @@ List<RecurringOccurrenceInput> recurringOccurrenceInputs(
             isIncome: view.rule.kind == 'income',
             isSubscription: view.rule.isSubscription,
             categoryId: view.rule.categoryId,
+            awaitsConfirm: !view.rule.autoPost && occurrence == view.rule.nextDue,
           ),
 ];
 

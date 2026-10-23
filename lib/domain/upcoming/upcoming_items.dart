@@ -36,6 +36,7 @@ class RecurringOccurrenceInput {
     this.isIncome = false,
     this.isSubscription = false,
     this.categoryId,
+    this.awaitsConfirm = false,
   });
 
   final String ruleId;
@@ -48,6 +49,10 @@ class RecurringOccurrenceInput {
 
   /// Category whose localised name stands in when [title] is empty.
   final String? categoryId;
+
+  /// This is the oldest unposted occurrence of a confirm-first rule: the one
+  /// confirming the rule would post.
+  final bool awaitsConfirm;
 }
 
 /// A pending reminder (bill, EMI, document renewal...). Done reminders are
@@ -103,6 +108,7 @@ class UpcomingItem {
     this.isIncome = false,
     this.recurringId,
     this.categoryId,
+    this.awaitsConfirm = false,
   });
 
   final UpcomingSource source;
@@ -130,6 +136,13 @@ class UpcomingItem {
 
   bool get isOverdue => daysAway < 0;
 
+  /// See [RecurringOccurrenceInput.awaitsConfirm].
+  final bool awaitsConfirm;
+
+  /// Tapping offers Confirm (post it now) before Edit: an overdue occurrence
+  /// of a confirm-first rule that confirming would post.
+  bool get offersConfirm => source == UpcomingSource.recurring && awaitsConfirm && isOverdue;
+
   @override
   String toString() => 'UpcomingItem(${source.name}:$sourceId $title $dueAt $daysAway)';
 }
@@ -147,6 +160,7 @@ UpcomingItem _fromRecurring(RecurringOccurrenceInput input, DateTime today) => U
   isIncome: input.isIncome,
   recurringId: input.ruleId,
   categoryId: input.categoryId,
+  awaitsConfirm: input.awaitsConfirm,
 );
 
 UpcomingItem _fromReminder(ReminderInput input, DateTime today) => UpcomingItem(

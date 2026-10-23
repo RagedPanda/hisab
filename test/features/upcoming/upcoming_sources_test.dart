@@ -58,6 +58,13 @@ void main() {
     expect(inputs.map((input) => input.dueAt), [DateTime(2026, 10, 19, 9), DateTime(2026, 11, 19, 9)]);
   });
 
+  test('only the oldest waiting occurrence of a confirm-first rule awaits confirmation', () async {
+    await recurring.saveRule(rule('Rent', frequency: RecurrenceFrequency.weekly, start: DateTime(2026, 10, 8, 9), autoPost: false));
+    await recurring.saveRule(rule('Netflix', frequency: RecurrenceFrequency.weekly, start: DateTime(2026, 10, 23, 9)));
+    final inputs = recurringOccurrenceInputs(await recurring.getViews(), today: today, start: today, end: DateTime(2026, 10, 30));
+    expect({for (final input in inputs) '${input.title} ${input.dueAt.day}': input.awaitsConfirm}, {'Rent 8': true, 'Rent 15': false, 'Rent 22': false, 'Rent 29': false, 'Netflix 23': false});
+  });
+
   test('paused rules are left out and an unnamed rule falls back to its payee', () async {
     final pausedId = await recurring.saveRule(rule('Gym', frequency: RecurrenceFrequency.monthly, start: DateTime(2026, 10, 25)));
     await recurring.setStatus(pausedId, RecurringStatus.paused);

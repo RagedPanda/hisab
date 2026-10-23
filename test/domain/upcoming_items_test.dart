@@ -97,6 +97,23 @@ void main() {
       expect(items.map((item) => '${item.source.name}:${item.dueAt.month}'), ['recurring:11'], reason: 'October is paid; only November remains');
     });
 
+    test('only an overdue occurrence awaiting confirmation offers Confirm', () {
+      RecurringOccurrenceInput waiting(String id, DateTime dueAt, {bool awaits = true}) =>
+          RecurringOccurrenceInput(ruleId: id, title: id, dueAt: dueAt, awaitsConfirm: awaits);
+      final items = mergeUpcoming(
+        today: today,
+        throughDay: 30,
+        recurring: [
+          waiting('overdue', DateTime(2026, 10, 18)),
+          waiting('later-overdue', DateTime(2026, 10, 19), awaits: false),
+          waiting('today', DateTime(2026, 10, 22, 9)),
+          waiting('soon', DateTime(2026, 10, 30)),
+        ],
+        reminders: [reminder('bill', DateTime(2026, 10, 10))],
+      );
+      expect({for (final item in items) item.sourceId: item.offersConfirm}, {'bill': false, 'overdue': true, 'later-overdue': false, 'today': false, 'soon': false});
+    });
+
     test('same day ties break by time, then source, then title', () {
       final items = upcomingWithin(
         today: today,

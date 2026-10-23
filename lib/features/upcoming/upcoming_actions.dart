@@ -22,6 +22,9 @@ Future<void> openUpcomingItem(BuildContext context, WidgetRef ref, UpcomingItem 
   final l10n = context.l10n;
   final choice = await showModalBottomSheet<UpcomingConfirmChoice>(
     context: context,
+    // The root navigator puts the sheet above the shell, so the Home "Add
+    // entry" button cannot sit on top of Confirm (#77).
+    useRootNavigator: true,
     showDragHandle: true,
     builder: (_) => UpcomingConfirmSheet(item: item),
   );

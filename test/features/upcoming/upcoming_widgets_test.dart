@@ -124,6 +124,51 @@ void main() {
     expect(find.byKey(const ValueKey('upcoming.confirm.post')), findsNothing);
   });
 
+  testWidgets('the Confirm sheet sits above a shell Add button: tapping the centre of Confirm confirms', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final ruleId = (await tester.runAsync(
+      () => RecurringRepository(db).saveRule(
+        RecurringRepository.newRule(
+          name: 'Rent',
+          kind: 'expense',
+          amountMinor: 2000000,
+          frequency: RecurrenceFrequency.monthly,
+          dayOfMonth: 18,
+          startDate: DateTime(2026, 10, 18, 9),
+          autoPost: false,
+        ),
+      ),
+    ))!;
+    final inputs = UpcomingInputs(
+      recurring: [RecurringOccurrenceInput(ruleId: ruleId, title: 'Rent', dueAt: DateTime(2026, 10, 18, 9), amountMinor: 2000000, awaitsConfirm: true)],
+    );
+    var addTaps = 0;
+    // Like the app shell: the tab content lives in a nested navigator under a
+    // Scaffold whose wide "Add entry" button floats over the bottom centre.
+    final shell = Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButton.extended(
+        key: const ValueKey('shell.add'),
+        onPressed: () => addTaps++,
+        label: const SizedBox(width: 600, child: Text('Add entry')),
+      ),
+      body: Navigator(onGenerateRoute: (_) => MaterialPageRoute<void>(builder: (_) => const SingleChildScrollView(child: UpcomingCard()))),
+    );
+    await pump(tester, SizedBox(height: 600, child: shell), inputs: inputs, overrides: [databaseProvider.overrideWithValue(db)]);
+
+    await tester.tap(find.text('Rent'));
+    await tester.pumpAndSettle();
+    final confirm = find.byKey(const ValueKey('upcoming.confirm.post'));
+    await tester.tapAt(tester.getCenter(confirm));
+    await tester.pumpAndSettle();
+
+    expect(addTaps, 0, reason: 'the Add button must not catch a tap on Confirm');
+    final entries = await tester.runAsync(() => db.select(db.entries).get());
+    expect(entries!.map((entry) => entry.recurringId), [ruleId], reason: 'tapping the centre of Confirm posted the occurrence');
+    expect(confirm, findsNothing);
+  });
+
   group('Due calendar', () {
     testWidgets('draws dots on due days and lists the tapped day', (tester) async {
       await pump(tester, const SizedBox(height: 900, child: UpcomingCalendarScreen()), inputs: sampleInputs());

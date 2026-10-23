@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 
 import '../../core/format.dart';
 import '../../core/money.dart';
-import '../../core/notifications/alarm_timing.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/reminders_repository.dart';
@@ -15,7 +14,7 @@ import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../categories/category_picker.dart';
 import '../shell/widgets/common.dart';
-import 'permission_explainer.dart';
+import 'reminder_actions.dart';
 import 'reminder_labels.dart';
 
 /// Repeats offered in the editor; weekly suits few bills, so it stays out.
@@ -114,32 +113,14 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
     return amount == null ? '' : amountInputText(amount);
   }
 
-  /// Pre-permission sheets shown when a reminder with alerts is saved while
-  /// notifications are off: first the notification permission, then (Android
-  /// 12+, when not granted) "Alarms & reminders" so alerts fire on time. The
-  /// reminder is saved whatever the answers.
-  Future<void> _askPermissionIfNeeded() async {
-    final service = ref.read(notificationServiceProvider);
-    final before = await service.checkPermission();
-    if (before.notificationsAllowed || !mounted) return;
-    final l10n = context.l10n;
-    final allow = await showPermissionExplainer(context, icon: Icons.notifications_active_outlined, title: l10n.notifPrePromptTitle, body: l10n.notifPrePromptBody);
-    if (allow) await service.requestPermission();
-    final after = await service.checkPermission();
-    if (shouldAskForExactAlarms(after) && mounted) {
-      final allowExact = await showPermissionExplainer(context, icon: Icons.alarm_on_outlined, title: l10n.exactAlarmPromptTitle, body: l10n.exactAlarmPromptBody);
-      if (allowExact) await service.requestExactAlarms();
-    }
-    ref.invalidate(notificationPermissionProvider);
-  }
-
   Future<void> _save() async {
     setState(() => _submitted = true);
     final draft = _draft;
     final amountInvalid = _kind.isMoney && amountErrorText(context, _amountController.text) != null;
     if (draft.error != null || amountInvalid || (_notify && _daysBefore.isEmpty) || _saving) return;
     setState(() => _saving = true);
-    if (_notify) await _askPermissionIfNeeded();
+    // The reminder is saved whatever the answers.
+    if (_notify) await askReminderPermissionsIfNeeded(context);
     final id = await ref.read(reminderSchedulerProvider).save(draft);
     if (mounted) Navigator.pop(context, id);
   }

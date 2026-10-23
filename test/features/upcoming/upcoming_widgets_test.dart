@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:drift/native.dart';
 import 'package:hisab/core/providers.dart';
+import 'package:hisab/data/db/database.dart';
+import 'package:hisab/data/repositories/recurring_repository.dart';
+import 'package:hisab/domain/recurring/recurrence.dart';
 import 'package:hisab/domain/upcoming/upcoming_items.dart';
 import 'package:hisab/features/dashboard/dashboard_keys.dart';
 import 'package:hisab/features/dashboard/widgets/upcoming_card.dart';
@@ -21,7 +26,7 @@ UpcomingInputs sampleInputs() => UpcomingInputs(
   recurring: [RecurringOccurrenceInput(ruleId: 'rent', title: 'Rent', dueAt: DateTime(2026, 10, 25), amountMinor: 2000000)],
 );
 
-Future<void> pump(WidgetTester tester, Widget child, {UpcomingInputs? inputs, Locale locale = const Locale('en')}) async {
+Future<void> pump(WidgetTester tester, Widget child, {UpcomingInputs? inputs, Locale locale = const Locale('en'), List<Override> overrides = const []}) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
   await tester.pumpWidget(
@@ -30,6 +35,7 @@ Future<void> pump(WidgetTester tester, Widget child, {UpcomingInputs? inputs, Lo
         sharedPreferencesProvider.overrideWithValue(prefs),
         upcomingTodayProvider.overrideWithValue(today),
         upcomingInputsProvider.overrideWith((ref, range) => AsyncData(inputs ?? const UpcomingInputs())),
+        ...overrides,
       ],
       child: MaterialApp(
         locale: locale,
@@ -82,6 +88,40 @@ void main() {
       await pump(tester, const UpcomingCard(), inputs: sampleInputs(), locale: const Locale('hi'));
       expect(find.text('3 दिन से बकाया'), findsOneWidget);
     });
+  });
+
+  testWidgets('tapping an overdue confirm-first item offers Confirm, which posts it, and Edit', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final ruleId = (await tester.runAsync(
+      () => RecurringRepository(db).saveRule(
+        RecurringRepository.newRule(
+          name: 'Rent',
+          kind: 'expense',
+          amountMinor: 2000000,
+          frequency: RecurrenceFrequency.monthly,
+          dayOfMonth: 18,
+          startDate: DateTime(2026, 10, 18, 9),
+          autoPost: false,
+        ),
+      ),
+    ))!;
+    final inputs = UpcomingInputs(
+      recurring: [RecurringOccurrenceInput(ruleId: ruleId, title: 'Rent', dueAt: DateTime(2026, 10, 18, 9), amountMinor: 2000000, awaitsConfirm: true)],
+    );
+    await pump(tester, const UpcomingCard(), inputs: inputs, overrides: [databaseProvider.overrideWithValue(db)]);
+
+    await tester.tap(find.text('Rent'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('upcoming.confirm.post')), findsOneWidget);
+    expect(find.byKey(const ValueKey('upcoming.confirm.edit')), findsOneWidget);
+    expect(find.text('Edit'), findsOneWidget, reason: 'Edit stays available as the secondary action');
+
+    await tester.tap(find.byKey(const ValueKey('upcoming.confirm.post')));
+    await tester.pumpAndSettle();
+    final entries = await tester.runAsync(() => db.select(db.entries).get());
+    expect(entries!.map((entry) => entry.recurringId), [ruleId], reason: 'Confirm posted the waiting occurrence');
+    expect(find.byKey(const ValueKey('upcoming.confirm.post')), findsNothing);
   });
 
   group('Due calendar', () {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/dates.dart';
@@ -11,8 +10,8 @@ import '../../domain/upcoming/upcoming_items.dart';
 import '../../l10n/l10n.dart';
 import '../dashboard/widgets/dashboard_card.dart' show captionStyle;
 import '../shell/widgets/common.dart';
+import 'upcoming_actions.dart';
 import 'upcoming_providers.dart';
-import 'upcoming_routes.dart';
 import 'widgets/upcoming_item_tile.dart';
 
 /// Most dots drawn under one day; more items still count in the label.
@@ -91,7 +90,7 @@ class _UpcomingCalendarScreenState extends ConsumerState<UpcomingCalendarScreen>
               ),
             )
           else
-            for (final item in dayItems) UpcomingItemTile(item: item, onTap: () => context.push(upcomingItemRoute(item))),
+            for (final item in dayItems) UpcomingItemTile(item: item, onTap: () => openUpcomingItem(context, ref, item)),
         ],
       ),
     );

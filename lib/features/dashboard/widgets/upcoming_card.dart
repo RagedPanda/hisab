@@ -7,6 +7,7 @@ import '../../../core/providers.dart';
 import '../../../domain/upcoming/upcoming_items.dart';
 import '../../../l10n/l10n.dart';
 import '../../shell/widgets/common.dart';
+import '../../upcoming/upcoming_actions.dart';
 import '../../upcoming/upcoming_providers.dart';
 import '../../upcoming/upcoming_routes.dart';
 import '../../upcoming/widgets/upcoming_item_tile.dart';
@@ -52,7 +53,7 @@ class UpcomingCard extends ConsumerWidget {
                   UpcomingItemTile(
                     key: ValueKey('upcoming.${item.source.name}.${item.sourceId}.${item.dueAt.millisecondsSinceEpoch}'),
                     item: item,
-                    onTap: () => context.push(upcomingItemRoute(item)),
+                    onTap: () => openUpcomingItem(context, ref, item),
                   ),
                 if (data.more > 0)
                   Align(

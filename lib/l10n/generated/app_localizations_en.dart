@@ -770,6 +770,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsDuplicate => 'Already imported.';
 
   @override
+  String get smsForeignCurrency =>
+      'Only SMS in your home currency are supported, so this one was ignored.';
+
+  @override
   String get smsNotFound => 'Could not find a transaction in that text.';
 
   @override

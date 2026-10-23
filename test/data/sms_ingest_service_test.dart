@@ -21,7 +21,7 @@ void main() {
     db = AppDatabase(NativeDatabase.memory());
     accounts = AccountsRepository(db);
     smsLog = SmsLogRepository(db);
-    service = SmsIngestService(smsLog: smsLog, accounts: accounts, categories: CategoriesRepository(db), entries: EntriesRepository(db));
+    service = SmsIngestService(smsLog: smsLog, accounts: accounts, categories: CategoriesRepository(db), entries: EntriesRepository(db), homeCurrencyCode: () => 'INR');
   });
 
   tearDown(() => db.close());
@@ -126,5 +126,49 @@ void main() {
       final again = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
       expect(again, IngestStatus.duplicate, reason: 'a rescan must not add the undone SMS again');
     });
+  });
+  group('foreign currency', () {
+    final received = DateTime(2026, 10, 21, 10, 0);
+    const foreign = {
+      'USD': 'USD 25.00 spent on your HDFC Bank Credit Card XX1234 at AMAZON US on 21-10-26.',
+      'EUR': 'EUR 40.00 spent on your HDFC Bank Credit Card XX1234 at ZARA PARIS on 21-10-26.',
+      'AED': 'AED 120.50 spent on your HDFC Bank Credit Card XX1234 at DUBAI MALL on 21-10-26.',
+    };
+    const home = {
+      'INR': 'INR 459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl.',
+      'Rs': 'Rs.459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl.',
+      '₹': '₹459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl.',
+      'no marker': 'A/c XX1234 debited by 459.00 on 21-10-26 to swiggy@ybl.',
+    };
+
+    for (final MapEntry(key: code, value: body) in foreign.entries) {
+      test('a $code SMS is ignored: not added and not queued for review', () async {
+        final announced = <SmsAutoAdded>[];
+        final subscription = service.autoAdded.listen(announced.add);
+        final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: body, receivedAt: received), autoAdd: true);
+        await Future<void>.delayed(Duration.zero);
+        await subscription.cancel();
+
+        expect(status, IngestStatus.foreignCurrency);
+        expect(announced, isEmpty);
+        expect(await smsLog.watchPending().first, isEmpty);
+        expect(await EntriesRepository(db).watchHasAnyEntries().first, isFalse);
+        final again = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: body, receivedAt: received), autoAdd: true);
+        expect(again, IngestStatus.duplicate, reason: 'a rescan must not read it again');
+      });
+    }
+
+    test('a foreign SMS is ignored with auto-add off too', () async {
+      final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: foreign['USD']!, receivedAt: received), autoAdd: false);
+      expect(status, IngestStatus.foreignCurrency);
+      expect(await smsLog.watchPending().first, isEmpty);
+    });
+
+    for (final MapEntry(key: marker, value: body) in home.entries) {
+      test('an SMS with $marker is processed', () async {
+        final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: body, receivedAt: received), autoAdd: true);
+        expect(status, IngestStatus.added);
+      });
+    }
   });
 }

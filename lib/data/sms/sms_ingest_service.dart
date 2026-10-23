@@ -10,6 +10,7 @@ import '../../domain/sms/sms_account_name.dart';
 import '../../domain/sms/payee_normaliser.dart';
 import '../../domain/sms/sms_categorizer.dart';
 import '../../domain/sms/sms_confidence.dart';
+import '../../domain/sms/sms_currency.dart';
 import '../../domain/sms/sms_parser.dart';
 import '../db/database.dart';
 import '../repositories/accounts_repository.dart';
@@ -21,7 +22,7 @@ import 'sms_channel.dart';
 /// What [SmsIngestService.ingest] did with one message. [pending] means it
 /// is waiting in the review queue, whether it was read with low confidence
 /// or could not be read at all; [unparsed] means it was dropped.
-enum IngestStatus { duplicate, notBank, unparsed, pending, added }
+enum IngestStatus { duplicate, notBank, foreignCurrency, unparsed, pending, added }
 
 /// An entry that was created from an SMS without the user approving it.
 class SmsAutoAdded {
@@ -40,12 +41,16 @@ class SmsIngestService {
     required this.accounts,
     required this.categories,
     required this.entries,
+    required this.homeCurrencyCode,
   });
 
   final SmsLogRepository smsLog;
   final AccountsRepository accounts;
   final CategoriesRepository categories;
   final EntriesRepository entries;
+
+  /// Read on every message, so a change of home currency applies at once.
+  final String Function() homeCurrencyCode;
 
   StreamSubscription<RawSms>? _liveSubscription;
   final _autoAddedController = StreamController<SmsAutoAdded>.broadcast();
@@ -90,6 +95,12 @@ class SmsIngestService {
     final id = SmsLogRepository.idFor(message.sender, message.body, message.receivedAt);
     if (await smsLog.exists(id)) return IngestStatus.duplicate;
     if (!force && !looksLikeBankSender(message.sender) && !_looksFinancial(message.body)) return IngestStatus.notBank;
+    if (isForeignCurrency(smsCurrencyCode(message.body), homeCurrencyCode())) {
+      // Cross-currency is not supported: logged so it is not read again, but
+      // neither added nor queued for review.
+      await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'skipped');
+      return IngestStatus.foreignCurrency;
+    }
 
     final parsed = parseBankSms(sender: message.sender, body: message.body, receivedAt: message.receivedAt);
     if (parsed == null) {

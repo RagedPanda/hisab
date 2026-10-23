@@ -261,6 +261,7 @@
   "smsFoundReview": "Transaction found. Review it below.",
   "smsAdded": "Transaction added.",
   "smsDuplicate": "Already imported.",
+  "smsForeignCurrency": "Only SMS in your home currency are supported, so this one was ignored.",
   "smsNotFound": "Could not find a transaction in that text.",
   "readBankSmsQuestion": "Read bank SMS?",
   "smsConsentBody": "Hisab reads SMS from your bank and UPI apps to log transactions and show account balances. Messages are processed on this device only and never uploaded. OTPs and promotional SMS are ignored. You can turn this off any time.",

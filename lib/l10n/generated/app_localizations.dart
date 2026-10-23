@@ -1418,6 +1418,12 @@ abstract class AppLocalizations {
   /// **'Already imported.'**
   String get smsDuplicate;
 
+  /// No description provided for @smsForeignCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Only SMS in your home currency are supported, so this one was ignored.'**
+  String get smsForeignCurrency;
+
   /// No description provided for @smsNotFound.
   ///
   /// In en, this message translates to:

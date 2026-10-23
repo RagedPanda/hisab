@@ -770,6 +770,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get smsDuplicate => 'पहले ही जोड़ा जा चुका है।';
 
   @override
+  String get smsForeignCurrency =>
+      'केवल आपकी मुख्य मुद्रा वाले SMS समर्थित हैं, इसलिए यह SMS छोड़ दिया गया।';
+
+  @override
   String get smsNotFound => 'इस टेक्स्ट में कोई लेन-देन नहीं मिला।';
 
   @override

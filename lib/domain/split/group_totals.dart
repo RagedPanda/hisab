@@ -1,7 +1,12 @@
 /// Group spending totals for a period: what the group spent, what one member
 /// paid and owed, and breakdowns by member and by category. Pure functions.
 ///
-/// Payments between members are not spending, so only expenses count here.
+/// Payments between members are not spending: they never add to the group's
+/// total or anyone's share, but they do move my balance, so the period's
+/// payments I made or received count in [GroupTotals.myNetChangeMinor].
+///
+/// Everything here is for one group. Groups cannot be archived yet; when they
+/// can, any overall total across groups must leave archived groups out.
 library;
 
 import '../../core/dates.dart';
@@ -10,11 +15,18 @@ import 'group_timeline.dart';
 /// One group expense as the totals see it: the timeline form (who paid how
 /// much, who owes how much) plus its category.
 class GroupTotalsExpense {
-  const GroupTotalsExpense({required this.expense, this.categoryId});
+  const GroupTotalsExpense({required this.expense, this.categoryId, this.amountMinor});
   final TimelineExpense expense;
 
   /// Null when the expense has no category.
   final String? categoryId;
+
+  /// The entry's recorded amount, the same figure the group export sums.
+  /// Null falls back to [expenseTotalMinor].
+  final int? amountMinor;
+
+  /// What this expense cost the group.
+  int get billMinor => amountMinor ?? expenseTotalMinor(expense);
 
   DateTime get occurredAt => expense.occurredAt;
 }
@@ -40,7 +52,16 @@ class MemberSpend {
 }
 
 class GroupTotals {
-  const GroupTotals({required this.totalSpentMinor, required this.myPaidMinor, required this.myShareMinor, required this.byMember, required this.byCategory, required this.expenseCount});
+  const GroupTotals({
+    required this.totalSpentMinor,
+    required this.myPaidMinor,
+    required this.myShareMinor,
+    required this.byMember,
+    required this.byCategory,
+    required this.expenseCount,
+    this.myPaymentsSentMinor = 0,
+    this.myPaymentsReceivedMinor = 0,
+  });
 
   static const empty = GroupTotals(totalSpentMinor: 0, myPaidMinor: 0, myShareMinor: 0, byMember: [], byCategory: {}, expenseCount: 0);
 
@@ -56,8 +77,16 @@ class GroupTotals {
   final Map<String, int> byCategory;
   final int expenseCount;
 
-  /// How the period's expenses moved my balance: positive means I am owed more.
-  int get myNetChangeMinor => myPaidMinor - myShareMinor;
+  /// Settle-up payments I made to other members in the period.
+  final int myPaymentsSentMinor;
+
+  /// Settle-up payments other members made to me in the period.
+  final int myPaymentsReceivedMinor;
+
+  /// How the period moved my balance: what I paid for expenses minus my share,
+  /// plus payments I made, minus payments I received. Positive means I am owed
+  /// more (or owe less) than at the start of the period.
+  int get myNetChangeMinor => myPaidMinor - myShareMinor + myPaymentsSentMinor - myPaymentsReceivedMinor;
 }
 
 /// The bill of one expense. Shares and payers both add up to it; shares win
@@ -67,16 +96,17 @@ int expenseTotalMinor(TimelineExpense expense) {
   return shares > 0 ? shares : _sum(expense.paidMinor.values);
 }
 
-/// Totals over [expenses] that fall inside [range] (every expense when null),
-/// seen from [myMemberId] (my figures are 0 when null).
-GroupTotals computeGroupTotals({required List<GroupTotalsExpense> expenses, String? myMemberId, DateRange? range}) {
+/// Totals over [expenses] and [payments] that fall inside [range] (all of
+/// them when null), seen from [myMemberId] (my figures are 0 when null).
+GroupTotals computeGroupTotals({required List<GroupTotalsExpense> expenses, List<TimelinePayment> payments = const [], String? myMemberId, DateRange? range}) {
   final inRange = range == null ? expenses : expenses.where((item) => range.contains(item.occurredAt)).toList();
+  final paymentsInRange = range == null ? payments : payments.where((payment) => range.contains(payment.occurredAt));
   final paidByMember = <String, int>{};
   final shareByMember = <String, int>{};
   final byCategory = <String, int>{};
   var total = 0;
   for (final item in inRange) {
-    final bill = expenseTotalMinor(item.expense);
+    final bill = item.billMinor;
     total += bill;
     _addAll(paidByMember, item.expense.paidMinor);
     _addAll(shareByMember, item.expense.shareMinor);
@@ -89,6 +119,8 @@ GroupTotals computeGroupTotals({required List<GroupTotalsExpense> expenses, Stri
     byMember: memberSpendOf(paidByMember, shareByMember),
     byCategory: byCategory,
     expenseCount: inRange.length,
+    myPaymentsSentMinor: myMemberId == null ? 0 : _sum(paymentsInRange.where((payment) => payment.fromMemberId == myMemberId).map((payment) => payment.amountMinor)),
+    myPaymentsReceivedMinor: myMemberId == null ? 0 : _sum(paymentsInRange.where((payment) => payment.toMemberId == myMemberId).map((payment) => payment.amountMinor)),
   );
 }
 

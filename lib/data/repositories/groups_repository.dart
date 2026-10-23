@@ -78,8 +78,11 @@ class GroupDetail {
   /// Every expense with a payer, with its category, for the totals screen.
   List<GroupTotalsExpense> get totalsExpenses => [
         for (final (entry, _, _) in entries)
-          if (timelineByEntryId[entry.id] case final expense?) GroupTotalsExpense(expense: expense, categoryId: entry.categoryId),
+          if (timelineByEntryId[entry.id] case final expense?) GroupTotalsExpense(expense: expense, categoryId: entry.categoryId, amountMinor: entry.amountMinor),
       ];
+
+  /// Settle-up payments between members, for my balance change on the totals screen.
+  List<TimelinePayment> get totalsPayments => settlements.map(timelinePaymentOf).toList();
 }
 
 /// A group expense with its splits and, when several members paid, its payer
@@ -177,10 +180,7 @@ class GroupsRepository {
       timelineByEntryId: timelineByEntryId,
       settledUpTo: settledUpPoint(
         expenses: timelineByEntryId.values.toList(),
-        payments: [
-          for (final settlement in settlements)
-            TimelinePayment(occurredAt: settlement.occurredAt, fromMemberId: settlement.fromMemberId, toMemberId: settlement.toMemberId, amountMinor: settlement.amountMinor),
-        ],
+        payments: settlements.map(timelinePaymentOf).toList(),
       ),
       lastRemindedAt: lastRemindedAt,
     );
@@ -378,3 +378,7 @@ class GroupsRepository {
     return List.generate(6, (_) => alphabet[random.nextInt(alphabet.length)]).join();
   }
 }
+
+/// The timeline form of a recorded settle-up payment.
+TimelinePayment timelinePaymentOf(Settlement settlement) =>
+    TimelinePayment(occurredAt: settlement.occurredAt, fromMemberId: settlement.fromMemberId, toMemberId: settlement.toMemberId, amountMinor: settlement.amountMinor);

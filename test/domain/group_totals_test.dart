@@ -83,6 +83,87 @@ void main() {
       expect(totals.byMember.map((row) => row.memberId), ['rahul', 'priya', 'me']);
     });
 
+    test('payments I made or received in the period move my balance but not the spending', () {
+      final ledger = [
+        LedgerExpense.multi(payers: const [SplitShare('rahul', 900)], shares: const [SplitShare('me', 300), SplitShare('rahul', 300), SplitShare('priya', 300)]),
+      ];
+      final expenses = [GroupTotalsExpense(expense: timelineExpenseOf(DateTime(2026, 10, 3), ledger.single))];
+      final payments = [
+        TimelinePayment(occurredAt: DateTime(2026, 10, 5), fromMemberId: 'me', toMemberId: 'rahul', amountMinor: 300),
+        TimelinePayment(occurredAt: DateTime(2026, 10, 6), fromMemberId: 'priya', toMemberId: 'me', amountMinor: 50),
+        TimelinePayment(occurredAt: DateTime(2026, 10, 7), fromMemberId: 'priya', toMemberId: 'rahul', amountMinor: 250),
+      ];
+
+      final totals = computeGroupTotals(expenses: expenses, payments: payments, myMemberId: 'me');
+
+      expect(totals.totalSpentMinor, 900);
+      expect(totals.myShareMinor, 300);
+      expect(totals.myPaymentsSentMinor, 300);
+      expect(totals.myPaymentsReceivedMinor, 50);
+      // Share 300 owed, then 300 paid back and 50 received: down 50 overall.
+      expect(totals.myNetChangeMinor, -50);
+      final balances = computeNetBalances(
+        memberIds: const ['me', 'rahul', 'priya'],
+        expenses: ledger,
+        settlements: [for (final payment in payments) LedgerSettlement(fromMemberId: payment.fromMemberId, toMemberId: payment.toMemberId, amountMinor: payment.amountMinor)],
+      );
+      expect(totals.myNetChangeMinor, balances['me']);
+    });
+
+    test("owner's example: a 3,00,000 trip where my share is 50,000, payments not counted as spending", () {
+      final expenses = [
+        // Flights for all four, I paid: 1,60,000 split equally.
+        GroupTotalsExpense(
+          amountMinor: 16000000,
+          expense: TimelineExpense(occurredAt: DateTime(2026, 10, 1), paidMinor: const {'me': 16000000}, shareMinor: const {'me': 4000000, 'rahul': 4000000, 'priya': 4000000, 'asha': 4000000}),
+        ),
+        // Villa: 1,00,000, Rahul and Priya paid; I owe 10,000 of it.
+        GroupTotalsExpense(
+          amountMinor: 10000000,
+          expense: TimelineExpense(occurredAt: DateTime(2026, 10, 2), paidMinor: const {'rahul': 6000000, 'priya': 4000000}, shareMinor: const {'me': 1000000, 'rahul': 3000000, 'priya': 3000000, 'asha': 3000000}),
+        ),
+        // Scuba trip I was not on: 40,000.
+        GroupTotalsExpense(
+          amountMinor: 4000000,
+          expense: TimelineExpense(occurredAt: DateTime(2026, 10, 3), paidMinor: const {'asha': 4000000}, shareMinor: const {'rahul': 2000000, 'asha': 2000000}),
+        ),
+      ];
+      final payments = [TimelinePayment(occurredAt: DateTime(2026, 10, 4), fromMemberId: 'asha', toMemberId: 'me', amountMinor: 3000000)];
+
+      final totals = computeGroupTotals(expenses: expenses, payments: payments, myMemberId: 'me');
+
+      expect(totals.totalSpentMinor, 30000000);
+      expect(totals.myShareMinor, 5000000);
+      expect(totals.byMember.fold(0, (sum, row) => sum + row.shareMinor), totals.totalSpentMinor);
+      expect(totals.myPaymentsReceivedMinor, 3000000);
+    });
+
+    test("the entry's recorded amount is the bill, as the group export sums it", () {
+      final expense = GroupTotalsExpense(amountMinor: 1000, expense: TimelineExpense(occurredAt: DateTime(2026, 10, 1), paidMinor: const {'me': 1000}, shareMinor: const {'me': 500, 'rahul': 500}));
+      expect(expense.billMinor, 1000);
+      expect(computeGroupTotals(expenses: [expense]).totalSpentMinor, 1000);
+      expect(GroupTotalsExpense(expense: expense.expense).billMinor, 1000);
+    });
+
+    test('a month range keeps only the payments made in that month', () {
+      final payments = [
+        TimelinePayment(occurredAt: DateTime(2026, 9, 30, 23, 59), fromMemberId: 'me', toMemberId: 'rahul', amountMinor: 100),
+        TimelinePayment(occurredAt: DateTime(2026, 10, 1), fromMemberId: 'me', toMemberId: 'rahul', amountMinor: 200),
+        TimelinePayment(occurredAt: DateTime(2026, 11, 1), fromMemberId: 'rahul', toMemberId: 'me', amountMinor: 400),
+      ];
+
+      final october = computeGroupTotals(expenses: const [], payments: payments, myMemberId: 'me', range: monthRange(DateTime(2026, 10, 15)));
+      final allTime = computeGroupTotals(expenses: const [], payments: payments, myMemberId: 'me');
+      final nobody = computeGroupTotals(expenses: const [], payments: payments);
+
+      expect(october.myPaymentsSentMinor, 200);
+      expect(october.myPaymentsReceivedMinor, 0);
+      expect(october.myNetChangeMinor, 200);
+      expect(october.totalSpentMinor, 0);
+      expect(allTime.myNetChangeMinor, 300 - 400);
+      expect(nobody.myNetChangeMinor, 0);
+    });
+
     test('a month range keeps only that month; boundaries are closed-open', () {
       final expenses = [
         _expense(DateTime(2026, 9, 30, 23, 59), paid: {'me': 100}, shares: {'me': 100}),

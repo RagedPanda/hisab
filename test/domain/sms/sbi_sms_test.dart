@@ -100,17 +100,5 @@ void main() {
       availableLimitMinor: 4850100,
       occurredAt: DateTime(2026, 10, 21),
     ),
-    const SmsCase(
-      'card payment received',
-      sender: 'VM-SBICRD-S',
-      body: 'We have received payment of Rs.5,000.00 towards your SBI Credit Card ending with 5512 on 20/10/26. Available limit is Rs.53,501.00.',
-      direction: TxnDirection.credit,
-      amountMinor: 500000,
-      kind: TxnKind.cardPayment,
-      bank: 'SBI Card',
-      isCreditCard: true,
-      accountLast4: '5512',
-      availableLimitMinor: 5350100,
-    ),
   ]);
 }

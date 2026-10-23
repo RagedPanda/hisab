@@ -12,7 +12,7 @@ void main() {
     'cash_withdrawal': ('AD-ATMSBI-S', 'Rs.2000 withdrawn at SBI ATM S1NW000123001 from A/cX4821 on 21Oct26.'),
     'loan_emi': ('AX-AXISBK-S', 'EMI of INR 8,250.00 for Loan A/c XX550012 has been debited from your A/c no. XX802211 on 05-10-26.'),
     'wallet_topup': ('VM-HDFCBK-S', 'Rs.500.00 debited from A/c XX7781 on 21-10-26 to MobiKwik wallet top-up.'),
-    'credit_card_payment': ('VM-HDFCBK-S', 'Payment of Rs 12,000.00 received on your HDFC Bank Credit Card ending 9902 on 20-10-2026.'),
+    'credit_card_payment': ('VM-HDFCBK-S', 'Rs.15,000.00 debited from A/c XX7781 on 20-10-26 towards CRED CLUB credit card bill. UPI Ref 629450500001.'),
   };
   group('category from message kind', () {
     for (final MapEntry(key: category, value: (sender, body)) in cases.entries) {

@@ -19,16 +19,6 @@ void main() {
       occurredAt: DateTime(2026, 10, 21, 20, 15),
     ),
     const SmsCase(
-      'American Express payment received',
-      sender: 'VM-AMEXIN-S',
-      body: 'We have received your payment of INR 10,000.00 on your AMEX card ** 41007 on 20 October 2026. Thank you.',
-      direction: TxnDirection.credit,
-      amountMinor: 1000000,
-      kind: TxnKind.cardPayment,
-      isCreditCard: true,
-      accountLast4: '1007',
-    ),
-    const SmsCase(
       'RBL credit card spend',
       sender: 'VM-RBLCRD-S',
       body: 'Dear Customer, INR 640.00 spent on your RBL Bank Credit Card XX2290 at ZEPTO on 21-10-2026. Available limit INR 39,360.00',

@@ -35,17 +35,6 @@ void main() {
       kind: TxnKind.emi,
       accountLast4: '2211',
     ),
-    SmsCase(
-      'credit card payment received',
-      sender: 'AX-AXISBK-S',
-      body: 'Payment of INR 3,000.00 has been received towards your Axis Bank Credit Card XX4321 on 20-10-26. Available limit INR 63,000.00.',
-      direction: TxnDirection.credit,
-      amountMinor: 300000,
-      kind: TxnKind.cardPayment,
-      isCreditCard: true,
-      accountLast4: '4321',
-      availableLimitMinor: 6300000,
-    ),
   ]);
 
   runSmsCases('Kotak Mahindra Bank', const [

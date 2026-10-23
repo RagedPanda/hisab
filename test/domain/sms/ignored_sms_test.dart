@@ -37,4 +37,16 @@ void main() {
     IgnoredSms('refund initiated, not yet credited', sender: 'VM-HDFCBK-S', body: 'Refund of Rs 499 has been initiated by MYNTRA and will be credited to your card in 5-7 days.'),
     IgnoredSms('statement', sender: 'VM-HDFCBK-S', body: 'Statement for HDFC Bank Credit Card XX9902: Total amount due Rs 12,000.00, minimum amount due Rs 600.00, due by 05-11-26.'),
   ]);
+
+  // Card-side acknowledgement of a bill payment. The bank-side debit is the
+  // expense; recording this too would count the payment twice or as income.
+  runIgnoredCases('Card payment acknowledgements', const [
+    IgnoredSms('SBI Card payment received', sender: 'VM-SBICRD-S', body: 'We have received payment of Rs.5,000.00 towards your SBI Credit Card ending with 5512 on 20/10/26. Available limit is Rs.53,501.00.'),
+    IgnoredSms('HDFC card payment received', sender: 'VM-HDFCBK-S', body: 'Payment of Rs 12,000.00 received on your HDFC Bank Credit Card ending 9902 on 20-10-2026. Thank you.'),
+    IgnoredSms('ICICI card payment received', sender: 'JD-ICICIT-S', body: 'Dear Customer, Payment of INR 5,000.00 has been received on your ICICI Bank Credit Card Account 4xxx xxxx xxxx 6611 on 20-OCT-26. Thank you.'),
+    IgnoredSms('Axis card payment received', sender: 'AX-AXISCR-S', body: 'Payment of INR 3,000.00 has been received towards your Axis Bank Credit Card XX4321 on 20-10-26. Available limit INR 63,000.00.'),
+    IgnoredSms('BOBCARD thank you for payment', sender: 'VM-BOBCRD-S', body: 'Thank you for the payment of Rs 4,000.00 towards your BOBCARD ending 7781 received on 20-10-2026.'),
+    IgnoredSms('Amex payment received', sender: 'AM-AMEXIN-S', body: 'We have received your payment of INR 10,000.00 on your AMEX card ** 41007 on 20 October 2026. Thank you.'),
+    IgnoredSms('pasted card payment received', sender: 'PASTED', body: 'Payment of Rs 2,500.00 has been credited to your Kotak Credit Card XX1188 on 20-10-26. Thank you.'),
+  ]);
 }

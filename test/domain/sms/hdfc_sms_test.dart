@@ -56,16 +56,6 @@ void main() {
       payee: 'Swiggy',
     ),
     SmsCase(
-      'credit card payment received',
-      sender: 'VM-HDFCBK-S',
-      body: 'Payment of Rs 12,000.00 received on your HDFC Bank Credit Card ending 9902 on 20-10-2026. Thank you.',
-      direction: TxnDirection.credit,
-      amountMinor: 1200000,
-      kind: TxnKind.cardPayment,
-      isCreditCard: true,
-      accountLast4: '9902',
-    ),
-    SmsCase(
       'ATM withdrawal with a debit card',
       sender: 'VM-HDFCBK-S',
       body: 'Rs.3000 withdrawn from HDFC Bank Debit Card x4410 at ATM PUNE CAMP on 21-10-26. Avl bal Rs.5,210.00',

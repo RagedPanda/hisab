@@ -2704,4 +2704,9 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get groupRecurringExpenseOnly =>
       'ग्रुप का दोहराने वाला नियम सिर्फ़ खर्च हो सकता है।';
+
+  @override
+  String groupRecurringYourShare(String amount) {
+    return 'आपका हिस्सा $amount';
+  }
 }

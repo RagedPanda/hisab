@@ -2712,4 +2712,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get groupRecurringExpenseOnly =>
       'A group repeating rule can only be an expense.';
+
+  @override
+  String groupRecurringYourShare(String amount) {
+    return 'your share $amount';
+  }
 }

@@ -4435,6 +4435,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A group repeating rule can only be an expense.'**
   String get groupRecurringExpenseOnly;
+
+  /// No description provided for @groupRecurringYourShare.
+  ///
+  /// In en, this message translates to:
+  /// **'your share {amount}'**
+  String groupRecurringYourShare(String amount);
 }
 
 class _AppLocalizationsDelegate

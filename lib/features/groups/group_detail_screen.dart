@@ -119,6 +119,7 @@ class GroupDetailScreen extends ConsumerWidget {
               timelineByEntryId: detail.timelineByEntryId,
               settledUpTo: detail.settledUpTo,
               myMemberId: myMemberId,
+              activeMemberIds: {for (final member in members) member.id},
               nameOf: nameOf,
               categoryById: categoryById,
               symbol: symbol,

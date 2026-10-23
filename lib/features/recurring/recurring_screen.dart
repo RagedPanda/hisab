@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
+import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart' show RecurringRule;
 import '../../data/repositories/recurring_repository.dart';
@@ -78,8 +79,11 @@ class RecurringScreen extends ConsumerWidget {
 enum _RuleAction { edit, pause, resume, delete }
 
 class RecurringRuleCard extends ConsumerWidget {
-  const RecurringRuleCard({super.key, required this.item});
+  const RecurringRuleCard({super.key, required this.item, this.yourShareMinor});
   final RecurringListItem item;
+
+  /// For a group rule, my part of the full amount, shown beneath it.
+  final int? yourShareMinor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -147,7 +151,20 @@ class RecurringRuleCard extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Padding(padding: const EdgeInsets.only(top: 2), child: AmountText(rule.amountMinor, kind: rule.kind)),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        AmountText(rule.amountMinor, kind: rule.kind),
+                        if (yourShareMinor case final share?)
+                          Text(
+                            l10n.groupRecurringYourShare(formatMinor(share, symbol: ref.watch(settingsProvider).currencySymbol)),
+                            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          ),
+                      ],
+                    ),
+                  ),
                   PopupMenuButton<_RuleAction>(
                     key: ValueKey('recurring.menu.${rule.id}'),
                     onSelected: onAction,

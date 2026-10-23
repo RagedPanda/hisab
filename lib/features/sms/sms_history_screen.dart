@@ -31,7 +31,7 @@ class _SmsHistoryScreenState extends ConsumerState<SmsHistoryScreen> {
     );
     if (!confirmed) return;
     await ref.read(smsLogRepositoryProvider).clearHistory(now: DateTime.now());
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.smsHistoryCleared)));
+    if (mounted) showTimedSnackBar(ScaffoldMessenger.of(context), l10n.smsHistoryCleared);
   }
 
   @override
@@ -94,17 +94,14 @@ class _SmsHistoryCard extends ConsumerWidget {
   const _SmsHistoryCard({required this.row});
   final SmsHistoryRow row;
 
+  /// Re-processing replaces this row, so the card is gone by the time the
+  /// result is known: the messenger and strings are taken before the await.
   Future<void> _reprocess(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
     final autoAdd = ref.read(settingsProvider).smsAutoAdd;
     final status = await ref.read(smsIngestServiceProvider).reprocess(row.log, autoAdd: autoAdd);
-    if (!context.mounted) return;
-    final message = switch (status) {
-      IngestStatus.pending => l10n.smsFoundReview,
-      IngestStatus.added => l10n.smsAdded,
-      _ => l10n.smsNotFound,
-    };
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    showTimedSnackBar(messenger, reprocessResultMessage(l10n, status));
   }
 
   @override
@@ -210,4 +207,11 @@ Color smsOutcomeColor(ColorScheme scheme, SmsOutcome outcome) => switch (outcome
       SmsOutcome.unparsed => scheme.error,
       SmsOutcome.pending => scheme.secondary,
       SmsOutcome.ignored || SmsOutcome.undone => scheme.outline,
+    };
+
+/// The snackbar text for the outcome of Process again.
+String reprocessResultMessage(AppLocalizations l10n, IngestStatus status) => switch (status) {
+      IngestStatus.pending => l10n.smsFoundReview,
+      IngestStatus.added => l10n.smsAdded,
+      _ => l10n.smsNotFound,
     };

@@ -410,6 +410,14 @@ void showUndoSnackBar(ScaffoldMessengerState messenger, {required String message
     ..showSnackBar(SnackBar(content: Text(message), persist: false, action: SnackBarAction(label: undoLabel, onPressed: onUndo)));
 }
 
+/// Replaces whatever snackbar is showing with [message]. It times out, so a
+/// result never lingers or queues behind an older one.
+void showTimedSnackBar(ScaffoldMessengerState messenger, String message) {
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message), persist: false));
+}
+
 /// Makes the system Back gesture return to Home instead of leaving the app
 /// when the wrapped screen is the only route on the stack (P2-3).
 class HomeFallbackPop extends StatelessWidget {

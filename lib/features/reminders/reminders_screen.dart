@@ -13,6 +13,7 @@ import '../../domain/reminders/reminder_kind.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import 'reminder_actions.dart';
+import 'reminder_late_note.dart';
 import 'reminder_editor.dart';
 import 'reminder_labels.dart';
 
@@ -101,7 +102,7 @@ class _UpcomingList extends ConsumerWidget {
     final banner = notificationsOff
         ? const _NotificationsOffBanner()
         : remindersMayArriveLate(permission, hasAlerts: hasAlerts)
-            ? const _MayArriveLateNote()
+            ? const ReminderLateNote()
             : null;
     if (reminders.isEmpty) {
       return EmptyState(
@@ -130,30 +131,6 @@ class _UpcomingList extends ConsumerWidget {
   }
 }
 
-/// Exact alarms are not allowed, so alerts fall back to inexact and may be
-/// late; tapping opens the "Alarms & reminders" setting.
-class _MayArriveLateNote extends ConsumerWidget {
-  const _MayArriveLateNote();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    return InkWell(
-      key: const ValueKey('reminders-late-note'),
-      borderRadius: BorderRadius.circular(8),
-      onTap: () => allowExactReminderAlarms(ref),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(4, 12, 4, 4),
-        child: Row(children: [
-          Icon(Icons.schedule, size: 18, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 8),
-          Expanded(child: Text(context.l10n.remindersLateNote, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary))),
-        ]),
-      ),
-    );
-  }
-}
-
 class _NotificationsOffBanner extends ConsumerWidget {
   const _NotificationsOffBanner();
 
@@ -172,7 +149,7 @@ class _NotificationsOffBanner extends ConsumerWidget {
           ]),
           Align(
             alignment: Alignment.centerRight,
-            child: TextButton(onPressed: () => turnOnReminderNotifications(ref), child: Text(context.l10n.notifTurnOn)),
+            child: TextButton(onPressed: () => turnOnReminderNotifications(context), child: Text(context.l10n.notifTurnOn)),
           ),
         ]),
       ),

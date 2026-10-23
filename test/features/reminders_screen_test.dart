@@ -238,6 +238,24 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Turn on in the notifications-off banner follows with the Alarms & reminders sheet', (tester) async {
+    final gateway = FakeNotificationGateway(notificationsAllowed: false, exactAlarmsAllowed: false);
+    final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');
+    await _addBill(container);
+    appRouter.push('/reminders');
+    await _settle(tester);
+
+    await tester.tap(find.text('Turn on'));
+    await _settle(tester);
+    expect(gateway.permissionRequests, 1);
+    expect(find.text('Get reminders on time'), findsOneWidget, reason: 'decision 22: reminders fire on time');
+    await tester.tap(find.text('Allow'));
+    await _settle(tester);
+    expect(gateway.exactRequests, 1);
+    expect(find.text('Reminders may arrive late. Allow Alarms & reminders'), findsOneWidget, reason: 'still denied, so the late note shows');
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a 0 amount is no amount: hidden on the list and empty in the editor', (tester) async {
     final gateway = FakeNotificationGateway();
     final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');

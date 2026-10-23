@@ -43,4 +43,18 @@ class SmsCapturePolicyTest {
         assertEquals("₹459 from HDFCBK. Tap to review.", settings.body("₹459", "HDFCBK"))
         assertEquals("From HDFCBK. Tap to review.", settings.body(null, "HDFCBK"))
     }
+
+    @Test
+    fun notificationIdIsStableForTheSameMessage() {
+        assertEquals(SmsCapturePolicy.notificationId("HDFCBK", upiDebit), SmsCapturePolicy.notificationId("HDFCBK", upiDebit))
+        assertTrue(SmsCapturePolicy.notificationId("HDFCBK", upiDebit) != SmsCapturePolicy.notificationId("ICICIB", upiDebit))
+    }
+
+    @Test
+    fun summaryGoesOnlyWhenNoMessageNotificationIsLeft() {
+        val summary = 0x5D5
+        assertTrue(SmsCapturePolicy.summaryOrphaned(listOf(summary, 1, 2), listOf(1, 2), summary))
+        assertTrue(SmsCapturePolicy.summaryOrphaned(emptyList(), listOf(1), summary))
+        assertFalse(SmsCapturePolicy.summaryOrphaned(listOf(summary, 1, 2, 3), listOf(1, 2), summary))
+    }
 }

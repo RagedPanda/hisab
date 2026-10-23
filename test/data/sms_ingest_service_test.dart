@@ -80,6 +80,21 @@ void main() {
     final now = DateTime(2026, 10, 22, 12);
     final morning = DateTime(2026, 10, 22, 9);
 
+    test('#103: notifications of queued messages are cancelled once processed, whatever the outcome', () async {
+      final clear = RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: morning);
+      final personal = RawSms(sender: '+919876500011', body: 'Rs.500 debited, send me the money', receivedAt: morning);
+      source.queue.addAll([clear, personal]);
+      source.inbox.add(RawSms(sender: 'HDFCBK', body: _atmDebit, receivedAt: morning));
+      final result = await service.sync(autoAdd: true, now: now);
+      expect(result.added, 2);
+      expect(source.cancelled, [clear, personal], reason: 'only queued messages were notified; inbox ones never were');
+    });
+
+    test('a sync with nothing queued cancels nothing', () async {
+      await service.sync(autoAdd: false, now: now);
+      expect(source.cancelled, isEmpty);
+    });
+
     test('ingests messages queued while the app was closed', () async {
       source.queue.add(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: morning));
       final result = await service.sync(autoAdd: false, now: now);
@@ -409,6 +424,10 @@ class FakeSmsSource implements SmsSource {
   final queue = <RawSms>[];
   final inbox = <RawSms>[];
   DateTime? lastSince;
+  final cancelled = <RawSms>[];
+
+  @override
+  Future<void> cancelNotifications(List<RawSms> messages) async => cancelled.addAll(messages);
 
   @override
   Future<List<RawSms>> drainQueue() async {

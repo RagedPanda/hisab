@@ -11,6 +11,10 @@ abstract interface class ReminderPaymentPort {
   /// Marks [reminderId] done by [entryId], records it in the reminder's
   /// history and advances it to its next due date.
   Future<void> markPaidBySms({required String reminderId, required String entryId});
+
+  /// Reverses [markPaidBySms]: [reminderId] goes back to unpaid with its alerts
+  /// rescheduled, when it is still the one [entryId] paid.
+  Future<void> reopenPaidBySms({required String reminderId, required String entryId});
 }
 
 /// After an SMS becomes an entry, pays the reminder it matches (if any) and
@@ -35,5 +39,16 @@ class SmsReminderLinker {
     await reminders.markPaidBySms(reminderId: match.reminderId, entryId: entryId);
     await smsLog.setMatchedReminder(smsId, match.reminderId);
     return match.reminderId;
+  }
+
+  /// Takes back the payment SMS [smsId] made as [entryId] (Undo of an auto-add):
+  /// the reminder reopens and the SMS no longer counts as having paid it, so a
+  /// later payment can. Returns the reopened reminder id, or null.
+  Future<String?> unlinkEntry({required String smsId, required String entryId}) async {
+    final reminderId = (await smsLog.getById(smsId))?.matchedReminderId;
+    if (reminderId == null) return null;
+    await reminders.reopenPaidBySms(reminderId: reminderId, entryId: entryId);
+    await smsLog.setMatchedReminder(smsId, null);
+    return reminderId;
   }
 }

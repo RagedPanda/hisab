@@ -63,8 +63,8 @@ class SmsLogRepository {
       (db.update(db.smsLog)..where((t) => t.id.equals(id)))
           .write(SmsLogCompanion(status: Value(status), entryId: Value(entryId)));
 
-  /// Links a logged SMS to the reminder it paid.
-  Future<void> setMatchedReminder(String smsId, String reminderId) =>
+  /// Links a logged SMS to the reminder it paid; null unlinks it.
+  Future<void> setMatchedReminder(String smsId, String? reminderId) =>
       (db.update(db.smsLog)..where((t) => t.id.equals(smsId))).write(SmsLogCompanion(matchedReminderId: Value(reminderId)));
 
   JoinedSelectStatement<$SmsLogTable, SmsLogData> _matchedReminderIdsQuery() => db.selectOnly(db.smsLog)

@@ -23,6 +23,7 @@ void main() {
   late SmsLogRepository smsLog;
   late FakeNotificationGateway gateway;
   late SmsReminderLinker linker;
+  late ReminderScheduler scheduler;
   final now = DateTime(2026, 11, 5, 9);
 
   setUp(() {
@@ -31,7 +32,7 @@ void main() {
     accounts = AccountsRepository(db);
     smsLog = SmsLogRepository(db);
     gateway = FakeNotificationGateway();
-    final scheduler = ReminderScheduler(
+    scheduler = ReminderScheduler(
       reminders: reminders,
       notifications: NotificationService(gateway,
           buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, notificationLocalizations('en'), currencySymbol: '₹'), clock: () => now),
@@ -78,6 +79,48 @@ void main() {
     expect(next.status, ReminderStatus.pending);
     expect((await smsLog.getById('s1'))!.matchedReminderId, reminderId);
     expect(gateway.alertsFor(reminderPayload(reminderId)), isEmpty, reason: 'the paid occurrence stops notifying');
+  });
+
+  test('undoing the SMS payment reopens the EMI, drops next month and brings its alerts back (decision 19)', () async {
+    final account = await accounts.create(name: 'HDFC 1234', type: 'bank', color: 0, bankName: 'HDFC Bank', last4: '1234');
+    final reminderId = await scheduler.save(ReminderDraft(
+      kind: ReminderKind.emi,
+      title: 'Car loan',
+      dueAt: DateTime(2026, 11, 12),
+      amountMinor: 1234500,
+      accountId: account.id,
+      repeat: ReminderRepeat.monthly,
+      remindDaysBefore: const [0, 3],
+    ));
+    final alertsBefore = gateway.alertsFor(reminderPayload(reminderId)).map((alert) => alert.fireAt).toList();
+    expect(alertsBefore, isNotEmpty);
+    await smsLog.record(id: 's1', sender: 'HDFCBK', body: 'emi', receivedAt: now, status: 'added', entryId: 'e1');
+    await linker.linkEntry(smsId: 's1', parsed: emiDebit(1234500), entryId: 'e1');
+    final nextId = (await reminders.getById(reminderId))!.nextId!;
+
+    expect(await linker.unlinkEntry(smsId: 's1', entryId: 'e1'), reminderId);
+
+    final reopened = (await reminders.getById(reminderId))!;
+    expect(reopened.status, ReminderStatus.pending);
+    expect(reopened.entryId, isNull);
+    expect(await reminders.getById(nextId), isNull, reason: 'the occurrence the payment spawned is dropped');
+    expect(gateway.alertsFor(reminderPayload(reminderId)).map((alert) => alert.fireAt), alertsBefore, reason: 'its alerts are rescheduled');
+    expect(gateway.alertsFor(reminderPayload(nextId)), isEmpty);
+    expect((await smsLog.getById('s1'))!.matchedReminderId, isNull, reason: 'a later payment may pay it again');
+  });
+
+  test('undo leaves a reminder alone that was since paid by another entry', () async {
+    final reminderId = await carLoan();
+    await smsLog.record(id: 's1', sender: 'HDFCBK', body: 'emi', receivedAt: now, status: 'added', entryId: 'e1');
+    await linker.linkEntry(smsId: 's1', parsed: emiDebit(1234500), entryId: 'e1');
+    await reminders.undoDone(reminderId);
+    await reminders.markDone(reminderId, entryId: 'manual-entry');
+
+    await linker.unlinkEntry(smsId: 's1', entryId: 'e1');
+
+    final row = (await reminders.getById(reminderId))!;
+    expect(row.status, ReminderStatus.done);
+    expect(row.entryId, 'manual-entry');
   });
 
   test('an EMI debit one rupee off leaves the reminder pending', () async {

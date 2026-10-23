@@ -145,9 +145,11 @@ class SmsIngestService {
     return IngestStatus.added;
   }
 
-  /// Reverses an automatic add: the entry is deleted and the SMS is marked
-  /// ignored, so it does not come back in the review queue.
+  /// Reverses an automatic add: a reminder it paid reopens, the entry is
+  /// deleted and the SMS is marked ignored, so it does not come back in the
+  /// review queue.
   Future<void> undoAutoAdd(SmsAutoAdded added) async {
+    await reminderLinker?.unlinkEntry(smsId: added.smsId, entryId: added.entryId);
     await entries.deleteEntry(added.entryId);
     await smsLog.setStatus(added.smsId, 'ignored');
   }

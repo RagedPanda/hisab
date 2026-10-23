@@ -44,4 +44,16 @@ class ReminderPaymentAdapter implements ReminderPaymentPort {
 
   @override
   Future<void> markPaidBySms({required String reminderId, required String entryId}) => scheduler.markDone(reminderId, entryId: entryId);
+
+  /// A full reversal through [ReminderScheduler.undoDone]: the reminder is
+  /// unpaid again, the occurrence it spawned is dropped and its alerts come
+  /// back. Left alone when it was since reopened or paid by another entry.
+  @override
+  Future<void> reopenPaidBySms({required String reminderId, required String entryId}) async {
+    if (isStillPaidBy(await reminders.getById(reminderId), entryId)) await scheduler.undoDone(reminderId);
+  }
 }
+
+/// Whether [reminder] is still closed as paid by [entryId].
+bool isStillPaidBy(Reminder? reminder, String entryId) =>
+    reminder != null && reminder.status == ReminderStatus.done && reminder.entryId == entryId;

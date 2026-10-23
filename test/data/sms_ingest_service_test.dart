@@ -158,6 +158,26 @@ void main() {
       expect(await entryCount(), 1);
     });
 
+    test('Undo of an auto-added SMS reopens the reminder it paid (decision 19)', () async {
+      final announced = <SmsAutoAdded>[];
+      final subscription = matchingService.autoAdded.listen(announced.add);
+      await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: true);
+      await Future<void>.delayed(Duration.zero);
+      await subscription.cancel();
+      expect(reminders.paid.single.reminderId, 'broadband-early');
+
+      await matchingService.undoAutoAdd(announced.single);
+
+      expect(reminders.reopened.single, (reminderId: 'broadband-early', entryId: announced.single.entryId));
+      final row = (await smsLog.getById(announced.single.smsId))!;
+      expect(row.status, 'ignored', reason: 'decision 1: the SMS stays ignored');
+      expect(row.matchedReminderId, isNull);
+      expect((await EntriesRepository(db).getEntry(announced.single.entryId))?.entry.deletedAt, isNotNull);
+      expect(await matchingService.ingest(RawSms(sender: 'PASTED', body: broadband, receivedAt: DateTime(2026, 10, 23, 18)), autoAdd: true, force: true),
+          IngestStatus.duplicate, reason: 'pasting the undone SMS does not pay it again');
+      expect(reminders.paid, hasLength(1));
+    });
+
     test('a different payment to the same payee still pays the next reminder', () async {
       await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: true);
       const nextMonth = 'Rs.799.00 debited from A/c XX1234 on 29-10-26 to ACTFIBERNET. UPI Ref 630200000123';

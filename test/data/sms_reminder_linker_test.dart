@@ -56,4 +56,10 @@ void main() {
     expect(reminders.paid, isEmpty);
     expect((await smsLog.getById('s1'))!.matchedReminderId, isNull);
   });
+
+  test('unlinking an SMS that paid nothing reopens nothing', () async {
+    await smsLog.record(id: 'unmatched', sender: 'HDFCBK', body: 'atm', receivedAt: DateTime(2026, 10, 21), status: 'added', entryId: 'e9');
+    expect(await linker.unlinkEntry(smsId: 'unmatched', entryId: 'e9'), isNull);
+    expect(reminders.reopened, isEmpty);
+  });
 }

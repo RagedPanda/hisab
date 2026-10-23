@@ -413,7 +413,7 @@ void showUndoSnackBar(
 }) {
   messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message), persist: false, duration: duration, action: SnackBarAction(label: undoLabel, onPressed: onUndo)));
+    ..showSnackBar(SnackBar(content: Text(message), duration: duration, persist: false, action: SnackBarAction(label: undoLabel, onPressed: onUndo)));
 }
 
 /// Makes the system Back gesture return to Home instead of leaving the app

@@ -8,6 +8,7 @@ import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../domain/reminders/reminder_kind.dart';
 import '../../l10n/l10n.dart';
+import '../shell/widgets/common.dart';
 
 enum _PaidChoice { addEntry, justMark }
 
@@ -72,11 +73,13 @@ Future<void> closeReminderWithUndo(BuildContext context, WidgetRef ref, Reminder
       : ReminderKind.of(reminder.kind).isMoney
           ? l10n.reminderMarkedPaid
           : l10n.reminderMarkedDone;
-  messenger.showSnackBar(SnackBar(
-    content: Text(message),
+  showUndoSnackBar(
+    messenger,
+    message: message,
+    undoLabel: l10n.undo,
+    onUndo: () => scheduler.undoDone(reminder.id),
     duration: const Duration(seconds: 6),
-    action: SnackBarAction(label: l10n.undo, onPressed: () => scheduler.undoDone(reminder.id)),
-  ));
+  );
 }
 
 /// Deletes [reminder] (soft) with Undo.
@@ -85,10 +88,7 @@ Future<void> deleteReminderWithUndo(BuildContext context, WidgetRef ref, Reminde
   final messenger = ScaffoldMessenger.of(context);
   final scheduler = ref.read(reminderSchedulerProvider);
   await scheduler.delete(reminder.id);
-  messenger.showSnackBar(SnackBar(
-    content: Text(l10n.reminderDeleted),
-    action: SnackBarAction(label: l10n.undo, onPressed: () => scheduler.restore(reminder.id)),
-  ));
+  showUndoSnackBar(messenger, message: l10n.reminderDeleted, undoLabel: l10n.undo, onUndo: () => scheduler.restore(reminder.id));
 }
 
 /// Asks for the notification permission; when the OS will not show the

@@ -12,9 +12,9 @@ int? parseBackedUpMonthStartDay(Map<String, dynamic> json) {
 }
 
 /// Whether a backup's [incoming] "Month starts on" should replace [local].
-/// The setting carries no timestamp, so only a device still on the default
-/// (the 1st) takes the backup's day; a day the user chose here is kept.
-bool shouldRestoreMonthStartDay({required int local, required int? incoming}) => incoming != null && local == 1 && incoming != local;
+/// A restore is the user asking for their saved state back, so the backup's
+/// day always wins when it has one; a backup without it changes nothing.
+bool shouldRestoreMonthStartDay({required int local, required int? incoming}) => incoming != null && incoming != local;
 
 /// Carries "Month starts on" in backups: budgets, the dashboard month and
 /// the salary alignment all depend on it.

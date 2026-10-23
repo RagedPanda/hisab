@@ -87,11 +87,16 @@ void main() {
       await prefs.clear();
       await BackupService(restoredDb, sections: [MonthStartBackupSection(prefs)]).importSnapshot(payload);
       expect(prefs.getInt('monthStartDay'), 25);
+
+      await prefs.setInt('monthStartDay', 10);
+      await BackupService(restoredDb, sections: [MonthStartBackupSection(prefs)]).importSnapshot(payload);
+      expect(prefs.getInt('monthStartDay'), 25, reason: 'overrides a day chosen on this device');
     });
 
-    test('a day chosen on this device is kept, and bad values are ignored', () {
+    test('the backup day always wins when it has one, and bad values are ignored', () {
       expect(shouldRestoreMonthStartDay(local: 1, incoming: 25), isTrue);
-      expect(shouldRestoreMonthStartDay(local: 10, incoming: 25), isFalse);
+      expect(shouldRestoreMonthStartDay(local: 10, incoming: 25), isTrue, reason: 'a restore brings back the saved state');
+      expect(shouldRestoreMonthStartDay(local: 25, incoming: 25), isFalse);
       expect(shouldRestoreMonthStartDay(local: 1, incoming: null), isFalse);
       expect(parseBackedUpMonthStartDay({'monthStartDay': 29}), isNull);
       expect(parseBackedUpMonthStartDay({'monthStartDay': '5'}), isNull);
@@ -99,9 +104,10 @@ void main() {
     });
 
     test('an older backup without the block restores without it', () async {
+      await prefs.setInt('monthStartDay', 10);
       final payload = await BackupService(db).snapshot();
       await BackupService(restoredDb, sections: [MonthStartBackupSection(prefs)]).importSnapshot(payload);
-      expect(prefs.getInt('monthStartDay'), isNull);
+      expect(prefs.getInt('monthStartDay'), 10);
     });
   });
 }

@@ -238,6 +238,28 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Turn on -> notifications granted -> no throw -> Alarms & reminders sheet -> granted re-posts exact', (tester) async {
+    final gateway = FakeNotificationGateway(notificationsAllowed: false, exactAlarmsAllowed: false, grantExactOnRequest: true);
+    final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');
+    await _addBill(container);
+    appRouter.push('/reminders');
+    await _settle(tester);
+    expect(gateway.exactById.values, everyElement(isFalse), reason: 'no access yet: inexact');
+
+    await tester.tap(find.text('Turn on'));
+    await _settle(tester);
+    expect(tester.takeException(), isNull, reason: 'the banner goes away once granted; the flow must not use its ref');
+    expect(gateway.permissionRequests, 1);
+    expect(find.text('Get reminders on time'), findsOneWidget, reason: 'permission is re-read only at the end, so the banner stays while the sheet shows');
+    await tester.tap(find.text('Allow'));
+    await _settle(tester);
+    expect(tester.takeException(), isNull);
+    expect(gateway.exactRequests, 1);
+    expect(gateway.exactById.values, everyElement(isTrue), reason: 'granted: every alert re-posted exact');
+    expect(find.text('Reminders may arrive late. Allow Alarms & reminders'), findsNothing);
+    expect(find.text('Turn on'), findsNothing, reason: 'notifications on: the banner is gone');
+  });
+
   testWidgets('Turn on in the notifications-off banner follows with the Alarms & reminders sheet', (tester) async {
     final gateway = FakeNotificationGateway(notificationsAllowed: false, exactAlarmsAllowed: false);
     final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');

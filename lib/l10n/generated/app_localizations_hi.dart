@@ -2709,4 +2709,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String groupRecurringYourShare(String amount) {
     return 'आपका हिस्सा $amount';
   }
+
+  @override
+  String get settleReminderPrePromptTitle => 'हिसाब बराबर करने की याद पाएँ';
+
+  @override
+  String get settleReminderPrePromptBody =>
+      'हिसाब आपके चुने दिन पर सिर्फ़ इस ग्रुप का हिसाब बराबर करने की याद दिलाएगा। कोई विज्ञापन नहीं।';
 }

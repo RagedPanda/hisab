@@ -101,7 +101,8 @@ Future<void> turnOnReminderNotifications(WidgetRef ref) async {
 
 /// Pre-permission sheet shown when something with alerts (a reminder, a
 /// settle-up schedule) is saved while notifications are off; it is saved either way.
-Future<void> askNotificationPermissionIfNeeded(BuildContext context, WidgetRef ref) async {
+/// [title] and [body] default to the reminders wording.
+Future<void> askNotificationPermissionIfNeeded(BuildContext context, WidgetRef ref, {String? title, String? body}) async {
   final permission = await ref.read(notificationServiceProvider).checkPermission();
   if (permission.notificationsAllowed || !context.mounted) return;
   final l10n = context.l10n;
@@ -115,9 +116,9 @@ Future<void> askNotificationPermissionIfNeeded(BuildContext context, WidgetRef r
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.notifications_active_outlined, size: 48, color: Theme.of(sheetContext).colorScheme.primary),
           const SizedBox(height: 12),
-          Text(l10n.notifPrePromptTitle, style: Theme.of(sheetContext).textTheme.titleLarge, textAlign: TextAlign.center),
+          Text(title ?? l10n.notifPrePromptTitle, style: Theme.of(sheetContext).textTheme.titleLarge, textAlign: TextAlign.center),
           const SizedBox(height: 8),
-          Text(l10n.notifPrePromptBody, textAlign: TextAlign.center),
+          Text(body ?? l10n.notifPrePromptBody, textAlign: TextAlign.center),
           const SizedBox(height: 16),
           Row(children: [
             Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext, false), child: Text(l10n.notNow))),

@@ -40,7 +40,10 @@ class SettleScheduleTile extends ConsumerWidget {
       existing: existing,
     );
     if (choice == null || !context.mounted) return;
-    if (choice.schedule != null) await askNotificationPermissionIfNeeded(context, ref);
+    if (choice.schedule != null) {
+      final l10n = context.l10n;
+      await askNotificationPermissionIfNeeded(context, ref, title: l10n.settleReminderPrePromptTitle, body: l10n.settleReminderPrePromptBody);
+    }
     await ref.read(settleReminderServiceProvider).setSchedule(detail.group.id, choice.schedule);
   }
 

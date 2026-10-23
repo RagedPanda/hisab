@@ -2717,4 +2717,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String groupRecurringYourShare(String amount) {
     return 'your share $amount';
   }
+
+  @override
+  String get settleReminderPrePromptTitle => 'Get reminded to settle up';
+
+  @override
+  String get settleReminderPrePromptBody =>
+      'Hisab sends a notification on the day you choose, only to remind you to settle up with this group. No marketing.';
 }

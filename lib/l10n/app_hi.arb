@@ -744,5 +744,7 @@
   "recurringIncrease": "{label} बढ़ाएँ",
   "recurringAddedSkipped": "{added, plural, =0{कोई नहीं जोड़ी गई} =1{1 जोड़ी गई} other{{added} जोड़ी गईं}}, {skipped, plural, =1{1 छोड़ी गई} other{{skipped} छोड़ी गईं}}",
   "groupRecurringExpenseOnly": "ग्रुप का दोहराने वाला नियम सिर्फ़ खर्च हो सकता है।",
-  "groupRecurringYourShare": "आपका हिस्सा {amount}"
+  "groupRecurringYourShare": "आपका हिस्सा {amount}",
+  "settleReminderPrePromptTitle": "हिसाब बराबर करने की याद पाएँ",
+  "settleReminderPrePromptBody": "हिसाब आपके चुने दिन पर सिर्फ़ इस ग्रुप का हिसाब बराबर करने की याद दिलाएगा। कोई विज्ञापन नहीं।"
 }

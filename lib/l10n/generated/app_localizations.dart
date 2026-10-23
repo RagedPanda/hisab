@@ -4441,6 +4441,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'your share {amount}'**
   String groupRecurringYourShare(String amount);
+
+  /// No description provided for @settleReminderPrePromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get reminded to settle up'**
+  String get settleReminderPrePromptTitle;
+
+  /// No description provided for @settleReminderPrePromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Hisab sends a notification on the day you choose, only to remind you to settle up with this group. No marketing.'**
+  String get settleReminderPrePromptBody;
 }
 
 class _AppLocalizationsDelegate

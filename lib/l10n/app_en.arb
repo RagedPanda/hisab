@@ -874,5 +874,7 @@
   "@recurringAddedSkipped": {"placeholders": {"added": {"type": "int"}, "skipped": {"type": "int"}}},
   "groupRecurringExpenseOnly": "A group repeating rule can only be an expense.",
   "groupRecurringYourShare": "your share {amount}",
-  "@groupRecurringYourShare": {"placeholders": {"amount": {"type": "String"}}}
+  "@groupRecurringYourShare": {"placeholders": {"amount": {"type": "String"}}},
+  "settleReminderPrePromptTitle": "Get reminded to settle up",
+  "settleReminderPrePromptBody": "Hisab sends a notification on the day you choose, only to remind you to settle up with this group. No marketing."
 }

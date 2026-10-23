@@ -96,9 +96,37 @@ void main() {
     test('not-bank text stored by an earlier build is wiped when the database opens', () async {
       await db.into(db.smsLog).insert(SmsLogCompanion.insert(id: 'old', sender: 'AMAZON', body: 'Your OTP is 123456', receivedAt: received, status: SmsLogStatus.notBank));
       await db.into(db.smsLog).insert(SmsLogCompanion.insert(id: 'bank', sender: 'HDFCBK', body: _upiDebit, receivedAt: received, status: SmsLogStatus.skipped));
-      await db.wipeNotBankSmsText();
+      await db.wipeUnkeptSmsText();
       expect((await smsLog.getById('old'))!.body, isEmpty);
       expect((await smsLog.getById('bank'))!.body, _upiDebit, reason: 'bank messages keep their text');
+    });
+
+    test('an OTP from a sender that looks like a bank (AX-AMAZON) keeps no text and logs no duplicate', () async {
+      const otp = 'Your OTP for login is 482913. Do not share it.';
+      final status = await service.ingest(RawSms(sender: 'AX-AMAZON', body: otp, receivedAt: received), autoAdd: true);
+      expect(status, IngestStatus.unparsed);
+      await service.ingest(RawSms(sender: 'AX-AMAZON', body: otp, receivedAt: received.add(const Duration(hours: 2))), autoAdd: true);
+      final row = (await history()).single.log;
+      expect(row.sender, 'AX-AMAZON');
+      expect(row.body, isEmpty);
+    });
+
+    test('an OTP from a real bank header keeps no text and logs no duplicate', () async {
+      const otp = 'OTP for txn of Rs.2,500.00 at AMAZON on HDFC Bank card XX1234 is 739201. Do not share it with anyone.';
+      final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: otp, receivedAt: received), autoAdd: true);
+      expect(status, IngestStatus.unparsed);
+      await service.ingest(RawSms(sender: 'VM-HDFCBK', body: otp, receivedAt: received.add(const Duration(hours: 2))), autoAdd: true);
+      final row = (await history()).single.log;
+      expect(row.status, SmsLogStatus.skipped);
+      expect(row.body, isEmpty);
+    });
+
+    test('OTP text stored under a bank sender by an earlier build is wiped when the database opens', () async {
+      await db.into(db.smsLog).insert(SmsLogCompanion.insert(id: 'otp', sender: 'AX-AMAZON', body: 'Your OTP is 123456', receivedAt: received, status: SmsLogStatus.skipped));
+      await db.into(db.smsLog).insert(SmsLogCompanion.insert(id: 'statement', sender: 'HDFCBK', body: 'Your statement is ready', receivedAt: received, status: SmsLogStatus.skipped));
+      await db.wipeUnkeptSmsText();
+      expect((await smsLog.getById('otp'))!.body, isEmpty);
+      expect((await smsLog.getById('statement'))!.body, 'Your statement is ready');
     });
 
     test('a message from a person is never kept', () async {

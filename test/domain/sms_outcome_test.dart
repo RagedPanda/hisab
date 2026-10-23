@@ -21,17 +21,31 @@ void main() {
     expect(reprocessable, {SmsOutcome.ignored, SmsOutcome.unparsed});
   });
 
-  test('not-bank messages never keep their text; others do', () {
-    expect(storedSmsBody(SmsLogStatus.notBank, 'Your OTP is 123456'), isEmpty);
+  test('not-bank messages never keep their text; possible transactions do', () {
+    expect(storedSmsBody(SmsLogStatus.notBank, 'Your order has shipped'), isEmpty);
     for (final status in [SmsLogStatus.added, SmsLogStatus.pending, SmsLogStatus.skipped, SmsLogStatus.duplicate, SmsLogStatus.ignored]) {
       expect(storedSmsBody(status, 'Rs.10 debited'), 'Rs.10 debited', reason: status);
     }
   });
 
-  test('re-deliveries of not-bank messages are not logged', () {
-    expect(logsDuplicateOf(SmsLogStatus.notBank), isFalse);
-    expect(logsDuplicateOf(SmsLogStatus.added), isTrue);
-    expect(logsDuplicateOf(SmsLogStatus.skipped), isTrue);
+  test('OTPs and promotions never keep their text, whatever the status', () {
+    const otp = 'Your OTP for login is 482913. Do not share it.';
+    const promo = 'Congratulations! You are eligible for a pre-approved loan. Apply now.';
+    for (final status in [SmsLogStatus.skipped, SmsLogStatus.duplicate, SmsLogStatus.ignored, SmsLogStatus.notBank]) {
+      expect(storedSmsBody(status, otp), isEmpty, reason: status);
+      expect(storedSmsBody(status, promo), isEmpty, reason: status);
+    }
+    expect(storedSmsBody(SmsLogStatus.skipped, 'Your statement is ready on NetBanking.'), isNotEmpty,
+        reason: 'a bank text that is neither an OTP nor a promotion stays re-processable');
+    expect(storedSmsBody(SmsLogStatus.added, 'Refund of Rs.200 under the cashback offer credited to A/c XX1234'), isNotEmpty,
+        reason: 'a refund is a real transaction even when it mentions an offer');
+  });
+
+  test('re-deliveries are logged only when their text could be kept', () {
+    expect(logsDuplicateOf(SmsLogStatus.notBank, 'Your order has shipped'), isFalse);
+    expect(logsDuplicateOf(SmsLogStatus.skipped, 'Your OTP is 123456'), isFalse);
+    expect(logsDuplicateOf(SmsLogStatus.added, 'Rs.10 debited'), isTrue);
+    expect(logsDuplicateOf(SmsLogStatus.skipped, 'Your statement is ready'), isTrue);
   });
 
   group('isSameDelivery', () {

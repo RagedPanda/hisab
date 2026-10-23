@@ -37,6 +37,8 @@ class GroupRecurringRepository {
   /// Writes the entry, splits and payers for one occurrence of a group rule.
   Future<OccurrencePost> postOccurrence(RecurringRule rule, DateTime occurrence) async {
     final groupId = rule.groupId!;
+    // Group rules are expense-only: income or transfers have no shared split.
+    if (!isGroupRuleKind(rule.kind)) return OccurrencePost.blocked;
     final entryId = occurrenceEntryId(rule.id, occurrence);
     final exists = await (db.select(db.entries)..where((t) => t.id.equals(entryId))).getSingleOrNull();
     if (exists != null) return OccurrencePost.alreadyPosted;

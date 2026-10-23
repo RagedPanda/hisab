@@ -871,5 +871,6 @@
   "recurringIncrease": "Increase {label}",
   "@recurringIncrease": {"placeholders": {"label": {"type": "String"}}},
   "recurringAddedSkipped": "{added, plural, =0{None added} =1{1 added} other{{added} added}}, {skipped, plural, =1{1 skipped} other{{skipped} skipped}}",
-  "@recurringAddedSkipped": {"placeholders": {"added": {"type": "int"}, "skipped": {"type": "int"}}}
+  "@recurringAddedSkipped": {"placeholders": {"added": {"type": "int"}, "skipped": {"type": "int"}}},
+  "groupRecurringExpenseOnly": "A group repeating rule can only be an expense."
 }

@@ -2708,4 +2708,8 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0, $_temp1';
   }
+
+  @override
+  String get groupRecurringExpenseOnly =>
+      'A group repeating rule can only be an expense.';
 }

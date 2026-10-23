@@ -4429,6 +4429,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{added, plural, =0{None added} =1{1 added} other{{added} added}}, {skipped, plural, =1{1 skipped} other{{skipped} skipped}}'**
   String recurringAddedSkipped(int added, int skipped);
+
+  /// No description provided for @groupRecurringExpenseOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'A group repeating rule can only be an expense.'**
+  String get groupRecurringExpenseOnly;
 }
 
 class _AppLocalizationsDelegate

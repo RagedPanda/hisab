@@ -127,4 +127,22 @@ void main() {
     expect(templateFitsAmount(exactWifi, 100000), isTrue);
     expect(templateFitsAmount(exactWifi, 120000), isFalse);
   });
+
+  group('group rule kind and share', () {
+    test('only expenses can be group rules', () {
+      expect(isGroupRuleKind('expense'), isTrue);
+      expect(isGroupRuleKind('income'), isFalse);
+      expect(isGroupRuleKind('transfer'), isFalse);
+    });
+
+    test('myShareOfGroupRule is my split of the full amount', () {
+      expect(myShareOfGroupRule(equalRent.encode(), amountMinor: 1500000, activeMemberIds: everyone, myMemberId: 'ravi'), 500000);
+    });
+
+    test('myShareOfGroupRule is null without a template, without me, or when I am not in the split', () {
+      expect(myShareOfGroupRule(null, amountMinor: 1500000, activeMemberIds: everyone, myMemberId: 'me'), isNull);
+      expect(myShareOfGroupRule(equalRent.encode(), amountMinor: 1500000, activeMemberIds: everyone, myMemberId: null), isNull);
+      expect(myShareOfGroupRule(equalRent.encode(), amountMinor: 1500000, activeMemberIds: everyone, myMemberId: 'stranger'), isNull);
+    });
+  });
 }

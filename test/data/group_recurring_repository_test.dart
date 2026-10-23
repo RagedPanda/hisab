@@ -71,6 +71,18 @@ void main() {
     expect({for (final payer in payers) payer.memberId: payer.amountMinor}, {memberIdByName['Me']: 600000, memberIdByName['Ravi']: 900000});
   });
 
+  test('a group rule switched to income or transfer posts nothing into the group', () async {
+    for (final kind in ['income', 'transfer']) {
+      await recurring.saveRule(GroupRecurringRepository.asGroupRule(
+        RecurringRepository.newRule(name: 'Salary', kind: kind, amountMinor: 100000, frequency: RecurrenceFrequency.monthly, dayOfMonth: 1, startDate: DateTime(2026, 9, 1, 9)),
+        groupId: groupId,
+        template: equalRent(),
+      ));
+    }
+    expect(await recurring.postDue(now: DateTime(2026, 10, 22)), 0);
+    expect(await db.select(db.entries).get(), isEmpty);
+  });
+
   test('a payer who left pauses the rule instead of posting a wrong split', () async {
     final ruleId = await saveRentRule(GroupExpenseTemplate(
       method: SplitMethod.equal,

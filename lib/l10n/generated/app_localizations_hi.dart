@@ -2700,4 +2700,8 @@ class AppLocalizationsHi extends AppLocalizations {
     );
     return '$_temp0, $_temp1';
   }
+
+  @override
+  String get groupRecurringExpenseOnly =>
+      'ग्रुप का दोहराने वाला नियम सिर्फ़ खर्च हो सकता है।';
 }

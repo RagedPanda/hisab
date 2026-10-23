@@ -154,3 +154,15 @@ bool templateFitsAmount(GroupExpenseTemplate template, int amountMinor) => group
       amountMinor: amountMinor,
       activeMemberIds: {template.paidByMemberId, for (final input in template.inputs) input.memberId, for (final payer in template.payers) payer.memberId},
     ).canPost;
+
+/// Group rules post shared expenses only; income and transfers have no split.
+bool isGroupRuleKind(String kind) => kind == 'expense';
+
+/// My share of the next occurrence of a group rule, or null when I am not
+/// in its split, it cannot post (see [groupOccurrence]) or nothing is stored.
+int? myShareOfGroupRule(String? groupSplit, {required int amountMinor, required Set<String> activeMemberIds, required String? myMemberId}) {
+  final template = GroupExpenseTemplate.decode(groupSplit);
+  if (template == null || myMemberId == null) return null;
+  final occurrence = groupOccurrence(template, amountMinor: amountMinor, activeMemberIds: activeMemberIds);
+  return occurrence.splits.where((split) => split.memberId == myMemberId).firstOrNull?.amountMinor;
+}

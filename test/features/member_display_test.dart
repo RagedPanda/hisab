@@ -30,4 +30,24 @@ void main() {
     expect(memberDisplayName(l10n, _member('Rahul', isMe: false)), 'Rahul');
     expect(memberInitial(_member('rahul', isMe: false)), 'R');
   });
+
+  group('payer names', () {
+    String nameOf(String id) => {'me': 'You', 'r': 'Rahul', 'p': 'Priya'}[id]!;
+
+    test('one payer reads as their name', () {
+      expect(payerNamesLine(l10n, ['r'], myMemberId: 'me', nameOf: nameOf), 'Rahul');
+      expect(payerNamesLine(l10n, ['me'], myMemberId: 'me', nameOf: nameOf), 'You');
+    });
+
+    test('several payers put me last in lower case', () {
+      expect(payerNamesLine(l10n, ['me', 'r'], myMemberId: 'me', nameOf: nameOf), 'Rahul and you');
+      expect(payerNamesLine(l10n, ['p', 'me', 'r'], myMemberId: 'me', nameOf: nameOf), 'Priya, Rahul and you');
+      expect(payerNamesLine(l10n, ['p', 'r'], myMemberId: 'me', nameOf: nameOf), 'Priya and Rahul');
+    });
+
+    test('joinNames handles empty and single lists', () {
+      expect(joinNames(const [], l10n.namesAnd), '');
+      expect(joinNames(const ['A'], l10n.namesAnd), 'A');
+    });
+  });
 }

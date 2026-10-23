@@ -626,5 +626,6 @@
   "payersAssigned": "{total} में से {assigned} दर्ज",
   "payersMustTotal": "दी गई रकम का जोड़ {total} होना चाहिए",
   "namesAnd": "{first} और {last}",
-  "youInList": "आप"
+  "youInList": "आप",
+  "recurringAddedSkipped": "{added, plural, =0{कोई नहीं जोड़ी गई} =1{1 जोड़ी गई} other{{added} जोड़ी गईं}}, {skipped, plural, =1{1 छोड़ी गई} other{{skipped} छोड़ी गईं}}"
 }

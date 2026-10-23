@@ -342,6 +342,8 @@ class RecurringRules extends Table with SyncColumns {
   /// Occurrences already posted or skipped, counted against [maxCount].
   IntColumn get postedCount => integer().withDefault(const Constant(0))();
 
+  /// How many of [postedCount] were skipped rather than added.
+  IntColumn get skippedCount => integer().withDefault(const Constant(0))();
 
   /// Next occurrence not yet posted or skipped; null once the rule ended.
   DateTimeColumn get nextDue => dateTime().nullable()();

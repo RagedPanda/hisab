@@ -736,5 +736,7 @@
   "@payersMustTotal": {"placeholders": {"total": {"type": "String"}}},
   "namesAnd": "{first} and {last}",
   "@namesAnd": {"placeholders": {"first": {"type": "String"}, "last": {"type": "String"}}},
-  "youInList": "you"
+  "youInList": "you",
+  "recurringAddedSkipped": "{added, plural, =0{None added} =1{1 added} other{{added} added}}, {skipped, plural, =1{1 skipped} other{{skipped} skipped}}",
+  "@recurringAddedSkipped": {"placeholders": {"added": {"type": "int"}, "skipped": {"type": "int"}}}
 }

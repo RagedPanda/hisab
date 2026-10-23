@@ -99,6 +99,7 @@ void main() {
     final rule = (await recurring.getRule(id))!;
     expect(rule.nextDue, DateTime(2026, 9, 5, 9));
     expect(rule.postedCount, 2, reason: 'a skipped occurrence still uses one of the repeat count');
+    expect(rule.skippedCount, 1, reason: 'confirming does not count as a skip');
     expect((await recurringEntries()).length, 1);
   });
 
@@ -108,6 +109,7 @@ void main() {
     await recurring.skipNext(id);
     final rule = (await recurring.getRule(id))!;
     expect(rule.postedCount, 2);
+    expect(rule.skippedCount, 2);
     expect(rule.status, RecurringStatus.ended);
     expect(rule.nextDue, isNull);
     expect((await recurringEntries()), isEmpty);

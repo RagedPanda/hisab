@@ -12,7 +12,7 @@ import 'dart:ui' as ui;
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show MethodCall, SystemChannels;
+import 'package:flutter/services.dart' show Clipboard, MethodCall, SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/money.dart';
 import 'package:hisab/core/dates.dart';
@@ -30,6 +30,7 @@ import 'package:hisab/domain/split/split_calculator.dart';
 import 'package:hisab/features/categories/categories_screen.dart';
 import 'package:hisab/features/dashboard/dashboard_screen.dart';
 import 'package:hisab/features/expense_editor/expense_editor_screen.dart';
+import 'package:hisab/features/groups/group_export.dart';
 import 'package:hisab/features/groups/settle_up_sheet.dart';
 import 'package:hisab/features/split/split_editor.dart';
 import 'package:hisab/features/shell/widgets/common.dart';
@@ -1483,5 +1484,59 @@ void main() {
     expect(tester.widget<ChoiceChip>(_chip('2+ people')).selected, isTrue, reason: 'editing keeps the payers');
     expect(tester.widget<TextFormField>(payerField(rahul)).initialValue, '600');
     expect(tester.widget<TextFormField>(payerField(me)).initialValue, '300');
+  });
+
+  testWidgets('25 groups: copy a WhatsApp summary and export the ledger as CSV', (tester) async {
+    final exports = <({String fileName, String csv, String subject})>[];
+    final fresh = await createApp(overrides: [
+      csvFileSharerProvider.overrideWithValue(({required fileName, required csv, required subject}) async {
+        exports.add((fileName: fileName, csv: csv, subject: subject));
+        return true;
+      }),
+    ]);
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final entries = fresh.read(entriesRepositoryProvider);
+    final tripId = await groups.createGroup(name: 'Goa trip', icon: 'beach', myName: 'You', otherMembers: ['Rahul', 'Priya']);
+    final members = await groups.getMembers(tripId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => member.name == 'Rahul').id;
+    final priya = members.firstWhere((member) => member.name == 'Priya').id;
+    final today = DateTime.now();
+    await entries.saveEntry(
+      EntriesRepository.newExpense(id: 'export-hotel', amountMinor: 90000, occurredAt: today, groupId: tripId, paidByMemberId: rahul, splitMethod: 'equal', note: 'Hotel, sea view'),
+      splits: [for (final member in [me, rahul, priya]) SplitsCompanion.insert(id: 'export-hotel-$member', entryId: 'export-hotel', memberId: member, amountMinor: 30000)],
+      payers: [
+        EntryPayersCompanion.insert(id: 'export-hotel-rahul', entryId: 'export-hotel', memberId: rahul, amountMinor: 60000),
+        EntryPayersCompanion.insert(id: 'export-hotel-me', entryId: 'export-hotel', memberId: me, amountMinor: 30000),
+      ],
+    );
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Goa trip');
+    await tapFinder(tester, find.byTooltip('Share summary'));
+    expect(find.text('Export as CSV'), findsOneWidget);
+    await shoot(tester, 'group_share_options');
+    await tapText(tester, 'Copy as text', frames: 12);
+    final copied = (await Clipboard.getData('text/plain'))?.text ?? '';
+    expect(copied, startsWith('*Goa trip — balances*'));
+    expect(copied, contains('Priya owes Rahul ${formatMinor(30000)}'));
+    expect(copied, contains('Rahul gets back ${formatMinor(30000)}'));
+    expect(copied, contains('Group total: ${formatMinor(90000)}'));
+    expect(copied, contains('Your share: ${formatMinor(30000)}'));
+
+    await tapFinder(tester, find.byTooltip('Share summary'));
+    await tapFinder(tester, find.byKey(const Key('group-export-csv')), frames: 12);
+    expect(exports, hasLength(1));
+    final export = exports.single;
+    expect(export.fileName, endsWith('.csv'));
+    expect(export.fileName, startsWith('goa-trip-'));
+    expect(export.subject, 'Goa trip expenses');
+    final lines = export.csv.split('\r\n');
+    expect(lines.first, startsWith('Date,Description,Category,Cost,Paid by,You paid,'));
+    expect(lines[1], contains('"Hotel, sea view"'));
+    expect(lines[1], contains(',Rahul 600.00; You 300.00,'));
+    expect(lines[2], startsWith(',Total,,900.00,'), reason: 'a closing total row follows the last expense');
   });
 }

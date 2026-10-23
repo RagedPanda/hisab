@@ -101,14 +101,58 @@ void main() {
       expect((await smsLog.getById('bank'))!.body, _upiDebit, reason: 'bank messages keep their text');
     });
 
-    test('an OTP from a sender that looks like a bank (AX-AMAZON) keeps no text and logs no duplicate', () async {
+    test('an OTP from a DLT business header (AX-AMAZON) is ignored with no text and no duplicate', () async {
       const otp = 'Your OTP for login is 482913. Do not share it.';
       final status = await service.ingest(RawSms(sender: 'AX-AMAZON', body: otp, receivedAt: received), autoAdd: true);
-      expect(status, IngestStatus.unparsed);
+      expect(status, IngestStatus.notBank);
       await service.ingest(RawSms(sender: 'AX-AMAZON', body: otp, receivedAt: received.add(const Duration(hours: 2))), autoAdd: true);
       final row = (await history()).single.log;
       expect(row.sender, 'AX-AMAZON');
+      expect(row.status, SmsLogStatus.notBank);
       expect(row.body, isEmpty);
+    });
+
+    // #74: promotions from 6-character business headers ended as Unreadable
+    // with their full text.
+    const businessPromos = {
+      'VM-SWIGGY': 'Craving biryani? Get 60% OFF up to Rs.120 on your next order. Use code TRYNEW. Order now: swgy.in/a1b2 T&C apply',
+      'JM-MYNTRA': 'END OF REASON SALE is LIVE! Flat 50-80% off on 1 lakh+ styles. Shop now: myntr.it/x9Yz',
+      'AD-ZOMATO': 'Rs.100 cashback credited? Not yet! Use code ZOMSAVE for 40% off your next 3 orders. Hurry, limited time!',
+      'BZ-FLPKRT': 'Big Billion Days: extra 10% off with SBI cards. Buy now before stocks run out!',
+    };
+    for (final MapEntry(key: sender, value: body) in businessPromos.entries) {
+      test('a promotion from $sender is ignored and its text discarded', () async {
+        final status = await service.ingest(RawSms(sender: sender, body: body, receivedAt: received), autoAdd: true);
+        expect(status, IngestStatus.notBank);
+        final row = (await history()).single.log;
+        expect(row.status, SmsLogStatus.notBank);
+        expect(smsOutcomeFor(row.status), SmsOutcome.ignored);
+        expect(row.body, isEmpty);
+      });
+    }
+
+    test('a business message without a transaction or promotion is ignored and its text discarded', () async {
+      final status = await service.ingest(
+          RawSms(sender: 'VM-SWIGGY', body: 'Your order from Meghana Foods has been delivered. Enjoy your meal!', receivedAt: received),
+          autoAdd: true);
+      expect(status, IngestStatus.notBank);
+      expect((await history()).single.log.body, isEmpty);
+    });
+
+    test('a transaction from a bank header not on the known list is still read', () async {
+      final status = await service.ingest(
+          RawSms(sender: 'VM-CANBNK', body: 'Rs.1,200.00 debited from A/c XX4321 on 21-10-26 to amazon@apl. UPI Ref 512345678901. -Canara Bank', receivedAt: received),
+          autoAdd: true);
+      expect(status, IngestStatus.added);
+    });
+
+    test('an unreadable text with a transaction signal from an unknown header stays re-processable', () async {
+      const body = 'Your A/c XX4321 has been linked to UPI ID ravi@cnrb.';
+      final status = await service.ingest(RawSms(sender: 'VM-CANBNK', body: body, receivedAt: received), autoAdd: true);
+      expect(status, IngestStatus.unparsed);
+      final row = (await history()).single.log;
+      expect(row.status, SmsLogStatus.skipped);
+      expect(row.body, body);
     });
 
     test('an OTP from a real bank header keeps no text and logs no duplicate', () async {

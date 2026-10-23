@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hisab/domain/sms/bank_senders.dart';
 import 'package:hisab/domain/sms/sms_outcome.dart';
+import 'package:hisab/domain/sms/sms_parser.dart';
 
 void main() {
   group('smsOutcomeFor', () {
@@ -39,6 +41,34 @@ void main() {
         reason: 'a bank text that is neither an OTP nor a promotion stays re-processable');
     expect(storedSmsBody(SmsLogStatus.added, 'Refund of Rs.200 under the cashback offer credited to A/c XX1234'), isNotEmpty,
         reason: 'a refund is a real transaction even when it mentions an offer');
+  });
+
+  test('real-style promotions are flagged; real transactions are not', () {
+    for (final promo in [
+      'Get 60% OFF up to Rs.120. Use code TRYNEW. Order now T&C apply',
+      'SALE is LIVE! Flat 50-80% off. Shop now: myntr.it/x9Yz',
+      'Use promo code FLY500 and book now. Limited period deal.',
+    ]) {
+      expect(isOtpOrPromotionSms(promo), isTrue, reason: promo);
+      expect(hasTransactionSignal(promo), isFalse, reason: promo);
+    }
+    for (final txn in [
+      'Rs.459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl',
+      'Rs.2,000.00 spent on your SBI Credit Card ending 5678 at MYNTRA on 21/10/26',
+      'INR 500.00 credited to your account **4321 by NEFT',
+    ]) {
+      expect(isOtpOrPromotionSms(txn), isFalse, reason: txn);
+      expect(hasTransactionSignal(txn), isTrue, reason: txn);
+    }
+    expect(hasTransactionSignal('Your order has been delivered'), isFalse);
+  });
+
+  test('only known bank and payment headers count as bank senders', () {
+    expect(looksLikeBankSender('VM-HDFCBK-S'), isTrue);
+    expect(looksLikeBankSender('AD-PHONPE'), isTrue);
+    for (final sender in ['VM-SWIGGY', 'JM-MYNTRA', 'AX-AMAZON', 'BZ-FLPKRT-P']) {
+      expect(looksLikeBankSender(sender), isFalse, reason: sender);
+    }
   });
 
   test('re-deliveries are logged only when their text could be kept', () {

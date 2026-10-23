@@ -24,7 +24,7 @@ import '../../domain/split/payers.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
-import '../accounts/account_choice_chips.dart';
+import '../accounts/grouped_account_picker.dart';
 import '../groups/member_display.dart';
 import '../categories/category_picker.dart';
 import '../projects/project_field_inputs.dart';
@@ -400,12 +400,17 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             const SizedBox(height: 8),
             Text(_kind == 'transfer' ? l10n.fromAccount : l10n.account, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 6),
-            AccountChoiceChips(accounts: accounts, selectedId: _accountId, onPick: (id) => setState(() => _accountId = id)),
+            GroupedAccountPicker(key: const ValueKey('from-account'), accounts: accounts, selectedId: _accountId, onPick: (id) => setState(() => _accountId = id)),
             if (_kind == 'transfer') ...[
               const SizedBox(height: 12),
               Text(l10n.toAccount, style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 6),
-              AccountChoiceChips(accounts: accounts.where((a) => a.id != _accountId).toList(), selectedId: _toAccountId, onPick: (id) => setState(() => _toAccountId = id)),
+              GroupedAccountPicker(
+                key: const ValueKey('to-account'),
+                accounts: accounts.where((a) => a.id != _accountId).toList(),
+                selectedId: _toAccountId,
+                onPick: (id) => setState(() => _toAccountId = id),
+              ),
             ],
           ],
           const SizedBox(height: 16),

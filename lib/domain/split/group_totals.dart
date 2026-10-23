@@ -142,11 +142,12 @@ List<MemberSpend> memberSpendOf(Map<String, int> paidByMember, Map<String, int> 
   return rows;
 }
 
-/// The first day of every calendar month that has at least one expense,
-/// newest first: the months the period picker offers.
-List<DateTime> monthsWithExpenses(Iterable<GroupTotalsExpense> expenses) {
-  final months = {for (final item in expenses) DateTime(item.occurredAt.year, item.occurredAt.month)}.toList()..sort((first, second) => second.compareTo(first));
-  return months;
+/// The first day of every calendar month that has at least one expense or
+/// payment, newest first: the months the period picker offers, so every
+/// payment that moves my balance shows up in some month.
+List<DateTime> monthsWithActivity({required Iterable<GroupTotalsExpense> expenses, Iterable<TimelinePayment> payments = const []}) {
+  final dates = [for (final item in expenses) item.occurredAt, for (final payment in payments) payment.occurredAt];
+  return {for (final date in dates) DateTime(date.year, date.month)}.toList()..sort((first, second) => second.compareTo(first));
 }
 
 int _sum(Iterable<int> amounts) => amounts.fold(0, (sum, amount) => sum + amount);

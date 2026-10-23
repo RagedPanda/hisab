@@ -53,10 +53,11 @@ class _GroupTotalsScreenState extends ConsumerState<GroupTotalsScreen> {
     }
     final locale = Localizations.localeOf(context).toString();
     final expenses = detail.totalsExpenses;
-    final months = monthsWithExpenses(expenses);
+    final payments = detail.totalsPayments;
+    final months = monthsWithActivity(expenses: expenses, payments: payments);
     final month = months.contains(_month) ? _month : null;
     final range = month == null ? null : monthRange(month);
-    final totals = computeGroupTotals(expenses: expenses, payments: detail.totalsPayments, myMemberId: detail.me?.id, range: range);
+    final totals = computeGroupTotals(expenses: expenses, payments: payments, myMemberId: detail.me?.id, range: range);
     final periodLabel = range == null ? l10n.allTime : formatMonthLabel(range, locale: locale);
     final memberById = {for (final member in detail.allMembers) member.id: member};
     String nameOf(String id) {

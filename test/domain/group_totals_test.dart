@@ -120,7 +120,11 @@ void main() {
         // Villa: 1,00,000, Rahul and Priya paid; I owe 10,000 of it.
         GroupTotalsExpense(
           amountMinor: 10000000,
-          expense: TimelineExpense(occurredAt: DateTime(2026, 10, 2), paidMinor: const {'rahul': 6000000, 'priya': 4000000}, shareMinor: const {'me': 1000000, 'rahul': 3000000, 'priya': 3000000, 'asha': 3000000}),
+          expense: TimelineExpense(
+            occurredAt: DateTime(2026, 10, 2),
+            paidMinor: const {'rahul': 6000000, 'priya': 4000000},
+            shareMinor: const {'me': 1000000, 'rahul': 3000000, 'priya': 3000000, 'asha': 3000000},
+          ),
         ),
         // Scuba trip I was not on: 40,000.
         GroupTotalsExpense(
@@ -139,7 +143,10 @@ void main() {
     });
 
     test("the entry's recorded amount is the bill, as the group export sums it", () {
-      final expense = GroupTotalsExpense(amountMinor: 1000, expense: TimelineExpense(occurredAt: DateTime(2026, 10, 1), paidMinor: const {'me': 1000}, shareMinor: const {'me': 500, 'rahul': 500}));
+      final expense = GroupTotalsExpense(
+        amountMinor: 1000,
+        expense: TimelineExpense(occurredAt: DateTime(2026, 10, 1), paidMinor: const {'me': 1000}, shareMinor: const {'me': 500, 'rahul': 500}),
+      );
       expect(expense.billMinor, 1000);
       expect(computeGroupTotals(expenses: [expense]).totalSpentMinor, 1000);
       expect(GroupTotalsExpense(expense: expense.expense).billMinor, 1000);
@@ -219,15 +226,36 @@ void main() {
     });
   });
 
-  group('monthsWithExpenses', () {
+  group('monthsWithActivity', () {
     test('lists each month once, newest first', () {
-      final months = monthsWithExpenses([
-        _expense(DateTime(2026, 9, 3), paid: const {}, shares: const {}),
-        _expense(DateTime(2026, 10, 12), paid: const {}, shares: const {}),
-        _expense(DateTime(2026, 10, 1), paid: const {}, shares: const {}),
-        _expense(DateTime(2025, 12, 31), paid: const {}, shares: const {}),
-      ]);
+      final months = monthsWithActivity(
+        expenses: [
+          _expense(DateTime(2026, 9, 3), paid: const {}, shares: const {}),
+          _expense(DateTime(2026, 10, 12), paid: const {}, shares: const {}),
+          _expense(DateTime(2026, 10, 1), paid: const {}, shares: const {}),
+          _expense(DateTime(2025, 12, 31), paid: const {}, shares: const {}),
+        ],
+      );
       expect(months, [DateTime(2026, 10), DateTime(2026, 9), DateTime(2025, 12)]);
+    });
+
+    test('a month with only a payment gets a chip, and the months add up to all time (#65)', () {
+      final expenses = [
+        _expense(DateTime(2026, 9, 10), paid: const {'priya': 30000}, shares: const {'me': 20000, 'priya': 10000}),
+        _expense(DateTime(2026, 10, 5), paid: const {'me': 20000}, shares: const {'me': 13333, 'priya': 6667}),
+      ];
+      final payments = [TimelinePayment(occurredAt: DateTime(2026, 8, 14), fromMemberId: 'me', toMemberId: 'priya', amountMinor: 6667)];
+
+      final months = monthsWithActivity(expenses: expenses, payments: payments);
+      expect(months, [DateTime(2026, 10), DateTime(2026, 9), DateTime(2026, 8)]);
+
+      GroupTotals totalsFor(DateRange? range) => computeGroupTotals(expenses: expenses, payments: payments, myMemberId: 'me', range: range);
+      final august = totalsFor(monthRange(DateTime(2026, 8)));
+      expect(august.totalSpentMinor, 0);
+      expect(august.myPaymentsSentMinor, 6667);
+      expect(august.myNetChangeMinor, 6667);
+      final monthlySum = months.fold(0, (sum, month) => sum + totalsFor(monthRange(month)).myNetChangeMinor);
+      expect(monthlySum, totalsFor(null).myNetChangeMinor);
     });
   });
 }

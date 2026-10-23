@@ -8,21 +8,9 @@ import 'package:hisab/core/notifications/plugin_notification_gateway.dart';
 import 'package:hisab/core/notifications/reminder_alert_text.dart';
 import 'package:hisab/core/providers.dart';
 
-/// What the app asked the OS to schedule and cancel, kept across gateway
-/// rebuilds (the gateway provider rebuilds when the app language changes).
-class GatewayCallLog {
-  final List<AlertRequest> scheduled = [];
-  final List<int> cancelled = [];
+import 'gateway_call_log.dart';
 
-  /// Alert ids scheduled for [payload] that were never cancelled afterwards.
-  Set<int> liveIdsFor(String payload) {
-    final live = <int>{};
-    for (final request in scheduled.where((request) => request.payload == payload)) {
-      live.add(request.id);
-    }
-    return live.difference(cancelled.toSet());
-  }
-}
+export 'gateway_call_log.dart';
 
 /// iOS only: grants provisional notification authorization, which iOS gives
 /// silently with no system prompt on a simulator that has never been asked.
@@ -47,13 +35,13 @@ class RecordingNotificationGateway implements NotificationGateway {
   Future<NotificationTap?> launchTap() => _delegate.launchTap();
   @override
   Future<void> schedule(AlertRequest request, {required bool exact}) {
-    log.scheduled.add(request);
+    log.recordPost(request);
     return _delegate.schedule(request, exact: exact);
   }
 
   @override
   Future<void> cancel(int id) {
-    log.cancelled.add(id);
+    log.recordCancel(id);
     return _delegate.cancel(id);
   }
 

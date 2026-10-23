@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/salary/salary_schedule.dart';
@@ -19,6 +21,8 @@ class SalarySettings {
     this.matchWindowDays = kSalaryMatchWindowDays,
     this.tolerancePercent = kDefaultSalaryTolerancePercent,
     this.updatedAt,
+    this.ruleAnchor,
+    this.alignDeclinedRuleId = '',
   });
 
   /// Recurring income rule created by the salary setup; empty when not set up.
@@ -46,6 +50,14 @@ class SalarySettings {
   /// Last time the user saved the setup; a backup restores only a newer one.
   final DateTime? updatedAt;
 
+  /// Ties the rule's lifetime count to a pay cycle so its due date can carry
+  /// the weekend and holiday shift; see [alignedSalaryRuleDue].
+  final SalaryRuleAnchor? ruleAnchor;
+
+  /// The rule for which the user declined to align "Month starts on", so the
+  /// suggestion is not offered again on every save.
+  final String alignDeclinedRuleId;
+
   bool get isSetUp => ruleId.isNotEmpty;
   Set<DateTime> get holidaySet => holidays.toSet();
 
@@ -62,6 +74,8 @@ class SalarySettings {
     int? matchWindowDays,
     int? tolerancePercent,
     DateTime? updatedAt,
+    SalaryRuleAnchor? ruleAnchor,
+    String? alignDeclinedRuleId,
   }) =>
       SalarySettings(
         ruleId: ruleId ?? this.ruleId,
@@ -75,7 +89,14 @@ class SalarySettings {
         matchWindowDays: matchWindowDays ?? this.matchWindowDays,
         tolerancePercent: tolerancePercent ?? this.tolerancePercent,
         updatedAt: updatedAt ?? this.updatedAt,
+        ruleAnchor: ruleAnchor ?? this.ruleAnchor,
+        alignDeclinedRuleId: alignDeclinedRuleId ?? this.alignDeclinedRuleId,
       );
+
+  /// Whether to offer aligning "Month starts on" after saving: the setting
+  /// does not match the salary day and the user has not declined for this rule.
+  bool shouldOfferMonthStartAlign({required int monthStartDay}) =>
+      !isMonthStartAligned(monthStartDay: monthStartDay, salaryDay: salaryDay) && (ruleId.isEmpty || alignDeclinedRuleId != ruleId);
 
   /// This setup's pay cycle against recent [incomes].
   SalaryStatus evaluate({required DateTime now, required Iterable<IncomeCandidate> incomes}) => evaluateSalary(
@@ -113,6 +134,8 @@ class SalarySettings {
         'matchWindowDays': matchWindowDays,
         'tolerancePercent': tolerancePercent,
         'updatedAt': updatedAt?.toIso8601String(),
+        'ruleAnchor': ruleAnchor?.toJson(),
+        'alignDeclinedRuleId': alignDeclinedRuleId,
       };
 
   /// Reads [toJson] output. Missing or mistyped values fall back to the
@@ -133,6 +156,8 @@ class SalarySettings {
       matchWindowDays: clampSalaryMatchWindowDays(read<int>('matchWindowDays') ?? kSalaryMatchWindowDays),
       tolerancePercent: clampSalaryTolerancePercent(read<int>('tolerancePercent') ?? kDefaultSalaryTolerancePercent),
       updatedAt: DateTime.tryParse(read<String>('updatedAt') ?? ''),
+      ruleAnchor: SalaryRuleAnchor.fromJson(json['ruleAnchor']),
+      alignDeclinedRuleId: read<String>('alignDeclinedRuleId') ?? '',
     );
   }
 
@@ -148,7 +173,18 @@ class SalarySettings {
         'matchWindowDays': prefs.getInt('salaryMatchWindowDays'),
         'tolerancePercent': prefs.getInt('salaryTolerancePercent'),
         'updatedAt': prefs.getString('salaryUpdatedAt'),
+        'ruleAnchor': _decodeJson(prefs.getString('salaryRuleAnchor')),
+        'alignDeclinedRuleId': prefs.getString('salaryAlignDeclinedFor'),
       });
+
+  static Object? _decodeJson(String? stored) {
+    if (stored == null || stored.isEmpty) return null;
+    try {
+      return jsonDecode(stored);
+    } on FormatException {
+      return null;
+    }
+  }
 
   Future<void> writeTo(SharedPreferences prefs) async {
     await prefs.setString('salaryRuleId', ruleId);
@@ -162,6 +198,8 @@ class SalarySettings {
     await prefs.setInt('salaryMatchWindowDays', matchWindowDays);
     await prefs.setInt('salaryTolerancePercent', tolerancePercent);
     if (updatedAt case final savedAt?) await prefs.setString('salaryUpdatedAt', savedAt.toIso8601String());
+    await prefs.setString('salaryRuleAnchor', ruleAnchor == null ? '' : jsonEncode(ruleAnchor!.toJson()));
+    await prefs.setString('salaryAlignDeclinedFor', alignDeclinedRuleId);
   }
 }
 

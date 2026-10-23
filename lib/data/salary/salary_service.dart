@@ -25,16 +25,18 @@ class SalaryService {
 
   /// Creates or updates the monthly salary income rule. Confirm-first, so the
   /// salary is never counted before it actually arrives; [reconcile] settles
-  /// the occurrence when a matching income shows up. Returns the rule id.
-  Future<String> saveSalaryRule({
+  /// the occurrence when a matching income shows up. The rule is named
+  /// [kSalaryRuleName] (lists translate it) and its due date carries the
+  /// weekend and holiday shift. Returns [settings] with the rule's id and
+  /// anchor, ready to save.
+  Future<SalarySettings> saveSalaryRule({
     required SalarySettings settings,
-    required String name,
     required DateTime today,
     int monthStartDay = 1,
   }) async {
-    final rule = RecurringRepository.newRule(
+    final draft = RecurringRepository.newRule(
       id: settings.ruleId.isEmpty ? null : settings.ruleId,
-      name: name,
+      name: kSalaryRuleName,
       kind: 'income',
       amountMinor: settings.amountMinor,
       categoryId: await salaryCategoryId(),
@@ -44,7 +46,30 @@ class SalaryService {
       startDate: DateTime(today.year, today.month, today.day, 9),
       autoPost: false,
     );
-    return recurring.saveRule(rule, monthStartDay: monthStartDay);
+    final ruleId = await recurring.saveRule(draft, monthStartDay: monthStartDay);
+    final rule = await recurring.getRule(ruleId);
+    final nextDue = rule?.nextDue;
+    final anchor = nextDue == null ? null : salaryRuleAnchorFor(nextDue, postedCount: rule!.postedCount, salaryDay: settings.salaryDay);
+    final saved = settings.copyWith(ruleId: ruleId, ruleAnchor: anchor);
+    if (rule != null) await _alignDue(saved, rule);
+    return saved;
+  }
+
+  /// Moves the rule's due date onto its pay cycle's shifted date (the
+  /// recurring engine only knows the unshifted day of month).
+  Future<void> _alignDue(SalarySettings settings, RecurringRule rule) async {
+    final stored = rule.nextDue;
+    if (stored == null) return;
+    final aligned = alignedSalaryRuleDue(
+      stored,
+      postedCount: rule.postedCount,
+      salaryDay: settings.salaryDay,
+      anchor: settings.ruleAnchor,
+      shift: settings.shift,
+      holidays: settings.holidaySet,
+    );
+    if (aligned == stored) return;
+    await (db.update(db.recurringRules)..where((t) => t.id.equals(rule.id))).write(RecurringRulesCompanion(nextDue: Value(aligned)));
   }
 
   /// Ends the salary rule when the user removes the salary setup.
@@ -71,11 +96,17 @@ class SalaryService {
   Future<SalaryStatus?> reconcile(SalarySettings settings, {required DateTime now, int monthStartDay = 1}) async {
     if (!settings.isSetUp) return null;
     final status = settings.evaluate(now: now, incomes: await recentIncomes(salaryLookbackStart(now)));
-    final rule = await recurring.getRule(settings.ruleId);
-    if (rule != null && rule.deletedAt == null && shouldClaimSalaryOccurrence(status, ruleNextDue: rule.nextDue, ruleId: rule.id, windowDays: clampSalaryMatchWindowDays(settings.matchWindowDays))) {
+    final stored = await recurring.getRule(settings.ruleId);
+    if (stored == null || stored.deletedAt != null) return status;
+    // Confirming or skipping in the recurring list steps the unshifted date.
+    await _alignDue(settings, stored);
+    final rule = (await recurring.getRule(stored.id))!;
+    if (shouldClaimSalaryOccurrence(status, ruleNextDue: rule.nextDue, ruleId: rule.id, windowDays: clampSalaryMatchWindowDays(settings.matchWindowDays))) {
       await db.transaction(() async {
         await recurring.linkEntry(status.received!.id, rule.id);
         await recurring.skipNext(rule.id, monthStartDay: monthStartDay);
+        final advanced = await recurring.getRule(rule.id);
+        if (advanced != null) await _alignDue(settings, advanced);
       });
     }
     return status;

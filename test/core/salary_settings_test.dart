@@ -117,4 +117,26 @@ void main() {
       expect(shouldRestoreSalarySettings(local: older, incoming: const SalarySettings(ruleId: 'y')), isFalse);
     });
   });
+
+  test('the rule anchor and a declined alignment round trip through preferences and JSON', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final settings = SalarySettings(ruleId: 'r', salaryDay: 25, ruleAnchor: SalaryRuleAnchor(nominal: DateTime(2026, 10, 25), postedCount: 1), alignDeclinedRuleId: 'r');
+    await settings.writeTo(prefs);
+    final read = SalarySettings.fromPrefs(prefs);
+    expect(read.ruleAnchor, settings.ruleAnchor);
+    expect(read.alignDeclinedRuleId, 'r');
+    expect(SalarySettings.fromJson(settings.toJson()).ruleAnchor, settings.ruleAnchor);
+
+    await prefs.setString('salaryRuleAnchor', '{broken');
+    expect(SalarySettings.fromPrefs(prefs).ruleAnchor, isNull);
+  });
+
+  test('the month-start suggestion is offered until declined for this rule', () {
+    const settings = SalarySettings(ruleId: 'r', salaryDay: 25);
+    expect(settings.shouldOfferMonthStartAlign(monthStartDay: 1), isTrue);
+    expect(settings.shouldOfferMonthStartAlign(monthStartDay: 25), isFalse);
+    expect(settings.copyWith(alignDeclinedRuleId: 'r').shouldOfferMonthStartAlign(monthStartDay: 1), isFalse);
+    expect(settings.copyWith(alignDeclinedRuleId: 'old').shouldOfferMonthStartAlign(monthStartDay: 1), isTrue, reason: 'a new rule asks again');
+  });
 }

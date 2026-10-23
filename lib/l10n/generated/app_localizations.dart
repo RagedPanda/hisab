@@ -3505,6 +3505,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You owe {amount} in total'**
   String groupSummaryYouOweInTotal(String amount);
+
+  /// No description provided for @groupCsvTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get groupCsvTotal;
+
+  /// No description provided for @groupSummaryGroupTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Group total: {amount}'**
+  String groupSummaryGroupTotal(String amount);
+
+  /// No description provided for @groupSummaryYourShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Your share: {amount}'**
+  String groupSummaryYourShare(String amount);
+
+  /// No description provided for @groupSummaryMemberShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s share: {amount}'**
+  String groupSummaryMemberShare(String name, String amount);
 }
 
 class _AppLocalizationsDelegate

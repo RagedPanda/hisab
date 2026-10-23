@@ -2058,4 +2058,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String groupSummaryYouOweInTotal(String amount) {
     return 'You owe $amount in total';
   }
+
+  @override
+  String get groupCsvTotal => 'Total';
+
+  @override
+  String groupSummaryGroupTotal(String amount) {
+    return 'Group total: $amount';
+  }
+
+  @override
+  String groupSummaryYourShare(String amount) {
+    return 'Your share: $amount';
+  }
+
+  @override
+  String groupSummaryMemberShare(String name, String amount) {
+    return '$name\'s share: $amount';
+  }
 }

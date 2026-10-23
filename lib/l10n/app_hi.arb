@@ -590,5 +590,9 @@
   "groupSummaryGetsBack": "{name} को {amount} वापस मिलेंगे",
   "groupSummaryOwesInTotal": "{name} को कुल {amount} देने हैं",
   "groupSummaryYouGetBack": "आपको {amount} वापस मिलेंगे",
-  "groupSummaryYouOweInTotal": "आपको कुल {amount} देने हैं"
+  "groupSummaryYouOweInTotal": "आपको कुल {amount} देने हैं",
+  "groupCsvTotal": "कुल",
+  "groupSummaryGroupTotal": "ग्रुप का कुल खर्च: {amount}",
+  "groupSummaryYourShare": "आपका हिस्सा: {amount}",
+  "groupSummaryMemberShare": "{name} का हिस्सा: {amount}"
 }

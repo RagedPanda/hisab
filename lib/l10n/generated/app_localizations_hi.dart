@@ -2051,4 +2051,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String groupSummaryYouOweInTotal(String amount) {
     return 'आपको कुल $amount देने हैं';
   }
+
+  @override
+  String get groupCsvTotal => 'कुल';
+
+  @override
+  String groupSummaryGroupTotal(String amount) {
+    return 'ग्रुप का कुल खर्च: $amount';
+  }
+
+  @override
+  String groupSummaryYourShare(String amount) {
+    return 'आपका हिस्सा: $amount';
+  }
+
+  @override
+  String groupSummaryMemberShare(String name, String amount) {
+    return '$name का हिस्सा: $amount';
+  }
 }

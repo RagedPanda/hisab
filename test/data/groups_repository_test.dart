@@ -365,6 +365,23 @@ void main() {
       expect((totals.owedToMe, totals.iOwe), (300, 0));
     });
 
+    test('app totals leave out archived groups', () async {
+      final home = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'Me', otherMembers: ['Rahul']);
+      final trip = await groups.createGroup(name: 'Goa', icon: 'flight', myName: 'Me', otherMembers: ['Rahul']);
+      for (final groupId in [home, trip]) {
+        final members = await groups.getMembers(groupId);
+        final me = members.firstWhere((member) => member.isMe);
+        final rahul = members.firstWhere((member) => !member.isMe);
+        await addGroupExpense(groupId, me.id, {me.id: 300, rahul.id: 300});
+      }
+      await groups.archiveGroup(trip);
+      final archived = groupTotalsInAppCurrency(await groups.getSummaries(), appSymbol: '₹');
+      expect((archived.owedToMe, archived.iOwe), (300, 0));
+      await groups.unarchiveGroup(trip);
+      final restored = groupTotalsInAppCurrency(await groups.getSummaries(), appSymbol: '₹');
+      expect((restored.owedToMe, restored.iOwe), (600, 0));
+    });
+
     test('backup carries group settings and fills them in for older backups', () async {
       final groupId = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'Me');
       await groups.updateGroup(GroupsCompanion(id: Value(groupId), type: const Value('home'), defaultSplitMethod: const Value('shares'), notes: const Value('Rent on the 1st')));

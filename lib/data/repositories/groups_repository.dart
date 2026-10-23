@@ -84,11 +84,12 @@ class GroupDetail {
   }
 }
 
-/// What I am owed and owe across [summaries], counting only groups whose
-/// amounts are in the app currency (labels are never converted).
+/// What I am owed and owe across [summaries], counting only active groups
+/// whose amounts are in the app currency (labels are never converted, and
+/// archived groups are left out of the overall totals).
 ({int owedToMe, int iOwe}) groupTotalsInAppCurrency(Iterable<GroupSummary> summaries, {required String appSymbol}) => groupNetTotals([
       for (final summary in summaries)
-        if (sharesAppCurrency(currencyLabel: summary.group.currencyLabel, appSymbol: appSymbol)) summary.myNetMinor,
+        if (summary.group.archivedAt == null && sharesAppCurrency(currencyLabel: summary.group.currencyLabel, appSymbol: appSymbol)) summary.myNetMinor,
     ]);
 
 /// A group expense with its splits and, when several members paid, its payer

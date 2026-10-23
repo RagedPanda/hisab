@@ -1959,6 +1959,255 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedAddAnother => 'Saved. Add the next one.';
 
   @override
+  String get recurringRepeat => 'Repeat';
+
+  @override
+  String get recurringDoesNotRepeat => 'Does not repeat';
+
+  @override
+  String get recurringDaily => 'Daily';
+
+  @override
+  String get recurringWeekly => 'Weekly';
+
+  @override
+  String get recurringMonthly => 'Monthly';
+
+  @override
+  String get recurringYearly => 'Yearly';
+
+  @override
+  String recurringEveryDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count days',
+      one: 'Every day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count weeks',
+      one: 'Every week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count months',
+      one: 'Every month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count years',
+      one: 'Every year',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringOnDay(int day) {
+    return 'on day $day';
+  }
+
+  @override
+  String get recurringOnLastDay => 'on the last day';
+
+  @override
+  String recurringOnWeekday(String weekday) {
+    return 'on $weekday';
+  }
+
+  @override
+  String recurringOnDate(String date) {
+    return 'on $date';
+  }
+
+  @override
+  String recurringUntil(String date) {
+    return 'until $date';
+  }
+
+  @override
+  String recurringTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: '1 time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recurringInterval => 'Repeat every';
+
+  @override
+  String get recurringLastDayOfMonth => 'On the last day of the month';
+
+  @override
+  String get recurringEnds => 'Ends';
+
+  @override
+  String get recurringEndNever => 'Never';
+
+  @override
+  String get recurringEndOnDate => 'On a date';
+
+  @override
+  String get recurringEndAfter => 'After';
+
+  @override
+  String get recurringOccurrences => 'Number of times';
+
+  @override
+  String get recurringAutoPost => 'Add automatically';
+
+  @override
+  String get recurringAutoPostHint =>
+      'When off, each one waits for you to confirm';
+
+  @override
+  String get recurringStopRepeating => 'Don\'t repeat';
+
+  @override
+  String get recurringDone => 'Done';
+
+  @override
+  String get recurringEndBeforeStart =>
+      'Pick an end date on or after the start';
+
+  @override
+  String get recurringPartOfRule => 'Part of a recurring entry';
+
+  @override
+  String get recurringTitle => 'Recurring';
+
+  @override
+  String get recurringNew => 'New recurring';
+
+  @override
+  String get recurringEdit => 'Edit recurring';
+
+  @override
+  String get recurringEmptyTitle => 'Nothing repeats yet';
+
+  @override
+  String get recurringEmptyBody =>
+      'Rent, SIP, EMI or salary: set it once and Hisab adds it on the day.';
+
+  @override
+  String get recurringSectionWaiting => 'Waiting for you';
+
+  @override
+  String get recurringSectionActive => 'Active';
+
+  @override
+  String get recurringSectionPaused => 'Paused';
+
+  @override
+  String get recurringSectionEnded => 'Ended';
+
+  @override
+  String recurringNext(String date) {
+    return 'Next $date';
+  }
+
+  @override
+  String recurringDue(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String recurringMoreWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'and $count more waiting',
+      one: 'and 1 more waiting',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recurringConfirm => 'Add';
+
+  @override
+  String get recurringSkip => 'Skip';
+
+  @override
+  String get recurringPause => 'Pause';
+
+  @override
+  String get recurringResume => 'Resume';
+
+  @override
+  String get recurringDeleted => 'Recurring entry deleted';
+
+  @override
+  String get recurringAdded => 'Entry added';
+
+  @override
+  String get recurringSkipped => 'Skipped';
+
+  @override
+  String recurringToConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recurring entries to confirm',
+      one: '1 recurring entry to confirm',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringPostedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added $count times',
+      one: 'Added once',
+      zero: 'Not added yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recurringNameLabel => 'Name (optional)';
+
+  @override
+  String get recurringNextOn => 'Next on';
+
+  @override
+  String get recurringRuleMissing => 'This recurring entry was deleted';
+
+  @override
+  String recurringDecrease(String label) {
+    return 'Decrease $label';
+  }
+
+  @override
+  String recurringIncrease(String label) {
+    return 'Increase $label';
+  }
+
+  @override
   String get payersMultiple => '2+ people';
 
   @override
@@ -1981,6 +2230,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get youInList => 'you';
+
+  @override
+  String recurringAddedSkipped(int added, int skipped) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added added',
+      one: '1 added',
+      zero: 'None added',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: '$skipped skipped',
+      one: '1 skipped',
+    );
+    return '$_temp0, $_temp1';
+  }
 
   @override
   String get groupExportCsv => 'Export as CSV';

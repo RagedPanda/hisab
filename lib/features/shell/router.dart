@@ -16,6 +16,8 @@ import '../projects/projects_screen.dart';
 import '../settings/settings_screen.dart';
 import '../sms/sms_screen.dart';
 import '../transactions/transactions_screen.dart';
+import '../recurring/recurring_rule_form_screen.dart';
+import '../recurring/recurring_screen.dart';
 import 'app_shell.dart';
 import 'deep_link.dart';
 import 'widgets/common.dart';
@@ -56,6 +58,15 @@ final appRouter = GoRouter(
     GoRoute(path: '/categories/packs', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoryPacksScreen()),
     GoRoute(path: '/accounts', parentNavigatorKey: _rootKey, builder: (_, _) => const AccountsScreen()),
     GoRoute(path: '/budgets', parentNavigatorKey: _rootKey, builder: (_, _) => const BudgetsScreen()),
+    GoRoute(
+      path: '/recurring',
+      parentNavigatorKey: _rootKey,
+      builder: (_, _) => const RecurringScreen(),
+      routes: [
+        GoRoute(path: 'new', parentNavigatorKey: _rootKey, builder: (_, _) => const RecurringRuleFormScreen()),
+        GoRoute(path: ':id', parentNavigatorKey: _rootKey, builder: (_, state) => RecurringRuleFormScreen(ruleId: state.pathParameters['id']!)),
+      ],
+    ),
     GoRoute(
       path: '/projects',
       parentNavigatorKey: _rootKey,

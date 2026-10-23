@@ -62,6 +62,7 @@ class Categories extends Table with SyncColumns {
 }
 
 @TableIndex(name: 'entries_project_id', columns: {#projectId})
+@TableIndex(name: 'entries_recurring_id', columns: {#recurringId})
 class Entries extends Table with SyncColumns {
   TextColumn get id => text()();
 
@@ -86,6 +87,9 @@ class Entries extends Table with SyncColumns {
 
   /// Project (vehicle, trip, construction...) this entry is tracked under.
   TextColumn get projectId => text().nullable()();
+
+  /// Recurring rule that produced (or started) this entry.
+  TextColumn get recurringId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
@@ -301,6 +305,64 @@ class Reminders extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
+/// A template entry plus a schedule. Due occurrences become entries with
+/// [Entries.recurringId] set, either automatically ([autoPost]) or after the
+/// user confirms them. Schedule maths lives in `lib/domain/recurring`.
+class RecurringRules extends Table with SyncColumns {
+  TextColumn get id => text()();
+
+  /// Display name ("Rent", "Netflix"); empty falls back to payee or category.
+  TextColumn get name => text().withDefault(const Constant(''))();
+
+  /// expense | income | transfer
+  TextColumn get kind => text()();
+  IntColumn get amountMinor => integer()();
+  TextColumn get currency => text().withDefault(const Constant('INR'))();
+  TextColumn get categoryId => text().nullable()();
+  TextColumn get accountId => text().nullable()();
+  TextColumn get toAccountId => text().nullable()();
+  TextColumn get payee => text().nullable()();
+  TextColumn get projectId => text().nullable()();
+  TextColumn get note => text().withDefault(const Constant(''))();
+
+  /// daily | weekly | monthly | yearly; a custom schedule is one of these
+  /// with [interval] above one.
+  TextColumn get frequency => text()();
+  IntColumn get interval => integer().withDefault(const Constant(1))();
+
+  /// 1..31, -1 = last day of the month, 0 = the month start day setting.
+  IntColumn get dayOfMonth => integer().nullable()();
+
+  /// ISO weekday 1..7 for weekly rules.
+  IntColumn get weekday => integer().nullable()();
+  DateTimeColumn get startDate => dateTime()();
+  DateTimeColumn get endDate => dateTime().nullable()();
+  IntColumn get maxCount => integer().nullable()();
+
+  /// Occurrences already posted or skipped, counted against [maxCount].
+  IntColumn get postedCount => integer().withDefault(const Constant(0))();
+
+  /// How many of [postedCount] were skipped rather than added.
+  IntColumn get skippedCount => integer().withDefault(const Constant(0))();
+
+  /// Next occurrence not yet posted or skipped; null once the rule ended.
+  DateTimeColumn get nextDue => dateTime().nullable()();
+
+  /// Post due occurrences without asking; false lists them as Upcoming to confirm.
+  BoolColumn get autoPost => boolean().withDefault(const Constant(true))();
+
+  /// Comma separated days before the due date to notify ("3,0").
+  TextColumn get remindDaysBefore => text().withDefault(const Constant(''))();
+  BoolColumn get isSubscription => boolean().withDefault(const Constant(false))();
+
+  /// active | paused | ended
+  TextColumn get status => text().withDefault(const Constant('active'))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class SmsLog extends Table {
   /// Hash of sender+body+timestamp so a message is only processed once.
   TextColumn get id => text()();
@@ -334,12 +396,13 @@ class SmsLog extends Table {
   EntryFieldValues,
   Reminders,
   EntryPayers,
+  RecurringRules,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -374,6 +437,12 @@ class AppDatabase extends _$AppDatabase {
           if (from < 6) {
             await m.createTable(entryPayers);
             await m.createIndex(entryPayersEntryId);
+          }
+          // v7: recurring rules and the entries they post (R2, recurring entries).
+          if (from < 7) {
+            await m.createTable(recurringRules);
+            await m.addColumn(entries, entries.recurringId);
+            await m.createIndex(entriesRecurringId);
           }
         },
         beforeOpen: (details) async {

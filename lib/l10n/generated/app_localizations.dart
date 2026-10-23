@@ -3356,6 +3356,336 @@ abstract class AppLocalizations {
   /// **'Saved. Add the next one.'**
   String get savedAddAnother;
 
+  /// No description provided for @recurringRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get recurringRepeat;
+
+  /// No description provided for @recurringDoesNotRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Does not repeat'**
+  String get recurringDoesNotRepeat;
+
+  /// No description provided for @recurringDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get recurringDaily;
+
+  /// No description provided for @recurringWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get recurringWeekly;
+
+  /// No description provided for @recurringMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get recurringMonthly;
+
+  /// No description provided for @recurringYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get recurringYearly;
+
+  /// No description provided for @recurringEveryDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every day} other{Every {count} days}}'**
+  String recurringEveryDays(int count);
+
+  /// No description provided for @recurringEveryWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every week} other{Every {count} weeks}}'**
+  String recurringEveryWeeks(int count);
+
+  /// No description provided for @recurringEveryMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every month} other{Every {count} months}}'**
+  String recurringEveryMonths(int count);
+
+  /// No description provided for @recurringEveryYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every year} other{Every {count} years}}'**
+  String recurringEveryYears(int count);
+
+  /// No description provided for @recurringOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'on day {day}'**
+  String recurringOnDay(int day);
+
+  /// No description provided for @recurringOnLastDay.
+  ///
+  /// In en, this message translates to:
+  /// **'on the last day'**
+  String get recurringOnLastDay;
+
+  /// No description provided for @recurringOnWeekday.
+  ///
+  /// In en, this message translates to:
+  /// **'on {weekday}'**
+  String recurringOnWeekday(String weekday);
+
+  /// No description provided for @recurringOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'on {date}'**
+  String recurringOnDate(String date);
+
+  /// No description provided for @recurringUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'until {date}'**
+  String recurringUntil(String date);
+
+  /// No description provided for @recurringTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 time} other{{count} times}}'**
+  String recurringTimes(int count);
+
+  /// No description provided for @recurringInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat every'**
+  String get recurringInterval;
+
+  /// No description provided for @recurringLastDayOfMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'On the last day of the month'**
+  String get recurringLastDayOfMonth;
+
+  /// No description provided for @recurringEnds.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends'**
+  String get recurringEnds;
+
+  /// No description provided for @recurringEndNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get recurringEndNever;
+
+  /// No description provided for @recurringEndOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'On a date'**
+  String get recurringEndOnDate;
+
+  /// No description provided for @recurringEndAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'After'**
+  String get recurringEndAfter;
+
+  /// No description provided for @recurringOccurrences.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of times'**
+  String get recurringOccurrences;
+
+  /// No description provided for @recurringAutoPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Add automatically'**
+  String get recurringAutoPost;
+
+  /// No description provided for @recurringAutoPostHint.
+  ///
+  /// In en, this message translates to:
+  /// **'When off, each one waits for you to confirm'**
+  String get recurringAutoPostHint;
+
+  /// No description provided for @recurringStopRepeating.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t repeat'**
+  String get recurringStopRepeating;
+
+  /// No description provided for @recurringDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get recurringDone;
+
+  /// No description provided for @recurringEndBeforeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an end date on or after the start'**
+  String get recurringEndBeforeStart;
+
+  /// No description provided for @recurringPartOfRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Part of a recurring entry'**
+  String get recurringPartOfRule;
+
+  /// No description provided for @recurringTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring'**
+  String get recurringTitle;
+
+  /// No description provided for @recurringNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New recurring'**
+  String get recurringNew;
+
+  /// No description provided for @recurringEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit recurring'**
+  String get recurringEdit;
+
+  /// No description provided for @recurringEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing repeats yet'**
+  String get recurringEmptyTitle;
+
+  /// No description provided for @recurringEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Rent, SIP, EMI or salary: set it once and Hisab adds it on the day.'**
+  String get recurringEmptyBody;
+
+  /// No description provided for @recurringSectionWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for you'**
+  String get recurringSectionWaiting;
+
+  /// No description provided for @recurringSectionActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get recurringSectionActive;
+
+  /// No description provided for @recurringSectionPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get recurringSectionPaused;
+
+  /// No description provided for @recurringSectionEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get recurringSectionEnded;
+
+  /// No description provided for @recurringNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next {date}'**
+  String recurringNext(String date);
+
+  /// No description provided for @recurringDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date}'**
+  String recurringDue(String date);
+
+  /// No description provided for @recurringMoreWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{and 1 more waiting} other{and {count} more waiting}}'**
+  String recurringMoreWaiting(int count);
+
+  /// No description provided for @recurringConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get recurringConfirm;
+
+  /// No description provided for @recurringSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get recurringSkip;
+
+  /// No description provided for @recurringPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get recurringPause;
+
+  /// No description provided for @recurringResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get recurringResume;
+
+  /// No description provided for @recurringDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring entry deleted'**
+  String get recurringDeleted;
+
+  /// No description provided for @recurringAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry added'**
+  String get recurringAdded;
+
+  /// No description provided for @recurringSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get recurringSkipped;
+
+  /// No description provided for @recurringToConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recurring entry to confirm} other{{count} recurring entries to confirm}}'**
+  String recurringToConfirm(int count);
+
+  /// No description provided for @recurringPostedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Not added yet} =1{Added once} other{Added {count} times}}'**
+  String recurringPostedCount(int count);
+
+  /// No description provided for @recurringNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (optional)'**
+  String get recurringNameLabel;
+
+  /// No description provided for @recurringNextOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Next on'**
+  String get recurringNextOn;
+
+  /// No description provided for @recurringRuleMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This recurring entry was deleted'**
+  String get recurringRuleMissing;
+
+  /// No description provided for @recurringDecrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease {label}'**
+  String recurringDecrease(String label);
+
+  /// No description provided for @recurringIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase {label}'**
+  String recurringIncrease(String label);
+
   /// No description provided for @payersMultiple.
   ///
   /// In en, this message translates to:
@@ -3391,6 +3721,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'you'**
   String get youInList;
+
+  /// No description provided for @recurringAddedSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{added, plural, =0{None added} =1{1 added} other{{added} added}}, {skipped, plural, =1{1 skipped} other{{skipped} skipped}}'**
+  String recurringAddedSkipped(int added, int skipped);
 
   /// No description provided for @groupExportCsv.
   ///

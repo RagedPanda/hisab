@@ -13,19 +13,23 @@ import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
 import '../../data/repositories/project_fields_repository.dart';
 import '../../data/repositories/projects_repository.dart';
+import '../../data/repositories/recurring_repository.dart';
 import '../../domain/ledger/balance_effects.dart';
 import '../../domain/projects/project_fields.dart';
 import '../../domain/projects/project_math.dart';
 import '../../domain/projects/project_picker.dart';
 import '../../domain/projects/project_templates.dart';
+import '../../domain/recurring/repeat_draft.dart';
 import '../../domain/split/payers.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
+import '../accounts/account_choice_chips.dart';
 import '../groups/member_display.dart';
 import '../categories/category_picker.dart';
 import '../projects/project_field_inputs.dart';
 import '../projects/project_picker_sheet.dart';
+import '../recurring/repeat_sheet.dart';
 import '../shell/widgets/common.dart';
 import '../split/payers_editor.dart';
 import '../split/split_editor.dart';
@@ -49,6 +53,12 @@ class ExpenseEditorScreen extends ConsumerStatefulWidget {
 class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   final _amountController = TextEditingController();
   final _amountFocus = FocusNode();
+
+  /// The amount field autofocuses only when the editor opens. The ListView
+  /// builds it lazily, so a field rebuilt after scrolling back (or after the
+  /// keyboard closes and the list grows) must not grab focus again: that
+  /// reopened the keyboard and scrolled the editor away from the Repeat tile.
+  bool _autofocusAmount = true;
   final _noteController = TextEditingController();
   final _payeeController = TextEditingController();
 
@@ -79,6 +89,12 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   bool _loaded = false;
   bool _saving = false;
   String? _existingId;
+
+  /// Repeat chosen for a new entry; null saves a one-off entry.
+  RepeatDraft? _repeat;
+
+  /// Rule an existing entry was posted by (or started), if any.
+  String? _recurringId;
   /// Balance-relevant fields of the stored entry, used to reverse its
   /// effect when the entry is edited or deleted.
   EntrySnapshot? _previousSnapshot;
@@ -90,6 +106,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   /// entries and edits close the editor on save.
   bool get _canAddAnother => !_isEditing && widget.smsId == null && _source != 'sms';
 
+  /// Repeat is offered on new personal entries typed by hand. Group
+  /// expenses are shared with others, and SMS entries record what happened.
+  bool get _canRepeat => !_isEditing && _groupId == null && _source == 'manual';
+
   @override
   void initState() {
     super.initState();
@@ -98,6 +118,12 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _projectId = widget.projectId;
     _smsId = widget.smsId;
     _load();
+    _amountFocus.addListener(_stopAmountAutofocus);
+  }
+
+  /// Once the amount field has had focus, a rebuilt field never autofocuses.
+  void _stopAmountAutofocus() {
+    if (_amountFocus.hasFocus) _autofocusAmount = false;
   }
 
   Future<void> _load() async {
@@ -119,6 +145,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         _paidByMemberId = entry.paidByMemberId;
         _source = entry.source;
         _smsId = entry.smsId;
+        _recurringId = entry.recurringId;
         _previousSnapshot = EntrySnapshot(
           kind: entry.kind,
           amountMinor: entry.amountMinor,
@@ -317,7 +344,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             controller: _amountController,
             focusNode: _amountFocus,
             readOnly: _hasItems,
-            autofocus: !_isEditing && !_hasItems,
+            autofocus: _autofocusAmount && !_isEditing && !_hasItems,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: amountInputFormatters,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -368,12 +395,12 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             const SizedBox(height: 8),
             Text(_kind == 'transfer' ? l10n.fromAccount : l10n.account, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 6),
-            _accountChips(accounts, _accountId, (id) => setState(() => _accountId = id)),
+            AccountChoiceChips(accounts: accounts, selectedId: _accountId, onPick: (id) => setState(() => _accountId = id)),
             if (_kind == 'transfer') ...[
               const SizedBox(height: 12),
               Text(l10n.toAccount, style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 6),
-              _accountChips(accounts.where((a) => a.id != _accountId).toList(), _toAccountId, (id) => setState(() => _toAccountId = id)),
+              AccountChoiceChips(accounts: accounts.where((a) => a.id != _accountId).toList(), selectedId: _toAccountId, onPick: (id) => setState(() => _toAccountId = id)),
             ],
           ],
           const SizedBox(height: 16),
@@ -400,6 +427,21 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               ),
             ),
           ]),
+          if (_canRepeat) ...[
+            const SizedBox(height: 8),
+            RepeatTile(draft: _repeat, start: _occurredAt, onChanged: (draft) => setState(() => _repeat = draft)),
+          ],
+          if (_recurringId != null) ...[
+            const SizedBox(height: 8),
+            ListTile(
+              key: const ValueKey('editor.recurringRule'),
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.repeat),
+              title: Text(l10n.recurringPartOfRule),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/recurring/${_recurringId!}'),
+            ),
+          ],
           const SizedBox(height: 16),
           TextField(controller: _payeeController, decoration: InputDecoration(labelText: l10n.payeeLabel, prefixIcon: const Icon(Icons.storefront_outlined)), textCapitalization: TextCapitalization.words),
           const SizedBox(height: 12),
@@ -461,6 +503,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _payeeController.clear();
       _category = null;
       _items = [];
+      _repeat = null;
       _fieldValues = const {};
       _multiplePayers = false;
       _payerAmounts = {};
@@ -468,23 +511,6 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _saving = false;
     });
     _amountFocus.requestFocus();
-  }
-
-  Widget _accountChips(List<Account> accounts, String? selected, ValueChanged<String?> onPick) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final account in accounts)
-          ChoiceChip(
-            avatar: CircleAvatar(backgroundColor: Color(account.color), radius: 6),
-            label: Text(account.name),
-            selected: selected == account.id,
-            onSelected: (_) => onPick(account.id),
-          ),
-        if (accounts.isEmpty) ActionChip(label: Text(context.l10n.addAccount), avatar: const Icon(Icons.add, size: 16), onPressed: () => context.push('/accounts')),
-      ],
-    );
   }
 
   Widget _itemsSection(String symbol, List<String> units) {
@@ -689,6 +715,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         );
     if (!_isEditing && _groupId == null && _kind != 'transfer') ref.read(lastProjectIdProvider.notifier).set(projectId);
     await _applyBalanceChange(amount);
+    if (_canRepeat && _repeat != null) await _startRule(_repeat!, entry);
     if (_smsId != null) await ref.read(smsLogRepositoryProvider).setStatus(_smsId!, 'added', entryId: id);
     if (!mounted) return;
     if (addAnother) {
@@ -697,6 +724,35 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     } else {
       popOrGoHome(context);
     }
+  }
+
+  /// Turns the entry just saved into the first occurrence of a new rule.
+  Future<void> _startRule(RepeatDraft draft, EntriesCompanion entry) async {
+    final repository = ref.read(recurringRepositoryProvider);
+    final spec = draft.specFrom(_occurredAt);
+    final ruleId = await repository.saveRule(
+      RecurringRepository.newRule(
+        kind: _kind,
+        amountMinor: entry.amountMinor.value,
+        categoryId: entry.categoryId.value,
+        accountId: entry.accountId.value,
+        toAccountId: entry.toAccountId.value,
+        payee: entry.payee.value,
+        projectId: entry.projectId.value,
+        note: entry.note.value,
+        frequency: spec.frequency,
+        interval: spec.interval,
+        dayOfMonth: spec.dayOfMonth,
+        weekday: spec.weekday,
+        startDate: _occurredAt,
+        endDate: spec.endDate,
+        maxCount: spec.maxCount,
+        autoPost: draft.autoPost,
+      ),
+      monthStartDay: ref.read(settingsProvider).monthStartDay,
+      postedOn: _occurredAt,
+    );
+    await repository.linkEntry(entry.id.value, ruleId);
   }
 
   /// Manual entries move the account's running balance; SMS and group

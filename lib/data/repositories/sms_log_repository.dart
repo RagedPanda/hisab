@@ -20,6 +20,14 @@ class SmsLogRepository {
   Future<bool> exists(String id) async =>
       (await (db.select(db.smsLog)..where((t) => t.id.equals(id))).getSingleOrNull()) != null;
 
+  /// Whether a message reporting the same bank transaction is already logged.
+  Future<bool> hasTransaction(String transactionKey) async =>
+      (await (db.select(db.smsLog)
+                ..where((t) => t.transactionKey.equals(transactionKey))
+                ..limit(1))
+              .getSingleOrNull()) !=
+      null;
+
   Future<void> record({
     required String id,
     required String sender,
@@ -28,6 +36,7 @@ class SmsLogRepository {
     required String status,
     Map<String, dynamic>? parsed,
     String? entryId,
+    String? transactionKey,
   }) =>
       db.into(db.smsLog).insertOnConflictUpdate(SmsLogCompanion.insert(
             id: id,
@@ -37,6 +46,7 @@ class SmsLogRepository {
             status: status,
             parsedJson: Value(parsed == null ? null : jsonEncode(parsed)),
             entryId: Value(entryId),
+            transactionKey: Value(transactionKey),
           ));
 
   Stream<List<SmsLogData>> watchPending() => (db.select(db.smsLog)

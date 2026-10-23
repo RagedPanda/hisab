@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart' hide isNull;
@@ -6,12 +7,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/ids.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
+import 'package:hisab/domain/sms/sms_transaction_key.dart';
 
 /// Rewinds a freshly created database to the schema shipped at version 1 so
 /// the upgrade path runs against a real file, the way an installed app sees it.
+/// Undoes the v7 step: the SMS log's matched reminder and transaction key.
+Future<void> dropVersion7SmsLogColumns(AppDatabase db) async {
+  await db.customStatement('DROP INDEX sms_log_transaction_key');
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN transaction_key');
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
+}
+
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
+  await dropVersion7SmsLogColumns(db);
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -30,7 +39,7 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
+  await dropVersion7SmsLogColumns(db);
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -44,7 +53,7 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
+  await dropVersion7SmsLogColumns(db);
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('DROP TABLE project_fields');
@@ -57,7 +66,7 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
+  await dropVersion7SmsLogColumns(db);
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
   await db.customStatement('PRAGMA user_version = 4');
@@ -68,7 +77,7 @@ Future<void> rewindToVersion4(File file) async {
 /// (generic reminders table without the due-reminder columns).
 Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
+  await dropVersion7SmsLogColumns(db);
   await db.customStatement('DROP INDEX reminders_status_due');
   for (final column in dueReminderColumns(db.reminders)) {
     await db.customStatement('ALTER TABLE reminders DROP COLUMN ${column.name}');
@@ -81,7 +90,7 @@ Future<void> rewindToVersion5(File file) async {
 /// (no SMS-to-reminder link).
 Future<void> rewindToVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
+  await dropVersion7SmsLogColumns(db);
   await db.customStatement('PRAGMA user_version = 6');
   await db.close();
 }
@@ -201,20 +210,26 @@ void main() {
     await db.close();
   });
 
-  test('upgrading from schema 6 adds the matched reminder to the SMS log', () async {
+  test('upgrading from schema 6 adds the matched reminder and transaction key to the SMS log', () async {
+    const parsedBody = 'Rs.799.00 debited from A/c XX1234 on 23-10-26 to ACTFIBERNET. UPI Ref 629400000799';
+    final parsed = {'direction': 'debit', 'amountMinor': 79900, 'occurredAt': DateTime(2026, 10, 23).toIso8601String(), 'reference': '629400000799'};
     final seed = AppDatabase(NativeDatabase(file));
     await seed.into(seed.smsLog).insert(SmsLogCompanion.insert(id: 's1', sender: 'HDFCBK', body: 'Rs 1500 debited', receivedAt: DateTime(2026, 11, 5), status: 'added'));
+    await seed.into(seed.smsLog).insert(SmsLogCompanion.insert(id: 's2', sender: 'HDFCBK', body: parsedBody, receivedAt: DateTime(2026, 10, 23), status: 'added', parsedJson: Value(jsonEncode(parsed))));
     await seed.close();
     await rewindToVersion6(file);
 
     final db = AppDatabase(NativeDatabase(file));
     final version = await db.customSelect('PRAGMA user_version').getSingle();
     expect(version.data['user_version'], db.schemaVersion);
-    final row = await db.select(db.smsLog).getSingle();
-    expect(row.matchedReminderId, isNull);
-    expect(row.body, 'Rs 1500 debited', reason: 'existing rows survive the upgrade');
+    final unparsed = await (db.select(db.smsLog)..where((t) => t.id.equals('s1'))).getSingle();
+    expect(unparsed.matchedReminderId, isNull);
+    expect(unparsed.transactionKey, isNull, reason: 'a message that was never parsed has no transaction');
+    expect(unparsed.body, 'Rs 1500 debited', reason: 'existing rows survive the upgrade');
+    final backfilled = await (db.select(db.smsLog)..where((t) => t.id.equals('s2'))).getSingle();
+    expect(backfilled.transactionKey, smsTransactionKeyForStored(parsedBody, parsed), reason: 'old messages are keyed from their stored parse');
     await (db.update(db.smsLog)..where((t) => t.id.equals('s1'))).write(const SmsLogCompanion(matchedReminderId: Value('r1')));
-    expect((await db.select(db.smsLog).getSingle()).matchedReminderId, 'r1');
+    expect((await (db.select(db.smsLog)..where((t) => t.id.equals('s1'))).getSingle()).matchedReminderId, 'r1');
     await db.close();
   });
 

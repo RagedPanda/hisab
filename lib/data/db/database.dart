@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../core/ids.dart';
 import '../../domain/categories/category_catalog.dart';
+import '../../domain/sms/sms_transaction_key.dart';
 
 part 'database.g.dart';
 
@@ -333,6 +336,7 @@ class Reminders extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(name: 'sms_log_transaction_key', columns: {#transactionKey})
 class SmsLog extends Table {
   /// Hash of sender+body+timestamp so a message is only processed once.
   TextColumn get id => text()();
@@ -347,6 +351,10 @@ class SmsLog extends Table {
 
   /// Reminder this message paid, when it matched one (R2 auto-done).
   TextColumn get matchedReminderId => text().nullable()();
+
+  /// The bank transaction this message reports (see smsTransactionKey), so
+  /// the same payment pasted again or read from the inbox is not added twice.
+  TextColumn get transactionKey => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
@@ -374,6 +382,18 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   int get schemaVersion => 7;
+
+  /// Gives messages logged before v7 their transaction key from the stored
+  /// parse, so pasting an old SMS again is still recognised.
+  Future<void> _backfillSmsTransactionKeys() async {
+    final rows = await customSelect('SELECT id, body, parsed_json FROM sms_log WHERE parsed_json IS NOT NULL').get();
+    for (final row in rows) {
+      final parsed = jsonDecode(row.read<String>('parsed_json')) as Map<String, dynamic>;
+      final key = smsTransactionKeyForStored(row.read<String>('body'), parsed);
+      if (key == null) continue;
+      await customUpdate('UPDATE sms_log SET transaction_key = ? WHERE id = ?', variables: [Variable(key), Variable(row.read<String>('id'))]);
+    }
+  }
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -411,8 +431,14 @@ class AppDatabase extends _$AppDatabase {
             }
           }
           if (from < 6) await m.createIndex(remindersStatusDue);
-          // v7: the reminder a bank SMS paid (R2 auto-done on an SMS match).
-          if (from < 7) await m.addColumn(smsLog, smsLog.matchedReminderId);
+          // v7: the reminder a bank SMS paid (R2 auto-done on an SMS match), and
+          // the transaction each message reports so a repeat is not added twice.
+          if (from < 7) {
+            await m.addColumn(smsLog, smsLog.matchedReminderId);
+            await m.addColumn(smsLog, smsLog.transactionKey);
+            await m.createIndex(smsLogTransactionKey);
+            await _backfillSmsTransactionKeys();
+          }
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');

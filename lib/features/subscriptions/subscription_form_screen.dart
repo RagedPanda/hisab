@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,7 +7,6 @@ import '../../core/format.dart';
 import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
-import '../../data/repositories/recurring_repository.dart';
 import '../../domain/recurring/recurrence.dart';
 import '../../domain/subscriptions/subscription_templates.dart';
 import '../../l10n/category_names.dart';
@@ -16,6 +14,7 @@ import '../../l10n/l10n.dart';
 import '../categories/category_picker.dart';
 import '../shell/widgets/common.dart';
 import 'subscription_labels.dart';
+import 'subscription_rules.dart';
 
 /// Hour every renewal is recorded at when a new subscription is created.
 const int kSubscriptionRenewalHour = 9;
@@ -74,9 +73,9 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
       final template = subscriptionTemplateByKey(widget.templateKey ?? '');
       if (template != null) {
         _cycle = SubscriptionCycle(template.frequency, template.interval);
-        _category = await categories.findBySeedKey(template.categoryKey);
         if (mounted) _nameController.text = subscriptionTemplateName(context.l10n, template);
       }
+      _category = await categories.findBySeedKey(subscriptionCategoryKeyFor(template));
     }
     if (mounted) setState(() => _loaded = true);
   }
@@ -200,37 +199,16 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
     final minute = existing?.startDate.minute ?? 0;
     final start = DateTime(_nextRenewal.year, _nextRenewal.month, _nextRenewal.day, hour, minute);
     final dateChanged = existing == null || existing.nextDue == null || !isSameDay(existing.nextDue!, start);
-    final RecurringRulesCompanion rule;
-    if (existing == null) {
-      rule = RecurringRepository.newRule(
-        name: name,
-        kind: 'expense',
-        amountMinor: priceMinor,
-        categoryId: _category?.id,
-        accountId: _accountId,
-        frequency: _cycle.frequency,
-        interval: _cycle.interval,
-        startDate: start,
-        autoPost: _autoPost,
-        isSubscription: true,
-      );
-    } else {
-      // The next renewal becomes the new start, so an edit never back-posts.
-      // A changed date re-anchors the day of month and weekday on it.
-      rule = existing.toCompanion(true).copyWith(
-            name: Value(name),
-            amountMinor: Value(priceMinor),
-            categoryId: Value(_category?.id),
-            accountId: Value(_accountId),
-            frequency: Value(_cycle.frequency.name),
-            interval: Value(_cycle.interval),
-            startDate: Value(start),
-            dayOfMonth: dateChanged ? const Value(null) : Value(existing.dayOfMonth),
-            weekday: dateChanged ? const Value(null) : Value(existing.weekday),
-            autoPost: Value(_autoPost),
-            isSubscription: const Value(true),
-          );
-    }
+    final draft = SubscriptionDraft(
+      name: name,
+      amountMinor: priceMinor,
+      cycle: _cycle,
+      startDate: start,
+      categoryId: _category?.id,
+      accountId: _accountId,
+      autoPost: _autoPost,
+    );
+    final rule = existing == null ? newSubscriptionRule(draft) : editedSubscriptionRule(existing, draft, renewalDayChanged: dateChanged);
     await ref.read(recurringRepositoryProvider).saveRule(rule, monthStartDay: ref.read(settingsProvider).monthStartDay);
     if (mounted) context.pop();
   }

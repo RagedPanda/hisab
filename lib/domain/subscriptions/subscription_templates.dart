@@ -77,3 +77,10 @@ const List<SubscriptionCycle> subscriptionCycles = [
 /// plus [current] at the end when a rule made elsewhere uses another cycle.
 List<SubscriptionCycle> cycleOptionsFor(SubscriptionCycle current) =>
     subscriptionCycles.contains(current) ? subscriptionCycles : [...subscriptionCycles, current];
+
+/// Seed category a subscription starts in when its template names none
+/// ("Something else"), so it is never posted as uncategorised.
+const kSubscriptionFallbackCategoryKey = 'other_expense';
+
+/// Seed category key to pre-select for [template], or the fallback.
+String subscriptionCategoryKeyFor(SubscriptionTemplate? template) => template?.categoryKey ?? kSubscriptionFallbackCategoryKey;

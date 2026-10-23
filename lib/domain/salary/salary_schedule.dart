@@ -445,15 +445,47 @@ SalaryNotificationPlan planSalaryNotification(SalaryStatus? status, {required bo
   );
 }
 
-/// Identifies one posted alert: its cycle and the language of its text.
-String salaryAlertMarker(ScheduleSalaryNotification plan, {required String locale}) => '${startOfDay(plan.expected).toIso8601String()}|$locale';
+/// Records one posted alert: its cycle, the language of its text and when
+/// it was set to fire (`expected|locale|fireAt`).
+String salaryAlertMarker(ScheduleSalaryNotification plan, {required String locale}) =>
+    '${_salaryAlertIdentity(plan.expected, locale)}|${plan.at.toIso8601String()}';
+
+String _salaryAlertIdentity(DateTime expected, String locale) => '${startOfDay(expected).toIso8601String()}|$locale';
+
+/// When the alert recorded by [marker] was set to fire; null for markers
+/// written before the fire time was recorded.
+DateTime? salaryAlertMarkerFireAt(String marker) {
+  final parts = marker.split('|');
+  return parts.length < 3 ? null : DateTime.tryParse(parts.sublist(2).join('|'));
+}
+
+/// How long past its fire time an alert may still be listed as pending
+/// before it counts as lost.
+const Duration kSalaryAlertMissedAfter = Duration(minutes: 1);
+
+/// Whether the alert recorded by [postedMarker] never showed: its fire time
+/// passed, yet the OS still lists it as pending ([stillPending]). A force
+/// stop or an OEM app killer drops the alarm but leaves it listed; an alert
+/// that showed is no longer pending.
+bool isSalaryAlertMissed({required String? postedMarker, required bool stillPending, required DateTime now}) {
+  if (postedMarker == null || !stillPending) return false;
+  final fireAt = salaryAlertMarkerFireAt(postedMarker);
+  return fireAt != null && now.isAfter(fireAt.add(kSalaryAlertMissedAfter));
+}
+
+/// Whether the alert recorded by [postedMarker] is for the same cycle and
+/// language as [plan].
+bool isSameSalaryAlert(ScheduleSalaryNotification plan, {required String? postedMarker, required String locale}) =>
+    postedMarker != null &&
+    (postedMarker == _salaryAlertIdentity(plan.expected, locale) || postedMarker.startsWith('${_salaryAlertIdentity(plan.expected, locale)}|'));
 
 /// Whether [plan] needs to reach the notification layer. An overdue alert
 /// already posted for the same cycle and language ([postedMarker]) is left
-/// alone, so it is not shown again on every app resume; a new language
-/// re-posts it with fresh text. Cancels and future alerts always apply.
-bool shouldApplySalaryPlan(SalaryNotificationPlan plan, {required String? postedMarker, required String locale}) => switch (plan) {
+/// alone, so it is not shown again on every app resume, unless it was
+/// [missed] (its alarm was lost before it showed); a new language re-posts
+/// it with fresh text. Cancels and future alerts always apply.
+bool shouldApplySalaryPlan(SalaryNotificationPlan plan, {required String? postedMarker, required String locale, bool missed = false}) => switch (plan) {
       CancelSalaryNotification() => true,
       ScheduleSalaryNotification(overdue: false) => true,
-      ScheduleSalaryNotification() => postedMarker != salaryAlertMarker(plan, locale: locale),
+      ScheduleSalaryNotification() => missed || !isSameSalaryAlert(plan, postedMarker: postedMarker, locale: locale),
     };

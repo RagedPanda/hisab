@@ -20,6 +20,10 @@ abstract interface class SalaryAlertSink {
 
   /// Language of the alert text, for [salaryAlertMarker].
   String get locale;
+
+  /// Whether the OS still lists the salary alert as scheduled (not yet
+  /// shown). False when that cannot be read.
+  Future<bool> isPending();
 }
 
 /// Payload of the salary alert; a tap opens the salary screen.
@@ -60,6 +64,16 @@ class GatewaySalaryAlerts implements SalaryAlertSink {
   /// exact alarm is refused it falls back to an inexact one; a failure is
   /// logged and reported, so the caller retries on the next sync.
   @override
+  Future<bool> isPending() async {
+    try {
+      return (await _gateway.pending()).any((alert) => alert.id == kSalaryNotificationId);
+    } catch (error) {
+      debugPrint('Hisab: pending salary alert not readable: $error');
+      return false;
+    }
+  }
+
+  @override
   Future<bool> apply(SalaryNotificationPlan plan) async {
     try {
       switch (plan) {
@@ -99,7 +113,8 @@ const String kSalaryAlertPostedKey = 'salaryAlertPostedFor';
 /// the salary arrived on its own, then schedules or dismisses the reminder.
 /// Safe to call often (app start, resume, after SMS ingest, after saving,
 /// after a language change): an overdue alert is posted once per cycle and
-/// language, and a failed post is retried on the next call.
+/// language, a failed post is retried on the next call, and one whose alarm
+/// was lost before it showed (still pending past its time) is posted again.
 /// Pass `ref.read` from a widget or a provider.
 Future<SalaryNotificationPlan> syncSalaryReminder(ProviderReader read, {required DateTime now}) async {
   final settings = read(salarySettingsProvider);
@@ -107,7 +122,12 @@ Future<SalaryNotificationPlan> syncSalaryReminder(ProviderReader read, {required
   final plan = planSalaryNotification(status, reminderEnabled: settings.reminderEnabled, now: now);
   final sink = read(salaryAlertSinkProvider);
   final prefs = read(sharedPreferencesProvider);
-  if (!shouldApplySalaryPlan(plan, postedMarker: prefs.getString(kSalaryAlertPostedKey), locale: sink.locale)) return plan;
+  final postedMarker = prefs.getString(kSalaryAlertPostedKey);
+  final missed = plan is ScheduleSalaryNotification &&
+      plan.overdue &&
+      isSameSalaryAlert(plan, postedMarker: postedMarker, locale: sink.locale) &&
+      isSalaryAlertMissed(postedMarker: postedMarker, stillPending: await sink.isPending(), now: now);
+  if (!shouldApplySalaryPlan(plan, postedMarker: postedMarker, locale: sink.locale, missed: missed)) return plan;
   if (!await sink.apply(plan)) return plan;
   switch (plan) {
     case CancelSalaryNotification():

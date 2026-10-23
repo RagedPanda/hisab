@@ -1618,6 +1618,9 @@ class _RecordingSalaryAlerts implements SalaryAlertSink {
   String get locale => 'en';
 
   @override
+  Future<bool> isPending() async => false;
+
+  @override
   Future<bool> apply(SalaryNotificationPlan plan) async {
     plans.add(plan);
     return true;

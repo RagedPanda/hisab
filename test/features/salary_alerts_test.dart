@@ -95,6 +95,35 @@ void main() {
       expect(gateway.scheduled[kSalaryNotificationId]?.title, lookupAppLocalizations(const Locale('hi')).salaryNotSeenTitle);
     });
 
+    test('an alert whose alarm was lost before it showed is posted again on the next open', () async {
+      await syncSalaryReminder(container.read, now: now);
+      final first = gateway.scheduled[kSalaryNotificationId]!.fireAt;
+      // Force-stopped before it fired: the OS dropped the alarm, so it is still listed as pending.
+      final later = now.add(const Duration(hours: 1));
+      await syncSalaryReminder(container.read, now: later);
+      final reposted = gateway.scheduled[kSalaryNotificationId]!.fireAt;
+      expect(reposted.isAfter(first), isTrue, reason: 'missed, so posted again');
+      expect(reposted.isAfter(later), isTrue);
+
+      gateway.scheduled.clear(); // this time it showed
+      await syncSalaryReminder(container.read, now: later.add(const Duration(hours: 1)));
+      expect(gateway.scheduled, isEmpty, reason: 'a shown alert is not repeated');
+    });
+
+    test('a future alert lost to an app killer is posted once its moment has passed', () async {
+      final dayBefore = DateTime(2026, 10, 31, 12);
+      gateway.clock = () => dayBefore;
+      final plan = await syncSalaryReminder(container.read, now: dayBefore);
+      expect((plan as ScheduleSalaryNotification).overdue, isFalse);
+      final planned = gateway.scheduled[kSalaryNotificationId]!.fireAt;
+
+      gateway.clock = () => now;
+      await syncSalaryReminder(container.read, now: now);
+      final reposted = gateway.scheduled[kSalaryNotificationId]!.fireAt;
+      expect(reposted, isNot(planned));
+      expect(reposted.isAfter(now), isTrue);
+    });
+
     test('a failed post is retried on the next sync, and a refused exact alarm falls back to inexact', () async {
       gateway.clock = () => now.add(const Duration(days: 1));
       await syncSalaryReminder(container.read, now: now);

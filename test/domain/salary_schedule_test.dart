@@ -293,6 +293,23 @@ void main() {
       expect(shouldApplySalaryPlan(ahead, postedMarker: salaryAlertMarker(ahead, locale: 'en'), locale: 'en'), isTrue);
       expect(shouldApplySalaryPlan(const CancelSalaryNotification(), postedMarker: marker, locale: 'en'), isTrue);
     });
+
+    test('a later overdue post of the same cycle counts as the same alert, an older marker too', () {
+      final later = ScheduleSalaryNotification(at: DateTime(2026, 11, 3, 9), expected: DateTime(2026, 10, 30), overdue: true);
+      expect(shouldApplySalaryPlan(later, postedMarker: salaryAlertMarker(overdue, locale: 'en'), locale: 'en'), isFalse);
+      expect(shouldApplySalaryPlan(later, postedMarker: '${DateTime(2026, 10, 30).toIso8601String()}|en', locale: 'en'), isFalse, reason: 'marker from before fire times were kept');
+      expect(shouldApplySalaryPlan(later, postedMarker: salaryAlertMarker(overdue, locale: 'en'), locale: 'en', missed: true), isTrue);
+    });
+
+    test('an alert still pending a minute past its fire time was missed', () {
+      final marker = salaryAlertMarker(overdue, locale: 'en'); // fires 8:00:05
+      expect(salaryAlertMarkerFireAt(marker), DateTime(2026, 11, 2, 8, 0, 5));
+      expect(isSalaryAlertMissed(postedMarker: marker, stillPending: true, now: DateTime(2026, 11, 2, 8, 2)), isTrue);
+      expect(isSalaryAlertMissed(postedMarker: marker, stillPending: true, now: DateTime(2026, 11, 2, 8, 0, 30)), isFalse, reason: 'may still fire');
+      expect(isSalaryAlertMissed(postedMarker: marker, stillPending: false, now: DateTime(2026, 11, 2, 9)), isFalse, reason: 'it showed');
+      expect(isSalaryAlertMissed(postedMarker: '${DateTime(2026, 10, 30).toIso8601String()}|en', stillPending: true, now: DateTime(2026, 11, 2, 9)), isFalse);
+      expect(isSalaryAlertMissed(postedMarker: null, stillPending: true, now: DateTime(2026, 11, 2, 9)), isFalse);
+    });
   });
 
   group('early salary and status lines', () {

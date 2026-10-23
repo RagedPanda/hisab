@@ -136,6 +136,19 @@ void main() {
       expect(find.text('Rent'), findsOneWidget);
     });
 
+    testWidgets('starts the week on the device region: Monday for en-GB, Sunday for en-US', (tester) async {
+      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+      double left(String label) => tester.getTopLeft(find.text(label)).dx;
+
+      tester.platformDispatcher.localesTestValue = const [Locale('en', 'GB')];
+      await pump(tester, const SizedBox(height: 900, child: UpcomingCalendarScreen()));
+      expect(left('Mon'), lessThan(left('Sun')));
+
+      tester.platformDispatcher.localesTestValue = const [Locale('en', 'US')];
+      await pump(tester, const SizedBox(height: 900, child: UpcomingCalendarScreen()));
+      expect(left('Sun'), lessThan(left('Mon')));
+    });
+
     testWidgets('moves between months', (tester) async {
       await pump(tester, const SizedBox(height: 900, child: UpcomingCalendarScreen()), inputs: sampleInputs());
       await tester.tap(find.byTooltip('Next month'));

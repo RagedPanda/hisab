@@ -107,9 +107,12 @@ class _MonthGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final materialFirstDay = MaterialLocalizations.of(context).firstDayOfWeekIndex;
-    final firstWeekday = materialFirstDay == 0 ? DateTime.sunday : materialFirstDay;
-    final locale = Localizations.localeOf(context).toString();
+    final appLocale = Localizations.localeOf(context);
+    final firstWeekday = calendarFirstWeekday(
+      appLanguage: appLocale.languageCode,
+      deviceLocaleTags: [appLocale.toLanguageTag(), for (final deviceLocale in View.of(context).platformDispatcher.locales) deviceLocale.toLanguageTag()],
+    );
+    final locale = appLocale.toString();
     final weekdayFormat = DateFormat.E(locale);
     // 2024-01-01 was a Monday, so day N of that week has ISO weekday N.
     String weekdayName(int isoWeekday) => weekdayFormat.format(DateTime(2024, 1, isoWeekday));

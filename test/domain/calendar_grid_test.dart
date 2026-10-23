@@ -28,4 +28,28 @@ void main() {
   test('leap February has 29 days', () {
     expect(calendarMonthCells(DateTime(2028, 2)).whereType<DateTime>().length, 29);
   });
+
+  group('calendarFirstWeekday follows the device region for the app language', () {
+    int weekStart(String app, List<String> device) => calendarFirstWeekday(appLanguage: app, deviceLocaleTags: device);
+
+    test('en-GB starts on Monday and en-US on Sunday', () {
+      expect(weekStart('en', ['en-GB']), DateTime.monday);
+      expect(weekStart('en', ['en_US']), DateTime.sunday);
+      expect(weekStart('en', ['en-IN']), DateTime.sunday);
+      expect(weekStart('en', ['en-AE']), DateTime.saturday);
+      expect(weekStart('en', ['en-Latn-GB']), DateTime.monday, reason: 'a script subtag is skipped');
+    });
+
+    test('the first device locale in the app language decides', () {
+      expect(weekStart('en', ['de-DE', 'en-GB', 'en-US']), DateTime.monday);
+      expect(weekStart('hi', ['en-GB', 'hi-IN']), DateTime.sunday);
+    });
+
+    test('without a matching region the language default applies', () {
+      expect(weekStart('en', []), DateTime.sunday);
+      expect(weekStart('en', ['en']), DateTime.sunday);
+      expect(weekStart('hi', ['en-GB']), DateTime.sunday);
+      expect(weekStart('xx', []), DateTime.monday);
+    });
+  });
 }

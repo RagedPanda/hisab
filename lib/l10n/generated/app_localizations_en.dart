@@ -2256,6 +2256,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionNextRenewal => 'Next renewal';
 
   @override
+  String subscriptionStartedOn(String date) {
+    return 'Started $date';
+  }
+
+  @override
   String get subscriptionAutoPost => 'Add to expenses on each renewal';
 
   @override

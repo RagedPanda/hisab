@@ -15,6 +15,8 @@ class SubscriptionDraft {
     this.categoryId,
     this.accountId,
     this.autoPost = true,
+    this.dayOfMonth,
+    this.weekday,
   });
 
   final String name;
@@ -24,6 +26,10 @@ class SubscriptionDraft {
   final String? categoryId;
   final String? accountId;
   final bool autoPost;
+
+  /// Schedule anchors (null means the start date's own day or weekday).
+  final int? dayOfMonth;
+  final int? weekday;
 }
 
 /// A new recurring expense rule flagged as a subscription. The name is also
@@ -37,6 +43,8 @@ RecurringRulesCompanion newSubscriptionRule(SubscriptionDraft draft) => Recurrin
       accountId: draft.accountId,
       frequency: draft.cycle.frequency,
       interval: draft.cycle.interval,
+      dayOfMonth: draft.dayOfMonth,
+      weekday: draft.weekday,
       startDate: draft.startDate,
       autoPost: draft.autoPost,
       isSubscription: true,
@@ -44,7 +52,8 @@ RecurringRulesCompanion newSubscriptionRule(SubscriptionDraft draft) => Recurrin
 
 /// [existing] updated from [draft]. The next renewal becomes the new start,
 /// so an edit never back-posts; a changed renewal day re-anchors the day of
-/// month and weekday on it. The payee follows the name.
+/// month and weekday on the
+/// draft's anchors. The payee follows the name.
 RecurringRulesCompanion editedSubscriptionRule(RecurringRule existing, SubscriptionDraft draft, {required bool renewalDayChanged}) =>
     existing.toCompanion(true).copyWith(
           name: Value(draft.name),
@@ -55,8 +64,8 @@ RecurringRulesCompanion editedSubscriptionRule(RecurringRule existing, Subscript
           frequency: Value(draft.cycle.frequency.name),
           interval: Value(draft.cycle.interval),
           startDate: Value(draft.startDate),
-          dayOfMonth: renewalDayChanged ? const Value(null) : Value(existing.dayOfMonth),
-          weekday: renewalDayChanged ? const Value(null) : Value(existing.weekday),
+          dayOfMonth: renewalDayChanged ? Value(draft.dayOfMonth) : Value(existing.dayOfMonth),
+          weekday: renewalDayChanged ? Value(draft.weekday) : Value(existing.weekday),
           autoPost: Value(draft.autoPost),
           isSubscription: const Value(true),
         );

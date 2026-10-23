@@ -743,6 +743,8 @@
   "subscriptionPrice": "Price per renewal",
   "subscriptionCycle": "Renews",
   "subscriptionNextRenewal": "Next renewal",
+  "subscriptionStartedOn": "Started {date}",
+  "@subscriptionStartedOn": {"placeholders": {"date": {"type": "String"}}},
   "subscriptionAutoPost": "Add to expenses on each renewal",
   "subscriptionAutoPostHelp": "Off: tracked here only, no entries are added",
   "subscriptionNameRequired": "Enter a name",

@@ -3764,6 +3764,12 @@ abstract class AppLocalizations {
   /// **'Next renewal'**
   String get subscriptionNextRenewal;
 
+  /// No description provided for @subscriptionStartedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Started {date}'**
+  String subscriptionStartedOn(String date);
+
   /// No description provided for @subscriptionAutoPost.
   ///
   /// In en, this message translates to:

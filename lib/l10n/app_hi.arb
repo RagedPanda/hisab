@@ -635,6 +635,7 @@
   "subscriptionPrice": "हर रिन्यूअल की कीमत",
   "subscriptionCycle": "रिन्यू होता है",
   "subscriptionNextRenewal": "अगला रिन्यूअल",
+  "subscriptionStartedOn": "{date} से शुरू",
   "subscriptionAutoPost": "हर रिन्यूअल पर खर्च में जोड़ें",
   "subscriptionAutoPostHelp": "बंद: सिर्फ़ यहाँ दिखेगा, कोई एंट्री नहीं जुड़ेगी",
   "subscriptionNameRequired": "नाम डालें",

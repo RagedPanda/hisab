@@ -8,6 +8,7 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../domain/recurring/recurrence.dart';
+import '../../domain/subscriptions/subscription_schedule.dart';
 import '../../domain/subscriptions/subscription_templates.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
@@ -38,6 +39,10 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
   final _priceController = TextEditingController();
   SubscriptionCycle _cycle = subscriptionCycles.first;
   DateTime _nextRenewal = startOfDay(DateTime.now());
+
+  /// Whether the user picked the renewal date; only a picked past date is
+  /// rolled forward, so editing an overdue subscription keeps it overdue.
+  bool _dateEdited = false;
   Category? _category;
   String? _accountId;
   bool _autoPost = true;
@@ -139,7 +144,8 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.event_outlined),
                     title: Text(l10n.subscriptionNextRenewal),
-                    trailing: SettingValue(formatShortDate(_nextRenewal, locale: locale.toString())),
+                    subtitle: _startedInPast ? Text(l10n.subscriptionStartedOn(formatShortDate(_nextRenewal, locale: locale.toString()))) : null,
+                    trailing: SettingValue(formatShortDate(_schedule().start, locale: locale.toString())),
                     onTap: _pickDate,
                   ),
                   ListTile(
@@ -182,11 +188,31 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
     final today = startOfDay(DateTime.now());
     final picked = await showDatePicker(
       context: context,
-      initialDate: _nextRenewal.isBefore(today) ? today : _nextRenewal,
-      firstDate: today,
-      lastDate: DateTime(today.year + 5),
+      initialDate: _nextRenewal,
+      firstDate: earliestSubscriptionRenewal(today),
+      lastDate: DateTime(today.year + kSubscriptionMaxYearsBack),
     );
-    if (picked != null && mounted) setState(() => _nextRenewal = picked);
+    if (picked != null && mounted) {
+      setState(() {
+        _nextRenewal = picked;
+        _dateEdited = true;
+      });
+    }
+  }
+
+  bool get _startedInPast => _dateEdited && _nextRenewal.isBefore(startOfDay(DateTime.now()));
+
+  /// Rule start and anchors for the form as filled in now.
+  ({DateTime start, int? dayOfMonth, int? weekday}) _schedule() {
+    final existing = _existing;
+    return subscriptionScheduleFrom(
+      renewalDate: _nextRenewal,
+      cycle: _cycle,
+      today: _dateEdited ? DateTime.now() : _nextRenewal,
+      hour: existing?.startDate.hour ?? kSubscriptionRenewalHour,
+      minute: existing?.startDate.minute ?? 0,
+      monthStartDay: ref.read(settingsProvider).monthStartDay,
+    );
   }
 
   Future<void> _save() async {
@@ -195,9 +221,8 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
     final priceMinor = parseAmountToMinor(_priceController.text);
     if (name.isEmpty || priceMinor == null || priceMinor <= 0) return;
     final existing = _existing;
-    final hour = existing?.startDate.hour ?? kSubscriptionRenewalHour;
-    final minute = existing?.startDate.minute ?? 0;
-    final start = DateTime(_nextRenewal.year, _nextRenewal.month, _nextRenewal.day, hour, minute);
+    final schedule = _schedule();
+    final start = schedule.start;
     final dateChanged = existing == null || existing.nextDue == null || !isSameDay(existing.nextDue!, start);
     final draft = SubscriptionDraft(
       name: name,
@@ -207,6 +232,8 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
       categoryId: _category?.id,
       accountId: _accountId,
       autoPost: _autoPost,
+      dayOfMonth: schedule.dayOfMonth,
+      weekday: schedule.weekday,
     );
     final rule = existing == null ? newSubscriptionRule(draft) : editedSubscriptionRule(existing, draft, renewalDayChanged: dateChanged);
     await ref.read(recurringRepositoryProvider).saveRule(rule, monthStartDay: ref.read(settingsProvider).monthStartDay);

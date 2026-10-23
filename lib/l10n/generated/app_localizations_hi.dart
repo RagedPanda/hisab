@@ -2248,6 +2248,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get subscriptionNextRenewal => 'अगला रिन्यूअल';
 
   @override
+  String subscriptionStartedOn(String date) {
+    return '$date से शुरू';
+  }
+
+  @override
   String get subscriptionAutoPost => 'हर रिन्यूअल पर खर्च में जोड़ें';
 
   @override

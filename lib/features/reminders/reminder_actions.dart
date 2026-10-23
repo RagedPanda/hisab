@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
+import '../../domain/reminders/reminder_draft.dart';
 import '../../domain/reminders/reminder_kind.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
@@ -18,7 +19,8 @@ enum _PaidChoice { addEntry, justMark }
 Future<void> markReminderPaid(BuildContext context, WidgetRef ref, Reminder reminder) async {
   final l10n = context.l10n;
   final isMoney = ReminderKind.of(reminder.kind).isMoney;
-  if (isMoney && reminder.amountMinor != null) {
+  final amount = reminderAmountOrNone(reminder.amountMinor);
+  if (isMoney && amount != null) {
     final symbol = ref.read(settingsProvider).currencySymbol;
     final choice = await showModalBottomSheet<_PaidChoice>(
       context: context,
@@ -32,7 +34,7 @@ Future<void> markReminderPaid(BuildContext context, WidgetRef ref, Reminder remi
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-            child: Text(l10n.reminderPaidSheetBody(formatMinor(reminder.amountMinor!, symbol: symbol))),
+            child: Text(l10n.reminderPaidSheetBody(formatMinor(amount, symbol: symbol))),
           ),
           ListTile(
             leading: const Icon(Icons.add_card_outlined),
@@ -96,5 +98,14 @@ Future<void> deleteReminderWithUndo(BuildContext context, WidgetRef ref, Reminde
 Future<void> turnOnReminderNotifications(WidgetRef ref) async {
   final granted = await ref.read(notificationServiceProvider).requestPermission();
   if (!granted) await openAppSettings();
+  ref.invalidate(notificationPermissionProvider);
+}
+
+/// Opens Android's "Alarms & reminders" setting for Hisab. When access is
+/// granted, every alert is re-posted exact straight away (the resume check in
+/// reminder_startup.dart also catches a grant made after this returns).
+Future<void> allowExactReminderAlarms(WidgetRef ref) async {
+  final granted = await ref.read(notificationServiceProvider).requestExactAlarms();
+  if (granted) await ref.read(reminderSchedulerProvider).rescheduleAll();
   ref.invalidate(notificationPermissionProvider);
 }

@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import '../../data/db/database.dart';
+import '../../domain/reminders/reminder_draft.dart';
 import '../../domain/reminders/reminder_kind.dart';
 import '../../domain/reminders/reminder_schedule.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -32,7 +33,8 @@ String reminderDueCaption(AppLocalizations l10n, {required DateTime dueAt, requi
       : days == 0
           ? l10n.reminderDueToday
           : l10n.reminderDueInDays(days);
-  return amountMinor == null ? due : '$due · ${formatMinor(amountMinor, symbol: currencySymbol)}';
+  final amount = reminderAmountOrNone(amountMinor);
+  return amount == null ? due : '$due · ${formatMinor(amount, symbol: currencySymbol)}';
 }
 
 /// The notification for [alert] of [reminder].

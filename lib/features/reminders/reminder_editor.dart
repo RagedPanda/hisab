@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/format.dart';
 import '../../core/money.dart';
+import '../../core/notifications/alarm_timing.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/reminders_repository.dart';
@@ -14,6 +15,7 @@ import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../categories/category_picker.dart';
 import '../shell/widgets/common.dart';
+import 'permission_explainer.dart';
 import 'reminder_labels.dart';
 
 /// Repeats offered in the editor; weekly suits few bills, so it stays out.
@@ -44,7 +46,7 @@ class ReminderEditor extends ConsumerStatefulWidget {
 
 class _ReminderEditorState extends ConsumerState<ReminderEditor> {
   late final _titleController = TextEditingController(text: widget.initial.title);
-  late final _amountController = TextEditingController(text: widget.initial.amountMinor == null ? '' : amountInputText(widget.initial.amountMinor!));
+  late final _amountController = TextEditingController(text: _initialAmountText(widget.initial.amountMinor));
   late final _notesController = TextEditingController(text: widget.initial.notes);
   late ReminderKind _kind = widget.initial.kind;
   late DateTime _dueAt = widget.initial.dueAt;
@@ -73,7 +75,7 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
         title: _titleController.text,
         dueAt: DateTime(_dueAt.year, _dueAt.month, _dueAt.day),
         notes: _notesController.text.trim(),
-        amountMinor: _kind.isMoney ? parseAmountToMinor(_amountController.text) : null,
+        amountMinor: _kind.isMoney ? reminderAmountOrNone(parseAmountToMinor(_amountController.text)) : null,
         categoryId: _kind.isMoney ? _categoryId : null,
         accountId: _kind.isMoney ? _accountId : null,
         recurringId: widget.initial.recurringId,
@@ -106,36 +108,28 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
     if (category != null) setState(() => _categoryId = category.id);
   }
 
-  /// Pre-permission sheet shown the first time a reminder with alerts is
-  /// saved while notifications are off; the reminder is saved either way.
+  /// The amount field starts empty for no amount, including a stored 0.
+  static String _initialAmountText(int? amountMinor) {
+    final amount = reminderAmountOrNone(amountMinor);
+    return amount == null ? '' : amountInputText(amount);
+  }
+
+  /// Pre-permission sheets shown when a reminder with alerts is saved while
+  /// notifications are off: first the notification permission, then (Android
+  /// 12+, when not granted) "Alarms & reminders" so alerts fire on time. The
+  /// reminder is saved whatever the answers.
   Future<void> _askPermissionIfNeeded() async {
-    final permission = await ref.read(notificationServiceProvider).checkPermission();
-    if (permission.notificationsAllowed || !mounted) return;
+    final service = ref.read(notificationServiceProvider);
+    final before = await service.checkPermission();
+    if (before.notificationsAllowed || !mounted) return;
     final l10n = context.l10n;
-    final allow = await showModalBottomSheet<bool>(
-      context: context,
-      useRootNavigator: true,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.notifications_active_outlined, size: 48, color: Theme.of(sheetContext).colorScheme.primary),
-            const SizedBox(height: 12),
-            Text(l10n.notifPrePromptTitle, style: Theme.of(sheetContext).textTheme.titleLarge, textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            Text(l10n.notifPrePromptBody, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            Row(children: [
-              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext, false), child: Text(l10n.notNow))),
-              const SizedBox(width: 12),
-              Expanded(child: FilledButton(onPressed: () => Navigator.pop(sheetContext, true), child: Text(l10n.allow))),
-            ]),
-          ]),
-        ),
-      ),
-    );
-    if (allow ?? false) await ref.read(notificationServiceProvider).requestPermission();
+    final allow = await showPermissionExplainer(context, icon: Icons.notifications_active_outlined, title: l10n.notifPrePromptTitle, body: l10n.notifPrePromptBody);
+    if (allow) await service.requestPermission();
+    final after = await service.checkPermission();
+    if (shouldAskForExactAlarms(after) && mounted) {
+      final allowExact = await showPermissionExplainer(context, icon: Icons.alarm_on_outlined, title: l10n.exactAlarmPromptTitle, body: l10n.exactAlarmPromptBody);
+      if (allowExact) await service.requestExactAlarms();
+    }
     ref.invalidate(notificationPermissionProvider);
   }
 

@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:hisab/core/notifications/notification_gateway.dart';
@@ -21,10 +24,15 @@ class GatewayCallLog {
   }
 }
 
-/// Whether the OS pending list shows what was scheduled. iOS drops requests
-/// while notification permission is undecided or denied (a fresh simulator
-/// cannot grant it headlessly), so there only the gateway calls can be checked.
-bool osPendingIsObservable({required bool isIOS, required bool notificationsAllowed}) => !isIOS || notificationsAllowed;
+/// iOS only: grants provisional notification authorization, which iOS gives
+/// silently with no system prompt on a simulator that has never been asked.
+/// The OS then accepts and lists scheduled requests, so flows can assert the
+/// real pending list. Returns whether iOS accepted (true on other platforms).
+Future<bool> grantProvisionalNotificationsOnIOS() async {
+  if (!Platform.isIOS) return true;
+  final ios = FlutterLocalNotificationsPlugin().resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+  return await ios?.requestPermissions(alert: true, badge: true, sound: true, provisional: true) ?? false;
+}
 
 /// The real plugin gateway, recording every schedule and cancel into [log].
 class RecordingNotificationGateway implements NotificationGateway {

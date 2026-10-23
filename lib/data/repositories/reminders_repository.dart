@@ -54,7 +54,7 @@ class RemindersRepository {
       kind: Value(draft.kind.key),
       title: Value(draft.title.trim()),
       notes: Value(draft.notes.trim()),
-      amountMinor: Value(draft.amountMinor),
+      amountMinor: Value(reminderAmountOrNone(draft.amountMinor)),
       toleranceMinor: Value(draft.toleranceMinor),
       matchKeywords: Value(draft.matchKeywords.trim().toLowerCase()),
       categoryId: Value(draft.categoryId),

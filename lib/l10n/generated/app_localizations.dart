@@ -3518,11 +3518,23 @@ abstract class AppLocalizations {
   /// **'Turn on'**
   String get notifTurnOn;
 
-  /// No description provided for @reminderExactAlarmNote.
+  /// No description provided for @remindersLateNote.
   ///
   /// In en, this message translates to:
-  /// **'Alerts may come a few minutes late. Exact timing needs the Alarms & reminders permission.'**
-  String get reminderExactAlarmNote;
+  /// **'Reminders may arrive late. Allow Alarms & reminders'**
+  String get remindersLateNote;
+
+  /// No description provided for @exactAlarmPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get reminders on time'**
+  String get exactAlarmPromptTitle;
+
+  /// No description provided for @exactAlarmPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To alert you at the exact time you set, Android needs Hisab\'s \"Alarms & reminders\" setting. Without it, reminders may arrive late.'**
+  String get exactAlarmPromptBody;
 
   /// No description provided for @notifPrePromptTitle.
   ///

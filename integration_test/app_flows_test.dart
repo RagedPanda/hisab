@@ -5,10 +5,15 @@
 ///
 /// Tests 2..8 share one in-memory database so later flows (groups, dark mode,
 /// Hindi, backup) have realistic data on screen; test 1 and 9 use their own.
+///
+/// iOS, flow 24 (reminders): the flow grants provisional notification
+/// authorization itself, which iOS does silently on a simulator that has never
+/// been asked (`xcrun simctl privacy` cannot grant notifications). Manual step:
+/// if Hisab's notifications were denied on the simulator before, uninstall the
+/// app (`xcrun simctl uninstall <udid> com.sarv.hisab`) or erase the simulator
+/// first, otherwise iOS keeps the denial and flow 24 fails its first expect.
 library;
 
-import 'dart:async';
-import 'dart:io' show Platform;
 import 'dart:ui' as ui;
 
 import 'package:drift/drift.dart' show Value;
@@ -1424,9 +1429,9 @@ void main() {
     final fresh = await createApp(overrides: [recordingGatewayOverride(gatewayLog)]);
     addTearDown(fresh.container.dispose);
     final gateway = fresh.read(notificationGatewayProvider);
-    // iOS: ask for the notification permission through the plugin (the system
-    // alert stays up; synthetic taps still reach Flutter underneath it).
-    if (Platform.isIOS) unawaited(gateway.requestPermission());
+    // iOS: grant provisional authorization up front, silently and with no
+    // system prompt, so the OS accepts the alerts and lists them (#60).
+    expect(await grantProvisionalNotificationsOnIOS(), isTrue, reason: 'iOS provisional authorization; see the header if this fails');
     await startReminderNotifications(fresh.container);
     await pumpApp(tester, fresh);
     final now = DateTime.now();
@@ -1455,16 +1460,10 @@ void main() {
     expect(electricity.amountMinor, 210000);
 
     // The alert is really with the OS: AlarmManager on Android, UNUserNotificationCenter on iOS.
-    // A fresh iOS simulator never grants permission headlessly and iOS then
-    // drops the request, so there check the schedule call instead (#60).
-    final osObservable = osPendingIsObservable(isIOS: Platform.isIOS, notificationsAllowed: (await gateway.permissionState()).notificationsAllowed);
     final electricityPayload = reminderPayload(electricity.id);
-    if (osObservable) {
-      final pending = await gateway.pending();
-      expect(pending.where((alert) => alert.payload == electricityPayload), isNotEmpty, reason: 'scheduled with the OS');
-    } else {
-      expect(gatewayLog.liveIdsFor(electricityPayload), isNotEmpty, reason: 'scheduled through the gateway (iOS without permission)');
-    }
+    final pending = await gateway.pending();
+    expect(pending.where((alert) => alert.payload == electricityPayload), isNotEmpty, reason: 'scheduled with the OS');
+    expect(gatewayLog.liveIdsFor(electricityPayload), isNotEmpty, reason: 'scheduled through the gateway');
 
     final scheduler = fresh.read(reminderSchedulerProvider);
     final card = await scheduler.save(ReminderDraft(kind: ReminderKind.card, title: 'HDFC credit card', dueAt: inDays(-2), amountMinor: 1845000, repeat: ReminderRepeat.monthly));
@@ -1486,10 +1485,8 @@ void main() {
     final paid = (await fresh.read(remindersRepositoryProvider).getById(electricity.id))!;
     expect(paid.status, 'done');
     expect(paid.entryId, isNotNull);
-    if (osObservable) {
-      final pending = await gateway.pending();
-      expect(pending.where((alert) => alert.payload == electricityPayload), isEmpty, reason: 'paid reminder alerts cancelled');
-    }
+    final pendingAfterPaid = await gateway.pending();
+    expect(pendingAfterPaid.where((alert) => alert.payload == electricityPayload), isEmpty, reason: 'paid reminder alerts cancelled');
     expect(gatewayLog.liveIdsFor(electricityPayload), isEmpty, reason: 'paid reminder alerts cancelled through the gateway');
 
     await scheduler.skip(card);

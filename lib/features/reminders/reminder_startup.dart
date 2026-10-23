@@ -1,6 +1,7 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/notifications/alarm_timing.dart';
 import '../../core/notifications/notification_gateway.dart';
 import '../../core/notifications/reminder_payload.dart';
 import '../../core/notifications/reminder_tap_gate.dart';
@@ -38,10 +39,32 @@ Future<void> startReminderNotifications(ProviderContainer container) async {
     await service.initialize(onTap: (tap) => handleReminderTap(container, tap));
     final launch = await service.launchTap();
     if (launch != null) await handleReminderTap(container, launch);
+    NotificationPermissionState? known = await service.checkPermission();
     await syncCardReminderSafely(() => container.read(cardReminderSyncProvider).syncAll());
     container.read(cardReminderLiveSyncProvider);
     await container.read(reminderSchedulerProvider).rescheduleAll();
+    _resumeListener?.dispose();
+    _resumeListener = AppLifecycleListener(onResume: () async => known = await recheckAlarmAccess(container, known));
   } catch (error, stack) {
     debugPrint('Hisab: reminder notifications unavailable: $error\n$stack');
+  }
+}
+
+AppLifecycleListener? _resumeListener;
+
+/// On app resume: refreshes the permission state the Reminders screen shows
+/// and, when "Alarms & reminders" access changed (the user just toggled it in
+/// Settings), re-posts every alert so they become exact, or inexact, at once.
+/// A revoke also kills the process; the next launch's rescheduleAll covers it.
+/// Returns the state now known. Never throws.
+Future<NotificationPermissionState?> recheckAlarmAccess(ProviderContainer container, NotificationPermissionState? previous) async {
+  try {
+    final current = await container.read(notificationServiceProvider).checkPermission();
+    container.invalidate(notificationPermissionProvider);
+    if (exactAlarmAccessChanged(previous, current)) await container.read(reminderSchedulerProvider).rescheduleAll();
+    return current;
+  } catch (error, stack) {
+    debugPrint('Hisab: alarm access check failed: $error\n$stack');
+    return previous;
   }
 }

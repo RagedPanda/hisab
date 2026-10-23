@@ -19,6 +19,7 @@ import '../../domain/projects/project_fields.dart';
 import '../../domain/projects/project_math.dart';
 import '../../domain/projects/project_picker.dart';
 import '../../domain/projects/project_templates.dart';
+import '../../domain/reminders/reminder_draft.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
@@ -219,7 +220,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     final reminder = await ref.read(remindersRepositoryProvider).getById(reminderId);
     if (reminder == null) return;
     _kind = 'expense';
-    if (reminder.amountMinor != null) _amountController.text = amountInputText(reminder.amountMinor!);
+    final amount = reminderAmountOrNone(reminder.amountMinor);
+    if (amount != null) _amountController.text = amountInputText(amount);
     _payeeController.text = reminder.title;
     if (reminder.notes.isNotEmpty) _noteController.text = reminder.notes;
     if (reminder.categoryId != null) _category = await ref.read(categoriesRepositoryProvider).byId(reminder.categoryId!);

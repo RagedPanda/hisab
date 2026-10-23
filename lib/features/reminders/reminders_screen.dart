@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format.dart';
 import '../../core/money.dart';
+import '../../core/notifications/alarm_timing.dart';
 import '../../core/notifications/reminder_alert_text.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../domain/reminders/reminder_buckets.dart';
+import '../../domain/reminders/reminder_draft.dart';
 import '../../domain/reminders/reminder_kind.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
@@ -92,10 +94,15 @@ class _UpcomingList extends ConsumerWidget {
     final l10n = context.l10n;
     final reminders = ref.watch(upcomingRemindersProvider).value ?? const <Reminder>[];
     final permission = ref.watch(notificationPermissionProvider).value;
-    final notificationsOff = permission != null && !permission.notificationsAllowed && reminders.any((r) => r.notifyAtMinute != null);
+    final hasAlerts = reminders.any((r) => r.notifyAtMinute != null);
+    final notificationsOff = permission != null && !permission.notificationsAllowed && hasAlerts;
     final now = DateTime.now();
     final buckets = groupByBucket(reminders.where((r) => r.dueAt != null), (Reminder r) => r.dueAt!, now);
-    final banner = notificationsOff ? const _NotificationsOffBanner() : null;
+    final banner = notificationsOff
+        ? const _NotificationsOffBanner()
+        : remindersMayArriveLate(permission, hasAlerts: hasAlerts)
+            ? const _MayArriveLateNote()
+            : null;
     if (reminders.isEmpty) {
       return EmptyState(
         icon: Icons.alarm,
@@ -119,6 +126,30 @@ class _UpcomingList extends ConsumerWidget {
             ),
           ],
       ],
+    );
+  }
+}
+
+/// Exact alarms are not allowed, so alerts fall back to inexact and may be
+/// late; tapping opens the "Alarms & reminders" setting.
+class _MayArriveLateNote extends ConsumerWidget {
+  const _MayArriveLateNote();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    return InkWell(
+      key: const ValueKey('reminders-late-note'),
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => allowExactReminderAlarms(ref),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(4, 12, 4, 4),
+        child: Row(children: [
+          Icon(Icons.schedule, size: 18, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 8),
+          Expanded(child: Text(context.l10n.remindersLateNote, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary))),
+        ]),
+      ),
     );
   }
 }
@@ -244,7 +275,8 @@ class _HistoryList extends ConsumerWidget {
         : kind.isMoney
             ? l10n.reminderPaidOn(date)
             : l10n.reminderDoneOn(date);
-    final caption = reminder.amountMinor == null ? status : '$status · ${formatMinor(reminder.amountMinor!, symbol: symbol)}';
+    final amount = reminderAmountOrNone(reminder.amountMinor);
+    final caption = amount == null ? status : '$status · ${formatMinor(amount, symbol: symbol)}';
     final canUndo = now.difference(closedAt) <= kReminderUndoWindow;
     return ListTile(
       leading: CircleAvatar(child: Icon(reminderKindIcon(kind), size: 20)),

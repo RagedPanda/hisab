@@ -8,6 +8,7 @@ import '../../data/repositories/recurring_repository.dart';
 import '../../domain/recurring/repeat_draft.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
+import '../../l10n/rule_names.dart';
 import '../shell/widgets/common.dart';
 import 'recurring_list_model.dart';
 import 'repeat_sheet.dart';
@@ -22,7 +23,7 @@ String recurringSectionLabel(AppLocalizations l10n, RecurringSection section) =>
 /// What a rule is called in lists: its name, else payee, else category.
 String recurringRuleTitle(BuildContext context, RecurringRuleView view) {
   final rule = view.rule;
-  if (rule.name.trim().isNotEmpty) return rule.name.trim();
+  if (rule.name.trim().isNotEmpty) return localizedRuleName(context.l10n, rule.name.trim());
   if ((rule.payee ?? '').trim().isNotEmpty) return rule.payee!.trim();
   final category = view.category;
   if (category != null) return category.displayName(context);

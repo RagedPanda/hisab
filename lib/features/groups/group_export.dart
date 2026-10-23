@@ -40,6 +40,7 @@ GroupCsvLabels groupCsvLabels(AppLocalizations l10n) => GroupCsvLabels(
       paidColumn: l10n.groupCsvPaidColumn,
       shareColumn: l10n.groupCsvShareColumn,
       balanceColumn: l10n.groupCsvBalanceColumn,
+      total: l10n.groupCsvTotal,
     );
 
 /// Every member the export needs a column for: current members (me first),
@@ -92,6 +93,7 @@ List<ExportRow> exportRows(
         costMinor: settlement.amountMinor,
         paidMinor: {settlement.fromMemberId: settlement.amountMinor},
         shareMinor: {settlement.toMemberId: settlement.amountMinor},
+        isPayment: true,
       ),
   ];
 }
@@ -103,14 +105,16 @@ String groupCsv(AppLocalizations l10n, GroupDetail detail, {required Map<String,
 }
 
 /// A plain-text summary of who owes whom that pastes cleanly into WhatsApp:
-/// a bold title, one line per suggested payment, then where each member
-/// stands overall. [nameOf] resolves member ids; [myMemberId] switches the
-/// wording to "You owe" / "owes you".
+/// a bold title, the group's total spend with each member's own share of it,
+/// one line per suggested payment, then where each member stands overall.
+/// [nameOf] resolves member ids; [myMemberId] switches the wording to
+/// "You owe" / "owes you" / "Your share".
 String groupSummaryText(
   AppLocalizations l10n, {
   required String groupName,
   required List<Transfer> transfers,
   required Map<String, int> net,
+  required ExpenseTotals totals,
   required List<String> memberOrder,
   required String? myMemberId,
   required String Function(String memberId) nameOf,
@@ -131,14 +135,26 @@ String groupSummaryText(
 
   final title = '*${l10n.shareHeader(groupName)}*';
   final footer = l10n.sharedFromHisab;
-  if (transfers.isEmpty) return '$title\n${l10n.allSettledUp}\n\n$footer';
+  final totalLines = totals.totalMinor == 0
+      ? const <String>[]
+      : [
+          l10n.groupSummaryGroupTotal(money(totals.totalMinor)),
+          for (final memberId in memberOrder)
+            if ((totals.shareByMember[memberId] ?? 0) != 0)
+              memberId == myMemberId
+                  ? l10n.groupSummaryYourShare(money(totals.shareByMember[memberId]!))
+                  : l10n.groupSummaryMemberShare(nameOf(memberId), money(totals.shareByMember[memberId]!)),
+          '',
+        ];
+  if (transfers.isEmpty) return [title, ...totalLines, l10n.allSettledUp, '', footer].join('\n');
   final standings = [
     for (final memberId in memberOrder)
       if ((net[memberId] ?? 0) != 0) '• ${standingLine(memberId, net[memberId]!)}',
   ];
   return [
     title,
-    '',
+    ...totalLines,
+    if (totalLines.isEmpty) '',
     '*${l10n.groupSummaryWhoPaysWhom}*',
     for (final transfer in transfers) '• ${transferLine(transfer)}',
     '',
@@ -149,14 +165,17 @@ String groupSummaryText(
   ].join('\n');
 }
 
-/// [groupSummaryText] for the group on screen.
+/// [groupSummaryText] for the group on screen. Totals come from the same
+/// rows the CSV exports, so both always agree.
 String groupSummaryFor(AppLocalizations l10n, GroupDetail detail, {required String symbol}) {
+  final rows = exportRows(l10n, detail, categoryById: const {}, locale: Locale(l10n.localeName));
   final nameById = {for (final member in detail.allMembers) member.id: memberShortName(l10n, member)};
   return groupSummaryText(
     l10n,
     groupName: detail.group.name,
     transfers: detail.balances.suggested,
     net: detail.balances.net,
+    totals: expenseTotals(rows),
     memberOrder: [
       for (final member in detail.members) member.id,
       for (final member in detail.allMembers)

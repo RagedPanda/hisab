@@ -6,6 +6,7 @@ import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/data/repositories/groups_repository.dart';
 import 'package:hisab/domain/split/debt_simplifier.dart';
+import 'package:hisab/domain/split/group_export.dart';
 import 'package:hisab/features/groups/group_export.dart';
 import 'package:hisab/l10n/generated/app_localizations_en.dart';
 import 'package:hisab/l10n/generated/app_localizations_hi.dart';
@@ -22,6 +23,7 @@ void main() {
         groupName: 'Goa trip',
         transfers: const [Transfer('me', 'rahul', 150000), Transfer('asha', 'rahul', 50000), Transfer('asha', 'me', 2550)],
         net: const {'me': -147450, 'rahul': 200000, 'asha': -52550},
+        totals: (totalMinor: 300000, paidByMember: const {'rahul': 300000}, shareByMember: const {'me': 147450, 'rahul': 100000, 'asha': 52550}),
         memberOrder: const ['me', 'rahul', 'asha'],
         myMemberId: 'me',
         nameOf: nameOf,
@@ -30,6 +32,10 @@ void main() {
       expect(
         text,
         '*Goa trip — balances*\n'
+        'Group total: ₹3,000\n'
+        'Your share: ₹1,474.50\n'
+        'Rahul\'s share: ₹1,000\n'
+        'आशा\'s share: ₹525.50\n'
         '\n'
         '*Who pays whom*\n'
         '• You owe Rahul ₹1,500\n'
@@ -46,8 +52,23 @@ void main() {
     });
 
     test('says all settled up when nobody owes anything', () {
-      final text = groupSummaryText(english, groupName: 'Flat', transfers: const [], net: const {'me': 0}, memberOrder: const ['me'], myMemberId: 'me', nameOf: nameOf, symbol: '₹');
+      final text = groupSummaryText(english, groupName: 'Flat', transfers: const [], net: const {'me': 0}, totals: _noSpend, memberOrder: const ['me'], myMemberId: 'me', nameOf: nameOf, symbol: '₹');
       expect(text, '*Flat — balances*\nAll settled up.\n\nShared from Hisab');
+    });
+
+    test('shows the group total and my smaller share when I skipped some expenses, even once settled', () {
+      final text = groupSummaryText(
+        english,
+        groupName: 'Goa trip',
+        transfers: const [],
+        net: const {'me': 0, 'rahul': 0},
+        totals: (totalMinor: 30000000, paidByMember: const {'rahul': 30000000}, shareByMember: const {'me': 5000000, 'rahul': 25000000}),
+        memberOrder: const ['me', 'rahul'],
+        myMemberId: 'me',
+        nameOf: nameOf,
+        symbol: '₹',
+      );
+      expect(text, '*Goa trip — balances*\nGroup total: ₹3,00,000\nYour share: ₹50,000\nRahul\'s share: ₹2,50,000\n\nAll settled up.\n\nShared from Hisab');
     });
 
     test('reads in Hindi', () {
@@ -56,6 +77,7 @@ void main() {
         groupName: 'गोवा',
         transfers: const [Transfer('rahul', 'me', 10000)],
         net: const {'me': 10000, 'rahul': -10000},
+        totals: (totalMinor: 20000, paidByMember: const {'me': 20000}, shareByMember: const {'me': 10000, 'rahul': 10000}),
         memberOrder: const ['me', 'rahul'],
         myMemberId: 'me',
         nameOf: (id) => id == 'me' ? 'आप' : 'राहुल',
@@ -63,6 +85,9 @@ void main() {
       );
       expect(text, contains('राहुल को आपको ₹100 देने हैं'));
       expect(text, contains('आपको ₹100 वापस मिलेंगे'));
+      expect(text, contains('ग्रुप का कुल खर्च: ₹200'));
+      expect(text, contains('आपका हिस्सा: ₹100'));
+      expect(text, contains('राहुल का हिस्सा: ₹100'));
       expect(text, endsWith('हिसाब ऐप से शेयर किया गया'));
     });
   });
@@ -104,6 +129,13 @@ void main() {
       expect(lines[2], startsWith('2026-10-03,"प्रिया paid Rahul · UPI, thanks",Payment,300.00,'));
       // After the payment everyone is square.
       expect(lines[2], endsWith(',0.00,0.00,0.00'));
+      // The payment is not spending: the total is the hotel bill alone.
+      expect(lines[3], ',Total,,900.00,,300.00,600.00,0.00,300.00,300.00,300.00,0.00,0.00,0.00');
+
+      final summary = groupSummaryFor(english, detail, symbol: '₹');
+      expect(summary, contains('Group total: ₹900\nYour share: ₹300\nRahul\'s share: ₹300\nप्रिया\'s share: ₹300'));
     });
   });
 }
+
+const ExpenseTotals _noSpend = (totalMinor: 0, paidByMember: {}, shareByMember: {});

@@ -56,7 +56,7 @@ class _GroupTotalsScreenState extends ConsumerState<GroupTotalsScreen> {
     final months = monthsWithExpenses(expenses);
     final month = months.contains(_month) ? _month : null;
     final range = month == null ? null : monthRange(month);
-    final totals = computeGroupTotals(expenses: expenses, myMemberId: detail.me?.id, range: range);
+    final totals = computeGroupTotals(expenses: expenses, payments: detail.totalsPayments, myMemberId: detail.me?.id, range: range);
     final periodLabel = range == null ? l10n.allTime : formatMonthLabel(range, locale: locale);
     final memberById = {for (final member in detail.allMembers) member.id: member};
     String nameOf(String id) {
@@ -123,7 +123,8 @@ class _GroupTotalsScreenState extends ConsumerState<GroupTotalsScreen> {
   }
 }
 
-/// Total group spend with my paid, my share and how the expenses moved my
+/// The group's total and my total share as the two headline figures, then
+/// what I paid, payments I made or received, and how the period moved my
 /// balance. Used on the totals page and, for all time, on the Balances tab.
 class GroupTotalsSummary extends StatelessWidget {
   const GroupTotalsSummary({super.key, required this.totals, required this.symbol, required this.showMine, this.onTap});
@@ -155,22 +156,28 @@ class GroupTotalsSummary extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(l10n.groupTotalsTotalSpent, style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    child: _Headline(
+                      label: l10n.groupTotalsTotalSpent,
+                      value: formatMinor(totals.totalSpentMinor, symbol: symbol),
+                    ),
                   ),
+                  if (showMine) ...[
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _Headline(
+                        label: l10n.groupTotalsYourShare,
+                        value: formatMinor(totals.myShareMinor, symbol: symbol),
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
                   if (onTap != null) Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
                 ],
               ),
               const SizedBox(height: 4),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  formatMinor(totals.totalSpentMinor, symbol: symbol),
-                  style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700).tabular,
-                ),
-              ),
               Text(l10n.groupTotalsExpenseCount(totals.expenseCount), style: captionStyle(context)),
               if (showMine) ...[
                 const Divider(height: 24),
@@ -178,16 +185,50 @@ class GroupTotalsSummary extends StatelessWidget {
                   label: l10n.groupTotalsYouPaid,
                   value: formatMinor(totals.myPaidMinor, symbol: symbol),
                 ),
-                _FigureRow(
-                  label: l10n.groupTotalsYourShare,
-                  value: formatMinor(totals.myShareMinor, symbol: symbol),
-                ),
+                if (totals.myPaymentsSentMinor != 0)
+                  _FigureRow(
+                    label: l10n.groupTotalsPaymentsMade,
+                    value: formatMinor(totals.myPaymentsSentMinor, symbol: symbol),
+                  ),
+                if (totals.myPaymentsReceivedMinor != 0)
+                  _FigureRow(
+                    label: l10n.groupTotalsPaymentsReceived,
+                    value: formatMinor(totals.myPaymentsReceivedMinor, symbol: symbol),
+                  ),
                 _FigureRow(label: l10n.groupTotalsNetChange, value: netText, color: netColor),
               ],
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A caption over a large amount: the group total and my share.
+class _Headline extends StatelessWidget {
+  const _Headline({required this.label, required this.value, this.color});
+  final String label;
+  final String value;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        const SizedBox(height: 4),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: color).tabular,
+          ),
+        ),
+      ],
     );
   }
 }

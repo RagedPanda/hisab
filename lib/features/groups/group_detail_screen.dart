@@ -300,7 +300,7 @@ class _BalancesTab extends ConsumerWidget {
           SectionHeader(l10n.groupTotalsTitle),
           GroupTotalsSummary(
             key: kGroupTotalsCardKey,
-            totals: computeGroupTotals(expenses: detail.totalsExpenses, myMemberId: detail.me?.id),
+            totals: computeGroupTotals(expenses: detail.totalsExpenses, payments: detail.totalsPayments, myMemberId: detail.me?.id),
             symbol: symbol,
             showMine: detail.me != null,
             onTap: () => context.push('/groups/${group.id}/totals'),

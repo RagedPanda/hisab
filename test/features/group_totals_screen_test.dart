@@ -18,6 +18,7 @@ import '../app_flow_test.dart' show settle;
 
 /// Goa trip: Rahul and I paid a 1,000 hotel together (600 + 400) split
 /// 500 / 300 / 200, and Priya paid a 300 dinner split equally among three.
+/// Then I paid Rahul 100 and Priya paid me 40 to settle up.
 Future<String> _seedGoaTrip(AppDatabase db) async {
   final groups = GroupsRepository(db);
   final entries = EntriesRepository(db);
@@ -38,6 +39,8 @@ Future<String> _seedGoaTrip(AppDatabase db) async {
     EntriesRepository.newExpense(amountMinor: 30000, occurredAt: now, groupId: groupId, paidByMemberId: priya, splitMethod: 'equal', note: 'Dinner'),
     splits: [split(me, 10000), split(rahul, 10000), split(priya, 10000)],
   );
+  await groups.addSettlement(groupId: groupId, fromMemberId: me, toMemberId: rahul, amountMinor: 10000, occurredAt: now);
+  await groups.addSettlement(groupId: groupId, fromMemberId: priya, toMemberId: me, amountMinor: 4000, occurredAt: now);
   return groupId;
 }
 
@@ -63,16 +66,25 @@ void main() {
 
     final card = find.byKey(kGroupTotalsCardKey);
     expect(card, findsOneWidget);
+    // The group total and my total share are the two headline figures.
+    expect(find.descendant(of: card, matching: find.text('Group total')), findsOneWidget);
     expect(find.descendant(of: card, matching: find.text('₹1,300')), findsOneWidget);
-    // I paid 600 and my share is 500 + 100 = 600, so my balance did not move.
+    expect(find.descendant(of: card, matching: find.text('Your share')), findsOneWidget);
+    // I paid 600 and my share is 500 + 100 = 600; payments then add 100 - 40.
     expect(find.descendant(of: card, matching: find.text('₹600')), findsNWidgets(2));
-    expect(find.descendant(of: card, matching: find.text('₹0')), findsOneWidget);
+    expect(find.descendant(of: card, matching: find.text('Payments you made')), findsOneWidget);
+    expect(find.descendant(of: card, matching: find.text('₹100')), findsOneWidget);
+    expect(find.descendant(of: card, matching: find.text('Payments you received')), findsOneWidget);
+    expect(find.descendant(of: card, matching: find.text('₹40')), findsOneWidget);
+    expect(find.descendant(of: card, matching: find.text('+₹60')), findsOneWidget);
 
     await tester.tap(card);
     await settle(tester);
     expect(find.text('Group totals'), findsOneWidget);
     expect(find.text('All time'), findsOneWidget);
-    expect(find.text('Total group spending'), findsOneWidget);
+    expect(find.text('Group total'), findsOneWidget);
+    expect(find.text('Your share'), findsOneWidget);
+    expect(find.text('+₹60'), findsOneWidget);
     expect(find.text('2 expenses'), findsOneWidget);
     expect(find.text('₹1,300'), findsWidgets);
     await tester.scrollUntilVisible(find.text('Paid and share by member'), 200, scrollable: find.byType(Scrollable).last);
@@ -82,7 +94,9 @@ void main() {
     expect(_memberRow('Rahul: paid ₹400, share ₹400'), findsOneWidget);
     expect(_memberRow('Priya: paid ₹300, share ₹300'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(ChoiceChip, formatMonthLabel(monthRange(DateTime.now()))));
+    final monthChip = find.widgetWithText(ChoiceChip, formatMonthLabel(monthRange(DateTime.now())));
+    await tester.scrollUntilVisible(monthChip, -200, scrollable: find.byType(Scrollable).last);
+    await tester.tap(monthChip);
     await settle(tester);
     expect(tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'All time')).selected, isFalse);
     expect(find.text('2 expenses'), findsOneWidget);

@@ -2,11 +2,12 @@ import 'dart:convert';
 
 import '../../core/dates.dart';
 
-/// What happened to an expense or payment in a group's activity log.
+/// What happened to an expense, payment or the group itself in a group's
+/// activity log.
 enum ActivityAction { added, edited, deleted, restored }
 
 /// What a log row is about.
-enum ActivitySubject { expense, payment }
+enum ActivitySubject { expense, payment, group }
 
 ActivityAction activityActionFrom(String name) => ActivityAction.values.firstWhere((action) => action.name == name, orElse: () => ActivityAction.edited);
 
@@ -43,6 +44,7 @@ sealed class ActivitySnapshot {
       return switch (json['type']) {
         'expense' => ExpenseSnapshot.fromJson(json),
         'payment' => PaymentSnapshot.fromJson(json),
+        'group' => GroupSnapshot.fromJson(json),
         _ => null,
       };
     } on Object {
@@ -132,6 +134,24 @@ class PaymentSnapshot extends ActivitySnapshot {
         occurredAt: DateTime.parse(json['occurredAt']! as String),
         method: json['method'] as String? ?? 'cash',
         note: json['note'] as String? ?? '',
+      );
+}
+
+/// A group as it was when deleted: its name and the expenses that were live,
+/// so a restore brings back exactly those and not ones deleted earlier.
+class GroupSnapshot extends ActivitySnapshot {
+  const GroupSnapshot({required this.name, this.icon = '', this.expenseIds = const []});
+  final String name;
+  final String icon;
+  final List<String> expenseIds;
+
+  @override
+  Map<String, Object?> toJson() => {'type': 'group', 'name': name, 'icon': icon, 'expenseIds': expenseIds};
+
+  static GroupSnapshot fromJson(Map<String, Object?> json) => GroupSnapshot(
+        name: json['name'] as String? ?? '',
+        icon: json['icon'] as String? ?? '',
+        expenseIds: [for (final id in (json['expenseIds'] as List?) ?? const []) id as String],
       );
 }
 
@@ -307,16 +327,17 @@ class ActivityRecord {
 }
 
 /// Ids of the log rows that should offer Restore: the latest deletion of each
-/// expense that is still deleted. Older deletions (later undone and deleted
-/// again) and payments never do; payments are restored through Undo only.
-/// [activities] are newest first, so on a timestamp tie the earlier item wins.
-Set<String> restorableActivityIds(List<ActivityRecord> activities, {required Set<String> deletedExpenseIds}) {
-  final latestDeletion = <String, ActivityRecord>{};
+/// expense, payment or group that is still deleted ([deletedIds] by subject).
+/// Older deletions (later undone and deleted again) never do. [activities]
+/// are newest first, so on a timestamp tie the earlier item wins.
+Set<String> restorableActivityIds(List<ActivityRecord> activities, {required Map<ActivitySubject, Set<String>> deletedIds}) {
+  final latestDeletion = <(ActivitySubject, String), ActivityRecord>{};
   for (final activity in activities) {
-    if (activity.subject != ActivitySubject.expense || activity.action != ActivityAction.deleted) continue;
-    if (!deletedExpenseIds.contains(activity.subjectId)) continue;
-    final current = latestDeletion[activity.subjectId];
-    if (current == null || activity.occurredAt.isAfter(current.occurredAt)) latestDeletion[activity.subjectId] = activity;
+    if (activity.action != ActivityAction.deleted) continue;
+    if (!(deletedIds[activity.subject]?.contains(activity.subjectId) ?? false)) continue;
+    final key = (activity.subject, activity.subjectId);
+    final current = latestDeletion[key];
+    if (current == null || activity.occurredAt.isAfter(current.occurredAt)) latestDeletion[key] = activity;
   }
   return {for (final activity in latestDeletion.values) activity.id};
 }

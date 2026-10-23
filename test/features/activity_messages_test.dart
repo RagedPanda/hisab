@@ -111,4 +111,15 @@ void main() {
     expect(words.details.last, 'राशि: ₹300 → ₹450');
     expect(activityWords(AppLocalizationsHi(), record(ActivityAction.added, after: dinner, actor: 'rahul'), format).headline, 'Rahul ने “Dinner” जोड़ा');
   });
+
+  test('a deleted or restored group names itself and how many expenses it had', () {
+    const goa = GroupSnapshot(name: 'Goa', expenseIds: ['e1', 'e2']);
+    final deleted = activityWords(l10n, record(ActivityAction.deleted, before: goa, subject: ActivitySubject.group), format);
+    expect(deleted.headline, 'You deleted the group “Goa”');
+    expect(deleted.details, ['2 expenses']);
+    final restored = activityWords(AppLocalizationsHi(), record(ActivityAction.restored, after: goa, subject: ActivitySubject.group, actor: 'rahul'), format);
+    expect(restored.headline, 'Rahul ने ग्रुप “Goa” वापस लाया');
+    expect(restored.details, ['2 खर्च']);
+    expect(activityWords(l10n, record(ActivityAction.deleted, subject: ActivitySubject.group), format).headline, 'You deleted the group “Unknown”');
+  });
 }

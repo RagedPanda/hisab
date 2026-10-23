@@ -28,6 +28,13 @@ void main() {
       expect(ActivitySnapshot.decode(payment.encode())!.toJson(), payment.toJson());
     });
 
+    test('a group survives a JSON round trip with the expenses it had', () {
+      const goa = GroupSnapshot(name: 'Goa', icon: 'beach', expenseIds: ['e1', 'e2']);
+      final decoded = ActivitySnapshot.decode(goa.encode())! as GroupSnapshot;
+      expect(decoded.toJson(), goa.toJson());
+      expect(decoded.expenseIds, ['e1', 'e2']);
+    });
+
     test('null, empty and unreadable text decode to null', () {
       expect(ActivitySnapshot.decode(null), isNull);
       expect(ActivitySnapshot.decode(''), isNull);
@@ -166,11 +173,25 @@ void main() {
         deletion('a3', 'e2', DateTime(2026, 10, 21)),
         deletion('a4', 'p1', DateTime(2026, 10, 21), subject: ActivitySubject.payment),
       ];
-      expect(restorableActivityIds(activities, deletedExpenseIds: {'e1', 'p1'}), {'a2'});
+      expect(restorableActivityIds(activities, deletedIds: {ActivitySubject.expense: {'e1'}}), {'a2'});
+    });
+
+    test('deleted payments and groups offer Restore too, matched by subject', () {
+      final activities = [
+        deletion('a1', 'p1', DateTime(2026, 10, 22), subject: ActivitySubject.payment),
+        deletion('a2', 'p1', DateTime(2026, 10, 20), subject: ActivitySubject.payment),
+        deletion('a3', 'g1', DateTime(2026, 10, 21), subject: ActivitySubject.group),
+        deletion('a4', 'g1', DateTime(2026, 10, 21)),
+      ];
+      final deletedIds = {
+        ActivitySubject.payment: {'p1'},
+        ActivitySubject.group: {'g1'},
+      };
+      expect(restorableActivityIds(activities, deletedIds: deletedIds), {'a1', 'a3'});
     });
 
     test('a restored expense offers nothing', () {
-      expect(restorableActivityIds([deletion('a1', 'e1', DateTime(2026, 10, 20))], deletedExpenseIds: const {}), isEmpty);
+      expect(restorableActivityIds([deletion('a1', 'e1', DateTime(2026, 10, 20))], deletedIds: const {}), isEmpty);
     });
   });
 

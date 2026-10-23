@@ -1557,6 +1557,13 @@ void main() {
     expect(tester.widget<Text>(key('upcoming.calendar.month')).data, isNot(monthLabel), reason: 'the header follows the shown month');
     await goBack(tester);
 
+    await scrollTo(tester, find.byKey(kUpcomingCardKey));
+    await tapFinder(tester, find.text('Rent').first, frames: 10);
+    expect(find.byKey(const ValueKey('upcoming.confirm.edit')), findsOneWidget, reason: 'an overdue confirm-first item offers Edit as the secondary action');
+    await shoot(tester, 'upcoming_confirm_sheet');
+    await tapFinder(tester, key('upcoming.confirm.post'), frames: 12);
+    expect(find.text('Rent'), findsOneWidget, reason: 'confirming posts the overdue Rent; next month stays listed');
+
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
     await settle(tester, 10);
     await scrollTo(tester, find.byKey(kUpcomingCardKey));

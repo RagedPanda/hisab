@@ -26,8 +26,9 @@ class _HostState extends State<_Host> {
       );
 }
 
-Future<void> _pumpHost(WidgetTester tester, FocusNode amountFocus) async {
+Future<void> _pumpHost(WidgetTester tester, FocusNode amountFocus, {Locale locale = const Locale('en')}) async {
   await tester.pumpWidget(MaterialApp(
+    locale: locale,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: _Host(amountFocus: amountFocus),
@@ -69,4 +70,27 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Every month on day 5'), findsOneWidget);
   });
+
+  for (final (locale, minus, plus) in [
+    (const Locale('en'), 'Decrease Repeat every', 'Increase Repeat every'),
+    (const Locale('hi'), null, null),
+  ]) {
+    testWidgets('stepper buttons have spoken labels (${locale.languageCode})', (tester) async {
+      await initializeDateFormatting(locale.languageCode);
+      final semantics = tester.ensureSemantics();
+      final amountFocus = FocusNode();
+      addTearDown(amountFocus.dispose);
+      await _pumpHost(tester, amountFocus, locale: locale);
+      await tester.tap(find.byKey(const ValueKey('editor.repeat')));
+      await tester.pumpAndSettle();
+      final l10n = lookupAppLocalizations(locale);
+      final expectedMinus = minus ?? l10n.recurringDecrease(l10n.recurringInterval);
+      final expectedPlus = plus ?? l10n.recurringIncrease(l10n.recurringInterval);
+      expect(tester.widget<IconButton>(find.byKey(const ValueKey('repeat.interval.minus'))).tooltip, expectedMinus);
+      expect(tester.widget<IconButton>(find.byKey(const ValueKey('repeat.interval.plus'))).tooltip, expectedPlus);
+      // The tooltip is what TalkBack and VoiceOver read for an icon button.
+      expect(tester.getSemantics(find.byKey(const ValueKey('repeat.interval.plus'))), isSemantics(tooltip: expectedPlus, isButton: true));
+      semantics.dispose();
+    });
+  }
 }

@@ -217,12 +217,13 @@ class _Stepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     return Row(
       children: [
         Expanded(child: Text(label, style: theme.textTheme.bodyLarge)),
-        IconButton(key: ValueKey('$keyPrefix.minus'), icon: const Icon(Icons.remove_circle_outline), onPressed: value > 1 ? () => onChanged(value - 1) : null),
+        IconButton(key: ValueKey('$keyPrefix.minus'), tooltip: l10n.recurringDecrease(label), icon: const Icon(Icons.remove_circle_outline), onPressed: value > 1 ? () => onChanged(value - 1) : null),
         SizedBox(width: 40, child: Text('$value', textAlign: TextAlign.center, style: theme.textTheme.titleMedium)),
-        IconButton(key: ValueKey('$keyPrefix.plus'), icon: const Icon(Icons.add_circle_outline), onPressed: value < 999 ? () => onChanged(value + 1) : null),
+        IconButton(key: ValueKey('$keyPrefix.plus'), tooltip: l10n.recurringIncrease(label), icon: const Icon(Icons.add_circle_outline), onPressed: value < 999 ? () => onChanged(value + 1) : null),
       ],
     );
   }

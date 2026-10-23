@@ -3673,6 +3673,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This recurring entry was deleted'**
   String get recurringRuleMissing;
+
+  /// No description provided for @recurringDecrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease {label}'**
+  String recurringDecrease(String label);
+
+  /// No description provided for @recurringIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase {label}'**
+  String recurringIncrease(String label);
 }
 
 class _AppLocalizationsDelegate

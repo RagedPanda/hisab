@@ -2196,4 +2196,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recurringRuleMissing => 'This recurring entry was deleted';
+
+  @override
+  String recurringDecrease(String label) {
+    return 'Decrease $label';
+  }
+
+  @override
+  String recurringIncrease(String label) {
+    return 'Increase $label';
+  }
 }

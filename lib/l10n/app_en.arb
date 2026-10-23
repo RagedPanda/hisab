@@ -723,5 +723,9 @@
   "@recurringPostedCount": {"placeholders": {"count": {"type": "int"}}},
   "recurringNameLabel": "Name (optional)",
   "recurringNextOn": "Next on",
-  "recurringRuleMissing": "This recurring entry was deleted"
+  "recurringRuleMissing": "This recurring entry was deleted",
+  "recurringDecrease": "Decrease {label}",
+  "@recurringDecrease": {"placeholders": {"label": {"type": "String"}}},
+  "recurringIncrease": "Increase {label}",
+  "@recurringIncrease": {"placeholders": {"label": {"type": "String"}}}
 }

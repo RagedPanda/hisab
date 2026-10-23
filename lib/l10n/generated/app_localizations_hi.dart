@@ -2188,4 +2188,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get recurringRuleMissing => 'यह दोहराई जाने वाली एंट्री हटा दी गई है';
+
+  @override
+  String recurringDecrease(String label) {
+    return '$label घटाएँ';
+  }
+
+  @override
+  String recurringIncrease(String label) {
+    return '$label बढ़ाएँ';
+  }
 }

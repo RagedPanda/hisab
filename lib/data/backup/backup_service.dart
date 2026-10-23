@@ -34,6 +34,7 @@ class BackupService {
       'projectFields': await dump(db.projectFields),
       'entryFieldValues': await dump(db.entryFieldValues),
       'reminders': await dump(db.reminders),
+      'entryPayers': await dump(db.entryPayers),
       'recurringRules': await dump(db.recurringRules),
     };
   }
@@ -92,6 +93,7 @@ class BackupService {
       await restore(db.projectFields, 'projectFields', ProjectField.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.entryFieldValues, 'entryFieldValues', EntryFieldValue.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.reminders, 'reminders', Reminder.fromJson, (r) => r.id, (r) => r.updatedAt);
+      await restore(db.entryPayers, 'entryPayers', EntryPayer.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.recurringRules, 'recurringRules', RecurringRule.fromJson, (r) => r.id, (r) => r.updatedAt);
     });
     return written;

@@ -434,7 +434,7 @@ void main() {
     // Expected balances straight from the domain layer.
     final entries = await shared.read(groupsRepositoryProvider).getGroupEntries(groupId);
     final ledger = [
-      for (final (entry, splits) in entries) LedgerExpense(paidByMemberId: entry.paidByMemberId!, shares: [for (final s in splits) SplitShare(s.memberId, s.amountMinor)]),
+      for (final (entry, splits, _) in entries) LedgerExpense(paidByMemberId: entry.paidByMemberId!, shares: [for (final s in splits) SplitShare(s.memberId, s.amountMinor)]),
     ];
     final net = computeNetBalances(memberIds: members.map((m) => m.id), expenses: ledger, settlements: const []);
     final nameOf = {for (final m in members) m.id: m.isMe ? 'You' : m.name};
@@ -1120,7 +1120,11 @@ void main() {
     expect(await projectOf(250000), carId);
 
     await tapFinder(tester, find.byType(FloatingActionButton));
-    expect(find.descendant(of: projectChip, matching: find.text('Swift car')), findsOneWidget, reason: 'the last project is remembered');
+    expect(
+      find.descendant(of: projectChip, matching: find.text('Swift car')),
+      findsOneWidget,
+      reason: 'the last project is remembered',
+    );
     await shoot(tester, 'editor_project_remembered');
     await tapFinder(tester, projectChip);
     await tapFinder(tester, option(kitchenId));
@@ -1218,7 +1222,16 @@ void main() {
       EntriesRepository.newExpense(id: milkId, amountMinor: 45000, occurredAt: thisMonth, categoryId: categoryOf('groceries'), payee: 'Sharma Dairy', note: 'Morning milk'),
       items: [EntryItemsCompanion.insert(id: 'paneer', entryId: milkId, name: 'Paneer', unitPriceMinor: 45000, amountMinor: 45000)],
     );
-    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 250000, occurredAt: thisMonth, categoryId: categoryOf('fuel'), accountId: hdfc.id, projectId: carId, note: 'Highway fill').copyWith(tags: const Value('#trip')));
+    await entries.saveEntry(
+      EntriesRepository.newExpense(
+        amountMinor: 250000,
+        occurredAt: thisMonth,
+        categoryId: categoryOf('fuel'),
+        accountId: hdfc.id,
+        projectId: carId,
+        note: 'Highway fill',
+      ).copyWith(tags: const Value('#trip')),
+    );
     await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 12000, occurredAt: thisMonth, note: 'Chai').copyWith(tags: const Value('#office')));
     await entries.saveEntry(EntriesRepository.newExpense(kind: 'income', amountMinor: 5000000, occurredAt: thisMonth, categoryId: categoryOf('salary'), payee: 'Acme'));
     await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 800000, occurredAt: lastMonth, categoryId: categoryOf('rent'), note: 'Old rent'));
@@ -1250,7 +1263,11 @@ void main() {
     expectResults(1);
     await clearAll();
     expect(find.byType(EntryTile), findsNWidgets(4));
-    expect(find.descendant(of: search, matching: find.text('chai')), findsNothing, reason: 'clear all empties the search box');
+    expect(
+      find.descendant(of: search, matching: find.text('chai')),
+      findsNothing,
+      reason: 'clear all empties the search box',
+    );
 
     await openFilters();
     expect(find.text('Filter entries'), findsOneWidget);
@@ -1265,7 +1282,11 @@ void main() {
     expectResults(1);
     expect(find.byKey(const ValueKey('entries.filter.account')), findsOneWidget);
     expect(find.byKey(const ValueKey('entries.filter.amount')), findsOneWidget);
-    expect(find.descendant(of: find.byKey(const ValueKey('entries.filters')), matching: find.text('2')), findsOneWidget, reason: 'the badge counts active filters');
+    expect(
+      find.descendant(of: find.byKey(const ValueKey('entries.filters')), matching: find.text('2')),
+      findsOneWidget,
+      reason: 'the badge counts active filters',
+    );
     await shoot(tester, 'entries_filtered');
     await tapFinder(tester, find.descendant(of: find.byKey(const ValueKey('entries.filter.account')), matching: find.byIcon(Icons.close)));
     expectResults(1);
@@ -1410,5 +1431,57 @@ void main() {
     await goBack(tester);
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
     await settle(tester, 6);
+  });
+
+  testWidgets('24 groups: two members pay one dinner, the editor blocks a wrong total and the list says who paid', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final dinnerGroupId = await groups.createGroup(name: 'Dinner club', icon: 'restaurant', myName: 'You', otherMembers: ['Rahul', 'Priya']);
+    final members = await groups.getMembers(dinnerGroupId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => member.name == 'Rahul').id;
+    final priya = members.firstWhere((member) => member.name == 'Priya').id;
+    Finder payerField(String memberId) => find.byKey(Key('payer-amount-$memberId'));
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Dinner club');
+    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
+    await enterText(tester, _amountField(), '900');
+    await scrollTo(tester, _chip('2+ people'), within: find.byType(ExpenseEditorScreen));
+    await tapFinder(tester, _chip('2+ people'));
+    expect(tester.widget<ChoiceChip>(_chip('2+ people')).selected, isTrue);
+    expect(tester.widget<ChoiceChip>(_chip('You')).selected, isFalse, reason: 'single payer chips clear in multi-payer mode');
+    expect(find.text('${formatMinor(90000)} of ${formatMinor(90000)} assigned'), findsOneWidget, reason: 'the current payer starts covering the whole bill');
+
+    await scrollTo(tester, payerField(rahul), within: find.byType(ExpenseEditorScreen));
+    await enterText(tester, payerField(rahul), '600');
+    expect(find.text('${formatMinor(150000)} of ${formatMinor(90000)} assigned'), findsOneWidget);
+    await _saveEntry(tester, formatMinor(90000));
+    expect(find.text('Amounts paid must add up to ${formatMinor(90000)}'), findsOneWidget, reason: 'save is blocked until the payers cover the bill');
+    expect(find.byType(ExpenseEditorScreen), findsOneWidget);
+
+    await enterText(tester, payerField(me), '300');
+    expect(find.text('${formatMinor(90000)} of ${formatMinor(90000)} assigned'), findsOneWidget);
+    await scrollTo(tester, find.text('Paid by'), within: find.byType(ExpenseEditorScreen), up: true);
+    await shoot(tester, 'group_multiple_payers');
+    await _saveEntry(tester, formatMinor(90000));
+    expect(find.textContaining('Rahul and you paid ${formatMinor(90000)}'), findsOneWidget);
+    await shoot(tester, 'group_expenses_multiple_payers');
+
+    final detail = (await groups.getGroupDetail(dinnerGroupId))!;
+    expect(detail.balances.net, {me: 0, rahul: 30000, priya: -30000});
+    expect(detail.entries.single.$1.paidByMemberId, rahul, reason: 'the biggest payer is kept as the main payer');
+
+    await tapText(tester, 'Balances');
+    expect(find.text('Priya → Rahul'), findsOneWidget);
+    await tapText(tester, 'Expenses');
+    await tapFinder(tester, find.textContaining('Rahul and you paid'), frames: 12);
+    await scrollTo(tester, _chip('2+ people'), within: find.byType(ExpenseEditorScreen));
+    expect(tester.widget<ChoiceChip>(_chip('2+ people')).selected, isTrue, reason: 'editing keeps the payers');
+    expect(tester.widget<TextFormField>(payerField(rahul)).initialValue, '600');
+    expect(tester.widget<TextFormField>(payerField(me)).initialValue, '300');
   });
 }

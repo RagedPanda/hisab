@@ -3685,6 +3685,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Increase {label}'**
   String recurringIncrease(String label);
+
+  /// No description provided for @payersMultiple.
+  ///
+  /// In en, this message translates to:
+  /// **'2+ people'**
+  String get payersMultiple;
+
+  /// No description provided for @payersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter how much each person paid.'**
+  String get payersHelp;
+
+  /// No description provided for @payersAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'{assigned} of {total} assigned'**
+  String payersAssigned(String assigned, String total);
+
+  /// No description provided for @payersMustTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Amounts paid must add up to {total}'**
+  String payersMustTotal(String total);
+
+  /// No description provided for @namesAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'{first} and {last}'**
+  String namesAnd(String first, String last);
+
+  /// No description provided for @youInList.
+  ///
+  /// In en, this message translates to:
+  /// **'you'**
+  String get youInList;
 }
 
 class _AppLocalizationsDelegate

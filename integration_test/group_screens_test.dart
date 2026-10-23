@@ -13,11 +13,13 @@ import 'package:hisab/core/ids.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
+import 'package:hisab/features/expense_editor/expense_editor_screen.dart';
 import 'package:hisab/features/shell/router.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'harness.dart';
 
+const _sharedFuelId = 'tour-shared-fuel';
 const _configs = [('en', ThemeMode.light), ('en', ThemeMode.dark), ('hi', ThemeMode.light), ('hi', ThemeMode.dark)];
 
 void main() {
@@ -86,6 +88,11 @@ void main() {
       await settle(tester, 10);
       await shoot(tester, 'group_balances_settled_$tag');
 
+      appRouter.go('/entry?id=$_sharedFuelId');
+      await settle(tester, 12);
+      await scrollTo(tester, find.byKey(const Key('payers-assigned')), within: find.byType(ExpenseEditorScreen));
+      await shoot(tester, 'expense_multiple_payers_$tag');
+
       appRouter.go('/groups');
       await settle(tester, 10);
       await shoot(tester, 'groups_list_$tag');
@@ -133,6 +140,13 @@ Future<String> _seedGroup(AppHandle app) async {
   await expense('Scooter rent', rahul, 240000, [me, rahul, priya], DateTime(2026, 10, 4));
   await expense('Dinner at Thalassa', priya, 450000, [me, rahul, priya], DateTime(2026, 10, 5));
   await groups.addSettlement(groupId: groupId, fromMemberId: priya, toMemberId: me, amountMinor: 100000, occurredAt: DateTime(2026, 10, 6), method: 'upi');
+  // Paid half each and shared by the two payers, so it shows "Rahul and you
+  // paid" without moving any balance.
+  await entries.saveEntry(
+    EntriesRepository.newExpense(id: _sharedFuelId, amountMinor: 60000, occurredAt: DateTime(2026, 10, 7), note: 'Fuel', groupId: groupId, paidByMemberId: rahul, splitMethod: 'equal'),
+    splits: [for (final member in [me, rahul]) SplitsCompanion.insert(id: newId(), entryId: _sharedFuelId, memberId: member, amountMinor: 30000)],
+    payers: [for (final member in [rahul, me]) EntryPayersCompanion.insert(id: newId(), entryId: _sharedFuelId, memberId: member, amountMinor: 30000)],
+  );
   await groups.updateMember(MembersCompanion(id: Value(rahul), phone: const Value('98765 43210')));
   return groupId;
 }

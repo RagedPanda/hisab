@@ -20,6 +20,7 @@ import '../../domain/projects/project_math.dart';
 import '../../domain/projects/project_picker.dart';
 import '../../domain/projects/project_templates.dart';
 import '../../domain/recurring/repeat_draft.dart';
+import '../../domain/split/payers.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
@@ -30,6 +31,7 @@ import '../projects/project_field_inputs.dart';
 import '../projects/project_picker_sheet.dart';
 import '../recurring/repeat_sheet.dart';
 import '../shell/widgets/common.dart';
+import '../split/payers_editor.dart';
 import '../split/split_editor.dart';
 import 'calculator_sheet.dart';
 import 'item_row.dart';
@@ -62,6 +64,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   String? _groupId;
   String? _projectId;
   String? _paidByMemberId;
+
+  /// True when several members paid; [_payerAmounts] then holds each one's part.
+  bool _multiplePayers = false;
+  Map<String, int> _payerAmounts = const {};
   SplitMethod _splitMethod = SplitMethod.equal;
   List<SplitInput> _splitInputs = const [];
   List<ItemDraft> _items = [];
@@ -141,6 +147,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         if (_groupId != null) {
           await _loadMembers();
           _splitInputs = _inputsFromSplits(details.splits);
+          final payers = await ref.read(entriesRepositoryProvider).getPayers(entry.id);
+          if (payers.isNotEmpty) {
+            _multiplePayers = true;
+            _payerAmounts = {for (final payer in payers) payer.memberId: payer.amountMinor};
+          }
         }
       }
     } else if (widget.smsId != null) {
@@ -482,6 +493,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _items = [];
       _repeat = null;
       _fieldValues = const {};
+      _multiplePayers = false;
+      _payerAmounts = {};
       if (_groupId != null) _splitInputs = defaultSplitInputs(_members, _splitMethod);
       _saving = false;
     });
@@ -549,9 +562,28 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           runSpacing: 8,
           children: [
             for (final member in _members)
-              ChoiceChip(label: Text(memberDisplayName(l10n, member)), selected: _paidByMemberId == member.id, onSelected: (_) => setState(() => _paidByMemberId = member.id)),
+              ChoiceChip(
+                label: Text(memberDisplayName(l10n, member)),
+                selected: !_multiplePayers && _paidByMemberId == member.id,
+                onSelected: (_) => setState(() {
+                  _multiplePayers = false;
+                  _paidByMemberId = member.id;
+                }),
+              ),
+            if (_members.length > 1)
+              ChoiceChip(label: Text(l10n.payersMultiple), selected: _multiplePayers, onSelected: (_) => setState(_startMultiplePayers)),
           ],
         ),
+        if (_multiplePayers) ...[
+          const SizedBox(height: 8),
+          PayersEditor(
+            totalMinor: _amountMinor,
+            members: _members,
+            amounts: _payerAmounts,
+            symbol: symbol,
+            onChanged: (amounts) => setState(() => _payerAmounts = amounts),
+          ),
+        ],
         SectionHeader(l10n.split),
         SplitEditor(
           totalMinor: _amountMinor,
@@ -567,6 +599,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         ),
       ],
     );
+  }
+
+  /// Switches to several payers, starting with the current payer covering
+  /// the whole bill so the assigned line begins balanced.
+  void _startMultiplePayers() {
+    _multiplePayers = true;
+    if (_payerAmounts.isEmpty && _paidByMemberId != null) _payerAmounts = {_paidByMemberId!: _amountMinor};
   }
 
   Future<void> _save({bool addAnother = false}) async {
@@ -595,6 +634,14 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     }
     SplitOutcome? outcome;
     if (_groupId != null) {
+      if (_multiplePayers) {
+        final payers = payersFrom(_payerAmounts);
+        if (payers.isEmpty || unassignedMinor(amount, payers) != 0) {
+          messenger.showSnackBar(SnackBar(content: Text(l10n.payersMustTotal(formatMinor(amount, symbol: ref.read(settingsProvider).currencySymbol)))));
+          return;
+        }
+        _paidByMemberId = primaryPayerId(payers);
+      }
       if (_paidByMemberId == null) {
         messenger.showSnackBar(SnackBar(content: Text(l10n.errorChoosePayer)));
         return;
@@ -605,6 +652,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         return;
       }
     }
+    messenger.hideCurrentSnackBar();
     setState(() => _saving = true);
     if (_source == 'sms' && _smsId != null && _accountId == null && _groupId == null) {
       _accountId = (await ref.read(smsIngestServiceProvider).ensureAccountForSms(_smsId!))?.id;
@@ -644,6 +692,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                       : weights[share.memberId]?.weight),
                 ),
           ],
+          payers: _groupId == null
+              ? null
+              : [
+                  if (_multiplePayers && payersFrom(_payerAmounts).length > 1)
+                    for (final payer in payersFrom(_payerAmounts))
+                      EntryPayersCompanion.insert(id: newId(), entryId: id, memberId: payer.memberId, amountMinor: payer.amountMinor),
+                ],
           fieldValues: projectId == null ? const [] : entryFieldValueRows(id, _fieldValues),
         );
     if (!_isEditing && _groupId == null && _kind != 'transfer') ref.read(lastProjectIdProvider.notifier).set(projectId);

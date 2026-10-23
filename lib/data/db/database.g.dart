@@ -9286,6 +9286,420 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
   }
 }
 
+class $EntryPayersTable extends EntryPayers
+    with TableInfo<$EntryPayersTable, EntryPayer> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EntryPayersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entryIdMeta = const VerificationMeta(
+    'entryId',
+  );
+  @override
+  late final GeneratedColumn<String> entryId = GeneratedColumn<String>(
+    'entry_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _memberIdMeta = const VerificationMeta(
+    'memberId',
+  );
+  @override
+  late final GeneratedColumn<String> memberId = GeneratedColumn<String>(
+    'member_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMinorMeta = const VerificationMeta(
+    'amountMinor',
+  );
+  @override
+  late final GeneratedColumn<int> amountMinor = GeneratedColumn<int>(
+    'amount_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    updatedAt,
+    deletedAt,
+    id,
+    entryId,
+    memberId,
+    amountMinor,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'entry_payers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EntryPayer> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('entry_id')) {
+      context.handle(
+        _entryIdMeta,
+        entryId.isAcceptableOrUnknown(data['entry_id']!, _entryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entryIdMeta);
+    }
+    if (data.containsKey('member_id')) {
+      context.handle(
+        _memberIdMeta,
+        memberId.isAcceptableOrUnknown(data['member_id']!, _memberIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_memberIdMeta);
+    }
+    if (data.containsKey('amount_minor')) {
+      context.handle(
+        _amountMinorMeta,
+        amountMinor.isAcceptableOrUnknown(
+          data['amount_minor']!,
+          _amountMinorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMinorMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EntryPayer map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EntryPayer(
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      entryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_id'],
+      )!,
+      memberId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}member_id'],
+      )!,
+      amountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_minor'],
+      )!,
+    );
+  }
+
+  @override
+  $EntryPayersTable createAlias(String alias) {
+    return $EntryPayersTable(attachedDatabase, alias);
+  }
+}
+
+class EntryPayer extends DataClass implements Insertable<EntryPayer> {
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String id;
+  final String entryId;
+  final String memberId;
+  final int amountMinor;
+  const EntryPayer({
+    required this.updatedAt,
+    this.deletedAt,
+    required this.id,
+    required this.entryId,
+    required this.memberId,
+    required this.amountMinor,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['id'] = Variable<String>(id);
+    map['entry_id'] = Variable<String>(entryId);
+    map['member_id'] = Variable<String>(memberId);
+    map['amount_minor'] = Variable<int>(amountMinor);
+    return map;
+  }
+
+  EntryPayersCompanion toCompanion(bool nullToAbsent) {
+    return EntryPayersCompanion(
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      id: Value(id),
+      entryId: Value(entryId),
+      memberId: Value(memberId),
+      amountMinor: Value(amountMinor),
+    );
+  }
+
+  factory EntryPayer.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EntryPayer(
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      id: serializer.fromJson<String>(json['id']),
+      entryId: serializer.fromJson<String>(json['entryId']),
+      memberId: serializer.fromJson<String>(json['memberId']),
+      amountMinor: serializer.fromJson<int>(json['amountMinor']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'id': serializer.toJson<String>(id),
+      'entryId': serializer.toJson<String>(entryId),
+      'memberId': serializer.toJson<String>(memberId),
+      'amountMinor': serializer.toJson<int>(amountMinor),
+    };
+  }
+
+  EntryPayer copyWith({
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? id,
+    String? entryId,
+    String? memberId,
+    int? amountMinor,
+  }) => EntryPayer(
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    id: id ?? this.id,
+    entryId: entryId ?? this.entryId,
+    memberId: memberId ?? this.memberId,
+    amountMinor: amountMinor ?? this.amountMinor,
+  );
+  EntryPayer copyWithCompanion(EntryPayersCompanion data) {
+    return EntryPayer(
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      id: data.id.present ? data.id.value : this.id,
+      entryId: data.entryId.present ? data.entryId.value : this.entryId,
+      memberId: data.memberId.present ? data.memberId.value : this.memberId,
+      amountMinor: data.amountMinor.present
+          ? data.amountMinor.value
+          : this.amountMinor,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EntryPayer(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('entryId: $entryId, ')
+          ..write('memberId: $memberId, ')
+          ..write('amountMinor: $amountMinor')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(updatedAt, deletedAt, id, entryId, memberId, amountMinor);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EntryPayer &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.id == this.id &&
+          other.entryId == this.entryId &&
+          other.memberId == this.memberId &&
+          other.amountMinor == this.amountMinor);
+}
+
+class EntryPayersCompanion extends UpdateCompanion<EntryPayer> {
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String> id;
+  final Value<String> entryId;
+  final Value<String> memberId;
+  final Value<int> amountMinor;
+  final Value<int> rowid;
+  const EntryPayersCompanion({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.id = const Value.absent(),
+    this.entryId = const Value.absent(),
+    this.memberId = const Value.absent(),
+    this.amountMinor = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EntryPayersCompanion.insert({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String id,
+    required String entryId,
+    required String memberId,
+    required int amountMinor,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       entryId = Value(entryId),
+       memberId = Value(memberId),
+       amountMinor = Value(amountMinor);
+  static Insertable<EntryPayer> custom({
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? id,
+    Expression<String>? entryId,
+    Expression<String>? memberId,
+    Expression<int>? amountMinor,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (id != null) 'id': id,
+      if (entryId != null) 'entry_id': entryId,
+      if (memberId != null) 'member_id': memberId,
+      if (amountMinor != null) 'amount_minor': amountMinor,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EntryPayersCompanion copyWith({
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String>? id,
+    Value<String>? entryId,
+    Value<String>? memberId,
+    Value<int>? amountMinor,
+    Value<int>? rowid,
+  }) {
+    return EntryPayersCompanion(
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      id: id ?? this.id,
+      entryId: entryId ?? this.entryId,
+      memberId: memberId ?? this.memberId,
+      amountMinor: amountMinor ?? this.amountMinor,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (entryId.present) {
+      map['entry_id'] = Variable<String>(entryId.value);
+    }
+    if (memberId.present) {
+      map['member_id'] = Variable<String>(memberId.value);
+    }
+    if (amountMinor.present) {
+      map['amount_minor'] = Variable<int>(amountMinor.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EntryPayersCompanion(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('entryId: $entryId, ')
+          ..write('memberId: $memberId, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $RecurringRulesTable extends RecurringRules
     with TableInfo<$RecurringRulesTable, RecurringRule> {
   @override
@@ -10767,6 +11181,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $RemindersTable reminders = $RemindersTable(this);
+  late final $EntryPayersTable entryPayers = $EntryPayersTable(this);
   late final $RecurringRulesTable recurringRules = $RecurringRulesTable(this);
   late final Index entriesProjectId = Index(
     'entries_project_id',
@@ -10788,6 +11203,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'reminders_group_id',
     'CREATE INDEX reminders_group_id ON reminders (group_id)',
   );
+  late final Index entryPayersEntryId = Index(
+    'entry_payers_entry_id',
+    'CREATE INDEX entry_payers_entry_id ON entry_payers (entry_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -10807,12 +11226,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     projectFields,
     entryFieldValues,
     reminders,
+    entryPayers,
     recurringRules,
     entriesProjectId,
     entriesRecurringId,
     projectFieldsProjectId,
     entryFieldValuesEntryId,
     remindersGroupId,
+    entryPayersEntryId,
   ];
 }
 
@@ -15336,6 +15757,236 @@ typedef $$RemindersTableProcessedTableManager =
       Reminder,
       PrefetchHooks Function()
     >;
+typedef $$EntryPayersTableCreateCompanionBuilder =
+    EntryPayersCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      required String id,
+      required String entryId,
+      required String memberId,
+      required int amountMinor,
+      Value<int> rowid,
+    });
+typedef $$EntryPayersTableUpdateCompanionBuilder =
+    EntryPayersCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String> id,
+      Value<String> entryId,
+      Value<String> memberId,
+      Value<int> amountMinor,
+      Value<int> rowid,
+    });
+
+class $$EntryPayersTableFilterComposer
+    extends Composer<_$AppDatabase, $EntryPayersTable> {
+  $$EntryPayersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get memberId => $composableBuilder(
+    column: $table.memberId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$EntryPayersTableOrderingComposer
+    extends Composer<_$AppDatabase, $EntryPayersTable> {
+  $$EntryPayersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get memberId => $composableBuilder(
+    column: $table.memberId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EntryPayersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EntryPayersTable> {
+  $$EntryPayersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get entryId =>
+      $composableBuilder(column: $table.entryId, builder: (column) => column);
+
+  GeneratedColumn<String> get memberId =>
+      $composableBuilder(column: $table.memberId, builder: (column) => column);
+
+  GeneratedColumn<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => column,
+  );
+}
+
+class $$EntryPayersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EntryPayersTable,
+          EntryPayer,
+          $$EntryPayersTableFilterComposer,
+          $$EntryPayersTableOrderingComposer,
+          $$EntryPayersTableAnnotationComposer,
+          $$EntryPayersTableCreateCompanionBuilder,
+          $$EntryPayersTableUpdateCompanionBuilder,
+          (
+            EntryPayer,
+            BaseReferences<_$AppDatabase, $EntryPayersTable, EntryPayer>,
+          ),
+          EntryPayer,
+          PrefetchHooks Function()
+        > {
+  $$EntryPayersTableTableManager(_$AppDatabase db, $EntryPayersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EntryPayersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EntryPayersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EntryPayersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> entryId = const Value.absent(),
+                Value<String> memberId = const Value.absent(),
+                Value<int> amountMinor = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EntryPayersCompanion(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                entryId: entryId,
+                memberId: memberId,
+                amountMinor: amountMinor,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String id,
+                required String entryId,
+                required String memberId,
+                required int amountMinor,
+                Value<int> rowid = const Value.absent(),
+              }) => EntryPayersCompanion.insert(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                entryId: entryId,
+                memberId: memberId,
+                amountMinor: amountMinor,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$EntryPayersTable, EntryPayer>(table),
+                  BaseReferences<_$AppDatabase, $EntryPayersTable, EntryPayer>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$EntryPayersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EntryPayersTable,
+      EntryPayer,
+      $$EntryPayersTableFilterComposer,
+      $$EntryPayersTableOrderingComposer,
+      $$EntryPayersTableAnnotationComposer,
+      $$EntryPayersTableCreateCompanionBuilder,
+      $$EntryPayersTableUpdateCompanionBuilder,
+      (
+        EntryPayer,
+        BaseReferences<_$AppDatabase, $EntryPayersTable, EntryPayer>,
+      ),
+      EntryPayer,
+      PrefetchHooks Function()
+    >;
 typedef $$RecurringRulesTableCreateCompanionBuilder =
     RecurringRulesCompanion Function({
       Value<DateTime> updatedAt,
@@ -16011,6 +16662,8 @@ class $AppDatabaseManager {
       $$EntryFieldValuesTableTableManager(_db, _db.entryFieldValues);
   $$RemindersTableTableManager get reminders =>
       $$RemindersTableTableManager(_db, _db.reminders);
+  $$EntryPayersTableTableManager get entryPayers =>
+      $$EntryPayersTableTableManager(_db, _db.entryPayers);
   $$RecurringRulesTableTableManager get recurringRules =>
       $$RecurringRulesTableTableManager(_db, _db.recurringRules);
 }

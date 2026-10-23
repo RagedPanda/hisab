@@ -620,5 +620,11 @@
   "recurringNextOn": "अगली तारीख़",
   "recurringRuleMissing": "यह दोहराई जाने वाली एंट्री हटा दी गई है",
   "recurringDecrease": "{label} घटाएँ",
-  "recurringIncrease": "{label} बढ़ाएँ"
+  "recurringIncrease": "{label} बढ़ाएँ",
+  "payersMultiple": "2+ लोग",
+  "payersHelp": "हर व्यक्ति ने कितना दिया, लिखें।",
+  "payersAssigned": "{total} में से {assigned} दर्ज",
+  "payersMustTotal": "दी गई रकम का जोड़ {total} होना चाहिए",
+  "namesAnd": "{first} और {last}",
+  "youInList": "आप"
 }

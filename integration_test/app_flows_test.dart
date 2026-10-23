@@ -1523,6 +1523,8 @@ void main() {
     expect(copied, startsWith('*Goa trip — balances*'));
     expect(copied, contains('Priya owes Rahul ${formatMinor(30000)}'));
     expect(copied, contains('Rahul gets back ${formatMinor(30000)}'));
+    expect(copied, contains('Group total: ${formatMinor(90000)}'));
+    expect(copied, contains('Your share: ${formatMinor(30000)}'));
 
     await tapFinder(tester, find.byTooltip('Share summary'));
     await tapFinder(tester, find.byKey(const Key('group-export-csv')), frames: 12);
@@ -1535,5 +1537,6 @@ void main() {
     expect(lines.first, startsWith('Date,Description,Category,Cost,Paid by,You paid,'));
     expect(lines[1], contains('"Hotel, sea view"'));
     expect(lines[1], contains(',Rahul 600.00; You 300.00,'));
+    expect(lines[2], startsWith(',Total,,900.00,'), reason: 'a closing total row follows the last expense');
   });
 }

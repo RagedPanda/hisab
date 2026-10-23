@@ -6,7 +6,6 @@ import '../../domain/split/item_split.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
-import '../shell/widgets/common.dart';
 
 /// Translated chip label for a split method.
 String splitMethodLabel(SplitMethod method, AppLocalizations l10n) => switch (method) {
@@ -95,8 +94,11 @@ class SplitEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ChipRow(
-          padding: EdgeInsets.zero,
+        // Wrapped, not a scrolling ChipRow: the selected method must always be
+        // visible, also when an edit opens on the last chip (#58).
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
           children: [
             for (final option in SplitMethod.values.where((m) => m != SplitMethod.byItem || items.isNotEmpty))
               ChoiceChip(

@@ -16,17 +16,49 @@ void main() {
   late AccountsRepository accounts;
   late SmsLogRepository smsLog;
   late SmsIngestService service;
+  late List<RawSms> inbox;
+  late List<DateTime> scanStarts;
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
     accounts = AccountsRepository(db);
     smsLog = SmsLogRepository(db);
-    service = SmsIngestService(smsLog: smsLog, accounts: accounts, categories: CategoriesRepository(db), entries: EntriesRepository(db));
+    inbox = [];
+    scanStarts = [];
+    Future<List<RawSms>> fakeInbox({required DateTime since, int limit = 2000}) async {
+      scanStarts.add(since);
+      return inbox.where((message) => !message.receivedAt.isBefore(since)).toList();
+    }
+
+    service = SmsIngestService(smsLog: smsLog, accounts: accounts, categories: CategoriesRepository(db), entries: EntriesRepository(db), readInbox: fakeInbox);
   });
 
   tearDown(() => db.close());
 
   Future<List<String>> accountNames() async => (await accounts.getAll()).map((a) => a.name).toList();
+
+  test('#95: a pasted SMS does not move the inbox scan start', () async {
+    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    inbox.add(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: yesterday));
+    await service.ingest(RawSms(sender: RawSms.pastedSender, body: _atmDebit, receivedAt: DateTime.now()), autoAdd: false, force: true);
+
+    final result = await service.scanInbox(autoAdd: false);
+
+    expect(result.scanned, 1);
+    expect(result.pending, 1, reason: 'the older inbox SMS is still read');
+    expect(scanStarts.single.isBefore(yesterday), isTrue, reason: 'first scan looks back the full window');
+  });
+
+  test('the scan starts at the newest inbox SMS already logged', () async {
+    final twoDaysAgo = DateTime.now().subtract(const Duration(days: 2));
+    final logged = DateTime(twoDaysAgo.year, twoDaysAgo.month, twoDaysAgo.day, 9, 30);
+    await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: logged), autoAdd: false);
+    await service.ingest(RawSms(sender: RawSms.pastedSender, body: _atmDebit, receivedAt: DateTime.now()), autoAdd: false, force: true);
+
+    await service.scanInbox(autoAdd: false);
+
+    expect(scanStarts.single, logged.subtract(const Duration(minutes: 1)));
+  });
 
   test('IOS-04: a pending SMS creates no account until it is approved', () async {
     final received = DateTime(2026, 10, 21, 10, 0);

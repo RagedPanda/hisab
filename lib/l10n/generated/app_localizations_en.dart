@@ -2248,4 +2248,99 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0, $_temp1';
   }
+
+  @override
+  String get groupExportCsv => 'Export as CSV';
+
+  @override
+  String groupExportCsvSubject(String group) {
+    return '$group expenses';
+  }
+
+  @override
+  String get groupExportFailed => 'Couldn\'t export the CSV';
+
+  @override
+  String get groupCsvDate => 'Date';
+
+  @override
+  String get groupCsvDescription => 'Description';
+
+  @override
+  String get groupCsvCost => 'Cost';
+
+  @override
+  String get groupCsvPaidBy => 'Paid by';
+
+  @override
+  String groupCsvPaidColumn(String name) {
+    return '$name paid';
+  }
+
+  @override
+  String groupCsvShareColumn(String name) {
+    return '$name share';
+  }
+
+  @override
+  String groupCsvBalanceColumn(String name) {
+    return '$name balance';
+  }
+
+  @override
+  String get groupCsvPayment => 'Payment';
+
+  @override
+  String get groupSummaryWhoPaysWhom => 'Who pays whom';
+
+  @override
+  String get groupSummaryStandings => 'Where everyone stands';
+
+  @override
+  String groupSummaryYouOwe(String name, String amount) {
+    return 'You owe $name $amount';
+  }
+
+  @override
+  String groupSummaryOwesYou(String name, String amount) {
+    return '$name owes you $amount';
+  }
+
+  @override
+  String groupSummaryGetsBack(String name, String amount) {
+    return '$name gets back $amount';
+  }
+
+  @override
+  String groupSummaryOwesInTotal(String name, String amount) {
+    return '$name owes $amount in total';
+  }
+
+  @override
+  String groupSummaryYouGetBack(String amount) {
+    return 'You get back $amount';
+  }
+
+  @override
+  String groupSummaryYouOweInTotal(String amount) {
+    return 'You owe $amount in total';
+  }
+
+  @override
+  String get groupCsvTotal => 'Total';
+
+  @override
+  String groupSummaryGroupTotal(String amount) {
+    return 'Group total: $amount';
+  }
+
+  @override
+  String groupSummaryYourShare(String amount) {
+    return 'Your share: $amount';
+  }
+
+  @override
+  String groupSummaryMemberShare(String name, String amount) {
+    return '$name\'s share: $amount';
+  }
 }

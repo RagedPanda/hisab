@@ -3727,6 +3727,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{added, plural, =0{None added} =1{1 added} other{{added} added}}, {skipped, plural, =1{1 skipped} other{{skipped} skipped}}'**
   String recurringAddedSkipped(int added, int skipped);
+
+  /// No description provided for @groupExportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export as CSV'**
+  String get groupExportCsv;
+
+  /// No description provided for @groupExportCsvSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'{group} expenses'**
+  String groupExportCsvSubject(String group);
+
+  /// No description provided for @groupExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t export the CSV'**
+  String get groupExportFailed;
+
+  /// No description provided for @groupCsvDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get groupCsvDate;
+
+  /// No description provided for @groupCsvDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get groupCsvDescription;
+
+  /// No description provided for @groupCsvCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get groupCsvCost;
+
+  /// No description provided for @groupCsvPaidBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid by'**
+  String get groupCsvPaidBy;
+
+  /// No description provided for @groupCsvPaidColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} paid'**
+  String groupCsvPaidColumn(String name);
+
+  /// No description provided for @groupCsvShareColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} share'**
+  String groupCsvShareColumn(String name);
+
+  /// No description provided for @groupCsvBalanceColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} balance'**
+  String groupCsvBalanceColumn(String name);
+
+  /// No description provided for @groupCsvPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get groupCsvPayment;
+
+  /// No description provided for @groupSummaryWhoPaysWhom.
+  ///
+  /// In en, this message translates to:
+  /// **'Who pays whom'**
+  String get groupSummaryWhoPaysWhom;
+
+  /// No description provided for @groupSummaryStandings.
+  ///
+  /// In en, this message translates to:
+  /// **'Where everyone stands'**
+  String get groupSummaryStandings;
+
+  /// No description provided for @groupSummaryYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {name} {amount}'**
+  String groupSummaryYouOwe(String name, String amount);
+
+  /// No description provided for @groupSummaryOwesYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes you {amount}'**
+  String groupSummaryOwesYou(String name, String amount);
+
+  /// No description provided for @groupSummaryGetsBack.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} gets back {amount}'**
+  String groupSummaryGetsBack(String name, String amount);
+
+  /// No description provided for @groupSummaryOwesInTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes {amount} in total'**
+  String groupSummaryOwesInTotal(String name, String amount);
+
+  /// No description provided for @groupSummaryYouGetBack.
+  ///
+  /// In en, this message translates to:
+  /// **'You get back {amount}'**
+  String groupSummaryYouGetBack(String amount);
+
+  /// No description provided for @groupSummaryYouOweInTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {amount} in total'**
+  String groupSummaryYouOweInTotal(String amount);
+
+  /// No description provided for @groupCsvTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get groupCsvTotal;
+
+  /// No description provided for @groupSummaryGroupTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Group total: {amount}'**
+  String groupSummaryGroupTotal(String amount);
+
+  /// No description provided for @groupSummaryYourShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Your share: {amount}'**
+  String groupSummaryYourShare(String amount);
+
+  /// No description provided for @groupSummaryMemberShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s share: {amount}'**
+  String groupSummaryMemberShare(String name, String amount);
 }
 
 class _AppLocalizationsDelegate

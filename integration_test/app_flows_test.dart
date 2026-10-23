@@ -1481,6 +1481,8 @@ void main() {
     expect(find.byType(ExpenseEditorScreen), findsOneWidget);
     expect(find.widgetWithText(TextField, '2100'), findsOneWidget);
     await shoot(tester, 'reminder_paid_entry');
+    // The reminder has no category, so pick one or Save stops at "Pick a category" (#107).
+    await _pickCategory(tester, 'electricity', 'Electricity');
     await tapFinder(tester, find.textContaining('Save').last, frames: 16);
     final paid = (await fresh.read(remindersRepositoryProvider).getById(electricity.id))!;
     expect(paid.status, 'done');

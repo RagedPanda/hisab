@@ -70,18 +70,9 @@ class SalaryService {
   /// rule's waiting occurrence so it is not offered for confirmation again.
   Future<SalaryStatus?> reconcile(SalarySettings settings, {required DateTime now, int monthStartDay = 1}) async {
     if (!settings.isSetUp) return null;
-    final status = evaluateSalary(
-      now: now,
-      salaryDay: settings.salaryDay,
-      expectedMinor: settings.amountMinor,
-      incomes: await recentIncomes(salaryLookbackStart(now)),
-      shift: settings.shift,
-      holidays: settings.holidaySet,
-      accountId: settings.accountId,
-      reminderDelayDays: settings.reminderDelayDays,
-    );
+    final status = settings.evaluate(now: now, incomes: await recentIncomes(salaryLookbackStart(now)));
     final rule = await recurring.getRule(settings.ruleId);
-    if (rule != null && rule.deletedAt == null && shouldClaimSalaryOccurrence(status, ruleNextDue: rule.nextDue, ruleId: rule.id)) {
+    if (rule != null && rule.deletedAt == null && shouldClaimSalaryOccurrence(status, ruleNextDue: rule.nextDue, ruleId: rule.id, windowDays: clampSalaryMatchWindowDays(settings.matchWindowDays))) {
       await db.transaction(() async {
         await recurring.linkEntry(status.received!.id, rule.id);
         await recurring.skipNext(rule.id, monthStartDay: monthStartDay);

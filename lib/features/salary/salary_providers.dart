@@ -9,9 +9,11 @@ class SalarySettingsNotifier extends Notifier<SalarySettings> {
   @override
   SalarySettings build() => SalarySettings.fromPrefs(ref.watch(sharedPreferencesProvider));
 
+  /// Stores [settings], stamped now so backups can tell which setup is newer.
   Future<void> save(SalarySettings settings) async {
-    state = settings;
-    await settings.writeTo(ref.read(sharedPreferencesProvider));
+    final stamped = settings.copyWith(updatedAt: DateTime.now());
+    state = stamped;
+    await stamped.writeTo(ref.read(sharedPreferencesProvider));
   }
 }
 
@@ -30,14 +32,5 @@ final salaryStatusProvider = Provider<SalaryStatus?>((ref) {
   final settings = ref.watch(salarySettingsProvider);
   if (!settings.isSetUp) return null;
   final incomes = ref.watch(salaryIncomesProvider).value ?? const <IncomeCandidate>[];
-  return evaluateSalary(
-    now: DateTime.now(),
-    salaryDay: settings.salaryDay,
-    expectedMinor: settings.amountMinor,
-    incomes: incomes,
-    shift: settings.shift,
-    holidays: settings.holidaySet,
-    accountId: settings.accountId,
-    reminderDelayDays: settings.reminderDelayDays,
-  );
+  return settings.evaluate(now: DateTime.now(), incomes: incomes);
 });

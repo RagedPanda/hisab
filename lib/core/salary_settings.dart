@@ -2,9 +2,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/salary/salary_schedule.dart';
 
-/// The user's salary setup, persisted beside [AppSettings]. The income itself
-/// is a recurring rule ([ruleId]); this holds what the rule cannot: the
-/// weekend/holiday shift and the "Salary not seen yet" reminder.
+/// The user's salary setup, persisted beside [AppSettings] and carried in
+/// backups (see [toJson]). The income itself is a recurring rule ([ruleId]);
+/// this holds what the rule cannot: the weekend/holiday shift, how detection
+/// matches an income and the "Salary not seen yet" reminder.
 class SalarySettings {
   const SalarySettings({
     this.ruleId = '',
@@ -15,6 +16,9 @@ class SalarySettings {
     this.holidays = const [],
     this.reminderEnabled = true,
     this.reminderDelayDays = kDefaultSalaryReminderDelayDays,
+    this.matchWindowDays = kSalaryMatchWindowDays,
+    this.tolerancePercent = kDefaultSalaryTolerancePercent,
+    this.updatedAt,
   });
 
   /// Recurring income rule created by the salary setup; empty when not set up.
@@ -33,6 +37,15 @@ class SalarySettings {
   /// Days after the expected date before "Salary not seen yet".
   final int reminderDelayDays;
 
+  /// Days either side of the expected date an income still counts as salary.
+  final int matchWindowDays;
+
+  /// How far, in percent, an income may differ from [amountMinor] and still count.
+  final int tolerancePercent;
+
+  /// Last time the user saved the setup; a backup restores only a newer one.
+  final DateTime? updatedAt;
+
   bool get isSetUp => ruleId.isNotEmpty;
   Set<DateTime> get holidaySet => holidays.toSet();
 
@@ -46,6 +59,9 @@ class SalarySettings {
     List<DateTime>? holidays,
     bool? reminderEnabled,
     int? reminderDelayDays,
+    int? matchWindowDays,
+    int? tolerancePercent,
+    DateTime? updatedAt,
   }) =>
       SalarySettings(
         ruleId: ruleId ?? this.ruleId,
@@ -56,6 +72,23 @@ class SalarySettings {
         holidays: holidays ?? this.holidays,
         reminderEnabled: reminderEnabled ?? this.reminderEnabled,
         reminderDelayDays: reminderDelayDays ?? this.reminderDelayDays,
+        matchWindowDays: matchWindowDays ?? this.matchWindowDays,
+        tolerancePercent: tolerancePercent ?? this.tolerancePercent,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+
+  /// This setup's pay cycle against recent [incomes].
+  SalaryStatus evaluate({required DateTime now, required Iterable<IncomeCandidate> incomes}) => evaluateSalary(
+        now: now,
+        salaryDay: salaryDay,
+        expectedMinor: amountMinor,
+        incomes: incomes,
+        shift: shift,
+        holidays: holidaySet,
+        accountId: accountId,
+        reminderDelayDays: reminderDelayDays,
+        windowDays: clampSalaryMatchWindowDays(matchWindowDays),
+        tolerance: salaryToleranceFraction(tolerancePercent),
       );
 
   static String _dateKey(DateTime date) =>
@@ -67,19 +100,55 @@ class SalarySettings {
           if (DateTime.tryParse(value) case final date?) DateTime(date.year, date.month, date.day),
       ];
 
-  static SalarySettings fromPrefs(SharedPreferences prefs) {
-    final account = prefs.getString('salaryAccountId') ?? '';
+  /// The backup form. Holidays are plain dates, [updatedAt] is ISO 8601.
+  Map<String, dynamic> toJson() => {
+        'ruleId': ruleId,
+        'amountMinor': amountMinor,
+        'accountId': accountId,
+        'salaryDay': salaryDay,
+        'shift': shift.name,
+        'holidays': [for (final date in holidays) _dateKey(date)],
+        'reminderEnabled': reminderEnabled,
+        'reminderDelayDays': reminderDelayDays,
+        'matchWindowDays': matchWindowDays,
+        'tolerancePercent': tolerancePercent,
+        'updatedAt': updatedAt?.toIso8601String(),
+      };
+
+  /// Reads [toJson] output. Missing or mistyped values fall back to the
+  /// defaults and out-of-range ones are brought back within bounds, so a
+  /// hand-edited or future backup can never break detection.
+  static SalarySettings fromJson(Map<String, dynamic> json) {
+    T? read<T>(String key) => json[key] is T ? json[key] as T : null;
+    final account = read<String>('accountId') ?? '';
     return SalarySettings(
-      ruleId: prefs.getString('salaryRuleId') ?? '',
-      amountMinor: prefs.getInt('salaryAmountMinor') ?? 0,
+      ruleId: read<String>('ruleId') ?? '',
+      amountMinor: read<int>('amountMinor') ?? 0,
       accountId: account.isEmpty ? null : account,
-      salaryDay: prefs.getInt('salaryDay') ?? 1,
-      shift: SalaryShift.parse(prefs.getString('salaryShift') ?? ''),
-      holidays: parseHolidays(prefs.getStringList('salaryHolidays') ?? const []),
-      reminderEnabled: prefs.getBool('salaryReminderEnabled') ?? true,
-      reminderDelayDays: prefs.getInt('salaryReminderDelayDays') ?? kDefaultSalaryReminderDelayDays,
+      salaryDay: (read<int>('salaryDay') ?? 1).clamp(1, 31),
+      shift: SalaryShift.parse(read<String>('shift') ?? ''),
+      holidays: parseHolidays([for (final value in read<List>('holidays') ?? const []) if (value is String) value]),
+      reminderEnabled: read<bool>('reminderEnabled') ?? true,
+      reminderDelayDays: read<int>('reminderDelayDays') ?? kDefaultSalaryReminderDelayDays,
+      matchWindowDays: clampSalaryMatchWindowDays(read<int>('matchWindowDays') ?? kSalaryMatchWindowDays),
+      tolerancePercent: clampSalaryTolerancePercent(read<int>('tolerancePercent') ?? kDefaultSalaryTolerancePercent),
+      updatedAt: DateTime.tryParse(read<String>('updatedAt') ?? ''),
     );
   }
+
+  static SalarySettings fromPrefs(SharedPreferences prefs) => fromJson({
+        'ruleId': prefs.getString('salaryRuleId'),
+        'amountMinor': prefs.getInt('salaryAmountMinor'),
+        'accountId': prefs.getString('salaryAccountId'),
+        'salaryDay': prefs.getInt('salaryDay'),
+        'shift': prefs.getString('salaryShift'),
+        'holidays': prefs.getStringList('salaryHolidays'),
+        'reminderEnabled': prefs.getBool('salaryReminderEnabled'),
+        'reminderDelayDays': prefs.getInt('salaryReminderDelayDays'),
+        'matchWindowDays': prefs.getInt('salaryMatchWindowDays'),
+        'tolerancePercent': prefs.getInt('salaryTolerancePercent'),
+        'updatedAt': prefs.getString('salaryUpdatedAt'),
+      });
 
   Future<void> writeTo(SharedPreferences prefs) async {
     await prefs.setString('salaryRuleId', ruleId);
@@ -90,5 +159,20 @@ class SalarySettings {
     await prefs.setStringList('salaryHolidays', [for (final date in holidays) _dateKey(date)]);
     await prefs.setBool('salaryReminderEnabled', reminderEnabled);
     await prefs.setInt('salaryReminderDelayDays', reminderDelayDays);
+    await prefs.setInt('salaryMatchWindowDays', matchWindowDays);
+    await prefs.setInt('salaryTolerancePercent', tolerancePercent);
+    if (updatedAt case final savedAt?) await prefs.setString('salaryUpdatedAt', savedAt.toIso8601String());
   }
+}
+
+/// Whether a backup's salary setup ([incoming]) should replace the [local]
+/// one: only a set-up backup, and only when it is newer (a local setup saved
+/// before timestamps existed counts as oldest). Same newer-wins rule as rows.
+bool shouldRestoreSalarySettings({required SalarySettings local, required SalarySettings incoming}) {
+  if (!incoming.isSetUp) return false;
+  if (!local.isSetUp) return true;
+  final localAt = local.updatedAt;
+  final incomingAt = incoming.updatedAt;
+  if (incomingAt == null) return false;
+  return localAt == null || incomingAt.isAfter(localAt);
 }

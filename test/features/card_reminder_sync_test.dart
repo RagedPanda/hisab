@@ -10,7 +10,9 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/data/repositories/reminders_repository.dart';
 import 'package:hisab/core/notifications/reminder_payload.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
+import 'package:hisab/domain/cards/card_reminder.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
+import 'package:hisab/domain/reminders/reminder_schedule.dart';
 import 'package:hisab/features/accounts/card_reminder_sync.dart';
 
 import '../core/fake_notification_gateway.dart';
@@ -21,6 +23,7 @@ void main() {
   late AccountsRepository accounts;
   late RemindersRepository reminders;
   late CardReminderSync sync;
+  late ReminderScheduler scheduler;
   var now = DateTime(2026, 10, 8, 10);
 
   setUp(() {
@@ -29,7 +32,7 @@ void main() {
     gateway = FakeNotificationGateway();
     accounts = AccountsRepository(db);
     reminders = RemindersRepository(db, clock: () => now);
-    final scheduler = ReminderScheduler(
+    scheduler = ReminderScheduler(
       reminders: reminders,
       notifications: NotificationService(gateway,
           buildAlert: (r, a) => alertRequestFor(r, a, notificationLocalizations('en'), currencySymbol: '₹'), clock: () => now),
@@ -186,5 +189,35 @@ void main() {
     final pending = await pendingCardReminders();
     expect(pending, hasLength(1));
     expect(pending.single.accountId, card.id);
+  });
+
+  test('alert days the user changed survive a due day edit and the startup sync', () async {
+    final card = await addCard();
+    await sync.syncAccount(card);
+    final created = (await pendingCardReminders()).single;
+    expect(parseRemindDaysBefore(created.remindDaysBefore), kCardReminderDaysBefore);
+
+    final edited = reminderDraftFrom(created);
+    await scheduler.save(ReminderDraft(
+      id: edited.id,
+      kind: edited.kind,
+      title: edited.title,
+      dueAt: edited.dueAt,
+      amountMinor: edited.amountMinor,
+      accountId: edited.accountId,
+      remindDaysBefore: const [7, 1],
+      notifyAtMinute: 20 * 60,
+    ));
+
+    await accounts.update(AccountsCompanion(id: Value(card.id), dueDay: const Value(20)));
+    await sync.syncAll();
+
+    final moved = (await pendingCardReminders()).single;
+    expect(moved.id, created.id);
+    expect(moved.dueAt, DateTime(2026, 10, 20));
+    expect(parseRemindDaysBefore(moved.remindDaysBefore), [7, 1]);
+    expect(moved.notifyAtMinute, 20 * 60);
+    final alerts = gateway.alertsFor(reminderPayload(moved.id));
+    expect(alerts.map((alert) => alert.fireAt), containsAll([DateTime(2026, 10, 13, 20), DateTime(2026, 10, 19, 20)]));
   });
 }

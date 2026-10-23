@@ -88,7 +88,7 @@ Set<String> orphanedCardReminderAccounts(List<Reminder> pending, {required Set<S
 
 /// The planner's view of a stored reminder row.
 ExistingCardReminder existingCardReminderOf(Reminder row) =>
-    ExistingCardReminder(id: row.id, dueAt: row.dueAt!, status: row.status, title: row.title, amountMinor: row.amountMinor);
+    ExistingCardReminder(status: row.status, draft: reminderDraftFrom(row));
 
 final cardReminderSyncProvider = Provider((ref) => CardReminderSync(
       accounts: ref.watch(accountsRepositoryProvider),

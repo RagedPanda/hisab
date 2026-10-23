@@ -7,15 +7,15 @@ import 'card_summary.dart';
 /// and on the day itself.
 const kCardReminderDaysBefore = [3, 0];
 
-/// One card-due reminder already stored for a card.
+/// One card-due reminder already stored for a card: its [status] and its
+/// full editable [draft] (so an update keeps what the user set on it).
 class ExistingCardReminder {
-  const ExistingCardReminder({required this.id, required this.dueAt, required this.status, this.title = '', this.amountMinor});
-  final String id;
-  final DateTime dueAt;
+  const ExistingCardReminder({required this.status, required this.draft});
   final String status;
-  final String title;
-  final int? amountMinor;
+  final ReminderDraft draft;
 
+  String get id => draft.id!;
+  DateTime get dueAt => draft.dueAt;
   bool get isPending => status == ReminderStatus.pending;
 }
 
@@ -30,17 +30,41 @@ class CardReminderPlan {
   bool get isEmpty => save == null && deleteIds.isEmpty;
 }
 
-/// The reminder a card should have for [due]; [existingId] updates in place.
-ReminderDraft cardReminderDraft({required String accountId, required String cardName, required CardDue due, String? existingId}) {
+/// A new reminder for a card's bill [due], with the default alert days.
+ReminderDraft cardReminderDraft({required String accountId, required String cardName, required CardDue due}) {
   final amountDue = due.amountDueMinor;
   return ReminderDraft(
-    id: existingId,
     kind: ReminderKind.card,
     title: cardName,
     accountId: accountId,
     dueAt: startOfDay(due.dueDate),
     amountMinor: amountDue != null && amountDue > 0 ? amountDue : null,
     remindDaysBefore: kCardReminderDaysBefore,
+  );
+}
+
+/// [stored] moved to the card's current bill: the name, due date and amount
+/// follow the card; everything the user set on the reminder (alert days and
+/// time, notes, repeat, matching) is kept. The defaults of
+/// [cardReminderDraft] only apply to a newly created reminder.
+ReminderDraft cardReminderUpdate(ReminderDraft stored, {required String cardName, required CardDue due}) {
+  final fresh = cardReminderDraft(accountId: stored.accountId ?? '', cardName: cardName, due: due);
+  return ReminderDraft(
+    id: stored.id,
+    kind: stored.kind,
+    title: fresh.title,
+    dueAt: fresh.dueAt,
+    notes: stored.notes,
+    amountMinor: fresh.amountMinor,
+    categoryId: stored.categoryId,
+    accountId: stored.accountId,
+    recurringId: stored.recurringId,
+    assetId: stored.assetId,
+    repeat: stored.repeat,
+    remindDaysBefore: stored.remindDaysBefore,
+    notifyAtMinute: stored.notifyAtMinute,
+    matchKeywords: stored.matchKeywords,
+    toleranceMinor: stored.toleranceMinor,
   );
 }
 
@@ -53,7 +77,8 @@ ReminderDraft cardReminderDraft({required String accountId, required String card
 /// - A reminder the user already marked paid or skipped for this same due
 ///   date settles it: nothing is re-raised and stray pending ones go.
 /// - Otherwise one pending reminder (the one on the due date if there is
-///   one) is kept and updated when its date, amount or name changed, any
+///   one) is kept and moved when its date, amount or name changed (keeping
+///   the user's alert days, see [cardReminderUpdate]), any
 ///   other pending ones are deleted, and a new one is created when none is
 ///   pending.
 CardReminderPlan planCardReminder({
@@ -68,7 +93,9 @@ CardReminderPlan planCardReminder({
   final settled = existing.any((reminder) => !reminder.isPending && isSameDay(reminder.dueAt, due.dueDate));
   if (settled) return CardReminderPlan(deleteIds: allPendingIds);
   final kept = _pick(pending, due.dueDate);
-  final draft = cardReminderDraft(accountId: accountId, cardName: cardName, due: due, existingId: kept?.id);
+  final draft = kept == null
+      ? cardReminderDraft(accountId: accountId, cardName: cardName, due: due)
+      : cardReminderUpdate(kept.draft, cardName: cardName, due: due);
   final extraIds = [for (final id in allPendingIds) if (id != kept?.id) id];
   return CardReminderPlan(save: kept != null && _matches(kept, draft) ? null : draft, deleteIds: extraIds);
 }
@@ -80,4 +107,4 @@ ExistingCardReminder? _pick(List<ExistingCardReminder> pending, DateTime dueDate
 }
 
 bool _matches(ExistingCardReminder existing, ReminderDraft draft) =>
-    isSameDay(existing.dueAt, draft.dueAt) && existing.title == draft.title && existing.amountMinor == draft.amountMinor;
+    isSameDay(existing.dueAt, draft.dueAt) && existing.draft.title == draft.title && existing.draft.amountMinor == draft.amountMinor;

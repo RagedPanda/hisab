@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/domain/cards/card_reminder.dart';
 import 'package:hisab/domain/cards/card_summary.dart';
+import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
 import 'package:hisab/domain/reminders/reminder_schedule.dart';
 
@@ -10,8 +11,30 @@ void main() {
   CardReminderPlan plan({CardDue? cardDue, List<ExistingCardReminder> existing = const [], String name = 'HDFC Millennia'}) =>
       planCardReminder(accountId: 'card', cardName: name, due: cardDue, existing: existing);
 
-  ExistingCardReminder stored({String id = 'r1', String status = ReminderStatus.pending, DateTime? dueAt, int? amountMinor = 2500000, String title = 'HDFC Millennia'}) =>
-      ExistingCardReminder(id: id, dueAt: dueAt ?? DateTime(2026, 11, 15), status: status, title: title, amountMinor: amountMinor);
+  ExistingCardReminder stored({
+    String id = 'r1',
+    String status = ReminderStatus.pending,
+    DateTime? dueAt,
+    int? amountMinor = 2500000,
+    String title = 'HDFC Millennia',
+    List<int> remindDaysBefore = kCardReminderDaysBefore,
+    int? notifyAtMinute = kDefaultNotifyMinute,
+    String notes = '',
+  }) =>
+      ExistingCardReminder(
+        status: status,
+        draft: ReminderDraft(
+          id: id,
+          kind: ReminderKind.card,
+          title: title,
+          accountId: 'card',
+          dueAt: dueAt ?? DateTime(2026, 11, 15),
+          amountMinor: amountMinor,
+          remindDaysBefore: remindDaysBefore,
+          notifyAtMinute: notifyAtMinute,
+          notes: notes,
+        ),
+      );
 
   group('cardReminderDraft', () {
     test('is a one-off card reminder on the due day, 3 days ahead and on the day', () {
@@ -63,6 +86,25 @@ void main() {
         expect(result.save!.dueAt, DateTime(2026, 11, 15));
         expect(result.deleteIds, isEmpty);
       }
+    });
+
+    test('moving the pending reminder keeps the alert days, time and notes the user set', () {
+      final result = plan(cardDue: due, existing: [
+        stored(dueAt: DateTime(2026, 10, 20), remindDaysBefore: const [7, 1], notifyAtMinute: 20 * 60, notes: 'autopay off'),
+      ]);
+      final draft = result.save!;
+      expect(draft.id, 'r1');
+      expect(draft.dueAt, DateTime(2026, 11, 15));
+      expect(draft.amountMinor, 2500000);
+      expect(draft.remindDaysBefore, [7, 1]);
+      expect(draft.notifyAtMinute, 20 * 60);
+      expect(draft.notes, 'autopay off');
+    });
+
+    test('only a new reminder gets the default alert days', () {
+      expect(plan(cardDue: due).save!.remindDaysBefore, kCardReminderDaysBefore);
+      final afterPaid = plan(cardDue: due, existing: [stored(status: ReminderStatus.done, dueAt: DateTime(2026, 10, 15), remindDaysBefore: const [7])]);
+      expect(afterPaid.save!.remindDaysBefore, kCardReminderDaysBefore);
     });
 
     test('a newer closed reminder does not stop the pending one being updated in place (#59)', () {

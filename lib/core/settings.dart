@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Preference behind Settings > "Month starts on"; also read by backups.
+const String kMonthStartDayPref = 'monthStartDay';
+
 /// User preferences persisted outside the database.
 class AppSettings {
   const AppSettings({
@@ -54,7 +57,7 @@ class AppSettings {
 
   static AppSettings fromPrefs(SharedPreferences prefs) => AppSettings(
         currencySymbol: prefs.getString('currencySymbol') ?? '₹',
-        monthStartDay: prefs.getInt('monthStartDay') ?? 1,
+        monthStartDay: prefs.getInt(kMonthStartDayPref) ?? 1,
         themeMode: ThemeMode.values[prefs.getInt('themeMode') ?? ThemeMode.system.index],
         smsEnabled: prefs.getBool('smsEnabled') ?? false,
         smsAutoAdd: prefs.getBool('smsAutoAdd') ?? false,
@@ -65,7 +68,7 @@ class AppSettings {
 
   Future<void> writeTo(SharedPreferences prefs) async {
     await prefs.setString('currencySymbol', currencySymbol);
-    await prefs.setInt('monthStartDay', monthStartDay);
+    await prefs.setInt(kMonthStartDayPref, monthStartDay);
     await prefs.setInt('themeMode', themeMode.index);
     await prefs.setBool('smsEnabled', smsEnabled);
     await prefs.setBool('smsAutoAdd', smsAutoAdd);

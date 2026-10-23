@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/salary_settings.dart';
 import 'package:hisab/data/backup/backup_service.dart';
+import 'package:hisab/data/backup/month_start_backup.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/salary/salary_backup.dart';
 import 'package:hisab/data/salary/salary_service.dart';
@@ -38,8 +39,7 @@ void main() {
       tolerancePercent: tolerancePercent,
       updatedAt: savedAt,
     );
-    final ruleId = await SalaryService(db).saveSalaryRule(settings: draft, name: 'Salary', today: DateTime(2026, 10, 22));
-    final saved = draft.copyWith(ruleId: ruleId);
+    final saved = await SalaryService(db).saveSalaryRule(settings: draft, today: DateTime(2026, 10, 22));
     await saved.writeTo(prefs);
     return saved;
   }
@@ -75,5 +75,33 @@ void main() {
     final written = await backupFor(restoredDb).importSnapshot({'app': 'hisab', 'version': 1, 'accounts': []});
     expect(written, 0);
     expect(SalarySettings.fromPrefs(prefs).isSetUp, isFalse);
+  });
+
+  group('month start', () {
+    test('a backup carries "Month starts on" and a fresh device takes it', () async {
+      await prefs.setInt('monthStartDay', 25);
+      final backup = BackupService(db, sections: [MonthStartBackupSection(prefs)]);
+      final payload = await backup.snapshot();
+      expect(payload['generalSettings'], {'monthStartDay': 25});
+
+      await prefs.clear();
+      await BackupService(restoredDb, sections: [MonthStartBackupSection(prefs)]).importSnapshot(payload);
+      expect(prefs.getInt('monthStartDay'), 25);
+    });
+
+    test('a day chosen on this device is kept, and bad values are ignored', () {
+      expect(shouldRestoreMonthStartDay(local: 1, incoming: 25), isTrue);
+      expect(shouldRestoreMonthStartDay(local: 10, incoming: 25), isFalse);
+      expect(shouldRestoreMonthStartDay(local: 1, incoming: null), isFalse);
+      expect(parseBackedUpMonthStartDay({'monthStartDay': 29}), isNull);
+      expect(parseBackedUpMonthStartDay({'monthStartDay': '5'}), isNull);
+      expect(parseBackedUpMonthStartDay({'monthStartDay': 28}), 28);
+    });
+
+    test('an older backup without the block restores without it', () async {
+      final payload = await BackupService(db).snapshot();
+      await BackupService(restoredDb, sections: [MonthStartBackupSection(prefs)]).importSnapshot(payload);
+      expect(prefs.getInt('monthStartDay'), isNull);
+    });
   });
 }

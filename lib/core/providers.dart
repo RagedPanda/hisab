@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/backup/backup_service.dart';
+import '../data/backup/month_start_backup.dart';
 import '../data/db/database.dart';
 import '../data/repositories/accounts_repository.dart';
 import '../data/repositories/entry_removal.dart';
@@ -154,7 +155,10 @@ final smsIngestServiceProvider = Provider((ref) => SmsIngestService(
     ));
 
 final backupServiceProvider = Provider(
-  (ref) => BackupService(ref.watch(databaseProvider), sections: [SalaryBackupSection(ref.watch(sharedPreferencesProvider))]),
+  (ref) => BackupService(ref.watch(databaseProvider), sections: [
+        MonthStartBackupSection(ref.watch(sharedPreferencesProvider)),
+        SalaryBackupSection(ref.watch(sharedPreferencesProvider)),
+      ]),
 );
 
 // Reminders and notifications ------------------------------------------------

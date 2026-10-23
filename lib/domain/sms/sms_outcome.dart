@@ -22,6 +22,14 @@ abstract final class SmsLogStatus {
   static const undone = 'undone';
 }
 
+/// The text the log keeps for a message with [status]. Not-bank messages
+/// (OTPs, promotions) never keep their text: only sender, time and outcome.
+String storedSmsBody(String status, String body) => status == SmsLogStatus.notBank ? '' : body;
+
+/// A re-delivery of a not-bank message is not logged at all, so its text
+/// cannot end up in a duplicate row.
+bool logsDuplicateOf(String originalStatus) => originalStatus != SmsLogStatus.notBank;
+
 /// Maps a stored status to the outcome the history screen shows.
 SmsOutcome smsOutcomeFor(String status) => switch (status) {
       SmsLogStatus.added => SmsOutcome.added,

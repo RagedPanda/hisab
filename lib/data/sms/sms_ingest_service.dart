@@ -123,7 +123,7 @@ class SmsIngestService {
   /// A re-read of the same inbox message is silent; a bank re-delivery at a
   /// different time gets its own history row, linked to the original's entry.
   Future<void> _recordDuplicate(SmsLogData original, RawSms message) async {
-    if (isSameDelivery(original.receivedAt, message.receivedAt)) return;
+    if (!logsDuplicateOf(original.status) || isSameDelivery(original.receivedAt, message.receivedAt)) return;
     final duplicateId = SmsLogRepository.duplicateIdFor(original.id, message.receivedAt);
     if (await smsLog.exists(duplicateId)) return;
     await smsLog.record(

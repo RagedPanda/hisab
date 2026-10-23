@@ -41,7 +41,7 @@ class SmsLogRepository {
       db.into(db.smsLog).insertOnConflictUpdate(SmsLogCompanion.insert(
             id: id,
             sender: sender,
-            body: body,
+            body: storedSmsBody(status, body),
             receivedAt: receivedAt,
             status: status,
             parsedJson: Value(parsed == null ? null : jsonEncode(parsed)),

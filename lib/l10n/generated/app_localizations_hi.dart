@@ -2279,6 +2279,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get salaryRemove => 'वेतन हटाएँ';
 
   @override
+  String get salaryRemoveBody =>
+      'वेतन नियम हटा दिया जाएगा। आपकी पहले की वेतन प्रविष्टियाँ बनी रहेंगी।';
+
+  @override
   String get salaryRemoved => 'वेतन हटाया गया';
 
   @override

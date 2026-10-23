@@ -119,7 +119,7 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
   Future<void> remove() async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    final confirmed = await confirmDialog(context, title: l10n.salaryRemove, confirmLabel: l10n.salaryRemove);
+    final confirmed = await confirmDialog(context, title: l10n.salaryRemove, message: l10n.salaryRemoveBody, confirmLabel: l10n.salaryRemove);
     if (!confirmed) return;
     await ref.read(salaryServiceProvider).removeSalaryRule(draft.ruleId);
     // Back to a blank setup, so setting it up again starts from the defaults.

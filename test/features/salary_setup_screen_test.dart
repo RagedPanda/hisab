@@ -150,6 +150,7 @@ void main() {
     await _settle(tester);
     await tester.tap(find.byKey(const Key('salaryRemove')));
     await _settle(tester, 6);
+    expect(find.text(english.salaryRemoveBody), findsOneWidget, reason: 'says the rule goes and past entries stay');
     await tester.tap(find.text(english.salaryRemove).last);
     await _settle(tester);
 

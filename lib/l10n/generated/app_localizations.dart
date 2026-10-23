@@ -3818,6 +3818,12 @@ abstract class AppLocalizations {
   /// **'Remove salary'**
   String get salaryRemove;
 
+  /// No description provided for @salaryRemoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The Salary rule will be deleted. Salary entries you already have are kept.'**
+  String get salaryRemoveBody;
+
   /// No description provided for @salaryRemoved.
   ///
   /// In en, this message translates to:

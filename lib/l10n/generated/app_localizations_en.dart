@@ -2287,6 +2287,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salaryRemove => 'Remove salary';
 
   @override
+  String get salaryRemoveBody =>
+      'The Salary rule will be deleted. Salary entries you already have are kept.';
+
+  @override
   String get salaryRemoved => 'Salary removed';
 
   @override

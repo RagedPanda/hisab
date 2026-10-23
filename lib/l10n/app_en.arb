@@ -752,6 +752,7 @@
   "salaryAlignMessage": "Budgets and monthly totals will run from one salary to the next.",
   "salaryAlignAction": "Align",
   "salaryRemove": "Remove salary",
+  "salaryRemoveBody": "The Salary rule will be deleted. Salary entries you already have are kept.",
   "salaryRemoved": "Salary removed",
   "salarySaved": "Salary saved",
   "salaryExpectedOn": "Expected {date}",

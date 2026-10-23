@@ -233,4 +233,16 @@ void main() {
       expect(due.reminderDate, isNull);
     });
   });
+
+  group('lastStatementExceedsAmountDue', () {
+    test('flags a statement above the amount due', () {
+      expect(lastStatementExceedsAmountDue(lastStatementMinor: 500000, amountDueMinor: 200000), isTrue);
+    });
+
+    test('accepts a statement up to the amount due, or none', () {
+      expect(lastStatementExceedsAmountDue(lastStatementMinor: 200000, amountDueMinor: 200000), isFalse);
+      expect(lastStatementExceedsAmountDue(lastStatementMinor: 100000, amountDueMinor: 200000), isFalse);
+      expect(lastStatementExceedsAmountDue(lastStatementMinor: null, amountDueMinor: 0), isFalse);
+    });
+  });
 }

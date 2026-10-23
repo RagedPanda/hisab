@@ -213,3 +213,10 @@ CardOverview buildCardOverview({
     ),
   );
 }
+
+/// Whether a last statement amount can go with the card's current amount
+/// due: what was billed and is still unpaid cannot exceed what is owed now.
+/// Payments made before the statement was entered are not recorded, so the
+/// editor asks the user to lower the statement instead.
+bool lastStatementExceedsAmountDue({required int? lastStatementMinor, required int amountDueMinor}) =>
+    lastStatementMinor != null && lastStatementMinor > amountDueMinor;

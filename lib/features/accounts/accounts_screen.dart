@@ -81,6 +81,7 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
     var include = existing?.includeInTotal ?? true;
     var statementDay = existing?.statementDay;
     var dueDay = existing?.dueDay;
+    String? statementError;
     final limitController = TextEditingController(text: existing?.creditLimitMinor == null ? '' : amountInputText(existing!.creditLimitMinor!));
     final lastStatementController = TextEditingController(text: existing?.lastStatementMinor == null ? '' : amountInputText(existing!.lastStatementMinor!));
     final l10n = context.l10n;
@@ -121,6 +122,10 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                   dueDay: dueDay,
                   limitController: limitController,
                   lastStatementController: lastStatementController,
+                  statementError: statementError,
+                  onStatementChanged: () {
+                    if (statementError != null) setSheetState(() => statementError = null);
+                  },
                   onStatementDay: (value) => setSheetState(() => statementDay = value),
                   onDueDay: (value) => setSheetState(() => dueDay = value),
                 ),
@@ -158,7 +163,13 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                   onPressed: () async {
                     final name = nameController.text.trim();
                     if (name.isEmpty) return;
-                    final signed = signedBalanceForType(type, parseAmountToMinor(balanceController.text) ?? 0);
+                    final amountMinor = parseAmountToMinor(balanceController.text) ?? 0;
+                    if (type == 'card' && lastStatementExceedsAmountDue(lastStatementMinor: parseAmountToMinor(lastStatementController.text), amountDueMinor: amountMinor)) {
+                      final symbol = ref.read(settingsProvider).currencySymbol;
+                      setSheetState(() => statementError = l10n.cardStatementOverAmountDue(formatMinor(amountMinor, symbol: symbol)));
+                      return;
+                    }
+                    final signed = signedBalanceForType(type, amountMinor);
                     final repo = ref.read(accountsRepositoryProvider);
                     final card = cardFieldsFromForm(
                       isCard: type == 'card',
@@ -250,6 +261,8 @@ class _CardFields extends StatelessWidget {
     required this.dueDay,
     required this.limitController,
     required this.lastStatementController,
+    required this.statementError,
+    required this.onStatementChanged,
     required this.onStatementDay,
     required this.onDueDay,
   });
@@ -257,6 +270,8 @@ class _CardFields extends StatelessWidget {
   final int? dueDay;
   final TextEditingController limitController;
   final TextEditingController lastStatementController;
+  final String? statementError;
+  final VoidCallback onStatementChanged;
   final ValueChanged<int?> onStatementDay;
   final ValueChanged<int?> onDueDay;
 
@@ -300,7 +315,8 @@ class _CardFields extends StatelessWidget {
           controller: lastStatementController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: amountInputFormatters,
-          decoration: InputDecoration(labelText: l10n.cardLastStatementAmount),
+          onChanged: (_) => onStatementChanged(),
+          decoration: InputDecoration(labelText: l10n.cardLastStatementAmount, errorText: statementError, errorMaxLines: 3),
         ),
         const SizedBox(height: 6),
         Text(l10n.cardDetailsHint, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),

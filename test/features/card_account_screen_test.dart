@@ -80,7 +80,15 @@ void main() {
     await tester.tap(find.text('15').last);
     await settle(tester);
     await enter(tester, find.byKey(const ValueKey('account.creditLimit')), '100000');
+    await enter(tester, find.byKey(const ValueKey('account.lastStatement')), '1500');
+    await tester.ensureVisible(find.text('Save'));
+    await tester.tap(find.text('Save'));
+    await settle(tester);
+    expect(find.textContaining('More than the amount due (₹500)'), findsOneWidget, reason: 'a statement above the amount due is not saved');
+    expect((await (db.select(db.accounts)..where((t) => t.id.equals('card'))).getSingle()).dueDay, isNull);
+
     await enter(tester, find.byKey(const ValueKey('account.lastStatement')), '400');
+    expect(find.textContaining('More than the amount due'), findsNothing, reason: 'editing the field clears the error');
     await tester.ensureVisible(find.text('Save'));
     await tester.tap(find.text('Save'));
     await settle(tester);

@@ -190,6 +190,30 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
                 ],
               ),
             ],
+            const SizedBox(height: 16),
+            DropdownButtonFormField<int>(
+              key: const Key('salaryMatchWindow'),
+              initialValue: clampSalaryMatchWindowDays(draft.matchWindowDays),
+              isExpanded: true,
+              decoration: InputDecoration(labelText: l10n.salaryMatchWindow, border: const OutlineInputBorder()),
+              items: [
+                for (var days = kMinSalaryMatchWindowDays; days <= kMaxSalaryMatchWindowDays; days++)
+                  DropdownMenuItem(value: days, child: Text(l10n.salaryMatchWindowDays(days))),
+              ],
+              onChanged: (value) => setState(() => draft = draft.copyWith(matchWindowDays: value)),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<int>(
+              key: const Key('salaryTolerance'),
+              initialValue: nearestSalaryToleranceChoice(draft.tolerancePercent),
+              isExpanded: true,
+              decoration: InputDecoration(labelText: l10n.salaryTolerance, border: const OutlineInputBorder(), helperText: l10n.salaryDetectionHelp, helperMaxLines: 3),
+              items: [
+                for (final percent in kSalaryTolerancePercentChoices)
+                  DropdownMenuItem(value: percent, child: Text(percent == 0 ? l10n.salaryToleranceExact : l10n.salaryTolerancePercent(percent))),
+              ],
+              onChanged: (value) => setState(() => draft = draft.copyWith(tolerancePercent: value)),
+            ),
             const SizedBox(height: 8),
             SwitchListTile(
               key: const Key('salaryReminderSwitch'),

@@ -3860,6 +3860,42 @@ abstract class AppLocalizations {
   /// **'Salary'**
   String get salaryRuleName;
 
+  /// No description provided for @salaryMatchWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Can arrive early by'**
+  String get salaryMatchWindow;
+
+  /// No description provided for @salaryMatchWindowDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Up to 1 day} other{Up to {days} days}}'**
+  String salaryMatchWindowDays(int days);
+
+  /// No description provided for @salaryTolerance.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount can differ by'**
+  String get salaryTolerance;
+
+  /// No description provided for @salaryTolerancePercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {percent}%'**
+  String salaryTolerancePercent(int percent);
+
+  /// No description provided for @salaryToleranceExact.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact amount only'**
+  String get salaryToleranceExact;
+
+  /// No description provided for @salaryDetectionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'An income counts as salary when it is this close to the amount and arrives no earlier than this, or any day later in the cycle.'**
+  String get salaryDetectionHelp;
+
   /// No description provided for @remindersTitle.
   ///
   /// In en, this message translates to:

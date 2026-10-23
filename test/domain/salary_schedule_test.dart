@@ -217,6 +217,10 @@ void main() {
       expect(salaryToleranceFraction(15), closeTo(0.15, 1e-9));
       expect(salaryToleranceFraction(200), closeTo(0.5, 1e-9));
       expect(kSalaryTolerancePercentChoices, contains(kDefaultSalaryTolerancePercent));
+      expect(nearestSalaryToleranceChoice(15), 15);
+      expect(nearestSalaryToleranceChoice(33), 30);
+      expect(nearestSalaryToleranceChoice(37), 40);
+      expect(nearestSalaryToleranceChoice(-1), 0);
     });
   });
 

@@ -2314,6 +2314,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salaryRuleName => 'Salary';
 
   @override
+  String get salaryMatchWindow => 'Can arrive early by';
+
+  @override
+  String salaryMatchWindowDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Up to $days days',
+      one: 'Up to 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salaryTolerance => 'Amount can differ by';
+
+  @override
+  String salaryTolerancePercent(int percent) {
+    return 'Up to $percent%';
+  }
+
+  @override
+  String get salaryToleranceExact => 'Exact amount only';
+
+  @override
+  String get salaryDetectionHelp =>
+      'An income counts as salary when it is this close to the amount and arrives no earlier than this, or any day later in the cycle.';
+
+  @override
   String get remindersTitle => 'Reminders';
 
   @override

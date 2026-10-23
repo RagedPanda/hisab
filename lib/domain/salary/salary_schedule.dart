@@ -47,6 +47,13 @@ int clampSalaryMatchWindowDays(int days) => days.clamp(kMinSalaryMatchWindowDays
 /// [percent] within the tolerance bounds (0 .. the highest choice).
 int clampSalaryTolerancePercent(int percent) => percent.clamp(0, kSalaryTolerancePercentChoices.last);
 
+/// The offered choice closest to [percent], for showing a restored or
+/// hand-edited value that is not one of [kSalaryTolerancePercentChoices].
+int nearestSalaryToleranceChoice(int percent) {
+  final bounded = clampSalaryTolerancePercent(percent);
+  return kSalaryTolerancePercentChoices.reduce((best, choice) => (choice - bounded).abs() < (best - bounded).abs() ? choice : best);
+}
+
 /// A tolerance in percent as the fraction [isAmountWithinTolerance] takes.
 double salaryToleranceFraction(int percent) => clampSalaryTolerancePercent(percent) / 100;
 

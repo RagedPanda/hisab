@@ -2306,6 +2306,35 @@ class AppLocalizationsHi extends AppLocalizations {
   String get salaryRuleName => 'वेतन';
 
   @override
+  String get salaryMatchWindow => 'कितने दिन पहले आ सकता है';
+
+  @override
+  String salaryMatchWindowDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन तक',
+      one: '1 दिन तक',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salaryTolerance => 'रकम में कितना फ़र्क चलेगा';
+
+  @override
+  String salaryTolerancePercent(int percent) {
+    return '$percent% तक';
+  }
+
+  @override
+  String get salaryToleranceExact => 'सिर्फ़ यही रकम';
+
+  @override
+  String get salaryDetectionHelp =>
+      'कोई आमदनी वेतन मानी जाती है जब रकम इतनी क़रीब हो और वह इससे पहले न आए, या इस चक्र में बाद में कभी भी आए।';
+
+  @override
   String get remindersTitle => 'रिमाइंडर';
 
   @override

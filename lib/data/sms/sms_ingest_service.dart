@@ -11,6 +11,7 @@ import '../../domain/sms/payee_normaliser.dart';
 import '../../domain/sms/sms_categorizer.dart';
 import '../../domain/sms/sms_confidence.dart';
 import '../../domain/sms/sms_parser.dart';
+import '../../domain/sms/sms_transaction_key.dart';
 import '../db/database.dart';
 import '../repositories/accounts_repository.dart';
 import '../repositories/categories_repository.dart';
@@ -109,6 +110,11 @@ class SmsIngestService {
       return IngestStatus.unparsed;
     }
 
+    // The same payment can arrive again under another id: pasted with today's
+    // time, opened from a link, or read from the inbox after a paste.
+    final transactionKey = smsTransactionKeyForParsed(message.body, parsed);
+    if (await smsLog.hasTransaction(transactionKey)) return IngestStatus.duplicate;
+
     // Only an account we already know gets its balance refreshed here; a new
     // account is created when the user approves the transaction, not before.
     final known = await accounts.findBySmsKey(parsed.accountKey);
@@ -122,12 +128,12 @@ class SmsIngestService {
       ..['accountId'] = known?.id;
 
     if (routeForSms(parsed: parsed, autoAddEnabled: autoAdd, possibleTransaction: true) != SmsRoute.autoAdd) {
-      await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'pending', parsed: payload);
+      await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'pending', parsed: payload, transactionKey: transactionKey);
       return IngestStatus.pending;
     }
     final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(id, parsed, categoryKey, account?.id);
-    await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'added', parsed: payload, entryId: entryId);
+    await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'added', parsed: payload, entryId: entryId, transactionKey: transactionKey);
     await reminderLinker?.linkEntry(smsId: id, parsed: parsed, entryId: entryId);
     _autoAddedController.add(SmsAutoAdded(
       smsId: id,

@@ -117,6 +117,57 @@ void main() {
     });
   });
 
+  group('the same payment arriving twice (#46)', () {
+    const broadband = 'Rs.799.00 debited from A/c XX1234 on 23-10-26 to ACTFIBERNET. UPI Ref 629400000799';
+    late FakeReminders reminders;
+    late SmsIngestService matchingService;
+
+    setUp(() {
+      reminders = FakeReminders([
+        ReminderMatchCandidate(id: 'broadband-early', kind: 'bill', title: 'Broadband early', dueAt: DateTime(2026, 10, 24), amountMinor: 79900, matchKeywords: const ['actfibernet']),
+        ReminderMatchCandidate(id: 'broadband-late', kind: 'bill', title: 'Broadband late', dueAt: DateTime(2026, 10, 30), amountMinor: 79900, matchKeywords: const ['actfibernet']),
+      ]);
+      matchingService = SmsIngestService(
+        smsLog: smsLog,
+        accounts: accounts,
+        categories: CategoriesRepository(db),
+        entries: EntriesRepository(db),
+        reminderLinker: SmsReminderLinker(smsLog: smsLog, reminders: reminders),
+      );
+    });
+
+    Future<int> entryCount() async => (await db.select(db.entries).get()).length;
+
+    test('pasting an approved SMS again on a later day adds nothing and pays no second reminder', () async {
+      await matchingService.ingest(RawSms(sender: 'PASTED', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: false, force: true);
+      await matchingService.approvePending((await smsLog.watchPending().first).single);
+      expect(reminders.paid.map((payment) => payment.reminderId), ['broadband-early']);
+
+      final again = await matchingService.ingest(RawSms(sender: 'PASTED', body: broadband, receivedAt: DateTime(2026, 10, 25, 20)), autoAdd: false, force: true);
+      expect(again, IngestStatus.duplicate);
+      expect(await smsLog.watchPending().first, isEmpty, reason: 'no second row to approve');
+      expect(reminders.paid.map((payment) => payment.reminderId), ['broadband-early'], reason: 'Broadband late stays pending');
+      expect(await entryCount(), 1);
+    });
+
+    test('pasting an SMS the inbox already auto-added is a duplicate', () async {
+      await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: true);
+      final pasted = await matchingService.ingest(RawSms(sender: 'PASTED', body: '  $broadband\n', receivedAt: DateTime(2026, 10, 23, 18)), autoAdd: true, force: true);
+      expect(pasted, IngestStatus.duplicate);
+      expect(reminders.paid, hasLength(1));
+      expect(await entryCount(), 1);
+    });
+
+    test('a different payment to the same payee still pays the next reminder', () async {
+      await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: true);
+      const nextMonth = 'Rs.799.00 debited from A/c XX1234 on 29-10-26 to ACTFIBERNET. UPI Ref 630200000123';
+      final status = await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: nextMonth, receivedAt: DateTime(2026, 10, 29, 9)), autoAdd: true);
+      expect(status, IngestStatus.added);
+      expect(reminders.paid.map((payment) => payment.reminderId), ['broadband-early', 'broadband-late']);
+      expect(await entryCount(), 2);
+    });
+  });
+
   group('auto-add', () {
     final received = DateTime(2026, 10, 21, 10, 0);
 

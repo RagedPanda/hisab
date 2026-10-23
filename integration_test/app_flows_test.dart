@@ -593,11 +593,8 @@ void main() {
     await waitFor(tester, find.textContaining('Added ${formatMinor(50000, showDecimals: false)} from SMS'));
     await shoot(tester, 'sms_auto_added_undo');
     await tapText(tester, 'Undo', frames: 12);
-    expect(find.text('To review (1)'), findsOneWidget, reason: 'Undo puts the SMS back in the review queue');
-    expect(find.text('Add ${formatMinor(50000, showDecimals: false)}'), findsOneWidget);
-    await shoot(tester, 'sms_pending');
-    await tapText(tester, 'Ignore');
-    expect(find.text('To review (0)'), findsOneWidget);
+    expect(find.text('To review (0)'), findsOneWidget, reason: 'Undo ignores the SMS; it does not come back for review');
+    await shoot(tester, 'sms_after_undo');
 
     await tapText(tester, 'Paste an SMS');
     await enterText(tester, _dialogField(), 'Paid Rs 250 to Ramesh');

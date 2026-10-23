@@ -21,6 +21,39 @@ String salaryShiftLabel(BuildContext context, SalaryShift shift) => switch (shif
       SalaryShift.nextWorkingDay => context.l10n.salaryShiftNext,
     };
 
+/// The status card's two lines: what happened to the tracked cycle (received
+/// with its amount, late, or expected) and what comes next, with the last
+/// salary received when the tracked one has not arrived yet.
+({String title, String subtitle}) salaryStatusLines(SalaryStatus status, AppLocalizations l10n, {required String locale, required String symbol}) {
+  String date(DateTime value) => formatShortDate(value, locale: locale);
+  String money(int minor) => formatMinor(minor, symbol: symbol);
+  final received = status.received;
+  final title = received != null
+      ? l10n.salaryReceivedAmount(date(received.occurredAt), money(received.amountMinor))
+      : status.isLate
+          ? l10n.salaryLateSince(date(status.expected))
+          : l10n.salaryExpectedOn(date(status.expected));
+  final last = status.lastReceived;
+  final subtitle = [
+    if (received == null && last != null) l10n.salaryLastReceived(date(last.occurredAt), money(last.amountMinor)),
+    l10n.salaryNextExpected(date(status.next)),
+  ].join('\n');
+  return (title: title, subtitle: subtitle);
+}
+
+/// Asks for the notification permission (the Android 13+ prompt) unless it
+/// is already granted, so the salary reminder can actually be shown. Never
+/// throws: saving the salary must not depend on the prompt.
+Future<void> ensureSalaryNotificationPermission(WidgetRef ref) async {
+  try {
+    final notifications = ref.read(notificationServiceProvider);
+    if (!(await notifications.checkPermission()).notificationsAllowed) await notifications.requestPermission();
+  } catch (error) {
+    debugPrint('Hisab: notification permission not requested: $error');
+  }
+  ref.invalidate(notificationPermissionProvider);
+}
+
 /// Settings > Money > Salary: amount, account, day, weekend shift and the
 /// "Salary not seen yet" reminder. Saving creates the recurring income rule.
 class SalarySetupScreen extends ConsumerStatefulWidget {
@@ -57,21 +90,30 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     final settings = ref.read(settingsProvider);
-    final service = ref.read(salaryServiceProvider);
+    final notifier = ref.read(salarySettingsProvider.notifier);
     final now = DateTime.now();
-    final withAmount = draft.copyWith(amountMinor: parsedAmount);
-    final ruleId = await service.saveSalaryRule(settings: withAmount, name: l10n.salaryRuleName, today: now, monthStartDay: settings.monthStartDay);
-    final saved = withAmount.copyWith(ruleId: ruleId);
-    await ref.read(salarySettingsProvider.notifier).save(saved);
+    if (draft.reminderEnabled) await ensureSalaryNotificationPermission(ref);
+    final saved = await ref.read(salaryServiceProvider).saveSalaryRule(settings: draft.copyWith(amountMinor: parsedAmount), today: now, monthStartDay: settings.monthStartDay);
+    await notifier.save(saved);
     if (!mounted) return;
-    if (!isMonthStartAligned(monthStartDay: settings.monthStartDay, salaryDay: saved.salaryDay)) {
+    if (saved.shouldOfferMonthStartAlign(monthStartDay: settings.monthStartDay)) {
       final suggested = suggestedMonthStartDay(saved.salaryDay);
       final align = await confirmDialog(context, title: l10n.salaryAlignTitle(suggested), message: l10n.salaryAlignMessage, confirmLabel: l10n.salaryAlignAction);
-      if (align) await ref.read(settingsProvider.notifier).update((current) => current.copyWith(monthStartDay: suggested));
+      if (align) {
+        await ref.read(settingsProvider.notifier).update((current) => current.copyWith(monthStartDay: suggested));
+      } else {
+        await notifier.save(saved.copyWith(alignDeclinedRuleId: saved.ruleId));
+      }
     }
     await syncSalaryReminder(ref.read, now: now);
     messenger.showSnackBar(SnackBar(content: Text(l10n.salarySaved)));
     if (mounted) popOrGoHome(context);
+  }
+
+  /// Turning the reminder on asks for the permission it needs right away.
+  Future<void> setReminderEnabled(bool enabled) async {
+    setState(() => draft = draft.copyWith(reminderEnabled: enabled));
+    if (enabled) await ensureSalaryNotificationPermission(ref);
   }
 
   Future<void> remove() async {
@@ -80,7 +122,12 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
     final confirmed = await confirmDialog(context, title: l10n.salaryRemove, confirmLabel: l10n.salaryRemove);
     if (!confirmed) return;
     await ref.read(salaryServiceProvider).removeSalaryRule(draft.ruleId);
-    await ref.read(salarySettingsProvider.notifier).save(draft.copyWith(ruleId: ''));
+    // Back to a blank setup, so setting it up again starts from the defaults.
+    await ref.read(salarySettingsProvider.notifier).save(const SalarySettings());
+    if (mounted) {
+      setState(() => draft = const SalarySettings());
+      amountController.clear();
+    }
     await syncSalaryReminder(ref.read, now: DateTime.now());
     messenger.showSnackBar(SnackBar(content: Text(l10n.salaryRemoved)));
     if (mounted) popOrGoHome(context);
@@ -93,6 +140,7 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
     final monthStartDay = ref.watch(settingsProvider).monthStartDay;
     final status = ref.watch(salaryStatusProvider);
+    final statusLines = status == null ? null : salaryStatusLines(status, l10n, locale: locale, symbol: ref.watch(settingsProvider).currencySymbol);
     final aligned = isMonthStartAligned(monthStartDay: monthStartDay, salaryDay: draft.salaryDay);
     final accountIds = {for (final account in accounts) account.id};
 
@@ -108,15 +156,14 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
             Text(l10n.salaryIntro, style: Theme.of(context).textTheme.bodyMedium),
-            if (status != null) ...[
+            if (status != null && statusLines != null) ...[
               const SizedBox(height: 12),
               Card(
+                key: const Key('salaryStatus'),
                 child: ListTile(
-                  leading: Icon(status.isSeen ? Icons.check_circle_outline : Icons.schedule),
-                  title: Text(status.isSeen
-                      ? l10n.salaryReceivedOn(formatShortDate(status.received!.occurredAt, locale: locale))
-                      : l10n.salaryExpectedOn(formatShortDate(status.expected, locale: locale))),
-                  subtitle: Text(l10n.salaryExpectedOn(formatShortDate(status.next, locale: locale))),
+                  leading: Icon(status.isSeen ? Icons.check_circle_outline : (status.isLate ? Icons.warning_amber_outlined : Icons.schedule)),
+                  title: Text(statusLines.title),
+                  subtitle: Text(statusLines.subtitle),
                 ),
               ),
             ],
@@ -220,7 +267,7 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.salaryReminder),
               value: draft.reminderEnabled,
-              onChanged: (value) => setState(() => draft = draft.copyWith(reminderEnabled: value)),
+              onChanged: setReminderEnabled,
             ),
             if (draft.reminderEnabled)
               DropdownButtonFormField<int>(

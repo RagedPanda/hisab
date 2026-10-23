@@ -3836,11 +3836,29 @@ abstract class AppLocalizations {
   /// **'Expected {date}'**
   String salaryExpectedOn(String date);
 
-  /// No description provided for @salaryReceivedOn.
+  /// No description provided for @salaryReceivedAmount.
   ///
   /// In en, this message translates to:
-  /// **'Received {date}'**
-  String salaryReceivedOn(String date);
+  /// **'Received {amount} on {date}'**
+  String salaryReceivedAmount(String date, String amount);
+
+  /// No description provided for @salaryLateSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Late: expected {date}'**
+  String salaryLateSince(String date);
+
+  /// No description provided for @salaryLastReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Last received {amount} on {date}'**
+  String salaryLastReceived(String date, String amount);
+
+  /// No description provided for @salaryNextExpected.
+  ///
+  /// In en, this message translates to:
+  /// **'Next expected {date}'**
+  String salaryNextExpected(String date);
 
   /// No description provided for @salaryNotSeenTitle.
   ///

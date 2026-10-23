@@ -2290,8 +2290,23 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String salaryReceivedOn(String date) {
-    return 'मिला $date';
+  String salaryReceivedAmount(String date, String amount) {
+    return '$date को $amount मिला';
+  }
+
+  @override
+  String salaryLateSince(String date) {
+    return 'देर हो गई: $date को अपेक्षित था';
+  }
+
+  @override
+  String salaryLastReceived(String date, String amount) {
+    return 'पिछली बार $date को $amount मिला';
+  }
+
+  @override
+  String salaryNextExpected(String date) {
+    return 'अगला अपेक्षित $date';
   }
 
   @override

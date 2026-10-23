@@ -2323,4 +2323,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String cardStatementOverAmountDue(String amount) {
     return 'बकाया राशि ($amount) से ज़्यादा है। इसे उतना करें जितना अभी चुकाना बाकी है।';
   }
+
+  @override
+  String get cardBalanceOwed => 'बकाया';
+
+  @override
+  String get cardBalanceCredit => 'क्रेडिट में';
+
+  @override
+  String get cardCreditOnCard => 'कार्ड पर क्रेडिट';
+
+  @override
+  String get balanceInAccount => 'खाते में';
+
+  @override
+  String get balanceOverdrawn => 'ओवरड्रॉन';
 }

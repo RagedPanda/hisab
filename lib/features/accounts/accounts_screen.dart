@@ -3,15 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/dates.dart';
 import '../../core/format.dart';
 import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../domain/accounts/account_label.dart';
+import '../../domain/accounts/balance_input.dart';
 import '../../domain/cards/card_summary.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import '../reminders/reminder_actions.dart';
 import 'card_reminder_sync.dart';
 
 /// (stored type value, icon name). Labels come from [_typeLabel].
@@ -50,7 +53,11 @@ class AccountsScreen extends ConsumerWidget {
                     if (!account.includeInTotal) l10n.excludedFromTotal,
                   ].join(' · ')),
                   trailing: Text(
-                    account.type == 'card' ? l10n.cardDue(formatMinor(account.balanceMinor.abs(), symbol: symbol)) : formatMinor(account.balanceMinor, symbol: symbol),
+                    account.type != 'card'
+                        ? formatMinor(account.balanceMinor, symbol: symbol)
+                        : account.balanceMinor > 0
+                            ? l10n.cardInCredit(formatMinor(account.balanceMinor, symbol: symbol))
+                            : l10n.cardDue(formatMinor(account.balanceMinor.abs(), symbol: symbol)),
                     style: TextStyle(fontWeight: FontWeight.w700, color: account.balanceMinor < 0 && account.type != 'card' ? kExpenseColor : null),
                   ),
                   onTap: () => account.type == 'card' ? openCardAccount(context, account.id) : showAccountForm(context, ref, existing: account),
@@ -73,10 +80,12 @@ void openCardAccount(BuildContext context, String accountId) => context.push('/a
 /// balance field, used by the "Set opening balance" prompt.
 Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? existing, bool focusBalance = false}) {
     final nameController = TextEditingController(text: existing?.name ?? '');
-    // Card balances are stored negative (money owed) but entered as the
-    // positive amount due, so there is never a sign to type on a number pad.
-    final balanceController = TextEditingController(text: existing == null ? '' : amountInputText(existing.type == 'card' ? existing.balanceMinor.abs() : existing.balanceMinor));
+    // The field takes a plain amount (there is no sign to type on a number
+    // pad); [balanceNegative] carries the direction, so a card's credit stays
+    // credit (#98) and a type change keeps what the balance means.
+    final balanceController = TextEditingController(text: existing == null ? '' : amountInputText(balanceInputMinor(existing.balanceMinor)));
     var type = existing?.type ?? 'bank';
+    var balanceNegative = existing == null ? defaultBalanceNegative(type) : existing.balanceMinor < 0;
     var color = existing?.color ?? kPaletteColors.first;
     var include = existing?.includeInTotal ?? true;
     var statementDay = existing?.statementDay;
@@ -104,7 +113,10 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
               Wrap(
                 spacing: 8,
                 children: [
-                  for (final option in kAccountTypeIcons.keys) ChoiceChip(label: Text(_typeLabel(l10n, option)), selected: type == option, onSelected: (_) => setSheetState(() => type = option)),
+                  for (final option in kAccountTypeIcons.keys) ChoiceChip(label: Text(_typeLabel(l10n, option)), selected: type == option, onSelected: (_) => setSheetState(() {
+                            balanceNegative = balanceNegativeAfterTypeChange(negative: balanceNegative, enteredMinor: parseAmountToMinor(balanceController.text) ?? 0, toType: option);
+                            type = option;
+                          })),
                 ],
               ),
               const SizedBox(height: 12),
@@ -113,7 +125,18 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                 autofocus: focusBalance,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: amountInputFormatters,
-                decoration: InputDecoration(labelText: type == 'card' ? l10n.outstandingBalance : l10n.currentBalance),
+                decoration: InputDecoration(labelText: type != 'card' ? l10n.currentBalance : balanceNegative ? l10n.outstandingBalance : l10n.cardCreditOnCard),
+              ),
+              const SizedBox(height: 8),
+              SegmentedButton<bool>(
+                key: const ValueKey('account.balanceDirection'),
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(value: false, label: Text(type == 'card' ? l10n.cardBalanceCredit : l10n.balanceInAccount)),
+                  ButtonSegment(value: true, label: Text(type == 'card' ? l10n.cardBalanceOwed : l10n.balanceOverdrawn)),
+                ],
+                selected: {balanceNegative},
+                onSelectionChanged: (selection) => setSheetState(() => balanceNegative = selection.single),
               ),
               if (type == 'card') ...[
                 const SizedBox(height: 12),
@@ -163,13 +186,7 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                   onPressed: () async {
                     final name = nameController.text.trim();
                     if (name.isEmpty) return;
-                    final amountMinor = parseAmountToMinor(balanceController.text) ?? 0;
-                    if (type == 'card' && lastStatementExceedsAmountDue(lastStatementMinor: parseAmountToMinor(lastStatementController.text), amountDueMinor: amountMinor)) {
-                      final symbol = ref.read(settingsProvider).currencySymbol;
-                      setSheetState(() => statementError = l10n.cardStatementOverAmountDue(formatMinor(amountMinor, symbol: symbol)));
-                      return;
-                    }
-                    final signed = signedBalanceForType(type, amountMinor);
+                    final signed = signedBalanceFromInput(enteredMinor: parseAmountToMinor(balanceController.text) ?? 0, negative: balanceNegative);
                     final repo = ref.read(accountsRepositoryProvider);
                     final card = cardFieldsFromForm(
                       isCard: type == 'card',
@@ -179,6 +196,19 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                       lastStatementText: lastStatementController.text,
                       existing: existing,
                     );
+                    if (type == 'card') {
+                      final amountDueMinor = outstandingMinor(signed);
+                      final statementAt = card.lastStatementAt;
+                      final paidSince = existing == null || statementAt == null
+                          ? 0
+                          : paymentsSinceMinor(await ref.read(entriesRepositoryProvider).getAccountMovements(existing.id, since: statementAt), cardId: existing.id, since: statementAt);
+                      final previousStatement = existing?.type == 'card' ? existing?.lastStatementMinor : null;
+                      if (lastStatementExceedsAmountDue(lastStatementMinor: card.lastStatementMinor, amountDueMinor: amountDueMinor, previousStatementMinor: previousStatement, paidSinceStatementMinor: paidSince)) {
+                        final symbol = ref.read(settingsProvider).currencySymbol;
+                        setSheetState(() => statementError = l10n.cardStatementOverAmountDue(formatMinor(amountDueMinor, symbol: symbol)));
+                        return;
+                      }
+                    }
                     final String accountId;
                     if (existing == null) {
                       accountId = (await repo.create(
@@ -211,6 +241,11 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                         lastStatementAt: Value(card.lastStatementAt),
                       ));
                     }
+                    // A card with a due date gets a due reminder with alerts:
+                    // the same permission sheets as any reminder (decision 22).
+                    final hasDueReminder = type == 'card' &&
+                        cardDue(today: startOfDay(DateTime.now()), statementDay: card.statementDay, dueDay: card.dueDay, lastStatementMinor: card.lastStatementMinor, lastStatementAt: card.lastStatementAt) != null;
+                    if (hasDueReminder && sheetContext.mounted) await askReminderPermissionsIfNeeded(sheetContext);
                     await syncCardReminderSafely(() => ref.read(cardReminderSyncProvider).syncAccountById(accountId));
                     if (sheetContext.mounted) Navigator.pop(sheetContext);
                   },

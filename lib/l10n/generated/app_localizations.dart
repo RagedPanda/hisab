@@ -3943,6 +3943,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More than the amount due ({amount}). Lower it to what is still unpaid.'**
   String cardStatementOverAmountDue(String amount);
+
+  /// No description provided for @cardBalanceOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount due'**
+  String get cardBalanceOwed;
+
+  /// No description provided for @cardBalanceCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'In credit'**
+  String get cardBalanceCredit;
+
+  /// No description provided for @cardCreditOnCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit on the card'**
+  String get cardCreditOnCard;
+
+  /// No description provided for @balanceInAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'In account'**
+  String get balanceInAccount;
+
+  /// No description provided for @balanceOverdrawn.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdrawn'**
+  String get balanceOverdrawn;
 }
 
 class _AppLocalizationsDelegate

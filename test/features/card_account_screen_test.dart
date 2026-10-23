@@ -143,6 +143,117 @@ void main() {
     expect(find.text('Amex'), findsOneWidget, reason: 'back on the Accounts list');
   });
 
+  Future<Account> savedCard(AppDatabase db) => (db.select(db.accounts)..where((t) => t.id.equals('card'))).getSingle();
+
+  Future<void> tapSave(WidgetTester tester) async {
+    await tester.ensureVisible(find.text('Save'));
+    await tester.tap(find.text('Save'));
+    await settle(tester);
+  }
+
+  testWidgets('a paid card can be edited without touching its last statement (#97)', (tester) async {
+    final container = await pumpApp(tester, overrides: [notificationGatewayProvider.overrideWithValue(FakeNotificationGateway())]);
+    final db = container.read(databaseProvider);
+    final statementAt = previousStatementDate(startOfDay(DateTime.now()), 5);
+    await db.into(db.accounts).insert(AccountsCompanion.insert(
+          id: 'card',
+          name: 'Amex',
+          type: 'card',
+          color: 0xFF1E88E5,
+          balanceMinor: const Value(0),
+          statementDay: const Value(5),
+          dueDay: const Value(15),
+          lastStatementMinor: const Value(500000),
+          lastStatementAt: Value(statementAt),
+        ));
+    await container.read(entriesRepositoryProvider).saveEntry(EntriesRepository.newExpense(kind: 'transfer', amountMinor: 500000, occurredAt: DateTime.now(), accountId: 'cash').copyWith(toAccountId: const Value('card')));
+
+    appRouter.push('/accounts/card/card');
+    await settle(tester);
+    await tester.tap(find.byTooltip('Edit'));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('account.dueDay')));
+    await settle(tester);
+    await tester.tap(find.text('20').last);
+    await settle(tester);
+    await tapSave(tester);
+
+    expect(find.textContaining('More than the amount due'), findsNothing);
+    final saved = await savedCard(db);
+    expect(saved.dueDay, 20);
+    expect(saved.lastStatementMinor, 500000);
+    expect(saved.balanceMinor, 0);
+  });
+
+  testWidgets('editing a card in credit keeps the credit (#98)', (tester) async {
+    final container = await pumpApp(tester);
+    final db = container.read(databaseProvider);
+    await db.into(db.accounts).insert(AccountsCompanion.insert(id: 'card', name: 'Amex', type: 'card', color: 0xFF1E88E5, balanceMinor: const Value(50000), lastStatementMinor: const Value(500000), lastStatementAt: Value(DateTime(2026, 10, 5))));
+
+    appRouter.push('/accounts/card/card');
+    await settle(tester);
+    await tester.tap(find.byTooltip('Edit'));
+    await settle(tester);
+    expect(find.text('Credit on the card'), findsOneWidget);
+    await tapSave(tester);
+
+    expect((await savedCard(db)).balanceMinor, 50000);
+    expect(find.descendant(of: find.byKey(kCardOutstandingKey), matching: find.text('₹500 credit')), findsOneWidget);
+  });
+
+  testWidgets('changing a card to a bank account keeps money owed as a negative balance', (tester) async {
+    final container = await pumpApp(tester);
+    final db = container.read(databaseProvider);
+    await db.into(db.accounts).insert(AccountsCompanion.insert(id: 'card', name: 'Amex', type: 'card', color: 0xFF1E88E5, balanceMinor: const Value(-50000)));
+
+    appRouter.push('/accounts/card/card');
+    await settle(tester);
+    await tester.tap(find.byTooltip('Edit'));
+    await settle(tester);
+    await tester.tap(find.text('Bank account'));
+    await settle(tester);
+    expect(find.text('Overdrawn'), findsOneWidget, reason: 'the direction is shown for the new type');
+    await tapSave(tester);
+
+    final saved = await savedCard(db);
+    expect(saved.type, 'bank');
+    expect(saved.balanceMinor, -50000);
+  });
+
+  testWidgets('setting a card due day shows the notification and Alarms & reminders sheets, then the late note', (tester) async {
+    final gateway = FakeNotificationGateway(notificationsAllowed: false, exactAlarmsAllowed: false);
+    final container = await pumpApp(tester, overrides: [notificationGatewayProvider.overrideWithValue(gateway)]);
+    final db = container.read(databaseProvider);
+    await db.into(db.accounts).insert(AccountsCompanion.insert(id: 'card', name: 'Amex', type: 'card', color: 0xFF1E88E5, balanceMinor: const Value(-50000)));
+
+    appRouter.push('/accounts/card/card');
+    await settle(tester);
+    expect(find.byKey(const ValueKey('reminders-late-note')), findsNothing, reason: 'no due day, no reminder');
+    await tester.tap(find.text('Set statement and due days'));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('account.statementDay')));
+    await settle(tester);
+    await tester.tap(find.text('5').last);
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('account.dueDay')));
+    await settle(tester);
+    await tester.tap(find.text('15').last);
+    await settle(tester);
+    await tapSave(tester);
+
+    expect(find.text("Get reminded before it's due"), findsOneWidget);
+    await tester.tap(find.text('Allow'));
+    await settle(tester);
+    expect(gateway.permissionRequests, 1);
+    expect(find.text('Get reminders on time'), findsOneWidget);
+    await tester.tap(find.text('Allow'));
+    await settle(tester);
+    expect(gateway.exactRequests, 1);
+    expect((await savedCard(db)).dueDay, 15);
+    expect(find.byKey(const ValueKey('reminders-late-note')), findsOneWidget, reason: 'still inexact, so the card says reminders may be late');
+    expect(tester.takeException(), isNull);
+  });
+
   test('card fields are cleared for other account types', () {
     final fields = cardFieldsFromForm(isCard: false, statementDay: 5, dueDay: 25, limitText: '1000', lastStatementText: '10');
     expect(fields.statementDay, isNull);

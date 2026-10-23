@@ -666,5 +666,10 @@
   "cardInCredit": "{amount} क्रेडिट",
   "@cardInCredit": {"placeholders": {"amount": {"type": "String"}}},
   "cardStatementOverAmountDue": "बकाया राशि ({amount}) से ज़्यादा है। इसे उतना करें जितना अभी चुकाना बाकी है।",
-  "@cardStatementOverAmountDue": {"placeholders": {"amount": {"type": "String"}}}
+  "@cardStatementOverAmountDue": {"placeholders": {"amount": {"type": "String"}}},
+  "cardBalanceOwed": "बकाया",
+  "cardBalanceCredit": "क्रेडिट में",
+  "cardCreditOnCard": "कार्ड पर क्रेडिट",
+  "balanceInAccount": "खाते में",
+  "balanceOverdrawn": "ओवरड्रॉन"
 }

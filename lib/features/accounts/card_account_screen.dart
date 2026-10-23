@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/dates.dart';
 import '../../core/format.dart';
 import '../../core/money.dart';
+import '../../core/notifications/alarm_timing.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
@@ -12,6 +13,7 @@ import '../../domain/cards/card_summary.dart';
 import '../../domain/reminders/reminder_draft.dart';
 import '../../l10n/l10n.dart';
 import '../dashboard/widgets/dashboard_card.dart';
+import '../reminders/reminder_late_note.dart';
 import '../shell/widgets/budget_row.dart';
 import '../shell/widgets/common.dart';
 import 'accounts_screen.dart';
@@ -43,6 +45,7 @@ class CardAccountScreen extends ConsumerWidget {
     final overview = cardOverviewFor(account, movements, today);
     final symbol = ref.watch(settingsProvider).currencySymbol;
     final locale = Localizations.localeOf(context).toString();
+    final permission = ref.watch(notificationPermissionProvider).value;
     String shortDate(DateTime date) => formatRowDate(date, now: today, locale: locale);
     return HomeFallbackPop(
       child: Scaffold(
@@ -58,6 +61,8 @@ class CardAccountScreen extends ConsumerWidget {
             _OutstandingCard(overview: overview, symbol: symbol),
             const SizedBox(height: kDashboardCardGap),
             _DueCard(overview: overview, symbol: symbol, locale: locale, onSetUp: () => _edit(context, ref, account)),
+            // A card with a due date has a due reminder with alerts.
+            if (remindersMayArriveLate(permission, hasAlerts: overview.due != null)) const ReminderLateNote(),
             const SizedBox(height: kDashboardCardGap),
             IntrinsicHeight(
               child: Row(

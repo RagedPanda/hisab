@@ -2330,4 +2330,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String cardStatementOverAmountDue(String amount) {
     return 'More than the amount due ($amount). Lower it to what is still unpaid.';
   }
+
+  @override
+  String get cardBalanceOwed => 'Amount due';
+
+  @override
+  String get cardBalanceCredit => 'In credit';
+
+  @override
+  String get cardCreditOnCard => 'Credit on the card';
+
+  @override
+  String get balanceInAccount => 'In account';
+
+  @override
+  String get balanceOverdrawn => 'Overdrawn';
 }

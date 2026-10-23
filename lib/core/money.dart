@@ -103,7 +103,3 @@ List<int> allocateProportionally(int total, List<double> weights) {
   }
   return result;
 }
-
-/// Card accounts hold what you owe, so an entered amount due is stored as a
-/// negative balance; every other account type keeps the sign as entered.
-int signedBalanceForType(String accountType, int enteredMinor) => accountType == 'card' ? -enteredMinor.abs() : enteredMinor;

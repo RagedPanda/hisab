@@ -777,5 +777,10 @@
   "cardInCredit": "{amount} credit",
   "@cardInCredit": {"placeholders": {"amount": {"type": "String"}}},
   "cardStatementOverAmountDue": "More than the amount due ({amount}). Lower it to what is still unpaid.",
-  "@cardStatementOverAmountDue": {"placeholders": {"amount": {"type": "String"}}}
+  "@cardStatementOverAmountDue": {"placeholders": {"amount": {"type": "String"}}},
+  "cardBalanceOwed": "Amount due",
+  "cardBalanceCredit": "In credit",
+  "cardCreditOnCard": "Credit on the card",
+  "balanceInAccount": "In account",
+  "balanceOverdrawn": "Overdrawn"
 }

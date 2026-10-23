@@ -1232,11 +1232,41 @@ abstract class AppLocalizations {
   /// **'Money'**
   String get money;
 
-  /// No description provided for @currencySymbol.
+  /// No description provided for @currency.
   ///
   /// In en, this message translates to:
-  /// **'Currency symbol'**
-  String get currencySymbol;
+  /// **'Currency'**
+  String get currency;
+
+  /// No description provided for @currencyChooseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your currency'**
+  String get currencyChooseTitle;
+
+  /// No description provided for @currencyChooseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Amounts in Hisab show in this currency. You can change it later in Settings.'**
+  String get currencyChooseBody;
+
+  /// No description provided for @currencySearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search code, name or country'**
+  String get currencySearchHint;
+
+  /// No description provided for @currencyContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with {currency}'**
+  String currencyContinue(String currency);
+
+  /// No description provided for @currencyNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No currency matches \"{query}\"'**
+  String currencyNoMatch(String query);
 
   /// No description provided for @monthStartsOn.
   ///

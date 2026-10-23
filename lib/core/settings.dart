@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../domain/currency/currency_lookup.dart';
+
+/// Preference key for the ISO 4217 home currency code.
+const String kCurrencyCodeKey = 'currencyCode';
+
+/// Preference key of the old free-text symbol; read only to migrate.
+const String kLegacyCurrencySymbolKey = 'currencySymbol';
+
 /// User preferences persisted outside the database.
 class AppSettings {
   const AppSettings({
-    this.currencySymbol = '₹',
+    this.currencyCode = kDefaultCurrencyCode,
+    this.currencyConfirmed = true,
     this.monthStartDay = 1,
     this.themeMode = ThemeMode.system,
     this.smsEnabled = false,
@@ -14,7 +23,14 @@ class AppSettings {
     this.localeCode = '',
   });
 
-  final String currencySymbol;
+  /// ISO 4217 code of the home currency; the symbol is derived from it.
+  final String currencyCode;
+
+  /// False only on a fresh install until the first-launch screen stores a
+  /// currency. Upgrades are migrated at startup and never see that screen.
+  final bool currencyConfirmed;
+
+  String get currencySymbol => symbolForCurrencyCode(currencyCode);
   final int monthStartDay;
   final ThemeMode themeMode;
 
@@ -32,7 +48,8 @@ class AppSettings {
   Locale? get locale => localeCode.isEmpty ? null : Locale(localeCode);
 
   AppSettings copyWith({
-    String? currencySymbol,
+    String? currencyCode,
+    bool? currencyConfirmed,
     int? monthStartDay,
     ThemeMode? themeMode,
     bool? smsEnabled,
@@ -42,7 +59,8 @@ class AppSettings {
     String? localeCode,
   }) =>
       AppSettings(
-        currencySymbol: currencySymbol ?? this.currencySymbol,
+        currencyCode: currencyCode ?? this.currencyCode,
+        currencyConfirmed: currencyConfirmed ?? this.currencyConfirmed,
         monthStartDay: monthStartDay ?? this.monthStartDay,
         themeMode: themeMode ?? this.themeMode,
         smsEnabled: smsEnabled ?? this.smsEnabled,
@@ -53,7 +71,8 @@ class AppSettings {
       );
 
   static AppSettings fromPrefs(SharedPreferences prefs) => AppSettings(
-        currencySymbol: prefs.getString('currencySymbol') ?? '₹',
+        currencyCode: prefs.getString(kCurrencyCodeKey) ?? currencyCodeForLegacySymbol(prefs.getString(kLegacyCurrencySymbolKey)),
+        currencyConfirmed: prefs.containsKey(kCurrencyCodeKey),
         monthStartDay: prefs.getInt('monthStartDay') ?? 1,
         themeMode: ThemeMode.values[prefs.getInt('themeMode') ?? ThemeMode.system.index],
         smsEnabled: prefs.getBool('smsEnabled') ?? false,
@@ -64,7 +83,11 @@ class AppSettings {
       );
 
   Future<void> writeTo(SharedPreferences prefs) async {
-    await prefs.setString('currencySymbol', currencySymbol);
+    if (currencyConfirmed) {
+      await prefs.setString(kCurrencyCodeKey, currencyCode);
+      // Older builds still read the symbol, so a downgrade keeps the currency.
+      await prefs.setString(kLegacyCurrencySymbolKey, currencySymbol);
+    }
     await prefs.setInt('monthStartDay', monthStartDay);
     await prefs.setInt('themeMode', themeMode.index);
     await prefs.setBool('smsEnabled', smsEnabled);

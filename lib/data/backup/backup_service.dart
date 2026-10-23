@@ -95,6 +95,8 @@ class BackupService {
       await restore(db.reminders, 'reminders', Reminder.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.entryPayers, 'entryPayers', EntryPayer.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.recurringRules, 'recurringRules', RecurringRule.fromJson, (r) => r.id, (r) => r.updatedAt);
+      // A backup from an older build may carry the text of not-bank SMS.
+      await db.wipeUnkeptSmsText();
     });
     return written;
   }

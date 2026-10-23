@@ -410,6 +410,14 @@ void showUndoSnackBar(ScaffoldMessengerState messenger, {required String message
     ..showSnackBar(SnackBar(content: Text(message), persist: false, action: SnackBarAction(label: undoLabel, onPressed: onUndo)));
 }
 
+/// Replaces whatever snackbar is showing with [message]. It times out, so a
+/// result never lingers or queues behind an older one.
+void showTimedSnackBar(ScaffoldMessengerState messenger, String message) {
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message), persist: false));
+}
+
 /// Makes the system Back gesture return to Home instead of leaving the app
 /// when the wrapped screen is the only route on the stack (P2-3).
 class HomeFallbackPop extends StatelessWidget {
@@ -494,16 +502,18 @@ class _ChipRowState extends State<ChipRow> {
       separatorBuilder: (_, _) => const SizedBox(width: 8),
       itemBuilder: (_, index) => widget.children[index],
     );
+    // The mask stays in the tree either way: swapping it in and out would
+    // rebuild the list and throw away the scroll position at the far end.
     return SizedBox(
       height: kChipRowHeight,
-      child: _moreToTheRight ? ShaderMask(shaderCallback: _fadeShader, blendMode: BlendMode.dstIn, child: list) : list,
+      child: ShaderMask(shaderCallback: (bounds) => _fadeShader(bounds, fade: _moreToTheRight), blendMode: BlendMode.dstIn, child: list),
     );
   }
 
-  static Shader _fadeShader(Rect bounds) => LinearGradient(
+  static Shader _fadeShader(Rect bounds, {required bool fade}) => LinearGradient(
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
-        colors: const [Colors.white, Colors.white, Colors.transparent],
+        colors: [Colors.white, Colors.white, fade ? Colors.transparent : Colors.white],
         stops: [0, 1 - kChipRowFadeWidth / bounds.width, 1],
       ).createShader(bounds);
 }

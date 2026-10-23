@@ -40,6 +40,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:intl/intl.dart';
 
 import 'harness.dart';
+import 'sms_history_flow.dart';
 
 const _milkTotalMinor = 20000; // 2 L @ 70 + 1 L @ 60
 const _restaurantMinor = 125000;
@@ -1594,4 +1595,6 @@ void main() {
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
     await settle(tester, 6);
   });
+
+  testWidgets('27 SMS history: outcomes, filter chips, re-process, entry link, Hindi dark, clear', smsHistoryFlow);
 }

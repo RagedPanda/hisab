@@ -106,7 +106,10 @@ String? dltHeader(String sender) => _dltSender.firstMatch(sender.toUpperCase().t
 /// send offers on these headers, never transaction alerts.
 bool isPromotionalSender(String sender) => _dltSender.firstMatch(sender.toUpperCase().trim())?.group(2) == 'P';
 
-bool looksLikeBankSender(String sender) => bankFromSender(sender) != null || dltHeader(sender) != null;
+/// Only a known bank or payment app header counts. Any 6-character DLT
+/// header (VM-SWIGGY, JM-MYNTRA) is not enough on its own: an unknown sender
+/// must carry a transaction signal in the text instead (see the parser).
+bool looksLikeBankSender(String sender) => bankFromSender(sender) != null;
 
 /// Bank names as they appear inside message bodies, used when the sender
 /// is not a known header (a pasted or shared SMS). Names match

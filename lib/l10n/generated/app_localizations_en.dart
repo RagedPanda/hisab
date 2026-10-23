@@ -1959,6 +1959,79 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedAddAnother => 'Saved. Add the next one.';
 
   @override
+  String get smsHistoryTitle => 'SMS history';
+
+  @override
+  String get smsHistoryHelp =>
+      'Every message Hisab processed and what happened to it';
+
+  @override
+  String get smsOutcomeAdded => 'Added';
+
+  @override
+  String get smsOutcomeDuplicate => 'Duplicate';
+
+  @override
+  String get smsOutcomeIgnored => 'Ignored';
+
+  @override
+  String get smsOutcomeUnparsed => 'Unreadable';
+
+  @override
+  String get smsOutcomePending => 'Pending';
+
+  @override
+  String get smsOutcomeUndone => 'Undone';
+
+  @override
+  String get smsHistoryNotBank => 'Not a bank message';
+
+  @override
+  String get smsHistoryDismissed => 'Dismissed from review';
+
+  @override
+  String get smsHistoryUnparsedDetail => 'No transaction found in the text';
+
+  @override
+  String get smsHistoryDuplicateDetail => 'Same message already processed';
+
+  @override
+  String get smsHistoryOpenEntry => 'Open entry';
+
+  @override
+  String get smsHistoryReprocess => 'Process again';
+
+  @override
+  String get smsHistoryClear => 'Clear history';
+
+  @override
+  String get smsHistoryClearQuestion => 'Clear SMS history?';
+
+  @override
+  String smsHistoryClearBody(int count) {
+    return 'Removes the text of $count processed messages from this device. Your entries and messages waiting for review stay, and cleared messages are never imported again.';
+  }
+
+  @override
+  String get smsHistoryClearConfirm => 'Clear';
+
+  @override
+  String get smsHistoryCleared => 'SMS history cleared';
+
+  @override
+  String get smsHistoryEmptyTitle => 'No messages processed yet';
+
+  @override
+  String get smsHistoryEmptyBody =>
+      'Bank SMS that Hisab reads or that you paste show up here.';
+
+  @override
+  String get smsHistoryEmptyFiltered => 'No messages with this outcome';
+
+  @override
+  String get smsHistoryTextNotKept => 'Message text not kept';
+
+  @override
   String get recurringRepeat => 'Repeat';
 
   @override

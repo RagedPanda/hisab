@@ -9025,6 +9025,179 @@ class $RemindersTable extends Reminders
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _amountMinorMeta = const VerificationMeta(
+    'amountMinor',
+  );
+  @override
+  late final GeneratedColumn<int> amountMinor = GeneratedColumn<int>(
+    'amount_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _toleranceMinorMeta = const VerificationMeta(
+    'toleranceMinor',
+  );
+  @override
+  late final GeneratedColumn<int> toleranceMinor = GeneratedColumn<int>(
+    'tolerance_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _matchKeywordsMeta = const VerificationMeta(
+    'matchKeywords',
+  );
+  @override
+  late final GeneratedColumn<String> matchKeywords = GeneratedColumn<String>(
+    'match_keywords',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _recurringIdMeta = const VerificationMeta(
+    'recurringId',
+  );
+  @override
+  late final GeneratedColumn<String> recurringId = GeneratedColumn<String>(
+    'recurring_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _assetIdMeta = const VerificationMeta(
+    'assetId',
+  );
+  @override
+  late final GeneratedColumn<String> assetId = GeneratedColumn<String>(
+    'asset_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _repeatMeta = const VerificationMeta('repeat');
+  @override
+  late final GeneratedColumn<String> repeat = GeneratedColumn<String>(
+    'repeat',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('once'),
+  );
+  static const VerificationMeta _repeatDayMeta = const VerificationMeta(
+    'repeatDay',
+  );
+  @override
+  late final GeneratedColumn<int> repeatDay = GeneratedColumn<int>(
+    'repeat_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _remindDaysBeforeMeta = const VerificationMeta(
+    'remindDaysBefore',
+  );
+  @override
+  late final GeneratedColumn<String> remindDaysBefore = GeneratedColumn<String>(
+    'remind_days_before',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _notifyAtMinuteMeta = const VerificationMeta(
+    'notifyAtMinute',
+  );
+  @override
+  late final GeneratedColumn<int> notifyAtMinute = GeneratedColumn<int>(
+    'notify_at_minute',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _snoozedUntilMeta = const VerificationMeta(
+    'snoozedUntil',
+  );
+  @override
+  late final GeneratedColumn<DateTime> snoozedUntil = GeneratedColumn<DateTime>(
+    'snoozed_until',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextIdMeta = const VerificationMeta('nextId');
+  @override
+  late final GeneratedColumn<String> nextId = GeneratedColumn<String>(
+    'next_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -9039,6 +9212,22 @@ class $RemindersTable extends Reminders
     doneAt,
     channel,
     message,
+    title,
+    notes,
+    amountMinor,
+    toleranceMinor,
+    matchKeywords,
+    categoryId,
+    accountId,
+    recurringId,
+    assetId,
+    repeat,
+    repeatDay,
+    remindDaysBefore,
+    notifyAtMinute,
+    status,
+    snoozedUntil,
+    nextId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -9125,6 +9314,123 @@ class $RemindersTable extends Reminders
         message.isAcceptableOrUnknown(data['message']!, _messageMeta),
       );
     }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('amount_minor')) {
+      context.handle(
+        _amountMinorMeta,
+        amountMinor.isAcceptableOrUnknown(
+          data['amount_minor']!,
+          _amountMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tolerance_minor')) {
+      context.handle(
+        _toleranceMinorMeta,
+        toleranceMinor.isAcceptableOrUnknown(
+          data['tolerance_minor']!,
+          _toleranceMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('match_keywords')) {
+      context.handle(
+        _matchKeywordsMeta,
+        matchKeywords.isAcceptableOrUnknown(
+          data['match_keywords']!,
+          _matchKeywordsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    }
+    if (data.containsKey('recurring_id')) {
+      context.handle(
+        _recurringIdMeta,
+        recurringId.isAcceptableOrUnknown(
+          data['recurring_id']!,
+          _recurringIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('asset_id')) {
+      context.handle(
+        _assetIdMeta,
+        assetId.isAcceptableOrUnknown(data['asset_id']!, _assetIdMeta),
+      );
+    }
+    if (data.containsKey('repeat')) {
+      context.handle(
+        _repeatMeta,
+        repeat.isAcceptableOrUnknown(data['repeat']!, _repeatMeta),
+      );
+    }
+    if (data.containsKey('repeat_day')) {
+      context.handle(
+        _repeatDayMeta,
+        repeatDay.isAcceptableOrUnknown(data['repeat_day']!, _repeatDayMeta),
+      );
+    }
+    if (data.containsKey('remind_days_before')) {
+      context.handle(
+        _remindDaysBeforeMeta,
+        remindDaysBefore.isAcceptableOrUnknown(
+          data['remind_days_before']!,
+          _remindDaysBeforeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notify_at_minute')) {
+      context.handle(
+        _notifyAtMinuteMeta,
+        notifyAtMinute.isAcceptableOrUnknown(
+          data['notify_at_minute']!,
+          _notifyAtMinuteMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('snoozed_until')) {
+      context.handle(
+        _snoozedUntilMeta,
+        snoozedUntil.isAcceptableOrUnknown(
+          data['snoozed_until']!,
+          _snoozedUntilMeta,
+        ),
+      );
+    }
+    if (data.containsKey('next_id')) {
+      context.handle(
+        _nextIdMeta,
+        nextId.isAcceptableOrUnknown(data['next_id']!, _nextIdMeta),
+      );
+    }
     return context;
   }
 
@@ -9182,6 +9488,70 @@ class $RemindersTable extends Reminders
         DriftSqlType.string,
         data['${effectivePrefix}message'],
       )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      )!,
+      amountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_minor'],
+      ),
+      toleranceMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tolerance_minor'],
+      )!,
+      matchKeywords: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}match_keywords'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      ),
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      ),
+      recurringId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recurring_id'],
+      ),
+      assetId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}asset_id'],
+      ),
+      repeat: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}repeat'],
+      )!,
+      repeatDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}repeat_day'],
+      ),
+      remindDaysBefore: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remind_days_before'],
+      )!,
+      notifyAtMinute: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}notify_at_minute'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      snoozedUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}snoozed_until'],
+      ),
+      nextId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}next_id'],
+      ),
     );
   }
 
@@ -9196,7 +9566,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
   final DateTime? deletedAt;
   final String id;
 
-  /// settle_up | recurring | ...
+  /// settle_up, or a due-reminder kind: bill | emi | card | subscription | insurance | document | custom
   final String kind;
   final String? groupId;
 
@@ -9212,6 +9582,47 @@ class Reminder extends DataClass implements Insertable<Reminder> {
   /// share | copy | whatsapp | sms | notification
   final String channel;
   final String message;
+
+  /// What the notification says ("Electricity bill"); empty for settle_up rows.
+  final String title;
+  final String notes;
+
+  /// Expected amount, null for non-money reminders (documents, custom).
+  final int? amountMinor;
+
+  /// Amount tolerance for SMS auto-match, in minor units.
+  final int toleranceMinor;
+
+  /// Lower-cased keywords matched against bank SMS: "tata power|tpddl".
+  final String matchKeywords;
+  final String? categoryId;
+  final String? accountId;
+
+  /// Recurring rule that produced this reminder (recurring_rules.id).
+  final String? recurringId;
+
+  /// Insurance policy, document or asset the reminder is about.
+  final String? assetId;
+
+  /// once | weekly | monthly | quarterly | yearly
+  final String repeat;
+
+  /// Day of month a repeating reminder falls on, kept so 31 Jan -> 28 Feb -> 31 Mar.
+  final int? repeatDay;
+
+  /// Days before dueAt to notify, comma separated ("3,0" = 3 days before and on the day).
+  final String remindDaysBefore;
+
+  /// Local time of day to notify, in minutes after midnight; null = no notification.
+  final int? notifyAtMinute;
+
+  /// pending | done | skipped (snoozed = pending with [snoozedUntil] in the future)
+  final String status;
+  final DateTime? snoozedUntil;
+
+  /// The next occurrence spawned when this repeating reminder was paid or skipped,
+  /// so undo can remove it again.
+  final String? nextId;
   const Reminder({
     required this.updatedAt,
     this.deletedAt,
@@ -9225,6 +9636,22 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     this.doneAt,
     required this.channel,
     required this.message,
+    required this.title,
+    required this.notes,
+    this.amountMinor,
+    required this.toleranceMinor,
+    required this.matchKeywords,
+    this.categoryId,
+    this.accountId,
+    this.recurringId,
+    this.assetId,
+    required this.repeat,
+    this.repeatDay,
+    required this.remindDaysBefore,
+    this.notifyAtMinute,
+    required this.status,
+    this.snoozedUntil,
+    this.nextId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -9255,6 +9682,40 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     }
     map['channel'] = Variable<String>(channel);
     map['message'] = Variable<String>(message);
+    map['title'] = Variable<String>(title);
+    map['notes'] = Variable<String>(notes);
+    if (!nullToAbsent || amountMinor != null) {
+      map['amount_minor'] = Variable<int>(amountMinor);
+    }
+    map['tolerance_minor'] = Variable<int>(toleranceMinor);
+    map['match_keywords'] = Variable<String>(matchKeywords);
+    if (!nullToAbsent || categoryId != null) {
+      map['category_id'] = Variable<String>(categoryId);
+    }
+    if (!nullToAbsent || accountId != null) {
+      map['account_id'] = Variable<String>(accountId);
+    }
+    if (!nullToAbsent || recurringId != null) {
+      map['recurring_id'] = Variable<String>(recurringId);
+    }
+    if (!nullToAbsent || assetId != null) {
+      map['asset_id'] = Variable<String>(assetId);
+    }
+    map['repeat'] = Variable<String>(repeat);
+    if (!nullToAbsent || repeatDay != null) {
+      map['repeat_day'] = Variable<int>(repeatDay);
+    }
+    map['remind_days_before'] = Variable<String>(remindDaysBefore);
+    if (!nullToAbsent || notifyAtMinute != null) {
+      map['notify_at_minute'] = Variable<int>(notifyAtMinute);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || snoozedUntil != null) {
+      map['snoozed_until'] = Variable<DateTime>(snoozedUntil);
+    }
+    if (!nullToAbsent || nextId != null) {
+      map['next_id'] = Variable<String>(nextId);
+    }
     return map;
   }
 
@@ -9286,6 +9747,40 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           : Value(doneAt),
       channel: Value(channel),
       message: Value(message),
+      title: Value(title),
+      notes: Value(notes),
+      amountMinor: amountMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(amountMinor),
+      toleranceMinor: Value(toleranceMinor),
+      matchKeywords: Value(matchKeywords),
+      categoryId: categoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryId),
+      accountId: accountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountId),
+      recurringId: recurringId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurringId),
+      assetId: assetId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(assetId),
+      repeat: Value(repeat),
+      repeatDay: repeatDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeatDay),
+      remindDaysBefore: Value(remindDaysBefore),
+      notifyAtMinute: notifyAtMinute == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notifyAtMinute),
+      status: Value(status),
+      snoozedUntil: snoozedUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(snoozedUntil),
+      nextId: nextId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextId),
     );
   }
 
@@ -9307,6 +9802,22 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       doneAt: serializer.fromJson<DateTime?>(json['doneAt']),
       channel: serializer.fromJson<String>(json['channel']),
       message: serializer.fromJson<String>(json['message']),
+      title: serializer.fromJson<String>(json['title']),
+      notes: serializer.fromJson<String>(json['notes']),
+      amountMinor: serializer.fromJson<int?>(json['amountMinor']),
+      toleranceMinor: serializer.fromJson<int>(json['toleranceMinor']),
+      matchKeywords: serializer.fromJson<String>(json['matchKeywords']),
+      categoryId: serializer.fromJson<String?>(json['categoryId']),
+      accountId: serializer.fromJson<String?>(json['accountId']),
+      recurringId: serializer.fromJson<String?>(json['recurringId']),
+      assetId: serializer.fromJson<String?>(json['assetId']),
+      repeat: serializer.fromJson<String>(json['repeat']),
+      repeatDay: serializer.fromJson<int?>(json['repeatDay']),
+      remindDaysBefore: serializer.fromJson<String>(json['remindDaysBefore']),
+      notifyAtMinute: serializer.fromJson<int?>(json['notifyAtMinute']),
+      status: serializer.fromJson<String>(json['status']),
+      snoozedUntil: serializer.fromJson<DateTime?>(json['snoozedUntil']),
+      nextId: serializer.fromJson<String?>(json['nextId']),
     );
   }
   @override
@@ -9325,6 +9836,22 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       'doneAt': serializer.toJson<DateTime?>(doneAt),
       'channel': serializer.toJson<String>(channel),
       'message': serializer.toJson<String>(message),
+      'title': serializer.toJson<String>(title),
+      'notes': serializer.toJson<String>(notes),
+      'amountMinor': serializer.toJson<int?>(amountMinor),
+      'toleranceMinor': serializer.toJson<int>(toleranceMinor),
+      'matchKeywords': serializer.toJson<String>(matchKeywords),
+      'categoryId': serializer.toJson<String?>(categoryId),
+      'accountId': serializer.toJson<String?>(accountId),
+      'recurringId': serializer.toJson<String?>(recurringId),
+      'assetId': serializer.toJson<String?>(assetId),
+      'repeat': serializer.toJson<String>(repeat),
+      'repeatDay': serializer.toJson<int?>(repeatDay),
+      'remindDaysBefore': serializer.toJson<String>(remindDaysBefore),
+      'notifyAtMinute': serializer.toJson<int?>(notifyAtMinute),
+      'status': serializer.toJson<String>(status),
+      'snoozedUntil': serializer.toJson<DateTime?>(snoozedUntil),
+      'nextId': serializer.toJson<String?>(nextId),
     };
   }
 
@@ -9341,6 +9868,22 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     Value<DateTime?> doneAt = const Value.absent(),
     String? channel,
     String? message,
+    String? title,
+    String? notes,
+    Value<int?> amountMinor = const Value.absent(),
+    int? toleranceMinor,
+    String? matchKeywords,
+    Value<String?> categoryId = const Value.absent(),
+    Value<String?> accountId = const Value.absent(),
+    Value<String?> recurringId = const Value.absent(),
+    Value<String?> assetId = const Value.absent(),
+    String? repeat,
+    Value<int?> repeatDay = const Value.absent(),
+    String? remindDaysBefore,
+    Value<int?> notifyAtMinute = const Value.absent(),
+    String? status,
+    Value<DateTime?> snoozedUntil = const Value.absent(),
+    Value<String?> nextId = const Value.absent(),
   }) => Reminder(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -9354,6 +9897,24 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     doneAt: doneAt.present ? doneAt.value : this.doneAt,
     channel: channel ?? this.channel,
     message: message ?? this.message,
+    title: title ?? this.title,
+    notes: notes ?? this.notes,
+    amountMinor: amountMinor.present ? amountMinor.value : this.amountMinor,
+    toleranceMinor: toleranceMinor ?? this.toleranceMinor,
+    matchKeywords: matchKeywords ?? this.matchKeywords,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
+    accountId: accountId.present ? accountId.value : this.accountId,
+    recurringId: recurringId.present ? recurringId.value : this.recurringId,
+    assetId: assetId.present ? assetId.value : this.assetId,
+    repeat: repeat ?? this.repeat,
+    repeatDay: repeatDay.present ? repeatDay.value : this.repeatDay,
+    remindDaysBefore: remindDaysBefore ?? this.remindDaysBefore,
+    notifyAtMinute: notifyAtMinute.present
+        ? notifyAtMinute.value
+        : this.notifyAtMinute,
+    status: status ?? this.status,
+    snoozedUntil: snoozedUntil.present ? snoozedUntil.value : this.snoozedUntil,
+    nextId: nextId.present ? nextId.value : this.nextId,
   );
   Reminder copyWithCompanion(RemindersCompanion data) {
     return Reminder(
@@ -9369,6 +9930,38 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       doneAt: data.doneAt.present ? data.doneAt.value : this.doneAt,
       channel: data.channel.present ? data.channel.value : this.channel,
       message: data.message.present ? data.message.value : this.message,
+      title: data.title.present ? data.title.value : this.title,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      amountMinor: data.amountMinor.present
+          ? data.amountMinor.value
+          : this.amountMinor,
+      toleranceMinor: data.toleranceMinor.present
+          ? data.toleranceMinor.value
+          : this.toleranceMinor,
+      matchKeywords: data.matchKeywords.present
+          ? data.matchKeywords.value
+          : this.matchKeywords,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      recurringId: data.recurringId.present
+          ? data.recurringId.value
+          : this.recurringId,
+      assetId: data.assetId.present ? data.assetId.value : this.assetId,
+      repeat: data.repeat.present ? data.repeat.value : this.repeat,
+      repeatDay: data.repeatDay.present ? data.repeatDay.value : this.repeatDay,
+      remindDaysBefore: data.remindDaysBefore.present
+          ? data.remindDaysBefore.value
+          : this.remindDaysBefore,
+      notifyAtMinute: data.notifyAtMinute.present
+          ? data.notifyAtMinute.value
+          : this.notifyAtMinute,
+      status: data.status.present ? data.status.value : this.status,
+      snoozedUntil: data.snoozedUntil.present
+          ? data.snoozedUntil.value
+          : this.snoozedUntil,
+      nextId: data.nextId.present ? data.nextId.value : this.nextId,
     );
   }
 
@@ -9386,13 +9979,29 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           ..write('sentAt: $sentAt, ')
           ..write('doneAt: $doneAt, ')
           ..write('channel: $channel, ')
-          ..write('message: $message')
+          ..write('message: $message, ')
+          ..write('title: $title, ')
+          ..write('notes: $notes, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('toleranceMinor: $toleranceMinor, ')
+          ..write('matchKeywords: $matchKeywords, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('accountId: $accountId, ')
+          ..write('recurringId: $recurringId, ')
+          ..write('assetId: $assetId, ')
+          ..write('repeat: $repeat, ')
+          ..write('repeatDay: $repeatDay, ')
+          ..write('remindDaysBefore: $remindDaysBefore, ')
+          ..write('notifyAtMinute: $notifyAtMinute, ')
+          ..write('status: $status, ')
+          ..write('snoozedUntil: $snoozedUntil, ')
+          ..write('nextId: $nextId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     updatedAt,
     deletedAt,
     id,
@@ -9405,7 +10014,23 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     doneAt,
     channel,
     message,
-  );
+    title,
+    notes,
+    amountMinor,
+    toleranceMinor,
+    matchKeywords,
+    categoryId,
+    accountId,
+    recurringId,
+    assetId,
+    repeat,
+    repeatDay,
+    remindDaysBefore,
+    notifyAtMinute,
+    status,
+    snoozedUntil,
+    nextId,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -9421,7 +10046,23 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           other.sentAt == this.sentAt &&
           other.doneAt == this.doneAt &&
           other.channel == this.channel &&
-          other.message == this.message);
+          other.message == this.message &&
+          other.title == this.title &&
+          other.notes == this.notes &&
+          other.amountMinor == this.amountMinor &&
+          other.toleranceMinor == this.toleranceMinor &&
+          other.matchKeywords == this.matchKeywords &&
+          other.categoryId == this.categoryId &&
+          other.accountId == this.accountId &&
+          other.recurringId == this.recurringId &&
+          other.assetId == this.assetId &&
+          other.repeat == this.repeat &&
+          other.repeatDay == this.repeatDay &&
+          other.remindDaysBefore == this.remindDaysBefore &&
+          other.notifyAtMinute == this.notifyAtMinute &&
+          other.status == this.status &&
+          other.snoozedUntil == this.snoozedUntil &&
+          other.nextId == this.nextId);
 }
 
 class RemindersCompanion extends UpdateCompanion<Reminder> {
@@ -9437,6 +10078,22 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
   final Value<DateTime?> doneAt;
   final Value<String> channel;
   final Value<String> message;
+  final Value<String> title;
+  final Value<String> notes;
+  final Value<int?> amountMinor;
+  final Value<int> toleranceMinor;
+  final Value<String> matchKeywords;
+  final Value<String?> categoryId;
+  final Value<String?> accountId;
+  final Value<String?> recurringId;
+  final Value<String?> assetId;
+  final Value<String> repeat;
+  final Value<int?> repeatDay;
+  final Value<String> remindDaysBefore;
+  final Value<int?> notifyAtMinute;
+  final Value<String> status;
+  final Value<DateTime?> snoozedUntil;
+  final Value<String?> nextId;
   final Value<int> rowid;
   const RemindersCompanion({
     this.updatedAt = const Value.absent(),
@@ -9451,6 +10108,22 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     this.doneAt = const Value.absent(),
     this.channel = const Value.absent(),
     this.message = const Value.absent(),
+    this.title = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.amountMinor = const Value.absent(),
+    this.toleranceMinor = const Value.absent(),
+    this.matchKeywords = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.recurringId = const Value.absent(),
+    this.assetId = const Value.absent(),
+    this.repeat = const Value.absent(),
+    this.repeatDay = const Value.absent(),
+    this.remindDaysBefore = const Value.absent(),
+    this.notifyAtMinute = const Value.absent(),
+    this.status = const Value.absent(),
+    this.snoozedUntil = const Value.absent(),
+    this.nextId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RemindersCompanion.insert({
@@ -9466,6 +10139,22 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     this.doneAt = const Value.absent(),
     this.channel = const Value.absent(),
     this.message = const Value.absent(),
+    this.title = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.amountMinor = const Value.absent(),
+    this.toleranceMinor = const Value.absent(),
+    this.matchKeywords = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.recurringId = const Value.absent(),
+    this.assetId = const Value.absent(),
+    this.repeat = const Value.absent(),
+    this.repeatDay = const Value.absent(),
+    this.remindDaysBefore = const Value.absent(),
+    this.notifyAtMinute = const Value.absent(),
+    this.status = const Value.absent(),
+    this.snoozedUntil = const Value.absent(),
+    this.nextId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        kind = Value(kind);
@@ -9482,6 +10171,22 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Expression<DateTime>? doneAt,
     Expression<String>? channel,
     Expression<String>? message,
+    Expression<String>? title,
+    Expression<String>? notes,
+    Expression<int>? amountMinor,
+    Expression<int>? toleranceMinor,
+    Expression<String>? matchKeywords,
+    Expression<String>? categoryId,
+    Expression<String>? accountId,
+    Expression<String>? recurringId,
+    Expression<String>? assetId,
+    Expression<String>? repeat,
+    Expression<int>? repeatDay,
+    Expression<String>? remindDaysBefore,
+    Expression<int>? notifyAtMinute,
+    Expression<String>? status,
+    Expression<DateTime>? snoozedUntil,
+    Expression<String>? nextId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -9497,6 +10202,22 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       if (doneAt != null) 'done_at': doneAt,
       if (channel != null) 'channel': channel,
       if (message != null) 'message': message,
+      if (title != null) 'title': title,
+      if (notes != null) 'notes': notes,
+      if (amountMinor != null) 'amount_minor': amountMinor,
+      if (toleranceMinor != null) 'tolerance_minor': toleranceMinor,
+      if (matchKeywords != null) 'match_keywords': matchKeywords,
+      if (categoryId != null) 'category_id': categoryId,
+      if (accountId != null) 'account_id': accountId,
+      if (recurringId != null) 'recurring_id': recurringId,
+      if (assetId != null) 'asset_id': assetId,
+      if (repeat != null) 'repeat': repeat,
+      if (repeatDay != null) 'repeat_day': repeatDay,
+      if (remindDaysBefore != null) 'remind_days_before': remindDaysBefore,
+      if (notifyAtMinute != null) 'notify_at_minute': notifyAtMinute,
+      if (status != null) 'status': status,
+      if (snoozedUntil != null) 'snoozed_until': snoozedUntil,
+      if (nextId != null) 'next_id': nextId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -9514,6 +10235,22 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Value<DateTime?>? doneAt,
     Value<String>? channel,
     Value<String>? message,
+    Value<String>? title,
+    Value<String>? notes,
+    Value<int?>? amountMinor,
+    Value<int>? toleranceMinor,
+    Value<String>? matchKeywords,
+    Value<String?>? categoryId,
+    Value<String?>? accountId,
+    Value<String?>? recurringId,
+    Value<String?>? assetId,
+    Value<String>? repeat,
+    Value<int?>? repeatDay,
+    Value<String>? remindDaysBefore,
+    Value<int?>? notifyAtMinute,
+    Value<String>? status,
+    Value<DateTime?>? snoozedUntil,
+    Value<String?>? nextId,
     Value<int>? rowid,
   }) {
     return RemindersCompanion(
@@ -9529,6 +10266,22 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       doneAt: doneAt ?? this.doneAt,
       channel: channel ?? this.channel,
       message: message ?? this.message,
+      title: title ?? this.title,
+      notes: notes ?? this.notes,
+      amountMinor: amountMinor ?? this.amountMinor,
+      toleranceMinor: toleranceMinor ?? this.toleranceMinor,
+      matchKeywords: matchKeywords ?? this.matchKeywords,
+      categoryId: categoryId ?? this.categoryId,
+      accountId: accountId ?? this.accountId,
+      recurringId: recurringId ?? this.recurringId,
+      assetId: assetId ?? this.assetId,
+      repeat: repeat ?? this.repeat,
+      repeatDay: repeatDay ?? this.repeatDay,
+      remindDaysBefore: remindDaysBefore ?? this.remindDaysBefore,
+      notifyAtMinute: notifyAtMinute ?? this.notifyAtMinute,
+      status: status ?? this.status,
+      snoozedUntil: snoozedUntil ?? this.snoozedUntil,
+      nextId: nextId ?? this.nextId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -9572,6 +10325,54 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     if (message.present) {
       map['message'] = Variable<String>(message.value);
     }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (amountMinor.present) {
+      map['amount_minor'] = Variable<int>(amountMinor.value);
+    }
+    if (toleranceMinor.present) {
+      map['tolerance_minor'] = Variable<int>(toleranceMinor.value);
+    }
+    if (matchKeywords.present) {
+      map['match_keywords'] = Variable<String>(matchKeywords.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (recurringId.present) {
+      map['recurring_id'] = Variable<String>(recurringId.value);
+    }
+    if (assetId.present) {
+      map['asset_id'] = Variable<String>(assetId.value);
+    }
+    if (repeat.present) {
+      map['repeat'] = Variable<String>(repeat.value);
+    }
+    if (repeatDay.present) {
+      map['repeat_day'] = Variable<int>(repeatDay.value);
+    }
+    if (remindDaysBefore.present) {
+      map['remind_days_before'] = Variable<String>(remindDaysBefore.value);
+    }
+    if (notifyAtMinute.present) {
+      map['notify_at_minute'] = Variable<int>(notifyAtMinute.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (snoozedUntil.present) {
+      map['snoozed_until'] = Variable<DateTime>(snoozedUntil.value);
+    }
+    if (nextId.present) {
+      map['next_id'] = Variable<String>(nextId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -9593,6 +10394,22 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
           ..write('doneAt: $doneAt, ')
           ..write('channel: $channel, ')
           ..write('message: $message, ')
+          ..write('title: $title, ')
+          ..write('notes: $notes, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('toleranceMinor: $toleranceMinor, ')
+          ..write('matchKeywords: $matchKeywords, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('accountId: $accountId, ')
+          ..write('recurringId: $recurringId, ')
+          ..write('assetId: $assetId, ')
+          ..write('repeat: $repeat, ')
+          ..write('repeatDay: $repeatDay, ')
+          ..write('remindDaysBefore: $remindDaysBefore, ')
+          ..write('notifyAtMinute: $notifyAtMinute, ')
+          ..write('status: $status, ')
+          ..write('snoozedUntil: $snoozedUntil, ')
+          ..write('nextId: $nextId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -12252,6 +13069,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'reminders_group_id',
     'CREATE INDEX reminders_group_id ON reminders (group_id)',
   );
+  late final Index remindersStatusDue = Index(
+    'reminders_status_due',
+    'CREATE INDEX reminders_status_due ON reminders (status, due_at)',
+  );
   late final Index entryPayersEntryId = Index(
     'entry_payers_entry_id',
     'CREATE INDEX entry_payers_entry_id ON entry_payers (entry_id)',
@@ -12287,6 +13108,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     projectFieldsProjectId,
     entryFieldValuesEntryId,
     remindersGroupId,
+    remindersStatusDue,
     entryPayersEntryId,
     groupActivitiesGroupId,
   ];
@@ -16611,6 +17433,22 @@ typedef $$RemindersTableCreateCompanionBuilder = RemindersCompanion Function({
   Value<DateTime?> doneAt,
   Value<String> channel,
   Value<String> message,
+  Value<String> title,
+  Value<String> notes,
+  Value<int?> amountMinor,
+  Value<int> toleranceMinor,
+  Value<String> matchKeywords,
+  Value<String?> categoryId,
+  Value<String?> accountId,
+  Value<String?> recurringId,
+  Value<String?> assetId,
+  Value<String> repeat,
+  Value<int?> repeatDay,
+  Value<String> remindDaysBefore,
+  Value<int?> notifyAtMinute,
+  Value<String> status,
+  Value<DateTime?> snoozedUntil,
+  Value<String?> nextId,
   Value<int> rowid,
 });
 typedef $$RemindersTableUpdateCompanionBuilder = RemindersCompanion Function({
@@ -16626,6 +17464,22 @@ typedef $$RemindersTableUpdateCompanionBuilder = RemindersCompanion Function({
   Value<DateTime?> doneAt,
   Value<String> channel,
   Value<String> message,
+  Value<String> title,
+  Value<String> notes,
+  Value<int?> amountMinor,
+  Value<int> toleranceMinor,
+  Value<String> matchKeywords,
+  Value<String?> categoryId,
+  Value<String?> accountId,
+  Value<String?> recurringId,
+  Value<String?> assetId,
+  Value<String> repeat,
+  Value<int?> repeatDay,
+  Value<String> remindDaysBefore,
+  Value<int?> notifyAtMinute,
+  Value<String> status,
+  Value<DateTime?> snoozedUntil,
+  Value<String?> nextId,
   Value<int> rowid,
 });
 
@@ -16695,6 +17549,86 @@ class $$RemindersTableFilterComposer
 
   ColumnFilters<String> get message => $composableBuilder(
     column: $table.message,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get toleranceMinor => $composableBuilder(
+    column: $table.toleranceMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get matchKeywords => $composableBuilder(
+    column: $table.matchKeywords,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recurringId => $composableBuilder(
+    column: $table.recurringId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get assetId => $composableBuilder(
+    column: $table.assetId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get repeat => $composableBuilder(
+    column: $table.repeat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get repeatDay => $composableBuilder(
+    column: $table.repeatDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remindDaysBefore => $composableBuilder(
+    column: $table.remindDaysBefore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get notifyAtMinute => $composableBuilder(
+    column: $table.notifyAtMinute,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get snoozedUntil => $composableBuilder(
+    column: $table.snoozedUntil,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nextId => $composableBuilder(
+    column: $table.nextId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -16767,6 +17701,86 @@ class $$RemindersTableOrderingComposer
     column: $table.message,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get toleranceMinor => $composableBuilder(
+    column: $table.toleranceMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get matchKeywords => $composableBuilder(
+    column: $table.matchKeywords,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recurringId => $composableBuilder(
+    column: $table.recurringId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get assetId => $composableBuilder(
+    column: $table.assetId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get repeat => $composableBuilder(
+    column: $table.repeat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get repeatDay => $composableBuilder(
+    column: $table.repeatDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remindDaysBefore => $composableBuilder(
+    column: $table.remindDaysBefore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get notifyAtMinute => $composableBuilder(
+    column: $table.notifyAtMinute,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get snoozedUntil => $composableBuilder(
+    column: $table.snoozedUntil,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nextId => $composableBuilder(
+    column: $table.nextId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RemindersTableAnnotationComposer
@@ -16813,6 +17827,70 @@ class $$RemindersTableAnnotationComposer
 
   GeneratedColumn<String> get message =>
       $composableBuilder(column: $table.message, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get toleranceMinor => $composableBuilder(
+    column: $table.toleranceMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get matchKeywords => $composableBuilder(
+    column: $table.matchKeywords,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get recurringId => $composableBuilder(
+    column: $table.recurringId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get assetId =>
+      $composableBuilder(column: $table.assetId, builder: (column) => column);
+
+  GeneratedColumn<String> get repeat =>
+      $composableBuilder(column: $table.repeat, builder: (column) => column);
+
+  GeneratedColumn<int> get repeatDay =>
+      $composableBuilder(column: $table.repeatDay, builder: (column) => column);
+
+  GeneratedColumn<String> get remindDaysBefore => $composableBuilder(
+    column: $table.remindDaysBefore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get notifyAtMinute => $composableBuilder(
+    column: $table.notifyAtMinute,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get snoozedUntil => $composableBuilder(
+    column: $table.snoozedUntil,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get nextId =>
+      $composableBuilder(column: $table.nextId, builder: (column) => column);
 }
 
 class $$RemindersTableTableManager
@@ -16855,6 +17933,22 @@ class $$RemindersTableTableManager
                 Value<DateTime?> doneAt = const Value.absent(),
                 Value<String> channel = const Value.absent(),
                 Value<String> message = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> notes = const Value.absent(),
+                Value<int?> amountMinor = const Value.absent(),
+                Value<int> toleranceMinor = const Value.absent(),
+                Value<String> matchKeywords = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<String?> accountId = const Value.absent(),
+                Value<String?> recurringId = const Value.absent(),
+                Value<String?> assetId = const Value.absent(),
+                Value<String> repeat = const Value.absent(),
+                Value<int?> repeatDay = const Value.absent(),
+                Value<String> remindDaysBefore = const Value.absent(),
+                Value<int?> notifyAtMinute = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> snoozedUntil = const Value.absent(),
+                Value<String?> nextId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RemindersCompanion(
                 updatedAt: updatedAt,
@@ -16869,6 +17963,22 @@ class $$RemindersTableTableManager
                 doneAt: doneAt,
                 channel: channel,
                 message: message,
+                title: title,
+                notes: notes,
+                amountMinor: amountMinor,
+                toleranceMinor: toleranceMinor,
+                matchKeywords: matchKeywords,
+                categoryId: categoryId,
+                accountId: accountId,
+                recurringId: recurringId,
+                assetId: assetId,
+                repeat: repeat,
+                repeatDay: repeatDay,
+                remindDaysBefore: remindDaysBefore,
+                notifyAtMinute: notifyAtMinute,
+                status: status,
+                snoozedUntil: snoozedUntil,
+                nextId: nextId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -16885,6 +17995,22 @@ class $$RemindersTableTableManager
                 Value<DateTime?> doneAt = const Value.absent(),
                 Value<String> channel = const Value.absent(),
                 Value<String> message = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> notes = const Value.absent(),
+                Value<int?> amountMinor = const Value.absent(),
+                Value<int> toleranceMinor = const Value.absent(),
+                Value<String> matchKeywords = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<String?> accountId = const Value.absent(),
+                Value<String?> recurringId = const Value.absent(),
+                Value<String?> assetId = const Value.absent(),
+                Value<String> repeat = const Value.absent(),
+                Value<int?> repeatDay = const Value.absent(),
+                Value<String> remindDaysBefore = const Value.absent(),
+                Value<int?> notifyAtMinute = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> snoozedUntil = const Value.absent(),
+                Value<String?> nextId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RemindersCompanion.insert(
                 updatedAt: updatedAt,
@@ -16899,6 +18025,22 @@ class $$RemindersTableTableManager
                 doneAt: doneAt,
                 channel: channel,
                 message: message,
+                title: title,
+                notes: notes,
+                amountMinor: amountMinor,
+                toleranceMinor: toleranceMinor,
+                matchKeywords: matchKeywords,
+                categoryId: categoryId,
+                accountId: accountId,
+                recurringId: recurringId,
+                assetId: assetId,
+                repeat: repeat,
+                repeatDay: repeatDay,
+                remindDaysBefore: remindDaysBefore,
+                notifyAtMinute: notifyAtMinute,
+                status: status,
+                snoozedUntil: snoozedUntil,
+                nextId: nextId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

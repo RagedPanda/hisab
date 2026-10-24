@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import '../../domain/backup/backup_codec.dart';
 import '../../domain/backup/backup_settings.dart';
 import '../db/database.dart';
+import '../repositories/reminders_repository.dart';
 
 /// What a restore wrote, plus the backup's currency (null for older backups).
 class BackupRestoreResult {
@@ -110,7 +111,7 @@ class BackupService {
       await restore(db.projects, 'projects', Project.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.projectFields, 'projectFields', ProjectField.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.entryFieldValues, 'entryFieldValues', EntryFieldValue.fromJson, (r) => r.id, (r) => r.updatedAt);
-      await restore(db.reminders, 'reminders', Reminder.fromJson, (r) => r.id, (r) => r.updatedAt);
+      await restore(db.reminders, 'reminders', (json) => Reminder.fromJson(reminderJsonWithDefaults(json)), (r) => r.id, (r) => r.updatedAt);
       await restore(db.entryPayers, 'entryPayers', EntryPayer.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.groupActivities, 'groupActivities', GroupActivity.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.recurringRules, 'recurringRules', RecurringRule.fromJson, (r) => r.id, (r) => r.updatedAt);

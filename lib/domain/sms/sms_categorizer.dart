@@ -143,9 +143,11 @@ String suggestCategoryKey(ParsedTransaction txn) {
   final haystack = '${txn.counterparty ?? ''} ${txn.raw}'.toLowerCase();
   final rules = txn.isDebit ? _debitRules : _creditRules;
   if (txn.isDebit && txn.instrument == Instrument.atm) return 'cash_withdrawal';
-  if (!txn.isDebit && txn.isCreditCard) return 'credit_card_payment';
+  // The message kind wins over the card rule: a refund credited to a credit
+  // card is a refund, not a bill payment.
   final byKind = _kindCategories[txn.kind];
   if (byKind != null) return byKind;
+  if (!txn.isDebit && txn.isCreditCard) return 'credit_card_payment';
 
   final best = _bestMatch(haystack, rules, _indexOfWord) ?? _bestMatch(haystack, rules, _indexOfSubstring);
   if (best != null) return best;

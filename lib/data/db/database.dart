@@ -301,10 +301,11 @@ class EntryFieldValues extends Table with SyncColumns {
 /// Anything Hisab nudged someone about, or will. One generic table so settle-up
 /// reminders, recurring-expense prompts and the like share history and sync.
 @TableIndex(name: 'reminders_group_id', columns: {#groupId})
+@TableIndex(name: 'reminders_status_due', columns: {#status, #dueAt})
 class Reminders extends Table with SyncColumns {
   TextColumn get id => text()();
 
-  /// settle_up | recurring | ...
+  /// settle_up, or a due-reminder kind: bill | emi | card | subscription | insurance | document | custom
   TextColumn get kind => text()();
   TextColumn get groupId => text().nullable()();
 
@@ -320,6 +321,51 @@ class Reminders extends Table with SyncColumns {
   /// share | copy | whatsapp | sms | notification
   TextColumn get channel => text().withDefault(const Constant('share'))();
   TextColumn get message => text().withDefault(const Constant(''))();
+
+  // Due reminders (v9): bills, EMIs, card dues, subscriptions, insurance,
+  // documents and custom nudges. Kinds and values live in
+  // lib/domain/reminders/reminder_kind.dart.
+
+  /// What the notification says ("Electricity bill"); empty for settle_up rows.
+  TextColumn get title => text().withDefault(const Constant(''))();
+  TextColumn get notes => text().withDefault(const Constant(''))();
+
+  /// Expected amount, null for non-money reminders (documents, custom).
+  IntColumn get amountMinor => integer().nullable()();
+
+  /// Amount tolerance for SMS auto-match, in minor units.
+  IntColumn get toleranceMinor => integer().withDefault(const Constant(0))();
+
+  /// Lower-cased keywords matched against bank SMS: "tata power|tpddl".
+  TextColumn get matchKeywords => text().withDefault(const Constant(''))();
+  TextColumn get categoryId => text().nullable()();
+  TextColumn get accountId => text().nullable()();
+
+  /// Recurring rule that produced this reminder (recurring_rules.id).
+  TextColumn get recurringId => text().nullable()();
+
+  /// Insurance policy, document or asset the reminder is about.
+  TextColumn get assetId => text().nullable()();
+
+  /// once | weekly | monthly | quarterly | yearly
+  TextColumn get repeat => text().withDefault(const Constant('once'))();
+
+  /// Day of month a repeating reminder falls on, kept so 31 Jan -> 28 Feb -> 31 Mar.
+  IntColumn get repeatDay => integer().nullable()();
+
+  /// Days before dueAt to notify, comma separated ("3,0" = 3 days before and on the day).
+  TextColumn get remindDaysBefore => text().withDefault(const Constant('0'))();
+
+  /// Local time of day to notify, in minutes after midnight; null = no notification.
+  IntColumn get notifyAtMinute => integer().nullable()();
+
+  /// pending | done | skipped (snoozed = pending with [snoozedUntil] in the future)
+  TextColumn get status => text().withDefault(const Constant('pending'))();
+  DateTimeColumn get snoozedUntil => dateTime().nullable()();
+
+  /// The next occurrence spawned when this repeating reminder was paid or skipped,
+  /// so undo can remove it again.
+  TextColumn get nextId => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -454,7 +500,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -498,8 +544,8 @@ class AppDatabase extends _$AppDatabase {
           }
           // v8: SMS history can be cleared without forgetting processed messages.
           if (from < 8) await m.addColumn(smsLog, smsLog.clearedAt);
+          // v9 was never shipped (it held the due-reminder step, now v12, before v10 merged).
           // v10: group activity log (groups parity, undo and history).
-          // v9 is reserved for another in-flight migration.
           if (from < 10) {
             await m.createTable(groupActivities);
             await m.createIndex(groupActivitiesGroupId);
@@ -512,6 +558,9 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(groups, groups.currencyLabel);
             await m.addColumn(groups, groups.archivedAt);
           }
+          // v12: due reminders (bills, EMIs, cards, documents) on the v5 reminders
+          // table: new columns only, so existing rows are kept as they are.
+          if (from < 12) await _upgradeToDueReminders(m, from);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -521,6 +570,36 @@ class AppDatabase extends _$AppDatabase {
           if (!details.wasCreated) await recolourRetiredSeeds();
         },
       );
+
+  /// v12 step. A v5..v11 table gains the due-reminder columns it lacks (a
+  /// table created at v5 or later by this version already has them all).
+  /// Checking what exists keeps it idempotent: it also upgrades pre-release
+  /// builds of the reminders feature, which stored these columns and the index
+  /// under schema 6 without main's v6 entry_payers table, and QA builds that
+  /// added them as schema 9.
+  Future<void> _upgradeToDueReminders(Migrator m, int from) async {
+    if (from >= 5) {
+      final existing = await _columnNames('reminders');
+      for (final column in dueReminderColumns(reminders)) {
+        if (!existing.contains(column.name)) await m.addColumn(reminders, column);
+      }
+    }
+    if (!await _schemaObjectExists('index', 'reminders_status_due')) await m.createIndex(remindersStatusDue);
+    if (!await _schemaObjectExists('table', 'entry_payers')) {
+      await m.createTable(entryPayers);
+      await m.createIndex(entryPayersEntryId);
+    }
+  }
+
+  Future<Set<String>> _columnNames(String table) async {
+    final rows = await customSelect('PRAGMA table_info($table)').get();
+    return {for (final row in rows) row.read<String>('name')};
+  }
+
+  Future<bool> _schemaObjectExists(String type, String name) async {
+    final rows = await customSelect('SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?', variables: [Variable.withString(type), Variable.withString(name)]).get();
+    return rows.isNotEmpty;
+  }
 
   static QueryExecutor _openConnection() => driftDatabase(
         name: 'hisab',
@@ -678,3 +757,23 @@ CategoriesCompanion seedCategoryRow(CategorySeed seed, {required String id, Stri
       sortOrder: Value(order),
       units: Value(seed.units.join(',')),
     );
+
+/// Columns v9 added to [Reminders]; a v5..v8 database gains exactly these.
+List<GeneratedColumn> dueReminderColumns($RemindersTable table) => [
+      table.title,
+      table.notes,
+      table.amountMinor,
+      table.toleranceMinor,
+      table.matchKeywords,
+      table.categoryId,
+      table.accountId,
+      table.recurringId,
+      table.assetId,
+      table.repeat,
+      table.repeatDay,
+      table.remindDaysBefore,
+      table.notifyAtMinute,
+      table.status,
+      table.snoozedUntil,
+      table.nextId,
+    ];

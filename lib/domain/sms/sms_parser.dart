@@ -169,10 +169,7 @@ ParsedTransaction? parseBankSms({
 
   final currency = (amountMatch == null ? null : _currencyCodeOf(amountMatch)) ?? 'INR';
 
-  final isCreditCard = (lower.contains('credit card') && !_paysCardBillFromAccount(lower)) ||
-      lower.contains('credit limit') ||
-      limitMatch != null ||
-      (RegExp(r'\bcard\b').hasMatch(lower) && !lower.contains('debit card') && !lower.contains('a/c'));
+  final isCreditCard = _isCreditCard(lower, hasLimit: limitMatch != null, hasBalance: balanceMatch != null);
   final instrument = _instrument(lower);
   final kind = _kind(
     lower: lower,
@@ -239,6 +236,18 @@ final _bankAccountWord = RegExp(r'\ba/c|\bacct\b|\baccount\b|\bac\b');
 /// "Rs 15,000 debited from A/c XX7781 towards credit card bill": the card is
 /// the payee, the money left a bank account.
 bool _paysCardBillFromAccount(String lower) => _cardBillPayee.hasMatch(lower) && _bankAccountWord.hasMatch(lower);
+
+/// "BLOCK DC 5678", "Debit Card", or a bank account named next to the card.
+final _debitCardMarker = RegExp(r'\bdebit card\b|\bdc\b|a/c');
+
+/// Whether the message is about a credit card. A plain "Card 5678" is a
+/// credit card unless the message marks it as a debit card or shows an
+/// account balance: credit-card alerts show the available limit instead.
+bool _isCreditCard(String lower, {required bool hasLimit, required bool hasBalance}) =>
+    (lower.contains('credit card') && !_paysCardBillFromAccount(lower)) ||
+    lower.contains('credit limit') ||
+    hasLimit ||
+    (RegExp(r'\bcard\b').hasMatch(lower) && !hasBalance && !_debitCardMarker.hasMatch(lower));
 
 /// The card issuer confirming a bill payment. Skipped by the parser and
 /// kept out of review: the bank-side debit already records the payment.
@@ -476,7 +485,27 @@ bool looksLikeUnreadTransaction(String body, {String sender = ''}) {
   final lower = text.toLowerCase();
   if (text.isEmpty) return false;
   if (_isIgnorable(sender, lower)) return false;
+  if (_isBalanceOnly(text, lower)) return false;
   if (_isCardPaymentAcknowledgement(text, lower)) return false;
   return _amountPattern.hasMatch(text) || _bareAmountPattern.hasMatch(text);
+}
+
+/// "Bal in Kotak Bank AC X3390 on 21-10-26 10:00 is Rs.9,000.00": a balance
+/// or limit named first and its amount stated later in the sentence.
+final _balanceStatement = RegExp(
+  '\\b(?:bal(?:ance)?|limit|lmt)\\b[^;!]{0,80}?\\bis\\s*:?\\s*$_currencyPrefix\\s*:?\\s*$_number',
+  caseSensitive: false,
+);
+
+/// "Your A/c X3333 Avl Bal is Rs.22,145.00 as on ...": every amount is a
+/// balance or limit and nothing says money moved, so there is nothing to
+/// review.
+bool _isBalanceOnly(String text, String lower) {
+  final balances = [
+    ..._balancePattern.allMatches(text),
+    ..._limitPattern.allMatches(text),
+    ..._balanceStatement.allMatches(text),
+  ];
+  return balances.isNotEmpty && _firstAmountOutside(text, balances) == null && _direction(lower) == null;
 }
 

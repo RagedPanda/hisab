@@ -12,6 +12,7 @@ import '../../domain/currency/currency_lookup.dart';
 import '../currency/currency_picker.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
+import '../reminders/reminders_settings_tile.dart';
 import '../shell/widgets/common.dart';
 import 'made_with_love.dart';
 
@@ -103,6 +104,7 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => context.push('/sms'),
             ),
           ),
+          const Card(child: RemindersSettingsTile()),
           SectionHeader(l10n.groups),
           Card(
             child: ListTile(
@@ -210,6 +212,7 @@ class SettingsScreen extends ConsumerWidget {
       if (backupCurrency != null) {
         await ref.read(settingsProvider.notifier).update((s) => s.copyWith(currencyCode: backupCurrency, currencyConfirmed: true));
       }
+      await ref.read(reminderSchedulerProvider).rescheduleAll();
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(restored.written))));
     } catch (error) {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoreFailed('$error'))));

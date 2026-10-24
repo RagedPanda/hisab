@@ -80,8 +80,12 @@ class RecurringScreen extends ConsumerWidget {
 enum _RuleAction { edit, pause, resume, delete }
 
 class RecurringRuleCard extends ConsumerWidget {
-  const RecurringRuleCard({super.key, required this.item, this.yourShareMinor});
+  const RecurringRuleCard({super.key, required this.item, this.yourShareMinor, this.symbol});
   final RecurringListItem item;
+
+  /// Currency symbol for the amounts; the app's own when null. A group rule
+  /// passes its group's currency label.
+  final String? symbol;
 
   /// For a group rule, my part of the full amount, shown beneath it.
   final int? yourShareMinor;
@@ -157,10 +161,10 @@ class RecurringRuleCard extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        AmountText(rule.amountMinor, kind: rule.kind),
+                        AmountText(rule.amountMinor, kind: rule.kind, symbol: symbol),
                         if (yourShareMinor case final share?)
                           Text(
-                            l10n.groupRecurringYourShare(formatMinor(share, symbol: ref.watch(settingsProvider).currencySymbol)),
+                            l10n.groupRecurringYourShare(formatMinor(share, symbol: symbol ?? ref.watch(settingsProvider).currencySymbol)),
                             style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                           ),
                       ],

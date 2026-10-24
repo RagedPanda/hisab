@@ -138,6 +138,7 @@ class GroupExpensesTab extends ConsumerWidget {
             RecurringRuleCard(
               key: ValueKey('group.recurring.${item.view.rule.id}'),
               item: item,
+              symbol: symbol,
               yourShareMinor: myShareOfGroupRule(item.view.rule.groupSplit, amountMinor: item.view.rule.amountMinor, activeMemberIds: activeMemberIds, myMemberId: myMemberId),
             ),
           ],

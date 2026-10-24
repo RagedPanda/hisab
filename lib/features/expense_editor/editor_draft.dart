@@ -6,6 +6,7 @@ library;
 import 'dart:convert';
 
 import '../../domain/projects/project_fields.dart';
+import '../../domain/recurring/repeat_draft.dart';
 import '../../domain/split/split_calculator.dart';
 import 'item_row.dart';
 
@@ -30,6 +31,7 @@ String editorDraftFingerprint({
   required List<SplitInput> splitInputs,
   required List<ItemDraft> items,
   required Map<String, FieldReading> fieldValues,
+  RepeatDraft? repeat,
 }) => jsonEncode({
   'kind': kind,
   'amount': amountMinor ?? 0,
@@ -51,4 +53,8 @@ String editorDraftFingerprint({
     for (final entry in (fieldValues.entries.where((entry) => !entry.value.isEmpty).toList()..sort((a, b) => a.key.compareTo(b.key))))
       entry.key: '${entry.value.number}|${entry.value.text?.trim()}|${entry.value.date?.toIso8601String()}',
   },
+  'repeat': repeat == null
+      ? null
+      : '${repeat.frequency.name}|${repeat.interval}|${repeat.lastDayOfMonth}|${repeat.end.name}|'
+            '${repeat.endDate?.toIso8601String()}|${repeat.maxCount}|${repeat.autoPost}',
 });

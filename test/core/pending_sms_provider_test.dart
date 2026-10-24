@@ -1,6 +1,7 @@
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hisab/core/home_currency.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/sms_log_repository.dart';
@@ -9,7 +10,7 @@ void main() {
   test('foreign-currency rows already in the queue are left out of review', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    final container = ProviderContainer(overrides: [databaseProvider.overrideWithValue(db)]);
+    final container = ProviderContainer(overrides: [databaseProvider.overrideWithValue(db), homeCurrencyCodeProvider.overrideWithValue('INR')]);
     addTearDown(container.dispose);
     final smsLog = SmsLogRepository(db);
     final received = DateTime(2026, 10, 21, 10);

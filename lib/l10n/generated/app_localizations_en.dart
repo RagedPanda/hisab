@@ -666,7 +666,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get money => 'Money';
 
   @override
-  String get currencySymbol => 'Currency symbol';
+  String get currency => 'Currency';
+
+  @override
+  String get currencyChooseTitle => 'Choose your currency';
+
+  @override
+  String get currencyChooseBody =>
+      'Amounts in Hisab show in this currency. You can change it later in Settings.';
+
+  @override
+  String get currencySearchHint => 'Search code, name or country';
+
+  @override
+  String currencyContinue(String currency) {
+    return 'Continue with $currency';
+  }
+
+  @override
+  String currencyNoMatch(String query) {
+    return 'No currency matches \"$query\"';
+  }
 
   @override
   String get monthStartsOn => 'Month starts on';

@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Drives the real app on an in-memory database through the main journeys.
 Future<ProviderContainer> pumpApp(WidgetTester tester) async {
-  SharedPreferences.setMockInitialValues({'onboarded': true});
+  SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR'});
   final prefs = await SharedPreferences.getInstance();
   final db = AppDatabase(NativeDatabase.memory());
   final container = ProviderContainer(overrides: [

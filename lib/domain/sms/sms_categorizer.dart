@@ -6,7 +6,25 @@ import 'parsed_transaction.dart';
 
 const Map<String, List<String>> _debitRules = {
   'food_delivery': ['swiggy', 'zomato', 'eatsure', 'dominos', 'domino', 'pizza hut', 'box8', 'faasos'],
-  'groceries': ['blinkit', 'zepto', 'bigbasket', 'instamart', 'dmart', 'd mart', 'grofers', 'jiomart', 'reliance fresh', 'reliance smart', 'more retail', 'spencer', 'nature basket', 'kirana', 'supermarket', 'super market', 'grocery'],
+  'groceries': [
+    'blinkit',
+    'zepto',
+    'bigbasket',
+    'instamart',
+    'dmart',
+    'd mart',
+    'grofers',
+    'jiomart',
+    'reliance fresh',
+    'reliance smart',
+    'more retail',
+    'spencer',
+    'nature basket',
+    'kirana',
+    'supermarket',
+    'super market',
+    'grocery',
+  ],
   'milk_dairy': ['milk', 'dairy', 'amul', 'mother dairy', 'nandini', 'country delight', 'milkbasket'],
   'restaurants': ['restaurant', 'cafe', 'coffee', 'starbucks', 'mcdonald', 'kfc', 'burger', 'subway', 'barbeque', 'bbq', 'dhaba', 'hotel', 'biryani', 'chai', 'bakery', 'eatery', 'kitchen', 'foods'],
   'cab_auto': ['uber', 'ola', 'rapido', 'namma yatri', 'blusmart', 'meru', 'auto rickshaw', 'autorickshaw'],
@@ -23,11 +41,52 @@ const Map<String, List<String>> _debitRules = {
   'cosmetics': ['nykaa', 'purplle', 'sephora', 'mamaearth'],
   'salon': ['salon', 'saloon', 'barber', 'spa', 'urban company', 'urbanclap', 'parlour', 'parlor'],
   'ott': ['netflix', 'spotify', 'hotstar', 'prime video', 'primevideo', 'youtube premium', 'sonyliv', 'zee5', 'jiocinema', 'apple music', 'gaana', 'wynk', 'audible'],
-  'software_subscriptions': ['google play', 'google one', 'google storage', 'icloud', 'apple.com', 'apple services', 'microsoft', 'adobe', 'openai', 'chatgpt', 'claude', 'anthropic', 'github', 'notion', 'canva', 'dropbox', 'aws', 'cloud'],
+  'software_subscriptions': [
+    'google play',
+    'google one',
+    'google storage',
+    'icloud',
+    'apple.com',
+    'apple services',
+    'microsoft',
+    'adobe',
+    'openai',
+    'chatgpt',
+    'claude',
+    'anthropic',
+    'github',
+    'notion',
+    'canva',
+    'dropbox',
+    'aws',
+    'cloud',
+  ],
   'mobile_recharge': ['jio', 'airtel', 'vodafone', 'vi ', 'bsnl', 'recharge', 'prepaid', 'postpaid'],
   'internet': ['broadband', 'act fibernet', 'hathway', 'tikona', 'excitel', 'you broadband', 'jiofiber', 'airtel xstream', 'wifi'],
   'dth_cable': ['tata play', 'tatasky', 'dish tv', 'd2h', 'airtel dth', 'sun direct', 'cable'],
-  'electricity': ['electricity', 'bescom', 'tneb', 'tangedco', 'mseb', 'msedcl', 'tata power', 'adani electricity', 'bses', 'torrent power', 'kseb', 'uppcl', 'pspcl', 'cesc', 'jvvnl', 'mahadiscom', 'wbsedcl', 'apspdcl', 'tsspdcl', 'dhbvn', 'uhbvn'],
+  'electricity': [
+    'electricity',
+    'bescom',
+    'tneb',
+    'tangedco',
+    'mseb',
+    'msedcl',
+    'tata power',
+    'adani electricity',
+    'bses',
+    'torrent power',
+    'kseb',
+    'uppcl',
+    'pspcl',
+    'cesc',
+    'jvvnl',
+    'mahadiscom',
+    'wbsedcl',
+    'apspdcl',
+    'tsspdcl',
+    'dhbvn',
+    'uhbvn',
+  ],
   'water_bill': ['water bill', 'bwssb', 'jal board', 'water supply', 'jal'],
   'gas_lpg': ['indane', 'hp gas', 'bharat gas', 'bharatgas', 'lpg', 'cylinder', 'png', 'mahanagar gas', 'igl', 'adani gas', 'gujarat gas'],
   'medicines': ['pharmacy', 'pharma', 'medical', 'medplus', 'apollo pharmacy', 'apollopharmacy', 'pharmeasy', '1mg', 'netmeds', 'chemist', 'medicine', 'drug'],
@@ -37,7 +96,37 @@ const Map<String, List<String>> _debitRules = {
   'health_insurance': ['star health', 'niva bupa', 'care health', 'hdfc ergo health', 'icici lombard health', 'aditya birla health', 'mediclaim'],
   'life_insurance': ['lic', 'life insurance', 'hdfc life', 'icici pru', 'sbi life', 'max life', 'bajaj allianz life', 'tata aia', 'policy'],
   'vehicle_insurance': ['acko', 'motor insurance', 'vehicle insurance', 'car insurance', 'bike insurance', 'two wheeler insurance'],
-  'investments': ['zerodha', 'groww', 'upstox', 'kuvera', 'coin', 'mutual fund', 'sip', 'nps', 'ppf', 'angel one', 'angelone', 'paytm money', 'indmoney', 'et money', 'etmoney', 'smallcase', 'icici direct', 'hdfc securities', 'kotak securities', 'sbi mf', 'nippon', 'axis mf', 'bse', 'nse', 'cams', 'kfintech', 'demat', 'rd ', 'fd '],
+  'investments': [
+    'zerodha',
+    'groww',
+    'upstox',
+    'kuvera',
+    'coin',
+    'mutual fund',
+    'sip',
+    'nps',
+    'ppf',
+    'angel one',
+    'angelone',
+    'paytm money',
+    'indmoney',
+    'et money',
+    'etmoney',
+    'smallcase',
+    'icici direct',
+    'hdfc securities',
+    'kotak securities',
+    'sbi mf',
+    'nippon',
+    'axis mf',
+    'bse',
+    'nse',
+    'cams',
+    'kfintech',
+    'demat',
+    'rd ',
+    'fd ',
+  ],
   'loan_emi': ['emi', 'loan', 'bajaj finserv', 'bajaj finance', 'hdb', 'tata capital', 'home credit', 'kreditbee', 'moneyview', 'navi', 'lazypay', 'simpl'],
   'credit_card_payment': ['cred', 'credit card payment', 'card payment', 'cc payment', 'payment received'],
   'rent': ['rent', 'nobroker', 'housing.com', 'landlord'],
@@ -91,6 +180,16 @@ const Map<String, List<String>> _creditRules = {
   'self_transfer': ['self', 'own account'],
 };
 
+/// Message kinds that settle the category on their own, whatever the
+/// merchant text says.
+const Map<TxnKind, String> _kindCategories = {
+  TxnKind.salary: 'salary',
+  TxnKind.refund: 'refunds_cashback',
+  TxnKind.atmWithdrawal: 'cash_withdrawal',
+  TxnKind.emi: 'loan_emi',
+  TxnKind.walletTopUp: 'wallet_topup',
+};
+
 /// Index of [keyword] in [haystack] as a whole word (letters/digits on
 /// either side break the match), or -1.
 int _indexOfWord(String haystack, String keyword) {
@@ -134,6 +233,8 @@ String suggestCategoryKey(ParsedTransaction txn) {
   final rules = txn.isDebit ? _debitRules : _creditRules;
   if (txn.isDebit && txn.instrument == Instrument.atm) return 'cash_withdrawal';
   if (!txn.isDebit && txn.isCreditCard) return 'credit_card_payment';
+  final byKind = _kindCategories[txn.kind];
+  if (byKind != null) return byKind;
 
   final best = _bestMatch(haystack, rules, _indexOfWord) ?? _bestMatch(haystack, rules, _indexOfSubstring);
   if (best != null) return best;

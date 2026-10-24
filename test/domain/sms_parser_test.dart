@@ -7,8 +7,7 @@ import 'package:hisab/domain/sms/sms_parser.dart';
 
 final _now = DateTime(2026, 10, 21, 10);
 
-ParsedTransaction? parse(String sender, String body) =>
-    parseBankSms(sender: sender, body: body, receivedAt: _now);
+ParsedTransaction? parse(String sender, String body) => parseBankSms(sender: sender, body: body, receivedAt: _now);
 
 void main() {
   group('bank senders', () {
@@ -18,6 +17,14 @@ void main() {
       expect(bankFromSender('JD-ICICIT-S'), 'ICICI Bank');
       expect(bankFromSender('AX-AXISBK-S'), 'Axis Bank');
       expect(bankFromSender('+919876543210'), isNull);
+    });
+
+    test('only alphanumeric headers count as business senders', () {
+      expect(isBusinessSender('AD-HDFCBK'), isTrue);
+      expect(isBusinessSender('KOTAKB'), isTrue);
+      expect(isBusinessSender('+19876500011'), isFalse);
+      expect(isBusinessSender('9876500011'), isFalse);
+      expect(isBusinessSender(''), isFalse);
     });
   });
 
@@ -38,8 +45,7 @@ void main() {
 
   group('parses real formats', () {
     test('HDFC UPI sent', () {
-      final t = parse('VM-HDFCBK-S',
-          'Sent Rs.15000.00 From HDFC Bank A/C *1234 To TEST MERCHANT PVT LTD On 01/01/26 Ref 567890567890 Not You? Call 18005556789/SMS BLOCK UPI to 7305556789')!;
+      final t = parse('VM-HDFCBK-S', 'Sent Rs.15000.00 From HDFC Bank A/C *1234 To TEST MERCHANT PVT LTD On 01/01/26 Ref 567890567890 Not You? Call 18005556789/SMS BLOCK UPI to 7305556789')!;
       expect(t.direction, TxnDirection.debit);
       expect(t.amountMinor, 1500000);
       expect(t.accountLast4, '1234');
@@ -58,8 +64,7 @@ void main() {
       expect(t.occurredAt, DateTime(2025, 10, 20));
     });
     test('HDFC NEFT credit with balance', () {
-      final t = parse('VM-HDFCBK-S',
-          'Update! INR 1.00 deposited in HDFC Bank A/c XX9999 on 30-MAR-26 for NEFT Cr-CITI0100000-ACME TECHNOLOGIES-PERSON NAME-CITIN99999999999.Avl bal INR 8.00.')!;
+      final t = parse('VM-HDFCBK-S', 'Update! INR 1.00 deposited in HDFC Bank A/c XX9999 on 30-MAR-26 for NEFT Cr-CITI0100000-ACME TECHNOLOGIES-PERSON NAME-CITIN99999999999.Avl bal INR 8.00.')!;
       expect(t.direction, TxnDirection.credit);
       expect(t.amountMinor, 100);
       expect(t.balanceMinor, 800);
@@ -92,8 +97,10 @@ void main() {
       expect(t.counterparty, isNull);
     });
     test('SBI debit card at merchant', () {
-      final t = parse('AD-SBIINB-S',
-          'Dear Customer, transaction number 1234 for Rs.383.00 by SBI Debit Card 0000 done at merchant on 13Sep25 at 21:38:26. Your updated available balance is Rs.999999999.')!;
+      final t = parse(
+        'AD-SBIINB-S',
+        'Dear Customer, transaction number 1234 for Rs.383.00 by SBI Debit Card 0000 done at merchant on 13Sep25 at 21:38:26. Your updated available balance is Rs.999999999.',
+      )!;
       expect(t.direction, TxnDirection.debit);
       expect(t.amountMinor, 38300);
       expect(t.balanceMinor, 99999999900);
@@ -110,8 +117,10 @@ void main() {
       expect(t.balanceMinor, isNull);
     });
     test('ICICI UPI with merchant credited', () {
-      final t = parse('JD-ICICIT-S',
-          'ICICI Bank Acct XX051 debited for Rs 180.00 on 10-Nov-25; DINDUGAL ORIGIN credited. UPI:568069174081. Call 18002662 for dispute. SMS BLOCK 051 to 9215676766. 06:33 PM')!;
+      final t = parse(
+        'JD-ICICIT-S',
+        'ICICI Bank Acct XX051 debited for Rs 180.00 on 10-Nov-25; DINDUGAL ORIGIN credited. UPI:568069174081. Call 18002662 for dispute. SMS BLOCK 051 to 9215676766. 06:33 PM',
+      )!;
       expect(t.direction, TxnDirection.debit);
       expect(t.amountMinor, 18000);
       expect(t.accountLast4, '051');
@@ -133,8 +142,7 @@ void main() {
       expect(suggestCategoryKey(t), 'loan_emi');
     });
     test('ICICI salary', () {
-      final t = parse('JD-ICICIT-S',
-          'ICICI Bank Account XX566 credited:Rs. 18,832.00 on 28-Feb-25. Info INF*000169831922*IQBO SAL FE. Available Balance is Rs. 28,076.14.')!;
+      final t = parse('JD-ICICIT-S', 'ICICI Bank Account XX566 credited:Rs. 18,832.00 on 28-Feb-25. Info INF*000169831922*IQBO SAL FE. Available Balance is Rs. 28,076.14.')!;
       expect(t.direction, TxnDirection.credit);
       expect(t.amountMinor, 1883200);
       expect(t.balanceMinor, 2807614);
@@ -149,8 +157,10 @@ void main() {
       expect(t.counterparty, 'Amazon DE');
     });
     test('Axis', () {
-      final t = parse('AX-AXISBK-S',
-          'INR 500.00 debited from A/c no. XX312225 on MERCHANT ABC 02-12-2025 20:38:23 IST. Avl bal: INR 10000.00. Not you? SMS BLOCKCARD XX0023 to +919951860002 - Axis Bank')!;
+      final t = parse(
+        'AX-AXISBK-S',
+        'INR 500.00 debited from A/c no. XX312225 on MERCHANT ABC 02-12-2025 20:38:23 IST. Avl bal: INR 10000.00. Not you? SMS BLOCKCARD XX0023 to +919951860002 - Axis Bank',
+      )!;
       expect(t.amountMinor, 50000);
       expect(t.accountLast4, '2225');
       expect(t.balanceMinor, 1000000);
@@ -158,8 +168,7 @@ void main() {
       expect(t.occurredAt, DateTime(2025, 12, 2, 20, 38, 23));
     });
     test('AND-11: Axis card with Avl Lmt and merchant after the clock time', () {
-      final t = parse('AX-AXISBK-S',
-          'Spent Card no. XX4321 INR 3,499.00 21-10-26 10:15:22 AMAZON Avl Lmt INR 96,501.00 SMS BLOCK 4321 to 919951860002, if not done by you - Axis Bank')!;
+      final t = parse('AX-AXISBK-S', 'Spent Card no. XX4321 INR 3,499.00 21-10-26 10:15:22 AMAZON Avl Lmt INR 96,501.00 SMS BLOCK 4321 to 919951860002, if not done by you - Axis Bank')!;
       expect(t.amountMinor, 349900);
       expect(t.isCreditCard, isTrue);
       expect(t.accountLast4, '4321');
@@ -168,8 +177,7 @@ void main() {
       expect(t.occurredAt, DateTime(2026, 10, 21, 10, 15, 22));
     });
     test('Kotak UPI sent and received', () {
-      final sent = parse('JD-KOTAKB-S',
-          'Sent Rs.100.00 from Kotak Bank AC X5678 to phonepeqr123456789xyz@ybl on 15-10-25.UPI Ref 9876543210. Not you, https://kotak.com/KBANKT/Fraud')!;
+      final sent = parse('JD-KOTAKB-S', 'Sent Rs.100.00 from Kotak Bank AC X5678 to phonepeqr123456789xyz@ybl on 15-10-25.UPI Ref 9876543210. Not you, https://kotak.com/KBANKT/Fraud')!;
       expect(sent.direction, TxnDirection.debit);
       expect(sent.accountLast4, '5678');
       expect(sent.counterparty, 'phonepeqr123456789xyz@ybl');
@@ -200,8 +208,7 @@ void main() {
       expect(upi.counterparty, 'Swiggy');
       expect(upi.balanceMinor, 900000);
       expect(upi.reference, '000000000001');
-      final atm = parse('VM-PNBSMS-S',
-          'A/c XX1234 debited with Rs.5000.00,21-11-2025 13:23:22 thru card XX9239 . Out of 5 free txn on PNB ATM... Bal 27000.00 CR.')!;
+      final atm = parse('VM-PNBSMS-S', 'A/c XX1234 debited with Rs.5000.00,21-11-2025 13:23:22 thru card XX9239 . Out of 5 free txn on PNB ATM... Bal 27000.00 CR.')!;
       expect(atm.amountMinor, 500000);
       expect(atm.accountLast4, '1234');
       expect(atm.instrument, Instrument.atm);
@@ -219,8 +226,7 @@ void main() {
       expect(cr.counterparty, 'JOHN DOE');
       expect(cr.instrument, Instrument.imps);
       expect(cr.reference, '518233445566');
-      final card = parse('VM-BOBCRD-S',
-          'ALERT: INR 1,500.00 is spent on your BOBCARD ending 1234 at AMAZON on 25-11-2024 10:30:00. Available credit limit is Rs 42,981.46')!;
+      final card = parse('VM-BOBCRD-S', 'ALERT: INR 1,500.00 is spent on your BOBCARD ending 1234 at AMAZON on 25-11-2024 10:30:00. Available credit limit is Rs 42,981.46')!;
       expect(card.amountMinor, 150000);
       expect(card.isCreditCard, isTrue);
       expect(card.accountLast4, '1234');
@@ -229,8 +235,7 @@ void main() {
       expect(suggestCategoryKey(card), 'online_shopping');
     });
     test('IDFC', () {
-      final t = parse('VM-IDFCFB-S',
-          'Your A/c XX4614 debited by Rs. 1,172.06 on 15/01/26; REDBUS credited. RRN 060649915527. Available balance Rs. 9,134.15. Team IDFC FIRST Bank')!;
+      final t = parse('VM-IDFCFB-S', 'Your A/c XX4614 debited by Rs. 1,172.06 on 15/01/26; REDBUS credited. RRN 060649915527. Available balance Rs. 9,134.15. Team IDFC FIRST Bank')!;
       expect(t.amountMinor, 117206);
       expect(t.counterparty, 'REDBUS');
       expect(t.reference, '060649915527');

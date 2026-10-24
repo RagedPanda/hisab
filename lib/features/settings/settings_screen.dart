@@ -8,9 +8,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/providers.dart';
+import '../../domain/currency/currency_lookup.dart';
+import '../currency/currency_picker.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
 import '../shell/widgets/common.dart';
+import 'made_with_love.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -27,66 +30,69 @@ class SettingsScreen extends ConsumerWidget {
         children: [
           SectionHeader(l10n.appearance),
           Card(
-            child: Column(children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: SegmentedButton<ThemeMode>(
-                  showSelectedIcon: false,
-                  expandedInsets: EdgeInsets.zero,
-                  style: const ButtonStyle(
-                    padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 8)),
-                    visualDensity: VisualDensity.standard,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: SegmentedButton<ThemeMode>(
+                    showSelectedIcon: false,
+                    expandedInsets: EdgeInsets.zero,
+                    style: const ButtonStyle(padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 8)), visualDensity: VisualDensity.standard),
+                    segments: [
+                      compactSegment(context, value: ThemeMode.system, label: l10n.themeSystem, icon: Icons.brightness_auto),
+                      compactSegment(context, value: ThemeMode.light, label: l10n.themeLight, icon: Icons.light_mode_outlined),
+                      compactSegment(context, value: ThemeMode.dark, label: l10n.themeDark, icon: Icons.dark_mode_outlined),
+                    ],
+                    selected: {settings.themeMode},
+                    onSelectionChanged: (set) => notifier.update((s) => s.copyWith(themeMode: set.first)),
                   ),
-                  segments: [
-                    compactSegment(context, value: ThemeMode.system, label: l10n.themeSystem, icon: Icons.brightness_auto),
-                    compactSegment(context, value: ThemeMode.light, label: l10n.themeLight, icon: Icons.light_mode_outlined),
-                    compactSegment(context, value: ThemeMode.dark, label: l10n.themeDark, icon: Icons.dark_mode_outlined),
-                  ],
-                  selected: {settings.themeMode},
-                  onSelectionChanged: (set) => notifier.update((s) => s.copyWith(themeMode: set.first)),
                 ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.language_outlined),
-                title: Text(l10n.language),
-                trailing: Text(_languageLabel(l10n, settings.localeCode)),
-                onTap: () async {
-                  final code = await _pickLanguage(context, settings.localeCode);
-                  if (code != null) await notifier.update((s) => s.copyWith(localeCode: code));
-                },
-              ),
-            ]),
+                ListTile(
+                  leading: const Icon(Icons.language_outlined),
+                  title: Text(l10n.language),
+                  trailing: Text(_languageLabel(l10n, settings.localeCode)),
+                  onTap: () async {
+                    final code = await _pickLanguage(context, settings.localeCode);
+                    if (code != null) await notifier.update((s) => s.copyWith(localeCode: code));
+                  },
+                ),
+              ],
+            ),
           ),
           SectionHeader(l10n.money),
           Card(
-            child: Column(children: [
-              ListTile(
-                leading: const Icon(Icons.currency_rupee),
-                title: Text(l10n.currencySymbol),
-                trailing: SettingValue(settings.currencySymbol),
-                visualDensity: VisualDensity.compact,
-                onTap: () async {
-                  final symbol = await promptText(context, title: l10n.currencySymbol, initial: settings.currencySymbol, hint: '₹, \$, €');
-                  if (symbol != null && symbol.isNotEmpty) await notifier.update((s) => s.copyWith(currencySymbol: symbol));
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.calendar_month_outlined),
-                title: Text(l10n.monthStartsOn),
-                subtitle: Text(l10n.monthStartsOnHelp, maxLines: 1, overflow: TextOverflow.ellipsis),
-                trailing: SettingValue(l10n.dayNumber(settings.monthStartDay)),
-                visualDensity: VisualDensity.compact,
-                onTap: () async {
-                  final text = await promptText(context, title: l10n.monthStartPrompt, hint: l10n.monthStartsOnExplain, initial: '${settings.monthStartDay}', keyboardType: TextInputType.number);
-                  final day = int.tryParse(text ?? '');
-                  if (day != null && day >= 1 && day <= 28) await notifier.update((s) => s.copyWith(monthStartDay: day));
-                },
-              ),
-              ListTile(leading: const Icon(Icons.account_balance_outlined), title: Text(l10n.accounts), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/accounts')),
-              ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.categories), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/categories')),
-              ListTile(leading: const Icon(Icons.savings_outlined), title: Text(l10n.budgets), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/budgets')),
-              ListTile(leading: const Icon(Icons.folder_outlined), title: Text(l10n.projects), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/projects')),
-            ]),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.currency_rupee),
+                  title: Text(l10n.currency),
+                  trailing: SettingValue(currencyShortLabel(settings.currencyCode)),
+                  visualDensity: VisualDensity.compact,
+                  onTap: () async {
+                    final code = await showCurrencyPicker(context, selectedCode: settings.currencyCode);
+                    if (code != null) await notifier.update((s) => s.copyWith(currencyCode: code, currencyConfirmed: true));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.calendar_month_outlined),
+                  title: Text(l10n.monthStartsOn),
+                  subtitle: Text(l10n.monthStartsOnHelp, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  trailing: SettingValue(l10n.dayNumber(settings.monthStartDay)),
+                  visualDensity: VisualDensity.compact,
+                  onTap: () async {
+                    final text = await promptText(context, title: l10n.monthStartPrompt, hint: l10n.monthStartsOnExplain, initial: '${settings.monthStartDay}', keyboardType: TextInputType.number);
+                    final day = int.tryParse(text ?? '');
+                    if (day != null && day >= 1 && day <= 28) await notifier.update((s) => s.copyWith(monthStartDay: day));
+                  },
+                ),
+                ListTile(leading: const Icon(Icons.account_balance_outlined), title: Text(l10n.accounts), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/accounts')),
+                ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.categories), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/categories')),
+                ListTile(leading: const Icon(Icons.savings_outlined), title: Text(l10n.budgets), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/budgets')),
+                ListTile(leading: const Icon(Icons.folder_outlined), title: Text(l10n.projects), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/projects')),
+                ListTile(leading: const Icon(Icons.repeat), title: Text(l10n.recurringTitle), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/recurring')),
+                ListTile(leading: const Icon(Icons.autorenew), title: Text(l10n.subscriptions), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/subscriptions')),
+              ],
+            ),
           ),
           SectionHeader(l10n.automation),
           Card(
@@ -115,34 +121,19 @@ class SettingsScreen extends ConsumerWidget {
           ),
           SectionHeader(l10n.backupAndSync),
           Card(
-            child: Column(children: [
-              ListTile(
-                leading: const Icon(Icons.lock_outline),
-                title: Text(l10n.exportBackup),
-                subtitle: Text(l10n.exportBackupHelp),
-                onTap: () => _export(context, ref),
-              ),
-              ListTile(
-                leading: const Icon(Icons.restore),
-                title: Text(l10n.restoreBackup),
-                subtitle: Text(l10n.restoreBackupHelp),
-                onTap: () => _import(context, ref),
-              ),
-              ListTile(
-                leading: const Icon(Icons.cloud_outlined),
-                title: Text(l10n.cloudSync),
-                subtitle: Text(l10n.cloudSyncHelp),
-              ),
-            ]),
+            child: Column(
+              children: [
+                ListTile(leading: const Icon(Icons.lock_outline), title: Text(l10n.exportBackup), subtitle: Text(l10n.exportBackupHelp), onTap: () => _export(context, ref)),
+                ListTile(leading: const Icon(Icons.restore), title: Text(l10n.restoreBackup), subtitle: Text(l10n.restoreBackupHelp), onTap: () => _import(context, ref)),
+                ListTile(leading: const Icon(Icons.cloud_outlined), title: Text(l10n.cloudSync), subtitle: Text(l10n.cloudSyncHelp)),
+              ],
+            ),
           ),
           SectionHeader(l10n.about),
           Card(
-            child: ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: Text(l10n.appName),
-              subtitle: Text(l10n.aboutBody),
-            ),
+            child: ListTile(leading: const Icon(Icons.info_outline), title: Text(l10n.appName), subtitle: Text(l10n.aboutBody)),
           ),
+          const MadeWithLove(),
         ],
       ),
     );
@@ -164,9 +155,7 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: (value) => Navigator.pop(dialogContext, value),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final code in options) RadioListTile<String>(value: code, title: Text(_languageLabel(l10n, code))),
-              ],
+              children: [for (final code in options) RadioListTile<String>(value: code, title: Text(_languageLabel(l10n, code)))],
             ),
           ),
         ],
@@ -182,7 +171,7 @@ class SettingsScreen extends ConsumerWidget {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.passphraseTooShort)));
       return;
     }
-    final bytes = await ref.read(backupServiceProvider).exportEncrypted(passphrase);
+    final bytes = await ref.read(backupServiceProvider).exportEncrypted(passphrase, currencyCode: ref.read(settingsProvider).currencyCode);
     final dir = await getTemporaryDirectory();
     final stamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
     final file = File('${dir.path}/hisab-backup-$stamp.hisab');
@@ -199,8 +188,12 @@ class SettingsScreen extends ConsumerWidget {
     final passphrase = await promptText(context, title: l10n.backupPassphrase);
     if (passphrase == null || !context.mounted) return;
     try {
-      final written = await ref.read(backupServiceProvider).importEncrypted(data, passphrase);
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(written))));
+      final restored = await ref.read(backupServiceProvider).importEncrypted(data, passphrase);
+      final backupCurrency = restored.currencyCode;
+      if (backupCurrency != null) {
+        await ref.read(settingsProvider.notifier).update((s) => s.copyWith(currencyCode: backupCurrency, currencyConfirmed: true));
+      }
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(restored.written))));
     } catch (error) {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoreFailed('$error'))));
     }

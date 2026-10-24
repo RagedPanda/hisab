@@ -7,6 +7,7 @@ import 'app.dart';
 import 'core/providers.dart';
 import 'data/db/database.dart';
 import 'data/debug/demo_seed.dart';
+import 'data/settings/currency_migration.dart';
 
 /// Debug/profile builds started with `--dart-define=HISAB_SEED_ENTRIES=300`
 /// fill the database with that many demo entries once; release ignores it.
@@ -17,10 +18,6 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
   final db = AppDatabase();
   if (!kReleaseMode && kSeedEntryCount > 0) await seedDemoData(db, entryCount: kSeedEntryCount);
-  runApp(
-    ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db)],
-      child: const HisabApp(),
-    ),
-  );
+  await migrateCurrencySetting(prefs, db);
+  runApp(ProviderScope(overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db)], child: const HisabApp()));
 }

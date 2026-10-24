@@ -28,17 +28,12 @@ int doubleToMinor(double amount) => (amount * 100).round();
 double minorToDouble(int minor) => minor / 100;
 
 /// Formats minor units using Indian digit grouping: 12,34,567.89.
-/// [symbol] is prefixed; negative amounts get a leading minus before the symbol.
+/// [symbol] is prefixed by [withCurrencySymbol]; negative amounts get a leading minus before the symbol.
 ///
 /// [showDecimals] `null` (default) prints paise only when there are any
 /// (₹250, ₹99.50); `true` always prints two decimals; `false` rounds to the
 /// nearest whole unit (₹9,876.67 -> ₹9,877).
-String formatMinor(
-  int minor, {
-  String symbol = '₹',
-  bool? showDecimals,
-  bool compact = false,
-}) {
+String formatMinor(int minor, {String symbol = '₹', bool? showDecimals, bool compact = false}) {
   final negative = minor < 0;
   final abs = minor.abs();
   final whole = abs ~/ 100;
@@ -46,9 +41,7 @@ String formatMinor(
   final String body;
   if (compact && whole >= 100000) {
     final lakhs = whole / 100000;
-    body = lakhs >= 100
-        ? '${(lakhs / 100).toStringAsFixed(2)}Cr'
-        : '${lakhs.toStringAsFixed(2)}L';
+    body = lakhs >= 100 ? '${(lakhs / 100).toStringAsFixed(2)}Cr' : '${lakhs.toStringAsFixed(2)}L';
   } else if (showDecimals == false) {
     body = groupIndian(roundMinorToWhole(abs));
   } else if (showDecimals == true || frac != 0) {
@@ -56,7 +49,18 @@ String formatMinor(
   } else {
     body = groupIndian(whole);
   }
-  return '${negative ? '-' : ''}$symbol$body';
+  return withCurrencySymbol(body, symbol: symbol, negative: negative);
+}
+
+/// Joins a formatted amount [body] with the currency [symbol]. A symbol of
+/// two or more characters ("CHF", "Rs", "AED") is separated by a space so it
+/// does not run into the digits; a single glyph ("₹", "$", "€") stays
+/// attached. A negative amount puts the minus before the symbol: "-CHF 1,000",
+/// "-₹1,000". An empty symbol leaves the bare number.
+String withCurrencySymbol(String body, {required String symbol, bool negative = false}) {
+  final trimmedSymbol = symbol.trim();
+  final separator = trimmedSymbol.runes.length > 1 ? ' ' : '';
+  return '${negative ? '-' : ''}$trimmedSymbol$separator$body';
 }
 
 /// Rounds minor units to the nearest whole unit (half up).

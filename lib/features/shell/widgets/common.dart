@@ -47,7 +47,13 @@ class AmountText extends StatelessWidget {
       'expense' => const Color(0xFFD9534F),
       _ => Theme.of(context).colorScheme.onSurfaceVariant,
     };
-    final prefix = !signed ? '' : switch (kind) { 'income' => '+', 'expense' => '-', _ => '' };
+    final prefix = !signed
+        ? ''
+        : switch (kind) {
+            'income' => '+',
+            'expense' => '-',
+            _ => '',
+          };
     return Text(
       '$prefix${formatMinor(minor, symbol: symbol)}',
       style: (style ?? Theme.of(context).textTheme.bodyLarge)?.copyWith(color: color, fontWeight: FontWeight.w600).tabular,
@@ -71,12 +77,10 @@ class EntryTile extends StatelessWidget {
     final title = entry.payee?.isNotEmpty == true
         ? entry.payee!
         : entry.note.isNotEmpty
-            ? entry.note
-            : categoryName ?? (entry.kind == 'transfer' ? l10n.kindTransfer : l10n.uncategorised);
+        ? entry.note
+        : categoryName ?? (entry.kind == 'transfer' ? l10n.kindTransfer : l10n.uncategorised);
     final locale = Localizations.localeOf(context).toString();
-    final accountLabel = entry.kind == 'transfer' && details.toAccount != null
-        ? l10n.transferArrow(details.account?.name ?? '', details.toAccount!.name)
-        : details.account?.name;
+    final accountLabel = entry.kind == 'transfer' && details.toAccount != null ? l10n.transferArrow(details.account?.name ?? '', details.toAccount!.name) : details.account?.name;
     // Line 2 keeps the context; the date moves under the amount so it never gets truncated away (P2-5, P2-22).
     final subtitleParts = <String>[
       if (categoryName != null && title != categoryName) categoryName,
@@ -88,20 +92,16 @@ class EntryTile extends StatelessWidget {
     final mutedSmall = theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
     return ListTile(
       onTap: onTap,
-      leading: IconBadge(
-        icon: entry.kind == 'transfer' ? 'swap_horiz' : category?.icon,
-        color: category?.color ?? 0xFF607D8B,
-      ),
+      leading: IconBadge(icon: entry.kind == 'transfer' ? 'swap_horiz' : category?.icon, color: category?.color ?? 0xFF607D8B),
       title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: subtitleParts.isEmpty
+      subtitle: subtitleParts.isEmpty && entry.source != 'sms'
           ? null
-          : Row(children: [
-              if (entry.source == 'sms') ...[
-                Icon(Icons.sms_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant, semanticLabel: l10n.sourceSms),
-                const SizedBox(width: 4),
+          : Row(
+              children: [
+                if (entry.source == 'sms') ...[Icon(Icons.sms_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant, semanticLabel: l10n.smsAddedMarker), const SizedBox(width: 4)],
+                Expanded(child: Text(subtitleParts.join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis)),
               ],
-              Expanded(child: Text(subtitleParts.join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis)),
-            ]),
+            ),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -129,7 +129,14 @@ class SectionHeader extends StatelessWidget {
       padding: padding,
       child: Row(
         children: [
-          Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700))),
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
           ?trailing,
         ],
       ),
@@ -145,10 +152,10 @@ class SectionAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => TextButton(
-        onPressed: onPressed,
-        style: TextButton.styleFrom(minimumSize: const Size(48, 48), padding: const EdgeInsets.symmetric(horizontal: 8)),
-        child: Text(label),
-      );
+    onPressed: onPressed,
+    style: TextButton.styleFrom(minimumSize: const Size(48, 48), padding: const EdgeInsets.symmetric(horizontal: 8)),
+    child: Text(label),
+  );
 }
 
 /// Neutral block shown while a stream has not produced its first value, so
@@ -159,9 +166,9 @@ class LoadingPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        height: height,
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHigh, borderRadius: BorderRadius.circular(16)),
-      );
+    height: height,
+    decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHigh, borderRadius: BorderRadius.circular(16)),
+  );
 }
 
 class EmptyState extends StatelessWidget {
@@ -190,7 +197,11 @@ class EmptyState extends StatelessWidget {
             Text(title, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
             if (message != null) ...[
               const SizedBox(height: 6),
-              Text(message!, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant), textAlign: TextAlign.center),
+              Text(
+                message!,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                textAlign: TextAlign.center,
+              ),
             ],
             if (action != null) ...[const SizedBox(height: 16), action!],
           ],
@@ -253,23 +264,12 @@ Future<bool> confirmDialog(BuildContext context, {required String title, String?
 
 /// Keeps amount fields to digits, a decimal point and thousands separators,
 /// and short enough that [parseAmountToMinor] can never overflow.
-final List<TextInputFormatter> amountInputFormatters = [
-  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-  LengthLimitingTextInputFormatter(kMaxAmountWholeDigits + 6),
-];
+final List<TextInputFormatter> amountInputFormatters = [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')), LengthLimitingTextInputFormatter(kMaxAmountWholeDigits + 6)];
 
 /// Inline error for an amount field, or null while the text parses.
-String? amountErrorText(BuildContext context, String text) =>
-    text.trim().isNotEmpty && parseAmountToMinor(text) == null ? context.l10n.invalidAmount : null;
+String? amountErrorText(BuildContext context, String text) => text.trim().isNotEmpty && parseAmountToMinor(text) == null ? context.l10n.invalidAmount : null;
 
-Future<String?> promptText(
-  BuildContext context, {
-  required String title,
-  String? initial,
-  String? hint,
-  TextInputType? keyboardType,
-  List<TextInputFormatter>? inputFormatters,
-}) {
+Future<String?> promptText(BuildContext context, {required String title, String? initial, String? hint, TextInputType? keyboardType, List<TextInputFormatter>? inputFormatters}) {
   final controller = TextEditingController(text: initial);
   controller.selection = TextSelection(baseOffset: 0, extentOffset: controller.text.length);
   return showDialog<String>(
@@ -332,11 +332,7 @@ class DismissKeyboardOnTap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-      child: child,
-    );
+    return GestureDetector(behavior: HitTestBehavior.translucent, onTap: () => FocusManager.instance.primaryFocus?.unfocus(), child: child);
   }
 }
 
@@ -373,18 +369,18 @@ class BottomActionBar extends StatelessWidget {
 }
 
 /// Width below which icon-and-label segmented buttons no longer fit three
-/// segments without wrapping their labels mid-word (P1-5).
+/// segments side by side (P1-5).
 const double kCompactSegmentWidth = 380;
 
-/// A [ButtonSegment] that never wraps its label: on narrow screens it falls
-/// back to an icon with the label as tooltip.
+/// A [ButtonSegment] whose label is always shown. On narrow screens the icon
+/// is dropped to make room, and the label scales down rather than wrapping or
+/// truncating, so a segment is never left as an unlabeled icon.
 ButtonSegment<T> compactSegment<T>(BuildContext context, {required T value, required String label, required IconData icon}) {
   final narrow = MediaQuery.sizeOf(context).width < kCompactSegmentWidth;
   return ButtonSegment(
     value: value,
-    icon: Icon(icon),
-    label: narrow ? null : Text(label, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
-    tooltip: narrow ? label : null,
+    icon: narrow ? null : Icon(icon),
+    label: FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1, softWrap: false)),
   );
 }
 
@@ -401,13 +397,40 @@ void popOrGoHome(BuildContext context) {
   }
 }
 
-/// Replaces whatever snackbar is showing with [message] and an Undo action.
-/// It times out like a plain snackbar instead of persisting, so a run of
-/// quick actions never queues stale messages behind each other.
-void showUndoSnackBar(ScaffoldMessengerState messenger, {required String message, required String undoLabel, required VoidCallback onUndo}) {
+/// Replaces whatever snackbar is showing with [message] and one action
+/// button. Since Flutter 3.29 a snackbar with an action stays up until it is
+/// dismissed; this one times out like a plain snackbar instead (#47, #72), so
+/// every snackbar with an action in the app goes through here.
+void showActionSnackBar(
+  ScaffoldMessengerState messenger, {
+  required String message,
+  required String actionLabel,
+  required VoidCallback onAction,
+  Duration duration = const Duration(milliseconds: 4000),
+}) {
   messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message), persist: false, action: SnackBarAction(label: undoLabel, onPressed: onUndo)));
+    ..showSnackBar(
+      SnackBar(
+        content: Text(message),
+        persist: false,
+        duration: duration,
+        action: SnackBarAction(label: actionLabel, onPressed: onAction),
+      ),
+    );
+}
+
+/// [showActionSnackBar] with an Undo action, so a run of quick actions never
+/// queues stale messages behind each other.
+void showUndoSnackBar(ScaffoldMessengerState messenger, {required String message, required String undoLabel, required VoidCallback onUndo, Duration duration = const Duration(milliseconds: 4000)}) =>
+    showActionSnackBar(messenger, message: message, actionLabel: undoLabel, onAction: onUndo, duration: duration);
+
+/// Replaces whatever snackbar is showing with [message]. It times out, so a
+/// result never lingers or queues behind an older one.
+void showTimedSnackBar(ScaffoldMessengerState messenger, String message) {
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message), persist: false));
 }
 
 /// Makes the system Back gesture return to Home instead of leaving the app
@@ -494,16 +517,22 @@ class _ChipRowState extends State<ChipRow> {
       separatorBuilder: (_, _) => const SizedBox(width: 8),
       itemBuilder: (_, index) => widget.children[index],
     );
+    // The mask stays in the tree either way: swapping it in and out would
+    // rebuild the list and throw away the scroll position at the far end.
     return SizedBox(
       height: kChipRowHeight,
-      child: _moreToTheRight ? ShaderMask(shaderCallback: _fadeShader, blendMode: BlendMode.dstIn, child: list) : list,
+      child: ShaderMask(
+        shaderCallback: (bounds) => _fadeShader(bounds, fade: _moreToTheRight),
+        blendMode: BlendMode.dstIn,
+        child: list,
+      ),
     );
   }
 
-  static Shader _fadeShader(Rect bounds) => LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: const [Colors.white, Colors.white, Colors.transparent],
-        stops: [0, 1 - kChipRowFadeWidth / bounds.width, 1],
-      ).createShader(bounds);
+  static Shader _fadeShader(Rect bounds, {required bool fade}) => LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [Colors.white, Colors.white, fade ? Colors.transparent : Colors.white],
+    stops: [0, 1 - kChipRowFadeWidth / bounds.width, 1],
+  ).createShader(bounds);
 }

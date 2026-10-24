@@ -6,6 +6,7 @@ library;
 import 'dart:math';
 
 import '../../core/dates.dart';
+import '../../core/money.dart';
 import '../ledger/personal_totals.dart';
 
 /// Whole days a range spans.
@@ -63,8 +64,7 @@ List<DateRange> trailingMonthRanges(DateRange current, {required int count, requ
 }
 
 /// The month range immediately before [range] with the same start day.
-DateRange previousMonthRange(DateRange range, {required int startDay}) =>
-    monthRange(range.start.subtract(const Duration(days: 1)), startDay: startDay);
+DateRange previousMonthRange(DateRange range, {required int startDay}) => monthRange(range.start.subtract(const Duration(days: 1)), startDay: startDay);
 
 class PeriodTotal {
   const PeriodTotal({required this.range, required this.expense, required this.income});
@@ -88,7 +88,10 @@ List<PeriodTotal> totalsByRange(Iterable<LedgerLine> lines, List<DateRange> rang
 }
 
 /// Lines that fall inside [range].
-List<LedgerLine> linesWithin(Iterable<LedgerLine> lines, DateRange range) => [for (final line in lines) if (range.contains(line.occurredAt)) line];
+List<LedgerLine> linesWithin(Iterable<LedgerLine> lines, DateRange range) => [
+  for (final line in lines)
+    if (range.contains(line.occurredAt)) line,
+];
 
 /// Evenly spaced x-axis day labels for a month: 1, 8, 15, 22, 29 (clamped to the month length).
 List<int> dayAxisLabels(int days, {int step = 7}) => [for (var day = 1; day <= days; day += step) day];
@@ -99,7 +102,13 @@ double niceCeiling(double value) {
   if (value <= 0) return 1;
   final magnitude = pow(10, (log(value) / ln10).floor()).toDouble();
   final normalised = value / magnitude;
-  final step = normalised <= 1 ? 1 : normalised <= 2 ? 2 : normalised <= 5 ? 5 : 10;
+  final step = normalised <= 1
+      ? 1
+      : normalised <= 2
+      ? 2
+      : normalised <= 5
+      ? 5
+      : 10;
   return step * magnitude;
 }
 
@@ -116,9 +125,9 @@ String axisAmountLabel(double rupees, {String symbol = ''}) {
   final body = abs >= 10000000
       ? '${trimmed(abs / 10000000)}Cr'
       : abs >= 100000
-          ? '${trimmed(abs / 100000)}L'
-          : abs >= 1000
-              ? '${trimmed(abs / 1000)}K'
-              : trimmed(abs);
-  return '${rupees < 0 ? '-' : ''}$symbol$body';
+      ? '${trimmed(abs / 100000)}L'
+      : abs >= 1000
+      ? '${trimmed(abs / 1000)}K'
+      : trimmed(abs);
+  return withCurrencySymbol(body, symbol: symbol, negative: rupees < 0);
 }

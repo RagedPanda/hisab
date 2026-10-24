@@ -30,10 +30,13 @@ class BudgetsScreen extends ConsumerWidget {
         final choice = await showModalBottomSheet<String>(
           context: context,
           showDragHandle: true,
-          builder: (sheetContext) => Column(mainAxisSize: MainAxisSize.min, children: [
-            ListTile(leading: const Icon(Icons.all_inclusive), title: Text(l10n.overallMonthlyBudget), onTap: () => Navigator.pop(sheetContext, 'overall')),
-            ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.budgetForCategory), onTap: () => Navigator.pop(sheetContext, 'category')),
-          ]),
+          builder: (sheetContext) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(leading: const Icon(Icons.all_inclusive), title: Text(l10n.overallMonthlyBudget), onTap: () => Navigator.pop(sheetContext, 'overall')),
+              ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.budgetForCategory), onTap: () => Navigator.pop(sheetContext, 'category')),
+            ],
+          ),
         );
         if (choice == null) return;
         overall = choice == 'overall';
@@ -43,11 +46,7 @@ class BudgetsScreen extends ConsumerWidget {
         }
       }
       if (!context.mounted) return;
-      final amount = await promptAmount(
-        context,
-        title: overall ? l10n.overallMonthlyLimit : l10n.categoryMonthlyLimit(category!.displayName(context)),
-        initialMinor: existing?.amountMinor,
-      );
+      final amount = await promptAmount(context, title: overall ? l10n.overallMonthlyLimit : l10n.categoryMonthlyLimit(category!.displayName(context)), initialMinor: existing?.amountMinor);
       if (amount == null || amount <= 0) return;
       await repo.save(id: existing?.id, categoryId: overall ? null : category!.id, period: 'month', amountMinor: amount);
     }
@@ -55,10 +54,7 @@ class BudgetsScreen extends ConsumerWidget {
     Future<void> remove(Budget budget) async {
       await repo.delete(budget.id);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(l10n.budgetRemoved),
-        action: SnackBarAction(label: l10n.undo, onPressed: () => repo.restore(budget.id)),
-      ));
+      showUndoSnackBar(ScaffoldMessenger.of(context), message: l10n.budgetRemoved, undoLabel: l10n.undo, onUndo: () => repo.restore(budget.id));
     }
 
     return Scaffold(
@@ -76,33 +72,32 @@ class BudgetsScreen extends ConsumerWidget {
               children: [
                 Card(
                   clipBehavior: Clip.antiAlias,
-                  child: Column(children: [
-                    for (final view in views)
-                      Dismissible(
-                        key: ValueKey(view.budget.id),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          color: Theme.of(context).colorScheme.errorContainer,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 24),
-                          child: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.onErrorContainer),
-                        ),
-                        onDismissed: (_) => remove(view.budget),
-                        child: BudgetRow(
-                          view: view,
-                          symbol: symbol,
-                          onTap: () => edit(existing: view.budget),
-                          trailing: PopupMenuButton<String>(
-                            tooltip: l10n.edit,
-                            onSelected: (value) => value == 'edit' ? edit(existing: view.budget) : remove(view.budget),
-                            itemBuilder: (_) => [
-                              PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
-                              PopupMenuItem(value: 'remove', child: Text(l10n.remove)),
-                            ],
+                  child: Column(
+                    children: [
+                      for (final view in views)
+                        Dismissible(
+                          key: ValueKey(view.budget.id),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            color: Theme.of(context).colorScheme.errorContainer,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 24),
+                            child: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.onErrorContainer),
+                          ),
+                          onDismissed: (_) => remove(view.budget),
+                          child: BudgetRow(
+                            view: view,
+                            symbol: symbol,
+                            onTap: () => edit(existing: view.budget),
+                            trailing: PopupMenuButton<String>(
+                              tooltip: l10n.edit,
+                              onSelected: (value) => value == 'edit' ? edit(existing: view.budget) : remove(view.budget),
+                              itemBuilder: (_) => [PopupMenuItem(value: 'edit', child: Text(l10n.edit)), PopupMenuItem(value: 'remove', child: Text(l10n.remove))],
+                            ),
                           ),
                         ),
-                      ),
-                  ]),
+                    ],
+                  ),
                 ),
               ],
             ),

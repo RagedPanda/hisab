@@ -22,10 +22,12 @@ Future<String> seedActivity(ProviderContainer container) async {
   final rahul = members.firstWhere((member) => member.name.startsWith('Rahul')).id;
   final priya = members.firstWhere((member) => member.name.startsWith('Priyanka')).id;
   Future<void> expense(String id, String note, int total, {List<(String, int)> payers = const []}) => groups.saveGroupExpense(
-        EntriesRepository.newExpense(id: id, amountMinor: total, occurredAt: DateTime.now(), note: note, groupId: groupId, paidByMemberId: me, splitMethod: 'equal'),
-        splits: [for (final member in [me, rahul, priya]) SplitsCompanion.insert(id: newId(), entryId: id, memberId: member, amountMinor: total ~/ 3)],
-        payers: [for (final (member, amount) in payers) EntryPayersCompanion.insert(id: newId(), entryId: id, memberId: member, amountMinor: amount)],
-      );
+    EntriesRepository.newExpense(id: id, amountMinor: total, occurredAt: DateTime.now(), note: note, groupId: groupId, paidByMemberId: me, splitMethod: 'equal'),
+    splits: [
+      for (final member in [me, rahul, priya]) SplitsCompanion.insert(id: newId(), entryId: id, memberId: member, amountMinor: total ~/ 3),
+    ],
+    payers: [for (final (member, amount) in payers) EntryPayersCompanion.insert(id: newId(), entryId: id, memberId: member, amountMinor: amount)],
+  );
   await expense('villa', 'Villa near Anjuna beach', 900000);
   await expense('villa', 'Villa near Anjuna beach for two nights', 9600000, payers: [(me, 6000000), (rahul, 3000000), (priya, 600000)]);
   await expense('scooter', 'Scooter rent for the whole week', 240000);
@@ -40,12 +42,9 @@ void main() {
 
   for (final locale in ['en', 'hi']) {
     testWidgets('activity screens fit a 360dp phone in $locale', (tester) async {
-      SharedPreferences.setMockInitialValues({'onboarded': true});
+      SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR'});
       final prefs = await SharedPreferences.getInstance();
-      final container = ProviderContainer(overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-        databaseProvider.overrideWithValue(AppDatabase(NativeDatabase.memory())),
-      ]);
+      final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(AppDatabase(NativeDatabase.memory()))]);
       addTearDown(container.dispose);
       final groupId = (await tester.runAsync(() => seedActivity(container)))!;
       await container.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: locale));

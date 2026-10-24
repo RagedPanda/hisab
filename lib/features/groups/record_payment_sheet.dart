@@ -15,26 +15,24 @@ import 'member_display.dart';
 const paymentMethods = ['cash', 'upi', 'bank', 'other'];
 
 String paymentMethodLabel(String method, AppLocalizations l10n) => switch (method) {
-      'upi' => l10n.methodUpi,
-      'bank' => l10n.methodBank,
-      'other' => l10n.methodOther,
-      _ => l10n.methodCash,
-    };
+  'upi' => l10n.methodUpi,
+  'bank' => l10n.methodBank,
+  'other' => l10n.methodOther,
+  _ => l10n.methodCash,
+};
 
 IconData paymentMethodIcon(String method) => switch (method) {
-      'upi' => Icons.qr_code_2,
-      'bank' => Icons.account_balance_outlined,
-      'other' => Icons.more_horiz,
-      _ => Icons.payments_outlined,
-    };
+  'upi' => Icons.qr_code_2,
+  'bank' => Icons.account_balance_outlined,
+  'other' => Icons.more_horiz,
+  _ => Icons.payments_outlined,
+};
 
 /// How much [from] is expected to pay [to] before this payment: the larger of
 /// the direct (pairwise) debt and the settle-up suggestion, so a payment
 /// prefilled from a simplified suggestion is never flagged as an overpayment.
 int owedBetween(GroupBalances balances, String from, String to) {
-  int sumFor(List<Transfer> transfers) => transfers
-      .where((transfer) => transfer.from == from && transfer.to == to)
-      .fold(0, (sum, transfer) => sum + transfer.amountMinor);
+  int sumFor(List<Transfer> transfers) => transfers.where((transfer) => transfer.from == from && transfer.to == to).fold(0, (sum, transfer) => sum + transfer.amountMinor);
   final direct = sumFor(balances.pairwise);
   final suggested = sumFor(balances.suggested);
   return direct > suggested ? direct : suggested;
@@ -160,8 +158,8 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
     final String? hint = samePerson
         ? l10n.samePersonError
         : (amount != null && amount > owed)
-            ? (owed == 0 ? l10n.paymentNoDebt(_name(_from), _name(_to)) : l10n.paymentOverOwed(formatMinor(owed, symbol: widget.symbol)))
-            : null;
+        ? (owed == 0 ? l10n.paymentNoDebt(_name(_from), _name(_to)) : l10n.paymentOverOwed(formatMinor(owed, symbol: widget.symbol)))
+        : null;
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.viewInsetsOf(context).bottom + 16),
       child: SingleChildScrollView(
@@ -195,10 +193,7 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
               decoration: InputDecoration(labelText: l10n.amountLabel, prefixText: '${widget.symbol} ', errorText: amountErrorText(context, _amount.text)),
               onChanged: (_) => setState(() {}),
             ),
-            if (hint != null) ...[
-              const SizedBox(height: 6),
-              Text(hint, style: theme.textTheme.bodySmall?.copyWith(color: samePerson ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant)),
-            ],
+            if (hint != null) ...[const SizedBox(height: 6), Text(hint, style: theme.textTheme.bodySmall?.copyWith(color: samePerson ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant))],
             const SizedBox(height: 12),
             Row(
               children: [
@@ -230,7 +225,11 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
               ],
             ),
             const SizedBox(height: 12),
-            TextField(controller: _note, decoration: InputDecoration(labelText: l10n.note), textCapitalization: TextCapitalization.sentences),
+            TextField(
+              controller: _note,
+              decoration: InputDecoration(labelText: l10n.note),
+              textCapitalization: TextCapitalization.sentences,
+            ),
             const SizedBox(height: 16),
             FilledButton(
               style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
@@ -252,7 +251,11 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
       isExpanded: true,
       decoration: InputDecoration(labelText: label),
       items: [
-        for (final member in widget.members) DropdownMenuItem(value: member.id, child: Text(memberShortName(l10n, member), overflow: TextOverflow.ellipsis)),
+        for (final member in widget.members)
+          DropdownMenuItem(
+            value: member.id,
+            child: Text(memberShortName(l10n, member), overflow: TextOverflow.ellipsis),
+          ),
       ],
       onChanged: (id) => id == null ? null : onChanged(id),
     );
@@ -279,9 +282,11 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
     }
     final id = await repo.addSettlement(groupId: widget.group.id, fromMemberId: _from, toMemberId: _to, amountMinor: amount, occurredAt: _occurredAt, note: note, method: _method);
     if (!host.mounted) return;
-    ScaffoldMessenger.of(host).showSnackBar(SnackBar(
-      content: Text(l10n.paymentRecorded(transferLine, formatMinor(amount, symbol: widget.symbol))),
-      action: SnackBarAction(label: l10n.undo, onPressed: () => repo.deleteSettlement(id)),
-    ));
+    showUndoSnackBar(
+      ScaffoldMessenger.of(host),
+      message: l10n.paymentRecorded(transferLine, formatMinor(amount, symbol: widget.symbol)),
+      undoLabel: l10n.undo,
+      onUndo: () => repo.deleteSettlement(id),
+    );
   }
 }

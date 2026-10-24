@@ -11,13 +11,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Drives the real app on an in-memory database through the main journeys.
 Future<ProviderContainer> pumpApp(WidgetTester tester) async {
-  SharedPreferences.setMockInitialValues({'onboarded': true});
+  SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR'});
   final prefs = await SharedPreferences.getInstance();
   final db = AppDatabase(NativeDatabase.memory());
-  final container = ProviderContainer(overrides: [
-    sharedPreferencesProvider.overrideWithValue(prefs),
-    databaseProvider.overrideWithValue(db),
-  ]);
+  final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db)]);
   addTearDown(container.dispose);
   await tester.binding.setSurfaceSize(const Size(430, 932));
   appRouter.go('/home');
@@ -82,13 +79,9 @@ void main() {
     await tester.tap(find.textContaining('Save ₹'));
     await settle(tester);
 
-    final totals = await tester.runAsync(
-      () => container.read(entriesRepositoryProvider).watchTotals(container.read(selectedRangeProvider)).first,
-    );
+    final totals = await tester.runAsync(() => container.read(entriesRepositoryProvider).watchTotals(container.read(selectedRangeProvider)).first);
     expect(totals?.expense, 10000);
-    final suggestions = await container.read(entriesRepositoryProvider).itemSuggestions(
-          (await container.read(categoriesRepositoryProvider).getAll()).firstWhere((c) => c.name.contains('Milk')).id,
-        );
+    final suggestions = await container.read(entriesRepositoryProvider).itemSuggestions((await container.read(categoriesRepositoryProvider).getAll()).firstWhere((c) => c.name.contains('Milk')).id);
     expect(suggestions.map((s) => s.name), containsAll(['Buffalo milk', 'Cow milk']));
     expect(find.textContaining('₹100'), findsWidgets);
   });
@@ -123,5 +116,36 @@ void main() {
     await tester.tap(find.text('Light'));
     await settle(tester);
     expect(Theme.of(tester.element(find.text('Settings').first)).brightness, Brightness.light);
+  });
+
+  testWidgets('subscription added from a template shows monthly and yearly totals', (tester) async {
+    final container = await pumpApp(tester);
+    appRouter.push('/subscriptions');
+    await settle(tester);
+    expect(find.text('No subscriptions yet'), findsOneWidget);
+
+    await tester.tap(find.text('Add subscription'));
+    await settle(tester);
+    await tester.tap(find.text('JioHotstar'));
+    await settle(tester);
+    expect(find.text('Every 3 months'), findsOneWidget);
+    await enter(tester, find.byKey(const Key('subscriptionPrice')), '299');
+    await tester.tap(find.text('Save'));
+    await settle(tester);
+
+    final rules = await container.read(databaseProvider).select(container.read(databaseProvider).recurringRules).get();
+    expect(rules.single.isSubscription, isTrue);
+    expect(rules.single.interval, 3);
+    expect(find.text('JioHotstar'), findsOneWidget);
+    expect(find.text('₹100'), findsOneWidget);
+    expect(find.text('₹1,196'), findsOneWidget);
+    expect(find.text('₹100/month'), findsOneWidget);
+
+    await tester.tap(find.text('JioHotstar'));
+    await settle(tester);
+    await tester.tap(find.text('Pause'));
+    await settle(tester);
+    expect(find.text('Paused'), findsOneWidget);
+    expect(find.text('₹0'), findsNWidgets(2));
   });
 }

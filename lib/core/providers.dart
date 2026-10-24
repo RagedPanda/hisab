@@ -18,9 +18,12 @@ import '../data/repositories/reminders_repository.dart';
 import '../data/repositories/settle_schedule_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
 import '../data/salary/salary_backup.dart';
+import '../data/sms/reminder_payment_adapter.dart';
 import '../data/sms/sms_channel.dart';
 import '../data/sms/sms_ingest_service.dart';
+import '../data/sms/sms_linked_reminder_scheduler.dart';
 import '../data/sms/sms_notification_prompt.dart';
+import '../data/sms/sms_reminder_linker.dart';
 import '../data/sms/sms_sync_cursor.dart';
 import '../domain/entries/entry_filter.dart';
 import '../domain/sms/sms_currency.dart';
@@ -173,6 +176,17 @@ final smsIngestServiceProvider = Provider((ref) => SmsIngestService(
       entries: ref.watch(entriesRepositoryProvider),
       cursor: SmsSyncCursor(ref.watch(sharedPreferencesProvider)),
       homeCurrencyCode: () => ref.read(homeCurrencyCodeProvider),
+      reminderLinker: ref.watch(smsReminderLinkerProvider),
+    ));
+
+/// Marks a pending reminder paid when an SMS entry matches it (R2).
+final smsReminderLinkerProvider = Provider((ref) => SmsReminderLinker(
+      smsLog: ref.watch(smsLogRepositoryProvider),
+      reminders: ReminderPaymentAdapter(
+        reminders: ref.watch(remindersRepositoryProvider),
+        scheduler: ref.watch(reminderSchedulerProvider),
+        accounts: ref.watch(accountsRepositoryProvider),
+      ),
     ));
 
 /// Requests POST_NOTIFICATIONS for Bank SMS notifications; a no-op off Android.
@@ -210,9 +224,10 @@ final notificationServiceProvider = Provider((ref) {
 });
 
 /// Reminder writes that keep notifications in step; what features call.
-final reminderSchedulerProvider = Provider((ref) => ReminderScheduler(
+final reminderSchedulerProvider = Provider<ReminderScheduler>((ref) => SmsLinkedReminderScheduler(
       reminders: ref.watch(remindersRepositoryProvider),
       notifications: ref.watch(notificationServiceProvider),
+      smsLog: ref.watch(smsLogRepositoryProvider),
       settleSchedules: ref.watch(settleScheduleRepositoryProvider),
       removeEntry: (entryId) => deleteEntryReversingBalances(
         entries: ref.read(entriesRepositoryProvider),
@@ -224,8 +239,14 @@ final reminderSchedulerProvider = Provider((ref) => ReminderScheduler(
 /// Pending due reminders, earliest (overdue) first.
 final upcomingRemindersProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchUpcoming());
 
+/// Reminders a matching bank SMS marked paid, for the "Paid via SMS" label.
+final smsPaidReminderIdsProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryProvider).watchMatchedReminderIds());
+
 /// Paid and skipped reminders, latest first.
 final reminderHistoryProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchHistory());
+
+/// The amount each paid reminder's entry recorded, by reminder id.
+final reminderPaidAmountsProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchPaidAmounts());
 
 /// Whether notifications and exact alarms are allowed; invalidate after asking.
 final notificationPermissionProvider = FutureProvider((ref) => ref.watch(notificationServiceProvider).checkPermission());

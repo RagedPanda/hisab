@@ -6169,6 +6169,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hisab sends a notification on the day you choose, only to remind you to settle up with this group. No marketing.'**
   String get settleReminderPrePromptBody;
+
+  /// Label on a reminder that a matching bank SMS marked done
+  ///
+  /// In en, this message translates to:
+  /// **'Paid via SMS'**
+  String get smsReminderPaidViaSms;
 }
 
 class _AppLocalizationsDelegate

@@ -1050,5 +1050,6 @@
   "groupRecurringExpenseOnly": "ग्रुप का दोहराने वाला नियम सिर्फ़ खर्च हो सकता है।",
   "groupRecurringYourShare": "आपका हिस्सा {amount}",
   "settleReminderPrePromptTitle": "हिसाब बराबर करने की याद पाएँ",
-  "settleReminderPrePromptBody": "हिसाब आपके चुने दिन पर सिर्फ़ इस ग्रुप का हिसाब बराबर करने की याद दिलाएगा। कोई विज्ञापन नहीं।"
+  "settleReminderPrePromptBody": "हिसाब आपके चुने दिन पर सिर्फ़ इस ग्रुप का हिसाब बराबर करने की याद दिलाएगा। कोई विज्ञापन नहीं।",
+  "smsReminderPaidViaSms": "एसएमएस से भुगतान हुआ"
 }

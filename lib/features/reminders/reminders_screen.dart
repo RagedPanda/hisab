@@ -16,6 +16,7 @@ import 'reminder_actions.dart';
 import 'new_reminder_sheet.dart';
 import 'reminder_late_note.dart';
 import 'reminder_editor.dart';
+import 'paid_via_sms_label.dart';
 import 'reminder_labels.dart';
 
 /// How long a paid or skipped reminder can be reopened from History.
@@ -230,6 +231,8 @@ class _HistoryList extends ConsumerWidget {
     if (history.isEmpty) return EmptyState(icon: Icons.history, title: l10n.reminderHistoryEmpty);
     final locale = Localizations.localeOf(context).toString();
     final symbol = ref.watch(settingsProvider).currencySymbol;
+    final paidBySms = ref.watch(smsPaidReminderIdsProvider).value ?? const <String>{};
+    final paidAmounts = ref.watch(reminderPaidAmountsProvider).value ?? const <String, int>{};
     final now = DateTime.now();
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
@@ -237,7 +240,7 @@ class _HistoryList extends ConsumerWidget {
         Card(
           clipBehavior: Clip.antiAlias,
           child: Column(children: [
-            for (final reminder in history) _historyTile(context, ref, reminder, now: now, locale: locale, symbol: symbol, l10n: l10n),
+            for (final reminder in history) _historyTile(context, ref, reminder, now: now, locale: locale, symbol: symbol, l10n: l10n, paidBySms: paidBySms.contains(reminder.id), paidAmountMinor: paidAmounts[reminder.id]),
           ]),
         ),
       ],
@@ -245,7 +248,7 @@ class _HistoryList extends ConsumerWidget {
   }
 
   Widget _historyTile(BuildContext context, WidgetRef ref, Reminder reminder,
-      {required DateTime now, required String locale, required String symbol, required AppLocalizations l10n}) {
+      {required DateTime now, required String locale, required String symbol, required AppLocalizations l10n, required bool paidBySms, int? paidAmountMinor}) {
     final kind = ReminderKind.of(reminder.kind);
     final closedAt = reminder.doneAt ?? reminder.updatedAt;
     final date = formatRowDate(closedAt, locale: locale);
@@ -254,13 +257,20 @@ class _HistoryList extends ConsumerWidget {
         : kind.isMoney
             ? l10n.reminderPaidOn(date)
             : l10n.reminderDoneOn(date);
-    final amount = reminderAmountOrNone(reminder.amountMinor);
+    // What the linked entry paid wins over the reminder's expected amount.
+    final amount = paidAmountMinor ?? reminderAmountOrNone(reminder.amountMinor);
     final caption = amount == null ? status : '$status · ${formatMinor(amount, symbol: symbol)}';
     final canUndo = now.difference(closedAt) <= kReminderUndoWindow;
     return ListTile(
       leading: CircleAvatar(child: Icon(reminderKindIcon(kind), size: 20)),
       title: Text(reminder.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(caption, maxLines: 2, overflow: TextOverflow.ellipsis),
+      subtitle: paidBySms
+          ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(caption, maxLines: 2, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 4),
+              const PaidViaSmsLabel(),
+            ])
+          : Text(caption, maxLines: 2, overflow: TextOverflow.ellipsis),
       trailing: canUndo ? TextButton(onPressed: () => ref.read(reminderSchedulerProvider).undoDone(reminder.id), child: Text(l10n.undo)) : null,
     );
   }

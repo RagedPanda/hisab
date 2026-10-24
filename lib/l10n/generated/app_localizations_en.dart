@@ -3877,4 +3877,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settleReminderPrePromptBody =>
       'Hisab sends a notification on the day you choose, only to remind you to settle up with this group. No marketing.';
+
+  @override
+  String get smsReminderPaidViaSms => 'Paid via SMS';
 }

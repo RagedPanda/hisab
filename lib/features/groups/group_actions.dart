@@ -29,7 +29,7 @@ Future<bool> confirmLeaveGroup(BuildContext context, WidgetRef ref, GroupDetail 
   return ref.read(groupsRepositoryProvider).leaveGroup(detail.group.id);
 }
 
-/// Warns harder when balances are still open, since deleting loses them.
+/// Warns harder when balances are still open, and offers Undo once deleted.
 Future<bool> confirmDeleteGroup(BuildContext context, WidgetRef ref, GroupDetail detail) async {
   final l10n = context.l10n;
   final unsettled = detail.balances.pairwise.isNotEmpty;
@@ -39,7 +39,10 @@ Future<bool> confirmDeleteGroup(BuildContext context, WidgetRef ref, GroupDetail
     message: unsettled ? l10n.groupDeleteUnsettledBody : l10n.deleteGroupBody,
     confirmLabel: l10n.delete,
   );
-  if (!confirmed) return false;
-  await ref.read(groupsRepositoryProvider).deleteGroup(detail.group.id);
+  if (!confirmed || !context.mounted) return false;
+  final messenger = ScaffoldMessenger.of(context);
+  final groups = ref.read(groupsRepositoryProvider);
+  await groups.deleteGroup(detail.group.id);
+  showUndoSnackBar(messenger, message: l10n.activityGroupDeletedSnack, undoLabel: l10n.undo, onUndo: () => groups.restoreGroup(detail.group.id));
   return true;
 }

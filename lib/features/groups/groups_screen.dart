@@ -26,7 +26,9 @@ class GroupsScreen extends ConsumerWidget {
     final archived = [for (final summary in list) if (summary.group.archivedAt != null) summary];
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.groups)),
+      appBar: AppBar(title: Text(l10n.groups), actions: [
+        IconButton(tooltip: l10n.activityTitle, icon: const Icon(Icons.history), onPressed: () => context.push('/activity')),
+      ]),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'add-group',
         onPressed: () => showGroupForm(context, ref),

@@ -38,6 +38,9 @@ Rule: anything that can be a pure function lives in `lib/domain` with a test.
   single payer, and `entries.paidByMemberId` keeps the biggest payer as the main one
 - **reminders** generic reminder log (kind, group, member, channel, sent time); settle-up
   reminders use it today
+- **group_activities** append-only log of who added, edited, deleted or restored which group
+  expense or payment, and when, with JSON snapshots of the state before and after; it backs
+  the activity feeds and restoring a deleted expense with its exact split and payer rows
 - **budgets** overall or per category, monthly
 - **sms_log** every parsed SMS with status pending | added | ignored | skipped (dedupe by hash)
 
@@ -92,6 +95,8 @@ Groups need a relay both members can reach regardless of platform:
   (several payers) and, for a by-item split, its item rows and their member assignments, so
   a client never applies the payers or assignments of one version against the total of
   another. Split rows are recomputed from the entry's method on the client.
+- Activity rows are append-only and never edited, so they merge by plain union; each names
+  its actor member, so a synced feed reads "Rahul edited Dinner" on the other phone.
 - Members without the app see a read-only web summary generated from the share text.
 - Identity: anonymous Firebase auth bound to the device; the member record holds a display
   name. No phone number or contacts upload.

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/providers.dart';
 import '../../l10n/l10n.dart';
+import '../recurring/recurring_list_model.dart';
 import '../shell/widgets/common.dart';
 import 'widgets/accounts_card.dart';
 import 'widgets/budgets_card.dart';
@@ -27,9 +28,11 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final pending = ref.watch(pendingSmsProvider).value ?? const [];
+    final recurringWaiting = ref.watch(recurringWaitingCountProvider);
     final gutter = dashboardGutter(MediaQuery.sizeOf(context).width);
     final cards = <Widget>[
-      if (pending.isNotEmpty) _PendingSmsBanner(count: pending.length),
+      if (pending.isNotEmpty) _ActionBanner(icon: Icons.sms_outlined, label: l10n.smsToReview(pending.length), route: '/sms/review'),
+      if (recurringWaiting > 0) _ActionBanner(key: const ValueKey('dashboard.recurringBanner'), icon: Icons.repeat, label: l10n.recurringToConfirm(recurringWaiting), route: '/recurring'),
       const HeroCard(),
       const TrendCard(),
       const CategoryDonutCard(),
@@ -50,7 +53,7 @@ class DashboardScreen extends ConsumerWidget {
               if (pending.isNotEmpty)
                 IconButton(
                   tooltip: l10n.smsToReview(pending.length),
-                  onPressed: () => context.push('/sms'),
+                  onPressed: () => context.push('/sms/review'),
                   icon: Badge(label: Text('${pending.length}'), child: const Icon(Icons.sms_outlined)),
                 ),
               const MonthSwitcher(),
@@ -68,10 +71,13 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-/// Bank SMS waiting to be reviewed, above the hero so it is never missed.
-class _PendingSmsBanner extends StatelessWidget {
-  const _PendingSmsBanner({required this.count});
-  final int count;
+/// Something waiting for the person (bank SMS to review, recurring entries
+/// to confirm), above the hero so it is never missed.
+class _ActionBanner extends StatelessWidget {
+  const _ActionBanner({super.key, required this.icon, required this.label, required this.route});
+  final IconData icon;
+  final String label;
+  final String route;
 
   @override
   Widget build(BuildContext context) {
@@ -81,10 +87,10 @@ class _PendingSmsBanner extends StatelessWidget {
         color: theme.colorScheme.secondaryContainer,
         clipBehavior: Clip.antiAlias,
         child: ListTile(
-          leading: Icon(Icons.sms_outlined, color: theme.colorScheme.onSecondaryContainer),
-          title: Text(context.l10n.smsToReview(count), style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSecondaryContainer)),
+          leading: Icon(icon, color: theme.colorScheme.onSecondaryContainer),
+          title: Text(label, style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSecondaryContainer)),
           trailing: Icon(Icons.chevron_right, color: theme.colorScheme.onSecondaryContainer),
-          onTap: () => context.push('/sms'),
+          onTap: () => context.push(route),
         ),
       ),
     );

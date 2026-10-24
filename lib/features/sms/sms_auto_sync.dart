@@ -10,12 +10,14 @@ import '../../l10n/l10n.dart';
 
 /// Background receiver settings in the user's language. The amount and
 /// sender stay as literal placeholders for the native side to fill.
-SmsCaptureConfig smsCaptureConfig(AppLocalizations l10n, {required bool enabled}) => SmsCaptureConfig(
+/// With auto-add on, a clear transaction is added when the app next opens,
+/// so the text says that instead of asking for a review (#103).
+SmsCaptureConfig smsCaptureConfig(AppLocalizations l10n, {required bool enabled, required bool autoAdd}) => SmsCaptureConfig(
       enabled: enabled,
       channelName: l10n.bankSms,
       title: l10n.smsNotificationTitle,
-      bodyWithAmount: l10n.smsNotificationBodyAmount('{amount}', '{sender}'),
-      bodyWithoutAmount: l10n.smsNotificationBody('{sender}'),
+      bodyWithAmount: autoAdd ? l10n.smsNotificationBodyAmountAutoAdd('{amount}', '{sender}') : l10n.smsNotificationBodyAmount('{amount}', '{sender}'),
+      bodyWithoutAmount: autoAdd ? l10n.smsNotificationBodyAutoAdd('{sender}') : l10n.smsNotificationBody('{sender}'),
     );
 
 /// Keeps Bank SMS capture running for the whole app: tells the native
@@ -61,11 +63,12 @@ class _SmsAutoSyncState extends ConsumerState<SmsAutoSync> with WidgetsBindingOb
 
   void _applySettings() {
     if (!SmsChannel.isSupported) return;
-    final enabled = ref.read(settingsProvider).smsEnabled;
-    final config = smsCaptureConfig(context.l10n, enabled: enabled).toMap();
+    final settings = ref.read(settingsProvider);
+    final enabled = settings.smsEnabled;
+    final config = smsCaptureConfig(context.l10n, enabled: enabled, autoAdd: settings.smsAutoAdd).toMap();
     if (!mapEquals(config, _sentConfig)) {
       _sentConfig = config;
-      unawaited(SmsChannel.configureCapture(smsCaptureConfig(context.l10n, enabled: enabled)));
+      unawaited(SmsChannel.configureCapture(smsCaptureConfig(context.l10n, enabled: enabled, autoAdd: settings.smsAutoAdd)));
     }
     if (enabled && _signals == null) {
       _signals = SmsChannel.queueSignals().listen((_) => _syncIfEnabled());
@@ -88,7 +91,7 @@ class _SmsAutoSyncState extends ConsumerState<SmsAutoSync> with WidgetsBindingOb
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(settingsProvider.select((settings) => settings.smsEnabled), (_, _) => _applySettings());
+    ref.listen(settingsProvider.select((settings) => (settings.smsEnabled, settings.smsAutoAdd)), (_, _) => _applySettings());
     return widget.child;
   }
 }

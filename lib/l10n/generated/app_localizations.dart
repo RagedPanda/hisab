@@ -1496,6 +1496,18 @@ abstract class AppLocalizations {
   /// **'From {sender}. Tap to review.'**
   String smsNotificationBody(String sender);
 
+  /// No description provided for @smsNotificationBodyAmountAutoAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} from {sender}. Open Hisab to add it.'**
+  String smsNotificationBodyAmountAutoAdd(String amount, String sender);
+
+  /// No description provided for @smsNotificationBodyAutoAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'From {sender}. Open Hisab to add it.'**
+  String smsNotificationBodyAutoAdd(String sender);
+
   /// No description provided for @readBankSmsQuestion.
   ///
   /// In en, this message translates to:

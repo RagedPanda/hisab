@@ -38,6 +38,15 @@ class SmsChannel {
     return (result ?? const []).map((row) => RawSms.fromMap(row as Map)).toList();
   }
 
+  /// Clears the "New bank transaction" notifications of [messages] once the
+  /// app has processed them.
+  static Future<void> cancelNotifications(List<RawSms> messages) async {
+    if (!isSupported || messages.isEmpty) return;
+    await _methods.invokeMethod<void>('cancelNotifications', [
+      for (final message in messages) {'sender': message.sender, 'body': message.body},
+    ]);
+  }
+
   /// Turns the background receiver on or off and hands it the notification
   /// text in the user's language.
   static Future<void> configureCapture(SmsCaptureConfig config) async {
@@ -83,6 +92,7 @@ class SmsCaptureConfig {
 abstract interface class SmsSource {
   Future<List<RawSms>> readInbox({required DateTime since});
   Future<List<RawSms>> drainQueue();
+  Future<void> cancelNotifications(List<RawSms> messages);
 }
 
 class PlatformSmsSource implements SmsSource {
@@ -93,4 +103,7 @@ class PlatformSmsSource implements SmsSource {
 
   @override
   Future<List<RawSms>> drainQueue() => SmsChannel.drainQueue();
+
+  @override
+  Future<void> cancelNotifications(List<RawSms> messages) => SmsChannel.cancelNotifications(messages);
 }

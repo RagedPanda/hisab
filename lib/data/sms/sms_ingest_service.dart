@@ -102,6 +102,9 @@ class SmsIngestService {
       final status = await ingest(message, autoAdd: autoAdd);
       counts[status] = (counts[status] ?? 0) + 1;
     }
+    // Every queued message is now added, waiting in review or ignored, and
+    // the app shows that itself, so its background notification goes (#103).
+    await source.cancelNotifications(queued);
     final advanced = advanceCursor(cursor.read(), inbox.map((message) => message.receivedAt));
     if (advanced != null) await cursor.write(advanced);
     return SmsSyncResult(scanned: queued.length + inbox.length, pending: counts[IngestStatus.pending] ?? 0, added: counts[IngestStatus.added] ?? 0);

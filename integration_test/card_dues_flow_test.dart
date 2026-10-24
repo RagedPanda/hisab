@@ -60,10 +60,7 @@ void main() {
     expect(reminder.dueAt, dueDateForStatement(previousStatementDate(startOfDay(DateTime.now()), 5), 15));
 
     for (final narrow in [false, true]) {
-      if (narrow) {
-        tester.view.physicalSize = Size(360 * tester.view.devicePixelRatio, tester.view.physicalSize.height);
-        addTearDown(tester.view.resetPhysicalSize);
-      }
+      if (narrow) await useLogicalWidth(tester, 360);
       for (final (locale, mode) in _configs) {
         await app.read(settingsProvider.notifier).update((s) => s.copyWith(localeCode: locale, themeMode: mode));
         final tag = '${locale}_${mode.name}${narrow ? '_360' : ''}';

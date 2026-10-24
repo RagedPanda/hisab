@@ -5,6 +5,7 @@ library;
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -42,8 +43,47 @@ Future<AppHandle> createApp({bool onboarded = true, List<Override> overrides = c
 /// Mounts [HisabApp] for [app] and lands on the Home tab.
 Future<void> pumpApp(WidgetTester tester, AppHandle app) async {
   appRouter.go('/home');
-  await tester.pumpWidget(UncontrolledProviderScope(container: app.container, child: const HisabApp()));
+  await tester.pumpWidget(_SurfaceMediaQuery(child: UncontrolledProviderScope(container: app.container, child: const HisabApp())));
   await settle(tester);
+}
+
+/// The logical size set by [useLogicalWidth], or null for the device's own.
+final _logicalSurface = ValueNotifier<Size?>(null);
+
+/// Lays the app out [width] logical pixels wide (a 360dp phone) until the
+/// test ends.
+///
+/// Never set `tester.view.physicalSize` on a device for this. The engine
+/// only rasterizes frames whose size matches the real window
+/// (`Shell::ShouldDiscardLayerTree`), so every frame drawn at an overridden
+/// physical size is dropped: the next Android capture returns the last frame
+/// drawn before the resize and the one after that waits forever (#99).
+/// `setSurfaceSize` instead lays out at [width] and paints into the real
+/// window, centred, so frames keep reaching the screen. MediaQuery still
+/// reports the window, so [_SurfaceMediaQuery] narrows it to match.
+Future<void> useLogicalWidth(WidgetTester tester, double width) async {
+  final size = Size(width, tester.view.physicalSize.height / tester.view.devicePixelRatio);
+  addTearDown(() async {
+    _logicalSurface.value = null;
+    await binding.setSurfaceSize(null);
+  });
+  await binding.setSurfaceSize(size);
+  _logicalSurface.value = size;
+  await settle(tester, 4);
+}
+
+/// Reports the [useLogicalWidth] size through MediaQuery, so widgets that
+/// read `MediaQuery.sizeOf` see the same width as their constraints.
+class _SurfaceMediaQuery extends StatelessWidget {
+  const _SurfaceMediaQuery({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<Size?>(
+        valueListenable: _logicalSurface,
+        child: child,
+        builder: (context, size, child) => size == null ? child! : MediaQuery(data: MediaQuery.of(context).copyWith(size: size), child: child!),
+      );
 }
 
 /// Pumps a fixed number of real frames. `pumpAndSettle` never returns on
@@ -179,6 +219,7 @@ Future<void> shoot(WidgetTester tester, String name) async {
   // On Android a real device capture (adb screencap through the watcher) is
   // the screenshot, so the in-process capture below is skipped.
   if (Platform.isAndroid && _watcherAlive == true) return;
+  if (Platform.isAndroid) _expectRealPhysicalSize(tester, numbered);
   if (Platform.isAndroid && !_surfaceConverted) {
     // Android renders to a SurfaceView that cannot be read back until it is
     // swapped for an image-backed surface; the binding reverts it after
@@ -189,6 +230,16 @@ Future<void> shoot(WidgetTester tester, String name) async {
     await tester.pump();
   }
   await _whilePumping(tester, binding.takeScreenshot(numbered), 'capturing $numbered');
+}
+
+/// Fails [shot] at once when the test view's physical size differs from the
+/// real window: the engine drops such frames, so the capture would return a
+/// stale frame and then hang (#99). Use [useLogicalWidth] instead.
+void _expectRealPhysicalSize(WidgetTester tester, String shot) {
+  final window = ui.PlatformDispatcher.instance.implicitView?.physicalSize;
+  if (window == null || tester.view.physicalSize == window) return;
+  fail('Cannot capture $shot: tester.view.physicalSize ${tester.view.physicalSize} differs from the window $window, '
+      'so the engine discards every frame. Use useLogicalWidth() to test a narrow phone.');
 }
 
 /// How long one in-app capture may take before the flow fails.

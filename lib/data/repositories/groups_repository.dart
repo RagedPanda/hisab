@@ -560,8 +560,8 @@ class GroupsRepository {
         await _log(groupId: entry!.groupId!, action: ActivityAction.deleted, subject: ActivitySubject.expense, subjectId: entryId, before: before);
       });
 
-  /// Brings back a deleted group expense with exactly the split and payer
-  /// rows it had when it was deleted, and logs the restore. Does nothing if
+  /// Brings back a deleted group expense with exactly the split, payer and
+  /// item-assignment rows it had when it was deleted, and logs the restore. Does nothing if
   /// the expense is not deleted or its group is gone.
   Future<void> restoreGroupExpense(String entryId) => db.transaction(() async {
         final entry = await _entryById(entryId);
@@ -586,6 +586,7 @@ class GroupsRepository {
         await (db.update(db.entryPayers)
               ..where((t) => t.entryId.equals(entryId) & (deletedState == null ? t.deletedAt.equals(deletedAt) : t.id.isIn(payerIds))))
             .write(EntryPayersCompanion(deletedAt: const Value(null), updatedAt: Value(now)));
+        await _entries.restoreAssignments(entryId, ids: deletedState?.assignmentIds, deletedAt: deletedAt);
         await _log(groupId: groupId, action: ActivityAction.restored, subject: ActivitySubject.expense, subjectId: entryId, after: await _expenseSnapshot(entryId, liveOnly: true));
       });
 
@@ -609,10 +610,11 @@ class GroupsRepository {
     if (entry == null || (liveOnly && entry.deletedAt != null)) return null;
     final splits = await (db.select(db.splits)..where((t) => t.entryId.equals(entryId) & t.deletedAt.isNull())).get();
     final payers = await (db.select(db.entryPayers)..where((t) => t.entryId.equals(entryId) & t.deletedAt.isNull())).get();
-    return expenseSnapshotOf(entry, splits, payers);
+    final assignments = await _entries.getItemAssignmentRows(entryId);
+    return expenseSnapshotOf(entry, splits, payers, assignments: assignments);
   }
 
-  static ExpenseSnapshot expenseSnapshotOf(Entry entry, List<Split> splits, List<EntryPayer> payers) => ExpenseSnapshot(
+  static ExpenseSnapshot expenseSnapshotOf(Entry entry, List<Split> splits, List<EntryPayer> payers, {List<ItemAssignment> assignments = const []}) => ExpenseSnapshot(
         amountMinor: entry.amountMinor,
         occurredAt: entry.occurredAt,
         note: entry.note,
@@ -623,6 +625,7 @@ class GroupsRepository {
             : [if (entry.paidByMemberId case final payerId?) MemberAmount(memberId: payerId, amountMinor: entry.amountMinor)],
         shares: [for (final split in splits) MemberAmount(memberId: split.memberId, amountMinor: split.amountMinor, rowId: split.id)],
         splitMethod: entry.splitMethod,
+        assignmentIds: [for (final assignment in assignments) assignment.id],
       );
 
   /// Writes one activity row, attributed to my member in the group.

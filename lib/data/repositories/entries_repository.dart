@@ -302,23 +302,37 @@ class EntriesRepository {
   }
 
   /// Soft-deletes every item assignment under any item, live or not, of [entryId].
-  Future<void> _tombstoneAssignments(String entryId, DateTime now) {
-    final itemIds = db.selectOnly(db.entryItems)
-      ..addColumns([db.entryItems.id])
-      ..where(db.entryItems.entryId.equals(entryId));
-    return (db.update(db.itemAssignments)..where((t) => t.entryItemId.isInQuery(itemIds) & t.deletedAt.isNull()))
-        .write(ItemAssignmentsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+  Future<void> _tombstoneAssignments(String entryId, DateTime now) =>
+      (db.update(db.itemAssignments)..where((t) => t.entryItemId.isInQuery(_itemIdsOf(entryId)) & t.deletedAt.isNull()))
+          .write(ItemAssignmentsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+
+  /// Brings back item assignments of [entryId] after [deleteEntry]: the rows
+  /// in [ids] when the deletion recorded them, otherwise the rows tombstoned
+  /// at [deletedAt], so a restored by-item expense keeps who shared each item.
+  Future<void> restoreAssignments(String entryId, {List<String>? ids, required DateTime deletedAt}) {
+    final now = DateTime.now();
+    return (db.update(db.itemAssignments)
+          ..where((t) => t.entryItemId.isInQuery(_itemIdsOf(entryId)) & (ids == null ? t.deletedAt.equals(deletedAt) : t.id.isIn(ids))))
+        .write(ItemAssignmentsCompanion(deletedAt: const Value(null), updatedAt: Value(now)));
   }
+
+  /// Ids of every item, live or not, of [entryId], as a subquery.
+  JoinedSelectStatement<$EntryItemsTable, EntryItem> _itemIdsOf(String entryId) => db.selectOnly(db.entryItems)
+    ..addColumns([db.entryItems.id])
+    ..where(db.entryItems.entryId.equals(entryId));
 
   /// Who shares each live item of [entryId]'s by-item split, in one query:
   /// item id to member ids. Items nobody was assigned to are absent.
-  Future<Map<String, List<String>>> getItemAssignments(String entryId) async {
+  Future<Map<String, List<String>>> getItemAssignments(String entryId) async => assignmentsByItem(await getItemAssignmentRows(entryId));
+
+  /// The live assignment rows under the live items of [entryId].
+  Future<List<ItemAssignment>> getItemAssignmentRows(String entryId) async {
     final rows = await (db.select(db.itemAssignments).join([
       innerJoin(db.entryItems, db.entryItems.id.equalsExp(db.itemAssignments.entryItemId)),
     ])
           ..where(db.entryItems.entryId.equals(entryId) & db.entryItems.deletedAt.isNull() & db.itemAssignments.deletedAt.isNull()))
         .get();
-    return assignmentsByItem(rows.map((row) => row.readTable(db.itemAssignments)));
+    return [for (final row in rows) row.readTable(db.itemAssignments)];
   }
 
   /// The live several-payer rows of an entry; empty for a single payer.

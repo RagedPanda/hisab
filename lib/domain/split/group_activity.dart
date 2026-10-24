@@ -63,6 +63,7 @@ class ExpenseSnapshot extends ActivitySnapshot {
     required this.payers,
     required this.shares,
     this.splitMethod,
+    this.assignmentIds = const [],
   });
   final int amountMinor;
   final DateTime occurredAt;
@@ -75,6 +76,10 @@ class ExpenseSnapshot extends ActivitySnapshot {
   final List<MemberAmount> shares;
   final String? splitMethod;
 
+  /// Row ids of who shared each item of a by-item split, so a restore brings
+  /// back exactly these; empty for other splits and for older log rows.
+  final List<String> assignmentIds;
+
   @override
   Map<String, Object?> toJson() => {
         'type': 'expense',
@@ -86,6 +91,7 @@ class ExpenseSnapshot extends ActivitySnapshot {
         'payers': [for (final payer in payers) payer.toJson()],
         'shares': [for (final share in shares) share.toJson()],
         'splitMethod': splitMethod,
+        if (assignmentIds.isNotEmpty) 'assignmentIds': assignmentIds,
       };
 
   static ExpenseSnapshot fromJson(Map<String, Object?> json) => ExpenseSnapshot(
@@ -97,6 +103,7 @@ class ExpenseSnapshot extends ActivitySnapshot {
         payers: _memberAmounts(json['payers']),
         shares: _memberAmounts(json['shares']),
         splitMethod: json['splitMethod'] as String?,
+        assignmentIds: [for (final id in json['assignmentIds'] as List<Object?>? ?? const []) id! as String],
       );
 }
 

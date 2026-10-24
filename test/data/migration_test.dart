@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart' hide isNull;
@@ -6,6 +7,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/ids.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
+import 'package:hisab/domain/sms/sms_transaction_key.dart';
+
+/// Undoes the v16 step (the SMS log's matched reminder and transaction key)
+/// on a database created at the current schema, so older rewinds start from v15.
+Future<void> dropVersion16(AppDatabase db) async {
+  await db.customStatement('DROP INDEX sms_log_transaction_key');
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN transaction_key');
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN matched_reminder_id');
+}
 
 /// Undoes the v15 step (group columns on recurring_rules) on a database
 /// created at the current schema, so older rewinds start from v14.
@@ -72,6 +82,7 @@ Future<void> dropVersion7(AppDatabase db) async {
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
@@ -99,6 +110,7 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
@@ -121,6 +133,7 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
@@ -142,6 +155,7 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
@@ -162,6 +176,7 @@ Future<void> rewindToVersion4(File file) async {
 /// rules).
 Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
@@ -179,6 +194,7 @@ Future<void> rewindToVersion5(File file) async {
 /// (entry payers, but no recurring rules).
 Future<void> rewindToVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
@@ -196,6 +212,7 @@ Future<void> rewindToVersion6(File file) async {
 /// schema 6 without main's v6 entry_payers, v7 and v8 steps.
 Future<void> rewindToPreReleaseRemindersVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
@@ -212,6 +229,7 @@ Future<void> rewindToPreReleaseRemindersVersion6(File file) async {
 /// (recurring rules, but SMS history could not be cleared).
 Future<void> rewindToVersion7(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
@@ -227,6 +245,7 @@ Future<void> rewindToVersion7(File file) async {
 /// (SMS history clearing, but no group activity log and no due-reminder columns).
 Future<void> rewindToVersion8(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
@@ -241,6 +260,7 @@ Future<void> rewindToVersion8(File file) async {
 /// (group activity log, but no group settings and no due-reminder columns).
 Future<void> rewindToVersion10(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
@@ -254,6 +274,7 @@ Future<void> rewindToVersion10(File file) async {
 /// (group settings, but no due-reminder columns).
 Future<void> rewindToVersion11(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
@@ -263,9 +284,10 @@ Future<void> rewindToVersion11(File file) async {
 }
 
 /// Rewinds a freshly created database to the schema shipped at version 12
-/// (due-reminder columns, but no by-item assignments).
+/// (due-reminder columns, but no by-item assignments or SMS-to-reminder link).
 Future<void> rewindToVersion12(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
@@ -274,10 +296,29 @@ Future<void> rewindToVersion12(File file) async {
 }
 
 /// Rewinds a freshly created database to the schema of pre-release builds of
+/// the SMS-to-reminder match, which added its SMS log columns as schema 7 on
+/// top of the pre-release reminders schema 6, so main's v6, v7 and v8 steps
+/// never ran.
+Future<void> rewindToSmsMatchPreReleaseVersion7(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
+  await dropVersion14(db);
+  await dropVersion13(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
+  await dropVersion8(db);
+  await dropVersion7(db);
+  await db.customStatement('DROP TABLE entry_payers');
+  await db.customStatement('PRAGMA user_version = 7');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema of pre-release builds of
 /// recurring group expenses (#33), which stored the group columns and the due
 /// reminders as schema 9 without main's v8 sms_log.cleared_at.
 Future<void> rewindToGroupRecurringQaVersion9(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await dropVersion11(db);
@@ -291,6 +332,7 @@ Future<void> rewindToGroupRecurringQaVersion9(File file) async {
 /// added the due-reminder columns as schema 9 before v10 existed.
 Future<void> rewindToRemindersQaVersion9(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
@@ -300,10 +342,20 @@ Future<void> rewindToRemindersQaVersion9(File file) async {
   await db.close();
 }
 
+/// Rewinds a freshly created database to the schema shipped at version 15
+/// (group recurring rules, but no SMS-to-reminder link).
+Future<void> rewindToVersion15(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
+  await db.customStatement('PRAGMA user_version = 15');
+  await db.close();
+}
+
 /// Rewinds a freshly created database to the schema shipped at version 14
 /// (document reminders, but recurring rules cannot post into a group).
 Future<void> rewindToVersion14(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await db.customStatement('PRAGMA user_version = 14');
   await db.close();
@@ -313,6 +365,7 @@ Future<void> rewindToVersion14(File file) async {
 /// (by-item assignments, but no project link or document number).
 Future<void> rewindToVersion13(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
   await db.customStatement('PRAGMA user_version = 13');
@@ -324,6 +377,7 @@ Future<void> rewindToVersion13(File file) async {
 /// under schema 7 without main's v7, v8, v10 and v11 steps.
 Future<void> rewindToDocumentRemindersPreReleaseVersion7(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion13(db);
   await dropVersion11(db);
@@ -574,7 +628,7 @@ void main() {
     });
   }
 
-  test('a fresh install at schema 15 has the project link, document number, preset key, project index and group recurring columns', () async {
+  test('a fresh install at schema 16 has the project link, document number, preset key, project index, group recurring and SMS match columns', () async {
     final db = AppDatabase(NativeDatabase(file));
     await db.into(db.reminders).insert(RemindersCompanion.insert(id: 'r1', kind: 'document', title: const Value('Passport'), projectId: const Value('p1'), documentNumber: const Value('Z1234567'), presetKey: const Value('passport')));
     final version = await db.customSelect('PRAGMA user_version').getSingle();
@@ -587,6 +641,10 @@ void main() {
     expect(indexes.map((row) => row.data['name']), contains('reminders_project_id'));
     await db.into(db.recurringRules).insert(RecurringRulesCompanion.insert(id: 'g1-rent', kind: 'expense', amountMinor: 1500000, frequency: 'monthly', startDate: DateTime(2026, 10, 1), groupId: const Value('g1'), groupSplit: const Value('{}')));
     expect((await db.select(db.recurringRules).getSingle()).groupId, 'g1');
+    await db.into(db.smsLog).insert(SmsLogCompanion.insert(id: 's1', sender: 'HDFCBK', body: 'Rs 1500 debited', receivedAt: DateTime(2026, 11, 5), status: 'added', matchedReminderId: const Value('r1'), transactionKey: const Value('k1')));
+    final sms = await db.select(db.smsLog).getSingle();
+    expect(sms.matchedReminderId, 'r1');
+    expect(sms.transactionKey, 'k1');
     await db.close();
   });
 
@@ -720,6 +778,50 @@ void main() {
       await db.close();
     });
   }
+
+  for (final (from, rewind) in [(5, rewindToVersion5), (6, rewindToVersion6), (7, rewindToVersion7), (8, rewindToVersion8), (10, rewindToVersion10), (11, rewindToVersion11), (12, rewindToVersion12), (13, rewindToVersion13), (14, rewindToVersion14), (15, rewindToVersion15)]) {
+    test('upgrading from schema $from adds the matched reminder and transaction key to the SMS log', () async {
+      const parsedBody = 'Rs.799.00 debited from A/c XX1234 on 23-10-26 to ACTFIBERNET. UPI Ref 629400000799';
+      final parsed = {'direction': 'debit', 'amountMinor': 79900, 'occurredAt': DateTime(2026, 10, 23).toIso8601String(), 'reference': '629400000799'};
+      final seed = AppDatabase(NativeDatabase(file));
+      await seed.into(seed.smsLog).insert(SmsLogCompanion.insert(id: 's1', sender: 'HDFCBK', body: 'Rs 1500 debited', receivedAt: DateTime(2026, 11, 5), status: 'added'));
+      await seed.into(seed.smsLog).insert(SmsLogCompanion.insert(id: 's2', sender: 'HDFCBK', body: parsedBody, receivedAt: DateTime(2026, 10, 23), status: 'added', parsedJson: Value(jsonEncode(parsed))));
+      await seed.close();
+      await rewind(file);
+
+      final db = AppDatabase(NativeDatabase(file));
+      final version = await db.customSelect('PRAGMA user_version').getSingle();
+      expect(version.data['user_version'], db.schemaVersion);
+      final unparsed = await (db.select(db.smsLog)..where((t) => t.id.equals('s1'))).getSingle();
+      expect(unparsed.matchedReminderId, isNull);
+      expect(unparsed.transactionKey, isNull, reason: 'a message that was never parsed has no transaction');
+      expect(unparsed.body, 'Rs 1500 debited', reason: 'existing rows survive the upgrade');
+      final backfilled = await (db.select(db.smsLog)..where((t) => t.id.equals('s2'))).getSingle();
+      expect(backfilled.transactionKey, smsTransactionKeyForStored(parsedBody, parsed), reason: 'old messages are keyed from their stored parse');
+      await (db.update(db.smsLog)..where((t) => t.id.equals('s1'))).write(const SmsLogCompanion(matchedReminderId: Value('r1')));
+      expect((await (db.select(db.smsLog)..where((t) => t.id.equals('s1'))).getSingle()).matchedReminderId, 'r1');
+      await db.close();
+    });
+  }
+
+  test('upgrading a pre-release SMS match build (schema 7 with its SMS columns) keeps the links and adds what main added since', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.smsLog).insert(SmsLogCompanion.insert(id: 's1', sender: 'HDFCBK', body: 'Rs 1500 debited', receivedAt: DateTime(2026, 11, 5), status: 'added', matchedReminderId: const Value('r1'), transactionKey: const Value('k1')));
+    await seed.close();
+    await rewindToSmsMatchPreReleaseVersion7(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final row = await db.select(db.smsLog).getSingle();
+    expect(row.matchedReminderId, 'r1', reason: 'the existing link is kept, not re-added');
+    expect(row.transactionKey, 'k1');
+    expect(row.clearedAt, isNull);
+    expect(await db.select(db.recurringRules).get(), isEmpty, reason: 'main\'s v7 recurring table is healed in');
+    expect(await db.select(db.entryPayers).get(), isEmpty);
+    expect(await db.select(db.groupActivities).get(), isEmpty);
+    await db.close();
+  });
 
   // Opens a real v1 database (schema dumped from the shipped app into
   // `fixtures/schema_v1.sql`) with a few rows, then lets [AppDatabase] run

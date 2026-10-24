@@ -14,12 +14,14 @@ import '../../domain/sms/sms_confidence.dart';
 import '../../domain/sms/sms_currency.dart';
 import '../../domain/sms/sms_outcome.dart';
 import '../../domain/sms/sms_parser.dart';
+import '../../domain/sms/sms_transaction_key.dart';
 import '../db/database.dart';
 import '../repositories/accounts_repository.dart';
 import '../repositories/categories_repository.dart';
 import '../repositories/entries_repository.dart';
 import '../repositories/sms_log_repository.dart';
 import 'sms_channel.dart';
+import 'sms_reminder_linker.dart';
 import 'sms_sync_cursor.dart';
 
 /// What [SmsIngestService.ingest] did with one message. [pending] means it
@@ -55,6 +57,7 @@ class SmsIngestService {
     required this.cursor,
     this.source = const PlatformSmsSource(),
     required this.homeCurrencyCode,
+    this.reminderLinker,
   });
 
   final SmsLogRepository smsLog;
@@ -69,6 +72,9 @@ class SmsIngestService {
 
   /// Read on every message, so a change of home currency applies at once.
   final String Function() homeCurrencyCode;
+
+  /// Pays a pending reminder the new entry matches; null disables matching.
+  final SmsReminderLinker? reminderLinker;
 
   final _autoAddedController = StreamController<SmsAutoAdded>.broadcast();
 
@@ -144,6 +150,11 @@ class SmsIngestService {
       return IngestStatus.unparsed;
     }
 
+    // The same payment can arrive again under another id: pasted with today's
+    // time, opened from a link, or read from the inbox after a paste.
+    final transactionKey = smsTransactionKeyForParsed(message.body, parsed);
+    if (await smsLog.hasTransaction(transactionKey)) return IngestStatus.duplicate;
+
     // Only an account we already know gets its balance refreshed here; a new
     // account is created when the user approves the transaction, not before.
     final known = await accounts.findBySmsKey(parsed.accountKey);
@@ -157,12 +168,13 @@ class SmsIngestService {
       ..['accountId'] = known?.id;
 
     if (routeForSms(parsed: parsed, autoAddEnabled: autoAdd, possibleTransaction: true) != SmsRoute.autoAdd) {
-      await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.pending, parsed: payload);
+      await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.pending, parsed: payload, transactionKey: transactionKey);
       return IngestStatus.pending;
     }
     final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(id, parsed, categoryKey, account?.id);
-    await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.added, parsed: payload, entryId: entryId);
+    await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.added, parsed: payload, entryId: entryId, transactionKey: transactionKey);
+    await reminderLinker?.linkEntry(smsId: id, parsed: parsed, entryId: entryId);
     _autoAddedController.add(SmsAutoAdded(
       smsId: id,
       entryId: entryId,
@@ -173,9 +185,11 @@ class SmsIngestService {
     return IngestStatus.added;
   }
 
-  /// Reverses an automatic add: the entry is deleted and the SMS is marked
-  /// ignored, so it does not come back in the review queue.
+  /// Reverses an automatic add: a reminder it paid reopens, the entry is
+  /// deleted and the SMS is marked ignored, so it does not come back in the
+  /// review queue.
   Future<void> undoAutoAdd(SmsAutoAdded added) async {
+    await reminderLinker?.unlinkEntry(smsId: added.smsId, entryId: added.entryId);
     await entries.deleteEntry(added.entryId);
     await smsLog.setStatus(added.smsId, SmsLogStatus.ignored);
   }
@@ -210,7 +224,18 @@ class SmsIngestService {
     final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(row.id, parsed, suggestCategoryKey(parsed), account?.id);
     await smsLog.setStatus(row.id, SmsLogStatus.added, entryId: entryId);
+    await reminderLinker?.linkEntry(smsId: row.id, parsed: parsed, entryId: entryId);
     return entryId;
+  }
+
+  /// Pays the reminder a logged SMS matches once the user saved it as [entryId]
+  /// from the editor. Returns the reminder id, or null.
+  Future<String?> linkSavedEntry(String smsId, String entryId) async {
+    final linker = reminderLinker;
+    final row = await smsLog.getById(smsId);
+    if (linker == null || row == null) return null;
+    final parsed = parseBankSms(sender: row.sender, body: row.body, receivedAt: row.receivedAt);
+    return parsed == null ? null : linker.linkEntry(smsId: smsId, parsed: parsed, entryId: entryId);
   }
 
   /// Creates (or finds) the account a logged SMS refers to. Used when the

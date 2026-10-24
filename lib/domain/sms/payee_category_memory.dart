@@ -3,6 +3,8 @@
 /// table rows are passed in as a key -> category id map.
 library;
 
+import 'dart:convert';
+
 import 'parsed_transaction.dart';
 import 'payee_normaliser.dart';
 
@@ -49,7 +51,7 @@ String? payeeNameKey(String? raw) {
 /// Keys to look [raw] up by, most specific first: the VPA when present,
 /// then the normalised name (so a card SMS for "Swiggy" and a UPI one for
 /// swiggy@icici share a correction made on either).
-List<String> payeeMemoryKeys(String? raw) => [?payeeVpaKey(raw), ?payeeNameKey(raw)].toSet().toList();
+List<String> payeeMemoryKeys(String? raw) => {?payeeVpaKey(raw), ?payeeNameKey(raw)}.toList();
 
 /// The key a correction for [raw] is stored under: the VPA when present,
 /// otherwise the normalised name. Null when the SMS named no payee.
@@ -86,3 +88,28 @@ bool isPersonToPersonPayee({required String? counterparty, required Instrument i
   final local = isVpa(raw) ? raw.substring(0, raw.indexOf('@')) : raw;
   return !_merchantQr.hasMatch(local) && !_merchantWords.hasMatch(local);
 }
+
+/// The payee side of a logged SMS, read back from its stored parse.
+typedef SmsPayee = ({String kind, String? counterparty, Instrument instrument, String suggestedCategoryKey});
+
+/// [SmsPayee] of an sms_log row's parsedJson, or null when it was not read.
+SmsPayee? parsedSmsPayee(String? parsedJson) {
+  if (parsedJson == null) return null;
+  final decoded = jsonDecode(parsedJson);
+  if (decoded is! Map) return null;
+  final instrument = Instrument.values.asNameMap()[decoded['instrument']] ?? Instrument.unknown;
+  final kind = decoded['direction'] == TxnDirection.credit.name ? kPayeeIncome : kPayeeExpense;
+  return (
+    kind: kind,
+    counterparty: decoded['counterparty'] as String?,
+    instrument: instrument,
+    suggestedCategoryKey: (decoded['suggestedCategory'] as String?) ?? (kind == kPayeeExpense ? 'other_expense' : 'other_income'),
+  );
+}
+
+/// Whether the app should ask for a category for [payee]: a person paid over
+/// UPI that has no remembered category yet. Ignoring the question stores
+/// nothing, so it is asked again for that payee's next message.
+bool asksForPayeeCategory(SmsPayee payee, Map<String, String> memory) =>
+    isPersonToPersonPayee(counterparty: payee.counterparty, instrument: payee.instrument, suggestedCategoryKey: payee.suggestedCategoryKey) &&
+    rememberedCategoryId(memory, kind: payee.kind, raw: payee.counterparty) == null;

@@ -62,6 +62,21 @@ void main() {
     expect(splits, hasLength(6));
   });
 
+  test('each posted occurrence is logged as an added expense in the group Activity log (#128)', () async {
+    await saveRentRule(equalRent());
+    await recurring.postDue(now: DateTime(2026, 10, 22));
+    final entries = await groupEntries();
+    final activities = await (db.select(db.groupActivities)..where((t) => t.groupId.equals(groupId))).get();
+    expect(activities.map((row) => row.subjectId).toSet(), entries.map((entry) => entry.id).toSet());
+    expect(activities.every((row) => row.action == 'added' && row.subjectKind == 'expense'), isTrue);
+    expect(activities.every((row) => row.actorMemberId == memberIdByName['Me']), isTrue);
+    final feed = await groups.getActivityFeed(groupId: groupId);
+    expect(feed.activities, hasLength(2));
+
+    await recurring.postDue(now: DateTime(2026, 10, 22));
+    expect(await db.select(db.groupActivities).get(), hasLength(2), reason: 're-running the catch-up logs nothing new');
+  });
+
   test('several payers are posted with every occurrence', () async {
     await saveRentRule(equalRent(payers: [SplitShare(memberIdByName['Me']!, 600000), SplitShare(memberIdByName['Ravi']!, 900000)]));
     await recurring.postDue(now: DateTime(2026, 9, 2));

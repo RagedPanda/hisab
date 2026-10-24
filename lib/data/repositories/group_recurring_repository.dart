@@ -3,7 +3,7 @@ import 'package:drift/drift.dart';
 import '../../core/ids.dart';
 import '../../domain/split/group_recurring.dart';
 import '../db/database.dart';
-import 'entries_repository.dart';
+import 'groups_repository.dart';
 import 'recurring_repository.dart';
 
 /// What happened to one occurrence of a recurring rule.
@@ -34,7 +34,9 @@ class GroupRecurringRepository {
   static RecurringRulesCompanion asGroupRule(RecurringRulesCompanion rule, {required String groupId, required GroupExpenseTemplate template}) =>
       rule.copyWith(groupId: Value(groupId), groupSplit: Value(template.encode()), accountId: const Value(null), toAccountId: const Value(null));
 
-  /// Writes the entry, splits and payers for one occurrence of a group rule.
+  /// Writes the entry, splits and payers for one occurrence of a group rule
+  /// through [GroupsRepository.saveGroupExpense], so the group's Activity log
+  /// shows it like any other added expense.
   Future<OccurrencePost> postOccurrence(RecurringRule rule, DateTime occurrence) async {
     final groupId = rule.groupId!;
     // Group rules are expense-only: income or transfers have no shared split.
@@ -48,7 +50,7 @@ class GroupRecurringRepository {
     final members = await (db.select(db.members)..where((t) => t.groupId.equals(groupId) & t.deletedAt.isNull())).get();
     final result = groupOccurrence(template, amountMinor: rule.amountMinor, activeMemberIds: {for (final member in members) member.id});
     if (!result.canPost) return OccurrencePost.blocked;
-    await EntriesRepository(db).saveEntry(
+    await GroupsRepository(db).saveGroupExpense(
       entryForOccurrence(rule, occurrence).copyWith(
         groupId: Value(groupId),
         paidByMemberId: Value(result.paidByMemberId),

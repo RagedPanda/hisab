@@ -7,6 +7,12 @@ import 'package:hisab/core/ids.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 
+/// Undoes the v8 step (sms_log.cleared_at) on a database created at the
+/// current schema, so older rewinds start from v7.
+Future<void> dropVersion8(AppDatabase db) async {
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN cleared_at');
+}
+
 /// Undoes the v7 step (recurring rules, entries.recurring_id) on a database
 /// created at the current schema, so older rewinds start from v6.
 Future<void> dropVersion7(AppDatabase db) async {
@@ -19,6 +25,7 @@ Future<void> dropVersion7(AppDatabase db) async {
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion8(db);
   await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
@@ -39,6 +46,7 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion8(db);
   await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
@@ -54,6 +62,7 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion8(db);
   await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
@@ -68,6 +77,7 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion8(db);
   await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
@@ -81,6 +91,7 @@ Future<void> rewindToVersion4(File file) async {
 /// rules).
 Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion8(db);
   await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('PRAGMA user_version = 5');
@@ -91,8 +102,18 @@ Future<void> rewindToVersion5(File file) async {
 /// (entry payers, but no recurring rules).
 Future<void> rewindToVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion8(db);
   await dropVersion7(db);
   await db.customStatement('PRAGMA user_version = 6');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 7
+/// (recurring rules, but SMS history could not be cleared).
+Future<void> rewindToVersion7(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion8(db);
+  await db.customStatement('PRAGMA user_version = 7');
   await db.close();
 }
 
@@ -228,6 +249,23 @@ void main() {
       expect(rule.isSubscription, isFalse);
       await (db.update(db.entries)..where((t) => t.id.equals('e1'))).write(const EntriesCompanion(recurringId: Value('r1')));
       expect((await db.select(db.entries).getSingle()).recurringId, 'r1');
+      await db.close();
+    });
+  }
+
+  for (final (from, rewind) in [(5, rewindToVersion5), (6, rewindToVersion6), (7, rewindToVersion7)]) {
+    test('upgrading from schema $from adds the SMS history cleared marker', () async {
+      final seed = AppDatabase(NativeDatabase(file));
+      await seed.into(seed.smsLog).insert(SmsLogCompanion.insert(id: 's1', sender: 'HDFCBK', body: 'Rs.10 debited', receivedAt: DateTime(2026, 10, 20), status: 'added'));
+      await seed.close();
+      await rewind(file);
+
+      final db = AppDatabase(NativeDatabase(file));
+      final version = await db.customSelect('PRAGMA user_version').getSingle();
+      expect(version.data['user_version'], db.schemaVersion);
+      final row = await db.select(db.smsLog).getSingle();
+      expect(row.clearedAt, isNull);
+      expect(row.body, 'Rs.10 debited', reason: 'existing rows survive the upgrade');
       await db.close();
     });
   }

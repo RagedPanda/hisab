@@ -8,9 +8,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/providers.dart';
+import '../../domain/currency/currency_lookup.dart';
+import '../currency/currency_picker.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
 import '../shell/widgets/common.dart';
+import 'made_with_love.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -62,12 +65,12 @@ class SettingsScreen extends ConsumerWidget {
             child: Column(children: [
               ListTile(
                 leading: const Icon(Icons.currency_rupee),
-                title: Text(l10n.currencySymbol),
-                trailing: SettingValue(settings.currencySymbol),
+                title: Text(l10n.currency),
+                trailing: SettingValue(currencyShortLabel(settings.currencyCode)),
                 visualDensity: VisualDensity.compact,
                 onTap: () async {
-                  final symbol = await promptText(context, title: l10n.currencySymbol, initial: settings.currencySymbol, hint: '₹, \$, €');
-                  if (symbol != null && symbol.isNotEmpty) await notifier.update((s) => s.copyWith(currencySymbol: symbol));
+                  final code = await showCurrencyPicker(context, selectedCode: settings.currencyCode);
+                  if (code != null) await notifier.update((s) => s.copyWith(currencyCode: code, currencyConfirmed: true));
                 },
               ),
               ListTile(
@@ -87,6 +90,7 @@ class SettingsScreen extends ConsumerWidget {
               ListTile(leading: const Icon(Icons.savings_outlined), title: Text(l10n.budgets), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/budgets')),
               ListTile(leading: const Icon(Icons.folder_outlined), title: Text(l10n.projects), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/projects')),
               ListTile(leading: const Icon(Icons.repeat), title: Text(l10n.recurringTitle), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/recurring')),
+              ListTile(leading: const Icon(Icons.autorenew), title: Text(l10n.subscriptions), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/subscriptions')),
             ]),
           ),
           SectionHeader(l10n.automation),
@@ -144,6 +148,7 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: Text(l10n.aboutBody),
             ),
           ),
+          const MadeWithLove(),
         ],
       ),
     );
@@ -183,7 +188,7 @@ class SettingsScreen extends ConsumerWidget {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.passphraseTooShort)));
       return;
     }
-    final bytes = await ref.read(backupServiceProvider).exportEncrypted(passphrase);
+    final bytes = await ref.read(backupServiceProvider).exportEncrypted(passphrase, currencyCode: ref.read(settingsProvider).currencyCode);
     final dir = await getTemporaryDirectory();
     final stamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
     final file = File('${dir.path}/hisab-backup-$stamp.hisab');
@@ -200,8 +205,12 @@ class SettingsScreen extends ConsumerWidget {
     final passphrase = await promptText(context, title: l10n.backupPassphrase);
     if (passphrase == null || !context.mounted) return;
     try {
-      final written = await ref.read(backupServiceProvider).importEncrypted(data, passphrase);
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(written))));
+      final restored = await ref.read(backupServiceProvider).importEncrypted(data, passphrase);
+      final backupCurrency = restored.currencyCode;
+      if (backupCurrency != null) {
+        await ref.read(settingsProvider.notifier).update((s) => s.copyWith(currencyCode: backupCurrency, currencyConfirmed: true));
+      }
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(restored.written))));
     } catch (error) {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoreFailed('$error'))));
     }

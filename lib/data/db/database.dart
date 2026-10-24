@@ -3,6 +3,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../core/ids.dart';
 import '../../domain/categories/category_catalog.dart';
+import '../../domain/sms/sms_outcome.dart';
 
 part 'database.g.dart';
 
@@ -370,11 +371,15 @@ class SmsLog extends Table {
   TextColumn get body => text()();
   DateTimeColumn get receivedAt => dateTime()();
 
-  /// pending | added | ignored | skipped
+  /// See SmsLogStatus: pending | added | ignored | skipped | not_bank | duplicate | undone
   TextColumn get status => text()();
   TextColumn get parsedJson => text().nullable()();
   TextColumn get entryId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Set when the user clears the SMS history. The row stays (with its body
+  /// wiped) so the message is still recognised and never processed twice.
+  DateTimeColumn get clearedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -402,7 +407,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -444,9 +449,12 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(entries, entries.recurringId);
             await m.createIndex(entriesRecurringId);
           }
+          // v8: SMS history can be cleared without forgetting processed messages.
+          if (from < 8) await m.addColumn(smsLog, smsLog.clearedAt);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
+          await wipeUnkeptSmsText();
         },
       );
 
@@ -454,6 +462,16 @@ class AppDatabase extends _$AppDatabase {
         name: 'hisab',
         native: const DriftNativeOptions(shareAcrossIsolates: true),
       );
+
+  /// Drops SMS text the log may not keep ([keepsSmsText]: not-bank messages,
+  /// OTPs and promotions) that an earlier build or a restored backup stored.
+  /// Idempotent, so it runs on every open.
+  Future<void> wipeUnkeptSmsText() async {
+    final rows = await (select(smsLog)..where((row) => row.body.equals('').not())).get();
+    final wipeIds = [for (final row in rows) if (!keepsSmsText(row.status, row.body)) row.id];
+    if (wipeIds.isEmpty) return;
+    await (update(smsLog)..where((row) => row.id.isIn(wipeIds))).write(const SmsLogCompanion(body: Value('')));
+  }
 
   /// Inserts the category catalog and a Cash account. Idempotent by seedKey.
   Future<void> seedDefaults() async {

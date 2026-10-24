@@ -743,7 +743,7 @@ abstract class AppLocalizations {
   /// No description provided for @smsEntryNotice.
   ///
   /// In en, this message translates to:
-  /// **'Created from a bank SMS. Editing it will not change your bank balance.'**
+  /// **'Added from SMS. Editing it will not change your bank balance.'**
   String get smsEntryNotice;
 
   /// No description provided for @saving.
@@ -1232,11 +1232,41 @@ abstract class AppLocalizations {
   /// **'Money'**
   String get money;
 
-  /// No description provided for @currencySymbol.
+  /// No description provided for @currency.
   ///
   /// In en, this message translates to:
-  /// **'Currency symbol'**
-  String get currencySymbol;
+  /// **'Currency'**
+  String get currency;
+
+  /// No description provided for @currencyChooseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your currency'**
+  String get currencyChooseTitle;
+
+  /// No description provided for @currencyChooseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Amounts in Hisab show in this currency. You can change it later in Settings.'**
+  String get currencyChooseBody;
+
+  /// No description provided for @currencySearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search code, name or country'**
+  String get currencySearchHint;
+
+  /// No description provided for @currencyContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with {currency}'**
+  String currencyContinue(String currency);
+
+  /// No description provided for @currencyNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No currency matches \"{query}\"'**
+  String currencyNoMatch(String query);
 
   /// No description provided for @monthStartsOn.
   ///
@@ -1358,6 +1388,24 @@ abstract class AppLocalizations {
   /// **'Free, open source, no ads, no account needed. Your data stays on your device.'**
   String get aboutBody;
 
+  /// Text shown before the red heart icon at the bottom of Settings > About. May be empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with'**
+  String get aboutMadeWithBefore;
+
+  /// Text shown after the red heart icon at the bottom of Settings > About. May be empty.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get aboutMadeWithAfter;
+
+  /// Screen reader label for the Made with heart line.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with love'**
+  String get aboutMadeWithLabel;
+
   /// No description provided for @backupPassphrase.
   ///
   /// In en, this message translates to:
@@ -1418,11 +1466,47 @@ abstract class AppLocalizations {
   /// **'Already imported.'**
   String get smsDuplicate;
 
+  /// No description provided for @smsForeignCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Only SMS in your home currency are supported, so this one was ignored.'**
+  String get smsForeignCurrency;
+
   /// No description provided for @smsNotFound.
   ///
   /// In en, this message translates to:
   /// **'Could not find a transaction in that text.'**
   String get smsNotFound;
+
+  /// No description provided for @smsNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New bank transaction'**
+  String get smsNotificationTitle;
+
+  /// No description provided for @smsNotificationBodyAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} from {sender}. Tap to review.'**
+  String smsNotificationBodyAmount(String amount, String sender);
+
+  /// No description provided for @smsNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'From {sender}. Tap to review.'**
+  String smsNotificationBody(String sender);
+
+  /// No description provided for @smsNotificationBodyAmountAutoAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} from {sender}. Open Hisab to add it.'**
+  String smsNotificationBodyAmountAutoAdd(String amount, String sender);
+
+  /// No description provided for @smsNotificationBodyAutoAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'From {sender}. Open Hisab to add it.'**
+  String smsNotificationBodyAutoAdd(String sender);
 
   /// No description provided for @readBankSmsQuestion.
   ///
@@ -1469,13 +1553,13 @@ abstract class AppLocalizations {
   /// No description provided for @smsAutoAddTitle.
   ///
   /// In en, this message translates to:
-  /// **'Add transactions without review'**
+  /// **'Add clear transactions automatically'**
   String get smsAutoAddTitle;
 
   /// No description provided for @smsAutoAddHelp.
   ///
   /// In en, this message translates to:
-  /// **'Off: new SMS wait in the review list below.'**
+  /// **'On: clear bank SMS are added right away with Undo. Unclear ones wait for review.'**
   String get smsAutoAddHelp;
 
   /// No description provided for @scanInboxNow.
@@ -3356,6 +3440,144 @@ abstract class AppLocalizations {
   /// **'Saved. Add the next one.'**
   String get savedAddAnother;
 
+  /// No description provided for @smsHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS history'**
+  String get smsHistoryTitle;
+
+  /// No description provided for @smsHistoryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Every message Hisab processed and what happened to it'**
+  String get smsHistoryHelp;
+
+  /// No description provided for @smsOutcomeAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get smsOutcomeAdded;
+
+  /// No description provided for @smsOutcomeDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get smsOutcomeDuplicate;
+
+  /// No description provided for @smsOutcomeIgnored.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignored'**
+  String get smsOutcomeIgnored;
+
+  /// No description provided for @smsOutcomeUnparsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreadable'**
+  String get smsOutcomeUnparsed;
+
+  /// No description provided for @smsOutcomePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get smsOutcomePending;
+
+  /// No description provided for @smsOutcomeUndone.
+  ///
+  /// In en, this message translates to:
+  /// **'Undone'**
+  String get smsOutcomeUndone;
+
+  /// No description provided for @smsHistoryNotBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a bank message'**
+  String get smsHistoryNotBank;
+
+  /// No description provided for @smsHistoryDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismissed from review'**
+  String get smsHistoryDismissed;
+
+  /// No description provided for @smsHistoryUnparsedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'No transaction found in the text'**
+  String get smsHistoryUnparsedDetail;
+
+  /// No description provided for @smsHistoryDuplicateDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Same message already processed'**
+  String get smsHistoryDuplicateDetail;
+
+  /// No description provided for @smsHistoryOpenEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Open entry'**
+  String get smsHistoryOpenEntry;
+
+  /// No description provided for @smsHistoryReprocess.
+  ///
+  /// In en, this message translates to:
+  /// **'Process again'**
+  String get smsHistoryReprocess;
+
+  /// No description provided for @smsHistoryClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear history'**
+  String get smsHistoryClear;
+
+  /// No description provided for @smsHistoryClearQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear SMS history?'**
+  String get smsHistoryClearQuestion;
+
+  /// No description provided for @smsHistoryClearBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes the text of {count} processed messages from this device. Your entries and messages waiting for review stay, and cleared messages are never imported again.'**
+  String smsHistoryClearBody(int count);
+
+  /// No description provided for @smsHistoryClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get smsHistoryClearConfirm;
+
+  /// No description provided for @smsHistoryCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS history cleared'**
+  String get smsHistoryCleared;
+
+  /// No description provided for @smsHistoryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages processed yet'**
+  String get smsHistoryEmptyTitle;
+
+  /// No description provided for @smsHistoryEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank SMS that Hisab reads or that you paste show up here.'**
+  String get smsHistoryEmptyBody;
+
+  /// No description provided for @smsHistoryEmptyFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages with this outcome'**
+  String get smsHistoryEmptyFiltered;
+
+  /// No description provided for @smsHistoryTextNotKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Message text not kept'**
+  String get smsHistoryTextNotKept;
+
   /// No description provided for @recurringRepeat.
   ///
   /// In en, this message translates to:
@@ -3686,6 +3908,312 @@ abstract class AppLocalizations {
   /// **'Increase {label}'**
   String recurringIncrease(String label);
 
+  /// No description provided for @subscriptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscriptions'**
+  String get subscriptions;
+
+  /// No description provided for @subscriptionsMonthlyTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Per month'**
+  String get subscriptionsMonthlyTotal;
+
+  /// No description provided for @subscriptionsYearlyTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Per year'**
+  String get subscriptionsYearlyTotal;
+
+  /// No description provided for @subscriptionsActiveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 active subscription} other{{count} active subscriptions}}'**
+  String subscriptionsActiveCount(int count);
+
+  /// No description provided for @subscriptionsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No subscriptions yet'**
+  String get subscriptionsEmptyTitle;
+
+  /// No description provided for @subscriptionsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Netflix, your phone recharge or the gym to see what they cost you each month and year.'**
+  String get subscriptionsEmptyBody;
+
+  /// No description provided for @subscriptionAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add subscription'**
+  String get subscriptionAdd;
+
+  /// No description provided for @subscriptionEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit subscription'**
+  String get subscriptionEdit;
+
+  /// No description provided for @subscriptionPickService.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a service'**
+  String get subscriptionPickService;
+
+  /// No description provided for @subscriptionCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get subscriptionCustom;
+
+  /// No description provided for @subscriptionPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per renewal'**
+  String get subscriptionPrice;
+
+  /// No description provided for @subscriptionCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews'**
+  String get subscriptionCycle;
+
+  /// No description provided for @subscriptionNextRenewal.
+  ///
+  /// In en, this message translates to:
+  /// **'Next renewal'**
+  String get subscriptionNextRenewal;
+
+  /// No description provided for @subscriptionStartedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Started {date}'**
+  String subscriptionStartedOn(String date);
+
+  /// No description provided for @subscriptionAutoPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to expenses on each renewal'**
+  String get subscriptionAutoPost;
+
+  /// No description provided for @subscriptionAutoPostHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: tracked here only, no entries are added'**
+  String get subscriptionAutoPostHelp;
+
+  /// No description provided for @subscriptionNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get subscriptionNameRequired;
+
+  /// No description provided for @subscriptionPriceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the price'**
+  String get subscriptionPriceRequired;
+
+  /// No description provided for @subscriptionRenewsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews {date}'**
+  String subscriptionRenewsOn(String date);
+
+  /// No description provided for @subscriptionRenewsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews today'**
+  String get subscriptionRenewsToday;
+
+  /// No description provided for @subscriptionRenewsInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Renews tomorrow} other{Renews in {days} days}}'**
+  String subscriptionRenewsInDays(int days);
+
+  /// No description provided for @subscriptionOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Was due {date}'**
+  String subscriptionOverdue(String date);
+
+  /// No description provided for @subscriptionPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get subscriptionPaused;
+
+  /// No description provided for @subscriptionCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get subscriptionCancelled;
+
+  /// No description provided for @subscriptionPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get subscriptionPause;
+
+  /// No description provided for @subscriptionResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get subscriptionResume;
+
+  /// No description provided for @subscriptionMarkCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as cancelled'**
+  String get subscriptionMarkCancelled;
+
+  /// No description provided for @subscriptionCancelConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark {name} as cancelled?'**
+  String subscriptionCancelConfirm(String name);
+
+  /// No description provided for @subscriptionCancelConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No new charges are added and it leaves the totals. Past entries stay.'**
+  String get subscriptionCancelConfirmBody;
+
+  /// No description provided for @subscriptionDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription deleted'**
+  String get subscriptionDeleted;
+
+  /// No description provided for @subscriptionPerMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount}/month'**
+  String subscriptionPerMonth(String amount);
+
+  /// No description provided for @subscriptionSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get subscriptionSort;
+
+  /// No description provided for @subscriptionSortCostHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost: high to low'**
+  String get subscriptionSortCostHigh;
+
+  /// No description provided for @subscriptionSortCostLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost: low to high'**
+  String get subscriptionSortCostLow;
+
+  /// No description provided for @subscriptionSortRenewal.
+  ///
+  /// In en, this message translates to:
+  /// **'Next renewal'**
+  String get subscriptionSortRenewal;
+
+  /// No description provided for @subscriptionSortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get subscriptionSortName;
+
+  /// No description provided for @subscriptionEveryDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every day} other{Every {count} days}}'**
+  String subscriptionEveryDays(int count);
+
+  /// No description provided for @subscriptionEveryWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every week} other{Every {count} weeks}}'**
+  String subscriptionEveryWeeks(int count);
+
+  /// No description provided for @subscriptionEveryMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every month} other{Every {count} months}}'**
+  String subscriptionEveryMonths(int count);
+
+  /// No description provided for @subscriptionEveryYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every year} other{Every {count} years}}'**
+  String subscriptionEveryYears(int count);
+
+  /// No description provided for @subscriptionTemplateNetflix.
+  ///
+  /// In en, this message translates to:
+  /// **'Netflix'**
+  String get subscriptionTemplateNetflix;
+
+  /// No description provided for @subscriptionTemplateAmazonPrime.
+  ///
+  /// In en, this message translates to:
+  /// **'Amazon Prime'**
+  String get subscriptionTemplateAmazonPrime;
+
+  /// No description provided for @subscriptionTemplateJiohotstar.
+  ///
+  /// In en, this message translates to:
+  /// **'JioHotstar'**
+  String get subscriptionTemplateJiohotstar;
+
+  /// No description provided for @subscriptionTemplateSpotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify'**
+  String get subscriptionTemplateSpotify;
+
+  /// No description provided for @subscriptionTemplateYoutubePremium.
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube Premium'**
+  String get subscriptionTemplateYoutubePremium;
+
+  /// No description provided for @subscriptionTemplateMobileRecharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile recharge'**
+  String get subscriptionTemplateMobileRecharge;
+
+  /// No description provided for @subscriptionTemplateDth.
+  ///
+  /// In en, this message translates to:
+  /// **'DTH'**
+  String get subscriptionTemplateDth;
+
+  /// No description provided for @subscriptionTemplateBroadband.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadband'**
+  String get subscriptionTemplateBroadband;
+
+  /// No description provided for @subscriptionTemplateGym.
+  ///
+  /// In en, this message translates to:
+  /// **'Gym'**
+  String get subscriptionTemplateGym;
+
+  /// No description provided for @subscriptionTemplateCloudStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud storage'**
+  String get subscriptionTemplateCloudStorage;
+
+  /// No description provided for @subscriptionTemplateNewsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'News app'**
+  String get subscriptionTemplateNewsApp;
+
   /// No description provided for @payersMultiple.
   ///
   /// In en, this message translates to:
@@ -3727,6 +4255,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{added, plural, =0{None added} =1{1 added} other{{added} added}}, {skipped, plural, =1{1 skipped} other{{skipped} skipped}}'**
   String recurringAddedSkipped(int added, int skipped);
+
+  /// No description provided for @groupExportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export as CSV'**
+  String get groupExportCsv;
+
+  /// No description provided for @groupExportCsvSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'{group} expenses'**
+  String groupExportCsvSubject(String group);
+
+  /// No description provided for @groupExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t export the CSV'**
+  String get groupExportFailed;
+
+  /// No description provided for @groupCsvDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get groupCsvDate;
+
+  /// No description provided for @groupCsvDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get groupCsvDescription;
+
+  /// No description provided for @groupCsvCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get groupCsvCost;
+
+  /// No description provided for @groupCsvPaidBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid by'**
+  String get groupCsvPaidBy;
+
+  /// No description provided for @groupCsvPaidColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} paid'**
+  String groupCsvPaidColumn(String name);
+
+  /// No description provided for @groupCsvShareColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} share'**
+  String groupCsvShareColumn(String name);
+
+  /// No description provided for @groupCsvBalanceColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} balance'**
+  String groupCsvBalanceColumn(String name);
+
+  /// No description provided for @groupCsvPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get groupCsvPayment;
+
+  /// No description provided for @groupSummaryWhoPaysWhom.
+  ///
+  /// In en, this message translates to:
+  /// **'Who pays whom'**
+  String get groupSummaryWhoPaysWhom;
+
+  /// No description provided for @groupSummaryStandings.
+  ///
+  /// In en, this message translates to:
+  /// **'Where everyone stands'**
+  String get groupSummaryStandings;
+
+  /// No description provided for @groupSummaryYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {name} {amount}'**
+  String groupSummaryYouOwe(String name, String amount);
+
+  /// No description provided for @groupSummaryOwesYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes you {amount}'**
+  String groupSummaryOwesYou(String name, String amount);
+
+  /// No description provided for @groupSummaryGetsBack.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} gets back {amount}'**
+  String groupSummaryGetsBack(String name, String amount);
+
+  /// No description provided for @groupSummaryOwesInTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes {amount} in total'**
+  String groupSummaryOwesInTotal(String name, String amount);
+
+  /// No description provided for @groupSummaryYouGetBack.
+  ///
+  /// In en, this message translates to:
+  /// **'You get back {amount}'**
+  String groupSummaryYouGetBack(String amount);
+
+  /// No description provided for @groupSummaryYouOweInTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {amount} in total'**
+  String groupSummaryYouOweInTotal(String amount);
+
+  /// No description provided for @groupCsvTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get groupCsvTotal;
+
+  /// No description provided for @groupSummaryGroupTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Group total: {amount}'**
+  String groupSummaryGroupTotal(String amount);
+
+  /// No description provided for @groupSummaryYourShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Your share: {amount}'**
+  String groupSummaryYourShare(String amount);
+
+  /// No description provided for @groupSummaryMemberShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s share: {amount}'**
+  String groupSummaryMemberShare(String name, String amount);
+
+  /// No description provided for @smsAddedMarker.
+  ///
+  /// In en, this message translates to:
+  /// **'Added from SMS'**
+  String get smsAddedMarker;
+
+  /// No description provided for @smsAutoAddedOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {amount} from SMS'**
+  String smsAutoAddedOne(String amount);
+
+  /// No description provided for @smsAutoAddedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Added 1 entry from SMS} other{Added {count} entries from SMS}}'**
+  String smsAutoAddedMany(int count);
+
+  /// No description provided for @smsReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS to review'**
+  String get smsReviewTitle;
+
+  /// No description provided for @smsReviewHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'These messages were not clear enough to add on their own. Add, edit or ignore each one.'**
+  String get smsReviewHelp;
+
+  /// No description provided for @smsReviewUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the amount'**
+  String get smsReviewUnread;
+
+  /// No description provided for @smsReviewAddManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Add manually'**
+  String get smsReviewAddManually;
 }
 
 class _AppLocalizationsDelegate

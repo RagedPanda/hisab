@@ -19,6 +19,14 @@ void main() {
       expect(bankFromSender('AX-AXISBK-S'), 'Axis Bank');
       expect(bankFromSender('+919876543210'), isNull);
     });
+
+    test('only alphanumeric headers count as business senders', () {
+      expect(isBusinessSender('AD-HDFCBK'), isTrue);
+      expect(isBusinessSender('KOTAKB'), isTrue);
+      expect(isBusinessSender('+19876500011'), isFalse);
+      expect(isBusinessSender('9876500011'), isFalse);
+      expect(isBusinessSender(''), isFalse);
+    });
   });
 
   group('rejects non-transactions', () {

@@ -6087,6 +6087,17 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _clearedAtMeta = const VerificationMeta(
+    'clearedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> clearedAt = GeneratedColumn<DateTime>(
+    'cleared_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6097,6 +6108,7 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
     parsedJson,
     entryId,
     createdAt,
+    clearedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6165,6 +6177,12 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('cleared_at')) {
+      context.handle(
+        _clearedAtMeta,
+        clearedAt.isAcceptableOrUnknown(data['cleared_at']!, _clearedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -6206,6 +6224,10 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      clearedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cleared_at'],
+      ),
     );
   }
 
@@ -6222,11 +6244,15 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
   final String body;
   final DateTime receivedAt;
 
-  /// pending | added | ignored | skipped
+  /// See SmsLogStatus: pending | added | ignored | skipped | not_bank | duplicate | undone
   final String status;
   final String? parsedJson;
   final String? entryId;
   final DateTime createdAt;
+
+  /// Set when the user clears the SMS history. The row stays (with its body
+  /// wiped) so the message is still recognised and never processed twice.
+  final DateTime? clearedAt;
   const SmsLogData({
     required this.id,
     required this.sender,
@@ -6236,6 +6262,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     this.parsedJson,
     this.entryId,
     required this.createdAt,
+    this.clearedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6252,6 +6279,9 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       map['entry_id'] = Variable<String>(entryId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || clearedAt != null) {
+      map['cleared_at'] = Variable<DateTime>(clearedAt);
+    }
     return map;
   }
 
@@ -6269,6 +6299,9 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           ? const Value.absent()
           : Value(entryId),
       createdAt: Value(createdAt),
+      clearedAt: clearedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(clearedAt),
     );
   }
 
@@ -6286,6 +6319,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       parsedJson: serializer.fromJson<String?>(json['parsedJson']),
       entryId: serializer.fromJson<String?>(json['entryId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      clearedAt: serializer.fromJson<DateTime?>(json['clearedAt']),
     );
   }
   @override
@@ -6300,6 +6334,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       'parsedJson': serializer.toJson<String?>(parsedJson),
       'entryId': serializer.toJson<String?>(entryId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'clearedAt': serializer.toJson<DateTime?>(clearedAt),
     };
   }
 
@@ -6312,6 +6347,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     Value<String?> parsedJson = const Value.absent(),
     Value<String?> entryId = const Value.absent(),
     DateTime? createdAt,
+    Value<DateTime?> clearedAt = const Value.absent(),
   }) => SmsLogData(
     id: id ?? this.id,
     sender: sender ?? this.sender,
@@ -6321,6 +6357,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     parsedJson: parsedJson.present ? parsedJson.value : this.parsedJson,
     entryId: entryId.present ? entryId.value : this.entryId,
     createdAt: createdAt ?? this.createdAt,
+    clearedAt: clearedAt.present ? clearedAt.value : this.clearedAt,
   );
   SmsLogData copyWithCompanion(SmsLogCompanion data) {
     return SmsLogData(
@@ -6336,6 +6373,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           : this.parsedJson,
       entryId: data.entryId.present ? data.entryId.value : this.entryId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      clearedAt: data.clearedAt.present ? data.clearedAt.value : this.clearedAt,
     );
   }
 
@@ -6349,7 +6387,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           ..write('status: $status, ')
           ..write('parsedJson: $parsedJson, ')
           ..write('entryId: $entryId, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('clearedAt: $clearedAt')
           ..write(')'))
         .toString();
   }
@@ -6364,6 +6403,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     parsedJson,
     entryId,
     createdAt,
+    clearedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -6376,7 +6416,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           other.status == this.status &&
           other.parsedJson == this.parsedJson &&
           other.entryId == this.entryId &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.clearedAt == this.clearedAt);
 }
 
 class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
@@ -6388,6 +6429,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
   final Value<String?> parsedJson;
   final Value<String?> entryId;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> clearedAt;
   final Value<int> rowid;
   const SmsLogCompanion({
     this.id = const Value.absent(),
@@ -6398,6 +6440,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     this.parsedJson = const Value.absent(),
     this.entryId = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.clearedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SmsLogCompanion.insert({
@@ -6409,6 +6452,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     this.parsedJson = const Value.absent(),
     this.entryId = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.clearedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        sender = Value(sender),
@@ -6424,6 +6468,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     Expression<String>? parsedJson,
     Expression<String>? entryId,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? clearedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -6435,6 +6480,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
       if (parsedJson != null) 'parsed_json': parsedJson,
       if (entryId != null) 'entry_id': entryId,
       if (createdAt != null) 'created_at': createdAt,
+      if (clearedAt != null) 'cleared_at': clearedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6448,6 +6494,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     Value<String?>? parsedJson,
     Value<String?>? entryId,
     Value<DateTime>? createdAt,
+    Value<DateTime?>? clearedAt,
     Value<int>? rowid,
   }) {
     return SmsLogCompanion(
@@ -6459,6 +6506,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
       parsedJson: parsedJson ?? this.parsedJson,
       entryId: entryId ?? this.entryId,
       createdAt: createdAt ?? this.createdAt,
+      clearedAt: clearedAt ?? this.clearedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6490,6 +6538,9 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (clearedAt.present) {
+      map['cleared_at'] = Variable<DateTime>(clearedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6507,6 +6558,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
           ..write('parsedJson: $parsedJson, ')
           ..write('entryId: $entryId, ')
           ..write('createdAt: $createdAt, ')
+          ..write('clearedAt: $clearedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -14210,6 +14262,7 @@ typedef $$SmsLogTableCreateCompanionBuilder = SmsLogCompanion Function({
   Value<String?> parsedJson,
   Value<String?> entryId,
   Value<DateTime> createdAt,
+  Value<DateTime?> clearedAt,
   Value<int> rowid,
 });
 typedef $$SmsLogTableUpdateCompanionBuilder = SmsLogCompanion Function({
@@ -14221,6 +14274,7 @@ typedef $$SmsLogTableUpdateCompanionBuilder = SmsLogCompanion Function({
   Value<String?> parsedJson,
   Value<String?> entryId,
   Value<DateTime> createdAt,
+  Value<DateTime?> clearedAt,
   Value<int> rowid,
 });
 
@@ -14270,6 +14324,11 @@ class $$SmsLogTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get clearedAt => $composableBuilder(
+    column: $table.clearedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -14322,6 +14381,11 @@ class $$SmsLogTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get clearedAt => $composableBuilder(
+    column: $table.clearedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SmsLogTableAnnotationComposer
@@ -14360,6 +14424,9 @@ class $$SmsLogTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get clearedAt =>
+      $composableBuilder(column: $table.clearedAt, builder: (column) => column);
 }
 
 class $$SmsLogTableTableManager
@@ -14398,6 +14465,7 @@ class $$SmsLogTableTableManager
                 Value<String?> parsedJson = const Value.absent(),
                 Value<String?> entryId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> clearedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SmsLogCompanion(
                 id: id,
@@ -14408,6 +14476,7 @@ class $$SmsLogTableTableManager
                 parsedJson: parsedJson,
                 entryId: entryId,
                 createdAt: createdAt,
+                clearedAt: clearedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -14420,6 +14489,7 @@ class $$SmsLogTableTableManager
                 Value<String?> parsedJson = const Value.absent(),
                 Value<String?> entryId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> clearedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SmsLogCompanion.insert(
                 id: id,
@@ -14430,6 +14500,7 @@ class $$SmsLogTableTableManager
                 parsedJson: parsedJson,
                 entryId: entryId,
                 createdAt: createdAt,
+                clearedAt: clearedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

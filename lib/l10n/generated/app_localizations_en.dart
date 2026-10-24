@@ -384,7 +384,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smsEntryNotice =>
-      'Created from a bank SMS. Editing it will not change your bank balance.';
+      'Added from SMS. Editing it will not change your bank balance.';
 
   @override
   String get saving => 'Saving…';
@@ -666,7 +666,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get money => 'Money';
 
   @override
-  String get currencySymbol => 'Currency symbol';
+  String get currency => 'Currency';
+
+  @override
+  String get currencyChooseTitle => 'Choose your currency';
+
+  @override
+  String get currencyChooseBody =>
+      'Amounts in Hisab show in this currency. You can change it later in Settings.';
+
+  @override
+  String get currencySearchHint => 'Search code, name or country';
+
+  @override
+  String currencyContinue(String currency) {
+    return 'Continue with $currency';
+  }
+
+  @override
+  String currencyNoMatch(String query) {
+    return 'No currency matches \"$query\"';
+  }
 
   @override
   String get monthStartsOn => 'Month starts on';
@@ -735,6 +755,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Free, open source, no ads, no account needed. Your data stays on your device.';
 
   @override
+  String get aboutMadeWithBefore => 'Made with';
+
+  @override
+  String get aboutMadeWithAfter => '';
+
+  @override
+  String get aboutMadeWithLabel => 'Made with love';
+
+  @override
   String get backupPassphrase => 'Backup passphrase';
 
   @override
@@ -770,7 +799,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsDuplicate => 'Already imported.';
 
   @override
+  String get smsForeignCurrency =>
+      'Only SMS in your home currency are supported, so this one was ignored.';
+
+  @override
   String get smsNotFound => 'Could not find a transaction in that text.';
+
+  @override
+  String get smsNotificationTitle => 'New bank transaction';
+
+  @override
+  String smsNotificationBodyAmount(String amount, String sender) {
+    return '$amount from $sender. Tap to review.';
+  }
+
+  @override
+  String smsNotificationBody(String sender) {
+    return 'From $sender. Tap to review.';
+  }
+
+  @override
+  String smsNotificationBodyAmountAutoAdd(String amount, String sender) {
+    return '$amount from $sender. Open Hisab to add it.';
+  }
+
+  @override
+  String smsNotificationBodyAutoAdd(String sender) {
+    return 'From $sender. Open Hisab to add it.';
+  }
 
   @override
   String get readBankSmsQuestion => 'Read bank SMS?';
@@ -799,10 +855,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not available on iOS. Use the Shortcut or paste below.';
 
   @override
-  String get smsAutoAddTitle => 'Add transactions without review';
+  String get smsAutoAddTitle => 'Add clear transactions automatically';
 
   @override
-  String get smsAutoAddHelp => 'Off: new SMS wait in the review list below.';
+  String get smsAutoAddHelp =>
+      'On: clear bank SMS are added right away with Undo. Unclear ones wait for review.';
 
   @override
   String get scanInboxNow => 'Scan inbox now';
@@ -1959,6 +2016,79 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedAddAnother => 'Saved. Add the next one.';
 
   @override
+  String get smsHistoryTitle => 'SMS history';
+
+  @override
+  String get smsHistoryHelp =>
+      'Every message Hisab processed and what happened to it';
+
+  @override
+  String get smsOutcomeAdded => 'Added';
+
+  @override
+  String get smsOutcomeDuplicate => 'Duplicate';
+
+  @override
+  String get smsOutcomeIgnored => 'Ignored';
+
+  @override
+  String get smsOutcomeUnparsed => 'Unreadable';
+
+  @override
+  String get smsOutcomePending => 'Pending';
+
+  @override
+  String get smsOutcomeUndone => 'Undone';
+
+  @override
+  String get smsHistoryNotBank => 'Not a bank message';
+
+  @override
+  String get smsHistoryDismissed => 'Dismissed from review';
+
+  @override
+  String get smsHistoryUnparsedDetail => 'No transaction found in the text';
+
+  @override
+  String get smsHistoryDuplicateDetail => 'Same message already processed';
+
+  @override
+  String get smsHistoryOpenEntry => 'Open entry';
+
+  @override
+  String get smsHistoryReprocess => 'Process again';
+
+  @override
+  String get smsHistoryClear => 'Clear history';
+
+  @override
+  String get smsHistoryClearQuestion => 'Clear SMS history?';
+
+  @override
+  String smsHistoryClearBody(int count) {
+    return 'Removes the text of $count processed messages from this device. Your entries and messages waiting for review stay, and cleared messages are never imported again.';
+  }
+
+  @override
+  String get smsHistoryClearConfirm => 'Clear';
+
+  @override
+  String get smsHistoryCleared => 'SMS history cleared';
+
+  @override
+  String get smsHistoryEmptyTitle => 'No messages processed yet';
+
+  @override
+  String get smsHistoryEmptyBody =>
+      'Bank SMS that Hisab reads or that you paste show up here.';
+
+  @override
+  String get smsHistoryEmptyFiltered => 'No messages with this outcome';
+
+  @override
+  String get smsHistoryTextNotKept => 'Message text not kept';
+
+  @override
   String get recurringRepeat => 'Repeat';
 
   @override
@@ -2208,6 +2338,220 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get subscriptions => 'Subscriptions';
+
+  @override
+  String get subscriptionsMonthlyTotal => 'Per month';
+
+  @override
+  String get subscriptionsYearlyTotal => 'Per year';
+
+  @override
+  String subscriptionsActiveCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count active subscriptions',
+      one: '1 active subscription',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionsEmptyTitle => 'No subscriptions yet';
+
+  @override
+  String get subscriptionsEmptyBody =>
+      'Add Netflix, your phone recharge or the gym to see what they cost you each month and year.';
+
+  @override
+  String get subscriptionAdd => 'Add subscription';
+
+  @override
+  String get subscriptionEdit => 'Edit subscription';
+
+  @override
+  String get subscriptionPickService => 'Pick a service';
+
+  @override
+  String get subscriptionCustom => 'Something else';
+
+  @override
+  String get subscriptionPrice => 'Price per renewal';
+
+  @override
+  String get subscriptionCycle => 'Renews';
+
+  @override
+  String get subscriptionNextRenewal => 'Next renewal';
+
+  @override
+  String subscriptionStartedOn(String date) {
+    return 'Started $date';
+  }
+
+  @override
+  String get subscriptionAutoPost => 'Add to expenses on each renewal';
+
+  @override
+  String get subscriptionAutoPostHelp =>
+      'Off: tracked here only, no entries are added';
+
+  @override
+  String get subscriptionNameRequired => 'Enter a name';
+
+  @override
+  String get subscriptionPriceRequired => 'Enter the price';
+
+  @override
+  String subscriptionRenewsOn(String date) {
+    return 'Renews $date';
+  }
+
+  @override
+  String get subscriptionRenewsToday => 'Renews today';
+
+  @override
+  String subscriptionRenewsInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Renews in $days days',
+      one: 'Renews tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionOverdue(String date) {
+    return 'Was due $date';
+  }
+
+  @override
+  String get subscriptionPaused => 'Paused';
+
+  @override
+  String get subscriptionCancelled => 'Cancelled';
+
+  @override
+  String get subscriptionPause => 'Pause';
+
+  @override
+  String get subscriptionResume => 'Resume';
+
+  @override
+  String get subscriptionMarkCancelled => 'Mark as cancelled';
+
+  @override
+  String subscriptionCancelConfirm(String name) {
+    return 'Mark $name as cancelled?';
+  }
+
+  @override
+  String get subscriptionCancelConfirmBody =>
+      'No new charges are added and it leaves the totals. Past entries stay.';
+
+  @override
+  String get subscriptionDeleted => 'Subscription deleted';
+
+  @override
+  String subscriptionPerMonth(String amount) {
+    return '$amount/month';
+  }
+
+  @override
+  String get subscriptionSort => 'Sort';
+
+  @override
+  String get subscriptionSortCostHigh => 'Cost: high to low';
+
+  @override
+  String get subscriptionSortCostLow => 'Cost: low to high';
+
+  @override
+  String get subscriptionSortRenewal => 'Next renewal';
+
+  @override
+  String get subscriptionSortName => 'Name';
+
+  @override
+  String subscriptionEveryDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count days',
+      one: 'Every day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count weeks',
+      one: 'Every week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count months',
+      one: 'Every month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count years',
+      one: 'Every year',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionTemplateNetflix => 'Netflix';
+
+  @override
+  String get subscriptionTemplateAmazonPrime => 'Amazon Prime';
+
+  @override
+  String get subscriptionTemplateJiohotstar => 'JioHotstar';
+
+  @override
+  String get subscriptionTemplateSpotify => 'Spotify';
+
+  @override
+  String get subscriptionTemplateYoutubePremium => 'YouTube Premium';
+
+  @override
+  String get subscriptionTemplateMobileRecharge => 'Mobile recharge';
+
+  @override
+  String get subscriptionTemplateDth => 'DTH';
+
+  @override
+  String get subscriptionTemplateBroadband => 'Broadband';
+
+  @override
+  String get subscriptionTemplateGym => 'Gym';
+
+  @override
+  String get subscriptionTemplateCloudStorage => 'Cloud storage';
+
+  @override
+  String get subscriptionTemplateNewsApp => 'News app';
+
+  @override
   String get payersMultiple => '2+ people';
 
   @override
@@ -2248,4 +2592,131 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0, $_temp1';
   }
+
+  @override
+  String get groupExportCsv => 'Export as CSV';
+
+  @override
+  String groupExportCsvSubject(String group) {
+    return '$group expenses';
+  }
+
+  @override
+  String get groupExportFailed => 'Couldn\'t export the CSV';
+
+  @override
+  String get groupCsvDate => 'Date';
+
+  @override
+  String get groupCsvDescription => 'Description';
+
+  @override
+  String get groupCsvCost => 'Cost';
+
+  @override
+  String get groupCsvPaidBy => 'Paid by';
+
+  @override
+  String groupCsvPaidColumn(String name) {
+    return '$name paid';
+  }
+
+  @override
+  String groupCsvShareColumn(String name) {
+    return '$name share';
+  }
+
+  @override
+  String groupCsvBalanceColumn(String name) {
+    return '$name balance';
+  }
+
+  @override
+  String get groupCsvPayment => 'Payment';
+
+  @override
+  String get groupSummaryWhoPaysWhom => 'Who pays whom';
+
+  @override
+  String get groupSummaryStandings => 'Where everyone stands';
+
+  @override
+  String groupSummaryYouOwe(String name, String amount) {
+    return 'You owe $name $amount';
+  }
+
+  @override
+  String groupSummaryOwesYou(String name, String amount) {
+    return '$name owes you $amount';
+  }
+
+  @override
+  String groupSummaryGetsBack(String name, String amount) {
+    return '$name gets back $amount';
+  }
+
+  @override
+  String groupSummaryOwesInTotal(String name, String amount) {
+    return '$name owes $amount in total';
+  }
+
+  @override
+  String groupSummaryYouGetBack(String amount) {
+    return 'You get back $amount';
+  }
+
+  @override
+  String groupSummaryYouOweInTotal(String amount) {
+    return 'You owe $amount in total';
+  }
+
+  @override
+  String get groupCsvTotal => 'Total';
+
+  @override
+  String groupSummaryGroupTotal(String amount) {
+    return 'Group total: $amount';
+  }
+
+  @override
+  String groupSummaryYourShare(String amount) {
+    return 'Your share: $amount';
+  }
+
+  @override
+  String groupSummaryMemberShare(String name, String amount) {
+    return '$name\'s share: $amount';
+  }
+
+  @override
+  String get smsAddedMarker => 'Added from SMS';
+
+  @override
+  String smsAutoAddedOne(String amount) {
+    return 'Added $amount from SMS';
+  }
+
+  @override
+  String smsAutoAddedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added $count entries from SMS',
+      one: 'Added 1 entry from SMS',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get smsReviewTitle => 'SMS to review';
+
+  @override
+  String get smsReviewHelp =>
+      'These messages were not clear enough to add on their own. Add, edit or ignore each one.';
+
+  @override
+  String get smsReviewUnread => 'Could not read the amount';
+
+  @override
+  String get smsReviewAddManually => 'Add manually';
 }

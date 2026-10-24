@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/providers.dart';
 import 'core/theme.dart';
+import 'features/currency/first_launch_currency_screen.dart';
 import 'features/recurring/recurring_catch_up.dart';
 import 'features/recurring/recurring_list_model.dart';
 import 'features/shell/router.dart';
+import 'features/sms/sms_auto_add_snackbar.dart';
+import 'features/sms/sms_auto_sync.dart';
 import 'l10n/generated/app_localizations.dart';
 
 class HisabApp extends ConsumerStatefulWidget {
@@ -72,6 +75,14 @@ class _HisabAppState extends ConsumerState<HisabApp> {
       themeAnimationDuration: const Duration(milliseconds: 300),
       themeAnimationCurve: Curves.easeOutCubic,
       routerConfig: appRouter,
+      // A fresh install picks its currency before Home. The router keeps its
+      // location (and any deep link) and shows it once the choice is saved.
+      // Otherwise the SMS Undo snackbar sits above the navigator so it shows on
+      // every route, including Bank SMS opened directly from a hisab://sms link.
+      // SmsAutoSync drains queued SMS and catches up on the inbox on start and resume.
+      builder: (context, child) => settings.currencyConfirmed
+          ? SmsAutoSync(child: SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink()))
+          : const FirstLaunchCurrencyGate(),
     );
   }
 }

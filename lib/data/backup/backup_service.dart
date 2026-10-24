@@ -3,14 +3,23 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 
 import '../../domain/backup/backup_codec.dart';
+import '../../domain/backup/backup_settings.dart';
 import '../db/database.dart';
+
+/// What a restore wrote, plus the backup's currency (null for older backups).
+class BackupRestoreResult {
+  const BackupRestoreResult({required this.written, required this.currencyCode});
+  final int written;
+  final String? currencyCode;
+}
 
 /// Exports and imports every table as JSON wrapped in the encrypted container.
 class BackupService {
   BackupService(this.db);
   final AppDatabase db;
 
-  Future<Map<String, dynamic>> snapshot() async {
+  /// [currencyCode] is stored so a restore keeps the backup's currency.
+  Future<Map<String, dynamic>> snapshot({String? currencyCode}) async {
     Future<List<Map<String, dynamic>>> dump<D extends DataClass>(TableInfo<Table, D> table) async {
       final rows = await db.select(table).get();
       return [for (final row in rows) row.toJson()];
@@ -20,6 +29,7 @@ class BackupService {
       'version': 1,
       'app': 'hisab',
       'exportedAt': DateTime.now().toIso8601String(),
+      if (currencyCode != null) kBackupSettingsKey: backupSettingsSection(currencyCode: currencyCode),
       'accounts': await dump(db.accounts),
       'categories': await dump(db.categories),
       'entries': await dump(db.entries),
@@ -35,16 +45,19 @@ class BackupService {
       'entryFieldValues': await dump(db.entryFieldValues),
       'reminders': await dump(db.reminders),
       'entryPayers': await dump(db.entryPayers),
+      'recurringRules': await dump(db.recurringRules),
     };
   }
 
-  Future<Uint8List> exportEncrypted(String passphrase) async => encryptBackup(payload: await snapshot(), passphrase: passphrase);
+  Future<Uint8List> exportEncrypted(String passphrase, {String? currencyCode}) async =>
+      encryptBackup(payload: await snapshot(currencyCode: currencyCode), passphrase: passphrase);
 
   Future<String> exportPlainJson() async => const JsonEncoder.withIndent('  ').convert(await snapshot());
 
-  Future<int> importEncrypted(List<int> bytes, String passphrase) async {
+  Future<BackupRestoreResult> importEncrypted(List<int> bytes, String passphrase) async {
     final payload = await decryptBackup(bytes: bytes, passphrase: passphrase);
-    return importSnapshot(payload);
+    final written = await importSnapshot(payload);
+    return BackupRestoreResult(written: written, currencyCode: backupCurrencyCode(payload));
   }
 
   /// Merges a backup into the current database. A row is written only when it
@@ -93,6 +106,9 @@ class BackupService {
       await restore(db.entryFieldValues, 'entryFieldValues', EntryFieldValue.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.reminders, 'reminders', Reminder.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.entryPayers, 'entryPayers', EntryPayer.fromJson, (r) => r.id, (r) => r.updatedAt);
+      await restore(db.recurringRules, 'recurringRules', RecurringRule.fromJson, (r) => r.id, (r) => r.updatedAt);
+      // A backup from an older build may carry the text of not-bank SMS.
+      await db.wipeUnkeptSmsText();
     });
     return written;
   }

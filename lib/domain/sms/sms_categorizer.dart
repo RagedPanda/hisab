@@ -91,6 +91,16 @@ const Map<String, List<String>> _creditRules = {
   'self_transfer': ['self', 'own account'],
 };
 
+/// Message kinds that settle the category on their own, whatever the
+/// merchant text says.
+const Map<TxnKind, String> _kindCategories = {
+  TxnKind.salary: 'salary',
+  TxnKind.refund: 'refunds_cashback',
+  TxnKind.atmWithdrawal: 'cash_withdrawal',
+  TxnKind.emi: 'loan_emi',
+  TxnKind.walletTopUp: 'wallet_topup',
+};
+
 /// Index of [keyword] in [haystack] as a whole word (letters/digits on
 /// either side break the match), or -1.
 int _indexOfWord(String haystack, String keyword) {
@@ -134,6 +144,8 @@ String suggestCategoryKey(ParsedTransaction txn) {
   final rules = txn.isDebit ? _debitRules : _creditRules;
   if (txn.isDebit && txn.instrument == Instrument.atm) return 'cash_withdrawal';
   if (!txn.isDebit && txn.isCreditCard) return 'credit_card_payment';
+  final byKind = _kindCategories[txn.kind];
+  if (byKind != null) return byKind;
 
   final best = _bestMatch(haystack, rules, _indexOfWord) ?? _bestMatch(haystack, rules, _indexOfSubstring);
   if (best != null) return best;

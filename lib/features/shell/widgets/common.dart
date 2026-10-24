@@ -32,19 +32,19 @@ class IconBadge extends StatelessWidget {
 }
 
 /// Amount text coloured by direction.
-class AmountText extends StatelessWidget {
-  const AmountText(this.minor, {super.key, required this.kind, this.style, this.signed = true, this.symbol});
+class AmountText extends ConsumerWidget {
+  const AmountText(this.minor, {super.key, required this.kind, this.style, this.signed = true, this.moneyFormat});
   final int minor;
   final String kind;
   final TextStyle? style;
   final bool signed;
 
-  /// Currency symbol to show; the app's own when null (a group passes its label).
-  final String? symbol;
+  /// How to write the amount; the app's own when null (a group passes its own).
+  final MoneyFormat? moneyFormat;
 
   @override
-  Widget build(BuildContext context) {
-    final shownSymbol = symbol ?? ProviderScope.containerOf(context).read(settingsProvider).currencySymbol;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final MoneyFormat shownFormat = moneyFormat ?? ref.watch(homeMoneyFormatProvider);
     final color = switch (kind) {
       'income' => const Color(0xFF2E9E6B),
       'expense' => const Color(0xFFD9534F),
@@ -52,7 +52,7 @@ class AmountText extends StatelessWidget {
     };
     final prefix = !signed ? '' : switch (kind) { 'income' => '+', 'expense' => '-', _ => '' };
     return Text(
-      '$prefix${formatMinor(minor, symbol: shownSymbol)}',
+      '$prefix${formatMinor(minor, format: shownFormat)}',
       style: (style ?? Theme.of(context).textTheme.bodyLarge)?.copyWith(color: color, fontWeight: FontWeight.w600).tabular,
     );
   }
@@ -261,9 +261,11 @@ final List<TextInputFormatter> amountInputFormatters = [
   LengthLimitingTextInputFormatter(kMaxAmountWholeDigits + 6),
 ];
 
-/// Inline error for an amount field, or null while the text parses.
-String? amountErrorText(BuildContext context, String text) =>
-    text.trim().isNotEmpty && parseAmountToMinor(text) == null ? context.l10n.invalidAmount : null;
+/// Inline error for an amount field read with [format], or null while the
+/// text parses.
+String? amountErrorText(BuildContext context, String text, {required MoneyFormat format}) =>
+    text.trim().isNotEmpty && parseAmountToMinor(text, format: format) == null ? context.l10n.invalidAmount : null;
+
 
 Future<String?> promptText(
   BuildContext context, {
@@ -300,14 +302,14 @@ Future<String?> promptText(
 
 /// Asks for a money amount; returns minor units, or null when cancelled.
 /// Save stays disabled until the text is a valid amount above zero.
-Future<int?> promptAmount(BuildContext context, {required String title, int? initialMinor, String? hint}) {
-  final controller = TextEditingController(text: initialMinor == null ? '' : amountInputText(initialMinor));
+Future<int?> promptAmount(BuildContext context, {required String title, required MoneyFormat format, int? initialMinor, String? hint}) {
+  final controller = TextEditingController(text: initialMinor == null ? '' : amountInputText(initialMinor, format: format));
   controller.selection = TextSelection(baseOffset: 0, extentOffset: controller.text.length);
   return showDialog<int>(
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setState) {
-        final parsed = parseAmountToMinor(controller.text);
+        final parsed = parseAmountToMinor(controller.text, format: format);
         final valid = parsed != null && parsed > 0;
         return AlertDialog(
           title: Text(title),
@@ -316,7 +318,12 @@ Future<int?> promptAmount(BuildContext context, {required String title, int? ini
             autofocus: true,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: amountInputFormatters,
-            decoration: InputDecoration(hintText: hint ?? '0', errorText: amountErrorText(context, controller.text)),
+            decoration: InputDecoration(
+              hintText: hint ?? '0',
+              prefixText: amountPrefixText(format),
+              suffixText: amountSuffixText(format),
+              errorText: amountErrorText(context, controller.text, format: format),
+            ),
             onChanged: (_) => setState(() {}),
             onSubmitted: (_) => valid ? Navigator.pop(context, parsed) : null,
           ),

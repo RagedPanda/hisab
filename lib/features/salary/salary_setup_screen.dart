@@ -24,9 +24,9 @@ String salaryShiftLabel(BuildContext context, SalaryShift shift) => switch (shif
 /// The status card's two lines: what happened to the tracked cycle (received
 /// with its amount, late, or expected) and what comes next, with the last
 /// salary received when the tracked one has not arrived yet.
-({String title, String subtitle}) salaryStatusLines(SalaryStatus status, AppLocalizations l10n, {required String locale, required String symbol}) {
+({String title, String subtitle}) salaryStatusLines(SalaryStatus status, AppLocalizations l10n, {required String locale, required MoneyFormat moneyFormat}) {
   String date(DateTime value) => formatShortDate(value, locale: locale);
-  String money(int minor) => formatMinor(minor, symbol: symbol);
+  String money(int minor) => formatMinor(minor, format: moneyFormat);
   final received = status.received;
   final title = received != null
       ? l10n.salaryReceivedAmount(date(received.occurredAt), money(received.amountMinor))
@@ -64,9 +64,12 @@ class SalarySetupScreen extends ConsumerStatefulWidget {
 }
 
 class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
+  /// Number format the amount fields read and write (the app's own).
+  MoneyFormat get _moneyFormat => ref.read(homeMoneyFormatProvider);
+
   late SalarySettings draft = ref.read(salarySettingsProvider);
   late final TextEditingController amountController =
-      TextEditingController(text: draft.amountMinor > 0 ? amountInputText(draft.amountMinor) : '');
+      TextEditingController(text: draft.amountMinor > 0 ? amountInputText(draft.amountMinor, format: _moneyFormat) : '');
   bool saving = false;
 
   @override
@@ -75,7 +78,7 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
     super.dispose();
   }
 
-  int? get parsedAmount => parseAmountToMinor(amountController.text);
+  int? get parsedAmount => parseAmountToMinor(amountController.text, format: _moneyFormat);
   bool get canSave => !saving && (parsedAmount ?? 0) > 0;
 
   Future<void> addHoliday() async {
@@ -140,7 +143,7 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
     final monthStartDay = ref.watch(settingsProvider).monthStartDay;
     final status = ref.watch(salaryStatusProvider);
-    final statusLines = status == null ? null : salaryStatusLines(status, l10n, locale: locale, symbol: ref.watch(settingsProvider).currencySymbol);
+    final statusLines = status == null ? null : salaryStatusLines(status, l10n, locale: locale, moneyFormat: ref.watch(homeMoneyFormatProvider));
     final aligned = isMonthStartAligned(monthStartDay: monthStartDay, salaryDay: draft.salaryDay);
     final accountIds = {for (final account in accounts) account.id};
 
@@ -175,8 +178,8 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
               inputFormatters: amountInputFormatters,
               decoration: InputDecoration(
                 labelText: l10n.salaryAmount,
-                prefixText: '${ref.watch(settingsProvider).currencySymbol} ',
-                errorText: amountErrorText(context, amountController.text),
+                prefixText: amountPrefixText(ref.watch(homeMoneyFormatProvider)), suffixText: amountSuffixText(ref.watch(homeMoneyFormatProvider)),
+                errorText: amountErrorText(context, amountController.text, format: _moneyFormat),
                 border: const OutlineInputBorder(),
               ),
               onChanged: (_) => setState(() {}),

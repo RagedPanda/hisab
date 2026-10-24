@@ -15,6 +15,7 @@ import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
 
 import 'fake_notification_gateway.dart';
+import 'package:hisab/core/money.dart';
 
 void main() {
   late AppDatabase db;
@@ -33,7 +34,7 @@ void main() {
       reminders: RemindersRepository(db, clock: () => now),
       notifications: NotificationService(
         FakeNotificationGateway(),
-        buildAlert: (r, a) => alertRequestFor(r, a, notificationLocalizations('en'), currencySymbol: '₹'),
+        buildAlert: (r, a) => alertRequestFor(r, a, notificationLocalizations('en'), moneyFormat: MoneyFormat.inr),
         clock: () => now,
       ),
       removeEntry: (entryId) => deleteEntryReversingBalances(entries: entries, accounts: accounts, entryId: entryId),

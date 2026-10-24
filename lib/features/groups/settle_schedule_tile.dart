@@ -14,7 +14,7 @@ import 'settle_up_sheet.dart';
 /// The text to share with the people in the group's settle-up schedule, or
 /// null when there is nothing outstanding with them. It goes to the other
 /// people, so it names them by their own names, never "You".
-String? settleScheduleNudgeFor(AppLocalizations l10n, GroupDetail detail, SettleReminderSchedule schedule, {required String currencySymbol}) {
+String? settleScheduleNudgeFor(AppLocalizations l10n, GroupDetail detail, SettleReminderSchedule schedule, {required MoneyFormat moneyFormat}) {
   final memberById = {for (final member in detail.allMembers) member.id: member};
   return settleReminderNudge(
     l10n,
@@ -22,16 +22,16 @@ String? settleScheduleNudgeFor(AppLocalizations l10n, GroupDetail detail, Settle
     myMemberId: detail.me?.id,
     groupName: detail.group.name,
     nameOf: (id) => memberById[id]?.name ?? l10n.unknown,
-    formatAmount: (amountMinor) => formatMinor(amountMinor, symbol: currencySymbol),
+    formatAmount: (amountMinor) => formatMinor(amountMinor, format: moneyFormat),
   );
 }
 
 /// "Remind me to settle up" on the Balances tab: shows the group's schedule,
 /// opens the schedule sheet, and shares a nudge while something is owed.
 class SettleScheduleTile extends ConsumerWidget {
-  const SettleScheduleTile({super.key, required this.detail, required this.symbol});
+  const SettleScheduleTile({super.key, required this.detail, required this.moneyFormat});
   final GroupDetail detail;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   Future<void> _edit(BuildContext context, WidgetRef ref, SettleReminderSchedule? existing) async {
     final choice = await showSettleReminderSheet(
@@ -51,7 +51,7 @@ class SettleScheduleTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final schedule = ref.watch(settleScheduleProvider(detail.group.id)).value;
-    final nudge = schedule == null ? null : settleScheduleNudgeFor(l10n, detail, schedule, currencySymbol: symbol);
+    final nudge = schedule == null ? null : settleScheduleNudgeFor(l10n, detail, schedule, moneyFormat: moneyFormat);
     return ListTile(
       leading: Icon(schedule == null ? Icons.notifications_none_outlined : Icons.notifications_active_outlined),
       title: Text(l10n.settleReminderSheetTitle),

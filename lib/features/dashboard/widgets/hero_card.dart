@@ -22,20 +22,20 @@ class HeroCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hero = ref.watch(heroDataProvider);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     return AsyncCard(
       value: hero,
       skeletonHeight: 168,
       contentKey: ValueKey(hero.value?.range.start),
-      builder: (data) => DashboardSection(child: _HeroContent(data: data, symbol: symbol)),
+      builder: (data) => DashboardSection(child: _HeroContent(data: data, moneyFormat: moneyFormat)),
     );
   }
 }
 
 class _HeroContent extends StatelessWidget {
-  const _HeroContent({required this.data, required this.symbol});
+  const _HeroContent({required this.data, required this.moneyFormat});
   final HeroData data;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +49,7 @@ class _HeroContent extends StatelessWidget {
     final gradient = isDark
         ? [scheme.primaryContainer, scheme.surfaceContainerHigh]
         : [scheme.primary, Color.lerp(scheme.primary, scheme.primaryContainer, 0.45)!];
-    final amountText = formatMinor(summary.expense, symbol: symbol, showDecimals: false);
+    final amountText = formatMinor(summary.expense, format: moneyFormat, showDecimals: false);
     return Semantics(
       button: true,
       label: '${l10n.spentInMonth(formatMonthName(data.range, locale: locale))} $amountText',
@@ -82,9 +82,9 @@ class _HeroContent extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  _AnimatedAmount(minor: summary.expense, symbol: symbol, style: theme.textTheme.displaySmall?.copyWith(color: foreground, fontWeight: FontWeight.w700).tabular),
+                  _AnimatedAmount(minor: summary.expense, moneyFormat: moneyFormat, style: theme.textTheme.displaySmall?.copyWith(color: foreground, fontWeight: FontWeight.w700).tabular),
                   const SizedBox(height: 12),
-                  if (summary.isEmpty) _EmptyRow(foreground: foreground) else _StatsRow(summary: summary, symbol: symbol, foreground: foreground),
+                  if (summary.isEmpty) _EmptyRow(foreground: foreground) else _StatsRow(summary: summary, moneyFormat: moneyFormat, foreground: foreground),
                 ],
               ),
             ),
@@ -97,7 +97,7 @@ class _HeroContent extends StatelessWidget {
   Future<void> _copyAmount(BuildContext context, int minor) async {
     final messenger = ScaffoldMessenger.of(context);
     final copied = context.l10n.copied;
-    await Clipboard.setData(ClipboardData(text: amountInputText(minor)));
+    await Clipboard.setData(ClipboardData(text: amountInputText(minor, format: moneyFormat)));
     HapticFeedback.selectionClick();
     messenger.showSnackBar(SnackBar(content: Text(copied)));
   }
@@ -105,9 +105,9 @@ class _HeroContent extends StatelessWidget {
 
 /// The headline amount, tweened over 300 ms when the value changes.
 class _AnimatedAmount extends StatelessWidget {
-  const _AnimatedAmount({required this.minor, required this.symbol, required this.style});
+  const _AnimatedAmount({required this.minor, required this.moneyFormat, required this.style});
   final int minor;
-  final String symbol;
+  final MoneyFormat moneyFormat;
   final TextStyle? style;
 
   @override
@@ -115,7 +115,7 @@ class _AnimatedAmount extends StatelessWidget {
         tween: IntTween(end: minor),
         duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
-        builder: (context, value, _) => Text(formatMinor(value, symbol: symbol, showDecimals: false), key: kSummarySpentKey, maxLines: 1, style: style),
+        builder: (context, value, _) => Text(formatMinor(value, format: moneyFormat, showDecimals: false), key: kSummarySpentKey, maxLines: 1, style: style),
       );
 }
 
@@ -145,9 +145,9 @@ class _ComparisonPill extends StatelessWidget {
 }
 
 class _StatsRow extends StatelessWidget {
-  const _StatsRow({required this.summary, required this.symbol, required this.foreground});
+  const _StatsRow({required this.summary, required this.moneyFormat, required this.foreground});
   final MonthSummary summary;
-  final String symbol;
+  final MoneyFormat moneyFormat;
   final Color foreground;
 
   @override
@@ -157,9 +157,9 @@ class _StatsRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Expanded(child: _Stat(label: l10n.income, value: formatMinor(summary.income, symbol: symbol, showDecimals: false), foreground: foreground, dot: kIncomeColor)),
-        Expanded(child: _Stat(label: overspent ? l10n.overspent : l10n.saved, value: formatMinor(summary.net.abs(), symbol: symbol, showDecimals: false), foreground: foreground, dot: overspent ? kExpenseColor : null)),
-        Expanded(child: _Stat(label: l10n.dailyAverage, value: l10n.perDay(formatMinor(summary.dailyAverageMinor, symbol: symbol, showDecimals: false)), foreground: foreground)),
+        Expanded(child: _Stat(label: l10n.income, value: formatMinor(summary.income, format: moneyFormat, showDecimals: false), foreground: foreground, dot: kIncomeColor)),
+        Expanded(child: _Stat(label: overspent ? l10n.overspent : l10n.saved, value: formatMinor(summary.net.abs(), format: moneyFormat, showDecimals: false), foreground: foreground, dot: overspent ? kExpenseColor : null)),
+        Expanded(child: _Stat(label: l10n.dailyAverage, value: l10n.perDay(formatMinor(summary.dailyAverageMinor, format: moneyFormat, showDecimals: false)), foreground: foreground)),
         _MonthProgressRing(fraction: summary.elapsedFraction, elapsed: summary.daysElapsed, total: summary.daysInMonth, foreground: foreground),
       ],
     );

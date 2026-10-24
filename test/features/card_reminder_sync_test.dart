@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hisab/core/money.dart';
 import 'package:hisab/core/notifications/notification_service.dart';
 import 'package:hisab/core/notifications/reminder_alert_text.dart';
 import 'package:hisab/core/notifications/reminder_scheduler.dart';
@@ -35,7 +36,7 @@ void main() {
     scheduler = ReminderScheduler(
       reminders: reminders,
       notifications: NotificationService(gateway,
-          buildAlert: (r, a) => alertRequestFor(r, a, notificationLocalizations('en'), currencySymbol: '₹'), clock: () => now),
+          buildAlert: (r, a) => alertRequestFor(r, a, notificationLocalizations('en'), moneyFormat: MoneyFormat.inr), clock: () => now),
       clock: () => now,
     );
     sync = CardReminderSync(accounts: accounts, entries: EntriesRepository(db), reminders: reminders, scheduler: scheduler, clock: () => now);

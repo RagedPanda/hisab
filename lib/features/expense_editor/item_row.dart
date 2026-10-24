@@ -70,13 +70,13 @@ class ItemDraft {
 }
 
 class ItemRow extends StatefulWidget {
-  const ItemRow({super.key, required this.draft, required this.units, required this.symbol, required this.onChanged, required this.onRemove, this.footer});
+  const ItemRow({super.key, required this.draft, required this.units, required this.moneyFormat, required this.onChanged, required this.onRemove, this.footer});
   final ItemDraft draft;
 
   /// Shown under the quantity and price line, e.g. who shares the item.
   final Widget? footer;
   final List<String> units;
-  final String symbol;
+  final MoneyFormat moneyFormat;
   final ValueChanged<ItemDraft> onChanged;
   final VoidCallback onRemove;
 
@@ -111,7 +111,7 @@ class _ItemRowState extends State<ItemRow> {
                   onChanged: (v) => widget.onChanged(draft.copyWith(name: v)),
                 ),
               ),
-              Text(formatMinor(draft.amountMinor, symbol: widget.symbol), style: Theme.of(context).textTheme.labelLarge),
+              Text(formatMinor(draft.amountMinor, format: widget.moneyFormat), style: Theme.of(context).textTheme.labelLarge),
               IconButton(tooltip: l10n.remove, icon: const Icon(Icons.close, size: 18), onPressed: widget.onRemove),
             ]),
             Row(children: [
@@ -144,8 +144,8 @@ class _ItemRowState extends State<ItemRow> {
                 child: TextField(
                   controller: _price,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(labelText: l10n.pricePerUnit(draft.unit ?? l10n.genericUnit), prefixText: '${widget.symbol} ', isDense: true),
-                  onChanged: (v) => widget.onChanged(draft.copyWith(unitPriceMinor: parseAmountToMinor(v) ?? 0)),
+                  decoration: InputDecoration(labelText: l10n.pricePerUnit(draft.unit ?? l10n.genericUnit), prefixText: amountPrefixText(widget.moneyFormat), suffixText: amountSuffixText(widget.moneyFormat), isDense: true),
+                  onChanged: (v) => widget.onChanged(draft.copyWith(unitPriceMinor: parseAmountToMinor(v, format: widget.moneyFormat) ?? 0)),
                 ),
               ),
               const SizedBox(width: 8),

@@ -50,7 +50,6 @@ class GroupDetailScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final detail = ref.watch(groupDetailProvider(groupId)).value;
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
-    final appSymbol = ref.watch(settingsProvider).currencySymbol;
     // Balances changed: reword the group's scheduled settle-up alert. A no-op
     // without a schedule, and nothing is written when the text is unchanged.
     ref.listen(groupDetailProvider(groupId), (previous, next) {
@@ -58,7 +57,7 @@ class GroupDetailScreen extends ConsumerWidget {
     });
     if (detail == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final group = detail.group;
-    final symbol = groupSymbol(currencyLabel: group.currencyLabel, appSymbol: appSymbol);
+    final moneyFormat = ref.watch(groupMoneyFormatProvider(group.currencyLabel));
     final archived = group.archivedAt != null;
     final members = detail.members;
     final entries = detail.entries;
@@ -78,7 +77,7 @@ class GroupDetailScreen extends ConsumerWidget {
     Future<void> openPaymentSheet({Settlement? existing, String? from, String? to, int? amountMinor}) {
       final referenced = {existing?.fromMemberId, existing?.toMemberId};
       final candidates = detail.allMembers.where((member) => member.deletedAt == null || referenced.contains(member.id)).toList();
-      return showRecordPaymentSheet(context, ref, group: group, members: candidates, balances: balances, symbol: symbol, existing: existing, fromMemberId: from, toMemberId: to, amountMinor: amountMinor);
+      return showRecordPaymentSheet(context, ref, group: group, members: candidates, balances: balances, moneyFormat: moneyFormat, existing: existing, fromMemberId: from, toMemberId: to, amountMinor: amountMinor);
     }
 
     return DefaultTabController(
@@ -91,7 +90,7 @@ class GroupDetailScreen extends ConsumerWidget {
             IconButton(
               tooltip: l10n.shareSummary,
               icon: const Icon(Icons.ios_share),
-              onPressed: () => _showShareOptions(context, ref, detail: detail, symbol: symbol, categoryById: categoryById),
+              onPressed: () => _showShareOptions(context, ref, detail: detail, moneyFormat: moneyFormat, categoryById: categoryById),
             ),
             PopupMenuButton<String>(
               onSelected: (value) async {
@@ -144,11 +143,11 @@ class GroupDetailScreen extends ConsumerWidget {
               activeMemberIds: {for (final member in members) member.id},
               nameOf: nameOf,
               categoryById: categoryById,
-              symbol: symbol,
+              moneyFormat: moneyFormat,
               openPayment: (settlement) => openPaymentSheet(existing: settlement),
             ),
-            _BalancesTab(detail: detail, nameOf: nameOf, symbol: symbol, openPayment: openPaymentSheet),
-            _MembersTab(groupId: groupId, members: members, balances: balances, symbol: symbol),
+            _BalancesTab(detail: detail, nameOf: nameOf, moneyFormat: moneyFormat, openPayment: openPaymentSheet),
+            _MembersTab(groupId: groupId, members: members, balances: balances, moneyFormat: moneyFormat),
           ],
         )),
         ]),
@@ -158,10 +157,10 @@ class GroupDetailScreen extends ConsumerWidget {
 
   /// Share balances summary, remind everyone who owes me, copy the summary,
   /// or export every expense and payment as CSV.
-  static Future<void> _showShareOptions(BuildContext context, WidgetRef ref, {required GroupDetail detail, required String symbol, required Map<String, Category> categoryById}) {
+  static Future<void> _showShareOptions(BuildContext context, WidgetRef ref, {required GroupDetail detail, required MoneyFormat moneyFormat, required Map<String, Category> categoryById}) {
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context);
-    final summary = groupSummaryFor(l10n, detail, symbol: symbol);
+    final summary = groupSummaryFor(l10n, detail, moneyFormat: moneyFormat);
     Future<void> exportCsv() async {
       try {
         await ref.read(csvFileSharerProvider)(
@@ -183,7 +182,7 @@ class GroupDetailScreen extends ConsumerWidget {
         groupName: detail.group.name,
         transfers: [
           for (final transfer in owedToMe)
-            (from: nameById[transfer.from] ?? l10n.unknown, to: nameById[transfer.to] ?? l10n.unknown, amount: formatMinor(transfer.amountMinor, symbol: symbol)),
+            (from: nameById[transfer.from] ?? l10n.unknown, to: nameById[transfer.to] ?? l10n.unknown, amount: formatMinor(transfer.amountMinor, format: moneyFormat)),
         ],
       );
       if (!await ref.read(textSharerProvider)(message)) return;
@@ -276,11 +275,11 @@ Future<void> confirmRemoveSettlement(BuildContext context, WidgetRef ref, Settle
 }
 
 class _BalancesTab extends ConsumerWidget {
-  const _BalancesTab({required this.detail, required this.nameOf, required this.symbol, required this.openPayment});
+  const _BalancesTab({required this.detail, required this.nameOf, required this.moneyFormat, required this.openPayment});
   final GroupDetail detail;
   final Future<void> Function({Settlement? existing, String? from, String? to, int? amountMinor}) openPayment;
   final String Function(String) nameOf;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   /// Opens Remind or Pay for [transfer] with the prewritten message.
   void _openSettleUp(BuildContext context, Transfer transfer, SettleRole role) {
@@ -296,12 +295,12 @@ class _BalancesTab extends ConsumerWidget {
       transfer: transfer,
       role: role,
       counterpart: counterpart,
-      symbol: symbol,
+      moneyFormat: moneyFormat,
       lastRemindedAt: detail.lastRemindedAt[counterpart.id],
       message: settleUpMessage(
         l10n,
         role: role,
-        transfer: (from: plainName(transfer.from), to: plainName(transfer.to), amount: formatMinor(transfer.amountMinor, symbol: symbol)),
+        transfer: (from: plainName(transfer.from), to: plainName(transfer.to), amount: formatMinor(transfer.amountMinor, format: moneyFormat)),
         groupName: detail.group.name,
       ),
       onRecordPayment: () => openPayment(from: transfer.from, to: transfer.to, amountMinor: transfer.amountMinor),
@@ -317,7 +316,7 @@ class _BalancesTab extends ConsumerWidget {
     return ListTile(
       leading: const Icon(Icons.arrow_forward),
       title: Text(l10n.transferArrow(nameOf(transfer.from), nameOf(transfer.to))),
-      trailing: Text(formatMinor(transfer.amountMinor, symbol: symbol), style: const TextStyle(fontWeight: FontWeight.w600)),
+      trailing: Text(formatMinor(transfer.amountMinor, format: moneyFormat), style: const TextStyle(fontWeight: FontWeight.w600)),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -365,7 +364,7 @@ class _BalancesTab extends ConsumerWidget {
           GroupTotalsSummary(
             key: kGroupTotalsCardKey,
             totals: computeGroupTotals(expenses: detail.totalsExpenses, payments: detail.totalsPayments, myMemberId: detail.me?.id),
-            symbol: symbol,
+            moneyFormat: moneyFormat,
             showMine: detail.me != null,
             onTap: () => context.push('/groups/${group.id}/totals'),
           ),
@@ -380,7 +379,7 @@ class _BalancesTab extends ConsumerWidget {
                 trailing: Text(
                   (net[member.id] ?? 0) == 0
                       ? l10n.settled
-                      : '${(net[member.id] ?? 0) > 0 ? l10n.getsBack : l10n.owes} ${formatMinor((net[member.id] ?? 0).abs(), symbol: symbol)}',
+                      : '${(net[member.id] ?? 0) > 0 ? l10n.getsBack : l10n.owes} ${formatMinor((net[member.id] ?? 0).abs(), format: moneyFormat)}',
                   style: TextStyle(fontWeight: FontWeight.w600, color: (net[member.id] ?? 0) >= 0 ? const Color(0xFF2E9E6B) : const Color(0xFFD9534F)),
                 ),
               ),
@@ -397,7 +396,7 @@ class _BalancesTab extends ConsumerWidget {
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                    onPressed: () => ref.read(textSharerProvider)(groupSummaryFor(l10n, detail, symbol: symbol)),
+                    onPressed: () => ref.read(textSharerProvider)(groupSummaryFor(l10n, detail, moneyFormat: moneyFormat)),
                     icon: const Icon(Icons.ios_share, size: 18),
                     label: Text(l10n.shareSummaryAnyway),
                   ),
@@ -413,7 +412,7 @@ class _BalancesTab extends ConsumerWidget {
               onTap: () => openPayment(),
             ),
             const Divider(height: 1),
-            SettleScheduleTile(detail: detail, symbol: symbol),
+            SettleScheduleTile(detail: detail, moneyFormat: moneyFormat),
           ]),
         ),
         if (settlements.isNotEmpty) ...[
@@ -429,7 +428,7 @@ class _BalancesTab extends ConsumerWidget {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(formatMinor(settlement.amountMinor, symbol: symbol), style: const TextStyle(fontWeight: FontWeight.w600).tabular),
+                      Text(formatMinor(settlement.amountMinor, format: moneyFormat), style: const TextStyle(fontWeight: FontWeight.w600).tabular),
                       PopupMenuButton<void>(
                         tooltip: l10n.moreOptions,
                         itemBuilder: (context) => [
@@ -455,11 +454,11 @@ String? _contactLine(Member member) {
 }
 
 class _MembersTab extends ConsumerWidget {
-  const _MembersTab({required this.groupId, required this.members, required this.balances, required this.symbol});
+  const _MembersTab({required this.groupId, required this.members, required this.balances, required this.moneyFormat});
   final String groupId;
   final List<Member> members;
   final GroupBalances balances;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

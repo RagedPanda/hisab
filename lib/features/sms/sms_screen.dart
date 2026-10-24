@@ -111,7 +111,7 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final pending = ref.watch(pendingSmsProvider).value ?? const <SmsLogData>[];
-    final symbol = settings.currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final supported = SmsChannel.isSupported;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.bankSms)),
@@ -162,7 +162,7 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
           if (pending.isEmpty)
             Card(child: ListTile(leading: const Icon(Icons.inbox_outlined), title: Text(l10n.nothingWaitingTitle), subtitle: Text(l10n.nothingWaitingBody)))
           else
-            for (final row in pending) SmsReviewCard(key: ValueKey(row.id), row: row, symbol: symbol),
+            for (final row in pending) SmsReviewCard(key: ValueKey(row.id), row: row, moneyFormat: moneyFormat),
           const SizedBox(height: 16),
           Text(l10n.iosShortcutHelp, style: Theme.of(context).textTheme.bodySmall),
         ],

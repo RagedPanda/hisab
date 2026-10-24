@@ -37,12 +37,15 @@ import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/backup/backup_service.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
+import 'package:hisab/data/repositories/recurring_repository.dart';
+import 'package:hisab/domain/recurring/recurrence.dart';
 import 'package:hisab/data/debug/demo_plan.dart';
 import 'package:hisab/data/debug/demo_seed.dart';
 import 'package:hisab/domain/backup/backup_codec.dart';
 import 'package:hisab/domain/categories/category_packs.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
+import 'package:hisab/features/upcoming/upcoming_calendar_screen.dart';
 import 'package:hisab/domain/projects/project_math.dart';
 import 'package:hisab/domain/salary/salary_schedule.dart';
 import 'package:hisab/domain/split/debt_simplifier.dart';
@@ -827,7 +830,7 @@ void main() {
     await scrollTo(tester, find.byKey(kBudgetsCardKey));
     expect(find.text('Overall'), findsOneWidget, reason: 'overall budget row comes first');
     await scrollTo(tester, find.byKey(kAccountsCardKey));
-    expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsOneWidget, reason: 'upcoming slot is keyed even while it has no data');
+    expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsOneWidget, reason: 'the Upcoming card is keyed even while it shows its empty state');
     expect(find.text('HDFC Savings'), findsOneWidget);
     await scrollTo(tester, find.byKey(kGroupsCardKey));
     expect(find.text('Goa trip'), findsOneWidget);
@@ -2094,6 +2097,64 @@ void main() {
     expect(find.text(hi.salaryReminder), findsOneWidget);
     await shoot(tester, 'hi_salary_setup');
     await goBack(tester);
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+  });
+
+  testWidgets('36 upcoming: overdue confirm-first rule, 7/30-day toggle, calendar dots and month switch, Hindi', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    final today = startOfDay(DateTime.now());
+    Finder key(String id) => find.byKey(ValueKey(id));
+    await fresh
+        .read(recurringRepositoryProvider)
+        .saveRule(
+          RecurringRepository.newRule(
+            name: 'Rent',
+            kind: 'expense',
+            amountMinor: 1500000,
+            frequency: RecurrenceFrequency.monthly,
+            dayOfMonth: today.subtract(const Duration(days: 3)).day,
+            startDate: today.subtract(const Duration(days: 3)),
+            autoPost: false,
+          ),
+        );
+    await fresh
+        .read(remindersRepositoryProvider)
+        .save(ReminderDraft(kind: ReminderKind.bill, title: 'Electricity', dueAt: today.add(const Duration(days: 12)), amountMinor: 184000));
+    await pumpApp(tester, fresh);
+
+    await scrollTo(tester, find.byKey(kUpcomingCardKey));
+    expect(find.text('Rent'), findsOneWidget, reason: 'a confirm-first rule past its date stays on the card');
+    expect(find.text('Electricity'), findsNothing, reason: 'a bill 12 days out is outside the 7-day window');
+    await shoot(tester, 'upcoming_card_week');
+    await tapFinder(tester, key('upcoming.window.month'), frames: 10);
+    expect(find.text('Electricity'), findsOneWidget, reason: 'the 30-day window brings the bill in');
+    expect(find.text('Rent'), findsNWidgets(2), reason: 'the overdue Rent and next month\'s Rent are two occurrences, each listed once');
+    await shoot(tester, 'upcoming_card_month');
+
+    await tapFinder(tester, key('upcoming.calendar'), frames: 10);
+    expect(find.byType(UpcomingCalendarScreen), findsOneWidget);
+    final monthLabel = tester.widget<Text>(key('upcoming.calendar.month')).data;
+    await shoot(tester, 'upcoming_calendar');
+    await tapFinder(tester, key('upcoming.calendar.day.${today.day}'), frames: 6);
+    await tapFinder(tester, find.byTooltip('Next month'), frames: 6);
+    expect(tester.widget<Text>(key('upcoming.calendar.month')).data, isNot(monthLabel), reason: 'the header follows the shown month');
+    await goBack(tester);
+
+    await scrollTo(tester, find.byKey(kUpcomingCardKey));
+    await tapFinder(tester, find.text('Rent').first, frames: 10);
+    expect(find.byKey(const ValueKey('upcoming.confirm.edit')), findsOneWidget, reason: 'an overdue confirm-first item offers Edit as the secondary action');
+    await shoot(tester, 'upcoming_confirm_sheet');
+    await tapFinder(tester, key('upcoming.confirm.post'), frames: 12);
+    expect(find.text('Rent'), findsOneWidget, reason: 'confirming posts the overdue Rent; next month stays listed');
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    await scrollTo(tester, find.byKey(kUpcomingCardKey));
+    expect(find.text(hi.upcoming), findsWidgets);
+    await shoot(tester, 'hi_upcoming_card');
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
     await settle(tester, 6);
   });

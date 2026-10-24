@@ -477,6 +477,26 @@ bool looksLikeUnreadTransaction(String body, {String sender = ''}) {
   final lower = text.toLowerCase();
   if (text.isEmpty) return false;
   if (_isIgnorable(sender, lower)) return false;
+  if (_isBalanceOnly(text, lower)) return false;
   return _amountPattern.hasMatch(text) || _bareAmountPattern.hasMatch(text);
+}
+
+/// "Bal in Kotak Bank AC X3390 on 21-10-26 10:00 is Rs.9,000.00": a balance
+/// or limit named first and its amount stated later in the sentence.
+final _balanceStatement = RegExp(
+  '\\b(?:bal(?:ance)?|limit|lmt)\\b[^;!]{0,80}?\\bis\\s*:?\\s*$_currencyPrefix\\s*:?\\s*$_number',
+  caseSensitive: false,
+);
+
+/// "Your A/c X3333 Avl Bal is Rs.22,145.00 as on ...": every amount is a
+/// balance or limit and nothing says money moved, so there is nothing to
+/// review.
+bool _isBalanceOnly(String text, String lower) {
+  final balances = [
+    ..._balancePattern.allMatches(text),
+    ..._limitPattern.allMatches(text),
+    ..._balanceStatement.allMatches(text),
+  ];
+  return balances.isNotEmpty && _firstAmountOutside(text, balances) == null && _direction(lower) == null;
 }
 

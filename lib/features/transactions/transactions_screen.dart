@@ -38,30 +38,38 @@ final _searchProvider = NotifierProvider<_SearchNotifier, String>(_SearchNotifie
 final _kindFilterProvider = NotifierProvider<_KindFilterNotifier, String?>(_KindFilterNotifier.new);
 
 /// Filters carried in the route, e.g. `/transactions?category=<id>` from the
-/// dashboard donut or `?account=<id>` from an account card. Dismissing a chip
-/// navigates to the same route without that parameter.
+/// dashboard donut, `?account=<id>` from an account card or `?day=2026-10-24`
+/// from the Home "Today" figure. Dismissing a chip navigates to the same
+/// route without that parameter.
 class RouteFilters {
-  const RouteFilters({this.categoryId, this.accountId});
+  const RouteFilters({this.categoryId, this.accountId, this.day});
   final String? categoryId;
   final String? accountId;
 
+  /// One calendar day, local midnight.
+  final DateTime? day;
+
   static RouteFilters of(BuildContext context) {
     final params = GoRouterState.of(context).uri.queryParameters;
-    return RouteFilters(categoryId: params['category'], accountId: params['account']);
+    return RouteFilters(categoryId: params['category'], accountId: params['account'], day: parseIsoDay(params['day']));
   }
 
-  bool get isEmpty => categoryId == null && accountId == null;
+  bool get isEmpty => categoryId == null && accountId == null && day == null;
 
-  String locationWithout({bool category = false, bool account = false}) => Uri(
+  String locationWithout({bool category = false, bool account = false, bool day = false}) => Uri(
         path: '/transactions',
         queryParameters: {
           if (!category && categoryId != null) 'category': categoryId!,
           if (!account && accountId != null) 'account': accountId!,
+          if (!day && this.day != null) 'day': isoDay(this.day!),
         },
       ).toString().replaceFirst(RegExp(r'\?$'), '');
 
-  EntryFilter get asFilter => EntryFilter(categoryId: categoryId, accountId: accountId);
+  EntryFilter get asFilter => EntryFilter(categoryId: categoryId, accountId: accountId, from: day, to: day);
 }
+
+/// The Entries list narrowed to the single day [day].
+String entriesForDayLocation(DateTime day) => '/transactions?day=${isoDay(day)}';
 
 /// What search and filters see of one listed entry.
 EntryFacts entryFacts(BuildContext context, EntryDetails details) => EntryFacts(
@@ -89,10 +97,11 @@ class TransactionsScreen extends ConsumerWidget {
     final kindFilter = ref.watch(_kindFilterProvider);
     final filter = ref.watch(_entryFilterProvider);
     final symbol = ref.watch(settingsProvider).currencySymbol;
-    final window = filter.dateWindow;
-    final async = window == null ? ref.watch(monthEntriesProvider) : ref.watch(windowEntriesProvider(window));
     final routeFilters = RouteFilters.of(context);
     final routeFilter = routeFilters.asFilter;
+    // The sheet's dates win when both are set; both filters still apply below.
+    final window = filter.dateWindow ?? routeFilter.dateWindow;
+    final async = window == null ? ref.watch(monthEntriesProvider) : ref.watch(windowEntriesProvider(window));
     final entries = (async.value ?? const <EntryDetails>[]).where((d) {
       if (kindFilter != null && d.entry.kind != kindFilter) return false;
       final facts = entryFacts(context, d);
@@ -143,6 +152,13 @@ class TransactionsScreen extends ConsumerWidget {
                 _RouteFilterChip(
                   label: _accountFilterLabel(ref, routeFilters.accountId!),
                   onDeleted: () => context.go(routeFilters.locationWithout(account: true)),
+                ),
+              if (routeFilters.day != null)
+                _RouteFilterChip(
+                  label: isSameDay(routeFilters.day!, DateTime.now())
+                      ? l10n.today
+                      : dateRangeLabel(routeFilters.day, routeFilters.day, locale: Localizations.localeOf(context).toString()),
+                  onDeleted: () => context.go(routeFilters.locationWithout(day: true)),
                 ),
               _ProjectFilterChip(selectedId: filter.projectId),
               ..._activeFilterChips(context, ref, filter, symbol),

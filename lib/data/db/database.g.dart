@@ -9250,6 +9250,40 @@ class $RemindersTable extends Reminders
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _projectIdMeta = const VerificationMeta(
+    'projectId',
+  );
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+    'project_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _documentNumberMeta = const VerificationMeta(
+    'documentNumber',
+  );
+  @override
+  late final GeneratedColumn<String> documentNumber = GeneratedColumn<String>(
+    'document_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _presetKeyMeta = const VerificationMeta(
+    'presetKey',
+  );
+  @override
+  late final GeneratedColumn<String> presetKey = GeneratedColumn<String>(
+    'preset_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -9280,6 +9314,9 @@ class $RemindersTable extends Reminders
     status,
     snoozedUntil,
     nextId,
+    projectId,
+    documentNumber,
+    presetKey,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -9483,6 +9520,27 @@ class $RemindersTable extends Reminders
         nextId.isAcceptableOrUnknown(data['next_id']!, _nextIdMeta),
       );
     }
+    if (data.containsKey('project_id')) {
+      context.handle(
+        _projectIdMeta,
+        projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta),
+      );
+    }
+    if (data.containsKey('document_number')) {
+      context.handle(
+        _documentNumberMeta,
+        documentNumber.isAcceptableOrUnknown(
+          data['document_number']!,
+          _documentNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('preset_key')) {
+      context.handle(
+        _presetKeyMeta,
+        presetKey.isAcceptableOrUnknown(data['preset_key']!, _presetKeyMeta),
+      );
+    }
     return context;
   }
 
@@ -9604,6 +9662,18 @@ class $RemindersTable extends Reminders
         DriftSqlType.string,
         data['${effectivePrefix}next_id'],
       ),
+      projectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project_id'],
+      ),
+      documentNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_number'],
+      )!,
+      presetKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}preset_key'],
+      ),
     );
   }
 
@@ -9675,6 +9745,15 @@ class Reminder extends DataClass implements Insertable<Reminder> {
   /// The next occurrence spawned when this repeating reminder was paid or skipped,
   /// so undo can remove it again.
   final String? nextId;
+
+  /// Project the reminder belongs to (projects.id), e.g. the Vehicle project's PUC.
+  final String? projectId;
+
+  /// Policy, registration or document number, kept for reference.
+  final String documentNumber;
+
+  /// Document preset the reminder was made from (lib/domain/reminders/document_presets.dart).
+  final String? presetKey;
   const Reminder({
     required this.updatedAt,
     this.deletedAt,
@@ -9704,6 +9783,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     required this.status,
     this.snoozedUntil,
     this.nextId,
+    this.projectId,
+    required this.documentNumber,
+    this.presetKey,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -9767,6 +9849,13 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     }
     if (!nullToAbsent || nextId != null) {
       map['next_id'] = Variable<String>(nextId);
+    }
+    if (!nullToAbsent || projectId != null) {
+      map['project_id'] = Variable<String>(projectId);
+    }
+    map['document_number'] = Variable<String>(documentNumber);
+    if (!nullToAbsent || presetKey != null) {
+      map['preset_key'] = Variable<String>(presetKey);
     }
     return map;
   }
@@ -9833,6 +9922,13 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       nextId: nextId == null && nullToAbsent
           ? const Value.absent()
           : Value(nextId),
+      projectId: projectId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(projectId),
+      documentNumber: Value(documentNumber),
+      presetKey: presetKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(presetKey),
     );
   }
 
@@ -9870,6 +9966,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       status: serializer.fromJson<String>(json['status']),
       snoozedUntil: serializer.fromJson<DateTime?>(json['snoozedUntil']),
       nextId: serializer.fromJson<String?>(json['nextId']),
+      projectId: serializer.fromJson<String?>(json['projectId']),
+      documentNumber: serializer.fromJson<String>(json['documentNumber']),
+      presetKey: serializer.fromJson<String?>(json['presetKey']),
     );
   }
   @override
@@ -9904,6 +10003,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       'status': serializer.toJson<String>(status),
       'snoozedUntil': serializer.toJson<DateTime?>(snoozedUntil),
       'nextId': serializer.toJson<String?>(nextId),
+      'projectId': serializer.toJson<String?>(projectId),
+      'documentNumber': serializer.toJson<String>(documentNumber),
+      'presetKey': serializer.toJson<String?>(presetKey),
     };
   }
 
@@ -9936,6 +10038,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     String? status,
     Value<DateTime?> snoozedUntil = const Value.absent(),
     Value<String?> nextId = const Value.absent(),
+    Value<String?> projectId = const Value.absent(),
+    String? documentNumber,
+    Value<String?> presetKey = const Value.absent(),
   }) => Reminder(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -9967,6 +10072,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     status: status ?? this.status,
     snoozedUntil: snoozedUntil.present ? snoozedUntil.value : this.snoozedUntil,
     nextId: nextId.present ? nextId.value : this.nextId,
+    projectId: projectId.present ? projectId.value : this.projectId,
+    documentNumber: documentNumber ?? this.documentNumber,
+    presetKey: presetKey.present ? presetKey.value : this.presetKey,
   );
   Reminder copyWithCompanion(RemindersCompanion data) {
     return Reminder(
@@ -10014,6 +10122,11 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           ? data.snoozedUntil.value
           : this.snoozedUntil,
       nextId: data.nextId.present ? data.nextId.value : this.nextId,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      documentNumber: data.documentNumber.present
+          ? data.documentNumber.value
+          : this.documentNumber,
+      presetKey: data.presetKey.present ? data.presetKey.value : this.presetKey,
     );
   }
 
@@ -10047,7 +10160,10 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           ..write('notifyAtMinute: $notifyAtMinute, ')
           ..write('status: $status, ')
           ..write('snoozedUntil: $snoozedUntil, ')
-          ..write('nextId: $nextId')
+          ..write('nextId: $nextId, ')
+          ..write('projectId: $projectId, ')
+          ..write('documentNumber: $documentNumber, ')
+          ..write('presetKey: $presetKey')
           ..write(')'))
         .toString();
   }
@@ -10082,6 +10198,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     status,
     snoozedUntil,
     nextId,
+    projectId,
+    documentNumber,
+    presetKey,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -10114,7 +10233,10 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           other.notifyAtMinute == this.notifyAtMinute &&
           other.status == this.status &&
           other.snoozedUntil == this.snoozedUntil &&
-          other.nextId == this.nextId);
+          other.nextId == this.nextId &&
+          other.projectId == this.projectId &&
+          other.documentNumber == this.documentNumber &&
+          other.presetKey == this.presetKey);
 }
 
 class RemindersCompanion extends UpdateCompanion<Reminder> {
@@ -10146,6 +10268,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
   final Value<String> status;
   final Value<DateTime?> snoozedUntil;
   final Value<String?> nextId;
+  final Value<String?> projectId;
+  final Value<String> documentNumber;
+  final Value<String?> presetKey;
   final Value<int> rowid;
   const RemindersCompanion({
     this.updatedAt = const Value.absent(),
@@ -10176,6 +10301,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     this.status = const Value.absent(),
     this.snoozedUntil = const Value.absent(),
     this.nextId = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.documentNumber = const Value.absent(),
+    this.presetKey = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RemindersCompanion.insert({
@@ -10207,6 +10335,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     this.status = const Value.absent(),
     this.snoozedUntil = const Value.absent(),
     this.nextId = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.documentNumber = const Value.absent(),
+    this.presetKey = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        kind = Value(kind);
@@ -10239,6 +10370,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Expression<String>? status,
     Expression<DateTime>? snoozedUntil,
     Expression<String>? nextId,
+    Expression<String>? projectId,
+    Expression<String>? documentNumber,
+    Expression<String>? presetKey,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -10270,6 +10404,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       if (status != null) 'status': status,
       if (snoozedUntil != null) 'snoozed_until': snoozedUntil,
       if (nextId != null) 'next_id': nextId,
+      if (projectId != null) 'project_id': projectId,
+      if (documentNumber != null) 'document_number': documentNumber,
+      if (presetKey != null) 'preset_key': presetKey,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -10303,6 +10440,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Value<String>? status,
     Value<DateTime?>? snoozedUntil,
     Value<String?>? nextId,
+    Value<String?>? projectId,
+    Value<String>? documentNumber,
+    Value<String?>? presetKey,
     Value<int>? rowid,
   }) {
     return RemindersCompanion(
@@ -10334,6 +10474,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       status: status ?? this.status,
       snoozedUntil: snoozedUntil ?? this.snoozedUntil,
       nextId: nextId ?? this.nextId,
+      projectId: projectId ?? this.projectId,
+      documentNumber: documentNumber ?? this.documentNumber,
+      presetKey: presetKey ?? this.presetKey,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -10425,6 +10568,15 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     if (nextId.present) {
       map['next_id'] = Variable<String>(nextId.value);
     }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (documentNumber.present) {
+      map['document_number'] = Variable<String>(documentNumber.value);
+    }
+    if (presetKey.present) {
+      map['preset_key'] = Variable<String>(presetKey.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -10462,6 +10614,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
           ..write('status: $status, ')
           ..write('snoozedUntil: $snoozedUntil, ')
           ..write('nextId: $nextId, ')
+          ..write('projectId: $projectId, ')
+          ..write('documentNumber: $documentNumber, ')
+          ..write('presetKey: $presetKey, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -13499,6 +13654,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'reminders_status_due',
     'CREATE INDEX reminders_status_due ON reminders (status, due_at)',
   );
+  late final Index remindersProjectId = Index(
+    'reminders_project_id',
+    'CREATE INDEX reminders_project_id ON reminders (project_id)',
+  );
   late final Index entryPayersEntryId = Index(
     'entry_payers_entry_id',
     'CREATE INDEX entry_payers_entry_id ON entry_payers (entry_id)',
@@ -13540,6 +13699,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     entryFieldValuesEntryId,
     remindersGroupId,
     remindersStatusDue,
+    remindersProjectId,
     entryPayersEntryId,
     groupActivitiesGroupId,
     itemAssignmentsEntryItemId,
@@ -17900,6 +18060,9 @@ typedef $$RemindersTableCreateCompanionBuilder = RemindersCompanion Function({
   Value<String> status,
   Value<DateTime?> snoozedUntil,
   Value<String?> nextId,
+  Value<String?> projectId,
+  Value<String> documentNumber,
+  Value<String?> presetKey,
   Value<int> rowid,
 });
 typedef $$RemindersTableUpdateCompanionBuilder = RemindersCompanion Function({
@@ -17931,6 +18094,9 @@ typedef $$RemindersTableUpdateCompanionBuilder = RemindersCompanion Function({
   Value<String> status,
   Value<DateTime?> snoozedUntil,
   Value<String?> nextId,
+  Value<String?> projectId,
+  Value<String> documentNumber,
+  Value<String?> presetKey,
   Value<int> rowid,
 });
 
@@ -18080,6 +18246,21 @@ class $$RemindersTableFilterComposer
 
   ColumnFilters<String> get nextId => $composableBuilder(
     column: $table.nextId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get presetKey => $composableBuilder(
+    column: $table.presetKey,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -18232,6 +18413,21 @@ class $$RemindersTableOrderingComposer
     column: $table.nextId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get presetKey => $composableBuilder(
+    column: $table.presetKey,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RemindersTableAnnotationComposer
@@ -18342,6 +18538,17 @@ class $$RemindersTableAnnotationComposer
 
   GeneratedColumn<String> get nextId =>
       $composableBuilder(column: $table.nextId, builder: (column) => column);
+
+  GeneratedColumn<String> get projectId =>
+      $composableBuilder(column: $table.projectId, builder: (column) => column);
+
+  GeneratedColumn<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get presetKey =>
+      $composableBuilder(column: $table.presetKey, builder: (column) => column);
 }
 
 class $$RemindersTableTableManager
@@ -18400,6 +18607,9 @@ class $$RemindersTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<DateTime?> snoozedUntil = const Value.absent(),
                 Value<String?> nextId = const Value.absent(),
+                Value<String?> projectId = const Value.absent(),
+                Value<String> documentNumber = const Value.absent(),
+                Value<String?> presetKey = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RemindersCompanion(
                 updatedAt: updatedAt,
@@ -18430,6 +18640,9 @@ class $$RemindersTableTableManager
                 status: status,
                 snoozedUntil: snoozedUntil,
                 nextId: nextId,
+                projectId: projectId,
+                documentNumber: documentNumber,
+                presetKey: presetKey,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -18462,6 +18675,9 @@ class $$RemindersTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<DateTime?> snoozedUntil = const Value.absent(),
                 Value<String?> nextId = const Value.absent(),
+                Value<String?> projectId = const Value.absent(),
+                Value<String> documentNumber = const Value.absent(),
+                Value<String?> presetKey = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RemindersCompanion.insert(
                 updatedAt: updatedAt,
@@ -18492,6 +18708,9 @@ class $$RemindersTableTableManager
                 status: status,
                 snoozedUntil: snoozedUntil,
                 nextId: nextId,
+                projectId: projectId,
+                documentNumber: documentNumber,
+                presetKey: presetKey,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

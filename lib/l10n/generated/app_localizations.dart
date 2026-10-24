@@ -5881,6 +5881,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An income counts as salary when it is this close to the amount and arrives no earlier than this, or any day later in the cycle.'**
   String get salaryDetectionHelp;
+
+  /// No description provided for @documentRemindersSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents & renewals'**
+  String get documentRemindersSection;
+
+  /// No description provided for @documentRemindersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'PUC, insurance, passport and other expiry dates'**
+  String get documentRemindersHint;
+
+  /// No description provided for @documentPresetVehicleInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle insurance'**
+  String get documentPresetVehicleInsurance;
+
+  /// No description provided for @documentPresetPuc.
+  ///
+  /// In en, this message translates to:
+  /// **'PUC certificate'**
+  String get documentPresetPuc;
+
+  /// No description provided for @documentPresetRcRenewal.
+  ///
+  /// In en, this message translates to:
+  /// **'RC renewal'**
+  String get documentPresetRcRenewal;
+
+  /// No description provided for @documentPresetDrivingLicence.
+  ///
+  /// In en, this message translates to:
+  /// **'Driving licence'**
+  String get documentPresetDrivingLicence;
+
+  /// No description provided for @documentPresetPassport.
+  ///
+  /// In en, this message translates to:
+  /// **'Passport'**
+  String get documentPresetPassport;
+
+  /// No description provided for @documentPresetHealthInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Health insurance premium'**
+  String get documentPresetHealthInsurance;
+
+  /// No description provided for @documentPresetLifeInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Life insurance premium'**
+  String get documentPresetLifeInsurance;
+
+  /// No description provided for @documentPresetWarranty.
+  ///
+  /// In en, this message translates to:
+  /// **'Warranty expiry'**
+  String get documentPresetWarranty;
+
+  /// No description provided for @documentPresetAmc.
+  ///
+  /// In en, this message translates to:
+  /// **'AMC renewal'**
+  String get documentPresetAmc;
+
+  /// No description provided for @documentPresetFdMaturity.
+  ///
+  /// In en, this message translates to:
+  /// **'FD maturity'**
+  String get documentPresetFdMaturity;
+
+  /// No description provided for @documentPresetPropertyTax.
+  ///
+  /// In en, this message translates to:
+  /// **'Property tax'**
+  String get documentPresetPropertyTax;
+
+  /// No description provided for @documentPresetRentAgreement.
+  ///
+  /// In en, this message translates to:
+  /// **'Rent agreement renewal'**
+  String get documentPresetRentAgreement;
+
+  /// No description provided for @documentNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Document number (optional)'**
+  String get documentNumberLabel;
+
+  /// No description provided for @documentNumberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Policy, registration or certificate number'**
+  String get documentNumberHint;
+
+  /// No description provided for @documentRemindersOnProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get documentRemindersOnProject;
+
+  /// No description provided for @reminderRepeatHalfYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 6 months'**
+  String get reminderRepeatHalfYearly;
+
+  /// No description provided for @reminderRepeatElevenMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 11 months'**
+  String get reminderRepeatElevenMonths;
+
+  /// No description provided for @reminderRepeatFiveYears.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 5 years'**
+  String get reminderRepeatFiveYears;
+
+  /// No description provided for @reminderRepeatTenYears.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 10 years'**
+  String get reminderRepeatTenYears;
+
+  /// No description provided for @documentPucOlderVehicleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Older vehicles (before BS-IV) need PUC every 6 months.'**
+  String get documentPucOlderVehicleHint;
 }
 
 class _AppLocalizationsDelegate

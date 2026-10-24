@@ -3703,4 +3703,72 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get salaryDetectionHelp =>
       'An income counts as salary when it is this close to the amount and arrives no earlier than this, or any day later in the cycle.';
+
+  @override
+  String get documentRemindersSection => 'Documents & renewals';
+
+  @override
+  String get documentRemindersHint =>
+      'PUC, insurance, passport and other expiry dates';
+
+  @override
+  String get documentPresetVehicleInsurance => 'Vehicle insurance';
+
+  @override
+  String get documentPresetPuc => 'PUC certificate';
+
+  @override
+  String get documentPresetRcRenewal => 'RC renewal';
+
+  @override
+  String get documentPresetDrivingLicence => 'Driving licence';
+
+  @override
+  String get documentPresetPassport => 'Passport';
+
+  @override
+  String get documentPresetHealthInsurance => 'Health insurance premium';
+
+  @override
+  String get documentPresetLifeInsurance => 'Life insurance premium';
+
+  @override
+  String get documentPresetWarranty => 'Warranty expiry';
+
+  @override
+  String get documentPresetAmc => 'AMC renewal';
+
+  @override
+  String get documentPresetFdMaturity => 'FD maturity';
+
+  @override
+  String get documentPresetPropertyTax => 'Property tax';
+
+  @override
+  String get documentPresetRentAgreement => 'Rent agreement renewal';
+
+  @override
+  String get documentNumberLabel => 'Document number (optional)';
+
+  @override
+  String get documentNumberHint => 'Policy, registration or certificate number';
+
+  @override
+  String get documentRemindersOnProject => 'Reminders';
+
+  @override
+  String get reminderRepeatHalfYearly => 'Every 6 months';
+
+  @override
+  String get reminderRepeatElevenMonths => 'Every 11 months';
+
+  @override
+  String get reminderRepeatFiveYears => 'Every 5 years';
+
+  @override
+  String get reminderRepeatTenYears => 'Every 10 years';
+
+  @override
+  String get documentPucOlderVehicleHint =>
+      'Older vehicles (before BS-IV) need PUC every 6 months.';
 }

@@ -25,13 +25,18 @@ List<int> parseRemindDaysBefore(String stored) {
 String formatRemindDaysBefore(Iterable<int> days) => parseRemindDaysBefore(days.join(',')).join(',');
 
 /// The [RecurrenceSpec] a repeating reminder due on [due] follows; null
-/// for one-off reminders. Quarterly is monthly with an interval of three.
+/// for one-off reminders. Quarterly, half-yearly and eleven-monthly are
+/// monthly with an interval; five and ten years are yearly with one.
 RecurrenceSpec? reminderRecurrence(DateTime due, ReminderRepeat repeat, {int? anchorDay}) => switch (repeat) {
       ReminderRepeat.once => null,
       ReminderRepeat.weekly => RecurrenceSpec(frequency: RecurrenceFrequency.weekly, start: due),
       ReminderRepeat.monthly => RecurrenceSpec(frequency: RecurrenceFrequency.monthly, start: due, dayOfMonth: anchorDay),
       ReminderRepeat.quarterly => RecurrenceSpec(frequency: RecurrenceFrequency.monthly, start: due, interval: 3, dayOfMonth: anchorDay),
+      ReminderRepeat.halfYearly => RecurrenceSpec(frequency: RecurrenceFrequency.monthly, start: due, interval: 6, dayOfMonth: anchorDay),
+      ReminderRepeat.everyElevenMonths => RecurrenceSpec(frequency: RecurrenceFrequency.monthly, start: due, interval: 11, dayOfMonth: anchorDay),
       ReminderRepeat.yearly => RecurrenceSpec(frequency: RecurrenceFrequency.yearly, start: due, dayOfMonth: anchorDay),
+      ReminderRepeat.everyFiveYears => RecurrenceSpec(frequency: RecurrenceFrequency.yearly, start: due, interval: 5, dayOfMonth: anchorDay),
+      ReminderRepeat.everyTenYears => RecurrenceSpec(frequency: RecurrenceFrequency.yearly, start: due, interval: 10, dayOfMonth: anchorDay),
     };
 
 /// The due date after [due] for [repeat]; null for one-off reminders.

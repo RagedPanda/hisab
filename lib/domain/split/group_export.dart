@@ -3,6 +3,10 @@
 /// Pure functions; the caller supplies names, labels and wording.
 library;
 
+import 'expense_totals.dart';
+
+export 'expense_totals.dart' show ExpenseTotals;
+
 /// A member as a CSV column: their id and the name shown in the header.
 typedef ExportMember = ({String id, String name});
 
@@ -39,19 +43,10 @@ class ExportRow {
 /// What the group spent overall, and what each member paid and owed of it.
 /// Payments between members are left out: they settle debt, they are not
 /// spending.
-typedef ExpenseTotals = ({int totalMinor, Map<String, int> paidByMember, Map<String, int> shareByMember});
-
-ExpenseTotals expenseTotals(Iterable<ExportRow> rows) {
-  var total = 0;
-  final paid = <String, int>{};
-  final share = <String, int>{};
-  for (final row in rows.where((row) => !row.isPayment)) {
-    total += row.costMinor;
-    row.paidMinor.forEach((id, amount) => paid.update(id, (value) => value + amount, ifAbsent: () => amount));
-    row.shareMinor.forEach((id, amount) => share.update(id, (value) => value + amount, ifAbsent: () => amount));
-  }
-  return (totalMinor: total, paidByMember: paid, shareByMember: share);
-}
+ExpenseTotals expenseTotals(Iterable<ExportRow> rows) => sumExpenses([
+  for (final row in rows)
+    if (!row.isPayment) (billMinor: row.costMinor, paidMinor: row.paidMinor, shareMinor: row.shareMinor),
+]);
 
 /// Header words, localised by the caller.
 class GroupCsvLabels {

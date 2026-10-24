@@ -8,6 +8,7 @@ import '../../domain/split/group_net.dart';
 import '../../domain/split/group_settings.dart';
 import '../../domain/split/group_activity.dart';
 import '../../domain/split/group_timeline.dart';
+import '../../domain/split/group_totals.dart';
 import '../../domain/split/split_calculator.dart';
 import '../db/database.dart';
 import '../db/watch_tables.dart';
@@ -77,6 +78,15 @@ class GroupDetail {
   final Map<String, DateTime> lastRemindedAt;
 
   Member? get me => members.where((member) => member.isMe).firstOrNull;
+
+  /// Every expense with a payer, with its category, for the totals screen.
+  List<GroupTotalsExpense> get totalsExpenses => [
+        for (final (entry, _, _) in entries)
+          if (timelineByEntryId[entry.id] case final expense?) GroupTotalsExpense(expense: expense, categoryId: entry.categoryId, amountMinor: entry.amountMinor),
+      ];
+
+  /// Settle-up payments between members, for my balance change on the totals screen.
+  List<TimelinePayment> get totalsPayments => settlements.map(timelinePaymentOf).toList();
 
   /// Whether I can leave: I am a member and no debt, direct or simplified,
   /// involves me (the same rule as removing any other member).
@@ -212,10 +222,7 @@ class GroupsRepository {
       timelineByEntryId: timelineByEntryId,
       settledUpTo: settledUpPoint(
         expenses: timelineByEntryId.values.toList(),
-        payments: [
-          for (final settlement in settlements)
-            TimelinePayment(occurredAt: settlement.occurredAt, fromMemberId: settlement.fromMemberId, toMemberId: settlement.toMemberId, amountMinor: settlement.amountMinor),
-        ],
+        payments: settlements.map(timelinePaymentOf).toList(),
       ),
       lastRemindedAt: lastRemindedAt,
     );
@@ -709,3 +716,7 @@ class GroupsRepository {
     return List.generate(6, (_) => alphabet[random.nextInt(alphabet.length)]).join();
   }
 }
+
+/// The timeline form of a recorded settle-up payment.
+TimelinePayment timelinePaymentOf(Settlement settlement) =>
+    TimelinePayment(occurredAt: settlement.occurredAt, fromMemberId: settlement.fromMemberId, toMemberId: settlement.toMemberId, amountMinor: settlement.amountMinor);

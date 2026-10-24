@@ -4286,6 +4286,96 @@ abstract class AppLocalizations {
   /// **'you'**
   String get youInList;
 
+  /// No description provided for @groupTotalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Group totals'**
+  String get groupTotalsTitle;
+
+  /// No description provided for @groupTotalsAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get groupTotalsAllTime;
+
+  /// No description provided for @groupTotalsTotalSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Group total'**
+  String get groupTotalsTotalSpent;
+
+  /// No description provided for @groupTotalsYouPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'You paid'**
+  String get groupTotalsYouPaid;
+
+  /// No description provided for @groupTotalsYourShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Your share'**
+  String get groupTotalsYourShare;
+
+  /// No description provided for @groupTotalsNetChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change in your balance'**
+  String get groupTotalsNetChange;
+
+  /// No description provided for @groupTotalsPaymentsMade.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you made'**
+  String get groupTotalsPaymentsMade;
+
+  /// No description provided for @groupTotalsPaymentsReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you received'**
+  String get groupTotalsPaymentsReceived;
+
+  /// No description provided for @groupTotalsByMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid and share by member'**
+  String get groupTotalsByMember;
+
+  /// No description provided for @groupTotalsPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get groupTotalsPaid;
+
+  /// No description provided for @groupTotalsShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get groupTotalsShare;
+
+  /// No description provided for @groupTotalsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No expenses in this period'**
+  String get groupTotalsEmpty;
+
+  /// No description provided for @groupTotalsExpenseCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 expense} other{{count} expenses}}'**
+  String groupTotalsExpenseCount(int count);
+
+  /// No description provided for @groupTotalsMemberRow.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: paid {paid}, share {share}'**
+  String groupTotalsMemberRow(String name, String paid, String share);
+
+  /// No description provided for @groupTotalsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'See totals'**
+  String get groupTotalsOpen;
+
   /// No description provided for @groupSettingsTitle.
   ///
   /// In en, this message translates to:

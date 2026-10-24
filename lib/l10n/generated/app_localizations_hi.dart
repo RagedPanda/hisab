@@ -2584,6 +2584,61 @@ class AppLocalizationsHi extends AppLocalizations {
   String get youInList => 'आप';
 
   @override
+  String get groupTotalsTitle => 'ग्रुप का कुल हिसाब';
+
+  @override
+  String get groupTotalsAllTime => 'अब तक';
+
+  @override
+  String get groupTotalsTotalSpent => 'ग्रुप का कुल खर्च';
+
+  @override
+  String get groupTotalsYouPaid => 'आपने चुकाया';
+
+  @override
+  String get groupTotalsYourShare => 'आपका हिस्सा';
+
+  @override
+  String get groupTotalsNetChange => 'आपके बैलेंस में बदलाव';
+
+  @override
+  String get groupTotalsPaymentsMade => 'आपके किए भुगतान';
+
+  @override
+  String get groupTotalsPaymentsReceived => 'आपको मिले भुगतान';
+
+  @override
+  String get groupTotalsByMember => 'सदस्यवार चुकाया और हिस्सा';
+
+  @override
+  String get groupTotalsPaid => 'चुकाया';
+
+  @override
+  String get groupTotalsShare => 'हिस्सा';
+
+  @override
+  String get groupTotalsEmpty => 'इस अवधि में कोई खर्च नहीं';
+
+  @override
+  String groupTotalsExpenseCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count खर्च',
+      one: '1 खर्च',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupTotalsMemberRow(String name, String paid, String share) {
+    return '$name: चुकाया $paid, हिस्सा $share';
+  }
+
+  @override
+  String get groupTotalsOpen => 'पूरा हिसाब देखें';
+
+  @override
   String get groupSettingsTitle => 'ग्रुप सेटिंग्स';
 
   @override

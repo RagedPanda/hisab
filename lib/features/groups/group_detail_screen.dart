@@ -12,6 +12,7 @@ import '../../data/db/database.dart';
 import '../../data/repositories/groups_repository.dart';
 import '../../domain/split/debt_simplifier.dart';
 import '../../domain/split/group_settings.dart';
+import '../../domain/split/group_totals.dart';
 import '../../domain/split/settle_up_links.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
@@ -19,6 +20,7 @@ import '../../domain/split/group_export.dart' show exportFileName;
 import 'group_actions.dart';
 import 'group_expenses_tab.dart';
 import 'group_export.dart';
+import 'group_totals_screen.dart';
 import 'member_display.dart';
 import 'member_sheet.dart';
 import 'record_payment_sheet.dart';
@@ -340,6 +342,16 @@ class _BalancesTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
       children: [
+        if (detail.entries.isNotEmpty) ...[
+          SectionHeader(l10n.groupTotalsTitle),
+          GroupTotalsSummary(
+            key: kGroupTotalsCardKey,
+            totals: computeGroupTotals(expenses: detail.totalsExpenses, payments: detail.totalsPayments, myMemberId: detail.me?.id),
+            symbol: symbol,
+            showMine: detail.me != null,
+            onTap: () => context.push('/groups/${group.id}/totals'),
+          ),
+        ],
         SectionHeader(l10n.netBalances),
         Card(
           child: Column(children: [

@@ -14,6 +14,8 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, MethodCall, SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hisab/core/format.dart';
+import 'package:hisab/core/ids.dart';
 import 'package:hisab/core/money.dart';
 import 'package:hisab/core/dates.dart';
 import 'package:hisab/core/providers.dart';
@@ -33,6 +35,7 @@ import 'package:hisab/features/expense_editor/expense_editor_screen.dart';
 import 'package:hisab/features/groups/activity_screen.dart';
 import 'package:hisab/features/groups/group_detail_screen.dart';
 import 'package:hisab/features/groups/group_export.dart';
+import 'package:hisab/features/groups/group_totals_screen.dart';
 import 'package:hisab/features/groups/settle_up_sheet.dart';
 import 'package:hisab/features/split/split_editor.dart';
 import 'package:hisab/features/shell/widgets/common.dart';
@@ -1737,6 +1740,54 @@ void main() {
     expect(lines[1], contains('"Hotel, sea view"'));
     expect(lines[1], contains(',Rahul 600.00; You 300.00,'));
     expect(lines[2], startsWith(',Total,,900.00,'), reason: 'a closing total row follows the last expense');
+  });
+
+  testWidgets('33 groups: totals for all time and one month, with several payers and an unequal split', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final entries = fresh.read(entriesRepositoryProvider);
+    final groupId = await groups.createGroup(name: 'Totals club', icon: 'restaurant', myName: 'You', otherMembers: ['Rahul', 'Priya']);
+    final members = await groups.getMembers(groupId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => member.name == 'Rahul').id;
+    final priya = members.firstWhere((member) => member.name == 'Priya').id;
+    final now = DateTime.now();
+    final lastMonth = DateTime(now.year, now.month - 1, 15);
+    Future<void> expense(String note, DateTime when, Map<String, int> shares, Map<String, int> paid) async {
+      final entryId = newId();
+      final total = shares.values.fold(0, (sum, amount) => sum + amount);
+      await entries.saveEntry(
+        EntriesRepository.newExpense(id: entryId, amountMinor: total, occurredAt: when, note: note, groupId: groupId, paidByMemberId: paid.keys.first, splitMethod: 'exact'),
+        splits: [for (final MapEntry(key: member, value: amount) in shares.entries) SplitsCompanion.insert(id: newId(), entryId: entryId, memberId: member, amountMinor: amount)],
+        payers: paid.length < 2 ? const [] : [for (final MapEntry(key: member, value: amount) in paid.entries) EntryPayersCompanion.insert(id: newId(), entryId: entryId, memberId: member, amountMinor: amount)],
+      );
+    }
+
+    // This month: Rahul 600 and I 300 pay a 900 dinner owed 200 / 300 / 400.
+    await expense('Dinner', now, {me: 20000, rahul: 30000, priya: 40000}, {rahul: 60000, me: 30000});
+    // Last month: Priya pays a 300 taxi shared equally.
+    await expense('Taxi', lastMonth, {me: 10000, rahul: 10000, priya: 10000}, {priya: 30000});
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Totals club');
+    await tapText(tester, 'Balances');
+    final card = find.byKey(kGroupTotalsCardKey);
+    expect(find.descendant(of: card, matching: find.text(formatMinor(120000))), findsOneWidget, reason: 'all-time group spending');
+    expect(find.descendant(of: card, matching: find.text(formatMinor(30000))), findsNWidgets(2), reason: 'I paid 300 and owe 200 + 100');
+
+    await tapFinder(tester, card, frames: 12);
+    expect(find.byType(GroupTotalsScreen), findsOneWidget);
+    expect(find.text('2 expenses'), findsOneWidget);
+    await shoot(tester, 'group_totals_all_time');
+
+    await tapFinder(tester, find.widgetWithText(ChoiceChip, formatMonthLabel(monthRange(now))), frames: 12);
+    expect(find.text('1 expense'), findsOneWidget);
+    expect(find.text(formatMinor(90000)), findsWidgets);
+    expect(find.text('+${formatMinor(10000)}'), findsOneWidget, reason: 'I paid 300 against a 200 share this month');
+    await scrollTo(tester, find.byType(MemberSpendChart), within: find.byType(GroupTotalsScreen));
+    await shoot(tester, 'group_totals_month_members');
   });
 
   testWidgets('26 subscriptions: add from templates, totals, sort by cost, pause, cancel, Hindi', (tester) async {

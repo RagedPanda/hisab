@@ -2065,6 +2065,42 @@ void main() {
     }
   });
 
+  testWidgets('37 groups: schedule a settle-up reminder on the Balances tab, share a nudge, turn it off', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final flatGroupId = await groups.createGroup(name: 'Flat 302', icon: 'home', myName: 'You', otherMembers: ['Ravi']);
+    final members = await groups.getMembers(flatGroupId);
+    await groups.addSettlement(
+      groupId: flatGroupId,
+      fromMemberId: members.firstWhere((member) => member.isMe).id,
+      toMemberId: members.firstWhere((member) => member.name == 'Ravi').id,
+      amountMinor: 50000,
+      occurredAt: DateTime.now(),
+    );
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Flat 302');
+    await tapText(tester, 'Balances');
+    await scrollTo(tester, find.text('Remind me to settle up'));
+    expect(find.text('Settle-up reminder off'), findsOneWidget);
+    await tapText(tester, 'Remind me to settle up');
+    await tapText(tester, 'Ravi', last: true);
+    await shoot(tester, 'settle_reminder_sheet');
+    await tapText(tester, 'Save');
+    if (find.text('Not now').evaluate().isNotEmpty) await tapText(tester, 'Not now');
+    expect(find.text('Reminder on day 1 every month'), findsOneWidget);
+    final schedule = await fresh.read(settleScheduleRepositoryProvider).scheduleOf(flatGroupId);
+    expect(schedule?.memberId, members.firstWhere((member) => member.name == 'Ravi').id);
+    expect(find.byTooltip('Share a nudge'), findsOneWidget, reason: 'something is owed, so a nudge can be shared');
+    await shoot(tester, 'settle_reminder_on');
+
+    await tapText(tester, 'Remind me to settle up');
+    await tapText(tester, 'Turn off');
+    expect(find.text('Settle-up reminder off'), findsOneWidget);
+    expect(await fresh.read(settleScheduleRepositoryProvider).scheduleOf(flatGroupId), isNull);
+  });
+
   testWidgets('32 salary day: set up from Settings, align month start, reminder clears when an SMS salary arrives, Hindi', (tester) async {
     final alerts = _RecordingSalaryAlerts();
     final fresh = await createApp(overrides: [salaryAlertSinkProvider.overrideWithValue(alerts)]);

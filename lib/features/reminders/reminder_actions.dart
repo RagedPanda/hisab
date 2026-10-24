@@ -114,14 +114,16 @@ Future<void> turnOnReminderNotifications(BuildContext context) async {
 /// Pre-permission sheets shown when a reminder with alerts is saved while
 /// notifications are off: first the notification permission, then (Android
 /// 12+, when not granted) "Alarms & reminders" so alerts fire on time
-/// (decision 22). Used by every flow that creates a reminder with alerts.
-Future<void> askReminderPermissionsIfNeeded(BuildContext context) async {
+/// (decision 22). Used by every flow that creates a reminder with alerts,
+/// including groups' settle-up schedules; it is saved either way. [title] and
+/// [body] default to the reminders wording.
+Future<void> askReminderPermissionsIfNeeded(BuildContext context, {String? title, String? body}) async {
   final container = ProviderScope.containerOf(context, listen: false);
   final service = container.read(notificationServiceProvider);
   final before = await service.checkPermission();
   if (before.notificationsAllowed || !context.mounted) return;
   final l10n = context.l10n;
-  final allow = await showPermissionExplainer(context, icon: Icons.notifications_active_outlined, title: l10n.notifPrePromptTitle, body: l10n.notifPrePromptBody);
+  final allow = await showPermissionExplainer(context, icon: Icons.notifications_active_outlined, title: title ?? l10n.notifPrePromptTitle, body: body ?? l10n.notifPrePromptBody);
   if (allow) await service.requestPermission();
   if (context.mounted) await askExactReminderAlarmsIfNeeded(context);
   container.invalidate(notificationPermissionProvider);

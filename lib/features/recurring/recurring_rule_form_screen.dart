@@ -7,6 +7,7 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/recurring_repository.dart';
+import '../../domain/split/group_recurring.dart';
 import '../../domain/recurring/recurrence.dart';
 import '../../domain/recurring/repeat_draft.dart';
 import '../../l10n/category_names.dart';
@@ -93,6 +94,9 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
     if (_amountMinor <= 0) return l10n.errorAmountZero;
     if (_kind != 'transfer' && _category == null) return l10n.errorPickCategory;
     if (_kind == 'transfer' && (_accountId == null || _toAccountId == null)) return l10n.errorPickBothAccounts;
+    if (_existing?.groupId != null && !isGroupRuleKind(_kind)) return l10n.groupRecurringExpenseOnly;
+    final groupTemplate = GroupExpenseTemplate.decode(_existing?.groupSplit);
+    if (groupTemplate != null && !templateFitsAmount(groupTemplate, _amountMinor)) return l10n.groupRecurringAmountFixed;
     if (!_repeat.isValidFrom(_nextOn)) return l10n.recurringEndBeforeStart;
     return null;
   }
@@ -167,6 +171,7 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
           children: [
+            if (_existing?.groupId == null) ...[
             SegmentedButton<String>(
               segments: [
                 compactSegment(context, value: 'expense', label: l10n.kindExpense, icon: Icons.arrow_upward),
@@ -180,6 +185,7 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
               }),
             ),
             const SizedBox(height: 16),
+            ],
             TextField(
               key: const ValueKey('recurring.amount'),
               controller: _amountController,
@@ -210,9 +216,12 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
                 },
               ),
             const SizedBox(height: 8),
-            Text(_kind == 'transfer' ? l10n.fromAccount : l10n.account, style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 6),
-            AccountChoiceChips(accounts: accounts, selectedId: _accountId, onPick: (id) => setState(() => _accountId = id)),
+            // A group rule is paid by a member, not from one of my accounts.
+            if (_existing?.groupId == null) ...[
+              Text(_kind == 'transfer' ? l10n.fromAccount : l10n.account, style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 6),
+              AccountChoiceChips(accounts: accounts, selectedId: _accountId, onPick: (id) => setState(() => _accountId = id)),
+            ],
             if (_kind == 'transfer') ...[
               const SizedBox(height: 12),
               Text(l10n.toAccount, style: Theme.of(context).textTheme.labelLarge),

@@ -1,4 +1,5 @@
 import '../../data/repositories/reminders_repository.dart';
+import '../../data/repositories/settle_schedule_repository.dart';
 import '../../domain/reminders/reminder_draft.dart';
 import '../../domain/reminders/reminder_kind.dart';
 import 'notification_service.dart';
@@ -14,10 +15,14 @@ class ReminderScheduler {
     required this.reminders,
     required this.notifications,
     this.removeEntry,
+    this.settleSchedules,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 
   final RemindersRepository reminders;
+
+  /// Groups' scheduled settle-up reminders, posted alongside due reminders.
+  final SettleScheduleRepository? settleSchedules;
   final NotificationService notifications;
 
   /// Deletes an entry and reverses its balance effect; [undoDone] uses it to
@@ -28,7 +33,8 @@ class ReminderScheduler {
   /// Re-posts the alerts of [id] from its stored row (or cancels them when it
   /// is closed or gone). Call after changing a reminder row directly.
   Future<void> refresh(String id) async {
-    final reminder = await reminders.getById(id);
+    final settleRow = await settleSchedules?.getRow(id);
+    final reminder = settleRow == null ? await reminders.getById(id) : (SettleScheduleRepository.isSchedulable(settleRow) ? settleRow : null);
     if (reminder == null) {
       await notifications.cancel(id);
     } else {
@@ -89,7 +95,10 @@ class ReminderScheduler {
 
   /// Re-posts every pending reminder's alerts. Run on app start (after reboot,
   /// app update or a time-zone change) and after a backup restore.
-  Future<int> rescheduleAll() async => notifications.rescheduleAll(await reminders.getSchedulable());
+  Future<int> rescheduleAll() async => notifications.rescheduleAll([
+        ...await reminders.getSchedulable(),
+        ...?await settleSchedules?.schedulable(),
+      ]);
 
   Future<void> _afterClose(String id, String? nextId) async {
     await notifications.cancel(id);

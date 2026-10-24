@@ -14,6 +14,7 @@ import '../../data/repositories/entries_repository.dart';
 import '../../data/repositories/entry_removal.dart';
 import '../../data/repositories/project_fields_repository.dart';
 import '../../data/repositories/projects_repository.dart';
+import '../../data/repositories/group_recurring_repository.dart';
 import '../../data/repositories/recurring_repository.dart';
 import '../../domain/entries/entry_accounts.dart';
 import '../../domain/ledger/balance_effects.dart';
@@ -23,6 +24,7 @@ import '../../domain/projects/project_picker.dart';
 import '../../domain/projects/project_templates.dart';
 import '../../domain/recurring/repeat_draft.dart';
 import '../../domain/reminders/reminder_draft.dart';
+import '../../domain/split/group_recurring.dart';
 import '../../domain/split/group_settings.dart';
 import '../../domain/split/item_split.dart';
 import '../../domain/split/payers.dart';
@@ -172,9 +174,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   /// entries and edits close the editor on save.
   bool get _canAddAnother => !_isEditing && widget.smsId == null && widget.reminderId == null && _source != 'sms';
 
-  /// Repeat is offered on new personal entries typed by hand. Group
-  /// expenses are shared with others, and SMS entries record what happened.
-  bool get _canRepeat => !_isEditing && _groupId == null && _source == 'manual';
+  /// Repeat is offered on new entries typed by hand, group expenses included
+  /// (rent, maid, wifi). SMS entries record what happened.
+  bool get _canRepeat => !_isEditing && _source == 'manual';
 
   @override
   void initState() {
@@ -609,8 +611,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.repeat),
               title: Text(l10n.recurringPartOfRule),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push('/recurring/${_recurringId!}'),
+              // Group rules are managed from the group's Upcoming list.
+              trailing: _groupId == null ? const Icon(Icons.chevron_right) : null,
+              onTap: _groupId == null ? () => context.push('/recurring/${_recurringId!}') : null,
             ),
           ],
           const SizedBox(height: 16),
@@ -920,9 +923,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                   entryId: id,
                   memberId: share.memberId,
                   amountMinor: share.amountMinor,
-                  shareValue: Value(_splitMethod == SplitMethod.exact || _splitMethod == SplitMethod.adjustment
-                      ? weights[share.memberId]?.amountMinor.toDouble()
-                      : weights[share.memberId]?.weight),
+                  shareValue: Value(shareValueFor(_splitMethod, weights[share.memberId])),
                 ),
           ],
           payers: _groupId == null
@@ -972,29 +973,40 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   Future<void> _startRule(RepeatDraft draft, EntriesCompanion entry) async {
     final repository = ref.read(recurringRepositoryProvider);
     final spec = draft.specFrom(_occurredAt);
-    final ruleId = await repository.saveRule(
-      RecurringRepository.newRule(
-        kind: _kind,
-        amountMinor: entry.amountMinor.value,
-        categoryId: entry.categoryId.value,
-        accountId: entry.accountId.value,
-        toAccountId: entry.toAccountId.value,
-        payee: entry.payee.value,
-        projectId: entry.projectId.value,
-        note: entry.note.value,
-        frequency: spec.frequency,
-        interval: spec.interval,
-        dayOfMonth: spec.dayOfMonth,
-        weekday: spec.weekday,
-        startDate: _occurredAt,
-        endDate: spec.endDate,
-        maxCount: spec.maxCount,
-        autoPost: draft.autoPost,
-      ),
-      monthStartDay: ref.read(settingsProvider).monthStartDay,
-      postedOn: _occurredAt,
+    final personalRule = RecurringRepository.newRule(
+      kind: _kind,
+      amountMinor: entry.amountMinor.value,
+      categoryId: entry.categoryId.value,
+      accountId: entry.accountId.value,
+      toAccountId: entry.toAccountId.value,
+      payee: entry.payee.value,
+      projectId: entry.projectId.value,
+      note: entry.note.value,
+      frequency: spec.frequency,
+      interval: spec.interval,
+      dayOfMonth: spec.dayOfMonth,
+      weekday: spec.weekday,
+      startDate: _occurredAt,
+      endDate: spec.endDate,
+      maxCount: spec.maxCount,
+      autoPost: draft.autoPost,
     );
+    final groupId = _groupId;
+    final rule = groupId == null ? personalRule : GroupRecurringRepository.asGroupRule(personalRule, groupId: groupId, template: _groupTemplate());
+    final ruleId = await repository.saveRule(rule, monthStartDay: ref.read(settingsProvider).monthStartDay, postedOn: _occurredAt);
     await repository.linkEntry(entry.id.value, ruleId);
+  }
+
+  /// The split and payers of the group expense being saved, replayed by
+  /// each later occurrence of its rule.
+  GroupExpenseTemplate _groupTemplate() {
+    final payers = _multiplePayers ? payersFrom(_payerAmounts) : const <SplitShare>[];
+    return GroupExpenseTemplate(
+      method: _splitMethod,
+      inputs: _splitInputs,
+      paidByMemberId: _paidByMemberId!,
+      payers: payers.length > 1 ? payers : const [],
+    );
   }
 
   /// Manual entries move the account's running balance; SMS and group

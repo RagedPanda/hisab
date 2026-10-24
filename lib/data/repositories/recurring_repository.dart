@@ -8,6 +8,7 @@ import '../../domain/recurring/recurrence.dart';
 import '../../domain/recurring/repeat_draft.dart';
 import '../db/database.dart';
 import 'accounts_repository.dart';
+import 'group_recurring_repository.dart';
 
 export '../../domain/recurring/repeat_draft.dart' show RecurringStatus;
 
@@ -70,12 +71,14 @@ class RecurringRepository {
 
   late final $AccountsTable _toAccounts = db.alias(db.accounts, 'rule_to_accounts');
 
-  JoinedSelectStatement<HasResultSet, dynamic> _viewsQuery() => db.select(db.recurringRules).join([
+  /// Personal rules when [groupId] is null, else that group's rules: group
+  /// rules are listed on their group's Expenses tab, not the personal list.
+  JoinedSelectStatement<HasResultSet, dynamic> _viewsQuery({String? groupId}) => db.select(db.recurringRules).join([
         leftOuterJoin(db.categories, db.categories.id.equalsExp(db.recurringRules.categoryId) & db.categories.deletedAt.isNull()),
         leftOuterJoin(db.accounts, db.accounts.id.equalsExp(db.recurringRules.accountId)),
         leftOuterJoin(_toAccounts, _toAccounts.id.equalsExp(db.recurringRules.toAccountId)),
       ])
-        ..where(db.recurringRules.deletedAt.isNull())
+        ..where(db.recurringRules.deletedAt.isNull() & (groupId == null ? db.recurringRules.groupId.isNull() : db.recurringRules.groupId.equals(groupId)))
         ..orderBy([OrderingTerm.asc(db.recurringRules.nextDue), OrderingTerm.asc(db.recurringRules.name)]);
 
   List<RecurringRuleView> _toViews(List<TypedResult> rows) => [
@@ -89,9 +92,9 @@ class RecurringRepository {
       ];
 
   /// Every live rule, soonest due first; the UI groups them by status.
-  Stream<List<RecurringRuleView>> watchViews() => _viewsQuery().watch().map(_toViews);
+  Stream<List<RecurringRuleView>> watchViews({String? groupId}) => _viewsQuery(groupId: groupId).watch().map(_toViews);
 
-  Future<List<RecurringRuleView>> getViews() async => _toViews(await _viewsQuery().get());
+  Future<List<RecurringRuleView>> getViews({String? groupId}) async => _toViews(await _viewsQuery(groupId: groupId).get());
 
   Future<RecurringRule?> getRule(String id) => (db.select(db.recurringRules)..where((t) => t.id.equals(id))).getSingleOrNull();
 
@@ -165,10 +168,16 @@ class RecurringRepository {
         for (final rule in rules) {
           final spec = specOf(rule);
           final due = dueOccurrences(spec, nextDue: rule.nextDue!, now: now, postedCount: rule.postedCount, monthStartDay: monthStartDay);
+          var consumed = 0;
           for (final occurrence in due) {
-            if (await _post(rule, occurrence)) written++;
+            final outcome = await _post(rule, occurrence);
+            if (outcome == OccurrencePost.blocked) break;
+            if (outcome == OccurrencePost.posted) written++;
+            consumed++;
           }
-          await _advance(rule, consumed: due.length, monthStartDay: monthStartDay);
+          if (consumed > 0) await _advance(rule, consumed: consumed, monthStartDay: monthStartDay);
+          // A group rule whose split no longer works waits, paused, for the person.
+          if (consumed < due.length) await setStatus(rule.id, RecurringStatus.paused);
         }
         return written;
       });
@@ -190,7 +199,7 @@ class RecurringRepository {
   Future<String?> confirmNext(String id, {int monthStartDay = 1}) => db.transaction(() async {
         final rule = await getRule(id);
         if (rule == null || rule.nextDue == null) return null;
-        await _post(rule, rule.nextDue!);
+        if (await _post(rule, rule.nextDue!) == OccurrencePost.blocked) return null;
         await _advance(rule, consumed: 1, monthStartDay: monthStartDay);
         return occurrenceEntryId(rule.id, rule.nextDue!);
       });
@@ -204,14 +213,17 @@ class RecurringRepository {
 
   /// Writes the entry for one occurrence unless it already exists, and moves
   /// account balances the way a hand-typed entry would.
-  Future<bool> _post(RecurringRule rule, DateTime occurrence) async {
+  /// Group rules post through [GroupRecurringRepository], which splits the
+  /// occurrence and never touches account balances.
+  Future<OccurrencePost> _post(RecurringRule rule, DateTime occurrence) async {
+    if (rule.groupId != null) return GroupRecurringRepository(db).postOccurrence(rule, occurrence);
     final entry = entryForOccurrence(rule, occurrence);
     final exists = await (db.select(db.entries)..where((t) => t.id.equals(entry.id.value))).getSingleOrNull();
-    if (exists != null) return false;
+    if (exists != null) return OccurrencePost.alreadyPosted;
     await db.into(db.entries).insert(entry);
     final snapshot = EntrySnapshot(kind: rule.kind, amountMinor: rule.amountMinor, accountId: rule.accountId, toAccountId: rule.kind == 'transfer' ? rule.toAccountId : null, source: 'recurring');
     await AccountsRepository(db).applyBalanceDeltas(postingDeltas(snapshot));
-    return true;
+    return OccurrencePost.posted;
   }
 
   Future<void> _advance(RecurringRule rule, {required int consumed, int skipped = 0, required int monthStartDay}) async {

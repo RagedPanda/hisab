@@ -455,6 +455,12 @@ class RecurringRules extends Table with SyncColumns {
   TextColumn get remindDaysBefore => text().withDefault(const Constant(''))();
   BoolColumn get isSubscription => boolean().withDefault(const Constant(false))();
 
+  /// Group a recurring group expense (rent, maid, wifi) is posted to.
+  TextColumn get groupId => text().nullable()();
+
+  /// How a group rule splits and who pays: `GroupExpenseTemplate` as JSON.
+  TextColumn get groupSplit => text().nullable()();
+
   /// active | paused | ended
   TextColumn get status => text().withDefault(const Constant('active'))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -535,7 +541,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -604,6 +610,8 @@ class AppDatabase extends _$AppDatabase {
           }
           // v14: document reminders link to a project and keep a document number.
           if (from < 14) await _upgradeToDocumentReminders(m, from);
+          // v15: recurring group expenses (groups parity) on recurring_rules.
+          if (from < 15) await _upgradeToGroupRecurring(m);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -651,6 +659,19 @@ class AppDatabase extends _$AppDatabase {
     if (!await _schemaObjectExists('table', 'recurring_rules')) await m.createTable(recurringRules);
     if (!(await _columnNames('entries')).contains('recurring_id')) await m.addColumn(entries, entries.recurringId);
     if (!await _schemaObjectExists('index', 'entries_recurring_id')) await m.createIndex(entriesRecurringId);
+  }
+
+  /// v15 step. Lets recurring rules post into a group: recurring_rules gains
+  /// the group columns it lacks (a table created at v7 or later by this version
+  /// already has them). Checking what exists keeps it idempotent, and also
+  /// heals pre-release builds of this feature, which stored these columns as
+  /// schema 8/9 and so skipped main's v8 sms_log.cleared_at step.
+  Future<void> _upgradeToGroupRecurring(Migrator m) async {
+    final ruleColumns = await _columnNames('recurring_rules');
+    for (final column in [recurringRules.groupId, recurringRules.groupSplit]) {
+      if (!ruleColumns.contains(column.name)) await m.addColumn(recurringRules, column);
+    }
+    if (!(await _columnNames('sms_log')).contains(smsLog.clearedAt.name)) await m.addColumn(smsLog, smsLog.clearedAt);
   }
 
   Future<Set<String>> _columnNames(String table) async {

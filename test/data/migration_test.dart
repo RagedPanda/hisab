@@ -7,6 +7,13 @@ import 'package:hisab/core/ids.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 
+/// Undoes the v15 step (group columns on recurring_rules) on a database
+/// created at the current schema, so older rewinds start from v14.
+Future<void> dropVersion15(AppDatabase db) async {
+  await db.customStatement('ALTER TABLE recurring_rules DROP COLUMN group_id');
+  await db.customStatement('ALTER TABLE recurring_rules DROP COLUMN group_split');
+}
+
 /// Undoes the v14 step (project link, document number, preset key and the
 /// project index on reminders) on a database created at the current schema,
 /// so older rewinds start from v13.
@@ -65,6 +72,7 @@ Future<void> dropVersion7(AppDatabase db) async {
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await dropVersion12(db);
@@ -91,6 +99,7 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await dropVersion12(db);
@@ -112,6 +121,7 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await dropVersion12(db);
@@ -132,6 +142,7 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await dropVersion12(db);
@@ -151,6 +162,7 @@ Future<void> rewindToVersion4(File file) async {
 /// rules).
 Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await dropVersion12(db);
@@ -167,6 +179,7 @@ Future<void> rewindToVersion5(File file) async {
 /// (entry payers, but no recurring rules).
 Future<void> rewindToVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await dropVersion12(db);
@@ -183,6 +196,7 @@ Future<void> rewindToVersion6(File file) async {
 /// schema 6 without main's v6 entry_payers, v7 and v8 steps.
 Future<void> rewindToPreReleaseRemindersVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await dropVersion11(db);
@@ -198,6 +212,7 @@ Future<void> rewindToPreReleaseRemindersVersion6(File file) async {
 /// (recurring rules, but SMS history could not be cleared).
 Future<void> rewindToVersion7(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await dropVersion12(db);
@@ -212,6 +227,7 @@ Future<void> rewindToVersion7(File file) async {
 /// (SMS history clearing, but no group activity log and no due-reminder columns).
 Future<void> rewindToVersion8(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await dropVersion12(db);
@@ -225,6 +241,7 @@ Future<void> rewindToVersion8(File file) async {
 /// (group activity log, but no group settings and no due-reminder columns).
 Future<void> rewindToVersion10(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await dropVersion12(db);
@@ -237,6 +254,7 @@ Future<void> rewindToVersion10(File file) async {
 /// (group settings, but no due-reminder columns).
 Future<void> rewindToVersion11(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await dropVersion12(db);
@@ -248,9 +266,24 @@ Future<void> rewindToVersion11(File file) async {
 /// (due-reminder columns, but no by-item assignments).
 Future<void> rewindToVersion12(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await db.customStatement('PRAGMA user_version = 12');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema of pre-release builds of
+/// recurring group expenses (#33), which stored the group columns and the due
+/// reminders as schema 9 without main's v8 sms_log.cleared_at.
+Future<void> rewindToGroupRecurringQaVersion9(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion14(db);
+  await dropVersion13(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
+  await dropVersion8(db);
+  await db.customStatement('PRAGMA user_version = 9');
   await db.close();
 }
 
@@ -258,6 +291,7 @@ Future<void> rewindToVersion12(File file) async {
 /// added the due-reminder columns as schema 9 before v10 existed.
 Future<void> rewindToRemindersQaVersion9(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await dropVersion13(db);
   await dropVersion11(db);
@@ -266,10 +300,20 @@ Future<void> rewindToRemindersQaVersion9(File file) async {
   await db.close();
 }
 
+/// Rewinds a freshly created database to the schema shipped at version 14
+/// (document reminders, but recurring rules cannot post into a group).
+Future<void> rewindToVersion14(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
+  await db.customStatement('PRAGMA user_version = 14');
+  await db.close();
+}
+
 /// Rewinds a freshly created database to the schema shipped at version 13
 /// (by-item assignments, but no project link or document number).
 Future<void> rewindToVersion13(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion14(db);
   await db.customStatement('PRAGMA user_version = 13');
   await db.close();
@@ -280,6 +324,7 @@ Future<void> rewindToVersion13(File file) async {
 /// under schema 7 without main's v7, v8, v10 and v11 steps.
 Future<void> rewindToDocumentRemindersPreReleaseVersion7(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion15(db);
   await dropVersion13(db);
   await dropVersion11(db);
   await dropVersion10(db);
@@ -529,7 +574,7 @@ void main() {
     });
   }
 
-  test('a fresh install at schema 14 has the project link, document number, preset key and project index', () async {
+  test('a fresh install at schema 15 has the project link, document number, preset key, project index and group recurring columns', () async {
     final db = AppDatabase(NativeDatabase(file));
     await db.into(db.reminders).insert(RemindersCompanion.insert(id: 'r1', kind: 'document', title: const Value('Passport'), projectId: const Value('p1'), documentNumber: const Value('Z1234567'), presetKey: const Value('passport')));
     final version = await db.customSelect('PRAGMA user_version').getSingle();
@@ -540,6 +585,8 @@ void main() {
     expect(passport.presetKey, 'passport');
     final indexes = await db.customSelect("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'reminders'").get();
     expect(indexes.map((row) => row.data['name']), contains('reminders_project_id'));
+    await db.into(db.recurringRules).insert(RecurringRulesCompanion.insert(id: 'g1-rent', kind: 'expense', amountMinor: 1500000, frequency: 'monthly', startDate: DateTime(2026, 10, 1), groupId: const Value('g1'), groupSplit: const Value('{}')));
+    expect((await db.select(db.recurringRules).getSingle()).groupId, 'g1');
     await db.close();
   });
 
@@ -573,6 +620,42 @@ void main() {
     final version = await db.customSelect('PRAGMA user_version').getSingle();
     expect(version.data['user_version'], db.schemaVersion);
     expect((await db.select(db.reminders).getSingle()).title, 'Card bill');
+    expect(await db.select(db.groupActivities).get(), isEmpty);
+    await db.close();
+  });
+
+  for (final (from, rewind) in [(7, rewindToVersion7), (8, rewindToVersion8), (10, rewindToVersion10), (11, rewindToVersion11), (12, rewindToVersion12), (13, rewindToVersion13), (14, rewindToVersion14)]) {
+    test('upgrading from schema $from lets recurring rules post into a group and keeps existing rules', () async {
+      final seed = AppDatabase(NativeDatabase(file));
+      await seed.into(seed.recurringRules).insert(RecurringRulesCompanion.insert(id: 'r1', kind: 'expense', amountMinor: 1500000, frequency: 'monthly', startDate: DateTime(2026, 10, 1)));
+      await seed.close();
+      await rewind(file);
+
+      final db = AppDatabase(NativeDatabase(file));
+      final version = await db.customSelect('PRAGMA user_version').getSingle();
+      expect(version.data['user_version'], db.schemaVersion);
+      final rule = await db.select(db.recurringRules).getSingle();
+      expect(rule.groupId, isNull, reason: 'existing rules stay personal');
+      expect(rule.groupSplit, isNull);
+      expect(rule.amountMinor, 1500000);
+      await db.into(db.recurringRules).insert(RecurringRulesCompanion.insert(id: 'r2', kind: 'expense', amountMinor: 90000, frequency: 'monthly', startDate: DateTime(2026, 10, 1), groupId: const Value('g1'), groupSplit: const Value('{}')));
+      expect((await (db.select(db.recurringRules)..where((row) => row.id.equals('r2'))).getSingle()).groupId, 'g1');
+      await db.close();
+    });
+  }
+
+  test('upgrading a recurring-groups pre-release build (schema 9 with group columns) keeps group rules and adds the SMS cleared marker', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.recurringRules).insert(RecurringRulesCompanion.insert(id: 'r1', kind: 'expense', amountMinor: 90000, frequency: 'monthly', startDate: DateTime(2026, 10, 1), groupId: const Value('g1'), groupSplit: const Value('{}')));
+    await seed.close();
+    await rewindToGroupRecurringQaVersion9(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    expect((await db.select(db.recurringRules).getSingle()).groupId, 'g1');
+    final smsColumns = await db.customSelect('PRAGMA table_info(sms_log)').get();
+    expect(smsColumns.map((row) => row.read<String>('name')), contains('cleared_at'));
     expect(await db.select(db.groupActivities).get(), isEmpty);
     await db.close();
   });

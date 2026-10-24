@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/db/database.dart';
 import '../../data/repositories/reminders_repository.dart';
+import '../../data/repositories/settle_schedule_repository.dart';
 import '../settings.dart';
 import 'notification_service.dart';
 import 'plugin_notification_gateway.dart';
@@ -18,6 +19,7 @@ ReminderScheduler buildReminderScheduler(AppDatabase db, AppSettings settings) {
   final l10n = notificationLocalizations(settings.localeCode);
   return ReminderScheduler(
     reminders: RemindersRepository(db),
+    settleSchedules: SettleScheduleRepository(db),
     notifications: NotificationService(
       PluginNotificationGateway(notificationSetupTexts(l10n)),
       buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, l10n, currencySymbol: settings.currencySymbol),

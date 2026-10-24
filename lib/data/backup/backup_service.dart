@@ -61,6 +61,9 @@ class BackupService {
     return BackupRestoreResult(written: written, currencyCode: backupCurrencyCode(payload));
   }
 
+  /// Values for group columns added in schema v7, for backups made before it.
+  static const groupBackupDefaults = <String, Object?>{'type': 'other', 'defaultSplitMethod': 'equal', 'notes': ''};
+
   /// Merges a backup into the current database. A row is written only when it
   /// is new or newer (by updatedAt) than the local copy, so restoring an old
   /// backup never clobbers recent edits. This is the same rule future sync uses.
@@ -73,13 +76,15 @@ class BackupService {
       String key,
       D Function(Map<String, dynamic>) fromJson,
       String Function(D) idOf,
-      DateTime? Function(D) updatedOf,
-    ) async {
+      DateTime? Function(D) updatedOf, {
+      Map<String, Object?> defaults = const {},
+    }) async {
       final rows = (payload[key] as List?) ?? const [];
       final existingRows = await db.select(table).get();
       final existingById = {for (final row in existingRows) idOf(row): row};
       for (final raw in rows) {
-        final incoming = fromJson(Map<String, dynamic>.from(raw as Map));
+        // Backups made before a column existed lack its key; [defaults] fills it.
+        final incoming = fromJson({...defaults, ...Map<String, dynamic>.from(raw as Map)});
         final current = existingById[idOf(incoming)];
         if (current != null) {
           final currentUpdated = updatedOf(current);
@@ -96,7 +101,7 @@ class BackupService {
       await restore(db.categories, 'categories', Category.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.entries, 'entries', Entry.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.entryItems, 'entryItems', EntryItem.fromJson, (r) => r.id, (r) => r.updatedAt);
-      await restore(db.groups, 'groups', Group.fromJson, (r) => r.id, (r) => r.updatedAt);
+      await restore(db.groups, 'groups', Group.fromJson, (r) => r.id, (r) => r.updatedAt, defaults: groupBackupDefaults);
       await restore(db.members, 'members', Member.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.splits, 'splits', Split.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.settlements, 'settlements', Settlement.fromJson, (r) => r.id, (r) => r.updatedAt);

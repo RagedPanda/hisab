@@ -2594,6 +2594,168 @@ class AppLocalizationsEn extends AppLocalizations {
   String get youInList => 'you';
 
   @override
+  String get groupSettingsTitle => 'Group settings';
+
+  @override
+  String get groupSettingsType => 'Type';
+
+  @override
+  String get groupTypeTrip => 'Trip';
+
+  @override
+  String get groupTypeHome => 'Home';
+
+  @override
+  String get groupTypeCouple => 'Couple';
+
+  @override
+  String get groupTypeOther => 'Other';
+
+  @override
+  String get groupSettingsIcon => 'Icon';
+
+  @override
+  String get groupSettingsDefaultSplit => 'Default split';
+
+  @override
+  String get groupSettingsDefaultSplitHint =>
+      'Pre-selected for new expenses. Expenses already added keep their split.';
+
+  @override
+  String get groupSettingsWeights => 'Shares per member';
+
+  @override
+  String groupSettingsWeightValue(num count, String weight) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$weight shares',
+      one: '1 share',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupSettingsWeightLess(String name) {
+    return 'Fewer shares for $name';
+  }
+
+  @override
+  String groupSettingsWeightMore(String name) {
+    return 'More shares for $name';
+  }
+
+  @override
+  String get groupSettingsCurrency => 'Currency label';
+
+  @override
+  String get groupSettingsCurrencyHint =>
+      'Only changes the symbol shown in this group. Amounts are not converted.';
+
+  @override
+  String groupSettingsCurrencyAppDefault(String symbol) {
+    return 'Same as app ($symbol)';
+  }
+
+  @override
+  String get groupSettingsCurrencyOther => 'Other symbol';
+
+  @override
+  String get groupSettingsSimplify => 'Simplify debts';
+
+  @override
+  String get groupSettingsSimplifyBody =>
+      'Combines debts so the group needs fewer repayments. If Asha owes Ravi and Ravi owes Meena, Asha can pay Meena directly. Nobody pays or gets back a different total.';
+
+  @override
+  String groupSettingsSimplifySaves(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Saves $count repayments right now',
+      one: 'Saves 1 repayment right now',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupSettingsNotes => 'Notes';
+
+  @override
+  String get groupSettingsNotesHint => 'Wi-Fi password, house rules, trip plan';
+
+  @override
+  String get groupSettingsNotesAdd => 'Add a note for this group';
+
+  @override
+  String get groupSettingsManage => 'Manage group';
+
+  @override
+  String get groupArchive => 'Archive group';
+
+  @override
+  String groupArchiveTitle(String name) {
+    return 'Archive $name?';
+  }
+
+  @override
+  String get groupArchiveBody =>
+      'The group moves to Archived on the groups list. Nothing is deleted, and you can unarchive it any time.';
+
+  @override
+  String get groupArchiveConfirm => 'Archive';
+
+  @override
+  String get groupUnarchive => 'Unarchive';
+
+  @override
+  String get groupArchivedBanner =>
+      'This group is archived. Unarchive it to add expenses.';
+
+  @override
+  String get groupLeftBanner => 'You left this group. Its history stays here.';
+
+  @override
+  String groupArchivedSection(int count) {
+    return 'Archived ($count)';
+  }
+
+  @override
+  String get groupLeave => 'Leave group';
+
+  @override
+  String groupLeaveTitle(String name) {
+    return 'Leave $name?';
+  }
+
+  @override
+  String get groupLeaveBody =>
+      'You are removed from the group on this phone and it moves to Archived, so its history stays readable.';
+
+  @override
+  String get groupLeaveConfirm => 'Leave';
+
+  @override
+  String get groupLeaveBlocked =>
+      'Settle up first. You can leave once nobody owes you and you owe nobody.';
+
+  @override
+  String get groupDeleteUnsettledBody =>
+      'This group still has unsettled balances. Deleting it removes every expense and payment, and it cannot be undone.';
+
+  @override
+  String get groupEmptyTrip =>
+      'Add tickets, stays and meals as you go; Hisab works out who owes whom.';
+
+  @override
+  String get groupEmptyHome =>
+      'Add rent, bills and groceries; Hisab works out who owes whom.';
+
+  @override
+  String get groupEmptyCouple =>
+      'Add the dinners, groceries and trips you share; Hisab keeps the balance.';
+
+  @override
   String get activityTitle => 'Activity';
 
   @override

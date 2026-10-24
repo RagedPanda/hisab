@@ -4286,6 +4286,252 @@ abstract class AppLocalizations {
   /// **'you'**
   String get youInList;
 
+  /// No description provided for @groupSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Group settings'**
+  String get groupSettingsTitle;
+
+  /// No description provided for @groupSettingsType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get groupSettingsType;
+
+  /// No description provided for @groupTypeTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip'**
+  String get groupTypeTrip;
+
+  /// No description provided for @groupTypeHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get groupTypeHome;
+
+  /// No description provided for @groupTypeCouple.
+  ///
+  /// In en, this message translates to:
+  /// **'Couple'**
+  String get groupTypeCouple;
+
+  /// No description provided for @groupTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get groupTypeOther;
+
+  /// No description provided for @groupSettingsIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get groupSettingsIcon;
+
+  /// No description provided for @groupSettingsDefaultSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Default split'**
+  String get groupSettingsDefaultSplit;
+
+  /// No description provided for @groupSettingsDefaultSplitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-selected for new expenses. Expenses already added keep their split.'**
+  String get groupSettingsDefaultSplitHint;
+
+  /// No description provided for @groupSettingsWeights.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares per member'**
+  String get groupSettingsWeights;
+
+  /// A member's share weight; count is the weight as a number, weight is it formatted (1.5).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 share} other{{weight} shares}}'**
+  String groupSettingsWeightValue(num count, String weight);
+
+  /// No description provided for @groupSettingsWeightLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Fewer shares for {name}'**
+  String groupSettingsWeightLess(String name);
+
+  /// No description provided for @groupSettingsWeightMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More shares for {name}'**
+  String groupSettingsWeightMore(String name);
+
+  /// No description provided for @groupSettingsCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency label'**
+  String get groupSettingsCurrency;
+
+  /// No description provided for @groupSettingsCurrencyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only changes the symbol shown in this group. Amounts are not converted.'**
+  String get groupSettingsCurrencyHint;
+
+  /// No description provided for @groupSettingsCurrencyAppDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Same as app ({symbol})'**
+  String groupSettingsCurrencyAppDefault(String symbol);
+
+  /// No description provided for @groupSettingsCurrencyOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other symbol'**
+  String get groupSettingsCurrencyOther;
+
+  /// No description provided for @groupSettingsSimplify.
+  ///
+  /// In en, this message translates to:
+  /// **'Simplify debts'**
+  String get groupSettingsSimplify;
+
+  /// No description provided for @groupSettingsSimplifyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Combines debts so the group needs fewer repayments. If Asha owes Ravi and Ravi owes Meena, Asha can pay Meena directly. Nobody pays or gets back a different total.'**
+  String get groupSettingsSimplifyBody;
+
+  /// No description provided for @groupSettingsSimplifySaves.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Saves 1 repayment right now} other{Saves {count} repayments right now}}'**
+  String groupSettingsSimplifySaves(int count);
+
+  /// No description provided for @groupSettingsNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get groupSettingsNotes;
+
+  /// No description provided for @groupSettingsNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi password, house rules, trip plan'**
+  String get groupSettingsNotesHint;
+
+  /// No description provided for @groupSettingsNotesAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note for this group'**
+  String get groupSettingsNotesAdd;
+
+  /// No description provided for @groupSettingsManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage group'**
+  String get groupSettingsManage;
+
+  /// No description provided for @groupArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive group'**
+  String get groupArchive;
+
+  /// No description provided for @groupArchiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive {name}?'**
+  String groupArchiveTitle(String name);
+
+  /// No description provided for @groupArchiveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The group moves to Archived on the groups list. Nothing is deleted, and you can unarchive it any time.'**
+  String get groupArchiveBody;
+
+  /// No description provided for @groupArchiveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get groupArchiveConfirm;
+
+  /// No description provided for @groupUnarchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive'**
+  String get groupUnarchive;
+
+  /// No description provided for @groupArchivedBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'This group is archived. Unarchive it to add expenses.'**
+  String get groupArchivedBanner;
+
+  /// No description provided for @groupLeftBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'You left this group. Its history stays here.'**
+  String get groupLeftBanner;
+
+  /// No description provided for @groupArchivedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived ({count})'**
+  String groupArchivedSection(int count);
+
+  /// No description provided for @groupLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave group'**
+  String get groupLeave;
+
+  /// No description provided for @groupLeaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave {name}?'**
+  String groupLeaveTitle(String name);
+
+  /// No description provided for @groupLeaveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You are removed from the group on this phone and it moves to Archived, so its history stays readable.'**
+  String get groupLeaveBody;
+
+  /// No description provided for @groupLeaveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get groupLeaveConfirm;
+
+  /// No description provided for @groupLeaveBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle up first. You can leave once nobody owes you and you owe nobody.'**
+  String get groupLeaveBlocked;
+
+  /// No description provided for @groupDeleteUnsettledBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This group still has unsettled balances. Deleting it removes every expense and payment, and it cannot be undone.'**
+  String get groupDeleteUnsettledBody;
+
+  /// No description provided for @groupEmptyTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tickets, stays and meals as you go; Hisab works out who owes whom.'**
+  String get groupEmptyTrip;
+
+  /// No description provided for @groupEmptyHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Add rent, bills and groceries; Hisab works out who owes whom.'**
+  String get groupEmptyHome;
+
+  /// No description provided for @groupEmptyCouple.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the dinners, groceries and trips you share; Hisab keeps the balance.'**
+  String get groupEmptyCouple;
+
   /// No description provided for @activityTitle.
   ///
   /// In en, this message translates to:

@@ -11,10 +11,12 @@ import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/groups_repository.dart';
 import '../../domain/split/debt_simplifier.dart';
+import '../../domain/split/group_settings.dart';
 import '../../domain/split/settle_up_links.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import '../../domain/split/group_export.dart' show exportFileName;
+import 'group_actions.dart';
 import 'group_expenses_tab.dart';
 import 'group_export.dart';
 import 'member_display.dart';
@@ -35,9 +37,11 @@ class GroupDetailScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final detail = ref.watch(groupDetailProvider(groupId)).value;
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final appSymbol = ref.watch(settingsProvider).currencySymbol;
     if (detail == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final group = detail.group;
+    final symbol = groupSymbol(currencyLabel: group.currencyLabel, appSymbol: appSymbol);
+    final archived = group.archivedAt != null;
     final members = detail.members;
     final entries = detail.entries;
     final settlements = detail.settlements;
@@ -72,47 +76,47 @@ class GroupDetailScreen extends ConsumerWidget {
             ),
             PopupMenuButton<String>(
               onSelected: (value) async {
-                final repo = ref.read(groupsRepositoryProvider);
                 switch (value) {
                   case 'activity':
                     context.push('/groups/${group.id}/activity');
-                  case 'rename':
-                    final name = await promptText(context, title: l10n.renameGroup, initial: group.name);
-                    if (name != null && name.isNotEmpty) await repo.updateGroup(GroupsCompanion(id: Value(group.id), name: Value(name)));
-                  case 'simplify':
-                    await repo.updateGroup(GroupsCompanion(id: Value(group.id), simplifyDebts: Value(!group.simplifyDebts)));
+                  case 'settings':
+                    await context.push('/groups/$groupId/settings');
+                  case 'archive':
+                    await confirmArchiveGroup(context, ref, detail);
+                  case 'unarchive':
+                    await ref.read(groupsRepositoryProvider).unarchiveGroup(group.id);
                   case 'delete':
-                    if (await confirmDialog(context, title: l10n.deleteNamed(group.name), message: l10n.deleteGroupBody, confirmLabel: l10n.delete)) {
-                      if (!context.mounted) return;
-                      final messenger = ScaffoldMessenger.of(context);
-                      await repo.deleteGroup(group.id);
-                      showUndoSnackBar(messenger, message: l10n.activityGroupDeletedSnack, undoLabel: l10n.undo, onUndo: () => repo.restoreGroup(group.id));
-                      if (context.mounted) context.pop();
-                    }
+                    if (await confirmDeleteGroup(context, ref, detail) && context.mounted) context.pop();
                 }
               },
               itemBuilder: (_) => [
                 PopupMenuItem(value: 'activity', child: Text(l10n.activityTitle)),
-                PopupMenuItem(value: 'rename', child: Text(l10n.rename)),
-                PopupMenuItem(value: 'simplify', child: Text(group.simplifyDebts ? l10n.simplifyOff : l10n.simplifyOn)),
+                PopupMenuItem(value: 'settings', child: Text(l10n.groupSettingsTitle)),
+                PopupMenuItem(value: archived ? 'unarchive' : 'archive', child: Text(archived ? l10n.groupUnarchive : l10n.groupArchive)),
                 PopupMenuItem(value: 'delete', child: Text(l10n.deleteGroup)),
               ],
             ),
           ],
           bottom: TabBar(tabs: [Tab(text: l10n.kindExpenses), Tab(text: l10n.balances), Tab(text: l10n.members)]),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          heroTag: 'add-group-expense',
-          onPressed: members.length < 2
-              ? () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.addMemberFirst)))
-              : () => context.push('/entry?group=$groupId'),
-          icon: const Icon(Icons.add),
-          label: Text(l10n.addExpense),
-        ),
-        body: TabBarView(
+        floatingActionButton: archived
+            ? null
+            : FloatingActionButton.extended(
+                heroTag: 'add-group-expense',
+                onPressed: members.length < 2
+                    ? () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.addMemberFirst)))
+                    : () => context.push('/entry?group=$groupId'),
+                icon: const Icon(Icons.add),
+                label: Text(l10n.addExpense),
+              ),
+        body: Column(children: [
+          if (archived) _ArchivedBanner(left: detail.me == null, onUnarchive: () => ref.read(groupsRepositoryProvider).unarchiveGroup(group.id)),
+          Expanded(child: TabBarView(
           children: [
             GroupExpensesTab(
               groupId: groupId,
+              groupType: GroupType.parse(group.type),
+              notes: group.notes,
               entries: entries,
               settlements: settlements,
               timelineByEntryId: detail.timelineByEntryId,
@@ -126,7 +130,8 @@ class GroupDetailScreen extends ConsumerWidget {
             _BalancesTab(detail: detail, nameOf: nameOf, symbol: symbol, openPayment: openPaymentSheet),
             _MembersTab(groupId: groupId, members: members, balances: balances, symbol: symbol),
           ],
-        ),
+        )),
+        ]),
       ),
     );
   }
@@ -208,6 +213,33 @@ class GroupDetailScreen extends ConsumerWidget {
           ]),
         );
       },
+    );
+  }
+}
+
+/// Shown above the tabs of an archived group, with Unarchive.
+class _ArchivedBanner extends StatelessWidget {
+  const _ArchivedBanner({required this.left, required this.onUnarchive});
+
+  /// I left the group, rather than only archiving it.
+  final bool left;
+  final VoidCallback onUnarchive;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+        child: Row(children: [
+          Icon(Icons.archive_outlined, color: scheme.onSecondaryContainer),
+          const SizedBox(width: 12),
+          Expanded(child: Text(left ? l10n.groupLeftBanner : l10n.groupArchivedBanner, style: TextStyle(color: scheme.onSecondaryContainer))),
+          TextButton(onPressed: onUnarchive, child: Text(l10n.groupUnarchive)),
+        ]),
+      ),
     );
   }
 }

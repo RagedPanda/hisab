@@ -7,6 +7,14 @@ import 'package:hisab/core/ids.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 
+/// Undoes the v11 step (group settings columns) on a database created at
+/// the current schema, so older rewinds start from v10.
+Future<void> dropVersion11(AppDatabase db) async {
+  for (final column in ['type', 'default_split_method', 'notes', 'currency_label', 'archived_at']) {
+    await db.customStatement('ALTER TABLE "groups" DROP COLUMN $column');
+  }
+}
+
 /// Undoes the v10 step (group activity log) on a database created at the
 /// current schema, so older rewinds start from v8.
 Future<void> dropVersion10(AppDatabase db) async {
@@ -31,6 +39,7 @@ Future<void> dropVersion7(AppDatabase db) async {
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion11(db);
   await dropVersion10(db);
   await dropVersion8(db);
   await dropVersion7(db);
@@ -53,6 +62,7 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion11(db);
   await dropVersion10(db);
   await dropVersion8(db);
   await dropVersion7(db);
@@ -70,6 +80,7 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion11(db);
   await dropVersion10(db);
   await dropVersion8(db);
   await dropVersion7(db);
@@ -86,6 +97,7 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion11(db);
   await dropVersion10(db);
   await dropVersion8(db);
   await dropVersion7(db);
@@ -101,6 +113,7 @@ Future<void> rewindToVersion4(File file) async {
 /// rules).
 Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion11(db);
   await dropVersion10(db);
   await dropVersion8(db);
   await dropVersion7(db);
@@ -113,6 +126,7 @@ Future<void> rewindToVersion5(File file) async {
 /// (entry payers, but no recurring rules).
 Future<void> rewindToVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion11(db);
   await dropVersion10(db);
   await dropVersion8(db);
   await dropVersion7(db);
@@ -124,6 +138,7 @@ Future<void> rewindToVersion6(File file) async {
 /// (recurring rules, but SMS history could not be cleared).
 Future<void> rewindToVersion7(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion11(db);
   await dropVersion10(db);
   await dropVersion8(db);
   await db.customStatement('PRAGMA user_version = 7');
@@ -134,8 +149,18 @@ Future<void> rewindToVersion7(File file) async {
 /// (SMS history clearing, but no group activity log).
 Future<void> rewindToVersion8(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion11(db);
   await dropVersion10(db);
   await db.customStatement('PRAGMA user_version = 8');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 10
+/// (group activity log, but no group settings).
+Future<void> rewindToVersion10(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion11(db);
+  await db.customStatement('PRAGMA user_version = 10');
   await db.close();
 }
 
@@ -227,6 +252,21 @@ void main() {
     final activity = await db.select(db.groupActivities).getSingle();
     expect(activity.beforeJson, isNull);
     expect(activity.deletedAt, isNull);
+    await db.close();
+  });
+
+  test('upgrading from schema 10 adds group settings with defaults that keep today\'s behaviour', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.groups).insert(GroupsCompanion.insert(id: 'g1', name: 'Goa', simplifyDebts: const Value(false)));
+    await seed.close();
+    await rewindToVersion10(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final group = await db.select(db.groups).getSingle();
+    expect((group.type, group.defaultSplitMethod, group.notes, group.currencyLabel, group.archivedAt), ('other', 'equal', '', null, null));
+    expect((group.name, group.simplifyDebts), ('Goa', false), reason: 'existing rows survive the upgrade');
     await db.close();
   });
 

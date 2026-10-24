@@ -7,12 +7,50 @@ import 'package:hisab/core/ids.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 
+/// Undoes the v13 step (by-item assignments, shared item lines) on a
+/// database created at the current schema, so older rewinds start from v11.
+Future<void> dropVersion13(AppDatabase db) async {
+  await db.customStatement('DROP TABLE item_assignments');
+  await db.customStatement('ALTER TABLE entry_items DROP COLUMN is_shared');
+}
+
+/// Undoes the v11 step (group settings columns) on a database created at
+/// the current schema, so older rewinds start from v10.
+Future<void> dropVersion11(AppDatabase db) async {
+  for (final column in ['type', 'default_split_method', 'notes', 'currency_label', 'archived_at']) {
+    await db.customStatement('ALTER TABLE "groups" DROP COLUMN $column');
+  }
+}
+
+/// Undoes the v10 step (group activity log) on a database created at the
+/// current schema, so older rewinds start from v8.
+Future<void> dropVersion10(AppDatabase db) async {
+  await db.customStatement('DROP TABLE group_activities');
+}
+
+/// Undoes the v8 step (sms_log.cleared_at) on a database created at the
+/// current schema, so older rewinds start from v7.
+Future<void> dropVersion8(AppDatabase db) async {
+  await db.customStatement('ALTER TABLE sms_log DROP COLUMN cleared_at');
+}
+
+/// Undoes the v7 step (recurring rules, entries.recurring_id) on a database
+/// created at the current schema, so older rewinds start from v6.
+Future<void> dropVersion7(AppDatabase db) async {
+  await db.customStatement('DROP TABLE recurring_rules');
+  await db.customStatement('DROP INDEX IF EXISTS entries_recurring_id');
+  await db.customStatement('ALTER TABLE entries DROP COLUMN recurring_id');
+}
+
 /// Rewinds a freshly created database to the schema shipped at version 1 so
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await db.customStatement('DROP TABLE item_assignments');
-  await db.customStatement('ALTER TABLE entry_items DROP COLUMN is_shared');
+  await dropVersion13(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
+  await dropVersion8(db);
+  await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
@@ -32,8 +70,11 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await db.customStatement('DROP TABLE item_assignments');
-  await db.customStatement('ALTER TABLE entry_items DROP COLUMN is_shared');
+  await dropVersion13(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
+  await dropVersion8(db);
+  await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
@@ -48,8 +89,11 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await db.customStatement('DROP TABLE item_assignments');
-  await db.customStatement('ALTER TABLE entry_items DROP COLUMN is_shared');
+  await dropVersion13(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
+  await dropVersion8(db);
+  await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
@@ -63,8 +107,11 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await db.customStatement('DROP TABLE item_assignments');
-  await db.customStatement('ALTER TABLE entry_items DROP COLUMN is_shared');
+  await dropVersion13(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
+  await dropVersion8(db);
+  await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('DROP TABLE reminders');
   await db.customStatement('ALTER TABLE members DROP COLUMN upi_id');
@@ -73,23 +120,72 @@ Future<void> rewindToVersion4(File file) async {
 }
 
 /// Rewinds a freshly created database to the schema shipped at version 5
-/// (reminders and UPI IDs, but only one payer per expense).
+/// (reminders and UPI IDs, but only one payer per expense and no recurring
+/// rules).
 Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await db.customStatement('DROP TABLE item_assignments');
-  await db.customStatement('ALTER TABLE entry_items DROP COLUMN is_shared');
+  await dropVersion13(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
+  await dropVersion8(db);
+  await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
   await db.customStatement('PRAGMA user_version = 5');
   await db.close();
 }
 
 /// Rewinds a freshly created database to the schema shipped at version 6
-/// (several payers, but no by-item assignments).
+/// (entry payers, but no recurring rules).
 Future<void> rewindToVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await db.customStatement('DROP TABLE item_assignments');
-  await db.customStatement('ALTER TABLE entry_items DROP COLUMN is_shared');
+  await dropVersion13(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
+  await dropVersion8(db);
+  await dropVersion7(db);
   await db.customStatement('PRAGMA user_version = 6');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 7
+/// (recurring rules, but SMS history could not be cleared).
+Future<void> rewindToVersion7(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion13(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
+  await dropVersion8(db);
+  await db.customStatement('PRAGMA user_version = 7');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 8
+/// (SMS history clearing, but no group activity log).
+Future<void> rewindToVersion8(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion13(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
+  await db.customStatement('PRAGMA user_version = 8');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 10
+/// (group activity log, but no group settings).
+Future<void> rewindToVersion10(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion13(db);
+  await dropVersion11(db);
+  await db.customStatement('PRAGMA user_version = 10');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 11
+/// (group settings, but no by-item assignments).
+Future<void> rewindToVersion11(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion13(db);
+  await db.customStatement('PRAGMA user_version = 11');
   await db.close();
 }
 
@@ -167,11 +263,43 @@ void main() {
     await db.close();
   });
 
-  test('upgrading from schema 6 adds item assignments and leaves old items unshared', () async {
+  test('upgrading from schema 8 adds the group activity log and keeps expenses', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.entries).insert(EntriesRepository.newExpense(id: 'e1', amountMinor: 90000, occurredAt: DateTime(2026, 10, 20), groupId: 'g1', paidByMemberId: 'm1', splitMethod: 'equal'));
+    await seed.close();
+    await rewindToVersion8(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    expect((await db.select(db.entries).getSingle()).id, 'e1', reason: 'existing rows survive the upgrade');
+    await db.into(db.groupActivities).insert(GroupActivitiesCompanion.insert(id: 'a1', groupId: 'g1', action: 'added', subjectKind: 'expense', subjectId: 'e1', occurredAt: DateTime(2026, 10, 20)));
+    final activity = await db.select(db.groupActivities).getSingle();
+    expect(activity.beforeJson, isNull);
+    expect(activity.deletedAt, isNull);
+    await db.close();
+  });
+
+  test('upgrading from schema 10 adds group settings with defaults that keep today\'s behaviour', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.groups).insert(GroupsCompanion.insert(id: 'g1', name: 'Goa', simplifyDebts: const Value(false)));
+    await seed.close();
+    await rewindToVersion10(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final group = await db.select(db.groups).getSingle();
+    expect((group.type, group.defaultSplitMethod, group.notes, group.currencyLabel, group.archivedAt), ('other', 'equal', '', null, null));
+    expect((group.name, group.simplifyDebts), ('Goa', false), reason: 'existing rows survive the upgrade');
+    await db.close();
+  });
+
+  test('upgrading from schema 11 adds item assignments and leaves old items unshared', () async {
     final seed = AppDatabase(NativeDatabase(file));
     await seed.into(seed.entryItems).insert(EntryItemsCompanion.insert(id: 'i1', entryId: 'e1', name: 'Pizza', unitPriceMinor: 50000, amountMinor: 50000));
     await seed.close();
-    await rewindToVersion6(file);
+    await rewindToVersion11(file);
 
     final db = AppDatabase(NativeDatabase(file));
     final version = await db.customSelect('PRAGMA user_version').getSingle();
@@ -222,6 +350,50 @@ void main() {
     expect(reminder.doneAt, isNull);
     await db.close();
   });
+
+  for (final (from, rewind) in [(5, rewindToVersion5), (6, rewindToVersion6)]) {
+    test('upgrading from schema $from adds recurring rules and the entry link', () async {
+      final seed = AppDatabase(NativeDatabase(file));
+      await EntriesRepository(seed).saveEntry(EntriesRepository.newExpense(id: 'e1', amountMinor: 1500000, occurredAt: DateTime(2026, 10, 5)));
+      await seed.close();
+      await rewind(file);
+
+      final db = AppDatabase(NativeDatabase(file));
+      final version = await db.customSelect('PRAGMA user_version').getSingle();
+      expect(version.data['user_version'], db.schemaVersion);
+      final entry = await db.select(db.entries).getSingle();
+      expect(entry.recurringId, isNull);
+      expect(entry.amountMinor, 1500000, reason: 'existing rows survive the upgrade');
+      expect(await db.select(db.entryPayers).get(), isA<List<EntryPayer>>(), reason: 'the v6 payers table is there after both paths');
+      await db.into(db.recurringRules).insert(RecurringRulesCompanion.insert(id: 'r1', kind: 'expense', amountMinor: 1500000, frequency: 'monthly', startDate: DateTime(2026, 10, 5)));
+      final rule = await db.select(db.recurringRules).getSingle();
+      expect(rule.interval, 1);
+      expect(rule.autoPost, isTrue);
+      expect(rule.status, 'active');
+      expect(rule.postedCount, 0);
+      expect(rule.isSubscription, isFalse);
+      await (db.update(db.entries)..where((t) => t.id.equals('e1'))).write(const EntriesCompanion(recurringId: Value('r1')));
+      expect((await db.select(db.entries).getSingle()).recurringId, 'r1');
+      await db.close();
+    });
+  }
+
+  for (final (from, rewind) in [(5, rewindToVersion5), (6, rewindToVersion6), (7, rewindToVersion7)]) {
+    test('upgrading from schema $from adds the SMS history cleared marker', () async {
+      final seed = AppDatabase(NativeDatabase(file));
+      await seed.into(seed.smsLog).insert(SmsLogCompanion.insert(id: 's1', sender: 'HDFCBK', body: 'Rs.10 debited', receivedAt: DateTime(2026, 10, 20), status: 'added'));
+      await seed.close();
+      await rewind(file);
+
+      final db = AppDatabase(NativeDatabase(file));
+      final version = await db.customSelect('PRAGMA user_version').getSingle();
+      expect(version.data['user_version'], db.schemaVersion);
+      final row = await db.select(db.smsLog).getSingle();
+      expect(row.clearedAt, isNull);
+      expect(row.body, 'Rs.10 debited', reason: 'existing rows survive the upgrade');
+      await db.close();
+    });
+  }
 
   // Opens a real v1 database (schema dumped from the shipped app into
   // `fixtures/schema_v1.sql`) with a few rows, then lets [AppDatabase] run

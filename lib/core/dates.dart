@@ -40,6 +40,19 @@ DateRange weekRange(DateTime anchor) {
 DateRange yearRange(DateTime anchor) =>
     DateRange(DateTime(anchor.year), DateTime(anchor.year + 1));
 
+/// `yyyy-MM-dd` for a calendar day, as routes and exports carry it.
+String isoDay(DateTime day) =>
+    '${day.year.toString().padLeft(4, '0')}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+
+/// A `yyyy-MM-dd` value back to local midnight; null when absent or malformed.
+DateTime? parseIsoDay(String? value) {
+  final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(value ?? '');
+  if (match == null) return null;
+  final day = DateTime(int.parse(match[1]!), int.parse(match[2]!), int.parse(match[3]!));
+  // Reject dates DateTime would roll over, such as 2026-02-30.
+  return isoDay(day) == value ? day : null;
+}
+
 bool isSameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
 

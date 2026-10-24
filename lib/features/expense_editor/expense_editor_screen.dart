@@ -126,7 +126,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   String get _draft => editorDraftFingerprint(
         kind: _kind,
-        amountMinor: _hasItems ? _itemsTotalMinor : parseAmountToMinor(_amountController.text),
+        amountMinor: _hasItems ? _itemsTotalMinor : parseAmountToMinor(_amountController.text, format: _moneyFormat),
         note: _noteController.text,
         payee: _payeeController.text,
         occurredAt: _occurredAt,
@@ -204,7 +204,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         final entry = details.entry;
         _existingId = entry.id;
         _kind = entry.kind;
-        _amountController.text = amountInputText(entry.amountMinor);
+        _amountController.text = amountInputText(entry.amountMinor, format: _moneyFormat);
         _noteController.text = entry.note;
         _payeeController.text = entry.payee ?? '';
         _occurredAt = entry.occurredAt;
@@ -319,7 +319,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     }
     final parsed = Map<String, dynamic>.from(jsonDecode(log.parsedJson!) as Map);
     _kind = parsed['direction'] == 'credit' ? 'income' : 'expense';
-    _amountController.text = amountInputText(parsed['amountMinor'] as int);
+    _amountController.text = amountInputText(parsed['amountMinor'] as int, format: _moneyFormat);
     _occurredAt = DateTime.tryParse(parsed['occurredAt'] as String? ?? '') ?? log.receivedAt;
     _payeeController.text = (parsed['counterparty'] as String?) ?? '';
     _source = 'sms';
@@ -334,7 +334,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     if (reminder == null) return;
     _kind = 'expense';
     final amount = reminderAmountOrNone(reminder.amountMinor);
-    if (amount != null) _amountController.text = amountInputText(amount);
+    if (amount != null) _amountController.text = amountInputText(amount, format: _moneyFormat);
     _payeeController.text = reminder.title;
     if (reminder.notes.isNotEmpty) _noteController.text = reminder.notes;
     if (reminder.categoryId != null) _category = await ref.read(categoriesRepositoryProvider).byId(reminder.categoryId!);
@@ -345,7 +345,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   Future<void> _loadMembers() async {
     final repo = ref.read(groupsRepositoryProvider);
     _members = await repo.getMembers(_groupId!);
+    final amountFormat = _moneyFormat;
     _group = await repo.getGroup(_groupId!);
+    _amountController.text = reformatAmountInput(_amountController.text, from: amountFormat, to: _moneyFormat);
   }
 
   List<SplitInput> _inputsFromSplits(List<Split> splits) {
@@ -369,7 +371,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   int get _itemsTotalMinor => _items.fold(0, (sum, i) => sum + i.amountMinor);
 
-  int get _amountMinor => _hasItems ? _itemsTotalMinor : (parseAmountToMinor(_amountController.text) ?? 0);
+  int get _amountMinor => _hasItems ? _itemsTotalMinor : (parseAmountToMinor(_amountController.text, format: _moneyFormat) ?? 0);
 
   /// Mutates the item list and keeps the amount field bound to the items total (P1-2).
   /// When the last item is removed the last total stays prefilled and the field becomes editable again.
@@ -377,7 +379,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     final hadItems = _hasItems;
     setState(() {
       mutate();
-      if (_hasItems) _amountController.text = amountInputText(_itemsTotalMinor);
+      if (_hasItems) _amountController.text = amountInputText(_itemsTotalMinor, format: _moneyFormat);
       if (_groupId != null) _syncByItemSplit(hadItems: hadItems);
     });
   }
@@ -423,6 +425,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     setState(() => _setSplitMethod(method));
   }
 
+  /// Currency label whose number format the amount uses: the group's own
+  /// when the entry is in a group, else the app's (null).
+  String? get _moneyFormatLabel => _groupId == null ? null : _group?.currencyLabel;
+
+  /// Number format for amounts read or written outside build.
+  MoneyFormat get _moneyFormat => ref.read(groupMoneyFormatProvider(_moneyFormatLabel));
+
   /// The payer who absorbs rounding remainders of a by-item split.
   String? get _remainderPayerId => _multiplePayers ? primaryPayerId(payersFrom(_payerAmounts)) ?? _paidByMemberId : _paidByMemberId;
 
@@ -446,10 +455,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   Widget _form(BuildContext context) {
     if (!_loaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final l10n = context.l10n;
-    final settings = ref.watch(settingsProvider);
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
     final recentAccountIds = ref.watch(recentAccountIdsProvider).value ?? const <String>[];
-    final symbol = groupSymbol(currencyLabel: _groupId == null ? null : _group?.currencyLabel, appSymbol: settings.currencySymbol);
+    final moneyFormat = ref.watch(groupMoneyFormatProvider(_moneyFormatLabel));
     final units = _category?.units.split(',').where((u) => u.isNotEmpty).toList() ?? const <String>[];
 
     return Scaffold(
@@ -507,17 +515,18 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             inputFormatters: amountInputFormatters,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
             decoration: InputDecoration(
-              prefixText: '$symbol ',
+              prefixText: amountPrefixText(moneyFormat),
+              suffixText: amountSuffixText(moneyFormat),
               hintText: '0',
               helperText: _hasItems ? l10n.totalOfItems(_items.length) : null,
-              errorText: _hasItems ? null : amountErrorText(context, _amountController.text),
+              errorText: _hasItems ? null : amountErrorText(context, _amountController.text, format: moneyFormat),
               suffixIcon: _hasItems
                   ? null
                   : IconButton(
                       key: const ValueKey('editor.calculator'),
                       tooltip: l10n.calculator,
                       icon: const Icon(Icons.calculate_outlined),
-                      onPressed: () => _openCalculator(symbol),
+                      onPressed: () => _openCalculator(moneyFormat),
                     ),
             ),
             onChanged: (_) => setState(() {}),
@@ -542,7 +551,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             const SizedBox(height: 8),
             _projectChip(l10n, ref.watch(projectViewsProvider).value ?? const <ProjectView>[]),
           ],
-          if (_kind == 'expense') _itemsSection(symbol, units),
+          if (_kind == 'expense') _itemsSection(moneyFormat, units),
           if (_kind != 'transfer' && _projectFields.isNotEmpty) ...[
             SectionHeader(l10n.projectDetails, padding: const EdgeInsets.fromLTRB(0, 16, 0, 8)),
             ProjectFieldInputs(key: ValueKey('fields.$_projectId'), fields: _projectFields, values: _fieldValues, onChanged: (values) => setState(() => _fieldValues = values)),
@@ -620,7 +629,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           TextField(controller: _payeeController, decoration: InputDecoration(labelText: l10n.payeeLabel, prefixIcon: const Icon(Icons.storefront_outlined)), textCapitalization: TextCapitalization.words),
           const SizedBox(height: 12),
           TextField(controller: _noteController, decoration: InputDecoration(labelText: l10n.note, prefixIcon: const Icon(Icons.notes)), textCapitalization: TextCapitalization.sentences, maxLines: 2),
-          if (_groupId != null) _groupSection(symbol),
+          if (_groupId != null) _groupSection(moneyFormat),
           if (_source == 'sms')
             Padding(
               padding: const EdgeInsets.only(top: 12),
@@ -634,7 +643,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         ),
       ),
       bottomNavigationBar: BottomActionBar(
-        child: _saveButtons(l10n, symbol),
+        child: _saveButtons(l10n, moneyFormat),
       ),
     );
   }
@@ -642,13 +651,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   /// A by-item split with an item nobody shares cannot be saved yet.
   bool get _saveBlocked => _isByItem && anyItemUnassigned(_itemInputs);
 
-  Widget _saveButtons(AppLocalizations l10n, String symbol) {
+  Widget _saveButtons(AppLocalizations l10n, MoneyFormat moneyFormat) {
     final save = FilledButton(
       key: const ValueKey('editor.save'),
       onPressed: _saving || _saveBlocked ? null : _save,
       child: FittedBox(
         fit: BoxFit.scaleDown,
-        child: Text(_saving ? l10n.saving : l10n.saveAmount(formatMinor(_amountMinor, symbol: symbol))),
+        child: Text(_saving ? l10n.saving : l10n.saveAmount(formatMinor(_amountMinor, format: moneyFormat))),
       ),
     );
     if (!_canAddAnother) return save;
@@ -668,11 +677,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     );
   }
 
-  Future<void> _openCalculator(String symbol) async {
+  Future<void> _openCalculator(MoneyFormat moneyFormat) async {
     FocusScope.of(context).unfocus();
-    final minor = await showCalculatorSheet(context, initialAmountText: _amountController.text, symbol: symbol);
+    final minor = await showCalculatorSheet(context, initialAmountText: _amountController.text, moneyFormat: moneyFormat);
     if (minor == null || !mounted) return;
-    setState(() => _amountController.text = amountInputText(minor));
+    setState(() => _amountController.text = amountInputText(minor, format: _moneyFormat));
   }
 
   /// Clears the form for the next entry, keeping the kind, account, project,
@@ -696,7 +705,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _amountFocus.requestFocus();
   }
 
-  Widget _itemsSection(String symbol, List<String> units) {
+  Widget _itemsSection(MoneyFormat moneyFormat, List<String> units) {
     final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -719,7 +728,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                 for (final suggestion in _suggestions.where((s) => !_items.any((i) => i.name.toLowerCase() == s.name.toLowerCase())))
                   ActionChip(
                     avatar: const Icon(Icons.history, size: 16),
-                    label: Text(l10n.itemSuggestion(suggestion.name, formatQuantity(suggestion.lastQuantity, suggestion.unit), formatMinor(suggestion.lastUnitPriceMinor, symbol: symbol))),
+                    label: Text(l10n.itemSuggestion(suggestion.name, formatQuantity(suggestion.lastQuantity, suggestion.unit), formatMinor(suggestion.lastUnitPriceMinor, format: moneyFormat))),
                     onPressed: () => _updateItems(() => _items.add(ItemDraft(
                           name: suggestion.name,
                           quantity: suggestion.lastQuantity,
@@ -735,7 +744,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             key: ValueKey(_items[i].id),
             draft: _items[i],
             units: units,
-            symbol: symbol,
+            moneyFormat: moneyFormat,
             onChanged: (draft) => _updateItems(() => _items[i] = draft),
             onRemove: () => _updateItems(() => _items.removeAt(i)),
             footer: _isByItem
@@ -767,7 +776,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     );
   }
 
-  Widget _groupSection(String symbol) {
+  Widget _groupSection(MoneyFormat moneyFormat) {
     final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -796,7 +805,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             totalMinor: _amountMinor,
             members: _members,
             amounts: _payerAmounts,
-            symbol: symbol,
+            moneyFormat: moneyFormat,
             onChanged: (amounts) => setState(() => _payerAmounts = amounts),
           ),
         ],
@@ -806,7 +815,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           members: _members,
           method: _splitMethod,
           inputs: _splitInputs,
-          symbol: symbol,
+          moneyFormat: moneyFormat,
           items: _itemInputs,
           payerId: _remainderPayerId,
           onMethodChanged: _changeSplitMethod,
@@ -834,7 +843,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     final amount = _amountMinor;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    if (!_hasItems && amountErrorText(context, _amountController.text) != null) {
+    if (!_hasItems && amountErrorText(context, _amountController.text, format: _moneyFormat) != null) {
       messenger.showSnackBar(SnackBar(content: Text(l10n.invalidAmount)));
       return;
     }
@@ -866,7 +875,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       if (_multiplePayers) {
         final payers = payersFrom(_payerAmounts);
         if (payers.isEmpty || unassignedMinor(amount, payers) != 0) {
-          messenger.showSnackBar(SnackBar(content: Text(l10n.payersMustTotal(formatMinor(amount, symbol: groupSymbol(currencyLabel: _group?.currencyLabel, appSymbol: ref.read(settingsProvider).currencySymbol))))));
+          messenger.showSnackBar(SnackBar(content: Text(l10n.payersMustTotal(formatMinor(amount, format: _moneyFormat)))));
           return;
         }
         _paidByMemberId = primaryPayerId(payers);
@@ -877,7 +886,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       }
       outcome = computeSplit(totalMinor: amount, method: _splitMethod, inputs: _splitInputs, items: _itemInputs, payerId: _paidByMemberId);
       if (!outcome.isValid) {
-        messenger.showSnackBar(SnackBar(content: Text(outcome.error == null ? l10n.errorFixSplit : splitErrorMessage(outcome.error!, l10n, ref.read(settingsProvider).currencySymbol))));
+        messenger.showSnackBar(SnackBar(content: Text(outcome.error == null ? l10n.errorFixSplit : splitErrorMessage(outcome.error!, l10n, _moneyFormat))));
         return;
       }
     }

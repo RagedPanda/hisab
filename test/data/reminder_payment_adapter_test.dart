@@ -1,5 +1,6 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hisab/core/money.dart';
 import 'package:hisab/core/notifications/notification_service.dart';
 import 'package:hisab/core/notifications/reminder_alert_text.dart';
 import 'package:hisab/core/notifications/reminder_payload.dart';
@@ -37,7 +38,7 @@ void main() {
       reminders: reminders,
       smsLog: smsLog,
       notifications: NotificationService(gateway,
-          buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, notificationLocalizations('en'), currencySymbol: '₹'), clock: () => now),
+          buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, notificationLocalizations('en'), moneyFormat: MoneyFormat.inr), clock: () => now),
       clock: () => now,
     );
     linker = SmsReminderLinker(smsLog: smsLog, reminders: ReminderPaymentAdapter(reminders: reminders, scheduler: scheduler, accounts: accounts));
@@ -149,7 +150,7 @@ void main() {
   test('documents and reminders without an amount are never candidates', () async {
     await reminders.save(ReminderDraft(kind: ReminderKind.document, title: 'PUC', dueAt: DateTime(2026, 11, 5)));
     await reminders.save(ReminderDraft(kind: ReminderKind.bill, title: 'Water', dueAt: DateTime(2026, 11, 5)));
-    final adapter = ReminderPaymentAdapter(reminders: reminders, scheduler: ReminderScheduler(reminders: reminders, notifications: NotificationService(gateway, buildAlert: (r, a) => alertRequestFor(r, a, notificationLocalizations('en'), currencySymbol: '₹'))), accounts: accounts);
+    final adapter = ReminderPaymentAdapter(reminders: reminders, scheduler: ReminderScheduler(reminders: reminders, notifications: NotificationService(gateway, buildAlert: (r, a) => alertRequestFor(r, a, notificationLocalizations('en'), moneyFormat: MoneyFormat.inr))), accounts: accounts);
     expect(await adapter.pendingCandidates(), isEmpty);
   });
 }

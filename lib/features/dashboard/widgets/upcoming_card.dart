@@ -81,7 +81,7 @@ class _UpcomingHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final summary = overview.summary;
     return Wrap(
       spacing: 12,
@@ -107,7 +107,7 @@ class _UpcomingHeader extends ConsumerWidget {
             l10n.upcomingOverdueCount(summary.overdueCount),
             style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.error, fontWeight: FontWeight.w700),
           ),
-        if (summary.dueOutMinor > 0) Text(l10n.upcomingDueTotal(formatMinor(summary.dueOutMinor, symbol: symbol)), style: captionStyle(context)),
+        if (summary.dueOutMinor > 0) Text(l10n.upcomingDueTotal(formatMinor(summary.dueOutMinor, format: moneyFormat)), style: captionStyle(context)),
       ],
     );
   }

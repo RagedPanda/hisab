@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/currency/currency_lookup.dart';
+import '../domain/money/money_format.dart';
+import '../domain/money/money_format_resolver.dart';
 import '../domain/sms/sms_confidence.dart';
 
 /// Preference behind Settings > "Month starts on"; also read by backups.
@@ -12,6 +14,9 @@ const String kCurrencyCodeKey = 'currencyCode';
 
 /// Preference key of the old free-text symbol; read only to migrate.
 const String kLegacyCurrencySymbolKey = 'currencySymbol';
+
+/// Preference behind Settings > Money > Number format; also read by backups.
+const String kNumberFormatKey = 'numberFormat';
 
 /// User preferences persisted outside the database.
 class AppSettings {
@@ -26,6 +31,7 @@ class AppSettings {
     this.myName = '',
     this.onboarded = false,
     this.localeCode = '',
+    this.numberFormat = NumberFormatChoice.automatic,
   });
 
   /// ISO 4217 code of the home currency; the symbol is derived from it.
@@ -56,6 +62,9 @@ class AppSettings {
 
   Locale? get locale => localeCode.isEmpty ? null : Locale(localeCode);
 
+  /// Digit grouping and separators: automatic (currency and region) or fixed.
+  final NumberFormatChoice numberFormat;
+
   AppSettings copyWith({
     String? currencyCode,
     bool? currencyConfirmed,
@@ -67,6 +76,7 @@ class AppSettings {
     String? myName,
     bool? onboarded,
     String? localeCode,
+    NumberFormatChoice? numberFormat,
   }) =>
       AppSettings(
         currencyCode: currencyCode ?? this.currencyCode,
@@ -79,6 +89,7 @@ class AppSettings {
         myName: myName ?? this.myName,
         onboarded: onboarded ?? this.onboarded,
         localeCode: localeCode ?? this.localeCode,
+        numberFormat: numberFormat ?? this.numberFormat,
       );
 
   static AppSettings fromPrefs(SharedPreferences prefs) => AppSettings(
@@ -92,6 +103,7 @@ class AppSettings {
         myName: prefs.getString('myName') ?? '',
         onboarded: prefs.getBool('onboarded') ?? false,
         localeCode: prefs.getString('localeCode') ?? '',
+        numberFormat: NumberFormatChoice.fromStorageKey(prefs.getString(kNumberFormatKey)),
       );
 
   Future<void> writeTo(SharedPreferences prefs) async {
@@ -108,5 +120,25 @@ class AppSettings {
     await prefs.setString('myName', myName);
     await prefs.setBool('onboarded', onboarded);
     await prefs.setString('localeCode', localeCode);
+    await prefs.setString(kNumberFormatKey, numberFormat.storageKey);
   }
 }
+
+/// How home-currency amounts are written for [settings] on a device in
+/// [deviceLocale]. Pure, so the background isolate shares it with
+/// homeMoneyFormatProvider.
+MoneyFormat homeMoneyFormatFor(AppSettings settings, Locale deviceLocale) => resolveMoneyFormat(
+      currencyCode: settings.currencyCode.isEmpty ? kDefaultCurrencyCode : settings.currencyCode,
+      deviceLanguage: deviceLocale.languageCode,
+      deviceCountry: deviceLocale.countryCode,
+      choice: settings.numberFormat,
+    );
+
+/// How a group with [currencyLabel] writes amounts; see [moneyFormatForLabel].
+MoneyFormat groupMoneyFormatFor(String? currencyLabel, AppSettings settings, Locale deviceLocale) => moneyFormatForLabel(
+      currencyLabel,
+      home: homeMoneyFormatFor(settings, deviceLocale),
+      deviceLanguage: deviceLocale.languageCode,
+      deviceCountry: deviceLocale.countryCode,
+      choice: settings.numberFormat,
+    );

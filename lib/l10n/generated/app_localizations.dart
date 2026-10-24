@@ -6349,6 +6349,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paid via SMS'**
   String get smsReminderPaidViaSms;
+
+  /// No description provided for @numberFormatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Number format'**
+  String get numberFormatTitle;
+
+  /// No description provided for @numberFormatAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get numberFormatAutomatic;
+
+  /// No description provided for @numberFormatAutomaticHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows your currency and region'**
+  String get numberFormatAutomaticHelp;
 }
 
 class _AppLocalizationsDelegate

@@ -44,7 +44,7 @@ class _GroupTotalsScreenState extends ConsumerState<GroupTotalsScreen> {
     final l10n = context.l10n;
     final detail = ref.watch(groupDetailProvider(widget.groupId)).value;
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     if (detail == null) {
       return Scaffold(
         appBar: AppBar(title: Text(l10n.groupTotalsTitle)),
@@ -83,7 +83,7 @@ class _GroupTotalsScreenState extends ConsumerState<GroupTotalsScreen> {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: GroupTotalsSummary(totals: totals, symbol: symbol, showMine: detail.me != null),
+            child: GroupTotalsSummary(totals: totals, moneyFormat: moneyFormat, showMine: detail.me != null),
           ),
           if (totals.expenseCount == 0)
             Padding(
@@ -100,7 +100,7 @@ class _GroupTotalsScreenState extends ConsumerState<GroupTotalsScreen> {
                   child: CategoryDonut(
                     data: buildCategoryBreakdown(totals.byCategory, categories),
                     selectedId: _selectedCategoryId,
-                    symbol: symbol,
+                    moneyFormat: moneyFormat,
                     totalCaption: periodLabel,
                     onSliceTap: (share) => setState(() => _selectedCategoryId = _selectedCategoryId == share.categoryId ? null : share.categoryId),
                   ),
@@ -113,7 +113,7 @@ class _GroupTotalsScreenState extends ConsumerState<GroupTotalsScreen> {
               child: Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: MemberSpendChart(rows: totals.byMember, nameOf: nameOf, symbol: symbol),
+                  child: MemberSpendChart(rows: totals.byMember, nameOf: nameOf, moneyFormat: moneyFormat),
                 ),
               ),
             ),
@@ -128,9 +128,9 @@ class _GroupTotalsScreenState extends ConsumerState<GroupTotalsScreen> {
 /// what I paid, payments I made or received, and how the period moved my
 /// balance. Used on the totals page and, for all time, on the Balances tab.
 class GroupTotalsSummary extends StatelessWidget {
-  const GroupTotalsSummary({super.key, required this.totals, required this.symbol, required this.showMine, this.onTap});
+  const GroupTotalsSummary({super.key, required this.totals, required this.moneyFormat, required this.showMine, this.onTap});
   final GroupTotals totals;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   /// False when the group has no "me" member, so my figures mean nothing.
   final bool showMine;
@@ -146,7 +146,7 @@ class GroupTotalsSummary extends StatelessWidget {
         : net < 0
         ? kExpenseColor
         : theme.colorScheme.onSurfaceVariant;
-    final netText = '${net > 0 ? '+' : ''}${formatMinor(net, symbol: symbol)}';
+    final netText = '${net > 0 ? '+' : ''}${formatMinor(net, format: moneyFormat)}';
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -162,7 +162,7 @@ class GroupTotalsSummary extends StatelessWidget {
                   Expanded(
                     child: _Headline(
                       label: l10n.groupTotalsTotalSpent,
-                      value: formatMinor(totals.totalSpentMinor, symbol: symbol),
+                      value: formatMinor(totals.totalSpentMinor, format: moneyFormat),
                     ),
                   ),
                   if (showMine) ...[
@@ -170,7 +170,7 @@ class GroupTotalsSummary extends StatelessWidget {
                     Expanded(
                       child: _Headline(
                         label: l10n.groupTotalsYourShare,
-                        value: formatMinor(totals.myShareMinor, symbol: symbol),
+                        value: formatMinor(totals.myShareMinor, format: moneyFormat),
                         color: theme.colorScheme.primary,
                       ),
                     ),
@@ -184,17 +184,17 @@ class GroupTotalsSummary extends StatelessWidget {
                 const Divider(height: 24),
                 _FigureRow(
                   label: l10n.groupTotalsYouPaid,
-                  value: formatMinor(totals.myPaidMinor, symbol: symbol),
+                  value: formatMinor(totals.myPaidMinor, format: moneyFormat),
                 ),
                 if (totals.myPaymentsSentMinor != 0)
                   _FigureRow(
                     label: l10n.groupTotalsPaymentsMade,
-                    value: formatMinor(totals.myPaymentsSentMinor, symbol: symbol),
+                    value: formatMinor(totals.myPaymentsSentMinor, format: moneyFormat),
                   ),
                 if (totals.myPaymentsReceivedMinor != 0)
                   _FigureRow(
                     label: l10n.groupTotalsPaymentsReceived,
-                    value: formatMinor(totals.myPaymentsReceivedMinor, symbol: symbol),
+                    value: formatMinor(totals.myPaymentsReceivedMinor, format: moneyFormat),
                   ),
                 _FigureRow(label: l10n.groupTotalsNetChange, value: netText, color: netColor),
               ],
@@ -262,10 +262,10 @@ class _FigureRow extends StatelessWidget {
 /// Paid and share side by side for every member, as grouped bars with a
 /// legend and the exact figures listed underneath.
 class MemberSpendChart extends StatelessWidget {
-  const MemberSpendChart({super.key, required this.rows, required this.nameOf, required this.symbol});
+  const MemberSpendChart({super.key, required this.rows, required this.nameOf, required this.moneyFormat});
   final List<MemberSpend> rows;
   final String Function(String memberId) nameOf;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -278,7 +278,7 @@ class MemberSpendChart extends StatelessWidget {
     final maxY = niceCeiling(largest / 100);
     final labelStyle = theme.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant);
     final rodWidth = rows.length > 5 ? 8.0 : 14.0;
-    String amount(int minor) => formatMinor(minor, symbol: symbol, showDecimals: false);
+    String amount(int minor) => formatMinor(minor, format: moneyFormat, showDecimals: false);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -314,7 +314,7 @@ class MemberSpendChart extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 40,
                       interval: maxY / 2,
-                      getTitlesWidget: (value, meta) => Text(axisAmountLabel(value, symbol: symbol), style: labelStyle),
+                      getTitlesWidget: (value, meta) => Text(axisAmountLabel(value, format: moneyFormat), style: labelStyle),
                     ),
                   ),
                   bottomTitles: AxisTitles(

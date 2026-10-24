@@ -3960,4 +3960,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get smsReminderPaidViaSms => 'एसएमएस से भुगतान हुआ';
+
+  @override
+  String get numberFormatTitle => 'संख्या फ़ॉर्मैट';
+
+  @override
+  String get numberFormatAutomatic => 'अपने-आप';
+
+  @override
+  String get numberFormatAutomaticHelp => 'आपकी मुद्रा और क्षेत्र के हिसाब से';
 }

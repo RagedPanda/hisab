@@ -1386,5 +1386,8 @@
   "settleReminderPrePromptTitle": "Get reminded to settle up",
   "settleReminderPrePromptBody": "Hisab sends a notification on the day you choose, only to remind you to settle up with this group. No marketing.",
   "smsReminderPaidViaSms": "Paid via SMS",
-  "@smsReminderPaidViaSms": {"description": "Label on a reminder that a matching bank SMS marked done"}
+  "@smsReminderPaidViaSms": {"description": "Label on a reminder that a matching bank SMS marked done"},
+  "numberFormatTitle": "Number format",
+  "numberFormatAutomatic": "Automatic",
+  "numberFormatAutomaticHelp": "Follows your currency and region"
 }

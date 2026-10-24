@@ -27,21 +27,26 @@ String symbolForCurrencyCode(String code) => currencyByCode(code)?.symbol ?? cod
 
 /// Maps the old free-text currency symbol to a code. ₹ -> INR, $ -> USD,
 /// € -> EUR, "CHF" -> CHF; anything unrecognised (or nothing) -> INR.
-String currencyCodeForLegacySymbol(String? symbol) {
-  final trimmed = symbol?.trim() ?? '';
-  if (trimmed.isEmpty) return kDefaultCurrencyCode;
+String currencyCodeForLegacySymbol(String? symbol) => currencyForLabel(symbol)?.code ?? kDefaultCurrencyCode;
+
+/// The currency a typed label names: a code ("CHF"), a known alias ("Rs"),
+/// or a table symbol ("€", case-insensitively as a last resort). Null when
+/// the label is empty or unrecognised.
+Currency? currencyForLabel(String? label) {
+  final trimmed = label?.trim() ?? '';
+  if (trimmed.isEmpty) return null;
   final byCode = currencyByCode(trimmed);
-  if (byCode != null) return byCode.code;
+  if (byCode != null) return byCode;
   final alias = _legacyAliases[trimmed.toLowerCase()];
-  if (alias != null) return alias;
+  if (alias != null) return currencyByCode(alias);
   for (final currency in kCurrencies) {
-    if (currency.symbol == trimmed) return currency.code;
+    if (currency.symbol == trimmed) return currency;
   }
   final lower = trimmed.toLowerCase();
   for (final currency in kCurrencies) {
-    if (currency.symbol.toLowerCase() == lower) return currency.code;
+    if (currency.symbol.toLowerCase() == lower) return currency;
   }
-  return kDefaultCurrencyCode;
+  return null;
 }
 
 /// Countries that use [currency], by English name.

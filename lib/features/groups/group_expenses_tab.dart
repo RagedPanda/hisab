@@ -70,7 +70,7 @@ class GroupExpensesTab extends ConsumerWidget {
     required this.activeMemberIds,
     required this.nameOf,
     required this.categoryById,
-    required this.symbol,
+    required this.moneyFormat,
     required this.openPayment,
   });
   final String groupId;
@@ -90,7 +90,7 @@ class GroupExpensesTab extends ConsumerWidget {
   final Set<String> activeMemberIds;
   final String Function(String) nameOf;
   final Map<String, Category> categoryById;
-  final String symbol;
+  final MoneyFormat moneyFormat;
   final void Function(Settlement) openPayment;
 
   @override
@@ -138,7 +138,7 @@ class GroupExpensesTab extends ConsumerWidget {
             RecurringRuleCard(
               key: ValueKey('group.recurring.${item.view.rule.id}'),
               item: item,
-              symbol: symbol,
+              moneyFormat: moneyFormat,
               yourShareMinor: myShareOfGroupRule(item.view.rule.groupSplit, amountMinor: item.view.rule.amountMinor, activeMemberIds: activeMemberIds, myMemberId: myMemberId),
             ),
           ],
@@ -183,7 +183,7 @@ class GroupExpensesTab extends ConsumerWidget {
       switch (item) {
         case MonthHeaderItem(:final month, :final totalMinor):
           flush();
-          widgets.add(_MonthHeader(month: month, totalMinor: totalMinor, symbol: symbol));
+          widgets.add(_MonthHeader(month: month, totalMinor: totalMinor, moneyFormat: moneyFormat));
         case SettledDividerItem(:final day, :final olderCount, :final collapsible, :final expanded):
           flush();
           widgets.add(_SettledDivider(day: day, olderCount: olderCount, collapsible: collapsible, expanded: expanded, onToggle: onToggleOlder));
@@ -216,11 +216,11 @@ class GroupExpensesTab extends ConsumerWidget {
       leading: IconBadge(icon: category?.icon, color: category?.color ?? 0xFF607D8B),
       title: Text(entry.note.isNotEmpty ? entry.note : (entry.payee ?? category?.displayName(context) ?? l10n.kindExpense), maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
-        '${formatRowDate(entry.occurredAt, locale: locale)} · ${l10n.payerPaidAmount(payers, formatMinor(entry.amountMinor, symbol: symbol))}',
+        '${formatRowDate(entry.occurredAt, locale: locale)} · ${l10n.payerPaidAmount(payers, formatMinor(entry.amountMinor, format: moneyFormat))}',
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: _Effect(label: label, amount: effect.kind == ExpenseEffectKind.notInvolved ? null : formatMinor(effect.amountMinor, symbol: symbol), color: color),
+      trailing: _Effect(label: label, amount: effect.kind == ExpenseEffectKind.notInvolved ? null : formatMinor(effect.amountMinor, format: moneyFormat), color: color),
       onTap: () => context.push('/entry?id=${entry.id}'),
     );
   }
@@ -245,7 +245,7 @@ class GroupExpensesTab extends ConsumerWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: _Effect(label: label, amount: formatMinor(settlement.amountMinor, symbol: symbol), color: color),
+      trailing: _Effect(label: label, amount: formatMinor(settlement.amountMinor, format: moneyFormat), color: color),
       onTap: () => openPayment(settlement),
     );
   }
@@ -274,10 +274,10 @@ class _Effect extends StatelessWidget {
 }
 
 class _MonthHeader extends StatelessWidget {
-  const _MonthHeader({required this.month, required this.totalMinor, required this.symbol});
+  const _MonthHeader({required this.month, required this.totalMinor, required this.moneyFormat});
   final DateTime month;
   final int totalMinor;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -289,7 +289,7 @@ class _MonthHeader extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(formatMonthYear(month, locale: locale), style: style)),
-          if (totalMinor > 0) Text(formatMinor(totalMinor, symbol: symbol), style: style.tabular),
+          if (totalMinor > 0) Text(formatMinor(totalMinor, format: moneyFormat), style: style.tabular),
         ],
       ),
     );

@@ -39,13 +39,13 @@ bool logsDuplicateOf(String originalStatus, String incomingBody) => keepsSmsText
 
 /// Maps a stored status to the outcome the history screen shows.
 SmsOutcome smsOutcomeFor(String status) => switch (status) {
-  SmsLogStatus.added => SmsOutcome.added,
-  SmsLogStatus.duplicate => SmsOutcome.duplicate,
-  SmsLogStatus.skipped => SmsOutcome.unparsed,
-  SmsLogStatus.pending => SmsOutcome.pending,
-  SmsLogStatus.undone => SmsOutcome.undone,
-  _ => SmsOutcome.ignored,
-};
+      SmsLogStatus.added => SmsOutcome.added,
+      SmsLogStatus.duplicate => SmsOutcome.duplicate,
+      SmsLogStatus.skipped => SmsOutcome.unparsed,
+      SmsLogStatus.pending => SmsOutcome.pending,
+      SmsLogStatus.undone => SmsOutcome.undone,
+      _ => SmsOutcome.ignored,
+    };
 
 /// Only messages that produced nothing can be run through ingest again.
 bool canReprocessSms(SmsOutcome outcome) => outcome == SmsOutcome.ignored || outcome == SmsOutcome.unparsed;
@@ -54,7 +54,8 @@ bool canReprocessSms(SmsOutcome outcome) => outcome == SmsOutcome.ignored || out
 /// a bank re-delivery. Live SMS carry the network timestamp while the inbox
 /// stores the device receive time, so one delivery read both ways can differ
 /// by a few seconds; anything under [tolerance] apart is the same delivery.
-bool isSameDelivery(DateTime logged, DateTime incoming, {Duration tolerance = const Duration(minutes: 1)}) => logged.difference(incoming).abs() < tolerance;
+bool isSameDelivery(DateTime logged, DateTime incoming, {Duration tolerance = const Duration(minutes: 1)}) =>
+    logged.difference(incoming).abs() < tolerance;
 
 /// Phone-number senders are people, not businesses; their messages are never
 /// kept in the history.

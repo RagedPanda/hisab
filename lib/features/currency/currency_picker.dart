@@ -30,48 +30,50 @@ class _CurrencyPickerListState extends State<CurrencyPickerList> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final matches = _query.trim().isEmpty ? selectedFirst(searchCurrencies(''), widget.selectedCode) : searchCurrencies(_query);
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: TextField(
-            key: const ValueKey('currency-search'),
-            controller: _search,
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search),
-              hintText: l10n.currencySearchHint,
-              isDense: true,
-              border: const OutlineInputBorder(),
-              suffixIcon: _query.isEmpty
-                  ? null
-                  : IconButton(
-                      icon: const Icon(Icons.close),
-                      tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
-                      onPressed: () => setState(() {
-                        _search.clear();
-                        _query = '';
-                      }),
-                    ),
-            ),
-            onChanged: (text) => setState(() => _query = text),
-          ),
-        ),
-        Expanded(
-          child: matches.isEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(l10n.currencyNoMatch(_query.trim()), textAlign: TextAlign.center),
+    return Column(children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        child: TextField(
+          key: const ValueKey('currency-search'),
+          controller: _search,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search),
+            hintText: l10n.currencySearchHint,
+            isDense: true,
+            border: const OutlineInputBorder(),
+            suffixIcon: _query.isEmpty
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.close),
+                    tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+                    onPressed: () => setState(() {
+                      _search.clear();
+                      _query = '';
+                    }),
                   ),
-                )
-              : ListView.builder(
-                  itemCount: matches.length,
-                  itemBuilder: (context, index) => CurrencyTile(currency: matches[index], selected: matches[index].code == widget.selectedCode, onTap: () => widget.onTap(matches[index])),
-                ),
+          ),
+          onChanged: (text) => setState(() => _query = text),
         ),
-      ],
-    );
+      ),
+      Expanded(
+        child: matches.isEmpty
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(l10n.currencyNoMatch(_query.trim()), textAlign: TextAlign.center),
+                ),
+              )
+            : ListView.builder(
+                itemCount: matches.length,
+                itemBuilder: (context, index) => CurrencyTile(
+                  currency: matches[index],
+                  selected: matches[index].code == widget.selectedCode,
+                  onTap: () => widget.onTap(matches[index]),
+                ),
+              ),
+      ),
+    ]);
   }
 }
 
@@ -99,7 +101,11 @@ class CurrencyTile extends StatelessWidget {
         ),
       ),
       title: Text(currency.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text([currency.code, if (countries.isNotEmpty) countries.join(', ')].join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(
+        [currency.code, if (countries.isNotEmpty) countries.join(', ')].join(' · '),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       trailing: selected ? Icon(Icons.check, color: scheme.primary) : null,
     );
   }
@@ -107,14 +113,14 @@ class CurrencyTile extends StatelessWidget {
 
 /// Full-screen picker for Settings. One tap on a row returns its code.
 Future<String?> showCurrencyPicker(BuildContext context, {required String selectedCode}) => Navigator.of(context).push<String>(
-  MaterialPageRoute(
-    fullscreenDialog: true,
-    builder: (context) => Scaffold(
-      appBar: AppBar(title: Text(context.l10n.currency)),
-      body: SafeArea(
-        top: false,
-        child: CurrencyPickerList(selectedCode: selectedCode, onTap: (currency) => Navigator.of(context).pop(currency.code)),
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: Text(context.l10n.currency)),
+          body: SafeArea(
+            top: false,
+            child: CurrencyPickerList(selectedCode: selectedCode, onTap: (currency) => Navigator.of(context).pop(currency.code)),
+          ),
+        ),
       ),
-    ),
-  ),
-);
+    );

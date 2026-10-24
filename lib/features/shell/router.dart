@@ -39,18 +39,10 @@ final appRouter = GoRouter(
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => AppShell(shell: shell),
       branches: [
-        StatefulShellBranch(
-          routes: [GoRoute(path: '/home', builder: (_, _) => const DashboardScreen())],
-        ),
-        StatefulShellBranch(
-          routes: [GoRoute(path: '/transactions', builder: (_, _) => const TransactionsScreen())],
-        ),
-        StatefulShellBranch(
-          routes: [GoRoute(path: '/groups', builder: (_, _) => const GroupsScreen())],
-        ),
-        StatefulShellBranch(
-          routes: [GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen())],
-        ),
+        StatefulShellBranch(routes: [GoRoute(path: '/home', builder: (_, _) => const DashboardScreen())]),
+        StatefulShellBranch(routes: [GoRoute(path: '/transactions', builder: (_, _) => const TransactionsScreen())]),
+        StatefulShellBranch(routes: [GoRoute(path: '/groups', builder: (_, _) => const GroupsScreen())]),
+        StatefulShellBranch(routes: [GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen())]),
       ],
     ),
     GoRoute(
@@ -66,16 +58,8 @@ final appRouter = GoRouter(
         ),
       ),
     ),
-    GoRoute(
-      path: '/groups/:id',
-      parentNavigatorKey: _rootKey,
-      builder: (_, state) => GroupDetailScreen(groupId: state.pathParameters['id']!),
-    ),
-    GoRoute(
-      path: '/groups/:id/activity',
-      parentNavigatorKey: _rootKey,
-      builder: (_, state) => ActivityScreen(groupId: state.pathParameters['id']!),
-    ),
+    GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(groupId: state.pathParameters['id']!)),
+    GoRoute(path: '/groups/:id/activity', parentNavigatorKey: _rootKey, builder: (_, state) => ActivityScreen(groupId: state.pathParameters['id']!)),
     GoRoute(path: '/activity', parentNavigatorKey: _rootKey, builder: (_, _) => const ActivityScreen()),
     GoRoute(path: '/categories', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoriesScreen()),
     GoRoute(path: '/categories/packs', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoryPacksScreen()),
@@ -87,11 +71,7 @@ final appRouter = GoRouter(
       builder: (_, _) => const RecurringScreen(),
       routes: [
         GoRoute(path: 'new', parentNavigatorKey: _rootKey, builder: (_, _) => const RecurringRuleFormScreen()),
-        GoRoute(
-          path: ':id',
-          parentNavigatorKey: _rootKey,
-          builder: (_, state) => RecurringRuleFormScreen(ruleId: state.pathParameters['id']!),
-        ),
+        GoRoute(path: ':id', parentNavigatorKey: _rootKey, builder: (_, state) => RecurringRuleFormScreen(ruleId: state.pathParameters['id']!)),
       ],
     ),
     GoRoute(
@@ -99,16 +79,8 @@ final appRouter = GoRouter(
       parentNavigatorKey: _rootKey,
       builder: (_, _) => const SubscriptionsScreen(),
       routes: [
-        GoRoute(
-          path: 'new',
-          parentNavigatorKey: _rootKey,
-          builder: (_, state) => SubscriptionFormScreen(templateKey: state.uri.queryParameters['template']),
-        ),
-        GoRoute(
-          path: ':id/edit',
-          parentNavigatorKey: _rootKey,
-          builder: (_, state) => SubscriptionFormScreen(ruleId: state.pathParameters['id']!),
-        ),
+        GoRoute(path: 'new', parentNavigatorKey: _rootKey, builder: (_, state) => SubscriptionFormScreen(templateKey: state.uri.queryParameters['template'])),
+        GoRoute(path: ':id/edit', parentNavigatorKey: _rootKey, builder: (_, state) => SubscriptionFormScreen(ruleId: state.pathParameters['id']!)),
       ],
     ),
     GoRoute(
@@ -127,25 +99,13 @@ final appRouter = GoRouter(
           parentNavigatorKey: _rootKey,
           builder: (_, state) => ProjectDetailScreen(projectId: state.pathParameters['id']!),
           routes: [
-            GoRoute(
-              path: 'edit',
-              parentNavigatorKey: _rootKey,
-              builder: (_, state) => ProjectFormScreen(projectId: state.pathParameters['id']!),
-            ),
+            GoRoute(path: 'edit', parentNavigatorKey: _rootKey, builder: (_, state) => ProjectFormScreen(projectId: state.pathParameters['id']!)),
           ],
         ),
       ],
     ),
-    GoRoute(
-      path: '/sms',
-      parentNavigatorKey: _rootKey,
-      builder: (_, state) => HomeFallbackPop(child: SmsScreen(sharedText: state.uri.queryParameters['text'])),
-    ),
-    GoRoute(
-      path: '/sms/review',
-      parentNavigatorKey: _rootKey,
-      builder: (_, _) => const HomeFallbackPop(child: SmsReviewScreen()),
-    ),
+    GoRoute(path: '/sms', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: SmsScreen(sharedText: state.uri.queryParameters['text']))),
+    GoRoute(path: '/sms/review', parentNavigatorKey: _rootKey, builder: (_, _) => const HomeFallbackPop(child: SmsReviewScreen())),
     GoRoute(path: '/sms/history', parentNavigatorKey: _rootKey, builder: (_, _) => const SmsHistoryScreen()),
   ],
 );

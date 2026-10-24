@@ -10,10 +10,10 @@ class RawSms {
   final DateTime receivedAt;
 
   static RawSms fromMap(Map<dynamic, dynamic> map) => RawSms(
-    sender: (map['sender'] as String?) ?? '',
-    body: (map['body'] as String?) ?? '',
-    receivedAt: DateTime.fromMillisecondsSinceEpoch((map['date'] as num?)?.toInt() ?? DateTime.now().millisecondsSinceEpoch),
-  );
+        sender: (map['sender'] as String?) ?? '',
+        body: (map['body'] as String?) ?? '',
+        receivedAt: DateTime.fromMillisecondsSinceEpoch((map['date'] as num?)?.toInt() ?? DateTime.now().millisecondsSinceEpoch),
+      );
 }
 
 /// Thin wrapper over the Android platform channel. Every method is a no-op on
@@ -64,7 +64,13 @@ class SmsChannel {
 /// Settings for the native background receiver. The body templates keep
 /// literal `{amount}` and `{sender}` placeholders for the receiver to fill.
 class SmsCaptureConfig {
-  const SmsCaptureConfig({required this.enabled, required this.channelName, required this.title, required this.bodyWithAmount, required this.bodyWithoutAmount});
+  const SmsCaptureConfig({
+    required this.enabled,
+    required this.channelName,
+    required this.title,
+    required this.bodyWithAmount,
+    required this.bodyWithoutAmount,
+  });
 
   final bool enabled;
   final String channelName;
@@ -72,7 +78,13 @@ class SmsCaptureConfig {
   final String bodyWithAmount;
   final String bodyWithoutAmount;
 
-  Map<String, Object> toMap() => {'enabled': enabled, 'channelName': channelName, 'title': title, 'bodyWithAmount': bodyWithAmount, 'bodyWithoutAmount': bodyWithoutAmount};
+  Map<String, Object> toMap() => {
+        'enabled': enabled,
+        'channelName': channelName,
+        'title': title,
+        'bodyWithAmount': bodyWithAmount,
+        'bodyWithoutAmount': bodyWithoutAmount,
+      };
 }
 
 /// The device side of SMS capture, behind an interface so the ingest

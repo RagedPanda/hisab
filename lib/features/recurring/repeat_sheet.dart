@@ -30,11 +30,11 @@ String repeatSummary(AppLocalizations l10n, RepeatDraft draft, DateTime start, {
 }
 
 String frequencyLabel(AppLocalizations l10n, RecurrenceFrequency frequency) => switch (frequency) {
-  RecurrenceFrequency.daily => l10n.recurringDaily,
-  RecurrenceFrequency.weekly => l10n.recurringWeekly,
-  RecurrenceFrequency.monthly => l10n.recurringMonthly,
-  RecurrenceFrequency.yearly => l10n.recurringYearly,
-};
+      RecurrenceFrequency.daily => l10n.recurringDaily,
+      RecurrenceFrequency.weekly => l10n.recurringWeekly,
+      RecurrenceFrequency.monthly => l10n.recurringMonthly,
+      RecurrenceFrequency.yearly => l10n.recurringYearly,
+    };
 
 /// What the Repeat sheet returned: a schedule, or null for "don't repeat".
 typedef RepeatChoice = ({RepeatDraft? draft});
@@ -103,11 +103,7 @@ class _RepeatSheetState extends State<_RepeatSheet> {
                 children: [
                   Text(l10n.recurringRepeat, style: theme.textTheme.titleLarge),
                   const SizedBox(height: 4),
-                  Text(
-                    repeatSummary(l10n, _draft, widget.start, locale: locale),
-                    key: const ValueKey('repeat.summary'),
-                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary),
-                  ),
+                  Text(repeatSummary(l10n, _draft, widget.start, locale: locale), key: const ValueKey('repeat.summary'), style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary)),
                   const SizedBox(height: 16),
                   Wrap(
                     spacing: 8,
@@ -142,11 +138,7 @@ class _RepeatSheetState extends State<_RepeatSheet> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      ChoiceChip(
-                        label: Text(l10n.recurringEndNever),
-                        selected: _draft.end == RepeatEnd.never,
-                        onSelected: (_) => _update(_draft.copyWith(end: RepeatEnd.never)),
-                      ),
+                      ChoiceChip(label: Text(l10n.recurringEndNever), selected: _draft.end == RepeatEnd.never, onSelected: (_) => _update(_draft.copyWith(end: RepeatEnd.never))),
                       ChoiceChip(
                         label: Text(_draft.end == RepeatEnd.onDate && _draft.endDate != null ? formatShortDate(_draft.endDate!, locale: locale) : l10n.recurringEndOnDate),
                         selected: _draft.end == RepeatEnd.onDate,
@@ -230,10 +222,7 @@ class _Stepper extends StatelessWidget {
       children: [
         Expanded(child: Text(label, style: theme.textTheme.bodyLarge)),
         IconButton(key: ValueKey('$keyPrefix.minus'), tooltip: l10n.recurringDecrease(label), icon: const Icon(Icons.remove_circle_outline), onPressed: value > 1 ? () => onChanged(value - 1) : null),
-        SizedBox(
-          width: 40,
-          child: Text('$value', textAlign: TextAlign.center, style: theme.textTheme.titleMedium),
-        ),
+        SizedBox(width: 40, child: Text('$value', textAlign: TextAlign.center, style: theme.textTheme.titleMedium)),
         IconButton(key: ValueKey('$keyPrefix.plus'), tooltip: l10n.recurringIncrease(label), icon: const Icon(Icons.add_circle_outline), onPressed: value < 999 ? () => onChanged(value + 1) : null),
       ],
     );

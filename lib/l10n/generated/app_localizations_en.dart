@@ -117,7 +117,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String itemCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count items', one: '1 item');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
     return '$_temp0';
   }
 
@@ -174,7 +179,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noAccountsTitle => 'No accounts yet';
 
   @override
-  String get noAccountsBody => 'Bank accounts detected from SMS are added automatically with their reported balance. Manual entries adjust the balance of the account you pick.';
+  String get noAccountsBody =>
+      'Bank accounts detected from SMS are added automatically with their reported balance. Manual entries adjust the balance of the account you pick.';
 
   @override
   String deleteNamed(String name) {
@@ -211,7 +217,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noBudgetsTitle => 'No budgets yet';
 
   @override
-  String get noBudgetsBody => 'Set a monthly limit overall or per category. The dashboard shows pace and what is left.';
+  String get noBudgetsBody =>
+      'Set a monthly limit overall or per category. The dashboard shows pace and what is left.';
 
   @override
   String get removeBudgetQuestion => 'Remove this budget?';
@@ -223,7 +230,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String budgetLeftWithDays(String amount, String limit, int days) {
-    String _temp0 = intl.Intl.pluralLogic(days, locale: localeName, other: '$days days', one: '1 day');
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
     return '$amount of $limit left · $_temp0';
   }
 
@@ -254,7 +266,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addSubcategory => 'Add subcategory';
 
   @override
-  String get deleteCategoryBody => 'Existing entries keep their amounts but become uncategorised.';
+  String get deleteCategoryBody =>
+      'Existing entries keep their amounts but become uncategorised.';
 
   @override
   String get archiveCategory => 'Archive (hide from picker)';
@@ -303,7 +316,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String smsToReview(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count SMS to review', one: '1 SMS to review');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count SMS to review',
+      one: '1 SMS to review',
+    );
     return '$_temp0';
   }
 
@@ -332,7 +350,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noEntriesThisMonthTitle => 'No entries this month';
 
   @override
-  String get noEntriesThisMonthBody => 'Tap + to add your first expense, or turn on SMS reading in Settings.';
+  String get noEntriesThisMonthBody =>
+      'Tap + to add your first expense, or turn on SMS reading in Settings.';
 
   @override
   String get newEntry => 'New entry';
@@ -364,7 +383,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payeeLabel => 'Paid to / received from';
 
   @override
-  String get smsEntryNotice => 'Added from SMS. Editing it will not change your bank balance.';
+  String get smsEntryNotice =>
+      'Added from SMS. Editing it will not change your bank balance.';
 
   @override
   String get saving => 'Saving…';
@@ -389,7 +409,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get itemsHelp => 'Optional: break this expense into items with quantity and price (e.g. buffalo milk 1 L). Hisab remembers them for next time.';
+  String get itemsHelp =>
+      'Optional: break this expense into items with quantity and price (e.g. buffalo milk 1 L). Hisab remembers them for next time.';
 
   @override
   String get paidBy => 'Paid by';
@@ -480,7 +501,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String paidByPeople(String payer, int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count people', one: '1 person');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people',
+      one: '1 person',
+    );
     return '$payer paid · $_temp0';
   }
 
@@ -509,7 +535,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removePayment => 'Remove payment';
 
   @override
-  String get removePaymentBody => 'The balances will go back to what they were before this payment.';
+  String get removePaymentBody =>
+      'The balances will go back to what they were before this payment.';
 
   @override
   String get moreOptions => 'More options';
@@ -518,7 +545,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noGroupExpensesTitle => 'No expenses yet';
 
   @override
-  String get noGroupExpensesBody => 'Add the first shared expense; Hisab works out who owes whom.';
+  String get noGroupExpensesBody =>
+      'Add the first shared expense; Hisab works out who owes whom.';
 
   @override
   String get netBalances => 'Net balances';
@@ -547,7 +575,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordPayment => 'Record payment';
 
   @override
-  String get settleBeforeRemove => 'Settle this member\'s balance before removing them';
+  String get settleBeforeRemove =>
+      'Settle this member\'s balance before removing them';
 
   @override
   String removeNamed(String name) {
@@ -564,7 +593,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memberName => 'Member name';
 
   @override
-  String get membersLocalNotice => 'Members are stored on this device. Shared sync with invite codes is planned; see Settings → Sync.';
+  String get membersLocalNotice =>
+      'Members are stored on this device. Shared sync with invite codes is planned; see Settings → Sync.';
 
   @override
   String get newGroup => 'New group';
@@ -591,7 +621,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noGroupsTitle => 'Split bills with friends';
 
   @override
-  String get noGroupsBody => 'Create a group for a trip, flat or dinner. Add expenses, split them equally, by percentage, shares or exact amounts, and settle up.';
+  String get noGroupsBody =>
+      'Create a group for a trip, flat or dinner. Add expenses, split them equally, by percentage, shares or exact amounts, and settle up.';
 
   @override
   String get youAreOwed => 'You are owed';
@@ -641,7 +672,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currencyChooseTitle => 'Choose your currency';
 
   @override
-  String get currencyChooseBody => 'Amounts in Hisab show in this currency. You can change it later in Settings.';
+  String get currencyChooseBody =>
+      'Amounts in Hisab show in this currency. You can change it later in Settings.';
 
   @override
   String get currencySearchHint => 'Search code, name or country';
@@ -663,7 +695,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monthStartsOnHelp => 'Use your salary date';
 
   @override
-  String get monthStartsOnExplain => 'Budgets and monthly totals follow your pay cycle';
+  String get monthStartsOnExplain =>
+      'Budgets and monthly totals follow your pay cycle';
 
   @override
   String dayNumber(int day) {
@@ -698,7 +731,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportBackup => 'Export encrypted backup';
 
   @override
-  String get exportBackupHelp => 'AES-256, protected by a passphrase you choose';
+  String get exportBackupHelp =>
+      'AES-256, protected by a passphrase you choose';
 
   @override
   String get restoreBackup => 'Restore from backup';
@@ -710,13 +744,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudSync => 'Cloud sync';
 
   @override
-  String get cloudSyncHelp => 'Coming next: Google Drive on Android, iCloud on iOS, end-to-end encrypted with the same format as backups.';
+  String get cloudSyncHelp =>
+      'Coming next: Google Drive on Android, iCloud on iOS, end-to-end encrypted with the same format as backups.';
 
   @override
   String get about => 'About';
 
   @override
-  String get aboutBody => 'Free, open source, no ads, no account needed. Your data stays on your device.';
+  String get aboutBody =>
+      'Free, open source, no ads, no account needed. Your data stays on your device.';
 
   @override
   String get aboutMadeWithBefore => 'Made with';
@@ -731,7 +767,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupPassphrase => 'Backup passphrase';
 
   @override
-  String get backupPassphraseHelp => 'At least 8 characters; you need it to restore';
+  String get backupPassphraseHelp =>
+      'At least 8 characters; you need it to restore';
 
   @override
   String get passphraseTooShort => 'Use at least 8 characters';
@@ -762,7 +799,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsDuplicate => 'Already imported.';
 
   @override
-  String get smsForeignCurrency => 'Only SMS in your home currency are supported, so this one was ignored.';
+  String get smsForeignCurrency =>
+      'Only SMS in your home currency are supported, so this one was ignored.';
 
   @override
   String get smsNotFound => 'Could not find a transaction in that text.';
@@ -809,22 +847,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readBankSmsAuto => 'Read bank SMS automatically';
 
   @override
-  String get smsAndroidOnly => 'Android only. Processed on-device, never uploaded.';
+  String get smsAndroidOnly =>
+      'Android only. Processed on-device, never uploaded.';
 
   @override
-  String get smsNotOnIos => 'Not available on iOS. Use the Shortcut or paste below.';
+  String get smsNotOnIos =>
+      'Not available on iOS. Use the Shortcut or paste below.';
 
   @override
   String get smsAutoAddTitle => 'Add clear transactions automatically';
 
   @override
-  String get smsAutoAddHelp => 'On: clear bank SMS are added right away with Undo. Unclear ones wait for review.';
+  String get smsAutoAddHelp =>
+      'On: clear bank SMS are added right away with Undo. Unclear ones wait for review.';
 
   @override
   String get scanInboxNow => 'Scan inbox now';
 
   @override
-  String get scanInboxHelp => 'Looks back 90 days the first time, then only new messages';
+  String get scanInboxHelp =>
+      'Looks back 90 days the first time, then only new messages';
 
   @override
   String get pasteSms => 'Paste an SMS';
@@ -891,19 +933,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get splitHelpEqual => 'Everyone ticked pays the same share.';
 
   @override
-  String get splitHelpExact => 'Enter the exact amount each person owes; must add up to the total.';
+  String get splitHelpExact =>
+      'Enter the exact amount each person owes; must add up to the total.';
 
   @override
   String get splitHelpPercent => 'Enter percentages adding up to 100.';
 
   @override
-  String get splitHelpShares => 'Enter shares, e.g. 2 for a couple and 1 for a single.';
+  String get splitHelpShares =>
+      'Enter shares, e.g. 2 for a couple and 1 for a single.';
 
   @override
-  String get splitHelpAdjustment => 'Extras are charged first, the rest is split equally among ticked people.';
+  String get splitHelpAdjustment =>
+      'Extras are charged first, the rest is split equally among ticked people.';
 
   @override
-  String get splitHelpByItem => 'Each item is split among the people who shared it.';
+  String get splitHelpByItem =>
+      'Each item is split among the people who shared it.';
 
   @override
   String get entries => 'Entries';
@@ -915,7 +961,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noEntriesTitle => 'Nothing here yet';
 
   @override
-  String get noEntriesBody => 'Entries for this month will appear grouped by day.';
+  String get noEntriesBody =>
+      'Entries for this month will appear grouped by day.';
 
   @override
   String get settled => 'settled';
@@ -967,7 +1014,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get splitErrorAdjustmentNegativeShare => 'An adjustment makes a share negative';
+  String get splitErrorAdjustmentNegativeShare =>
+      'An adjustment makes a share negative';
 
   @override
   String get splitErrorNoItems => 'Add at least one item';
@@ -1060,7 +1108,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String andMoreCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count more', one: '1 more');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more',
+      one: '1 more',
+    );
     return 'and $_temp0';
   }
 
@@ -1082,7 +1135,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String memberCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count members', one: '1 member');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+    );
     return '$_temp0';
   }
 
@@ -1090,7 +1148,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noEntriesYetTitle => 'No entries yet';
 
   @override
-  String get noEntriesYetBody => 'Add one with + or turn on Bank SMS to capture them automatically';
+  String get noEntriesYetBody =>
+      'Add one with + or turn on Bank SMS to capture them automatically';
 
   @override
   String get addEntry => 'Add entry';
@@ -1120,13 +1179,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noProjectsTitle => 'No projects yet';
 
   @override
-  String get noProjectsBody => 'Track a car, a renovation, a trip or a wedding against its own budget.';
+  String get noProjectsBody =>
+      'Track a car, a renovation, a trip or a wedding against its own budget.';
 
   @override
   String get startProject => 'Start a project';
 
   @override
-  String get projectsEmptyBody => 'Start a project to track a big spend against its budget';
+  String get projectsEmptyBody =>
+      'Start a project to track a big spend against its budget';
 
   @override
   String get projectStatusActive => 'Active';
@@ -1171,7 +1232,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String entryCountLabel(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count entries', one: '1 entry', zero: 'No entries');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries',
+      one: '1 entry',
+      zero: 'No entries',
+    );
     return '$_temp0';
   }
 
@@ -1179,7 +1246,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noProjectEntriesTitle => 'Nothing spent yet';
 
   @override
-  String get noProjectEntriesBody => 'Add an entry from here and it counts towards this project';
+  String get noProjectEntriesBody =>
+      'Add an entry from here and it counts towards this project';
 
   @override
   String get markCompleted => 'Mark completed';
@@ -1194,7 +1262,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteProject => 'Delete project';
 
   @override
-  String get deleteProjectBody => 'Entries stay in your ledger; they just leave this project.';
+  String get deleteProjectBody =>
+      'Entries stay in your ledger; they just leave this project.';
 
   @override
   String get projectDeleted => 'Project deleted';
@@ -1263,7 +1332,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get templateConstruction => 'Home construction';
 
   @override
-  String get templateConstructionHint => 'Materials, labour, stages and cost per sq ft';
+  String get templateConstructionHint =>
+      'Materials, labour, stages and cost per sq ft';
 
   @override
   String get templateRenovation => 'Renovation';
@@ -1281,14 +1351,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get templateWedding => 'Wedding';
 
   @override
-  String get templateWeddingHint => 'Venue, catering, outfits, vendors and shagun';
+  String get templateWeddingHint =>
+      'Venue, catering, outfits, vendors and shagun';
 
   @override
   String get addSuggestedCategories => 'Add suggested categories';
 
   @override
   String suggestedCategoriesNew(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count new categories', one: '1 new category');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new categories',
+      one: '1 new category',
+    );
     return '$_temp0';
   }
 
@@ -1304,11 +1380,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addAPack => 'Add a pack';
 
   @override
-  String get categoryPacksHint => 'Ready-made sets of categories for a part of your life. Add one in a tap and remove it any time.';
+  String get categoryPacksHint =>
+      'Ready-made sets of categories for a part of your life. Add one in a tap and remove it any time.';
 
   @override
   String packCategoryCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count categories', one: '1 category');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count categories',
+      one: '1 category',
+    );
     return '$_temp0';
   }
 
@@ -1350,7 +1432,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get packAlreadyHave => 'Already in your list';
 
   @override
-  String get suggestedCategoriesAllPresent => 'All suggested categories are already in your list';
+  String get suggestedCategoriesAllPresent =>
+      'All suggested categories are already in your list';
 
   @override
   String get projectDetails => 'Project details';
@@ -1492,7 +1575,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String travellersCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count travellers', one: '1 traveller');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travellers',
+      one: '1 traveller',
+    );
     return '$_temp0';
   }
 
@@ -1505,7 +1593,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notPicked => 'Not picked';
 
   @override
-  String get metricsHint => 'Fill in project details on entries (odometer, stage, room…) to see metrics here.';
+  String get metricsHint =>
+      'Fill in project details on entries (odometer, stage, room…) to see metrics here.';
 
   @override
   String get projectFields => 'Fields';
@@ -1577,7 +1666,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordAPayment => 'Record a payment';
 
   @override
-  String get recordAPaymentHint => 'Any pair, any amount — partial payments are fine';
+  String get recordAPaymentHint =>
+      'Any pair, any amount — partial payments are fine';
 
   @override
   String get editPayment => 'Edit payment';
@@ -1640,7 +1730,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nothingInvolvingYou => 'Nothing involving you yet.';
 
   @override
-  String get expensesAllSettled => 'All settled up. New expenses will show here.';
+  String get expensesAllSettled =>
+      'All settled up. New expenses will show here.';
 
   @override
   String settledUpTo(String date) {
@@ -1649,7 +1740,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String showOlderRows(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'Show $count older entries', one: 'Show 1 older entry');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Show $count older entries',
+      one: 'Show 1 older entry',
+    );
     return '$_temp0';
   }
 
@@ -1696,7 +1792,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noProject => 'No project';
 
   @override
-  String get noActiveProjects => 'No active projects. Start one from the Projects screen.';
+  String get noActiveProjects =>
+      'No active projects. Start one from the Projects screen.';
 
   @override
   String get remindAction => 'Remind';
@@ -1758,7 +1855,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payWithUpi => 'Pay with UPI';
 
   @override
-  String get noUpiApp => 'No UPI app on this phone. Pay another way, then record it.';
+  String get noUpiApp =>
+      'No UPI app on this phone. Pay another way, then record it.';
 
   @override
   String couldNotOpenApp(String app) {
@@ -1781,7 +1879,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String remindedDaysAgo(int days) {
-    String _temp0 = intl.Intl.pluralLogic(days, locale: localeName, other: 'Reminded $days days ago', one: 'Reminded yesterday', zero: 'Reminded today');
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Reminded $days days ago',
+      one: 'Reminded yesterday',
+      zero: 'Reminded today',
+    );
     return '$_temp0';
   }
 
@@ -1792,7 +1896,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copiedReminder => 'Copied. Paste it into any chat.';
 
   @override
-  String get nothingToRemind => 'Everyone is settled up. Nothing to remind or pay.';
+  String get nothingToRemind =>
+      'Everyone is settled up. Nothing to remind or pay.';
 
   @override
   String get shareSummaryAnyway => 'Share the summary anyway';
@@ -1819,7 +1924,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidUpiId => 'Enter a UPI ID like name@bank';
 
   @override
-  String get memberContactLocal => 'Phone and UPI ID stay on this device. Hisab uses them only to fill in reminders and UPI payments.';
+  String get memberContactLocal =>
+      'Phone and UPI ID stay on this device. Hisab uses them only to fill in reminders and UPI payments.';
 
   @override
   String get editMember => 'Edit member';
@@ -1859,7 +1965,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String resultsCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count results', one: '1 result');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count results',
+      one: '1 result',
+    );
     return '$_temp0';
   }
 
@@ -1908,7 +2019,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsHistoryTitle => 'SMS history';
 
   @override
-  String get smsHistoryHelp => 'Every message Hisab processed and what happened to it';
+  String get smsHistoryHelp =>
+      'Every message Hisab processed and what happened to it';
 
   @override
   String get smsOutcomeAdded => 'Added';
@@ -1967,7 +2079,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsHistoryEmptyTitle => 'No messages processed yet';
 
   @override
-  String get smsHistoryEmptyBody => 'Bank SMS that Hisab reads or that you paste show up here.';
+  String get smsHistoryEmptyBody =>
+      'Bank SMS that Hisab reads or that you paste show up here.';
 
   @override
   String get smsHistoryEmptyFiltered => 'No messages with this outcome';
@@ -1995,25 +2108,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String recurringEveryDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'Every $count days', one: 'Every day');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count days',
+      one: 'Every day',
+    );
     return '$_temp0';
   }
 
   @override
   String recurringEveryWeeks(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'Every $count weeks', one: 'Every week');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count weeks',
+      one: 'Every week',
+    );
     return '$_temp0';
   }
 
   @override
   String recurringEveryMonths(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'Every $count months', one: 'Every month');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count months',
+      one: 'Every month',
+    );
     return '$_temp0';
   }
 
   @override
   String recurringEveryYears(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'Every $count years', one: 'Every year');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count years',
+      one: 'Every year',
+    );
     return '$_temp0';
   }
 
@@ -2042,7 +2175,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String recurringTimes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count times', one: '1 time');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: '1 time',
+    );
     return '$_temp0';
   }
 
@@ -2071,7 +2209,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringAutoPost => 'Add automatically';
 
   @override
-  String get recurringAutoPostHint => 'When off, each one waits for you to confirm';
+  String get recurringAutoPostHint =>
+      'When off, each one waits for you to confirm';
 
   @override
   String get recurringStopRepeating => 'Don\'t repeat';
@@ -2080,7 +2219,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringDone => 'Done';
 
   @override
-  String get recurringEndBeforeStart => 'Pick an end date on or after the start';
+  String get recurringEndBeforeStart =>
+      'Pick an end date on or after the start';
 
   @override
   String get recurringPartOfRule => 'Part of a recurring entry';
@@ -2098,7 +2238,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringEmptyTitle => 'Nothing repeats yet';
 
   @override
-  String get recurringEmptyBody => 'Rent, SIP, EMI or salary: set it once and Hisab adds it on the day.';
+  String get recurringEmptyBody =>
+      'Rent, SIP, EMI or salary: set it once and Hisab adds it on the day.';
 
   @override
   String get recurringSectionWaiting => 'Waiting for you';
@@ -2124,7 +2265,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String recurringMoreWaiting(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'and $count more waiting', one: 'and 1 more waiting');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'and $count more waiting',
+      one: 'and 1 more waiting',
+    );
     return '$_temp0';
   }
 
@@ -2151,13 +2297,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String recurringToConfirm(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count recurring entries to confirm', one: '1 recurring entry to confirm');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recurring entries to confirm',
+      one: '1 recurring entry to confirm',
+    );
     return '$_temp0';
   }
 
   @override
   String recurringPostedCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'Added $count times', one: 'Added once', zero: 'Not added yet');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added $count times',
+      one: 'Added once',
+      zero: 'Not added yet',
+    );
     return '$_temp0';
   }
 
@@ -2191,7 +2348,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String subscriptionsActiveCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count active subscriptions', one: '1 active subscription');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count active subscriptions',
+      one: '1 active subscription',
+    );
     return '$_temp0';
   }
 
@@ -2199,7 +2361,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionsEmptyTitle => 'No subscriptions yet';
 
   @override
-  String get subscriptionsEmptyBody => 'Add Netflix, your phone recharge or the gym to see what they cost you each month and year.';
+  String get subscriptionsEmptyBody =>
+      'Add Netflix, your phone recharge or the gym to see what they cost you each month and year.';
 
   @override
   String get subscriptionAdd => 'Add subscription';
@@ -2231,7 +2394,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionAutoPost => 'Add to expenses on each renewal';
 
   @override
-  String get subscriptionAutoPostHelp => 'Off: tracked here only, no entries are added';
+  String get subscriptionAutoPostHelp =>
+      'Off: tracked here only, no entries are added';
 
   @override
   String get subscriptionNameRequired => 'Enter a name';
@@ -2249,7 +2413,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String subscriptionRenewsInDays(int days) {
-    String _temp0 = intl.Intl.pluralLogic(days, locale: localeName, other: 'Renews in $days days', one: 'Renews tomorrow');
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Renews in $days days',
+      one: 'Renews tomorrow',
+    );
     return '$_temp0';
   }
 
@@ -2279,7 +2448,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get subscriptionCancelConfirmBody => 'No new charges are added and it leaves the totals. Past entries stay.';
+  String get subscriptionCancelConfirmBody =>
+      'No new charges are added and it leaves the totals. Past entries stay.';
 
   @override
   String get subscriptionDeleted => 'Subscription deleted';
@@ -2306,25 +2476,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String subscriptionEveryDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'Every $count days', one: 'Every day');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count days',
+      one: 'Every day',
+    );
     return '$_temp0';
   }
 
   @override
   String subscriptionEveryWeeks(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'Every $count weeks', one: 'Every week');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count weeks',
+      one: 'Every week',
+    );
     return '$_temp0';
   }
 
   @override
   String subscriptionEveryMonths(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'Every $count months', one: 'Every month');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count months',
+      one: 'Every month',
+    );
     return '$_temp0';
   }
 
   @override
   String subscriptionEveryYears(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'Every $count years', one: 'Every year');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count years',
+      one: 'Every year',
+    );
     return '$_temp0';
   }
 
@@ -2392,7 +2582,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityEmptyTitle => 'No activity yet';
 
   @override
-  String get activityEmptyBody => 'Expenses and payments you add, edit or delete show up here.';
+  String get activityEmptyBody =>
+      'Expenses and payments you add, edit or delete show up here.';
 
   @override
   String activityExpenseAdded(String actor, String title) {
@@ -2521,8 +2712,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String recurringAddedSkipped(int added, int skipped) {
-    String _temp0 = intl.Intl.pluralLogic(added, locale: localeName, other: '$added added', one: '1 added', zero: 'None added');
-    String _temp1 = intl.Intl.pluralLogic(skipped, locale: localeName, other: '$skipped skipped', one: '1 skipped');
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added added',
+      one: '1 added',
+      zero: 'None added',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: '$skipped skipped',
+      one: '1 skipped',
+    );
     return '$_temp0, $_temp1';
   }
 
@@ -2631,7 +2833,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String smsAutoAddedMany(int count) {
-    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'Added $count entries from SMS', one: 'Added 1 entry from SMS');
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added $count entries from SMS',
+      one: 'Added 1 entry from SMS',
+    );
     return '$_temp0';
   }
 
@@ -2639,7 +2846,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsReviewTitle => 'SMS to review';
 
   @override
-  String get smsReviewHelp => 'These messages were not clear enough to add on their own. Add, edit or ignore each one.';
+  String get smsReviewHelp =>
+      'These messages were not clear enough to add on their own. Add, edit or ignore each one.';
 
   @override
   String get smsReviewUnread => 'Could not read the amount';

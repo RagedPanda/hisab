@@ -19,22 +19,19 @@ void main() {
   tearDown(() => db.close());
 
   Future<List<Entry>> recurringEntries() =>
-      (db.select(db.entries)
-            ..where((t) => t.source.equals('recurring'))
-            ..orderBy([(t) => OrderingTerm.asc(t.occurredAt)]))
-          .get();
+      (db.select(db.entries)..where((t) => t.source.equals('recurring'))..orderBy([(t) => OrderingTerm.asc(t.occurredAt)])).get();
 
   RecurringRulesCompanion rent({String? accountId, int? maxCount, bool autoPost = true, DateTime? start}) => RecurringRepository.newRule(
-    name: 'Rent',
-    kind: 'expense',
-    amountMinor: 1500000,
-    accountId: accountId,
-    frequency: RecurrenceFrequency.monthly,
-    dayOfMonth: 5,
-    startDate: start ?? DateTime(2026, 7, 5, 9),
-    maxCount: maxCount,
-    autoPost: autoPost,
-  );
+        name: 'Rent',
+        kind: 'expense',
+        amountMinor: 1500000,
+        accountId: accountId,
+        frequency: RecurrenceFrequency.monthly,
+        dayOfMonth: 5,
+        startDate: start ?? DateTime(2026, 7, 5, 9),
+        maxCount: maxCount,
+        autoPost: autoPost,
+      );
 
   test('saveRule sets the first due date and counts an on-schedule first entry', () async {
     final id = await recurring.saveRule(rent(), postedOn: DateTime(2026, 7, 5, 18));

@@ -6,19 +6,19 @@ import '../../l10n/l10n.dart';
 
 /// Localised name of a quick-add subscription template.
 String subscriptionTemplateName(AppLocalizations l10n, SubscriptionTemplate template) => switch (template.key) {
-  'netflix' => l10n.subscriptionTemplateNetflix,
-  'amazon_prime' => l10n.subscriptionTemplateAmazonPrime,
-  'jiohotstar' => l10n.subscriptionTemplateJiohotstar,
-  'spotify' => l10n.subscriptionTemplateSpotify,
-  'youtube_premium' => l10n.subscriptionTemplateYoutubePremium,
-  'mobile_recharge' => l10n.subscriptionTemplateMobileRecharge,
-  'dth' => l10n.subscriptionTemplateDth,
-  'broadband' => l10n.subscriptionTemplateBroadband,
-  'gym' => l10n.subscriptionTemplateGym,
-  'cloud_storage' => l10n.subscriptionTemplateCloudStorage,
-  'news_app' => l10n.subscriptionTemplateNewsApp,
-  _ => template.key,
-};
+      'netflix' => l10n.subscriptionTemplateNetflix,
+      'amazon_prime' => l10n.subscriptionTemplateAmazonPrime,
+      'jiohotstar' => l10n.subscriptionTemplateJiohotstar,
+      'spotify' => l10n.subscriptionTemplateSpotify,
+      'youtube_premium' => l10n.subscriptionTemplateYoutubePremium,
+      'mobile_recharge' => l10n.subscriptionTemplateMobileRecharge,
+      'dth' => l10n.subscriptionTemplateDth,
+      'broadband' => l10n.subscriptionTemplateBroadband,
+      'gym' => l10n.subscriptionTemplateGym,
+      'cloud_storage' => l10n.subscriptionTemplateCloudStorage,
+      'news_app' => l10n.subscriptionTemplateNewsApp,
+      _ => template.key,
+    };
 
 /// "Monthly", "Every 3 months", "Every 28 days", "Yearly".
 String subscriptionCycleLabel(AppLocalizations l10n, RecurrenceFrequency frequency, int interval) {
@@ -41,8 +41,8 @@ String subscriptionRenewalLabel(AppLocalizations l10n, DateTime renewal, DateTim
 }
 
 String subscriptionSortLabel(AppLocalizations l10n, SubscriptionSort sort) => switch (sort) {
-  SubscriptionSort.costHighToLow => l10n.subscriptionSortCostHigh,
-  SubscriptionSort.costLowToHigh => l10n.subscriptionSortCostLow,
-  SubscriptionSort.nextRenewal => l10n.subscriptionSortRenewal,
-  SubscriptionSort.name => l10n.subscriptionSortName,
-};
+      SubscriptionSort.costHighToLow => l10n.subscriptionSortCostHigh,
+      SubscriptionSort.costLowToHigh => l10n.subscriptionSortCostLow,
+      SubscriptionSort.nextRenewal => l10n.subscriptionSortRenewal,
+      SubscriptionSort.name => l10n.subscriptionSortName,
+    };

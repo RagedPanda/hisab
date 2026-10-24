@@ -24,7 +24,10 @@ void main() {
   testWidgets('Settings ends with "Made with" and a red heart at 360dp', (tester) async {
     SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR'});
     final prefs = await SharedPreferences.getInstance();
-    final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(AppDatabase(NativeDatabase.memory()))]);
+    final container = ProviderContainer(overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      databaseProvider.overrideWithValue(AppDatabase(NativeDatabase.memory())),
+    ]);
     addTearDown(container.dispose);
     await tester.binding.setSurfaceSize(_phoneSize);
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -58,14 +61,12 @@ void main() {
   testWidgets('Hindi puts the heart first and reads naturally', (tester) async {
     await tester.binding.setSurfaceSize(_phoneSize);
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(
-      const MaterialApp(
-        locale: Locale('hi'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(body: Center(child: MadeWithLove())),
-      ),
-    );
+    await tester.pumpWidget(const MaterialApp(
+      locale: Locale('hi'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(body: Center(child: MadeWithLove())),
+    ));
     await tester.pump();
 
     expect(find.textContaining('से बनाया गया'), findsOneWidget);

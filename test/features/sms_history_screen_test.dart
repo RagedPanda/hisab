@@ -28,11 +28,7 @@ class _GatedIngestService extends SmsIngestService {
   Future<IngestStatus> reprocess(SmsLogData row, {required bool autoAdd}) async {
     await smsLog.delete(row.id);
     await gate.future;
-    return ingest(
-      RawSms(sender: row.sender, body: row.body, receivedAt: row.receivedAt),
-      autoAdd: autoAdd,
-      force: true,
-    );
+    return ingest(RawSms(sender: row.sender, body: row.body, receivedAt: row.receivedAt), autoAdd: autoAdd, force: true);
   }
 }
 
@@ -40,7 +36,8 @@ Future<ProviderContainer> _container({List overrides = const []}) async {
   SharedPreferences.setMockInitialValues({'onboarded': true});
   final prefs = await SharedPreferences.getInstance();
   final db = AppDatabase(NativeDatabase.memory());
-  final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db), ...overrides]);
+  final container = ProviderContainer(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db), ...overrides]);
   addTearDown(() async {
     container.dispose();
     await db.close();
@@ -59,12 +56,14 @@ Future<void> _pumpFrames(WidgetTester tester) async {
 Future<void> _pumpHistory(WidgetTester tester, ProviderContainer container) async {
   await tester.binding.setSurfaceSize(const Size(360, 780));
   addTearDown(() => tester.binding.setSurfaceSize(null));
-  await tester.pumpWidget(
-    UncontrolledProviderScope(
-      container: container,
-      child: const MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: SmsHistoryScreen()),
+  await tester.pumpWidget(UncontrolledProviderScope(
+    container: container,
+    child: const MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: SmsHistoryScreen(),
     ),
-  );
+  ));
   await _pumpFrames(tester);
 }
 
@@ -115,22 +114,20 @@ void main() {
   // #75: re-processing deletes the row first, so the tapped card is gone
   // before the result is known and its context can no longer show anything.
   testWidgets('Process again shows its result in a snackbar that times out', (tester) async {
-    final container = await _container(
-      overrides: [
-        smsIngestServiceProvider.overrideWith(
-          (ref) => _GatedIngestService(
+    final container = await _container(overrides: [
+      smsIngestServiceProvider.overrideWith((ref) => _GatedIngestService(
             smsLog: ref.watch(smsLogRepositoryProvider),
             accounts: ref.watch(accountsRepositoryProvider),
             categories: ref.watch(categoriesRepositoryProvider),
             entries: ref.watch(entriesRepositoryProvider),
             homeCurrencyCode: () => 'INR',
             cursor: SmsSyncCursor(ref.watch(sharedPreferencesProvider)),
-          ),
-        ),
-      ],
-    );
+          )),
+    ]);
     final service = container.read(smsIngestServiceProvider) as _GatedIngestService;
-    await tester.runAsync(() => service.ingest(RawSms(sender: 'VM-HDFCBK', body: 'Your statement is ready on NetBanking.', receivedAt: DateTime(2026, 10, 21, 9)), autoAdd: true));
+    await tester.runAsync(() => service.ingest(
+        RawSms(sender: 'VM-HDFCBK', body: 'Your statement is ready on NetBanking.', receivedAt: DateTime(2026, 10, 21, 9)),
+        autoAdd: true));
     await _pumpHistory(tester, container);
 
     await tester.tap(find.text('Process again'));

@@ -19,24 +19,20 @@ class _HostState extends State<_Host> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: Column(
-      children: [
-        TextField(focusNode: widget.amountFocus, autofocus: true),
-        RepeatTile(draft: draft, start: DateTime(2026, 7, 5), onChanged: (value) => setState(() => draft = value)),
-      ],
-    ),
-  );
+        body: Column(children: [
+          TextField(focusNode: widget.amountFocus, autofocus: true),
+          RepeatTile(draft: draft, start: DateTime(2026, 7, 5), onChanged: (value) => setState(() => draft = value)),
+        ]),
+      );
 }
 
 Future<void> _pumpHost(WidgetTester tester, FocusNode amountFocus, {Locale locale = const Locale('en')}) async {
-  await tester.pumpWidget(
-    MaterialApp(
-      locale: locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: _Host(amountFocus: amountFocus),
-    ),
-  );
+  await tester.pumpWidget(MaterialApp(
+    locale: locale,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: _Host(amountFocus: amountFocus),
+  ));
   await tester.pumpAndSettle();
 }
 
@@ -75,7 +71,10 @@ void main() {
     expect(find.text('Every month on day 5'), findsOneWidget);
   });
 
-  for (final (locale, minus, plus) in [(const Locale('en'), 'Decrease Repeat every', 'Increase Repeat every'), (const Locale('hi'), null, null)]) {
+  for (final (locale, minus, plus) in [
+    (const Locale('en'), 'Decrease Repeat every', 'Increase Repeat every'),
+    (const Locale('hi'), null, null),
+  ]) {
     testWidgets('stepper buttons have spoken labels (${locale.languageCode})', (tester) async {
       await initializeDateFormatting(locale.languageCode);
       final semantics = tester.ensureSemantics();

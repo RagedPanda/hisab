@@ -20,7 +20,9 @@ List<RecurringListItem> recurringListItems(List<RecurringRuleView> views, {requi
       () {
         final rule = view.rule;
         final section = sectionOf(status: rule.status, autoPost: rule.autoPost, nextDue: rule.nextDue, now: now);
-        final waiting = section == RecurringSection.waiting ? waitingCount(specOf(rule), nextDue: rule.nextDue!, now: now, postedCount: rule.postedCount, monthStartDay: monthStartDay) : 0;
+        final waiting = section == RecurringSection.waiting
+            ? waitingCount(specOf(rule), nextDue: rule.nextDue!, now: now, postedCount: rule.postedCount, monthStartDay: monthStartDay)
+            : 0;
         return RecurringListItem(view: view, section: section, waiting: waiting);
       }(),
   ];

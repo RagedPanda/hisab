@@ -4,7 +4,8 @@ import 'package:hisab/domain/recurring/recurrence.dart';
 import 'package:hisab/domain/subscriptions/subscription_costs.dart';
 import 'package:hisab/domain/subscriptions/subscription_templates.dart';
 
-SubscriptionItem item(String name, int amountMinor, RecurrenceFrequency frequency, {int interval = 1, SubscriptionStatus status = SubscriptionStatus.active, DateTime? nextDue}) =>
+SubscriptionItem item(String name, int amountMinor, RecurrenceFrequency frequency,
+        {int interval = 1, SubscriptionStatus status = SubscriptionStatus.active, DateTime? nextDue}) =>
     SubscriptionItem(id: name, name: name, amountMinor: amountMinor, frequency: frequency, interval: interval, status: status, nextDue: nextDue);
 
 void main() {

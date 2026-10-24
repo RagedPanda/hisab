@@ -157,10 +157,7 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
     final symbol = ref.watch(settingsProvider).currencySymbol;
     final title = Text(widget.ruleId == null ? l10n.recurringNew : l10n.recurringEdit);
     if (_missing) {
-      return Scaffold(
-        appBar: AppBar(title: title),
-        body: EmptyState(icon: Icons.repeat, title: l10n.recurringRuleMissing),
-      );
+      return Scaffold(appBar: AppBar(title: title), body: EmptyState(icon: Icons.repeat, title: l10n.recurringRuleMissing));
     }
     if (!_loaded) return Scaffold(appBar: AppBar(title: title));
     return Scaffold(
@@ -237,18 +234,9 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
             ),
             RepeatTile(draft: _repeat, start: _nextOn, allowNone: false, onChanged: (draft) => setState(() => _repeat = draft ?? _repeat)),
             const SizedBox(height: 8),
-            TextField(
-              controller: _payeeController,
-              decoration: InputDecoration(labelText: l10n.payeeLabel, prefixIcon: const Icon(Icons.storefront_outlined)),
-              textCapitalization: TextCapitalization.words,
-            ),
+            TextField(controller: _payeeController, decoration: InputDecoration(labelText: l10n.payeeLabel, prefixIcon: const Icon(Icons.storefront_outlined)), textCapitalization: TextCapitalization.words),
             const SizedBox(height: 12),
-            TextField(
-              controller: _noteController,
-              decoration: InputDecoration(labelText: l10n.note, prefixIcon: const Icon(Icons.notes)),
-              textCapitalization: TextCapitalization.sentences,
-              maxLines: 2,
-            ),
+            TextField(controller: _noteController, decoration: InputDecoration(labelText: l10n.note, prefixIcon: const Icon(Icons.notes)), textCapitalization: TextCapitalization.sentences, maxLines: 2),
           ],
         ),
       ),

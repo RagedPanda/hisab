@@ -22,28 +22,26 @@ void main() {
       tester.view.physicalSize = const Size(360, 1200);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(
-        MaterialApp(
-          locale: locale,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
-            body: SingleChildScrollView(
-              padding: EdgeInsets.all(16),
-              child: CategoryDonut(
-                data: CategoryBreakdown(
-                  shares: [CategoryShare(categoryId: '', minor: 25400000, fraction: 1)],
-                  categoriesById: {},
-                  totalMinor: 25400000,
-                ),
-                selectedId: null,
-                symbol: 'CHF',
-                totalCaption: 'Spent',
+      await tester.pumpWidget(MaterialApp(
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const Scaffold(
+          body: SingleChildScrollView(
+            padding: EdgeInsets.all(16),
+            child: CategoryDonut(
+              data: CategoryBreakdown(
+                shares: [CategoryShare(categoryId: '', minor: 25400000, fraction: 1)],
+                categoriesById: {},
+                totalMinor: 25400000,
               ),
+              selectedId: null,
+              symbol: 'CHF',
+              totalCaption: 'Spent',
             ),
           ),
         ),
-      );
+      ));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull, reason: 'no overflow');
 

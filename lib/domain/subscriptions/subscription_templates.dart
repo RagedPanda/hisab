@@ -8,7 +8,12 @@ library;
 import '../recurring/recurrence.dart';
 
 class SubscriptionTemplate {
-  const SubscriptionTemplate({required this.key, required this.frequency, required this.categoryKey, this.interval = 1});
+  const SubscriptionTemplate({
+    required this.key,
+    required this.frequency,
+    required this.categoryKey,
+    this.interval = 1,
+  });
 
   final String key;
   final RecurrenceFrequency frequency;
@@ -70,7 +75,8 @@ const List<SubscriptionCycle> subscriptionCycles = [
 
 /// The cycle list to offer for a rule already on [current]: the presets,
 /// plus [current] at the end when a rule made elsewhere uses another cycle.
-List<SubscriptionCycle> cycleOptionsFor(SubscriptionCycle current) => subscriptionCycles.contains(current) ? subscriptionCycles : [...subscriptionCycles, current];
+List<SubscriptionCycle> cycleOptionsFor(SubscriptionCycle current) =>
+    subscriptionCycles.contains(current) ? subscriptionCycles : [...subscriptionCycles, current];
 
 /// Seed category a subscription starts in when its template names none
 /// ("Something else"), so it is never posted as uncategorised.

@@ -24,9 +24,15 @@ void main() {
   Future<RecurringRuleView> viewOf(String id) async => (await recurring.getViews()).firstWhere((view) => view.rule.id == id);
 
   test('a stored subscription maps to its pure item', () async {
-    final id = await recurring.saveRule(
-      RecurringRepository.newRule(name: 'Netflix', kind: 'expense', amountMinor: 64900, frequency: RecurrenceFrequency.monthly, interval: 3, startDate: DateTime(2026, 11, 5, 9), isSubscription: true),
-    );
+    final id = await recurring.saveRule(RecurringRepository.newRule(
+      name: 'Netflix',
+      kind: 'expense',
+      amountMinor: 64900,
+      frequency: RecurrenceFrequency.monthly,
+      interval: 3,
+      startDate: DateTime(2026, 11, 5, 9),
+      isSubscription: true,
+    ));
     final item = subscriptionItemOf(await viewOf(id), english);
     expect(item.name, 'Netflix');
     expect(item.amountMinor, 64900);
@@ -43,12 +49,10 @@ void main() {
 
   test('an unnamed rule falls back to payee, then the localised category', () async {
     final gym = (await CategoriesRepository(db).findBySeedKey('fitness'))!;
-    final byPayee = await recurring.saveRule(
-      RecurringRepository.newRule(kind: 'expense', amountMinor: 100, payee: 'Cult', frequency: RecurrenceFrequency.monthly, startDate: DateTime(2026, 11, 1), isSubscription: true),
-    );
-    final byCategory = await recurring.saveRule(
-      RecurringRepository.newRule(kind: 'expense', amountMinor: 100, categoryId: gym.id, frequency: RecurrenceFrequency.monthly, startDate: DateTime(2026, 11, 1), isSubscription: true),
-    );
+    final byPayee = await recurring.saveRule(RecurringRepository.newRule(
+        kind: 'expense', amountMinor: 100, payee: 'Cult', frequency: RecurrenceFrequency.monthly, startDate: DateTime(2026, 11, 1), isSubscription: true));
+    final byCategory = await recurring.saveRule(RecurringRepository.newRule(
+        kind: 'expense', amountMinor: 100, categoryId: gym.id, frequency: RecurrenceFrequency.monthly, startDate: DateTime(2026, 11, 1), isSubscription: true));
     expect(subscriptionDisplayName(await viewOf(byPayee), english), 'Cult');
     expect(subscriptionDisplayName(await viewOf(byCategory), english), gym.name);
     expect(subscriptionDisplayName(await viewOf(byCategory), hindi), isNot(gym.name));

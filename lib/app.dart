@@ -51,7 +51,12 @@ class _HisabAppState extends ConsumerState<HisabApp> {
       debugShowCheckedModeBanner: false,
       locale: settings.locale,
       supportedLocales: AppLocalizations.supportedLocales,
-      localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       themeMode: settings.themeMode,
@@ -63,7 +68,9 @@ class _HisabAppState extends ConsumerState<HisabApp> {
       // Otherwise the SMS Undo snackbar sits above the navigator so it shows on
       // every route, including Bank SMS opened directly from a hisab://sms link.
       // SmsAutoSync drains queued SMS and catches up on the inbox on start and resume.
-      builder: (context, child) => settings.currencyConfirmed ? SmsAutoSync(child: SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink())) : const FirstLaunchCurrencyGate(),
+      builder: (context, child) => settings.currencyConfirmed
+          ? SmsAutoSync(child: SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink()))
+          : const FirstLaunchCurrencyGate(),
     );
   }
 }

@@ -25,24 +25,17 @@ String subscriptionDisplayName(RecurringRuleView view, Locale locale) {
 
 /// The pure view of a stored rule, for the maths in `lib/domain/subscriptions`.
 SubscriptionItem subscriptionItemOf(RecurringRuleView view, Locale locale) => SubscriptionItem(
-  id: view.rule.id,
-  name: subscriptionDisplayName(view, locale),
-  amountMinor: view.rule.amountMinor,
-  frequency: RecurrenceFrequency.parse(view.rule.frequency),
-  interval: view.rule.interval,
-  status: SubscriptionStatus.fromRuleStatus(view.rule.status),
-  nextDue: view.rule.nextDue,
-);
+      id: view.rule.id,
+      name: subscriptionDisplayName(view, locale),
+      amountMinor: view.rule.amountMinor,
+      frequency: RecurrenceFrequency.parse(view.rule.frequency),
+      interval: view.rule.interval,
+      status: SubscriptionStatus.fromRuleStatus(view.rule.status),
+      nextDue: view.rule.nextDue,
+    );
 
 /// Live recurring rules flagged as subscriptions.
-final subscriptionViewsProvider = StreamProvider<List<RecurringRuleView>>(
-  (ref) => ref
-      .watch(recurringRepositoryProvider)
-      .watchViews()
-      .map(
-        (views) => [
-          for (final view in views)
-            if (view.rule.isSubscription) view,
-        ],
-      ),
-);
+final subscriptionViewsProvider = StreamProvider<List<RecurringRuleView>>((ref) => ref
+    .watch(recurringRepositoryProvider)
+    .watchViews()
+    .map((views) => [for (final view in views) if (view.rule.isSubscription) view]));

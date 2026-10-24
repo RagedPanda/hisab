@@ -21,17 +21,11 @@ class MadeWithLove extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Text.rich(
-          TextSpan(
-            style: style,
-            children: [
-              if (l10n.aboutMadeWithBefore.isNotEmpty) TextSpan(text: '${l10n.aboutMadeWithBefore} '),
-              WidgetSpan(
-                alignment: PlaceholderAlignment.middle,
-                child: Icon(Icons.favorite, color: Colors.red, size: heartSize),
-              ),
-              if (l10n.aboutMadeWithAfter.isNotEmpty) TextSpan(text: ' ${l10n.aboutMadeWithAfter}'),
-            ],
-          ),
+          TextSpan(style: style, children: [
+            if (l10n.aboutMadeWithBefore.isNotEmpty) TextSpan(text: '${l10n.aboutMadeWithBefore} '),
+            WidgetSpan(alignment: PlaceholderAlignment.middle, child: Icon(Icons.favorite, color: Colors.red, size: heartSize)),
+            if (l10n.aboutMadeWithAfter.isNotEmpty) TextSpan(text: ' ${l10n.aboutMadeWithAfter}'),
+          ]),
           textAlign: TextAlign.center,
         ),
       ),

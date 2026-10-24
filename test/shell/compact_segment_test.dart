@@ -5,41 +5,43 @@ import 'package:hisab/l10n/generated/app_localizations.dart';
 
 /// The labels the app shows with [compactSegment]: the entry kind tabs (entry
 /// editor and recurring rule form) and the theme picker in Settings.
-List<(String, IconData)> kindSegments(AppLocalizations l10n) => [(l10n.kindExpense, Icons.arrow_upward), (l10n.kindIncome, Icons.arrow_downward), (l10n.kindTransfer, Icons.swap_horiz)];
+List<(String, IconData)> kindSegments(AppLocalizations l10n) =>
+    [(l10n.kindExpense, Icons.arrow_upward), (l10n.kindIncome, Icons.arrow_downward), (l10n.kindTransfer, Icons.swap_horiz)];
 
-List<(String, IconData)> themeSegments(AppLocalizations l10n) => [(l10n.themeSystem, Icons.brightness_auto), (l10n.themeLight, Icons.light_mode_outlined), (l10n.themeDark, Icons.dark_mode_outlined)];
+List<(String, IconData)> themeSegments(AppLocalizations l10n) =>
+    [(l10n.themeSystem, Icons.brightness_auto), (l10n.themeLight, Icons.light_mode_outlined), (l10n.themeDark, Icons.dark_mode_outlined)];
 
 /// Mirrors the entry editor and recurring form: default style, 16dp page padding.
 Widget kindPicker(BuildContext context, List<(String, IconData)> segments) => ListView(
-  padding: const EdgeInsets.symmetric(horizontal: 16),
-  children: [
-    SegmentedButton<int>(
-      segments: [for (final (index, (label, icon)) in segments.indexed) compactSegment(context, value: index, label: label, icon: icon)],
-      selected: const {2},
-      onSelectionChanged: (_) {},
-    ),
-  ],
-);
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      children: [
+        SegmentedButton<int>(
+          segments: [for (final (index, (label, icon)) in segments.indexed) compactSegment(context, value: index, label: label, icon: icon)],
+          selected: const {2},
+          onSelectionChanged: (_) {},
+        ),
+      ],
+    );
 
 /// Mirrors the Settings theme picker: expanded inside a padded card.
 Widget themePicker(BuildContext context, List<(String, IconData)> segments) => ListView(
-  padding: const EdgeInsets.symmetric(horizontal: 16),
-  children: [
-    Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: SegmentedButton<int>(
-          showSelectedIcon: false,
-          expandedInsets: EdgeInsets.zero,
-          style: const ButtonStyle(padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 8)), visualDensity: VisualDensity.standard),
-          segments: [for (final (index, (label, icon)) in segments.indexed) compactSegment(context, value: index, label: label, icon: icon)],
-          selected: const {0},
-          onSelectionChanged: (_) {},
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: SegmentedButton<int>(
+              showSelectedIcon: false,
+              expandedInsets: EdgeInsets.zero,
+              style: const ButtonStyle(padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 8)), visualDensity: VisualDensity.standard),
+              segments: [for (final (index, (label, icon)) in segments.indexed) compactSegment(context, value: index, label: label, icon: icon)],
+              selected: const {0},
+              onSelectionChanged: (_) {},
+            ),
+          ),
         ),
-      ),
-    ),
-  ],
-);
+      ],
+    );
 
 Future<AppLocalizations> pumpPicker(
   WidgetTester tester, {
@@ -52,21 +54,17 @@ Future<AppLocalizations> pumpPicker(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   late AppLocalizations l10n;
-  await tester.pumpWidget(
-    MaterialApp(
-      locale: locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: Builder(
-          builder: (context) {
-            l10n = AppLocalizations.of(context);
-            return picker(context, segmentsOf(l10n));
-          },
-        ),
-      ),
+  await tester.pumpWidget(MaterialApp(
+    locale: locale,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(
+      body: Builder(builder: (context) {
+        l10n = AppLocalizations.of(context);
+        return picker(context, segmentsOf(l10n));
+      }),
     ),
-  );
+  ));
   await tester.pumpAndSettle();
   return l10n;
 }

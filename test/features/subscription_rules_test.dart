@@ -20,8 +20,13 @@ void main() {
 
   tearDown(() => db.close());
 
-  SubscriptionDraft draft({String name = 'Netflix', String? categoryId}) =>
-      SubscriptionDraft(name: name, amountMinor: 64900, cycle: const SubscriptionCycle(RecurrenceFrequency.monthly, 1), startDate: DateTime(2026, 10, 1, 9), categoryId: categoryId);
+  SubscriptionDraft draft({String name = 'Netflix', String? categoryId}) => SubscriptionDraft(
+        name: name,
+        amountMinor: 64900,
+        cycle: const SubscriptionCycle(RecurrenceFrequency.monthly, 1),
+        startDate: DateTime(2026, 10, 1, 9),
+        categoryId: categoryId,
+      );
 
   Future<Entry> onlyPostedEntry() async => (await (db.select(db.entries)..where((t) => t.source.equals('recurring'))).get()).single;
 
@@ -58,9 +63,13 @@ void main() {
     final now = DateTime(2026, 10, 23, 15);
     final schedule = subscriptionScheduleFrom(renewalDate: DateTime(2025, 1, 12), cycle: const SubscriptionCycle(RecurrenceFrequency.monthly, 1), today: now, hour: 9);
     final id = await recurring.saveRule(
-      newSubscriptionRule(
-        SubscriptionDraft(name: 'Spotify', amountMinor: 11900, cycle: const SubscriptionCycle(RecurrenceFrequency.monthly, 1), startDate: schedule.start, dayOfMonth: schedule.dayOfMonth),
-      ),
+      newSubscriptionRule(SubscriptionDraft(
+        name: 'Spotify',
+        amountMinor: 11900,
+        cycle: const SubscriptionCycle(RecurrenceFrequency.monthly, 1),
+        startDate: schedule.start,
+        dayOfMonth: schedule.dayOfMonth,
+      )),
       monthStartDay: 1,
     );
     expect(await recurring.postDue(now: now), 0, reason: 'no back-posting for cycles before today');

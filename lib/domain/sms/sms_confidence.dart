@@ -21,7 +21,10 @@ enum SmsRoute {
 /// returns a [ParsedTransaction] once it found a direction, so that part is
 /// carried by the type. Foreign-currency amounts are never confident: the
 /// user has to enter the rupee value.
-bool isConfidentParse(ParsedTransaction parsed) => parsed.amountMinor > 0 && (parsed.bank != null || parsed.accountLast4 != null) && parsed.currency == 'INR';
+bool isConfidentParse(ParsedTransaction parsed) =>
+    parsed.amountMinor > 0 &&
+    (parsed.bank != null || parsed.accountLast4 != null) &&
+    parsed.currency == 'INR';
 
 /// Picks the [SmsRoute] for one message.
 ///
@@ -29,11 +32,16 @@ bool isConfidentParse(ParsedTransaction parsed) => parsed.amountMinor > 0 && (pa
 /// transaction), [autoAddEnabled] the user's setting and
 /// [possibleTransaction] whether an unparsed message still looks like money
 /// moved, so it is worth a human look.
-SmsRoute routeForSms({required ParsedTransaction? parsed, required bool autoAddEnabled, required bool possibleTransaction}) {
+SmsRoute routeForSms({
+  required ParsedTransaction? parsed,
+  required bool autoAddEnabled,
+  required bool possibleTransaction,
+}) {
   if (parsed == null) return possibleTransaction ? SmsRoute.review : SmsRoute.skip;
   return autoAddEnabled && isConfidentParse(parsed) ? SmsRoute.autoAdd : SmsRoute.review;
 }
 
 /// Whether auto-add is on. Users who never touched the toggle get the
 /// default (on); an explicit choice is always kept.
-bool resolveSmsAutoAdd({required bool? storedValue, required bool userChose}) => userChose ? (storedValue ?? true) : true;
+bool resolveSmsAutoAdd({required bool? storedValue, required bool userChose}) =>
+    userChose ? (storedValue ?? true) : true;

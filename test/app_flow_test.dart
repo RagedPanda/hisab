@@ -14,7 +14,10 @@ Future<ProviderContainer> pumpApp(WidgetTester tester) async {
   SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR'});
   final prefs = await SharedPreferences.getInstance();
   final db = AppDatabase(NativeDatabase.memory());
-  final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db)]);
+  final container = ProviderContainer(overrides: [
+    sharedPreferencesProvider.overrideWithValue(prefs),
+    databaseProvider.overrideWithValue(db),
+  ]);
   addTearDown(container.dispose);
   await tester.binding.setSurfaceSize(const Size(430, 932));
   appRouter.go('/home');
@@ -79,9 +82,13 @@ void main() {
     await tester.tap(find.textContaining('Save ₹'));
     await settle(tester);
 
-    final totals = await tester.runAsync(() => container.read(entriesRepositoryProvider).watchTotals(container.read(selectedRangeProvider)).first);
+    final totals = await tester.runAsync(
+      () => container.read(entriesRepositoryProvider).watchTotals(container.read(selectedRangeProvider)).first,
+    );
     expect(totals?.expense, 10000);
-    final suggestions = await container.read(entriesRepositoryProvider).itemSuggestions((await container.read(categoriesRepositoryProvider).getAll()).firstWhere((c) => c.name.contains('Milk')).id);
+    final suggestions = await container.read(entriesRepositoryProvider).itemSuggestions(
+          (await container.read(categoriesRepositoryProvider).getAll()).firstWhere((c) => c.name.contains('Milk')).id,
+        );
     expect(suggestions.map((s) => s.name), containsAll(['Buffalo milk', 'Cow milk']));
     expect(find.textContaining('₹100'), findsWidgets);
   });

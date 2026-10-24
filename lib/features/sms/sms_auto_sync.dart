@@ -13,12 +13,12 @@ import '../../l10n/l10n.dart';
 /// With auto-add on, a clear transaction is added when the app next opens,
 /// so the text says that instead of asking for a review (#103).
 SmsCaptureConfig smsCaptureConfig(AppLocalizations l10n, {required bool enabled, required bool autoAdd}) => SmsCaptureConfig(
-  enabled: enabled,
-  channelName: l10n.bankSms,
-  title: l10n.smsNotificationTitle,
-  bodyWithAmount: autoAdd ? l10n.smsNotificationBodyAmountAutoAdd('{amount}', '{sender}') : l10n.smsNotificationBodyAmount('{amount}', '{sender}'),
-  bodyWithoutAmount: autoAdd ? l10n.smsNotificationBodyAutoAdd('{sender}') : l10n.smsNotificationBody('{sender}'),
-);
+      enabled: enabled,
+      channelName: l10n.bankSms,
+      title: l10n.smsNotificationTitle,
+      bodyWithAmount: autoAdd ? l10n.smsNotificationBodyAmountAutoAdd('{amount}', '{sender}') : l10n.smsNotificationBodyAmount('{amount}', '{sender}'),
+      bodyWithoutAmount: autoAdd ? l10n.smsNotificationBodyAutoAdd('{sender}') : l10n.smsNotificationBody('{sender}'),
+    );
 
 /// Keeps Bank SMS capture running for the whole app: tells the native
 /// receiver whether the user opted in, and runs the ingest sync when the app

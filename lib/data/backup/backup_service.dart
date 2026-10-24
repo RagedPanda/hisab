@@ -50,10 +50,8 @@ class BackupService {
     };
   }
 
-  Future<Uint8List> exportEncrypted(String passphrase, {String? currencyCode}) async => encryptBackup(
-    payload: await snapshot(currencyCode: currencyCode),
-    passphrase: passphrase,
-  );
+  Future<Uint8List> exportEncrypted(String passphrase, {String? currencyCode}) async =>
+      encryptBackup(payload: await snapshot(currencyCode: currencyCode), passphrase: passphrase);
 
   Future<String> exportPlainJson() async => const JsonEncoder.withIndent('  ').convert(await snapshot());
 
@@ -70,7 +68,13 @@ class BackupService {
     if (payload['app'] != 'hisab') throw const BackupFormatException('Not a Hisab backup');
     var written = 0;
 
-    Future<void> restore<D extends DataClass>(TableInfo<Table, D> table, String key, D Function(Map<String, dynamic>) fromJson, String Function(D) idOf, DateTime? Function(D) updatedOf) async {
+    Future<void> restore<D extends DataClass>(
+      TableInfo<Table, D> table,
+      String key,
+      D Function(Map<String, dynamic>) fromJson,
+      String Function(D) idOf,
+      DateTime? Function(D) updatedOf,
+    ) async {
       final rows = (payload[key] as List?) ?? const [];
       final existingRows = await db.select(table).get();
       final existingById = {for (final row in existingRows) idOf(row): row};

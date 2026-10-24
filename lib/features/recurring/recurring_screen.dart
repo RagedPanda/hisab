@@ -14,11 +14,11 @@ import 'recurring_list_model.dart';
 import 'repeat_sheet.dart';
 
 String recurringSectionLabel(AppLocalizations l10n, RecurringSection section) => switch (section) {
-  RecurringSection.waiting => l10n.recurringSectionWaiting,
-  RecurringSection.active => l10n.recurringSectionActive,
-  RecurringSection.paused => l10n.recurringSectionPaused,
-  RecurringSection.ended => l10n.recurringSectionEnded,
-};
+      RecurringSection.waiting => l10n.recurringSectionWaiting,
+      RecurringSection.active => l10n.recurringSectionActive,
+      RecurringSection.paused => l10n.recurringSectionPaused,
+      RecurringSection.ended => l10n.recurringSectionEnded,
+    };
 
 /// What a rule is called in lists: its name, else payee, else category.
 /// "Added 3 times", or "2 added, 1 skipped" once any occurrence was skipped.
@@ -50,25 +50,26 @@ class RecurringScreen extends ConsumerWidget {
     return HomeFallbackPop(
       child: Scaffold(
         appBar: AppBar(title: Text(l10n.recurringTitle)),
-        floatingActionButton: FloatingActionButton.extended(heroTag: 'add-recurring', onPressed: create, icon: const Icon(Icons.add), label: Text(l10n.recurringNew)),
+        floatingActionButton: FloatingActionButton.extended(
+          heroTag: 'add-recurring',
+          onPressed: create,
+          icon: const Icon(Icons.add),
+          label: Text(l10n.recurringNew),
+        ),
         body: !items.hasValue
             ? const SizedBox.shrink()
             : list.isEmpty
-            ? EmptyState(
-                icon: Icons.repeat,
-                title: l10n.recurringEmptyTitle,
-                message: l10n.recurringEmptyBody,
-                action: FilledButton.tonal(onPressed: create, child: Text(l10n.recurringNew)),
-              )
-            : ListView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-                children: [
-                  for (final (index, item) in list.indexed) ...[
-                    if (index == 0 || list[index - 1].section != item.section) SectionHeader(recurringSectionLabel(l10n, item.section), padding: const EdgeInsets.fromLTRB(4, 16, 4, 8)),
-                    RecurringRuleCard(item: item),
-                  ],
-                ],
-              ),
+                ? EmptyState(icon: Icons.repeat, title: l10n.recurringEmptyTitle, message: l10n.recurringEmptyBody, action: FilledButton.tonal(onPressed: create, child: Text(l10n.recurringNew)))
+                : ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+                    children: [
+                      for (final (index, item) in list.indexed) ...[
+                        if (index == 0 || list[index - 1].section != item.section)
+                          SectionHeader(recurringSectionLabel(l10n, item.section), padding: const EdgeInsets.fromLTRB(4, 16, 4, 8)),
+                        RecurringRuleCard(item: item),
+                      ],
+                    ],
+                  ),
       ),
     );
   }
@@ -133,18 +134,8 @@ class RecurringRuleCard extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          recurringRuleTitle(context, view),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        Text(
-                          summary,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                        ),
+                        Text(recurringRuleTitle(context, view), maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                        Text(summary, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                         const SizedBox(height: 2),
                         Text(
                           when,
@@ -156,10 +147,7 @@ class RecurringRuleCard extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: AmountText(rule.amountMinor, kind: rule.kind),
-                  ),
+                  Padding(padding: const EdgeInsets.only(top: 2), child: AmountText(rule.amountMinor, kind: rule.kind)),
                   PopupMenuButton<_RuleAction>(
                     key: ValueKey('recurring.menu.${rule.id}'),
                     onSelected: onAction,

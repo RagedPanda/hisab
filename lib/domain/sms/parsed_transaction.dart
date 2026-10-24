@@ -60,18 +60,18 @@ class ParsedTransaction {
   String get accountKey => '${bank ?? 'unknown'}:${isCreditCard ? 'cc' : 'ac'}:${accountLast4 ?? '????'}';
 
   Map<String, dynamic> toJson() => {
-    'direction': direction.name,
-    'amountMinor': amountMinor,
-    'currency': currency,
-    'instrument': instrument.name,
-    'kind': kind.name,
-    'occurredAt': occurredAt.toIso8601String(),
-    'bank': bank,
-    'accountLast4': accountLast4,
-    'isCreditCard': isCreditCard,
-    'counterparty': counterparty,
-    'balanceMinor': balanceMinor,
-    'availableLimitMinor': availableLimitMinor,
-    'reference': reference,
-  };
+        'direction': direction.name,
+        'amountMinor': amountMinor,
+        'currency': currency,
+        'instrument': instrument.name,
+        'kind': kind.name,
+        'occurredAt': occurredAt.toIso8601String(),
+        'bank': bank,
+        'accountLast4': accountLast4,
+        'isCreditCard': isCreditCard,
+        'counterparty': counterparty,
+        'balanceMinor': balanceMinor,
+        'availableLimitMinor': availableLimitMinor,
+        'reference': reference,
+      };
 }

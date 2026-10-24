@@ -46,22 +46,16 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
 
   Future<void> _ingestText(String text) async {
     final service = ref.read(smsIngestServiceProvider);
-    final status = await service.ingest(
-      RawSms(sender: 'PASTED', body: text, receivedAt: DateTime.now()),
-      autoAdd: ref.read(settingsProvider).smsAutoAdd,
-      force: true,
-    );
+    final status = await service.ingest(RawSms(sender: 'PASTED', body: text, receivedAt: DateTime.now()), autoAdd: ref.read(settingsProvider).smsAutoAdd, force: true);
     if (!mounted) return;
     final l10n = context.l10n;
-    setState(
-      () => _lastResult = switch (status) {
-        IngestStatus.pending => l10n.smsFoundReview,
-        IngestStatus.added => l10n.smsAdded,
-        IngestStatus.duplicate => l10n.smsDuplicate,
-        IngestStatus.foreignCurrency => l10n.smsForeignCurrency,
-        _ => l10n.smsNotFound,
-      },
-    );
+    setState(() => _lastResult = switch (status) {
+          IngestStatus.pending => l10n.smsFoundReview,
+          IngestStatus.added => l10n.smsAdded,
+          IngestStatus.duplicate => l10n.smsDuplicate,
+          IngestStatus.foreignCurrency => l10n.smsForeignCurrency,
+          _ => l10n.smsNotFound,
+        });
   }
 
   Future<void> _toggleSms(bool enable) async {
@@ -85,7 +79,12 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     final granted = await ref.read(smsIngestServiceProvider).requestPermission();
     if (!granted) {
       if (mounted) {
-        showActionSnackBar(ScaffoldMessenger.of(context), message: context.l10n.smsPermissionDenied, actionLabel: context.l10n.settings, onAction: openAppSettings);
+        showActionSnackBar(
+          ScaffoldMessenger.of(context),
+          message: context.l10n.smsPermissionDenied,
+          actionLabel: context.l10n.settings,
+          onAction: openAppSettings,
+        );
       }
       return;
     }
@@ -120,56 +119,48 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [
           Card(
-            child: Column(
-              children: [
-                SwitchListTile(
-                  title: Text(l10n.readBankSmsAuto),
-                  subtitle: Text(supported ? l10n.smsAndroidOnly : l10n.smsNotOnIos),
-                  value: settings.smsEnabled && supported,
-                  onChanged: supported ? _toggleSms : null,
-                ),
-                SwitchListTile(
-                  title: Text(l10n.smsAutoAddTitle),
-                  subtitle: Text(l10n.smsAutoAddHelp),
-                  value: settings.smsAutoAdd,
-                  onChanged: (v) => ref.read(settingsProvider.notifier).update((s) => s.copyWith(smsAutoAdd: v, smsAutoAddChosen: true)),
-                ),
-                if (supported && settings.smsEnabled)
-                  ListTile(
-                    leading: _busy ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.refresh),
-                    title: Text(l10n.scanInboxNow),
-                    subtitle: Text(l10n.scanInboxHelp),
-                    onTap: _busy ? null : _scan,
-                  ),
+            child: Column(children: [
+              SwitchListTile(
+                title: Text(l10n.readBankSmsAuto),
+                subtitle: Text(supported ? l10n.smsAndroidOnly : l10n.smsNotOnIos),
+                value: settings.smsEnabled && supported,
+                onChanged: supported ? _toggleSms : null,
+              ),
+              SwitchListTile(
+                title: Text(l10n.smsAutoAddTitle),
+                subtitle: Text(l10n.smsAutoAddHelp),
+                value: settings.smsAutoAdd,
+                onChanged: (v) => ref.read(settingsProvider.notifier).update((s) => s.copyWith(smsAutoAdd: v, smsAutoAddChosen: true)),
+              ),
+              if (supported && settings.smsEnabled)
                 ListTile(
-                  leading: const Icon(Icons.content_paste),
-                  title: Text(l10n.pasteSms),
-                  subtitle: Text(l10n.pasteSmsHelp),
-                  onTap: () async {
-                    final text = await promptText(context, title: l10n.pasteBankSms, hint: l10n.pasteBankSmsHint);
-                    if (text != null && text.isNotEmpty) await _ingestText(text);
-                  },
+                  leading: _busy ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.refresh),
+                  title: Text(l10n.scanInboxNow),
+                  subtitle: Text(l10n.scanInboxHelp),
+                  onTap: _busy ? null : _scan,
                 ),
-                ListTile(
-                  leading: const Icon(Icons.history),
-                  title: Text(l10n.smsHistoryTitle),
-                  subtitle: Text(l10n.smsHistoryHelp),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/sms/history'),
-                ),
-              ],
-            ),
+              ListTile(
+                leading: const Icon(Icons.content_paste),
+                title: Text(l10n.pasteSms),
+                subtitle: Text(l10n.pasteSmsHelp),
+                onTap: () async {
+                  final text = await promptText(context, title: l10n.pasteBankSms, hint: l10n.pasteBankSmsHint);
+                  if (text != null && text.isNotEmpty) await _ingestText(text);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.history),
+                title: Text(l10n.smsHistoryTitle),
+                subtitle: Text(l10n.smsHistoryHelp),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/sms/history'),
+              ),
+            ]),
           ),
-          if (_lastResult != null)
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Text(_lastResult!, style: Theme.of(context).textTheme.bodyMedium),
-            ),
+          if (_lastResult != null) Padding(padding: const EdgeInsets.all(12), child: Text(_lastResult!, style: Theme.of(context).textTheme.bodyMedium)),
           SectionHeader(l10n.toReview(pending.length)),
           if (pending.isEmpty)
-            Card(
-              child: ListTile(leading: const Icon(Icons.inbox_outlined), title: Text(l10n.nothingWaitingTitle), subtitle: Text(l10n.nothingWaitingBody)),
-            )
+            Card(child: ListTile(leading: const Icon(Icons.inbox_outlined), title: Text(l10n.nothingWaitingTitle), subtitle: Text(l10n.nothingWaitingBody)))
           else
             for (final row in pending) SmsReviewCard(key: ValueKey(row.id), row: row, symbol: symbol),
           const SizedBox(height: 16),

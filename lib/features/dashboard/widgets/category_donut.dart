@@ -46,7 +46,13 @@ class CategoryDonutCard extends ConsumerWidget {
           key: kCategoryCardKey,
           child: data.shares.isEmpty
               ? EmptyDonut(symbol: symbol, message: l10n.categoriesEmpty)
-              : CategoryDonut(data: data, selectedId: selected, symbol: symbol, totalCaption: l10n.thisMonth, onSliceTap: (share) => _toggle(context, ref, selected, share)),
+              : CategoryDonut(
+                  data: data,
+                  selectedId: selected,
+                  symbol: symbol,
+                  totalCaption: l10n.thisMonth,
+                  onSliceTap: (share) => _toggle(context, ref, selected, share),
+                ),
         ),
       ),
     );
@@ -87,8 +93,8 @@ List<_Slice> _slices(BuildContext context, CategoryBreakdown data) {
           color: share.isOthers
               ? scheme.outline
               : category != null
-              ? Color(category.color)
-              : fallback[index % fallback.length],
+                  ? Color(category.color)
+                  : fallback[index % fallback.length],
         );
       }(),
   ];
@@ -124,33 +130,22 @@ class CategoryDonut extends StatelessWidget {
       selectedIndex: selected == null ? null : selectedIndex,
       size: sideBySide ? kDonutSideDiameter : kDonutStackedDiameter,
       centre: selected == null
-          ? _Centre(
-              amount: formatMinor(data.totalMinor, symbol: symbol, showDecimals: false),
-              caption: totalCaption,
-            )
-          : _Centre(
-              amount: formatMinor(selected.share.minor, symbol: symbol, showDecimals: false),
-              caption: selected.name,
-            ),
+          ? _Centre(amount: formatMinor(data.totalMinor, symbol: symbol, showDecimals: false), caption: totalCaption)
+          : _Centre(amount: formatMinor(selected.share.minor, symbol: symbol, showDecimals: false), caption: selected.name),
       onTap: onTap,
     );
     final legend = Column(
       mainAxisSize: MainAxisSize.min,
-      children: [for (final slice in slices) _LegendRow(slice: slice, selected: slice == selected, symbol: symbol, onTap: () => onTap(slice))],
+      children: [
+        for (final slice in slices) _LegendRow(slice: slice, selected: slice == selected, symbol: symbol, onTap: () => onTap(slice)),
+      ],
     );
     final semantics = '${l10n.spendingByCategory}: ${slices.map((slice) => '${slice.name} ${l10n.percentOf(sharePercent(slice.share))}').join(', ')}';
     return Semantics(
       label: semantics,
       child: LayoutBuilder(
         builder: (context, constraints) => donutSideBySide(constraints.maxWidth)
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  donut(true),
-                  const SizedBox(width: kDonutLegendGap),
-                  Expanded(child: legend),
-                ],
-              )
+            ? Row(crossAxisAlignment: CrossAxisAlignment.center, children: [donut(true), const SizedBox(width: kDonutLegendGap), Expanded(child: legend)])
             : Column(children: [donut(false), const SizedBox(height: 12), legend]),
       ),
     );
@@ -167,36 +162,41 @@ class _Donut extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    width: size,
-    height: size,
-    child: Stack(
-      alignment: Alignment.center,
-      children: [
-        ExcludeSemantics(
-          child: PieChart(
-            duration: chartAnimation(context),
-            curve: kChartCurve,
-            PieChartData(
-              sectionsSpace: 2,
-              centerSpaceRadius: 46,
-              startDegreeOffset: startDegreeForShare([for (final slice in slices) slice.share], selectedIndex),
-              pieTouchData: PieTouchData(
-                touchCallback: (event, response) {
-                  final index = response?.touchedSection?.touchedSectionIndex;
-                  if (event is FlTapUpEvent && index != null && index >= 0 && index < slices.length) onTap(slices[index]);
-                },
+        width: size,
+        height: size,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            ExcludeSemantics(
+              child: PieChart(
+                duration: chartAnimation(context),
+                curve: kChartCurve,
+                PieChartData(
+                  sectionsSpace: 2,
+                  centerSpaceRadius: 46,
+                  startDegreeOffset: startDegreeForShare([for (final slice in slices) slice.share], selectedIndex),
+                  pieTouchData: PieTouchData(
+                    touchCallback: (event, response) {
+                      final index = response?.touchedSection?.touchedSectionIndex;
+                      if (event is FlTapUpEvent && index != null && index >= 0 && index < slices.length) onTap(slices[index]);
+                    },
+                  ),
+                  sections: [
+                    for (var index = 0; index < slices.length; index++)
+                      PieChartSectionData(
+                        value: slices[index].share.minor.toDouble(),
+                        color: slices[index].color,
+                        radius: index == selectedIndex ? 30 : 24,
+                        showTitle: false,
+                      ),
+                  ],
+                ),
               ),
-              sections: [
-                for (var index = 0; index < slices.length; index++)
-                  PieChartSectionData(value: slices[index].share.minor.toDouble(), color: slices[index].color, radius: index == selectedIndex ? 30 : 24, showTitle: false),
-              ],
             ),
-          ),
+            centre,
+          ],
         ),
-        centre,
-      ],
-    ),
-  );
+      );
 }
 
 class _Centre extends StatelessWidget {
@@ -212,17 +212,8 @@ class _Centre extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(amount, maxLines: 1, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700).tabular),
-          ),
-          Text(
-            caption,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
+          FittedBox(fit: BoxFit.scaleDown, child: Text(amount, maxLines: 1, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700).tabular)),
+          Text(caption, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
         ],
       ),
     );
@@ -250,18 +241,15 @@ class _LegendRow extends StatelessWidget {
       child: Container(
         height: 48,
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(color: selected ? theme.colorScheme.primary.withValues(alpha: 0.08) : null, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(
+          color: selected ? theme.colorScheme.primary.withValues(alpha: 0.08) : null,
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Row(
           children: [
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(color: slice.color, shape: BoxShape.circle),
-            ),
+            Container(width: 10, height: 10, decoration: BoxDecoration(color: slice.color, shape: BoxShape.circle)),
             const SizedBox(width: 10),
-            Expanded(
-              child: Text(slice.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium),
-            ),
+            Expanded(child: Text(slice.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium)),
             ConstrainedBox(
               constraints: const BoxConstraints(minWidth: 44),
               child: Text(l10n.percentOf(sharePercent(slice.share)), maxLines: 1, softWrap: false, textAlign: TextAlign.end, style: theme.textTheme.labelLarge?.tabular),
@@ -269,11 +257,7 @@ class _LegendRow extends StatelessWidget {
             const SizedBox(width: kLegendValueGap),
             ConstrainedBox(
               constraints: const BoxConstraints(minWidth: 72),
-              child: Text(
-                formatMinor(slice.share.minor, symbol: symbol, showDecimals: false),
-                textAlign: TextAlign.end,
-                style: theme.textTheme.bodyMedium?.tabular,
-              ),
+              child: Text(formatMinor(slice.share.minor, symbol: symbol, showDecimals: false), textAlign: TextAlign.end, style: theme.textTheme.bodyMedium?.tabular),
             ),
           ],
         ),
@@ -297,14 +281,8 @@ class EmptyDonut extends StatelessWidget {
           width: 140,
           height: 140,
           alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: theme.colorScheme.surfaceContainerHigh, width: 24),
-          ),
-          child: Text(
-            formatMinor(0, symbol: symbol, showDecimals: false),
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700).tabular,
-          ),
+          decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: theme.colorScheme.surfaceContainerHigh, width: 24)),
+          child: Text(formatMinor(0, symbol: symbol, showDecimals: false), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700).tabular),
         ),
         const SizedBox(height: 12),
         Text(message, style: captionStyle(context), textAlign: TextAlign.center),

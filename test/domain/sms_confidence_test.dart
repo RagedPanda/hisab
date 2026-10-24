@@ -4,15 +4,15 @@ import 'package:hisab/domain/sms/sms_confidence.dart';
 import 'package:hisab/domain/sms/sms_parser.dart';
 
 ParsedTransaction _parsed({int amountMinor = 45900, String? bank = 'HDFC Bank', String? last4 = '1234', String currency = 'INR'}) => ParsedTransaction(
-  direction: TxnDirection.debit,
-  amountMinor: amountMinor,
-  instrument: Instrument.upi,
-  occurredAt: DateTime(2026, 10, 21),
-  raw: 'raw',
-  bank: bank,
-  accountLast4: last4,
-  currency: currency,
-);
+      direction: TxnDirection.debit,
+      amountMinor: amountMinor,
+      instrument: Instrument.upi,
+      occurredAt: DateTime(2026, 10, 21),
+      raw: 'raw',
+      bank: bank,
+      accountLast4: last4,
+      currency: currency,
+    );
 
 void main() {
   group('isConfidentParse', () {

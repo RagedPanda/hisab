@@ -100,12 +100,11 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
     final priceMinor = parseAmountToMinor(_priceController.text);
     final nameError = _submitted && _nameController.text.trim().isEmpty ? l10n.subscriptionNameRequired : null;
-    final priceError = amountErrorText(context, _priceController.text) ?? (_submitted && (priceMinor == null || priceMinor <= 0) ? l10n.subscriptionPriceRequired : null);
+    final priceError = amountErrorText(context, _priceController.text) ??
+        (_submitted && (priceMinor == null || priceMinor <= 0) ? l10n.subscriptionPriceRequired : null);
     return Scaffold(
       appBar: AppBar(title: Text(_isEditing ? l10n.subscriptionEdit : l10n.subscriptionAdd)),
-      bottomNavigationBar: BottomActionBar(
-        child: FilledButton(onPressed: _loaded ? _save : null, child: Text(l10n.save)),
-      ),
+      bottomNavigationBar: BottomActionBar(child: FilledButton(onPressed: _loaded ? _save : null, child: Text(l10n.save))),
       body: !_loaded
           ? const SizedBox.shrink()
           : DismissKeyboardOnTap(
@@ -134,7 +133,10 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
                     initialValue: _cycle,
                     isExpanded: true,
                     decoration: InputDecoration(labelText: l10n.subscriptionCycle),
-                    items: [for (final cycle in cycleOptionsFor(_cycle)) DropdownMenuItem(value: cycle, child: Text(subscriptionCycleLabel(l10n, cycle.frequency, cycle.interval)))],
+                    items: [
+                      for (final cycle in cycleOptionsFor(_cycle))
+                        DropdownMenuItem(value: cycle, child: Text(subscriptionCycleLabel(l10n, cycle.frequency, cycle.interval))),
+                    ],
                     onChanged: (cycle) => setState(() => _cycle = cycle ?? _cycle),
                   ),
                   const SizedBox(height: 4),
@@ -160,16 +162,13 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
                     const SizedBox(height: 4),
                     Text(l10n.account, style: Theme.of(context).textTheme.labelLarge),
                     const SizedBox(height: 4),
-                    ChipRow(
-                      padding: EdgeInsets.zero,
-                      children: [
-                        for (final account in accounts)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ChoiceChip(label: Text(account.name), selected: _accountId == account.id, onSelected: (_) => setState(() => _accountId = account.id)),
-                          ),
-                      ],
-                    ),
+                    ChipRow(padding: EdgeInsets.zero, children: [
+                      for (final account in accounts)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(label: Text(account.name), selected: _accountId == account.id, onSelected: (_) => setState(() => _accountId = account.id)),
+                        ),
+                    ]),
                   ],
                   const SizedBox(height: 8),
                   SwitchListTile(
@@ -187,7 +186,12 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
 
   Future<void> _pickDate() async {
     final today = startOfDay(DateTime.now());
-    final picked = await showDatePicker(context: context, initialDate: _nextRenewal, firstDate: earliestSubscriptionRenewal(today), lastDate: DateTime(today.year + kSubscriptionMaxYearsBack));
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _nextRenewal,
+      firstDate: earliestSubscriptionRenewal(today),
+      lastDate: DateTime(today.year + kSubscriptionMaxYearsBack),
+    );
     if (picked != null && mounted) {
       setState(() {
         _nextRenewal = picked;

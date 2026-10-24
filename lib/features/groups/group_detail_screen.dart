@@ -50,25 +50,13 @@ class GroupDetailScreen extends ConsumerWidget {
       final member = memberById[id];
       return member == null ? l10n.unknown : memberShortName(l10n, member);
     }
-
     final myMemberId = detail.me?.id;
     // Members offered in the payment sheet: current ones, plus whoever an
     // existing payment already names (they may have been removed since).
     Future<void> openPaymentSheet({Settlement? existing, String? from, String? to, int? amountMinor}) {
       final referenced = {existing?.fromMemberId, existing?.toMemberId};
       final candidates = detail.allMembers.where((member) => member.deletedAt == null || referenced.contains(member.id)).toList();
-      return showRecordPaymentSheet(
-        context,
-        ref,
-        group: group,
-        members: candidates,
-        balances: balances,
-        symbol: symbol,
-        existing: existing,
-        fromMemberId: from,
-        toMemberId: to,
-        amountMinor: amountMinor,
-      );
+      return showRecordPaymentSheet(context, ref, group: group, members: candidates, balances: balances, symbol: symbol, existing: existing, fromMemberId: from, toMemberId: to, amountMinor: amountMinor);
     }
 
     return DefaultTabController(
@@ -108,17 +96,13 @@ class GroupDetailScreen extends ConsumerWidget {
               ],
             ),
           ],
-          bottom: TabBar(
-            tabs: [
-              Tab(text: l10n.kindExpenses),
-              Tab(text: l10n.balances),
-              Tab(text: l10n.members),
-            ],
-          ),
+          bottom: TabBar(tabs: [Tab(text: l10n.kindExpenses), Tab(text: l10n.balances), Tab(text: l10n.members)]),
         ),
         floatingActionButton: FloatingActionButton.extended(
           heroTag: 'add-group-expense',
-          onPressed: members.length < 2 ? () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.addMemberFirst))) : () => context.push('/entry?group=$groupId'),
+          onPressed: members.length < 2
+              ? () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.addMemberFirst)))
+              : () => context.push('/entry?group=$groupId'),
           icon: const Icon(Icons.add),
           label: Text(l10n.addExpense),
         ),
@@ -163,17 +147,15 @@ class GroupDetailScreen extends ConsumerWidget {
     }
 
     final myId = detail.me?.id;
-    final owedToMe = [
-      for (final transfer in detail.balances.suggested)
-        if (settleRoleFor(transfer, myId) == SettleRole.remind) transfer,
-    ];
+    final owedToMe = [for (final transfer in detail.balances.suggested) if (settleRoleFor(transfer, myId) == SettleRole.remind) transfer];
     final nameById = {for (final member in detail.allMembers) member.id: memberShortName(l10n, member)};
     Future<void> remindEveryone() async {
       final message = remindEveryoneMessage(
         l10n,
         groupName: detail.group.name,
         transfers: [
-          for (final transfer in owedToMe) (from: nameById[transfer.from] ?? l10n.unknown, to: nameById[transfer.to] ?? l10n.unknown, amount: formatMinor(transfer.amountMinor, symbol: symbol)),
+          for (final transfer in owedToMe)
+            (from: nameById[transfer.from] ?? l10n.unknown, to: nameById[transfer.to] ?? l10n.unknown, amount: formatMinor(transfer.amountMinor, symbol: symbol)),
         ],
       );
       if (!await ref.read(textSharerProvider)(message)) return;
@@ -194,22 +176,33 @@ class GroupDetailScreen extends ConsumerWidget {
         }
 
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(leading: const Icon(Icons.ios_share), title: Text(l10n.shareBalancesSummary), onTap: () => run(() => ref.read(textSharerProvider)(summary))),
-              if (owedToMe.isNotEmpty) ListTile(leading: const Icon(Icons.notifications_active_outlined), title: Text(l10n.remindEveryoneWhoOwes), onTap: () => run(remindEveryone)),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            ListTile(
+              leading: const Icon(Icons.ios_share),
+              title: Text(l10n.shareBalancesSummary),
+              onTap: () => run(() => ref.read(textSharerProvider)(summary)),
+            ),
+            if (owedToMe.isNotEmpty)
               ListTile(
-                leading: const Icon(Icons.copy),
-                title: Text(l10n.copyAsText),
-                onTap: () => run(() async {
-                  await Clipboard.setData(ClipboardData(text: summary));
-                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.copied)));
-                }),
+                leading: const Icon(Icons.notifications_active_outlined),
+                title: Text(l10n.remindEveryoneWhoOwes),
+                onTap: () => run(remindEveryone),
               ),
-              ListTile(key: const Key('group-export-csv'), leading: const Icon(Icons.table_view_outlined), title: Text(l10n.groupExportCsv), onTap: () => run(exportCsv)),
-            ],
-          ),
+            ListTile(
+              leading: const Icon(Icons.copy),
+              title: Text(l10n.copyAsText),
+              onTap: () => run(() async {
+                await Clipboard.setData(ClipboardData(text: summary));
+                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.copied)));
+              }),
+            ),
+            ListTile(
+              key: const Key('group-export-csv'),
+              leading: const Icon(Icons.table_view_outlined),
+              title: Text(l10n.groupExportCsv),
+              onTap: () => run(exportCsv),
+            ),
+          ]),
         );
       },
     );
@@ -269,10 +262,7 @@ class _BalancesTab extends ConsumerWidget {
     return ListTile(
       leading: const Icon(Icons.arrow_forward),
       title: Text(l10n.transferArrow(nameOf(transfer.from), nameOf(transfer.to))),
-      trailing: Text(
-        formatMinor(transfer.amountMinor, symbol: symbol),
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
+      trailing: Text(formatMinor(transfer.amountMinor, symbol: symbol), style: const TextStyle(fontWeight: FontWeight.w600)),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -317,78 +307,73 @@ class _BalancesTab extends ConsumerWidget {
       children: [
         SectionHeader(l10n.netBalances),
         Card(
-          child: Column(
-            children: [
-              for (final member in members)
-                ListTile(
-                  leading: MemberAvatar(member: member),
-                  title: Text(nameOf(member.id)),
-                  trailing: Text(
-                    (net[member.id] ?? 0) == 0 ? l10n.settled : '${(net[member.id] ?? 0) > 0 ? l10n.getsBack : l10n.owes} ${formatMinor((net[member.id] ?? 0).abs(), symbol: symbol)}',
-                    style: TextStyle(fontWeight: FontWeight.w600, color: (net[member.id] ?? 0) >= 0 ? const Color(0xFF2E9E6B) : const Color(0xFFD9534F)),
-                  ),
+          child: Column(children: [
+            for (final member in members)
+              ListTile(
+                leading: MemberAvatar(member: member),
+                title: Text(nameOf(member.id)),
+                trailing: Text(
+                  (net[member.id] ?? 0) == 0
+                      ? l10n.settled
+                      : '${(net[member.id] ?? 0) > 0 ? l10n.getsBack : l10n.owes} ${formatMinor((net[member.id] ?? 0).abs(), symbol: symbol)}',
+                  style: TextStyle(fontWeight: FontWeight.w600, color: (net[member.id] ?? 0) >= 0 ? const Color(0xFF2E9E6B) : const Color(0xFFD9534F)),
                 ),
-            ],
-          ),
+              ),
+          ]),
         ),
         SectionHeader(group.simplifyDebts ? l10n.settleUpSimplified : l10n.settleUp),
         Card(
-          child: Column(
-            children: [
-              if (balances.suggested.isEmpty)
-                ListTile(
-                  leading: const Icon(Icons.check_circle_outline),
-                  title: Text(l10n.nothingToRemind),
-                  subtitle: Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                      onPressed: () => ref.read(textSharerProvider)(groupSummaryFor(l10n, detail, symbol: symbol)),
-                      icon: const Icon(Icons.ios_share, size: 18),
-                      label: Text(l10n.shareSummaryAnyway),
-                    ),
+          child: Column(children: [
+            if (balances.suggested.isEmpty)
+              ListTile(
+                leading: const Icon(Icons.check_circle_outline),
+                title: Text(l10n.nothingToRemind),
+                subtitle: Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                    onPressed: () => ref.read(textSharerProvider)(groupSummaryFor(l10n, detail, symbol: symbol)),
+                    icon: const Icon(Icons.ios_share, size: 18),
+                    label: Text(l10n.shareSummaryAnyway),
                   ),
-                )
-              else
-                for (final transfer in balances.suggested) _transferTile(context, transfer),
-              const Divider(height: 1),
-              ListTile(leading: const Icon(Icons.add_card_outlined), title: Text(l10n.recordAPayment), subtitle: Text(l10n.recordAPaymentHint), onTap: () => openPayment()),
-            ],
-          ),
+                ),
+              )
+            else
+              for (final transfer in balances.suggested) _transferTile(context, transfer),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.add_card_outlined),
+              title: Text(l10n.recordAPayment),
+              subtitle: Text(l10n.recordAPaymentHint),
+              onTap: () => openPayment(),
+            ),
+          ]),
         ),
         if (settlements.isNotEmpty) ...[
           SectionHeader(l10n.settledPayments),
           Card(
-            child: Column(
-              children: [
-                for (final settlement in settlements)
-                  ListTile(
-                    leading: const Icon(Icons.handshake_outlined),
-                    title: Text(l10n.transferArrow(nameOf(settlement.fromMemberId), nameOf(settlement.toMemberId)), maxLines: 1, overflow: TextOverflow.ellipsis),
-                    subtitle: Text('${formatRowDate(settlement.occurredAt, locale: locale)} · ${paymentMethodLabel(settlement.method, l10n)}'),
-                    onTap: () => openPayment(existing: settlement),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          formatMinor(settlement.amountMinor, symbol: symbol),
-                          style: const TextStyle(fontWeight: FontWeight.w600).tabular,
-                        ),
-                        PopupMenuButton<void>(
-                          tooltip: l10n.moreOptions,
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              onTap: () => openPayment(existing: settlement),
-                              child: Text(l10n.editPayment),
-                            ),
-                            PopupMenuItem(onTap: () => confirmRemoveSettlement(context, ref, settlement), child: Text(l10n.removePayment)),
-                          ],
-                        ),
-                      ],
-                    ),
+            child: Column(children: [
+              for (final settlement in settlements)
+                ListTile(
+                  leading: const Icon(Icons.handshake_outlined),
+                  title: Text(l10n.transferArrow(nameOf(settlement.fromMemberId), nameOf(settlement.toMemberId)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text('${formatRowDate(settlement.occurredAt, locale: locale)} · ${paymentMethodLabel(settlement.method, l10n)}'),
+                  onTap: () => openPayment(existing: settlement),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(formatMinor(settlement.amountMinor, symbol: symbol), style: const TextStyle(fontWeight: FontWeight.w600).tabular),
+                      PopupMenuButton<void>(
+                        tooltip: l10n.moreOptions,
+                        itemBuilder: (context) => [
+                          PopupMenuItem(onTap: () => openPayment(existing: settlement), child: Text(l10n.editPayment)),
+                          PopupMenuItem(onTap: () => confirmRemoveSettlement(context, ref, settlement), child: Text(l10n.removePayment)),
+                        ],
+                      ),
+                    ],
                   ),
-              ],
-            ),
+                ),
+            ]),
           ),
         ],
       ],
@@ -417,45 +402,43 @@ class _MembersTab extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
       children: [
         Card(
-          child: Column(
-            children: [
-              for (final member in members)
-                ListTile(
-                  leading: MemberAvatar(member: member),
-                  title: Text(memberDisplayName(l10n, member)),
-                  subtitle: _contactLine(member) == null ? null : Text(_contactLine(member)!, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  trailing: member.isMe
-                      ? null
-                      : IconButton(
-                          tooltip: l10n.removeNamed(member.name),
-                          icon: const Icon(Icons.person_remove_outlined),
-                          onPressed: () async {
-                            // Pairwise debts, not the simplified ones: with simplify on a
-                            // member in the middle of a chain nets to zero yet still owes.
-                            final settled = isMemberSettled(memberId: member.id, net: balances.net, transfers: balances.pairwise);
-                            if (!settled) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.settleBeforeRemove)));
-                              return;
-                            }
-                            if (await confirmDialog(context, title: l10n.removeNamed(member.name), confirmLabel: l10n.remove)) await repo.removeMember(member.id);
-                          },
-                        ),
-                  onTap: () async {
-                    final details = await showMemberSheet(context, existing: member);
-                    if (details == null) return;
-                    await repo.updateMember(MembersCompanion(id: Value(member.id), name: Value(details.name), phone: Value(details.phone), upiId: Value(details.upiId)));
-                  },
-                ),
+          child: Column(children: [
+            for (final member in members)
               ListTile(
-                leading: const Icon(Icons.person_add_outlined),
-                title: Text(l10n.addMember),
+                leading: MemberAvatar(member: member),
+                title: Text(memberDisplayName(l10n, member)),
+                subtitle: _contactLine(member) == null ? null : Text(_contactLine(member)!, maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: member.isMe
+                    ? null
+                    : IconButton(
+                        tooltip: l10n.removeNamed(member.name),
+                        icon: const Icon(Icons.person_remove_outlined),
+                        onPressed: () async {
+                          // Pairwise debts, not the simplified ones: with simplify on a
+                          // member in the middle of a chain nets to zero yet still owes.
+                          final settled = isMemberSettled(memberId: member.id, net: balances.net, transfers: balances.pairwise);
+                          if (!settled) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.settleBeforeRemove)));
+                            return;
+                          }
+                          if (await confirmDialog(context, title: l10n.removeNamed(member.name), confirmLabel: l10n.remove)) await repo.removeMember(member.id);
+                        },
+                      ),
                 onTap: () async {
-                  final details = await showMemberSheet(context);
-                  if (details != null) await repo.addMember(groupId, details.name, phone: details.phone, upiId: details.upiId);
+                  final details = await showMemberSheet(context, existing: member);
+                  if (details == null) return;
+                  await repo.updateMember(MembersCompanion(id: Value(member.id), name: Value(details.name), phone: Value(details.phone), upiId: Value(details.upiId)));
                 },
               ),
-            ],
-          ),
+            ListTile(
+              leading: const Icon(Icons.person_add_outlined),
+              title: Text(l10n.addMember),
+              onTap: () async {
+                final details = await showMemberSheet(context);
+                if (details != null) await repo.addMember(groupId, details.name, phone: details.phone, upiId: details.upiId);
+              },
+            ),
+          ]),
         ),
         const SizedBox(height: 16),
         Text(l10n.membersLocalNotice, style: Theme.of(context).textTheme.bodySmall),

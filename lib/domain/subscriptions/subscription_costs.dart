@@ -16,15 +16,23 @@ enum SubscriptionStatus {
   /// Maps a recurring rule status (`active | paused | ended`) to a
   /// subscription status; an ended rule is a cancelled subscription.
   static SubscriptionStatus fromRuleStatus(String status) => switch (status) {
-    'paused' => SubscriptionStatus.paused,
-    'ended' => SubscriptionStatus.cancelled,
-    _ => SubscriptionStatus.active,
-  };
+        'paused' => SubscriptionStatus.paused,
+        'ended' => SubscriptionStatus.cancelled,
+        _ => SubscriptionStatus.active,
+      };
 }
 
 /// The fields of a recurring rule the subscriptions view needs.
 class SubscriptionItem {
-  const SubscriptionItem({required this.id, required this.name, required this.amountMinor, required this.frequency, this.interval = 1, this.status = SubscriptionStatus.active, this.nextDue});
+  const SubscriptionItem({
+    required this.id,
+    required this.name,
+    required this.amountMinor,
+    required this.frequency,
+    this.interval = 1,
+    this.status = SubscriptionStatus.active,
+    this.nextDue,
+  });
 
   final String id;
   final String name;
@@ -46,21 +54,24 @@ class SubscriptionItem {
 /// Occurrences of one step of [frequency] in a year. A year is 365 days and
 /// 52 weeks, so a 28-day prepaid recharge works out to about 13 a year.
 int occurrencesPerYear(RecurrenceFrequency frequency) => switch (frequency) {
-  RecurrenceFrequency.daily => 365,
-  RecurrenceFrequency.weekly => 52,
-  RecurrenceFrequency.monthly => 12,
-  RecurrenceFrequency.yearly => 1,
-};
+      RecurrenceFrequency.daily => 365,
+      RecurrenceFrequency.weekly => 52,
+      RecurrenceFrequency.monthly => 12,
+      RecurrenceFrequency.yearly => 1,
+    };
 
 /// Unrounded yearly cost in minor units, so totals round once at the end.
-double _exactYearlyMinor(int amountMinor, RecurrenceFrequency frequency, int interval) => amountMinor * occurrencesPerYear(frequency) / (interval < 1 ? 1 : interval);
+double _exactYearlyMinor(int amountMinor, RecurrenceFrequency frequency, int interval) =>
+    amountMinor * occurrencesPerYear(frequency) / (interval < 1 ? 1 : interval);
 
 /// What a charge of [amountMinor] every [interval] [frequency] costs per year.
-int yearlyEquivalentMinor(int amountMinor, RecurrenceFrequency frequency, {int interval = 1}) => _exactYearlyMinor(amountMinor, frequency, interval).round();
+int yearlyEquivalentMinor(int amountMinor, RecurrenceFrequency frequency, {int interval = 1}) =>
+    _exactYearlyMinor(amountMinor, frequency, interval).round();
 
 /// What a charge of [amountMinor] every [interval] [frequency] costs per month
 /// (a twelfth of the yearly cost).
-int monthlyEquivalentMinor(int amountMinor, RecurrenceFrequency frequency, {int interval = 1}) => (_exactYearlyMinor(amountMinor, frequency, interval) / 12).round();
+int monthlyEquivalentMinor(int amountMinor, RecurrenceFrequency frequency, {int interval = 1}) =>
+    (_exactYearlyMinor(amountMinor, frequency, interval) / 12).round();
 
 int itemMonthlyMinor(SubscriptionItem item) => monthlyEquivalentMinor(item.amountMinor, item.frequency, interval: item.interval);
 
@@ -110,9 +121,9 @@ List<SubscriptionItem> sortSubscriptions(Iterable<SubscriptionItem> items, Subsc
   }
 
   return [...items]..sort((left, right) {
-    final status = _statusRank(left.status).compareTo(_statusRank(right.status));
-    if (status != 0) return status;
-    final key = byKey(left, right);
-    return key != 0 ? key : byName(left, right);
-  });
+      final status = _statusRank(left.status).compareTo(_statusRank(right.status));
+      if (status != 0) return status;
+      final key = byKey(left, right);
+      return key != 0 ? key : byName(left, right);
+    });
 }

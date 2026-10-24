@@ -25,7 +25,10 @@ void main() {
     });
 
     test('an old cursor is capped at the lookback window', () {
-      expect(catchUpSince(now: now, cursor: DateTime(2025, 1, 1), lookback: const Duration(days: 90), overlap: Duration.zero), now.subtract(const Duration(days: 90)));
+      expect(
+        catchUpSince(now: now, cursor: DateTime(2025, 1, 1), lookback: const Duration(days: 90), overlap: Duration.zero),
+        now.subtract(const Duration(days: 90)),
+      );
     });
   });
 

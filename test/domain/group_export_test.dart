@@ -2,16 +2,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/domain/split/group_export.dart';
 
 GroupCsvLabels get labels => GroupCsvLabels(
-  date: 'Date',
-  description: 'Description',
-  category: 'Category',
-  cost: 'Cost',
-  paidBy: 'Paid by',
-  paidColumn: (name) => '$name paid',
-  shareColumn: (name) => '$name share',
-  balanceColumn: (name) => '$name balance',
-  total: 'Total',
-);
+      date: 'Date',
+      description: 'Description',
+      category: 'Category',
+      cost: 'Cost',
+      paidBy: 'Paid by',
+      paidColumn: (name) => '$name paid',
+      shareColumn: (name) => '$name share',
+      balanceColumn: (name) => '$name balance',
+      total: 'Total',
+    );
 
 ExportRow row(DateTime when, String description, int cost, Map<String, int> paid, Map<String, int> share, {String category = 'Food', bool isPayment = false}) =>
     ExportRow(occurredAt: when, description: description, category: category, costMinor: cost, paidMinor: paid, shareMinor: share, isPayment: isPayment);
@@ -69,13 +69,10 @@ void main() {
     });
 
     test('does not change earlier snapshots', () {
-      final result = withRunningBalances(
-        [
-          row(DateTime(2026, 1, 1), 'One', 200, {'a': 200}, {'a': 100, 'b': 100}),
-          row(DateTime(2026, 1, 2), 'Two', 200, {'a': 200}, {'a': 100, 'b': 100}),
-        ],
-        ['a', 'b'],
-      );
+      final result = withRunningBalances([
+        row(DateTime(2026, 1, 1), 'One', 200, {'a': 200}, {'a': 100, 'b': 100}),
+        row(DateTime(2026, 1, 2), 'Two', 200, {'a': 200}, {'a': 100, 'b': 100}),
+      ], ['a', 'b']);
       expect(result.first.balances, {'a': 100, 'b': -100});
       expect(result.last.balances, {'a': 200, 'b': -200});
     });
@@ -88,18 +85,15 @@ void main() {
 
     test('header lists paid, share and balance columns per member', () {
       final csv = buildGroupCsv(members: members, rows: const [], labels: labels);
-      expect(linesOf(csv), ['Date,Description,Category,Cost,Paid by,You paid,Rahul paid,You share,Rahul share,You balance,Rahul balance', ',Total,,0.00,,0.00,0.00,0.00,0.00,0.00,0.00']);
+      expect(linesOf(csv), [
+        'Date,Description,Category,Cost,Paid by,You paid,Rahul paid,You share,Rahul share,You balance,Rahul balance',
+        ',Total,,0.00,,0.00,0.00,0.00,0.00,0.00,0.00',
+      ]);
       expect(csv.endsWith('\r\n'), isTrue);
     });
 
     test('one payer', () {
-      final csv = buildGroupCsv(
-        members: members,
-        rows: [
-          row(DateTime(2026, 10, 1), 'Dinner', 90000, {'a': 90000}, {'a': 45000, 'b': 45000}),
-        ],
-        labels: labels,
-      );
+      final csv = buildGroupCsv(members: members, rows: [row(DateTime(2026, 10, 1), 'Dinner', 90000, {'a': 90000}, {'a': 45000, 'b': 45000})], labels: labels);
       expect(linesOf(csv)[1], '2026-10-01,Dinner,Food,900.00,You 900.00,900.00,0.00,450.00,450.00,450.00,-450.00');
     });
 
@@ -107,9 +101,7 @@ void main() {
       final three = [...members, (id: 'c', name: 'Asha')];
       final csv = buildGroupCsv(
         members: three,
-        rows: [
-          row(DateTime(2026, 10, 2), 'Hotel', 90000, {'b': 60000, 'c': 30000}, {'a': 30000, 'b': 30000, 'c': 30000}, category: 'Stay'),
-        ],
+        rows: [row(DateTime(2026, 10, 2), 'Hotel', 90000, {'b': 60000, 'c': 30000}, {'a': 30000, 'b': 30000, 'c': 30000}, category: 'Stay')],
         labels: labels,
       );
       expect(linesOf(csv)[1], '2026-10-02,Hotel,Stay,900.00,Rahul 600.00; Asha 300.00,0.00,600.00,300.00,300.00,300.00,300.00,-300.00,300.00,0.00');
@@ -119,9 +111,7 @@ void main() {
       const hindi = [(id: 'a', name: 'आप'), (id: 'b', name: 'राहुल, "R"')];
       final csv = buildGroupCsv(
         members: hindi,
-        rows: [
-          row(DateTime(2026, 10, 4), 'चाय 🍵, समोसा', 4000, {'b': 4000}, {'a': 2000, 'b': 2000}, category: 'खाना'),
-        ],
+        rows: [row(DateTime(2026, 10, 4), 'चाय 🍵, समोसा', 4000, {'b': 4000}, {'a': 2000, 'b': 2000}, category: 'खाना')],
         labels: labels,
       );
       final lines = linesOf(csv);
@@ -130,13 +120,7 @@ void main() {
     });
 
     test('a description with a line break stays one CSV record', () {
-      final csv = buildGroupCsv(
-        members: members,
-        rows: [
-          row(DateTime(2026, 10, 5), 'Groceries\nand milk', 100, {'a': 100}, {'b': 100}),
-        ],
-        labels: labels,
-      );
+      final csv = buildGroupCsv(members: members, rows: [row(DateTime(2026, 10, 5), 'Groceries\nand milk', 100, {'a': 100}, {'b': 100})], labels: labels);
       expect(csv, contains('"Groceries\nand milk"'));
       expect(linesOf(csv), hasLength(3));
     });
@@ -177,15 +161,8 @@ void main() {
 
     test('a localised total label is escaped like any text cell', () {
       final hindi = GroupCsvLabels(
-        date: 'तारीख',
-        description: 'विवरण',
-        category: 'श्रेणी',
-        cost: 'राशि',
-        paidBy: 'किसने दिया',
-        paidColumn: (name) => name,
-        shareColumn: (name) => name,
-        balanceColumn: (name) => name,
-        total: 'कुल, सब',
+        date: 'तारीख', description: 'विवरण', category: 'श्रेणी', cost: 'राशि', paidBy: 'किसने दिया',
+        paidColumn: (name) => name, shareColumn: (name) => name, balanceColumn: (name) => name, total: 'कुल, सब',
       );
       expect(linesOf(buildGroupCsv(members: const [], rows: const [], labels: hindi)).last, ',"कुल, सब",,0.00,');
     });

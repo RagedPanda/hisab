@@ -64,31 +64,32 @@ class AppSettings {
     String? myName,
     bool? onboarded,
     String? localeCode,
-  }) => AppSettings(
-    currencyCode: currencyCode ?? this.currencyCode,
-    currencyConfirmed: currencyConfirmed ?? this.currencyConfirmed,
-    monthStartDay: monthStartDay ?? this.monthStartDay,
-    themeMode: themeMode ?? this.themeMode,
-    smsEnabled: smsEnabled ?? this.smsEnabled,
-    smsAutoAdd: smsAutoAdd ?? this.smsAutoAdd,
-    smsAutoAddChosen: smsAutoAddChosen ?? this.smsAutoAddChosen,
-    myName: myName ?? this.myName,
-    onboarded: onboarded ?? this.onboarded,
-    localeCode: localeCode ?? this.localeCode,
-  );
+  }) =>
+      AppSettings(
+        currencyCode: currencyCode ?? this.currencyCode,
+        currencyConfirmed: currencyConfirmed ?? this.currencyConfirmed,
+        monthStartDay: monthStartDay ?? this.monthStartDay,
+        themeMode: themeMode ?? this.themeMode,
+        smsEnabled: smsEnabled ?? this.smsEnabled,
+        smsAutoAdd: smsAutoAdd ?? this.smsAutoAdd,
+        smsAutoAddChosen: smsAutoAddChosen ?? this.smsAutoAddChosen,
+        myName: myName ?? this.myName,
+        onboarded: onboarded ?? this.onboarded,
+        localeCode: localeCode ?? this.localeCode,
+      );
 
   static AppSettings fromPrefs(SharedPreferences prefs) => AppSettings(
-    currencyCode: prefs.getString(kCurrencyCodeKey) ?? currencyCodeForLegacySymbol(prefs.getString(kLegacyCurrencySymbolKey)),
-    currencyConfirmed: prefs.containsKey(kCurrencyCodeKey),
-    monthStartDay: prefs.getInt('monthStartDay') ?? 1,
-    themeMode: ThemeMode.values[prefs.getInt('themeMode') ?? ThemeMode.system.index],
-    smsEnabled: prefs.getBool('smsEnabled') ?? false,
-    smsAutoAdd: resolveSmsAutoAdd(storedValue: prefs.getBool('smsAutoAdd'), userChose: prefs.getBool('smsAutoAddChosen') ?? false),
-    smsAutoAddChosen: prefs.getBool('smsAutoAddChosen') ?? false,
-    myName: prefs.getString('myName') ?? '',
-    onboarded: prefs.getBool('onboarded') ?? false,
-    localeCode: prefs.getString('localeCode') ?? '',
-  );
+        currencyCode: prefs.getString(kCurrencyCodeKey) ?? currencyCodeForLegacySymbol(prefs.getString(kLegacyCurrencySymbolKey)),
+        currencyConfirmed: prefs.containsKey(kCurrencyCodeKey),
+        monthStartDay: prefs.getInt('monthStartDay') ?? 1,
+        themeMode: ThemeMode.values[prefs.getInt('themeMode') ?? ThemeMode.system.index],
+        smsEnabled: prefs.getBool('smsEnabled') ?? false,
+        smsAutoAdd: resolveSmsAutoAdd(storedValue: prefs.getBool('smsAutoAdd'), userChose: prefs.getBool('smsAutoAddChosen') ?? false),
+        smsAutoAddChosen: prefs.getBool('smsAutoAddChosen') ?? false,
+        myName: prefs.getString('myName') ?? '',
+        onboarded: prefs.getBool('onboarded') ?? false,
+        localeCode: prefs.getString('localeCode') ?? '',
+      );
 
   Future<void> writeTo(SharedPreferences prefs) async {
     if (currencyConfirmed) {

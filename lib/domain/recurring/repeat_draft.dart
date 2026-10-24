@@ -8,7 +8,15 @@ import 'recurrence.dart';
 enum RepeatEnd { never, onDate, afterCount }
 
 class RepeatDraft {
-  const RepeatDraft({this.frequency = RecurrenceFrequency.monthly, this.interval = 1, this.lastDayOfMonth = false, this.end = RepeatEnd.never, this.endDate, this.maxCount, this.autoPost = true});
+  const RepeatDraft({
+    this.frequency = RecurrenceFrequency.monthly,
+    this.interval = 1,
+    this.lastDayOfMonth = false,
+    this.end = RepeatEnd.never,
+    this.endDate,
+    this.maxCount,
+    this.autoPost = true,
+  });
 
   final RecurrenceFrequency frequency;
   final int interval;
@@ -25,48 +33,57 @@ class RepeatDraft {
 
   /// The draft a stored schedule was made from.
   factory RepeatDraft.fromSpec(RecurrenceSpec spec, {bool autoPost = true}) => RepeatDraft(
-    frequency: spec.frequency,
-    interval: spec.interval < 1 ? 1 : spec.interval,
-    lastDayOfMonth: spec.frequency == RecurrenceFrequency.monthly && spec.dayOfMonth == kLastDayOfMonth,
-    end: spec.maxCount != null ? RepeatEnd.afterCount : (spec.endDate != null ? RepeatEnd.onDate : RepeatEnd.never),
-    endDate: spec.endDate,
-    maxCount: spec.maxCount,
-    autoPost: autoPost,
-  );
+        frequency: spec.frequency,
+        interval: spec.interval < 1 ? 1 : spec.interval,
+        lastDayOfMonth: spec.frequency == RecurrenceFrequency.monthly && spec.dayOfMonth == kLastDayOfMonth,
+        end: spec.maxCount != null ? RepeatEnd.afterCount : (spec.endDate != null ? RepeatEnd.onDate : RepeatEnd.never),
+        endDate: spec.endDate,
+        maxCount: spec.maxCount,
+        autoPost: autoPost,
+      );
 
   /// The schedule this draft describes, starting on [start] (whose day and
   /// weekday anchor monthly and weekly rules).
   RecurrenceSpec specFrom(DateTime start) => RecurrenceSpec(
-    frequency: frequency,
-    start: start,
-    interval: interval < 1 ? 1 : interval,
-    dayOfMonth: switch (frequency) {
-      RecurrenceFrequency.monthly => lastDayOfMonth ? kLastDayOfMonth : start.day,
-      RecurrenceFrequency.yearly => start.day,
-      _ => null,
-    },
-    weekday: frequency == RecurrenceFrequency.weekly ? start.weekday : null,
-    endDate: end == RepeatEnd.onDate ? endDate : null,
-    maxCount: end == RepeatEnd.afterCount ? maxCount : null,
-  );
+        frequency: frequency,
+        start: start,
+        interval: interval < 1 ? 1 : interval,
+        dayOfMonth: switch (frequency) {
+          RecurrenceFrequency.monthly => lastDayOfMonth ? kLastDayOfMonth : start.day,
+          RecurrenceFrequency.yearly => start.day,
+          _ => null,
+        },
+        weekday: frequency == RecurrenceFrequency.weekly ? start.weekday : null,
+        endDate: end == RepeatEnd.onDate ? endDate : null,
+        maxCount: end == RepeatEnd.afterCount ? maxCount : null,
+      );
 
   /// Whether the draft can be saved: an end date must not precede [start]
   /// and a count must be at least one.
   bool isValidFrom(DateTime start) => switch (end) {
-    RepeatEnd.never => interval >= 1,
-    RepeatEnd.onDate => interval >= 1 && endDate != null && !DateTime(endDate!.year, endDate!.month, endDate!.day).isBefore(DateTime(start.year, start.month, start.day)),
-    RepeatEnd.afterCount => interval >= 1 && (maxCount ?? 0) >= 1,
-  };
+        RepeatEnd.never => interval >= 1,
+        RepeatEnd.onDate => interval >= 1 && endDate != null && !DateTime(endDate!.year, endDate!.month, endDate!.day).isBefore(DateTime(start.year, start.month, start.day)),
+        RepeatEnd.afterCount => interval >= 1 && (maxCount ?? 0) >= 1,
+      };
 
-  RepeatDraft copyWith({RecurrenceFrequency? frequency, int? interval, bool? lastDayOfMonth, RepeatEnd? end, DateTime? endDate, int? maxCount, bool? autoPost}) => RepeatDraft(
-    frequency: frequency ?? this.frequency,
-    interval: interval ?? this.interval,
-    lastDayOfMonth: lastDayOfMonth ?? this.lastDayOfMonth,
-    end: end ?? this.end,
-    endDate: endDate ?? this.endDate,
-    maxCount: maxCount ?? this.maxCount,
-    autoPost: autoPost ?? this.autoPost,
-  );
+  RepeatDraft copyWith({
+    RecurrenceFrequency? frequency,
+    int? interval,
+    bool? lastDayOfMonth,
+    RepeatEnd? end,
+    DateTime? endDate,
+    int? maxCount,
+    bool? autoPost,
+  }) =>
+      RepeatDraft(
+        frequency: frequency ?? this.frequency,
+        interval: interval ?? this.interval,
+        lastDayOfMonth: lastDayOfMonth ?? this.lastDayOfMonth,
+        end: end ?? this.end,
+        endDate: endDate ?? this.endDate,
+        maxCount: maxCount ?? this.maxCount,
+        autoPost: autoPost ?? this.autoPost,
+      );
 
   @override
   bool operator ==(Object other) =>

@@ -41,50 +41,45 @@ Future<String> _categoryId(AppHandle app, String seedKey) async {
   return category!.id;
 }
 
-Future<List<Entry>> _recurringEntries(AppHandle app, String ruleId) => (app.db.select(app.db.entries)..where((t) => t.recurringId.equals(ruleId) & t.deletedAt.isNull())).get();
+Future<List<Entry>> _recurringEntries(AppHandle app, String ruleId) =>
+    (app.db.select(app.db.entries)..where((t) => t.recurringId.equals(ruleId) & t.deletedAt.isNull())).get();
 
 /// Seeds the rules the screenshot tour shows: one waiting to confirm, one
 /// active, one paused.
 Future<void> _seedRules(AppHandle app) async {
   final repository = app.read(recurringRepositoryProvider);
   final cashId = (await app.read(accountsRepositoryProvider).getAll()).first.id;
-  await repository.saveRule(
-    RecurringRepository.newRule(
-      name: 'SIP',
-      kind: 'expense',
-      amountMinor: 500000,
-      categoryId: await _categoryId(app, 'rent'),
-      accountId: cashId,
-      frequency: RecurrenceFrequency.monthly,
-      dayOfMonth: _monthsAgo(1).day,
-      startDate: _monthsAgo(1),
-      autoPost: false,
-    ),
-  );
-  await repository.saveRule(
-    RecurringRepository.newRule(
-      name: 'Salary',
-      kind: 'income',
-      amountMinor: 8500000,
-      categoryId: await _categoryId(app, 'salary'),
-      accountId: cashId,
-      frequency: RecurrenceFrequency.monthly,
-      dayOfMonth: kLastDayOfMonth,
-      startDate: DateTime.now().add(const Duration(days: 3)),
-    ),
-  );
-  final paused = await repository.saveRule(
-    RecurringRepository.newRule(
-      name: 'Gym membership',
-      kind: 'expense',
-      amountMinor: 150000,
-      categoryId: await _categoryId(app, 'rent'),
-      frequency: RecurrenceFrequency.weekly,
-      interval: 2,
-      startDate: DateTime.now().add(const Duration(days: 5)),
-      maxCount: 12,
-    ),
-  );
+  await repository.saveRule(RecurringRepository.newRule(
+    name: 'SIP',
+    kind: 'expense',
+    amountMinor: 500000,
+    categoryId: await _categoryId(app, 'rent'),
+    accountId: cashId,
+    frequency: RecurrenceFrequency.monthly,
+    dayOfMonth: _monthsAgo(1).day,
+    startDate: _monthsAgo(1),
+    autoPost: false,
+  ));
+  await repository.saveRule(RecurringRepository.newRule(
+    name: 'Salary',
+    kind: 'income',
+    amountMinor: 8500000,
+    categoryId: await _categoryId(app, 'salary'),
+    accountId: cashId,
+    frequency: RecurrenceFrequency.monthly,
+    dayOfMonth: kLastDayOfMonth,
+    startDate: DateTime.now().add(const Duration(days: 3)),
+  ));
+  final paused = await repository.saveRule(RecurringRepository.newRule(
+    name: 'Gym membership',
+    kind: 'expense',
+    amountMinor: 150000,
+    categoryId: await _categoryId(app, 'rent'),
+    frequency: RecurrenceFrequency.weekly,
+    interval: 2,
+    startDate: DateTime.now().add(const Duration(days: 5)),
+    maxCount: 12,
+  ));
   await repository.setPaused(paused, true, now: DateTime.now());
 }
 
@@ -129,18 +124,16 @@ void main() {
 
     // 2. An auto rule left behind for months catches up on resume, once.
     final cashId = (await app.read(accountsRepositoryProvider).getAll()).first.id;
-    final backlogId = await repository.saveRule(
-      RecurringRepository.newRule(
-        name: 'Maid salary',
-        kind: 'expense',
-        amountMinor: 400000,
-        categoryId: await _categoryId(app, 'rent'),
-        accountId: cashId,
-        frequency: RecurrenceFrequency.monthly,
-        dayOfMonth: _monthsAgo(3).day,
-        startDate: _monthsAgo(3),
-      ),
-    );
+    final backlogId = await repository.saveRule(RecurringRepository.newRule(
+      name: 'Maid salary',
+      kind: 'expense',
+      amountMinor: 400000,
+      categoryId: await _categoryId(app, 'rent'),
+      accountId: cashId,
+      frequency: RecurrenceFrequency.monthly,
+      dayOfMonth: _monthsAgo(3).day,
+      startDate: _monthsAgo(3),
+    ));
     Future<void> resume() async {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
@@ -154,19 +147,17 @@ void main() {
     expect((await _recurringEntries(app, backlogId)).length, 4, reason: 'resuming again posts nothing new');
 
     // 3. A confirm-first rule waits on the dashboard; Add posts one, Skip drops one.
-    final confirmId = await repository.saveRule(
-      RecurringRepository.newRule(
-        name: 'Society maintenance',
-        kind: 'expense',
-        amountMinor: 250000,
-        categoryId: await _categoryId(app, 'rent'),
-        accountId: cashId,
-        frequency: RecurrenceFrequency.monthly,
-        dayOfMonth: _monthsAgo(1).day,
-        startDate: _monthsAgo(1),
-        autoPost: false,
-      ),
-    );
+    final confirmId = await repository.saveRule(RecurringRepository.newRule(
+      name: 'Society maintenance',
+      kind: 'expense',
+      amountMinor: 250000,
+      categoryId: await _categoryId(app, 'rent'),
+      accountId: cashId,
+      frequency: RecurrenceFrequency.monthly,
+      dayOfMonth: _monthsAgo(1).day,
+      startDate: _monthsAgo(1),
+      autoPost: false,
+    ));
     await resume();
     expect(await _recurringEntries(app, confirmId), isEmpty, reason: 'confirm-first rules never post on their own');
     appRouter.go('/home');

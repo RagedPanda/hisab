@@ -95,7 +95,6 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   /// Rule an existing entry was posted by (or started), if any.
   String? _recurringId;
-
   /// Balance-relevant fields of the stored entry, used to reverse its
   /// effect when the entry is edited or deleted.
   EntrySnapshot? _previousSnapshot;
@@ -147,7 +146,14 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         _source = entry.source;
         _smsId = entry.smsId;
         _recurringId = entry.recurringId;
-        _previousSnapshot = EntrySnapshot(kind: entry.kind, amountMinor: entry.amountMinor, accountId: entry.accountId, toAccountId: entry.toAccountId, source: entry.source, groupId: entry.groupId);
+        _previousSnapshot = EntrySnapshot(
+          kind: entry.kind,
+          amountMinor: entry.amountMinor,
+          accountId: entry.accountId,
+          toAccountId: entry.toAccountId,
+          source: entry.source,
+          groupId: entry.groupId,
+        );
         _splitMethod = SplitMethod.values.firstWhere((m) => m.name == entry.splitMethod, orElse: () => SplitMethod.equal);
         _items = details.items.map(ItemDraft.fromRow).toList();
         if (_groupId != null) {
@@ -169,10 +175,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _projectId = initialEntryProjectId(
         explicitId: widget.projectId,
         lastUsedId: ref.read(lastProjectIdProvider),
-        activeIds: {
-          for (final project in projects)
-            if (ProjectStatus.parse(project.status) == ProjectStatus.active) project.id,
-        },
+        activeIds: {for (final project in projects) if (ProjectStatus.parse(project.status) == ProjectStatus.active) project.id},
         isGroup: _groupId != null,
       );
       if (_groupId != null) {
@@ -262,7 +265,15 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   List<SplitInput> _inputsFromSplits(List<Split> splits) {
     final byMember = {for (final s in splits) s.memberId: s};
-    return [for (final m in _members) SplitInput(memberId: m.id, included: byMember.containsKey(m.id), amountMinor: byMember[m.id]?.amountMinor ?? 0, weight: byMember[m.id]?.shareValue ?? 0)];
+    return [
+      for (final m in _members)
+        SplitInput(
+          memberId: m.id,
+          included: byMember.containsKey(m.id),
+          amountMinor: byMember[m.id]?.amountMinor ?? 0,
+          weight: byMember[m.id]?.shareValue ?? 0,
+        ),
+    ];
   }
 
   Future<void> _refreshSuggestions() async {
@@ -295,13 +306,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _isEditing
-              ? l10n.editEntry
-              : _groupId != null
-              ? l10n.groupExpense
-              : l10n.newEntry,
-        ),
+        title: Text(_isEditing ? l10n.editEntry : _groupId != null ? l10n.groupExpense : l10n.newEntry),
         actions: [
           if (_isEditing)
             IconButton(
@@ -329,144 +334,144 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
           children: [
-            if (_groupId == null)
-              SegmentedButton<String>(
-                segments: [
-                  compactSegment(context, value: 'expense', label: l10n.kindExpense, icon: Icons.arrow_upward),
-                  compactSegment(context, value: 'income', label: l10n.kindIncome, icon: Icons.arrow_downward),
-                  compactSegment(context, value: 'transfer', label: l10n.kindTransfer, icon: Icons.swap_horiz),
-                ],
-                selected: {_kind},
-                onSelectionChanged: (set) => setState(() {
-                  _kind = set.first;
-                  _category = null;
-                  _items = [];
-                  _amountController.text = '';
-                }),
-              ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _amountController,
-              focusNode: _amountFocus,
-              readOnly: _hasItems,
-              autofocus: _autofocusAmount && !_isEditing && !_hasItems,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: amountInputFormatters,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
-              decoration: InputDecoration(
-                prefixText: '$symbol ',
-                hintText: '0',
-                helperText: _hasItems ? l10n.totalOfItems(_items.length) : null,
-                errorText: _hasItems ? null : amountErrorText(context, _amountController.text),
-                suffixIcon: _hasItems
-                    ? null
-                    : IconButton(key: const ValueKey('editor.calculator'), tooltip: l10n.calculator, icon: const Icon(Icons.calculate_outlined), onPressed: () => _openCalculator(symbol)),
-              ),
-              onChanged: (_) => setState(() {}),
+          if (_groupId == null)
+            SegmentedButton<String>(
+              segments: [
+                compactSegment(context, value: 'expense', label: l10n.kindExpense, icon: Icons.arrow_upward),
+                compactSegment(context, value: 'income', label: l10n.kindIncome, icon: Icons.arrow_downward),
+                compactSegment(context, value: 'transfer', label: l10n.kindTransfer, icon: Icons.swap_horiz),
+              ],
+              selected: {_kind},
+              onSelectionChanged: (set) => setState(() {
+                _kind = set.first;
+                _category = null;
+                _items = [];
+                _amountController.text = '';
+              }),
             ),
-            const SizedBox(height: 16),
-            if (_kind != 'transfer')
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: IconBadge(icon: _category?.icon ?? 'category', color: _category?.color ?? 0xFF9E9E9E),
-                title: Text(_category?.displayName(context) ?? l10n.chooseCategory),
-                subtitle: _category == null ? Text(l10n.required) : null,
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () async {
-                  final picked = await showCategoryPicker(context, kind: _kind, selectedId: _category?.id);
-                  if (picked != null) {
-                    setState(() => _category = picked);
-                    await _refreshSuggestions();
-                  }
+          const SizedBox(height: 16),
+          TextField(
+            controller: _amountController,
+            focusNode: _amountFocus,
+            readOnly: _hasItems,
+            autofocus: _autofocusAmount && !_isEditing && !_hasItems,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: amountInputFormatters,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
+            decoration: InputDecoration(
+              prefixText: '$symbol ',
+              hintText: '0',
+              helperText: _hasItems ? l10n.totalOfItems(_items.length) : null,
+              errorText: _hasItems ? null : amountErrorText(context, _amountController.text),
+              suffixIcon: _hasItems
+                  ? null
+                  : IconButton(
+                      key: const ValueKey('editor.calculator'),
+                      tooltip: l10n.calculator,
+                      icon: const Icon(Icons.calculate_outlined),
+                      onPressed: () => _openCalculator(symbol),
+                    ),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 16),
+          if (_kind != 'transfer')
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: IconBadge(icon: _category?.icon ?? 'category', color: _category?.color ?? 0xFF9E9E9E),
+              title: Text(_category?.displayName(context) ?? l10n.chooseCategory),
+              subtitle: _category == null ? Text(l10n.required) : null,
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                final picked = await showCategoryPicker(context, kind: _kind, selectedId: _category?.id);
+                if (picked != null) {
+                  setState(() => _category = picked);
+                  await _refreshSuggestions();
+                }
+              },
+            ),
+          if (_kind != 'transfer' && _groupId == null) ...[
+            const SizedBox(height: 8),
+            _projectChip(l10n, ref.watch(projectViewsProvider).value ?? const <ProjectView>[]),
+          ],
+          if (_kind == 'expense' && _groupId == null) _itemsSection(symbol, units),
+          if (_kind != 'transfer' && _projectFields.isNotEmpty) ...[
+            SectionHeader(l10n.projectDetails, padding: const EdgeInsets.fromLTRB(0, 16, 0, 8)),
+            ProjectFieldInputs(key: ValueKey('fields.$_projectId'), fields: _projectFields, values: _fieldValues, onChanged: (values) => setState(() => _fieldValues = values)),
+          ],
+          // Group expenses are a ledger between people, not an account
+          // movement, so they never pick (or touch) a personal account.
+          if (_groupId == null) ...[
+            const SizedBox(height: 8),
+            Text(_kind == 'transfer' ? l10n.fromAccount : l10n.account, style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 6),
+            AccountChoiceChips(accounts: accounts, selectedId: _accountId, onPick: (id) => setState(() => _accountId = id)),
+            if (_kind == 'transfer') ...[
+              const SizedBox(height: 12),
+              Text(l10n.toAccount, style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 6),
+              AccountChoiceChips(accounts: accounts.where((a) => a.id != _accountId).toList(), selectedId: _toAccountId, onPick: (id) => setState(() => _toAccountId = id)),
+            ],
+          ],
+          const SizedBox(height: 16),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.calendar_today_outlined, size: 18),
+                label: Text(formatShortDate(_occurredAt, locale: Localizations.localeOf(context).toString())),
+                onPressed: () async {
+                  final picked = await showDatePicker(context: context, initialDate: _occurredAt, firstDate: DateTime(2000), lastDate: DateTime.now().add(const Duration(days: 365)));
+                  if (picked != null) setState(() => _occurredAt = DateTime(picked.year, picked.month, picked.day, _occurredAt.hour, _occurredAt.minute));
                 },
               ),
-            if (_kind != 'transfer' && _groupId == null) ...[const SizedBox(height: 8), _projectChip(l10n, ref.watch(projectViewsProvider).value ?? const <ProjectView>[])],
-            if (_kind == 'expense' && _groupId == null) _itemsSection(symbol, units),
-            if (_kind != 'transfer' && _projectFields.isNotEmpty) ...[
-              SectionHeader(l10n.projectDetails, padding: const EdgeInsets.fromLTRB(0, 16, 0, 8)),
-              ProjectFieldInputs(key: ValueKey('fields.$_projectId'), fields: _projectFields, values: _fieldValues, onChanged: (values) => setState(() => _fieldValues = values)),
-            ],
-            // Group expenses are a ledger between people, not an account
-            // movement, so they never pick (or touch) a personal account.
-            if (_groupId == null) ...[
-              const SizedBox(height: 8),
-              Text(_kind == 'transfer' ? l10n.fromAccount : l10n.account, style: Theme.of(context).textTheme.labelLarge),
-              const SizedBox(height: 6),
-              AccountChoiceChips(accounts: accounts, selectedId: _accountId, onPick: (id) => setState(() => _accountId = id)),
-              if (_kind == 'transfer') ...[
-                const SizedBox(height: 12),
-                Text(l10n.toAccount, style: Theme.of(context).textTheme.labelLarge),
-                const SizedBox(height: 6),
-                AccountChoiceChips(accounts: accounts.where((a) => a.id != _accountId).toList(), selectedId: _toAccountId, onPick: (id) => setState(() => _toAccountId = id)),
-              ],
-            ],
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.calendar_today_outlined, size: 18),
-                    label: Text(formatShortDate(_occurredAt, locale: Localizations.localeOf(context).toString())),
-                    onPressed: () async {
-                      final picked = await showDatePicker(context: context, initialDate: _occurredAt, firstDate: DateTime(2000), lastDate: DateTime.now().add(const Duration(days: 365)));
-                      if (picked != null) setState(() => _occurredAt = DateTime(picked.year, picked.month, picked.day, _occurredAt.hour, _occurredAt.minute));
-                    },
-                  ),
-                ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.schedule, size: 18),
+                label: Text(formatTime(_occurredAt, locale: Localizations.localeOf(context).toString())),
+                onPressed: () async {
+                  final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_occurredAt));
+                  if (picked != null) setState(() => _occurredAt = DateTime(_occurredAt.year, _occurredAt.month, _occurredAt.day, picked.hour, picked.minute));
+                },
+              ),
+            ),
+          ]),
+          if (_canRepeat) ...[
+            const SizedBox(height: 8),
+            RepeatTile(draft: _repeat, start: _occurredAt, onChanged: (draft) => setState(() => _repeat = draft)),
+          ],
+          if (_recurringId != null) ...[
+            const SizedBox(height: 8),
+            ListTile(
+              key: const ValueKey('editor.recurringRule'),
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.repeat),
+              title: Text(l10n.recurringPartOfRule),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/recurring/${_recurringId!}'),
+            ),
+          ],
+          const SizedBox(height: 16),
+          TextField(controller: _payeeController, decoration: InputDecoration(labelText: l10n.payeeLabel, prefixIcon: const Icon(Icons.storefront_outlined)), textCapitalization: TextCapitalization.words),
+          const SizedBox(height: 12),
+          TextField(controller: _noteController, decoration: InputDecoration(labelText: l10n.note, prefixIcon: const Icon(Icons.notes)), textCapitalization: TextCapitalization.sentences, maxLines: 2),
+          if (_groupId != null) _groupSection(symbol),
+          if (_source == 'sms')
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Row(children: [
+                Icon(Icons.sms_outlined, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.schedule, size: 18),
-                    label: Text(formatTime(_occurredAt, locale: Localizations.localeOf(context).toString())),
-                    onPressed: () async {
-                      final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_occurredAt));
-                      if (picked != null) setState(() => _occurredAt = DateTime(_occurredAt.year, _occurredAt.month, _occurredAt.day, picked.hour, picked.minute));
-                    },
-                  ),
-                ),
-              ],
+                Expanded(child: Text(l10n.smsEntryNotice, style: Theme.of(context).textTheme.bodySmall)),
+              ]),
             ),
-            if (_canRepeat) ...[const SizedBox(height: 8), RepeatTile(draft: _repeat, start: _occurredAt, onChanged: (draft) => setState(() => _repeat = draft))],
-            if (_recurringId != null) ...[
-              const SizedBox(height: 8),
-              ListTile(
-                key: const ValueKey('editor.recurringRule'),
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.repeat),
-                title: Text(l10n.recurringPartOfRule),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/recurring/${_recurringId!}'),
-              ),
-            ],
-            const SizedBox(height: 16),
-            TextField(
-              controller: _payeeController,
-              decoration: InputDecoration(labelText: l10n.payeeLabel, prefixIcon: const Icon(Icons.storefront_outlined)),
-              textCapitalization: TextCapitalization.words,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _noteController,
-              decoration: InputDecoration(labelText: l10n.note, prefixIcon: const Icon(Icons.notes)),
-              textCapitalization: TextCapitalization.sentences,
-              maxLines: 2,
-            ),
-            if (_groupId != null) _groupSection(symbol),
-            if (_source == 'sms')
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Row(
-                  children: [
-                    Icon(Icons.sms_outlined, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(l10n.smsEntryNotice, style: Theme.of(context).textTheme.bodySmall)),
-                  ],
-                ),
-              ),
           ],
         ),
       ),
-      bottomNavigationBar: BottomActionBar(child: _saveButtons(l10n, symbol)),
+      bottomNavigationBar: BottomActionBar(
+        child: _saveButtons(l10n, symbol),
+      ),
     );
   }
 
@@ -529,7 +534,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       children: [
         SectionHeader(
           l10n.items,
-          trailing: TextButton.icon(icon: const Icon(Icons.add, size: 18), label: Text(l10n.addItem), onPressed: () => _updateItems(() => _items.add(ItemDraft()))),
+          trailing: TextButton.icon(
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(l10n.addItem),
+            onPressed: () => _updateItems(() => _items.add(ItemDraft())),
+          ),
         ),
         if (_suggestions.isNotEmpty)
           Padding(
@@ -542,8 +551,12 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                   ActionChip(
                     avatar: const Icon(Icons.history, size: 16),
                     label: Text(l10n.itemSuggestion(suggestion.name, formatQuantity(suggestion.lastQuantity, suggestion.unit), formatMinor(suggestion.lastUnitPriceMinor, symbol: symbol))),
-                    onPressed: () =>
-                        _updateItems(() => _items.add(ItemDraft(name: suggestion.name, quantity: suggestion.lastQuantity, unit: suggestion.unit, unitPriceMinor: suggestion.lastUnitPriceMinor))),
+                    onPressed: () => _updateItems(() => _items.add(ItemDraft(
+                          name: suggestion.name,
+                          quantity: suggestion.lastQuantity,
+                          unit: suggestion.unit,
+                          unitPriceMinor: suggestion.lastUnitPriceMinor,
+                        ))),
                   ),
               ],
             ),
@@ -557,7 +570,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             onChanged: (draft) => _updateItems(() => _items[i] = draft),
             onRemove: () => _updateItems(() => _items.removeAt(i)),
           ),
-        if (_items.isEmpty && _suggestions.isEmpty) Text(l10n.itemsHelp, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        if (_items.isEmpty && _suggestions.isEmpty)
+          Text(l10n.itemsHelp,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
       ],
     );
   }
@@ -581,12 +596,19 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                   _paidByMemberId = member.id;
                 }),
               ),
-            if (_members.length > 1) ChoiceChip(label: Text(l10n.payersMultiple), selected: _multiplePayers, onSelected: (_) => setState(_startMultiplePayers)),
+            if (_members.length > 1)
+              ChoiceChip(label: Text(l10n.payersMultiple), selected: _multiplePayers, onSelected: (_) => setState(_startMultiplePayers)),
           ],
         ),
         if (_multiplePayers) ...[
           const SizedBox(height: 8),
-          PayersEditor(totalMinor: _amountMinor, members: _members, amounts: _payerAmounts, symbol: symbol, onChanged: (amounts) => setState(() => _payerAmounts = amounts)),
+          PayersEditor(
+            totalMinor: _amountMinor,
+            members: _members,
+            amounts: _payerAmounts,
+            symbol: symbol,
+            onChanged: (amounts) => setState(() => _payerAmounts = amounts),
+          ),
         ],
         SectionHeader(l10n.split),
         SplitEditor(
@@ -683,27 +705,30 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     // Group expenses go through the groups repository so the change is logged.
     final save = _groupId == null ? ref.read(entriesRepositoryProvider).saveEntry : ref.read(groupsRepositoryProvider).saveGroupExpense;
     await save(
-      entry,
-      items: [for (final draft in _items) draft.toCompanion(id)],
-      splits: [
-        if (outcome != null)
-          for (final share in outcome.shares)
-            SplitsCompanion.insert(
-              id: newId(),
-              entryId: id,
-              memberId: share.memberId,
-              amountMinor: share.amountMinor,
-              shareValue: Value(_splitMethod == SplitMethod.exact || _splitMethod == SplitMethod.adjustment ? weights[share.memberId]?.amountMinor.toDouble() : weights[share.memberId]?.weight),
-            ),
-      ],
-      payers: _groupId == null
-          ? null
-          : [
-              if (_multiplePayers && payersFrom(_payerAmounts).length > 1)
-                for (final payer in payersFrom(_payerAmounts)) EntryPayersCompanion.insert(id: newId(), entryId: id, memberId: payer.memberId, amountMinor: payer.amountMinor),
-            ],
-      fieldValues: projectId == null ? const [] : entryFieldValueRows(id, _fieldValues),
-    );
+          entry,
+          items: [for (final draft in _items) draft.toCompanion(id)],
+          splits: [
+            if (outcome != null)
+              for (final share in outcome.shares)
+                SplitsCompanion.insert(
+                  id: newId(),
+                  entryId: id,
+                  memberId: share.memberId,
+                  amountMinor: share.amountMinor,
+                  shareValue: Value(_splitMethod == SplitMethod.exact || _splitMethod == SplitMethod.adjustment
+                      ? weights[share.memberId]?.amountMinor.toDouble()
+                      : weights[share.memberId]?.weight),
+                ),
+          ],
+          payers: _groupId == null
+              ? null
+              : [
+                  if (_multiplePayers && payersFrom(_payerAmounts).length > 1)
+                    for (final payer in payersFrom(_payerAmounts))
+                      EntryPayersCompanion.insert(id: newId(), entryId: id, memberId: payer.memberId, amountMinor: payer.amountMinor),
+                ],
+          fieldValues: projectId == null ? const [] : entryFieldValueRows(id, _fieldValues),
+        );
     if (!_isEditing && _groupId == null && _kind != 'transfer') ref.read(lastProjectIdProvider.notifier).set(projectId);
     await _applyBalanceChange(amount);
     if (_canRepeat && _repeat != null) await _startRule(_repeat!, entry);
@@ -760,7 +785,14 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   /// entries do not. The deltas come from the pure ledger module so the
   /// previous version of the entry is always fully reversed first.
   Future<void> _applyBalanceChange(int amount) async {
-    final next = EntrySnapshot(kind: _kind, amountMinor: amount, accountId: _accountId, toAccountId: _kind == 'transfer' ? _toAccountId : null, source: _source, groupId: _groupId);
+    final next = EntrySnapshot(
+      kind: _kind,
+      amountMinor: amount,
+      accountId: _accountId,
+      toAccountId: _kind == 'transfer' ? _toAccountId : null,
+      source: _source,
+      groupId: _groupId,
+    );
     await ref.read(accountsRepositoryProvider).applyBalanceDeltas(editDeltas(previous: _previousSnapshot, next: next));
   }
 

@@ -37,12 +37,10 @@ void main() {
       appRouter.go('/home');
       await settle(tester, 10);
 
-      final added = await tester.runAsync(
-        () => service.ingest(
-          RawSms(sender: 'VM-HDFCBK', body: 'Rs.459.00 debited from A/c XX1234 on ${day.day}-10-26 to swiggy@ybl (UPI Ref No 12345678901$index). Avl bal Rs.15,541.00', receivedAt: day),
-          autoAdd: app.read(settingsProvider).smsAutoAdd,
-        ),
-      );
+      final added = await tester.runAsync(() => service.ingest(
+            RawSms(sender: 'VM-HDFCBK', body: 'Rs.459.00 debited from A/c XX1234 on ${day.day}-10-26 to swiggy@ybl (UPI Ref No 12345678901$index). Avl bal Rs.15,541.00', receivedAt: day),
+            autoAdd: app.read(settingsProvider).smsAutoAdd,
+          ));
       expect(added, IngestStatus.added);
       await settle(tester, 10);
       expect(find.byType(SnackBar), findsOneWidget, reason: 'the open app offers Undo for an automatic add');

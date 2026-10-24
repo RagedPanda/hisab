@@ -44,19 +44,17 @@ class SmsReviewCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    (counterparty == null ? null : normalisePayee(counterparty)) ?? bank ?? row.sender,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+            Row(children: [
+              Expanded(
+                child: Text(
+                  (counterparty == null ? null : normalisePayee(counterparty)) ?? bank ?? row.sender,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                if (parsed != null) AmountText(amount, kind: isDebit ? 'expense' : 'income'),
-              ],
-            ),
+              ),
+              if (parsed != null) AmountText(amount, kind: isDebit ? 'expense' : 'income'),
+            ]),
             const SizedBox(height: 4),
             Text(
               parsed == null
@@ -70,30 +68,23 @@ class SmsReviewCard extends ConsumerWidget {
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 4),
-            Text(
-              row.body,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
-            ),
-            Row(
-              children: [
-                TextButton(onPressed: () => smsLog.setStatus(row.id, 'ignored'), child: Text(l10n.ignore)),
-                const Spacer(),
-                if (parsed == null)
-                  FilledButton.tonal(onPressed: () => context.push('/entry?sms=${row.id}'), child: Text(l10n.smsReviewAddManually))
-                else ...[
-                  TextButton(onPressed: () => context.push('/entry?sms=${row.id}'), child: Text(l10n.edit)),
-                  FilledButton.tonal(
-                    onPressed: () async {
-                      final id = await service.approvePending(row);
-                      if (id == null && context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.couldNotAddUseEdit)));
-                    },
-                    child: Text(l10n.addAmount(formatMinor(amount, symbol: symbol, showDecimals: false))),
-                  ),
-                ],
+            Text(row.body, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline)),
+            Row(children: [
+              TextButton(onPressed: () => smsLog.setStatus(row.id, 'ignored'), child: Text(l10n.ignore)),
+              const Spacer(),
+              if (parsed == null)
+                FilledButton.tonal(onPressed: () => context.push('/entry?sms=${row.id}'), child: Text(l10n.smsReviewAddManually))
+              else ...[
+                TextButton(onPressed: () => context.push('/entry?sms=${row.id}'), child: Text(l10n.edit)),
+                FilledButton.tonal(
+                  onPressed: () async {
+                    final id = await service.approvePending(row);
+                    if (id == null && context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.couldNotAddUseEdit)));
+                  },
+                  child: Text(l10n.addAmount(formatMinor(amount, symbol: symbol, showDecimals: false))),
+                ),
               ],
-            ),
+            ]),
           ],
         ),
       ),

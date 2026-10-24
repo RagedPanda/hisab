@@ -309,16 +309,17 @@ void main() {
     }
 
     test('a business message without a transaction or promotion is ignored and its text discarded', () async {
-      final status = await service.ingest(RawSms(sender: 'VM-SWIGGY', body: 'Your order from Meghana Foods has been delivered. Enjoy your meal!', receivedAt: received), autoAdd: true);
+      final status = await service.ingest(
+          RawSms(sender: 'VM-SWIGGY', body: 'Your order from Meghana Foods has been delivered. Enjoy your meal!', receivedAt: received),
+          autoAdd: true);
       expect(status, IngestStatus.notBank);
       expect((await history()).single.log.body, isEmpty);
     });
 
     test('a transaction from a bank header not on the known list is still read', () async {
       final status = await service.ingest(
-        RawSms(sender: 'VM-CANBNK', body: 'Rs.1,200.00 debited from A/c XX4321 on 21-10-26 to amazon@apl. UPI Ref 512345678901. -Canara Bank', receivedAt: received),
-        autoAdd: true,
-      );
+          RawSms(sender: 'VM-CANBNK', body: 'Rs.1,200.00 debited from A/c XX4321 on 21-10-26 to amazon@apl. UPI Ref 512345678901. -Canara Bank', receivedAt: received),
+          autoAdd: true);
       expect(status, IngestStatus.added);
     });
 

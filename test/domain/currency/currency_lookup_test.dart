@@ -100,14 +100,6 @@ void main() {
   group('backup currency', () {
     test('reads the stored code', () => expect(backupCurrencyCode({'settings': backupSettingsSection(currencyCode: 'GBP')}), 'GBP'));
     test('older backup without settings keeps the current currency', () => expect(backupCurrencyCode({'app': 'hisab'}), isNull));
-    test(
-      'unknown code is ignored',
-      () => expect(
-        backupCurrencyCode({
-          'settings': {'currencyCode': 'XXX'},
-        }),
-        isNull,
-      ),
-    );
+    test('unknown code is ignored', () => expect(backupCurrencyCode({'settings': {'currencyCode': 'XXX'}}), isNull));
   });
 }

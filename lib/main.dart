@@ -19,5 +19,10 @@ Future<void> main() async {
   final db = AppDatabase();
   if (!kReleaseMode && kSeedEntryCount > 0) await seedDemoData(db, entryCount: kSeedEntryCount);
   await migrateCurrencySetting(prefs, db);
-  runApp(ProviderScope(overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db)], child: const HisabApp()));
+  runApp(
+    ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db)],
+      child: const HisabApp(),
+    ),
+  );
 }

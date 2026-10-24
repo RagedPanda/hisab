@@ -97,12 +97,14 @@ final projectViewsProvider = StreamProvider<List<ProjectView>>((ref) {
   return ref.watch(projectsRepositoryProvider).watchViews(monthStartDay: monthStartDay);
 });
 final recurringViewsProvider = StreamProvider((ref) => ref.watch(recurringRepositoryProvider).watchViews());
-
 /// SMS waiting for review. Rows in another currency, queued before such SMS
 /// were ignored, are left out so they neither show nor count on Home.
 final pendingSmsProvider = StreamProvider((ref) {
   final homeCurrency = ref.watch(homeCurrencyCodeProvider);
-  return ref.watch(smsLogRepositoryProvider).watchPending().map((rows) => rows.where((row) => !isForeignCurrency(smsCurrencyCode(row.body), homeCurrency)).toList());
+  return ref
+      .watch(smsLogRepositoryProvider)
+      .watchPending()
+      .map((rows) => rows.where((row) => !isForeignCurrency(smsCurrencyCode(row.body), homeCurrency)).toList());
 });
 final smsHistoryProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryProvider).watchHistory());
 
@@ -110,7 +112,6 @@ final monthEntriesProvider = StreamProvider((ref) {
   final range = ref.watch(selectedRangeProvider);
   return ref.watch(entriesRepositoryProvider).watchEntries(range: range, myLedger: true);
 });
-
 /// My ledger in an explicit window, for the Entries date filter.
 final windowEntriesProvider = StreamProvider.family<List<EntryDetails>, ({DateTime start, DateTime end})>(
   (ref, window) => ref.watch(entriesRepositoryProvider).watchEntries(range: DateRange(window.start, window.end), myLedger: true),
@@ -152,25 +153,21 @@ final dashboardLedgerProvider = StreamProvider<DashboardLedger>((ref) {
 /// Whether the user has recorded anything yet, independent of the month shown.
 final hasAnyEntriesProvider = StreamProvider<bool>((ref) => ref.watch(entriesRepositoryProvider).watchHasAnyEntries());
 
-final smsIngestServiceProvider = Provider(
-  (ref) => SmsIngestService(
-    smsLog: ref.watch(smsLogRepositoryProvider),
-    accounts: ref.watch(accountsRepositoryProvider),
-    categories: ref.watch(categoriesRepositoryProvider),
-    entries: ref.watch(entriesRepositoryProvider),
-    cursor: SmsSyncCursor(ref.watch(sharedPreferencesProvider)),
-    homeCurrencyCode: () => ref.read(homeCurrencyCodeProvider),
-  ),
-);
+final smsIngestServiceProvider = Provider((ref) => SmsIngestService(
+      smsLog: ref.watch(smsLogRepositoryProvider),
+      accounts: ref.watch(accountsRepositoryProvider),
+      categories: ref.watch(categoriesRepositoryProvider),
+      entries: ref.watch(entriesRepositoryProvider),
+      cursor: SmsSyncCursor(ref.watch(sharedPreferencesProvider)),
+      homeCurrencyCode: () => ref.read(homeCurrencyCodeProvider),
+    ));
 
 /// Requests POST_NOTIFICATIONS for Bank SMS notifications; a no-op off Android.
-final smsNotificationPromptProvider = Provider(
-  (ref) => SmsNotificationPrompt(
-    ref.watch(sharedPreferencesProvider),
-    request: () async {
-      if (SmsChannel.isSupported) await Permission.notification.request();
-    },
-  ),
-);
+final smsNotificationPromptProvider = Provider((ref) => SmsNotificationPrompt(
+      ref.watch(sharedPreferencesProvider),
+      request: () async {
+        if (SmsChannel.isSupported) await Permission.notification.request();
+      },
+    ));
 
 final backupServiceProvider = Provider((ref) => BackupService(ref.watch(databaseProvider)));

@@ -20,7 +20,10 @@ const _upiDebit = 'Rs.459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl (
 Future<ProviderContainer> _pumpAppAt(WidgetTester tester, String location) async {
   SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR', 'smsEnabled': true});
   final prefs = await SharedPreferences.getInstance();
-  final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(AppDatabase(NativeDatabase.memory()))]);
+  final container = ProviderContainer(overrides: [
+    sharedPreferencesProvider.overrideWithValue(prefs),
+    databaseProvider.overrideWithValue(AppDatabase(NativeDatabase.memory())),
+  ]);
   addTearDown(container.dispose);
   await tester.binding.setSurfaceSize(const Size(430, 932));
   appRouter.go(location);
@@ -38,7 +41,9 @@ Future<void> _frames(WidgetTester tester, [int count = 12]) async {
 Future<void> _autoAddOne(WidgetTester tester, ProviderContainer container) async {
   // Not awaited: the database work finishes while frames are pumped, which
   // also lets Home's watched queries settle under the fake clock.
-  unawaited(container.read(smsIngestServiceProvider).ingest(RawSms(sender: 'VM-HDFCBK', body: _upiDebit, receivedAt: DateTime(2026, 10, 21, 9)), autoAdd: true));
+  unawaited(container
+      .read(smsIngestServiceProvider)
+      .ingest(RawSms(sender: 'VM-HDFCBK', body: _upiDebit, receivedAt: DateTime(2026, 10, 21, 9)), autoAdd: true));
   await _frames(tester, 4);
   // Past the batch window, so the snackbar is announced.
   await tester.pump(kSmsAutoAddBatchWindow + const Duration(milliseconds: 100));

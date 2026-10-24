@@ -37,8 +37,10 @@ void main() {
       expect(storedSmsBody(status, otp), isEmpty, reason: status);
       expect(storedSmsBody(status, promo), isEmpty, reason: status);
     }
-    expect(storedSmsBody(SmsLogStatus.skipped, 'Your statement is ready on NetBanking.'), isNotEmpty, reason: 'a bank text that is neither an OTP nor a promotion stays re-processable');
-    expect(storedSmsBody(SmsLogStatus.added, 'Refund of Rs.200 under the cashback offer credited to A/c XX1234'), isNotEmpty, reason: 'a refund is a real transaction even when it mentions an offer');
+    expect(storedSmsBody(SmsLogStatus.skipped, 'Your statement is ready on NetBanking.'), isNotEmpty,
+        reason: 'a bank text that is neither an OTP nor a promotion stays re-processable');
+    expect(storedSmsBody(SmsLogStatus.added, 'Refund of Rs.200 under the cashback offer credited to A/c XX1234'), isNotEmpty,
+        reason: 'a refund is a real transaction even when it mentions an offer');
   });
 
   test('real-style promotions are flagged; real transactions are not', () {

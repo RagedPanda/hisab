@@ -11,7 +11,15 @@ typedef ExportMember = ({String id, String name});
 /// A payment from A to B is a row where A paid the amount and B's share is
 /// the amount: it moves both balances exactly as the settlement does.
 class ExportRow {
-  const ExportRow({required this.occurredAt, required this.description, required this.category, required this.costMinor, required this.paidMinor, required this.shareMinor, this.isPayment = false});
+  const ExportRow({
+    required this.occurredAt,
+    required this.description,
+    required this.category,
+    required this.costMinor,
+    required this.paidMinor,
+    required this.shareMinor,
+    this.isPayment = false,
+  });
   final DateTime occurredAt;
   final String description;
   final String category;
@@ -153,9 +161,9 @@ String buildGroupCsv({required List<ExportMember> members, required List<ExportR
 /// "Rahul 600.00; Asha 300.00": every payer with what they put in, in the
 /// order given. Ids missing from [nameById] are skipped.
 String paidBySummary(Map<String, int> paidMinor, Map<String, String> nameById) => [
-  for (final MapEntry(key: id, value: amount) in paidMinor.entries)
-    if (amount != 0 && nameById[id] != null) '${nameById[id]} ${decimalAmount(amount)}',
-].join('; ');
+      for (final MapEntry(key: id, value: amount) in paidMinor.entries)
+        if (amount != 0 && nameById[id] != null) '${nameById[id]} ${decimalAmount(amount)}',
+    ].join('; ');
 
 /// Minor units as a plain decimal with two places: 123450 -> "1234.50",
 /// -5 -> "-0.05".
@@ -166,7 +174,8 @@ String decimalAmount(int amountMinor) {
 }
 
 /// yyyy-MM-dd, which every spreadsheet reads as a date.
-String isoDate(DateTime when) => '${when.year.toString().padLeft(4, '0')}-${when.month.toString().padLeft(2, '0')}-${when.day.toString().padLeft(2, '0')}';
+String isoDate(DateTime when) =>
+    '${when.year.toString().padLeft(4, '0')}-${when.month.toString().padLeft(2, '0')}-${when.day.toString().padLeft(2, '0')}';
 
 const _formulaStarts = {'=', '+', '-', '@', '\t', '\r'};
 
@@ -188,6 +197,9 @@ String csvEscape(String value) {
 /// A filesystem-safe file name for the export, e.g. "goa-trip-2026-10-22.csv".
 /// Letters in any script are kept; anything else becomes a dash.
 String exportFileName(String groupName, DateTime when) {
-  final slug = groupName.toLowerCase().replaceAll(RegExp(r'[^\p{L}\p{M}\p{N}]+', unicode: true), '-').replaceAll(RegExp(r'^-+|-+$'), '');
+  final slug = groupName
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^\p{L}\p{M}\p{N}]+', unicode: true), '-')
+      .replaceAll(RegExp(r'^-+|-+$'), '');
   return '${slug.isEmpty ? 'group' : slug}-${isoDate(when)}.csv';
 }

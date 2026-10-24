@@ -26,19 +26,17 @@ Future<void> _seed(AppHandle app) async {
   final today = startOfDay(DateTime.now());
   Future<void> add(String name, int amountMinor, RecurrenceFrequency frequency, String categoryKey, {int interval = 1, int inDays = 3, String? status}) async {
     final category = await categories.findBySeedKey(categoryKey);
-    final id = await recurring.saveRule(
-      RecurringRepository.newRule(
-        name: name,
-        kind: 'expense',
-        amountMinor: amountMinor,
-        categoryId: category?.id,
-        frequency: frequency,
-        interval: interval,
-        startDate: today.add(Duration(days: inDays, hours: 9)),
-        autoPost: false,
-        isSubscription: true,
-      ),
-    );
+    final id = await recurring.saveRule(RecurringRepository.newRule(
+      name: name,
+      kind: 'expense',
+      amountMinor: amountMinor,
+      categoryId: category?.id,
+      frequency: frequency,
+      interval: interval,
+      startDate: today.add(Duration(days: inDays, hours: 9)),
+      autoPost: false,
+      isSubscription: true,
+    ));
     if (status == 'paused') await recurring.setPaused(id, true, now: today);
     if (status == 'ended') await recurring.setStatus(id, RecurringStatus.ended);
   }

@@ -112,9 +112,7 @@ void main() {
       await groups.addSettlement(groupId: groupId, fromMemberId: priya, toMemberId: rahul, amountMinor: 30000, occurredAt: DateTime(2026, 10, 3), note: 'UPI, thanks');
       await entries.saveEntry(
         EntriesRepository.newExpense(id: 'hotel', amountMinor: 90000, occurredAt: DateTime(2026, 10, 2), groupId: groupId, paidByMemberId: rahul, splitMethod: 'equal', note: 'Hotel, "sea view"'),
-        splits: [
-          for (final member in [me, rahul, priya]) SplitsCompanion.insert(id: 'hotel-$member', entryId: 'hotel', memberId: member, amountMinor: 30000),
-        ],
+        splits: [for (final member in [me, rahul, priya]) SplitsCompanion.insert(id: 'hotel-$member', entryId: 'hotel', memberId: member, amountMinor: 30000)],
         payers: [
           EntryPayersCompanion.insert(id: 'hotel-paid-rahul', entryId: 'hotel', memberId: rahul, amountMinor: 60000),
           EntryPayersCompanion.insert(id: 'hotel-paid-me', entryId: 'hotel', memberId: me, amountMinor: 30000),

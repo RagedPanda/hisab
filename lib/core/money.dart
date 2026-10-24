@@ -33,7 +33,12 @@ double minorToDouble(int minor) => minor / 100;
 /// [showDecimals] `null` (default) prints paise only when there are any
 /// (₹250, ₹99.50); `true` always prints two decimals; `false` rounds to the
 /// nearest whole unit (₹9,876.67 -> ₹9,877).
-String formatMinor(int minor, {String symbol = '₹', bool? showDecimals, bool compact = false}) {
+String formatMinor(
+  int minor, {
+  String symbol = '₹',
+  bool? showDecimals,
+  bool compact = false,
+}) {
   final negative = minor < 0;
   final abs = minor.abs();
   final whole = abs ~/ 100;
@@ -41,7 +46,9 @@ String formatMinor(int minor, {String symbol = '₹', bool? showDecimals, bool c
   final String body;
   if (compact && whole >= 100000) {
     final lakhs = whole / 100000;
-    body = lakhs >= 100 ? '${(lakhs / 100).toStringAsFixed(2)}Cr' : '${lakhs.toStringAsFixed(2)}L';
+    body = lakhs >= 100
+        ? '${(lakhs / 100).toStringAsFixed(2)}Cr'
+        : '${lakhs.toStringAsFixed(2)}L';
   } else if (showDecimals == false) {
     body = groupIndian(roundMinorToWhole(abs));
   } else if (showDecimals == true || frac != 0) {

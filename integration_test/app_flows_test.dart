@@ -1567,14 +1567,12 @@ void main() {
 
   testWidgets('25 groups: copy a WhatsApp summary and export the ledger as CSV', (tester) async {
     final exports = <({String fileName, String csv, String subject})>[];
-    final fresh = await createApp(
-      overrides: [
-        csvFileSharerProvider.overrideWithValue(({required fileName, required csv, required subject}) async {
-          exports.add((fileName: fileName, csv: csv, subject: subject));
-          return true;
-        }),
-      ],
-    );
+    final fresh = await createApp(overrides: [
+      csvFileSharerProvider.overrideWithValue(({required fileName, required csv, required subject}) async {
+        exports.add((fileName: fileName, csv: csv, subject: subject));
+        return true;
+      }),
+    ]);
     addTearDown(fresh.container.dispose);
     final groups = fresh.read(groupsRepositoryProvider);
     final entries = fresh.read(entriesRepositoryProvider);
@@ -1586,9 +1584,7 @@ void main() {
     final today = DateTime.now();
     await entries.saveEntry(
       EntriesRepository.newExpense(id: 'export-hotel', amountMinor: 90000, occurredAt: today, groupId: tripId, paidByMemberId: rahul, splitMethod: 'equal', note: 'Hotel, sea view'),
-      splits: [
-        for (final member in [me, rahul, priya]) SplitsCompanion.insert(id: 'export-hotel-$member', entryId: 'export-hotel', memberId: member, amountMinor: 30000),
-      ],
+      splits: [for (final member in [me, rahul, priya]) SplitsCompanion.insert(id: 'export-hotel-$member', entryId: 'export-hotel', memberId: member, amountMinor: 30000)],
       payers: [
         EntryPayersCompanion.insert(id: 'export-hotel-rahul', entryId: 'export-hotel', memberId: rahul, amountMinor: 60000),
         EntryPayersCompanion.insert(id: 'export-hotel-me', entryId: 'export-hotel', memberId: me, amountMinor: 30000),

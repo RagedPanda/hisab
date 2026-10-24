@@ -23,7 +23,12 @@ class _SmsHistoryScreenState extends ConsumerState<SmsHistoryScreen> {
 
   Future<void> _clearHistory(int clearableCount) async {
     final l10n = context.l10n;
-    final confirmed = await confirmDialog(context, title: l10n.smsHistoryClearQuestion, message: l10n.smsHistoryClearBody(clearableCount), confirmLabel: l10n.smsHistoryClearConfirm);
+    final confirmed = await confirmDialog(
+      context,
+      title: l10n.smsHistoryClearQuestion,
+      message: l10n.smsHistoryClearBody(clearableCount),
+      confirmLabel: l10n.smsHistoryClearConfirm,
+    );
     if (!confirmed) return;
     await ref.read(smsLogRepositoryProvider).clearHistory(now: DateTime.now());
     if (mounted) showTimedSnackBar(ScaffoldMessenger.of(context), l10n.smsHistoryCleared);
@@ -56,12 +61,10 @@ class _SmsHistoryScreenState extends ConsumerState<SmsHistoryScreen> {
       body: history.isLoading && rows.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : rows.isEmpty
-          ? EmptyState(icon: Icons.sms_outlined, title: l10n.smsHistoryEmptyTitle, message: l10n.smsHistoryEmptyBody)
-          : Column(
-              children: [
-                const SizedBox(height: 4),
-                ChipRow(
-                  children: [
+              ? EmptyState(icon: Icons.sms_outlined, title: l10n.smsHistoryEmptyTitle, message: l10n.smsHistoryEmptyBody)
+              : Column(children: [
+                  const SizedBox(height: 4),
+                  ChipRow(children: [
                     ChoiceChip(label: Text(l10n.all), selected: _outcomeFilter == null, onSelected: (_) => setState(() => _outcomeFilter = null)),
                     for (final outcome in SmsOutcome.values)
                       if (outcome != SmsOutcome.undone || counts[outcome]! > 0)
@@ -71,20 +74,18 @@ class _SmsHistoryScreenState extends ConsumerState<SmsHistoryScreen> {
                           selected: _outcomeFilter == outcome,
                           onSelected: (_) => setState(() => _outcomeFilter = outcome),
                         ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: visible.isEmpty
-                      ? EmptyState(icon: Icons.filter_alt_off_outlined, title: l10n.smsHistoryEmptyFiltered)
-                      : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-                          itemCount: visible.length,
-                          itemBuilder: (_, index) => _SmsHistoryCard(row: visible[index]),
-                        ),
-                ),
-              ],
-            ),
+                  ]),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: visible.isEmpty
+                        ? EmptyState(icon: Icons.filter_alt_off_outlined, title: l10n.smsHistoryEmptyFiltered)
+                        : ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                            itemCount: visible.length,
+                            itemBuilder: (_, index) => _SmsHistoryCard(row: visible[index]),
+                          ),
+                  ),
+                ]),
     );
   }
 }
@@ -119,64 +120,46 @@ class _SmsHistoryCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    log.sender,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${formatRowDate(log.receivedAt, locale: locale)}, ${formatTime(log.receivedAt, locale: locale)}',
-                  style: theme.textTheme.bodySmall,
-                ),
-                const SizedBox(width: 8),
-              ],
-            ),
+            Row(children: [
+              Expanded(child: Text(log.sender, style: const TextStyle(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
+              const SizedBox(width: 8),
+              Text('${formatRowDate(log.receivedAt, locale: locale)}, ${formatTime(log.receivedAt, locale: locale)}', style: theme.textTheme.bodySmall),
+              const SizedBox(width: 8),
+            ]),
             const SizedBox(height: 4),
             if (log.body.isEmpty)
-              Text(
-                l10n.smsHistoryTextNotKept,
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontStyle: FontStyle.italic),
-              )
+              Text(l10n.smsHistoryTextNotKept, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontStyle: FontStyle.italic))
             else
-              Text(
-                smsBodyPreview(log.body),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              ),
+              Text(smsBodyPreview(log.body), maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
             const SizedBox(height: 4),
             Wrap(
               crossAxisAlignment: WrapCrossAlignment.center,
               spacing: 8,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(smsOutcomeIcon(outcome), size: 16, color: color),
-                    const SizedBox(width: 4),
-                    Text(smsOutcomeLabel(context, outcome), style: theme.textTheme.labelMedium?.copyWith(color: color)),
-                  ],
-                ),
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(smsOutcomeIcon(outcome), size: 16, color: color),
+                  const SizedBox(width: 4),
+                  Text(smsOutcomeLabel(context, outcome), style: theme.textTheme.labelMedium?.copyWith(color: color)),
+                ]),
                 if (detail != null) Text(detail, style: theme.textTheme.bodySmall),
               ],
             ),
             Align(
               alignment: AlignmentDirectional.centerEnd,
-              child: Wrap(
-                spacing: 4,
-                children: [
-                  if (row.hasEntry && log.entryId != null)
-                    TextButton.icon(onPressed: () => context.push('/entry?id=${log.entryId}'), icon: const Icon(Icons.open_in_new, size: 18), label: Text(l10n.smsHistoryOpenEntry)),
-                  if (canReprocessSms(outcome) && log.body.isNotEmpty)
-                    TextButton.icon(onPressed: () => _reprocess(context, ref), icon: const Icon(Icons.replay, size: 18), label: Text(l10n.smsHistoryReprocess)),
-                ],
-              ),
+              child: Wrap(spacing: 4, children: [
+                if (row.hasEntry && log.entryId != null)
+                  TextButton.icon(
+                    onPressed: () => context.push('/entry?id=${log.entryId}'),
+                    icon: const Icon(Icons.open_in_new, size: 18),
+                    label: Text(l10n.smsHistoryOpenEntry),
+                  ),
+                if (canReprocessSms(outcome) && log.body.isNotEmpty)
+                  TextButton.icon(
+                    onPressed: () => _reprocess(context, ref),
+                    icon: const Icon(Icons.replay, size: 18),
+                    label: Text(l10n.smsHistoryReprocess),
+                  ),
+              ]),
             ),
           ],
         ),
@@ -210,25 +193,25 @@ String? smsOutcomeDetail(BuildContext context, String status) {
 }
 
 IconData smsOutcomeIcon(SmsOutcome outcome) => switch (outcome) {
-  SmsOutcome.added => Icons.check_circle_outline,
-  SmsOutcome.duplicate => Icons.copy_all_outlined,
-  SmsOutcome.ignored => Icons.block,
-  SmsOutcome.unparsed => Icons.help_outline,
-  SmsOutcome.pending => Icons.hourglass_empty,
-  SmsOutcome.undone => Icons.undo,
-};
+      SmsOutcome.added => Icons.check_circle_outline,
+      SmsOutcome.duplicate => Icons.copy_all_outlined,
+      SmsOutcome.ignored => Icons.block,
+      SmsOutcome.unparsed => Icons.help_outline,
+      SmsOutcome.pending => Icons.hourglass_empty,
+      SmsOutcome.undone => Icons.undo,
+    };
 
 Color smsOutcomeColor(ColorScheme scheme, SmsOutcome outcome) => switch (outcome) {
-  SmsOutcome.added => scheme.primary,
-  SmsOutcome.duplicate => scheme.tertiary,
-  SmsOutcome.unparsed => scheme.error,
-  SmsOutcome.pending => scheme.secondary,
-  SmsOutcome.ignored || SmsOutcome.undone => scheme.outline,
-};
+      SmsOutcome.added => scheme.primary,
+      SmsOutcome.duplicate => scheme.tertiary,
+      SmsOutcome.unparsed => scheme.error,
+      SmsOutcome.pending => scheme.secondary,
+      SmsOutcome.ignored || SmsOutcome.undone => scheme.outline,
+    };
 
 /// The snackbar text for the outcome of Process again.
 String reprocessResultMessage(AppLocalizations l10n, IngestStatus status) => switch (status) {
-  IngestStatus.pending => l10n.smsFoundReview,
-  IngestStatus.added => l10n.smsAdded,
-  _ => l10n.smsNotFound,
-};
+      IngestStatus.pending => l10n.smsFoundReview,
+      IngestStatus.added => l10n.smsAdded,
+      _ => l10n.smsNotFound,
+    };

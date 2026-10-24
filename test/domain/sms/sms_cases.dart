@@ -52,7 +52,8 @@ class SmsCase {
   final DateTime? occurredAt;
 }
 
-ParsedTransaction? parseSms(String sender, String body) => parseBankSms(sender: sender, body: body, receivedAt: smsReceivedAt);
+ParsedTransaction? parseSms(String sender, String body) =>
+    parseBankSms(sender: sender, body: body, receivedAt: smsReceivedAt);
 
 void runSmsCases(String family, List<SmsCase> cases) {
   group(family, () {

@@ -8,7 +8,17 @@ final Map<String, Currency> _byCode = {for (final currency in kCurrencies) curre
 
 /// Free-text symbols people typed into the old setting that do not match a
 /// table symbol exactly.
-const Map<String, String> _legacyAliases = {'rs': 'INR', 'rs.': 'INR', '₨': 'INR', 'rupee': 'INR', 'rupees': 'INR', 'us\$': 'USD', '¥': 'JPY', '円': 'JPY', '元': 'CNY'};
+const Map<String, String> _legacyAliases = {
+  'rs': 'INR',
+  'rs.': 'INR',
+  '₨': 'INR',
+  'rupee': 'INR',
+  'rupees': 'INR',
+  'us\$': 'USD',
+  '¥': 'JPY',
+  '円': 'JPY',
+  '元': 'CNY',
+};
 
 Currency? currencyByCode(String code) => _byCode[code.trim().toUpperCase()];
 
@@ -35,7 +45,9 @@ String currencyCodeForLegacySymbol(String? symbol) {
 }
 
 /// Countries that use [currency], by English name.
-List<String> countryNamesFor(Currency currency) => [for (final region in currency.regions) ?kCountryNames[region]];
+List<String> countryNamesFor(Currency currency) => [
+      for (final region in currency.regions) ?kCountryNames[region],
+    ];
 
 /// Currencies matching [query] by code, name or country, best match first:
 /// exact code, code prefix, name word start, name anywhere, then country.

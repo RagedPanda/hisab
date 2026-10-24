@@ -15,7 +15,8 @@ enum RecurrenceFrequency {
   monthly,
   yearly;
 
-  static RecurrenceFrequency parse(String value) => RecurrenceFrequency.values.firstWhere((frequency) => frequency.name == value, orElse: () => RecurrenceFrequency.monthly);
+  static RecurrenceFrequency parse(String value) =>
+      RecurrenceFrequency.values.firstWhere((frequency) => frequency.name == value, orElse: () => RecurrenceFrequency.monthly);
 }
 
 /// [RecurrenceSpec.dayOfMonth] value for "the last day of the month".
@@ -31,7 +32,15 @@ const int kMaxCatchUp = 400;
 
 /// When and how often a rule repeats, plus where it stops.
 class RecurrenceSpec {
-  const RecurrenceSpec({required this.frequency, required this.start, this.interval = 1, this.dayOfMonth, this.weekday, this.endDate, this.maxCount});
+  const RecurrenceSpec({
+    required this.frequency,
+    required this.start,
+    this.interval = 1,
+    this.dayOfMonth,
+    this.weekday,
+    this.endDate,
+    this.maxCount,
+  });
 
   final RecurrenceFrequency frequency;
 

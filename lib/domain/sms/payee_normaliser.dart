@@ -111,5 +111,8 @@ String _titleCase(String word) {
 /// payee was rewritten, so the original handle stays searchable.
 String smsEntryNote({required String? reference, required String? rawCounterparty}) {
   final raw = rawCounterparty?.trim();
-  return [if (reference != null) 'Ref $reference', if (raw != null && raw.isNotEmpty && normalisePayee(raw) != raw) raw].join(' · ');
+  return [
+    if (reference != null) 'Ref $reference',
+    if (raw != null && raw.isNotEmpty && normalisePayee(raw) != raw) raw,
+  ].join(' · ');
 }

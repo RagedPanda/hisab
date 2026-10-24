@@ -30,30 +30,27 @@ class _FirstLaunchCurrencyScreenState extends ConsumerState<FirstLaunchCurrencyS
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 4),
-              child: Text(l10n.currencyChooseTitle, style: textTheme.headlineSmall),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 4),
+            child: Text(l10n.currencyChooseTitle, style: textTheme.headlineSmall),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(l10n.currencyChooseBody, style: textTheme.bodyMedium),
+          ),
+          Expanded(
+            child: CurrencyPickerList(selectedCode: _selectedCode, onTap: (currency) => setState(() => _selectedCode = currency.code)),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: FilledButton(
+              key: const ValueKey('currency-continue'),
+              onPressed: _saving ? null : _confirm,
+              child: Text(l10n.currencyContinue(currencyShortLabel(_selectedCode)), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(l10n.currencyChooseBody, style: textTheme.bodyMedium),
-            ),
-            Expanded(
-              child: CurrencyPickerList(selectedCode: _selectedCode, onTap: (currency) => setState(() => _selectedCode = currency.code)),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: FilledButton(
-                key: const ValueKey('currency-continue'),
-                onPressed: _saving ? null : _confirm,
-                child: Text(l10n.currencyContinue(currencyShortLabel(_selectedCode)), maxLines: 1, overflow: TextOverflow.ellipsis),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ]),
       ),
     );
   }
@@ -65,5 +62,7 @@ class FirstLaunchCurrencyGate extends StatelessWidget {
   const FirstLaunchCurrencyGate({super.key});
 
   @override
-  Widget build(BuildContext context) => Navigator(onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const FirstLaunchCurrencyScreen()));
+  Widget build(BuildContext context) => Navigator(
+        onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const FirstLaunchCurrencyScreen()),
+      );
 }

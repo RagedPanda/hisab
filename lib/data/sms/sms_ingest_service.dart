@@ -133,11 +133,7 @@ class SmsIngestService {
 
     final parsed = parseBankSms(sender: message.sender, body: message.body, receivedAt: message.receivedAt);
     if (parsed == null) {
-      final route = routeForSms(
-        parsed: null,
-        autoAddEnabled: autoAdd,
-        possibleTransaction: looksLikeUnreadTransaction(message.body, sender: message.sender),
-      );
+      final route = routeForSms(parsed: null, autoAddEnabled: autoAdd, possibleTransaction: looksLikeUnreadTransaction(message.body, sender: message.sender));
       if (route == SmsRoute.review) {
         await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.pending);
         return IngestStatus.pending;
@@ -167,7 +163,13 @@ class SmsIngestService {
     final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(id, parsed, categoryKey, account?.id);
     await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.added, parsed: payload, entryId: entryId);
-    _autoAddedController.add(SmsAutoAdded(smsId: id, entryId: entryId, amountMinor: parsed.amountMinor, isDebit: parsed.isDebit, payee: _payeeFor(parsed)));
+    _autoAddedController.add(SmsAutoAdded(
+      smsId: id,
+      entryId: entryId,
+      amountMinor: parsed.amountMinor,
+      isDebit: parsed.isDebit,
+      payee: _payeeFor(parsed),
+    ));
     return IngestStatus.added;
   }
 
@@ -182,11 +184,7 @@ class SmsIngestService {
   /// the parser learned a new format. The old row is replaced.
   Future<IngestStatus> reprocess(SmsLogData row, {required bool autoAdd}) async {
     await smsLog.delete(row.id);
-    return ingest(
-      RawSms(sender: row.sender, body: row.body, receivedAt: row.receivedAt),
-      autoAdd: autoAdd,
-      force: true,
-    );
+    return ingest(RawSms(sender: row.sender, body: row.body, receivedAt: row.receivedAt), autoAdd: autoAdd, force: true);
   }
 
   /// A re-read of the same inbox message is silent; a bank re-delivery at a
@@ -195,7 +193,14 @@ class SmsIngestService {
     if (!logsDuplicateOf(original.status, message.body) || isSameDelivery(original.receivedAt, message.receivedAt)) return;
     final duplicateId = SmsLogRepository.duplicateIdFor(original.id, message.receivedAt);
     if (await smsLog.exists(duplicateId)) return;
-    await smsLog.record(id: duplicateId, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.duplicate, entryId: original.entryId);
+    await smsLog.record(
+      id: duplicateId,
+      sender: message.sender,
+      body: message.body,
+      receivedAt: message.receivedAt,
+      status: SmsLogStatus.duplicate,
+      entryId: original.entryId,
+    );
   }
 
   /// Approves a pending log row into an entry with the suggested values.
@@ -220,20 +225,18 @@ class SmsIngestService {
   Future<String> _createEntry(String smsId, ParsedTransaction parsed, String categoryKey, String? accountId) async {
     final category = await categories.findBySeedKey(categoryKey);
     final id = newId();
-    await entries.saveEntry(
-      EntriesRepository.newExpense(
-        id: id,
-        kind: parsed.isDebit ? 'expense' : 'income',
-        amountMinor: parsed.amountMinor,
-        occurredAt: parsed.occurredAt,
-        categoryId: category?.id,
-        accountId: accountId,
-        payee: _payeeFor(parsed),
-        note: smsEntryNote(reference: parsed.reference, rawCounterparty: parsed.counterparty),
-        source: 'sms',
-        smsId: smsId,
-      ),
-    );
+    await entries.saveEntry(EntriesRepository.newExpense(
+      id: id,
+      kind: parsed.isDebit ? 'expense' : 'income',
+      amountMinor: parsed.amountMinor,
+      occurredAt: parsed.occurredAt,
+      categoryId: category?.id,
+      accountId: accountId,
+      payee: _payeeFor(parsed),
+      note: smsEntryNote(reference: parsed.reference, rawCounterparty: parsed.counterparty),
+      source: 'sms',
+      smsId: smsId,
+    ));
     return id;
   }
 
@@ -259,5 +262,6 @@ class SmsIngestService {
   }
 
   /// Personal chats are never ingested, however much they read like a debit.
-  static bool _worthIngesting(RawSms message) => isBusinessSender(message.sender) && (looksLikeBankSender(message.sender) || hasTransactionSignal(message.body));
+  static bool _worthIngesting(RawSms message) =>
+      isBusinessSender(message.sender) && (looksLikeBankSender(message.sender) || hasTransactionSignal(message.body));
 }

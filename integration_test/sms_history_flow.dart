@@ -23,10 +23,8 @@ Future<void> smsHistoryFlow(WidgetTester tester) async {
   final service = fresh.read(smsIngestServiceProvider);
   final start = DateTime.now().subtract(const Duration(days: 1));
   final day = DateTime(start.year, start.month, start.day, 9);
-  Future<IngestStatus> ingest(String sender, String body, Duration after, {bool autoAdd = false}) => service.ingest(
-    RawSms(sender: sender, body: body, receivedAt: day.add(after)),
-    autoAdd: autoAdd,
-  );
+  Future<IngestStatus> ingest(String sender, String body, Duration after, {bool autoAdd = false}) =>
+      service.ingest(RawSms(sender: sender, body: body, receivedAt: day.add(after)), autoAdd: autoAdd);
   expect(await ingest('VM-HDFCBK', _upiDebit, Duration.zero, autoAdd: true), IngestStatus.added);
   expect(await ingest('VM-HDFCBK', _upiDebit, const Duration(minutes: 40), autoAdd: true), IngestStatus.duplicate);
   expect(await ingest('VM-HDFCBK', _atmDebit, const Duration(hours: 2)), IngestStatus.pending);

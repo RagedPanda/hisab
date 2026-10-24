@@ -25,28 +25,23 @@ final csvFileSharerProvider = Provider<Future<bool> Function({required String fi
     final directory = await getTemporaryDirectory();
     final file = File('${directory.path}/$fileName');
     await file.writeAsString('$_utf8Bom$csv', flush: true);
-    final result = await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile(file.path, mimeType: 'text/csv')],
-        subject: subject,
-      ),
-    );
+    final result = await SharePlus.instance.share(ShareParams(files: [XFile(file.path, mimeType: 'text/csv')], subject: subject));
     return result.status != ShareResultStatus.dismissed;
   },
 );
 
 /// The CSV header words in the current language.
 GroupCsvLabels groupCsvLabels(AppLocalizations l10n) => GroupCsvLabels(
-  date: l10n.groupCsvDate,
-  description: l10n.groupCsvDescription,
-  category: l10n.category,
-  cost: l10n.groupCsvCost,
-  paidBy: l10n.groupCsvPaidBy,
-  paidColumn: l10n.groupCsvPaidColumn,
-  shareColumn: l10n.groupCsvShareColumn,
-  balanceColumn: l10n.groupCsvBalanceColumn,
-  total: l10n.groupCsvTotal,
-);
+      date: l10n.groupCsvDate,
+      description: l10n.groupCsvDescription,
+      category: l10n.category,
+      cost: l10n.groupCsvCost,
+      paidBy: l10n.groupCsvPaidBy,
+      paidColumn: l10n.groupCsvPaidColumn,
+      shareColumn: l10n.groupCsvShareColumn,
+      balanceColumn: l10n.groupCsvBalanceColumn,
+      total: l10n.groupCsvTotal,
+    );
 
 /// Every member the export needs a column for: current members (me first),
 /// then removed members who still appear in an expense or payment.
@@ -63,7 +58,12 @@ List<ExportMember> exportMembers(AppLocalizations l10n, GroupDetail detail, List
 }
 
 /// The group's expenses and payments as CSV rows, in the current language.
-List<ExportRow> exportRows(AppLocalizations l10n, GroupDetail detail, {required Map<String, Category> categoryById, required Locale locale}) {
+List<ExportRow> exportRows(
+  AppLocalizations l10n,
+  GroupDetail detail, {
+  required Map<String, Category> categoryById,
+  required Locale locale,
+}) {
   final nameById = {for (final member in detail.allMembers) member.id: memberShortName(l10n, member)};
   String nameOf(String id) => nameById[id] ?? l10n.unknown;
   return [
@@ -85,7 +85,10 @@ List<ExportRow> exportRows(AppLocalizations l10n, GroupDetail detail, {required 
     for (final settlement in detail.settlements)
       ExportRow(
         occurredAt: settlement.occurredAt,
-        description: [l10n.settlementLine(nameOf(settlement.fromMemberId), nameOf(settlement.toMemberId)), if (settlement.note.isNotEmpty) settlement.note].join(' · '),
+        description: [
+          l10n.settlementLine(nameOf(settlement.fromMemberId), nameOf(settlement.toMemberId)),
+          if (settlement.note.isNotEmpty) settlement.note,
+        ].join(' · '),
         category: l10n.groupCsvPayment,
         costMinor: settlement.amountMinor,
         paidMinor: {settlement.fromMemberId: settlement.amountMinor},
@@ -138,7 +141,9 @@ String groupSummaryText(
           l10n.groupSummaryGroupTotal(money(totals.totalMinor)),
           for (final memberId in memberOrder)
             if ((totals.shareByMember[memberId] ?? 0) != 0)
-              memberId == myMemberId ? l10n.groupSummaryYourShare(money(totals.shareByMember[memberId]!)) : l10n.groupSummaryMemberShare(nameOf(memberId), money(totals.shareByMember[memberId]!)),
+              memberId == myMemberId
+                  ? l10n.groupSummaryYourShare(money(totals.shareByMember[memberId]!))
+                  : l10n.groupSummaryMemberShare(nameOf(memberId), money(totals.shareByMember[memberId]!)),
           '',
         ];
   if (transfers.isEmpty) return [title, ...totalLines, l10n.allSettledUp, '', footer].join('\n');

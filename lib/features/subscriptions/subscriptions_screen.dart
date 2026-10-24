@@ -40,11 +40,17 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
             tooltip: l10n.subscriptionSort,
             initialValue: _sort,
             onSelected: (sort) => setState(() => _sort = sort),
-            itemBuilder: (_) => [for (final sort in SubscriptionSort.values) PopupMenuItem(value: sort, child: Text(subscriptionSortLabel(l10n, sort)))],
+            itemBuilder: (_) => [
+              for (final sort in SubscriptionSort.values) PopupMenuItem(value: sort, child: Text(subscriptionSortLabel(l10n, sort))),
+            ],
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(onPressed: () => _add(context), icon: const Icon(Icons.add), label: Text(l10n.subscriptionAdd)),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _add(context),
+        icon: const Icon(Icons.add),
+        label: Text(l10n.subscriptionAdd),
+      ),
       body: views.when(
         loading: () => const LoadingPlaceholder(),
         error: (error, _) => Center(child: Text('$error')),
@@ -62,9 +68,9 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
               const SizedBox(height: 12),
               Card(
                 clipBehavior: Clip.antiAlias,
-                child: Column(
-                  children: [for (final item in sorted) _SubscriptionTile(view: byId[item.id]!, item: item, onTap: () => _showActions(context, byId[item.id]!, item))],
-                ),
+                child: Column(children: [
+                  for (final item in sorted) _SubscriptionTile(view: byId[item.id]!, item: item, onTap: () => _showActions(context, byId[item.id]!, item)),
+                ]),
               ),
             ],
           );
@@ -74,7 +80,12 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
   }
 
   Future<void> _add(BuildContext context) async {
-    final key = await showModalBottomSheet<String>(context: context, isScrollControlled: true, showDragHandle: true, builder: (_) => const _TemplateSheet());
+    final key = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => const _TemplateSheet(),
+    );
     if (key == null || !context.mounted) return;
     context.push(key.isEmpty ? '/subscriptions/new' : '/subscriptions/new?template=$key');
   }
@@ -88,20 +99,17 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(title: Text(item.name, style: Theme.of(sheetContext).textTheme.titleMedium)),
-            ListTile(leading: const Icon(Icons.edit_outlined), title: Text(l10n.edit), onTap: () => Navigator.pop(sheetContext, 'edit')),
-            if (item.status == SubscriptionStatus.active)
-              ListTile(leading: const Icon(Icons.pause_circle_outline), title: Text(l10n.subscriptionPause), onTap: () => Navigator.pop(sheetContext, 'pause')),
-            if (item.status == SubscriptionStatus.paused)
-              ListTile(leading: const Icon(Icons.play_circle_outline), title: Text(l10n.subscriptionResume), onTap: () => Navigator.pop(sheetContext, 'resume')),
-            if (item.status != SubscriptionStatus.cancelled)
-              ListTile(leading: const Icon(Icons.block), title: Text(l10n.subscriptionMarkCancelled), onTap: () => Navigator.pop(sheetContext, 'cancel')),
-            ListTile(leading: const Icon(Icons.delete_outline), title: Text(l10n.delete), onTap: () => Navigator.pop(sheetContext, 'delete')),
-          ],
-        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(title: Text(item.name, style: Theme.of(sheetContext).textTheme.titleMedium)),
+          ListTile(leading: const Icon(Icons.edit_outlined), title: Text(l10n.edit), onTap: () => Navigator.pop(sheetContext, 'edit')),
+          if (item.status == SubscriptionStatus.active)
+            ListTile(leading: const Icon(Icons.pause_circle_outline), title: Text(l10n.subscriptionPause), onTap: () => Navigator.pop(sheetContext, 'pause')),
+          if (item.status == SubscriptionStatus.paused)
+            ListTile(leading: const Icon(Icons.play_circle_outline), title: Text(l10n.subscriptionResume), onTap: () => Navigator.pop(sheetContext, 'resume')),
+          if (item.status != SubscriptionStatus.cancelled)
+            ListTile(leading: const Icon(Icons.block), title: Text(l10n.subscriptionMarkCancelled), onTap: () => Navigator.pop(sheetContext, 'cancel')),
+          ListTile(leading: const Icon(Icons.delete_outline), title: Text(l10n.delete), onTap: () => Navigator.pop(sheetContext, 'delete')),
+        ]),
       ),
     );
     if (action == null || !context.mounted) return;
@@ -132,31 +140,22 @@ class _TotalsCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final symbol = ref.watch(settingsProvider).currencySymbol;
     Widget column(String label, int minor) => Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-          const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              formatMinor(minor, symbol: symbol, showDecimals: false),
-              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700).tabular,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(label, style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 4),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(formatMinor(minor, symbol: symbol, showDecimals: false), style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700).tabular),
             ),
-          ),
-        ],
-      ),
-    );
+          ]),
+        );
     return DashboardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [column(l10n.subscriptionsMonthlyTotal, totals.monthlyMinor), const SizedBox(width: 16), column(l10n.subscriptionsYearlyTotal, totals.yearlyMinor)]),
-          const SizedBox(height: 8),
-          Text(l10n.subscriptionsActiveCount(totals.activeCount), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-        ],
-      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [column(l10n.subscriptionsMonthlyTotal, totals.monthlyMinor), const SizedBox(width: 16), column(l10n.subscriptionsYearlyTotal, totals.yearlyMinor)]),
+        const SizedBox(height: 8),
+        Text(l10n.subscriptionsActiveCount(totals.activeCount), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+      ]),
     );
   }
 }
@@ -188,23 +187,16 @@ class _SubscriptionTile extends ConsumerWidget {
         onTap: onTap,
         leading: IconBadge(icon: category?.icon, color: category?.color ?? theme.colorScheme.primary.toARGB32()),
         title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(price, maxLines: 1, overflow: TextOverflow.ellipsis),
-            if (renewal != null)
-              Text(
-                subscriptionRenewalLabel(l10n, renewal, DateTime.now(), locale: locale),
-                style: theme.textTheme.bodySmall?.copyWith(color: daysUntilRenewal(renewal, DateTime.now()) < 0 ? theme.colorScheme.error : muted),
-              ),
-          ],
-        ),
+        subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(price, maxLines: 1, overflow: TextOverflow.ellipsis),
+          if (renewal != null)
+            Text(subscriptionRenewalLabel(l10n, renewal, DateTime.now(), locale: locale),
+                style: theme.textTheme.bodySmall?.copyWith(color: daysUntilRenewal(renewal, DateTime.now()) < 0 ? theme.colorScheme.error : muted)),
+        ]),
         trailing: statusText != null
             ? _StatusMarker(statusText)
-            : Text(
-                l10n.subscriptionPerMonth(formatMinor(itemMonthlyMinor(item), symbol: symbol, showDecimals: false)),
-                style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600).tabular,
-              ),
+            : Text(l10n.subscriptionPerMonth(formatMinor(itemMonthlyMinor(item), symbol: symbol, showDecimals: false)),
+                style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600).tabular),
       ),
     );
   }

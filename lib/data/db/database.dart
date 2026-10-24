@@ -412,27 +412,25 @@ class GroupActivities extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(
-  tables: [
-    Accounts,
-    Categories,
-    Entries,
-    EntryItems,
-    Groups,
-    Members,
-    Splits,
-    Settlements,
-    Budgets,
-    SmsLog,
-    Projects,
-    ProjectFields,
-    EntryFieldValues,
-    Reminders,
-    EntryPayers,
-    RecurringRules,
-    GroupActivities,
-  ],
-)
+@DriftDatabase(tables: [
+  Accounts,
+  Categories,
+  Entries,
+  EntryItems,
+  Groups,
+  Members,
+  Splits,
+  Settlements,
+  Budgets,
+  SmsLog,
+  Projects,
+  ProjectFields,
+  EntryFieldValues,
+  Reminders,
+  EntryPayers,
+  RecurringRules,
+  GroupActivities,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
@@ -441,70 +439,70 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (m) async {
-      await m.createAll();
-      await seedDefaults();
-    },
-    onUpgrade: (m, from, to) async {
-      if (from < 2) {
-        await m.createTable(projects);
-        await m.addColumn(entries, entries.projectId);
-        await m.createIndex(entriesProjectId);
-        await m.addColumn(groups, groups.projectId);
-        await m.addColumn(categories, categories.packKey);
-      }
-      // v3: payment method on settlements (groups parity, record payment).
-      if (from < 3) await m.addColumn(settlements, settlements.method);
-      // v4: project fields and the values entries record for them.
-      if (from < 4) {
-        await m.createTable(projectFields);
-        await m.createIndex(projectFieldsProjectId);
-        await m.createTable(entryFieldValues);
-        await m.createIndex(entryFieldValuesEntryId);
-      }
-      // v5: member UPI IDs and the generic reminders table (groups parity, reminders).
-      if (from < 5) {
-        await m.addColumn(members, members.upiId);
-        await m.createTable(reminders);
-        await m.createIndex(remindersGroupId);
-      }
-      // v6: several payers on one group expense (groups parity, multiple payers).
-      if (from < 6) {
-        await m.createTable(entryPayers);
-        await m.createIndex(entryPayersEntryId);
-      }
-      // v7: recurring rules and the entries they post (R2, recurring entries).
-      if (from < 7) {
-        await m.createTable(recurringRules);
-        await m.addColumn(entries, entries.recurringId);
-        await m.createIndex(entriesRecurringId);
-      }
-      // v8: SMS history can be cleared without forgetting processed messages.
-      if (from < 8) await m.addColumn(smsLog, smsLog.clearedAt);
-      // v10: group activity log (groups parity, undo and history).
-      // v9 is reserved for another in-flight migration.
-      if (from < 10) {
-        await m.createTable(groupActivities);
-        await m.createIndex(groupActivitiesGroupId);
-      }
-    },
-    beforeOpen: (details) async {
-      await customStatement('PRAGMA foreign_keys = ON');
-      await wipeUnkeptSmsText();
-    },
-  );
+        onCreate: (m) async {
+          await m.createAll();
+          await seedDefaults();
+        },
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(projects);
+            await m.addColumn(entries, entries.projectId);
+            await m.createIndex(entriesProjectId);
+            await m.addColumn(groups, groups.projectId);
+            await m.addColumn(categories, categories.packKey);
+          }
+          // v3: payment method on settlements (groups parity, record payment).
+          if (from < 3) await m.addColumn(settlements, settlements.method);
+          // v4: project fields and the values entries record for them.
+          if (from < 4) {
+            await m.createTable(projectFields);
+            await m.createIndex(projectFieldsProjectId);
+            await m.createTable(entryFieldValues);
+            await m.createIndex(entryFieldValuesEntryId);
+          }
+          // v5: member UPI IDs and the generic reminders table (groups parity, reminders).
+          if (from < 5) {
+            await m.addColumn(members, members.upiId);
+            await m.createTable(reminders);
+            await m.createIndex(remindersGroupId);
+          }
+          // v6: several payers on one group expense (groups parity, multiple payers).
+          if (from < 6) {
+            await m.createTable(entryPayers);
+            await m.createIndex(entryPayersEntryId);
+          }
+          // v7: recurring rules and the entries they post (R2, recurring entries).
+          if (from < 7) {
+            await m.createTable(recurringRules);
+            await m.addColumn(entries, entries.recurringId);
+            await m.createIndex(entriesRecurringId);
+          }
+          // v8: SMS history can be cleared without forgetting processed messages.
+          if (from < 8) await m.addColumn(smsLog, smsLog.clearedAt);
+          // v10: group activity log (groups parity, undo and history).
+          // v9 is reserved for another in-flight migration.
+          if (from < 10) {
+            await m.createTable(groupActivities);
+            await m.createIndex(groupActivitiesGroupId);
+          }
+        },
+        beforeOpen: (details) async {
+          await customStatement('PRAGMA foreign_keys = ON');
+          await wipeUnkeptSmsText();
+        },
+      );
 
-  static QueryExecutor _openConnection() => driftDatabase(name: 'hisab', native: const DriftNativeOptions(shareAcrossIsolates: true));
+  static QueryExecutor _openConnection() => driftDatabase(
+        name: 'hisab',
+        native: const DriftNativeOptions(shareAcrossIsolates: true),
+      );
 
   /// Drops SMS text the log may not keep ([keepsSmsText]: not-bank messages,
   /// OTPs and promotions) that an earlier build or a restored backup stored.
   /// Idempotent, so it runs on every open.
   Future<void> wipeUnkeptSmsText() async {
     final rows = await (select(smsLog)..where((row) => row.body.equals('').not())).get();
-    final wipeIds = [
-      for (final row in rows)
-        if (!keepsSmsText(row.status, row.body)) row.id,
-    ];
+    final wipeIds = [for (final row in rows) if (!keepsSmsText(row.status, row.body)) row.id];
     if (wipeIds.isEmpty) return;
     await (update(smsLog)..where((row) => row.id.isIn(wipeIds))).write(const SmsLogCompanion(body: Value('')));
   }
@@ -528,21 +526,27 @@ class AppDatabase extends _$AppDatabase {
     });
     final accountCount = await (select(accounts)..limit(1)).get();
     if (accountCount.isEmpty) {
-      await into(accounts).insert(AccountsCompanion.insert(id: newId(), name: 'Cash', type: 'cash', color: 0xFF43A047));
+      await into(accounts).insert(AccountsCompanion.insert(
+        id: newId(),
+        name: 'Cash',
+        type: 'cash',
+        color: 0xFF43A047,
+      ));
     }
   }
 }
 
 /// Insert row for a catalog or pack seed. [packKey] marks categories a pack created.
-CategoriesCompanion seedCategoryRow(CategorySeed seed, {required String id, String? parentId, required int order, String? packKey}) => CategoriesCompanion.insert(
-  id: id,
-  seedKey: Value(seed.key),
-  packKey: Value(packKey),
-  name: seed.name,
-  icon: seed.icon,
-  color: seed.color,
-  kind: seed.kind.name,
-  parentId: Value(parentId),
-  sortOrder: Value(order),
-  units: Value(seed.units.join(',')),
-);
+CategoriesCompanion seedCategoryRow(CategorySeed seed, {required String id, String? parentId, required int order, String? packKey}) =>
+    CategoriesCompanion.insert(
+      id: id,
+      seedKey: Value(seed.key),
+      packKey: Value(packKey),
+      name: seed.name,
+      icon: seed.icon,
+      color: seed.color,
+      kind: seed.kind.name,
+      parentId: Value(parentId),
+      sortOrder: Value(order),
+      units: Value(seed.units.join(',')),
+    );

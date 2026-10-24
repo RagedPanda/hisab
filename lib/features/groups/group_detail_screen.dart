@@ -74,6 +74,8 @@ class GroupDetailScreen extends ConsumerWidget {
               onSelected: (value) async {
                 final repo = ref.read(groupsRepositoryProvider);
                 switch (value) {
+                  case 'activity':
+                    context.push('/groups/${group.id}/activity');
                   case 'rename':
                     final name = await promptText(context, title: l10n.renameGroup, initial: group.name);
                     if (name != null && name.isNotEmpty) await repo.updateGroup(GroupsCompanion(id: Value(group.id), name: Value(name)));
@@ -81,12 +83,16 @@ class GroupDetailScreen extends ConsumerWidget {
                     await repo.updateGroup(GroupsCompanion(id: Value(group.id), simplifyDebts: Value(!group.simplifyDebts)));
                   case 'delete':
                     if (await confirmDialog(context, title: l10n.deleteNamed(group.name), message: l10n.deleteGroupBody, confirmLabel: l10n.delete)) {
+                      if (!context.mounted) return;
+                      final messenger = ScaffoldMessenger.of(context);
                       await repo.deleteGroup(group.id);
+                      showUndoSnackBar(messenger, message: l10n.activityGroupDeletedSnack, undoLabel: l10n.undo, onUndo: () => repo.restoreGroup(group.id));
                       if (context.mounted) context.pop();
                     }
                 }
               },
               itemBuilder: (_) => [
+                PopupMenuItem(value: 'activity', child: Text(l10n.activityTitle)),
                 PopupMenuItem(value: 'rename', child: Text(l10n.rename)),
                 PopupMenuItem(value: 'simplify', child: Text(group.simplifyDebts ? l10n.simplifyOff : l10n.simplifyOn)),
                 PopupMenuItem(value: 'delete', child: Text(l10n.deleteGroup)),
@@ -214,10 +220,7 @@ Future<void> confirmRemoveSettlement(BuildContext context, WidgetRef ref, Settle
   final repo = ref.read(groupsRepositoryProvider);
   await repo.deleteSettlement(settlement.id);
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    content: Text(l10n.paymentRemoved),
-    action: SnackBarAction(label: l10n.undo, onPressed: () => repo.restoreSettlement(settlement.id)),
-  ));
+  showUndoSnackBar(ScaffoldMessenger.of(context), message: l10n.paymentRemoved, undoLabel: l10n.undo, onUndo: () => repo.restoreSettlement(settlement.id));
 }
 
 class _BalancesTab extends ConsumerWidget {

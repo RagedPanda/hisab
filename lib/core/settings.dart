@@ -4,6 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/currency/currency_lookup.dart';
 import '../domain/sms/sms_confidence.dart';
 
+/// Preference behind Settings > "Month starts on"; also read by backups.
+const String kMonthStartDayPref = 'monthStartDay';
+
 /// Preference key for the ISO 4217 home currency code.
 const String kCurrencyCodeKey = 'currencyCode';
 
@@ -81,7 +84,7 @@ class AppSettings {
   static AppSettings fromPrefs(SharedPreferences prefs) => AppSettings(
         currencyCode: prefs.getString(kCurrencyCodeKey) ?? currencyCodeForLegacySymbol(prefs.getString(kLegacyCurrencySymbolKey)),
         currencyConfirmed: prefs.containsKey(kCurrencyCodeKey),
-        monthStartDay: prefs.getInt('monthStartDay') ?? 1,
+        monthStartDay: prefs.getInt(kMonthStartDayPref) ?? 1,
         themeMode: ThemeMode.values[prefs.getInt('themeMode') ?? ThemeMode.system.index],
         smsEnabled: prefs.getBool('smsEnabled') ?? false,
         smsAutoAdd: resolveSmsAutoAdd(storedValue: prefs.getBool('smsAutoAdd'), userChose: prefs.getBool('smsAutoAddChosen') ?? false),
@@ -97,7 +100,7 @@ class AppSettings {
       // Older builds still read the symbol, so a downgrade keeps the currency.
       await prefs.setString(kLegacyCurrencySymbolKey, currencySymbol);
     }
-    await prefs.setInt('monthStartDay', monthStartDay);
+    await prefs.setInt(kMonthStartDayPref, monthStartDay);
     await prefs.setInt('themeMode', themeMode.index);
     await prefs.setBool('smsEnabled', smsEnabled);
     await prefs.setBool('smsAutoAdd', smsAutoAdd);

@@ -6,6 +6,7 @@ import '../../domain/backup/backup_codec.dart';
 import '../../domain/backup/backup_settings.dart';
 import '../db/database.dart';
 import '../repositories/reminders_repository.dart';
+import 'backup_section.dart';
 
 /// What a restore wrote, plus the backup's currency (null for older backups).
 class BackupRestoreResult {
@@ -14,10 +15,12 @@ class BackupRestoreResult {
   final String? currencyCode;
 }
 
-/// Exports and imports every table as JSON wrapped in the encrypted container.
+/// Exports and imports every table, plus any settings [sections], as JSON
+/// wrapped in the encrypted container.
 class BackupService {
-  BackupService(this.db);
+  BackupService(this.db, {this.sections = const []});
   final AppDatabase db;
+  final List<BackupSection> sections;
 
   /// [currencyCode] is stored so a restore keeps the backup's currency.
   Future<Map<String, dynamic>> snapshot({String? currencyCode}) async {
@@ -48,6 +51,7 @@ class BackupService {
       'entryPayers': await dump(db.entryPayers),
       'groupActivities': await dump(db.groupActivities),
       'recurringRules': await dump(db.recurringRules),
+      for (final section in sections) section.key: ?section.export(),
     };
   }
 
@@ -121,6 +125,9 @@ class BackupService {
       // the backup's copies land beside them. Keep the backup's, drop the rest (#63).
       await db.mergeSeededDuplicates(preferIds: {...restoredIds(payload, 'accounts'), ...restoredIds(payload, 'categories')});
     });
+    for (final section in sections) {
+      if (payload[section.key] case final Map block) written += await section.restore(Map<String, dynamic>.from(block), db: db, payload: payload);
+    }
     return written;
   }
 }

@@ -3407,4 +3407,168 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smsReviewAddManually => 'Add manually';
+
+  @override
+  String get salaryTitle => 'Salary';
+
+  @override
+  String get salarySetUp => 'Set up salary day';
+
+  @override
+  String get salaryIntro =>
+      'Hisab adds your salary as a monthly income you confirm, and gently reminds you if it has not arrived.';
+
+  @override
+  String salarySummary(String amount, int day) {
+    return '$amount on day $day';
+  }
+
+  @override
+  String get salaryAmount => 'Monthly salary';
+
+  @override
+  String get salaryAccount => 'Credited to';
+
+  @override
+  String get salaryAnyAccount => 'Any account';
+
+  @override
+  String get salaryDay => 'Salary day';
+
+  @override
+  String get salaryShiftLabel => 'On a weekend or holiday';
+
+  @override
+  String get salaryShiftSameDay => 'Same day';
+
+  @override
+  String get salaryShiftPrevious => 'Previous working day';
+
+  @override
+  String get salaryShiftNext => 'Next working day';
+
+  @override
+  String get salaryHolidays => 'Bank holidays';
+
+  @override
+  String get salaryHolidaysHelp =>
+      'Skipped like weekends when the salary day moves';
+
+  @override
+  String get salaryAddHoliday => 'Add holiday';
+
+  @override
+  String get salaryReminder => 'Remind me if it has not arrived';
+
+  @override
+  String get salaryReminderDelay => 'Remind after';
+
+  @override
+  String salaryDaysAfter(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days after',
+      one: '1 day after',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salaryAligned => 'Your month already starts on payday';
+
+  @override
+  String salaryNotAligned(int monthStart, int salaryDay) {
+    return 'Your month starts on day $monthStart, salary arrives on day $salaryDay';
+  }
+
+  @override
+  String salaryAlignTitle(int day) {
+    return 'Start months on day $day?';
+  }
+
+  @override
+  String get salaryAlignMessage =>
+      'Budgets and monthly totals will run from one salary to the next.';
+
+  @override
+  String get salaryAlignAction => 'Align';
+
+  @override
+  String get salaryRemove => 'Remove salary';
+
+  @override
+  String get salaryRemoveBody =>
+      'The Salary rule will be deleted. Salary entries you already have are kept.';
+
+  @override
+  String get salaryRemoved => 'Salary removed';
+
+  @override
+  String get salarySaved => 'Salary saved';
+
+  @override
+  String salaryExpectedOn(String date) {
+    return 'Expected $date';
+  }
+
+  @override
+  String salaryReceivedAmount(String date, String amount) {
+    return 'Received $amount on $date';
+  }
+
+  @override
+  String salaryLateSince(String date) {
+    return 'Late: expected $date';
+  }
+
+  @override
+  String salaryLastReceived(String date, String amount) {
+    return 'Last received $amount on $date';
+  }
+
+  @override
+  String salaryNextExpected(String date) {
+    return 'Next expected $date';
+  }
+
+  @override
+  String get salaryNotSeenTitle => 'Salary not seen yet';
+
+  @override
+  String salaryNotSeenBody(String date) {
+    return 'It was expected on $date. This clears by itself once it arrives.';
+  }
+
+  @override
+  String get salaryRuleName => 'Salary';
+
+  @override
+  String get salaryMatchWindow => 'Can arrive early by';
+
+  @override
+  String salaryMatchWindowDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Up to $days days',
+      one: 'Up to 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salaryTolerance => 'Amount can differ by';
+
+  @override
+  String salaryTolerancePercent(int percent) {
+    return 'Up to $percent%';
+  }
+
+  @override
+  String get salaryToleranceExact => 'Exact amount only';
+
+  @override
+  String get salaryDetectionHelp =>
+      'An income counts as salary when it is this close to the amount and arrives no earlier than this, or any day later in the cycle.';
 }

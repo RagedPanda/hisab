@@ -12,8 +12,15 @@
 /// if Hisab's notifications were denied on the simulator before, uninstall the
 /// app (`xcrun simctl uninstall <udid> com.sarv.hisab`) or erase the simulator
 /// first, otherwise iOS keeps the denial and flow 31 fails its first expect.
+/// Android, flow 32 (salary day, numbered 25 and 29 before): the notification permission must be granted
+/// before the flow, or the Android 13+ system prompt covers the align dialog
+/// (#86). The driver does this with
+/// `adb shell pm grant com.sarv.hisab android.permission.POST_NOTIFICATIONS`;
+/// with several devices attached, set `ANDROID_SERIAL` to the `-d` device.
+/// Run another way, grant it by hand first. The flow checks it up front.
 library;
 
+import 'dart:io' show Platform;
 import 'dart:ui' as ui;
 
 import 'package:drift/drift.dart' show Value;
@@ -37,6 +44,7 @@ import 'package:hisab/domain/categories/category_packs.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
 import 'package:hisab/domain/projects/project_math.dart';
+import 'package:hisab/domain/salary/salary_schedule.dart';
 import 'package:hisab/domain/split/debt_simplifier.dart';
 import 'package:hisab/domain/split/split_calculator.dart';
 import 'package:hisab/features/categories/categories_screen.dart';
@@ -48,6 +56,9 @@ import 'package:hisab/features/reminders/reminder_startup.dart';
 import 'package:hisab/features/groups/group_export.dart';
 import 'package:hisab/features/groups/group_totals_screen.dart';
 import 'package:hisab/features/groups/settle_up_sheet.dart';
+import 'package:hisab/features/salary/salary_providers.dart';
+import 'package:hisab/features/salary/salary_reminder.dart';
+import 'package:hisab/features/salary/salary_setup_screen.dart';
 import 'package:hisab/features/split/split_editor.dart';
 import 'package:hisab/features/shell/widgets/common.dart';
 import 'package:hisab/l10n/category_names_hi.dart';
@@ -1965,4 +1976,106 @@ void main() {
       await scheduler.delete(reminder.id);
     }
   });
+
+  testWidgets('32 salary day: set up from Settings, align month start, reminder clears when an SMS salary arrives, Hindi', (tester) async {
+    final alerts = _RecordingSalaryAlerts();
+    final fresh = await createApp(overrides: [salaryAlertSinkProvider.overrideWithValue(alerts)]);
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    Finder key(String id) => find.byKey(ValueKey(id));
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(monthStartDay: 25));
+    if (Platform.isAndroid) {
+      // Granted by the driver (see the header), so saving shows no system prompt.
+      final permission = await fresh.read(notificationGatewayProvider).permissionState();
+      expect(permission.notificationsAllowed, isTrue, reason: 'grant POST_NOTIFICATIONS before flow 32; see the file header');
+    }
+    await pumpApp(tester, fresh);
+
+    await goTab(tester, 'Settings');
+    await scrollTo(tester, key('settingsSalary'));
+    expect(find.text('Set up salary day'), findsOneWidget);
+    await tapFinder(tester, key('settingsSalary'), frames: 10);
+    expect(find.byType(SalarySetupScreen), findsOneWidget);
+    expect(tester.widget<FilledButton>(key('salarySave')).onPressed, isNull, reason: 'no amount yet');
+    expect(find.text('Your month starts on day 25, salary arrives on day 1'), findsOneWidget);
+    await enterText(tester, key('salaryAmount'), '85000');
+    await shoot(tester, 'salary_setup');
+    await scrollTo(tester, key('salaryTolerance'), within: find.byType(SalarySetupScreen));
+    expect(find.text('Up to 4 days'), findsOneWidget, reason: 'default match window');
+    expect(find.text('Up to 15%'), findsOneWidget, reason: 'default amount tolerance');
+    await shoot(tester, 'salary_detection');
+    await tapFinder(tester, key('salarySave'), frames: 10);
+    expect(find.text('Start months on day 1?'), findsOneWidget);
+    await tapText(tester, 'Align', last: true, frames: 10);
+    expect(fresh.read(settingsProvider).monthStartDay, 1);
+    final salary = fresh.read(salarySettingsProvider);
+    expect(salary.isSetUp, isTrue);
+    expect(salary.amountMinor, 8500000);
+    final rule = (await (fresh.db.select(fresh.db.recurringRules)..where((t) => t.id.equals(salary.ruleId))).getSingle());
+    expect((rule.kind, rule.amountMinor, rule.dayOfMonth, rule.autoPost), ('income', 8500000, 1, false));
+    await scrollTo(tester, key('settingsSalary'));
+    expect(find.text('${formatMinor(8500000)} on day 1'), findsOneWidget);
+
+    // Expected three days ago, reminder one day after: "Salary not seen yet" is due now.
+    // The day change goes through the service like a save on the screen, as if
+    // made the day before the salary was due, so the rule and the setup agree
+    // and that cycle counts (nothing before the rule's start is late).
+    final now = DateTime.now();
+    final expected = DateTime(now.year, now.month, now.day - 3);
+    final moved = await fresh.read(salaryServiceProvider).saveSalaryRule(
+          settings: salary.copyWith(salaryDay: expected.day, shift: SalaryShift.sameDay, reminderDelayDays: 1),
+          today: DateTime(expected.year, expected.month, expected.day - 1),
+          monthStartDay: fresh.read(settingsProvider).monthStartDay,
+        );
+    await fresh.read(salarySettingsProvider.notifier).save(moved);
+    await settle(tester, 10);
+    expect(alerts.last, isA<ScheduleSalaryNotification>());
+    expect((alerts.last as ScheduleSalaryNotification).expected, expected);
+
+    // An SMS-added salary entry dismisses it without any user action.
+    await fresh.db.into(fresh.db.entries).insert(EntriesCompanion.insert(
+          id: 'sms-salary',
+          kind: 'income',
+          amountMinor: 8450000,
+          occurredAt: DateTime(expected.year, expected.month, expected.day, 11),
+          source: const Value('sms'),
+        ));
+    await settle(tester, 10);
+    expect(alerts.last, isA<CancelSalaryNotification>());
+    final linked = await (fresh.db.select(fresh.db.entries)..where((t) => t.id.equals('sms-salary'))).getSingle();
+    expect(linked.recurringId, salary.ruleId, reason: 'the SMS entry settles the rule occurrence');
+
+    await scrollTo(tester, key('settingsSalary'));
+    await tapFinder(tester, key('settingsSalary'), frames: 10);
+    expect(find.textContaining('Received'), findsOneWidget);
+    await shoot(tester, 'salary_received');
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    expect(find.text(hi.salaryTitle), findsWidgets);
+    await scrollTo(tester, key('salaryReminderSwitch'), within: find.byType(SalarySetupScreen));
+    expect(find.text(hi.salaryTolerance), findsOneWidget);
+    expect(find.text(hi.salaryReminder), findsOneWidget);
+    await shoot(tester, 'hi_salary_setup');
+    await goBack(tester);
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+  });
+}
+
+class _RecordingSalaryAlerts implements SalaryAlertSink {
+  final plans = <SalaryNotificationPlan>[];
+  SalaryNotificationPlan? get last => plans.isEmpty ? null : plans.last;
+
+  @override
+  String get locale => 'en';
+
+  @override
+  Future<bool> isPending() async => false;
+
+  @override
+  Future<bool> apply(SalaryNotificationPlan plan) async {
+    plans.add(plan);
+    return true;
+  }
 }

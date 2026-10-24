@@ -6,6 +6,7 @@ import '../../core/notifications/notification_gateway.dart';
 import '../../core/notifications/reminder_payload.dart';
 import '../../core/notifications/reminder_tap_gate.dart';
 import '../../core/providers.dart';
+import '../salary/salary_reminder.dart';
 import '../shell/router.dart';
 
 /// Drops the second delivery of a cold-start tap (launch details plus callback).
@@ -16,6 +17,10 @@ final _tapGate = ReminderTapGate();
 /// twice is handled once.
 Future<void> handleReminderTap(ProviderContainer container, NotificationTap tap) async {
   if (!_tapGate.admit(tap)) return;
+  if (tap.payload == kSalaryAlertPayload) {
+    appRouter.push(kSalaryLocation);
+    return;
+  }
   final reminderId = reminderIdFromPayload(tap.payload);
   if (reminderId == null) return;
   if (tap.actionId == kSnoozeActionId) {
@@ -38,6 +43,8 @@ Future<void> startReminderNotifications(ProviderContainer container) async {
     if (launch != null) await handleReminderTap(container, launch);
     NotificationPermissionState? known = await service.checkPermission();
     await container.read(reminderSchedulerProvider).rescheduleAll();
+    // Re-post the salary alert now the plugin is ready (the first sync can beat it).
+    await syncSalaryReminder(container.read, now: DateTime.now());
     _resumeListener?.dispose();
     _resumeListener = AppLifecycleListener(onResume: () async => known = await recheckAlarmAccess(container, known));
   } catch (error, stack) {

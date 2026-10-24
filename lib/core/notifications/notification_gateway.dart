@@ -9,6 +9,7 @@ class AlertRequest {
     required this.markPaidLabel,
     required this.snoozeLabel,
     required this.isMoney,
+    this.withActions = true,
   });
 
   final int id;
@@ -23,6 +24,9 @@ class AlertRequest {
 
   /// Money reminders say "Mark paid"; documents and custom ones say "Done".
   final bool isMoney;
+
+  /// False for plain nudges (the salary alert) that have nothing to mark paid or snooze.
+  final bool withActions;
 }
 
 /// A notification the OS still holds for later.

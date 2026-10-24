@@ -279,9 +279,11 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
     }
     final id = await repo.addSettlement(groupId: widget.group.id, fromMemberId: _from, toMemberId: _to, amountMinor: amount, occurredAt: _occurredAt, note: note, method: _method);
     if (!host.mounted) return;
-    ScaffoldMessenger.of(host).showSnackBar(SnackBar(
-      content: Text(l10n.paymentRecorded(transferLine, formatMinor(amount, symbol: widget.symbol))),
-      action: SnackBarAction(label: l10n.undo, onPressed: () => repo.deleteSettlement(id)),
-    ));
+    showUndoSnackBar(
+      ScaffoldMessenger.of(host),
+      message: l10n.paymentRecorded(transferLine, formatMinor(amount, symbol: widget.symbol)),
+      undoLabel: l10n.undo,
+      onUndo: () => repo.deleteSettlement(id),
+    );
   }
 }

@@ -152,6 +152,15 @@ Future<void> waitFor(WidgetTester tester, Finder finder, {int frames = 20}) asyn
   expect(finder, findsWidgets);
 }
 
+/// Pumps until [finder] matches nothing, e.g. a sheet that is closing.
+Future<void> waitForGone(WidgetTester tester, Finder finder, {int frames = 20}) async {
+  for (var frame = 0; frame < frames && finder.evaluate().isNotEmpty; frame++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+  if (finder.evaluate().isNotEmpty) debugPrint('GONE-DIAG texts=${onstageTexts()}');
+  expect(finder, findsNothing);
+}
+
 /// Every [Text] currently on stage, for failure diagnostics.
 List<String> onstageTexts() => find.byType(Text).evaluate().map((element) => (element.widget as Text).data).whereType<String>().toList();
 

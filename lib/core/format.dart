@@ -39,6 +39,12 @@ String formatRowDate(DateTime value, {DateTime? now, String? locale}) {
   final sameYear = value.year == (now ?? DateTime.now()).year;
   return DateFormat(sameYear ? 'd MMM' : 'd MMM yyyy', locale).format(value);
 }
+/// Full weekday name: "Monday".
+String formatWeekday(DateTime value, {String? locale}) => DateFormat('EEEE', locale).format(value);
+
+/// Day and month without the year: "5 Jul".
+String formatDayMonth(DateTime value, {String? locale}) => DateFormat('d MMM', locale).format(value);
+
 String formatTime(DateTime value, {String? locale}) => DateFormat('h:mm a', locale).format(value);
 
 String formatQuantity(double quantity, String? unit) {

@@ -218,12 +218,15 @@ class EntriesRepository {
 
   /// Inserts or replaces an entry with its items and splits atomically.
   /// [fieldValues], when given, replace the project field values the entry
-  /// recorded; null leaves them as they are.
+  /// recorded; null leaves them as they are. [payers], when given, replace
+  /// the several-payer rows of a group expense (empty for a single payer);
+  /// null leaves them as they are.
   Future<void> saveEntry(
     EntriesCompanion entry, {
     List<EntryItemsCompanion> items = const [],
     List<SplitsCompanion> splits = const [],
     List<EntryFieldValuesCompanion>? fieldValues,
+    List<EntryPayersCompanion>? payers,
   }) {
     final entryId = entry.id.value;
     final now = DateTime.now();
@@ -248,6 +251,17 @@ class EntriesRepository {
               updatedAt: Value(now),
             ));
       }
+      if (payers != null) {
+        await (db.update(db.entryPayers)..where((t) => t.entryId.equals(entryId)))
+            .write(EntryPayersCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+        for (final payer in payers) {
+          await db.into(db.entryPayers).insertOnConflictUpdate(payer.copyWith(
+                entryId: Value(entryId),
+                deletedAt: const Value(null),
+                updatedAt: Value(now),
+              ));
+        }
+      }
       if (fieldValues != null) {
         await (db.update(db.entryFieldValues)..where((t) => t.entryId.equals(entryId)))
             .write(EntryFieldValuesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
@@ -269,8 +283,14 @@ class EntriesRepository {
           .write(EntriesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
       await (db.update(db.splits)..where((t) => t.entryId.equals(id)))
           .write(SplitsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+      await (db.update(db.entryPayers)..where((t) => t.entryId.equals(id)))
+          .write(EntryPayersCompanion(deletedAt: Value(now), updatedAt: Value(now)));
     });
   }
+
+  /// The live several-payer rows of an entry; empty for a single payer.
+  Future<List<EntryPayer>> getPayers(String entryId) =>
+      (db.select(db.entryPayers)..where((t) => t.entryId.equals(entryId) & t.deletedAt.isNull())).get();
 
   /// Total minor units per category id for expenses (or income) in [range],
   /// counting my share of group entries. Deleted categories key on ''.

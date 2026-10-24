@@ -144,9 +144,9 @@ void main() {
     test('net balances and simplification', () {
       final net = computeNetBalances(
         memberIds: ['a', 'b', 'c'],
-        expenses: const [
-          LedgerExpense(paidByMemberId: 'a', shares: [SplitShare('a', 1000), SplitShare('b', 1000), SplitShare('c', 1000)]),
-          LedgerExpense(paidByMemberId: 'b', shares: [SplitShare('a', 500), SplitShare('b', 500)]),
+        expenses: [
+          LedgerExpense(paidByMemberId: 'a', shares: const [SplitShare('a', 1000), SplitShare('b', 1000), SplitShare('c', 1000)]),
+          LedgerExpense(paidByMemberId: 'b', shares: const [SplitShare('a', 500), SplitShare('b', 500)]),
         ],
         settlements: const [LedgerSettlement(fromMemberId: 'c', toMemberId: 'a', amountMinor: 400)],
       );
@@ -162,13 +162,39 @@ void main() {
     });
     test('pairwise keeps direct debts', () {
       final debts = pairwiseDebts(
-        expenses: const [
-          LedgerExpense(paidByMemberId: 'a', shares: [SplitShare('b', 100)]),
-          LedgerExpense(paidByMemberId: 'b', shares: [SplitShare('c', 100)]),
+        expenses: [
+          LedgerExpense(paidByMemberId: 'a', shares: const [SplitShare('b', 100)]),
+          LedgerExpense(paidByMemberId: 'b', shares: const [SplitShare('c', 100)]),
         ],
         settlements: const [LedgerSettlement(fromMemberId: 'b', toMemberId: 'a', amountMinor: 30)],
       );
       expect(debts, const [Transfer('c', 'b', 100), Transfer('b', 'a', 70)]);
+    });
+    test('two payers: each sharer owes the payers what they are down', () {
+      // 900 dinner, a paid 600 and b paid 300, split three ways (300 each).
+      const dinner = LedgerExpense.multi(
+        payers: [SplitShare('a', 600), SplitShare('b', 300)],
+        shares: [SplitShare('a', 300), SplitShare('b', 300), SplitShare('c', 300)],
+      );
+      expect(dinner.netByMember, {'a': 300, 'b': 0, 'c': -300});
+      expect(computeNetBalances(memberIds: ['a', 'b', 'c'], expenses: const [dinner], settlements: const []), {'a': 300, 'b': 0, 'c': -300});
+      expect(pairwiseDebts(expenses: const [dinner], settlements: const []), const [Transfer('c', 'a', 300)]);
+    });
+    test('a single payer matches the multi form with one payer', () {
+      final single = LedgerExpense(paidByMemberId: 'a', shares: const [SplitShare('a', 250), SplitShare('b', 750)]);
+      expect(single.payers, const [SplitShare('a', 1000)]);
+      const multi = LedgerExpense.multi(payers: [SplitShare('a', 1000)], shares: [SplitShare('a', 250), SplitShare('b', 750)]);
+      expect(pairwiseDebts(expenses: [single], settlements: const []), pairwiseDebts(expenses: const [multi], settlements: const []));
+    });
+    test('two payers who both owe a third and each other net out per expense', () {
+      // 1000 paid 700 by a and 300 by b, split equally four ways (250 each).
+      const taxi = LedgerExpense.multi(
+        payers: [SplitShare('a', 700), SplitShare('b', 300)],
+        shares: [SplitShare('a', 250), SplitShare('b', 250), SplitShare('c', 250), SplitShare('d', 250)],
+      );
+      final debts = pairwiseDebts(expenses: const [taxi], settlements: const []);
+      expect(debts.fold<int>(0, (sum, debt) => sum + debt.amountMinor), 500, reason: 'a is up 450 and b up 50; c and d are down 250 each');
+      expect(debts.every((debt) => debt.to == 'a' || debt.to == 'b'), isTrue);
     });
   });
 }

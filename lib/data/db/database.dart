@@ -3,6 +3,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../core/ids.dart';
 import '../../domain/categories/category_catalog.dart';
+import '../../domain/sms/sms_outcome.dart';
 
 part 'database.g.dart';
 
@@ -72,6 +73,7 @@ class Categories extends Table with SyncColumns {
 }
 
 @TableIndex(name: 'entries_project_id', columns: {#projectId})
+@TableIndex(name: 'entries_recurring_id', columns: {#recurringId})
 class Entries extends Table with SyncColumns {
   TextColumn get id => text()();
 
@@ -96,6 +98,9 @@ class Entries extends Table with SyncColumns {
 
   /// Project (vehicle, trip, construction...) this entry is tracked under.
   TextColumn get projectId => text().nullable()();
+
+  /// Recurring rule that produced (or started) this entry.
+  TextColumn get recurringId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
@@ -160,6 +165,20 @@ class Splits extends Table with SyncColumns {
 
   /// Raw input that produced the amount (percent, shares, exact...).
   RealColumn get shareValue => real().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Who paid what when several members paid one group expense. Single-payer
+/// entries have no rows here; `Entries.paidByMemberId` always holds the main
+/// payer so older readers keep working.
+@TableIndex(name: 'entry_payers_entry_id', columns: {#entryId})
+class EntryPayers extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get entryId => text()();
+  TextColumn get memberId => text()();
+  IntColumn get amountMinor => integer()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -294,7 +313,7 @@ class Reminders extends Table with SyncColumns {
   TextColumn get channel => text().withDefault(const Constant('share'))();
   TextColumn get message => text().withDefault(const Constant(''))();
 
-  // Due reminders (v6): bills, EMIs, card dues, subscriptions, insurance,
+  // Due reminders (v9): bills, EMIs, card dues, subscriptions, insurance,
   // documents and custom nudges. Kinds and values live in
   // lib/domain/reminders/reminder_kind.dart.
 
@@ -343,6 +362,64 @@ class Reminders extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
+/// A template entry plus a schedule. Due occurrences become entries with
+/// [Entries.recurringId] set, either automatically ([autoPost]) or after the
+/// user confirms them. Schedule maths lives in `lib/domain/recurring`.
+class RecurringRules extends Table with SyncColumns {
+  TextColumn get id => text()();
+
+  /// Display name ("Rent", "Netflix"); empty falls back to payee or category.
+  TextColumn get name => text().withDefault(const Constant(''))();
+
+  /// expense | income | transfer
+  TextColumn get kind => text()();
+  IntColumn get amountMinor => integer()();
+  TextColumn get currency => text().withDefault(const Constant('INR'))();
+  TextColumn get categoryId => text().nullable()();
+  TextColumn get accountId => text().nullable()();
+  TextColumn get toAccountId => text().nullable()();
+  TextColumn get payee => text().nullable()();
+  TextColumn get projectId => text().nullable()();
+  TextColumn get note => text().withDefault(const Constant(''))();
+
+  /// daily | weekly | monthly | yearly; a custom schedule is one of these
+  /// with [interval] above one.
+  TextColumn get frequency => text()();
+  IntColumn get interval => integer().withDefault(const Constant(1))();
+
+  /// 1..31, -1 = last day of the month, 0 = the month start day setting.
+  IntColumn get dayOfMonth => integer().nullable()();
+
+  /// ISO weekday 1..7 for weekly rules.
+  IntColumn get weekday => integer().nullable()();
+  DateTimeColumn get startDate => dateTime()();
+  DateTimeColumn get endDate => dateTime().nullable()();
+  IntColumn get maxCount => integer().nullable()();
+
+  /// Occurrences already posted or skipped, counted against [maxCount].
+  IntColumn get postedCount => integer().withDefault(const Constant(0))();
+
+  /// How many of [postedCount] were skipped rather than added.
+  IntColumn get skippedCount => integer().withDefault(const Constant(0))();
+
+  /// Next occurrence not yet posted or skipped; null once the rule ended.
+  DateTimeColumn get nextDue => dateTime().nullable()();
+
+  /// Post due occurrences without asking; false lists them as Upcoming to confirm.
+  BoolColumn get autoPost => boolean().withDefault(const Constant(true))();
+
+  /// Comma separated days before the due date to notify ("3,0").
+  TextColumn get remindDaysBefore => text().withDefault(const Constant(''))();
+  BoolColumn get isSubscription => boolean().withDefault(const Constant(false))();
+
+  /// active | paused | ended
+  TextColumn get status => text().withDefault(const Constant('active'))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class SmsLog extends Table {
   /// Hash of sender+body+timestamp so a message is only processed once.
   TextColumn get id => text()();
@@ -350,11 +427,15 @@ class SmsLog extends Table {
   TextColumn get body => text()();
   DateTimeColumn get receivedAt => dateTime()();
 
-  /// pending | added | ignored | skipped
+  /// See SmsLogStatus: pending | added | ignored | skipped | not_bank | duplicate | undone
   TextColumn get status => text()();
   TextColumn get parsedJson => text().nullable()();
   TextColumn get entryId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Set when the user clears the SMS history. The row stays (with its body
+  /// wiped) so the message is still recognised and never processed twice.
+  DateTimeColumn get clearedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -375,12 +456,14 @@ class SmsLog extends Table {
   ProjectFields,
   EntryFieldValues,
   Reminders,
+  EntryPayers,
+  RecurringRules,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -411,31 +494,84 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(reminders);
             await m.createIndex(remindersGroupId);
           }
-          // v6: due reminders (bills, EMIs, cards, documents) on the reminders table.
-          if (from < 6 && from >= 5) {
-            for (final column in dueReminderColumns(reminders)) {
-              await m.addColumn(reminders, column);
-            }
+          // v6: several payers on one group expense (groups parity, multiple payers).
+          if (from < 6) {
+            await m.createTable(entryPayers);
+            await m.createIndex(entryPayersEntryId);
           }
-          if (from < 6) await m.createIndex(remindersStatusDue);
-          // v7: credit card statement and due days, limit and last statement.
+          // v7: recurring rules and the entries they post (R2, recurring entries).
           if (from < 7) {
-            await m.addColumn(accounts, accounts.statementDay);
-            await m.addColumn(accounts, accounts.dueDay);
-            await m.addColumn(accounts, accounts.creditLimitMinor);
-            await m.addColumn(accounts, accounts.lastStatementMinor);
-            await m.addColumn(accounts, accounts.lastStatementAt);
+            await m.createTable(recurringRules);
+            await m.addColumn(entries, entries.recurringId);
+            await m.createIndex(entriesRecurringId);
           }
+          // v8: SMS history can be cleared without forgetting processed messages.
+          if (from < 8) await m.addColumn(smsLog, smsLog.clearedAt);
+          // v9: due reminders (bills, EMIs, cards, documents) on the v5 reminders
+          // table: new columns only, so existing rows are kept as they are.
+          if (from < 9) await _upgradeToDueReminders(m, from);
+          // v12: credit card statement and due days, limit and last statement.
+          // v11 is reserved for another in-flight migration.
+          if (from < 12) await _upgradeToCardDetails(m);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
+          await wipeUnkeptSmsText();
         },
       );
+
+  /// v9 step. A v5..v8 table gains the due-reminder columns it lacks (a table
+  /// created at v5 or later by this version already has them all). Checking
+  /// what exists also upgrades pre-release builds of the reminders feature,
+  /// which stored these columns and the index under schema 6 without
+  /// main's v6 entry_payers table.
+  Future<void> _upgradeToDueReminders(Migrator m, int from) async {
+    if (from >= 5) {
+      final existing = await _columnNames('reminders');
+      for (final column in dueReminderColumns(reminders)) {
+        if (!existing.contains(column.name)) await m.addColumn(reminders, column);
+      }
+    }
+    if (!await _schemaObjectExists('index', 'reminders_status_due')) await m.createIndex(remindersStatusDue);
+    if (!await _schemaObjectExists('table', 'entry_payers')) {
+      await m.createTable(entryPayers);
+      await m.createIndex(entryPayersEntryId);
+    }
+  }
+
+  /// v12 step. Adds the credit card columns a table lacks; pre-release
+  /// builds of card dues stored them under schema 7.
+  Future<void> _upgradeToCardDetails(Migrator m) async {
+    final existing = await _columnNames('accounts');
+    for (final column in cardDetailColumns(accounts)) {
+      if (!existing.contains(column.name)) await m.addColumn(accounts, column);
+    }
+  }
+
+  Future<Set<String>> _columnNames(String table) async {
+    final rows = await customSelect('PRAGMA table_info($table)').get();
+    return {for (final row in rows) row.read<String>('name')};
+  }
+
+  Future<bool> _schemaObjectExists(String type, String name) async {
+    final rows = await customSelect('SELECT 1 FROM sqlite_master WHERE type = ? AND name = ?', variables: [Variable.withString(type), Variable.withString(name)]).get();
+    return rows.isNotEmpty;
+  }
 
   static QueryExecutor _openConnection() => driftDatabase(
         name: 'hisab',
         native: const DriftNativeOptions(shareAcrossIsolates: true),
       );
+
+  /// Drops SMS text the log may not keep ([keepsSmsText]: not-bank messages,
+  /// OTPs and promotions) that an earlier build or a restored backup stored.
+  /// Idempotent, so it runs on every open.
+  Future<void> wipeUnkeptSmsText() async {
+    final rows = await (select(smsLog)..where((row) => row.body.equals('').not())).get();
+    final wipeIds = [for (final row in rows) if (!keepsSmsText(row.status, row.body)) row.id];
+    if (wipeIds.isEmpty) return;
+    await (update(smsLog)..where((row) => row.id.isIn(wipeIds))).write(const SmsLogCompanion(body: Value('')));
+  }
 
   /// Inserts the category catalog and a Cash account. Idempotent by seedKey.
   Future<void> seedDefaults() async {
@@ -481,7 +617,16 @@ CategoriesCompanion seedCategoryRow(CategorySeed seed, {required String id, Stri
       units: Value(seed.units.join(',')),
     );
 
-/// Columns v6 added to [Reminders]; a v5 database gains exactly these.
+/// Columns v9 added to [Reminders]; a v5..v8 database gains exactly these.
+/// The credit card columns added to accounts at schema v12.
+List<GeneratedColumn> cardDetailColumns($AccountsTable table) => [
+      table.statementDay,
+      table.dueDay,
+      table.creditLimitMinor,
+      table.lastStatementMinor,
+      table.lastStatementAt,
+    ];
+
 List<GeneratedColumn> dueReminderColumns($RemindersTable table) => [
       table.title,
       table.notes,

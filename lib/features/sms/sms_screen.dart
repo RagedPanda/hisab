@@ -155,6 +155,13 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/sms/history'),
               ),
+              ListTile(
+                leading: const Icon(Icons.person_search_outlined),
+                title: Text(l10n.smsPayeesTitle),
+                subtitle: Text(l10n.smsPayeesHelp),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/sms/payees'),
+              ),
             ]),
           ),
           if (_lastResult != null) Padding(padding: const EdgeInsets.all(12), child: Text(_lastResult!, style: Theme.of(context).textTheme.bodyMedium)),

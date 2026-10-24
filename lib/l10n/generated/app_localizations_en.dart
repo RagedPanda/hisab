@@ -3377,6 +3377,42 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get byItemShared => 'Shared';
+
+  @override
+  String get byItemSharedHelp => 'Split among everyone with an item';
+
+  @override
+  String get byItemOnlyMe => 'Only me';
+
+  @override
+  String get byItemEveryone => 'Everyone';
+
+  @override
+  String get byItemAddExtras => 'Delivery, tax or tip';
+
+  @override
+  String get byItemHint => 'Add items to split by item';
+
+  @override
+  String byItemSummary(String amount, int count, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$amount · $_temp0 · $percent%';
+  }
+
+  @override
+  String get byItemClearTitle => 'Item assignments will be cleared';
+
+  @override
+  String get byItemClearBody =>
+      'Items stay, and everyone shares each one again.';
+
+  @override
   String get smsAddedMarker => 'Added from SMS';
 
   @override

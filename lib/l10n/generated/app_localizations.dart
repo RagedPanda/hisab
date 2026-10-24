@@ -5432,6 +5432,60 @@ abstract class AppLocalizations {
   /// **'{name}\'s share: {amount}'**
   String groupSummaryMemberShare(String name, String amount);
 
+  /// No description provided for @byItemShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared'**
+  String get byItemShared;
+
+  /// No description provided for @byItemSharedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Split among everyone with an item'**
+  String get byItemSharedHelp;
+
+  /// No description provided for @byItemOnlyMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Only me'**
+  String get byItemOnlyMe;
+
+  /// No description provided for @byItemEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get byItemEveryone;
+
+  /// No description provided for @byItemAddExtras.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery, tax or tip'**
+  String get byItemAddExtras;
+
+  /// No description provided for @byItemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add items to split by item'**
+  String get byItemHint;
+
+  /// No description provided for @byItemSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} · {count, plural, =1{1 item} other{{count} items}} · {percent}%'**
+  String byItemSummary(String amount, int count, int percent);
+
+  /// No description provided for @byItemClearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Item assignments will be cleared'**
+  String get byItemClearTitle;
+
+  /// No description provided for @byItemClearBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Items stay, and everyone shares each one again.'**
+  String get byItemClearBody;
+
   /// No description provided for @smsAddedMarker.
   ///
   /// In en, this message translates to:

@@ -3369,6 +3369,36 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get byItemShared => 'साझा';
+
+  @override
+  String get byItemSharedHelp => 'जिनके पास कोई आइटम है, उनमें बराबर बँटेगा';
+
+  @override
+  String get byItemOnlyMe => 'सिर्फ़ मैं';
+
+  @override
+  String get byItemEveryone => 'सभी';
+
+  @override
+  String get byItemAddExtras => 'डिलीवरी, टैक्स या टिप';
+
+  @override
+  String get byItemHint => 'आइटम के हिसाब से बाँटने के लिए आइटम जोड़ें';
+
+  @override
+  String byItemSummary(String amount, int count, int percent) {
+    return '$amount · $count आइटम · $percent%';
+  }
+
+  @override
+  String get byItemClearTitle => 'आइटम का बँटवारा हट जाएगा';
+
+  @override
+  String get byItemClearBody =>
+      'आइटम बने रहेंगे, और हर आइटम फिर सब में बँटेगा।';
+
+  @override
   String get smsAddedMarker => 'एसएमएस से जोड़ा गया';
 
   @override

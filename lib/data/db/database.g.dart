@@ -1721,6 +1721,17 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entry> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _recurringIdMeta = const VerificationMeta(
+    'recurringId',
+  );
+  @override
+  late final GeneratedColumn<String> recurringId = GeneratedColumn<String>(
+    'recurring_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1754,6 +1765,7 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entry> {
     splitMethod,
     tags,
     projectId,
+    recurringId,
     createdAt,
   ];
   @override
@@ -1899,6 +1911,15 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entry> {
         projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta),
       );
     }
+    if (data.containsKey('recurring_id')) {
+      context.handle(
+        _recurringIdMeta,
+        recurringId.isAcceptableOrUnknown(
+          data['recurring_id']!,
+          _recurringIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1990,6 +2011,10 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entry> {
         DriftSqlType.string,
         data['${effectivePrefix}project_id'],
       ),
+      recurringId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recurring_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -2029,6 +2054,9 @@ class Entry extends DataClass implements Insertable<Entry> {
 
   /// Project (vehicle, trip, construction...) this entry is tracked under.
   final String? projectId;
+
+  /// Recurring rule that produced (or started) this entry.
+  final String? recurringId;
   final DateTime createdAt;
   const Entry({
     required this.updatedAt,
@@ -2050,6 +2078,7 @@ class Entry extends DataClass implements Insertable<Entry> {
     this.splitMethod,
     required this.tags,
     this.projectId,
+    this.recurringId,
     required this.createdAt,
   });
   @override
@@ -2093,6 +2122,9 @@ class Entry extends DataClass implements Insertable<Entry> {
     map['tags'] = Variable<String>(tags);
     if (!nullToAbsent || projectId != null) {
       map['project_id'] = Variable<String>(projectId);
+    }
+    if (!nullToAbsent || recurringId != null) {
+      map['recurring_id'] = Variable<String>(recurringId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -2139,6 +2171,9 @@ class Entry extends DataClass implements Insertable<Entry> {
       projectId: projectId == null && nullToAbsent
           ? const Value.absent()
           : Value(projectId),
+      recurringId: recurringId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurringId),
       createdAt: Value(createdAt),
     );
   }
@@ -2168,6 +2203,7 @@ class Entry extends DataClass implements Insertable<Entry> {
       splitMethod: serializer.fromJson<String?>(json['splitMethod']),
       tags: serializer.fromJson<String>(json['tags']),
       projectId: serializer.fromJson<String?>(json['projectId']),
+      recurringId: serializer.fromJson<String?>(json['recurringId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -2194,6 +2230,7 @@ class Entry extends DataClass implements Insertable<Entry> {
       'splitMethod': serializer.toJson<String?>(splitMethod),
       'tags': serializer.toJson<String>(tags),
       'projectId': serializer.toJson<String?>(projectId),
+      'recurringId': serializer.toJson<String?>(recurringId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -2218,6 +2255,7 @@ class Entry extends DataClass implements Insertable<Entry> {
     Value<String?> splitMethod = const Value.absent(),
     String? tags,
     Value<String?> projectId = const Value.absent(),
+    Value<String?> recurringId = const Value.absent(),
     DateTime? createdAt,
   }) => Entry(
     updatedAt: updatedAt ?? this.updatedAt,
@@ -2241,6 +2279,7 @@ class Entry extends DataClass implements Insertable<Entry> {
     splitMethod: splitMethod.present ? splitMethod.value : this.splitMethod,
     tags: tags ?? this.tags,
     projectId: projectId.present ? projectId.value : this.projectId,
+    recurringId: recurringId.present ? recurringId.value : this.recurringId,
     createdAt: createdAt ?? this.createdAt,
   );
   Entry copyWithCompanion(EntriesCompanion data) {
@@ -2276,6 +2315,9 @@ class Entry extends DataClass implements Insertable<Entry> {
           : this.splitMethod,
       tags: data.tags.present ? data.tags.value : this.tags,
       projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      recurringId: data.recurringId.present
+          ? data.recurringId.value
+          : this.recurringId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -2302,13 +2344,14 @@ class Entry extends DataClass implements Insertable<Entry> {
           ..write('splitMethod: $splitMethod, ')
           ..write('tags: $tags, ')
           ..write('projectId: $projectId, ')
+          ..write('recurringId: $recurringId, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     updatedAt,
     deletedAt,
     id,
@@ -2328,8 +2371,9 @@ class Entry extends DataClass implements Insertable<Entry> {
     splitMethod,
     tags,
     projectId,
+    recurringId,
     createdAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2353,6 +2397,7 @@ class Entry extends DataClass implements Insertable<Entry> {
           other.splitMethod == this.splitMethod &&
           other.tags == this.tags &&
           other.projectId == this.projectId &&
+          other.recurringId == this.recurringId &&
           other.createdAt == this.createdAt);
 }
 
@@ -2376,6 +2421,7 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
   final Value<String?> splitMethod;
   final Value<String> tags;
   final Value<String?> projectId;
+  final Value<String?> recurringId;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const EntriesCompanion({
@@ -2398,6 +2444,7 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
     this.splitMethod = const Value.absent(),
     this.tags = const Value.absent(),
     this.projectId = const Value.absent(),
+    this.recurringId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -2421,6 +2468,7 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
     this.splitMethod = const Value.absent(),
     this.tags = const Value.absent(),
     this.projectId = const Value.absent(),
+    this.recurringId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -2447,6 +2495,7 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
     Expression<String>? splitMethod,
     Expression<String>? tags,
     Expression<String>? projectId,
+    Expression<String>? recurringId,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -2470,6 +2519,7 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
       if (splitMethod != null) 'split_method': splitMethod,
       if (tags != null) 'tags': tags,
       if (projectId != null) 'project_id': projectId,
+      if (recurringId != null) 'recurring_id': recurringId,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2495,6 +2545,7 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
     Value<String?>? splitMethod,
     Value<String>? tags,
     Value<String?>? projectId,
+    Value<String?>? recurringId,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
@@ -2518,6 +2569,7 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
       splitMethod: splitMethod ?? this.splitMethod,
       tags: tags ?? this.tags,
       projectId: projectId ?? this.projectId,
+      recurringId: recurringId ?? this.recurringId,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2583,6 +2635,9 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
     if (projectId.present) {
       map['project_id'] = Variable<String>(projectId.value);
     }
+    if (recurringId.present) {
+      map['recurring_id'] = Variable<String>(recurringId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2614,6 +2669,7 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
           ..write('splitMethod: $splitMethod, ')
           ..write('tags: $tags, ')
           ..write('projectId: $projectId, ')
+          ..write('recurringId: $recurringId, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -6031,6 +6087,17 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _clearedAtMeta = const VerificationMeta(
+    'clearedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> clearedAt = GeneratedColumn<DateTime>(
+    'cleared_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6041,6 +6108,7 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
     parsedJson,
     entryId,
     createdAt,
+    clearedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6109,6 +6177,12 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('cleared_at')) {
+      context.handle(
+        _clearedAtMeta,
+        clearedAt.isAcceptableOrUnknown(data['cleared_at']!, _clearedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -6150,6 +6224,10 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      clearedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cleared_at'],
+      ),
     );
   }
 
@@ -6166,11 +6244,15 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
   final String body;
   final DateTime receivedAt;
 
-  /// pending | added | ignored | skipped
+  /// See SmsLogStatus: pending | added | ignored | skipped | not_bank | duplicate | undone
   final String status;
   final String? parsedJson;
   final String? entryId;
   final DateTime createdAt;
+
+  /// Set when the user clears the SMS history. The row stays (with its body
+  /// wiped) so the message is still recognised and never processed twice.
+  final DateTime? clearedAt;
   const SmsLogData({
     required this.id,
     required this.sender,
@@ -6180,6 +6262,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     this.parsedJson,
     this.entryId,
     required this.createdAt,
+    this.clearedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6196,6 +6279,9 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       map['entry_id'] = Variable<String>(entryId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || clearedAt != null) {
+      map['cleared_at'] = Variable<DateTime>(clearedAt);
+    }
     return map;
   }
 
@@ -6213,6 +6299,9 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           ? const Value.absent()
           : Value(entryId),
       createdAt: Value(createdAt),
+      clearedAt: clearedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(clearedAt),
     );
   }
 
@@ -6230,6 +6319,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       parsedJson: serializer.fromJson<String?>(json['parsedJson']),
       entryId: serializer.fromJson<String?>(json['entryId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      clearedAt: serializer.fromJson<DateTime?>(json['clearedAt']),
     );
   }
   @override
@@ -6244,6 +6334,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       'parsedJson': serializer.toJson<String?>(parsedJson),
       'entryId': serializer.toJson<String?>(entryId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'clearedAt': serializer.toJson<DateTime?>(clearedAt),
     };
   }
 
@@ -6256,6 +6347,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     Value<String?> parsedJson = const Value.absent(),
     Value<String?> entryId = const Value.absent(),
     DateTime? createdAt,
+    Value<DateTime?> clearedAt = const Value.absent(),
   }) => SmsLogData(
     id: id ?? this.id,
     sender: sender ?? this.sender,
@@ -6265,6 +6357,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     parsedJson: parsedJson.present ? parsedJson.value : this.parsedJson,
     entryId: entryId.present ? entryId.value : this.entryId,
     createdAt: createdAt ?? this.createdAt,
+    clearedAt: clearedAt.present ? clearedAt.value : this.clearedAt,
   );
   SmsLogData copyWithCompanion(SmsLogCompanion data) {
     return SmsLogData(
@@ -6280,6 +6373,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           : this.parsedJson,
       entryId: data.entryId.present ? data.entryId.value : this.entryId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      clearedAt: data.clearedAt.present ? data.clearedAt.value : this.clearedAt,
     );
   }
 
@@ -6293,7 +6387,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           ..write('status: $status, ')
           ..write('parsedJson: $parsedJson, ')
           ..write('entryId: $entryId, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('clearedAt: $clearedAt')
           ..write(')'))
         .toString();
   }
@@ -6308,6 +6403,7 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     parsedJson,
     entryId,
     createdAt,
+    clearedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -6320,7 +6416,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           other.status == this.status &&
           other.parsedJson == this.parsedJson &&
           other.entryId == this.entryId &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.clearedAt == this.clearedAt);
 }
 
 class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
@@ -6332,6 +6429,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
   final Value<String?> parsedJson;
   final Value<String?> entryId;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> clearedAt;
   final Value<int> rowid;
   const SmsLogCompanion({
     this.id = const Value.absent(),
@@ -6342,6 +6440,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     this.parsedJson = const Value.absent(),
     this.entryId = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.clearedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SmsLogCompanion.insert({
@@ -6353,6 +6452,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     this.parsedJson = const Value.absent(),
     this.entryId = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.clearedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        sender = Value(sender),
@@ -6368,6 +6468,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     Expression<String>? parsedJson,
     Expression<String>? entryId,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? clearedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -6379,6 +6480,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
       if (parsedJson != null) 'parsed_json': parsedJson,
       if (entryId != null) 'entry_id': entryId,
       if (createdAt != null) 'created_at': createdAt,
+      if (clearedAt != null) 'cleared_at': clearedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6392,6 +6494,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     Value<String?>? parsedJson,
     Value<String?>? entryId,
     Value<DateTime>? createdAt,
+    Value<DateTime?>? clearedAt,
     Value<int>? rowid,
   }) {
     return SmsLogCompanion(
@@ -6403,6 +6506,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
       parsedJson: parsedJson ?? this.parsedJson,
       entryId: entryId ?? this.entryId,
       createdAt: createdAt ?? this.createdAt,
+      clearedAt: clearedAt ?? this.clearedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6434,6 +6538,9 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (clearedAt.present) {
+      map['cleared_at'] = Variable<DateTime>(clearedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6451,6 +6558,7 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
           ..write('parsedJson: $parsedJson, ')
           ..write('entryId: $entryId, ')
           ..write('createdAt: $createdAt, ')
+          ..write('clearedAt: $clearedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -10047,6 +10155,1935 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
   }
 }
 
+class $EntryPayersTable extends EntryPayers
+    with TableInfo<$EntryPayersTable, EntryPayer> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EntryPayersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entryIdMeta = const VerificationMeta(
+    'entryId',
+  );
+  @override
+  late final GeneratedColumn<String> entryId = GeneratedColumn<String>(
+    'entry_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _memberIdMeta = const VerificationMeta(
+    'memberId',
+  );
+  @override
+  late final GeneratedColumn<String> memberId = GeneratedColumn<String>(
+    'member_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMinorMeta = const VerificationMeta(
+    'amountMinor',
+  );
+  @override
+  late final GeneratedColumn<int> amountMinor = GeneratedColumn<int>(
+    'amount_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    updatedAt,
+    deletedAt,
+    id,
+    entryId,
+    memberId,
+    amountMinor,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'entry_payers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EntryPayer> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('entry_id')) {
+      context.handle(
+        _entryIdMeta,
+        entryId.isAcceptableOrUnknown(data['entry_id']!, _entryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entryIdMeta);
+    }
+    if (data.containsKey('member_id')) {
+      context.handle(
+        _memberIdMeta,
+        memberId.isAcceptableOrUnknown(data['member_id']!, _memberIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_memberIdMeta);
+    }
+    if (data.containsKey('amount_minor')) {
+      context.handle(
+        _amountMinorMeta,
+        amountMinor.isAcceptableOrUnknown(
+          data['amount_minor']!,
+          _amountMinorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMinorMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EntryPayer map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EntryPayer(
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      entryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_id'],
+      )!,
+      memberId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}member_id'],
+      )!,
+      amountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_minor'],
+      )!,
+    );
+  }
+
+  @override
+  $EntryPayersTable createAlias(String alias) {
+    return $EntryPayersTable(attachedDatabase, alias);
+  }
+}
+
+class EntryPayer extends DataClass implements Insertable<EntryPayer> {
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String id;
+  final String entryId;
+  final String memberId;
+  final int amountMinor;
+  const EntryPayer({
+    required this.updatedAt,
+    this.deletedAt,
+    required this.id,
+    required this.entryId,
+    required this.memberId,
+    required this.amountMinor,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['id'] = Variable<String>(id);
+    map['entry_id'] = Variable<String>(entryId);
+    map['member_id'] = Variable<String>(memberId);
+    map['amount_minor'] = Variable<int>(amountMinor);
+    return map;
+  }
+
+  EntryPayersCompanion toCompanion(bool nullToAbsent) {
+    return EntryPayersCompanion(
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      id: Value(id),
+      entryId: Value(entryId),
+      memberId: Value(memberId),
+      amountMinor: Value(amountMinor),
+    );
+  }
+
+  factory EntryPayer.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EntryPayer(
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      id: serializer.fromJson<String>(json['id']),
+      entryId: serializer.fromJson<String>(json['entryId']),
+      memberId: serializer.fromJson<String>(json['memberId']),
+      amountMinor: serializer.fromJson<int>(json['amountMinor']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'id': serializer.toJson<String>(id),
+      'entryId': serializer.toJson<String>(entryId),
+      'memberId': serializer.toJson<String>(memberId),
+      'amountMinor': serializer.toJson<int>(amountMinor),
+    };
+  }
+
+  EntryPayer copyWith({
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? id,
+    String? entryId,
+    String? memberId,
+    int? amountMinor,
+  }) => EntryPayer(
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    id: id ?? this.id,
+    entryId: entryId ?? this.entryId,
+    memberId: memberId ?? this.memberId,
+    amountMinor: amountMinor ?? this.amountMinor,
+  );
+  EntryPayer copyWithCompanion(EntryPayersCompanion data) {
+    return EntryPayer(
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      id: data.id.present ? data.id.value : this.id,
+      entryId: data.entryId.present ? data.entryId.value : this.entryId,
+      memberId: data.memberId.present ? data.memberId.value : this.memberId,
+      amountMinor: data.amountMinor.present
+          ? data.amountMinor.value
+          : this.amountMinor,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EntryPayer(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('entryId: $entryId, ')
+          ..write('memberId: $memberId, ')
+          ..write('amountMinor: $amountMinor')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(updatedAt, deletedAt, id, entryId, memberId, amountMinor);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EntryPayer &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.id == this.id &&
+          other.entryId == this.entryId &&
+          other.memberId == this.memberId &&
+          other.amountMinor == this.amountMinor);
+}
+
+class EntryPayersCompanion extends UpdateCompanion<EntryPayer> {
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String> id;
+  final Value<String> entryId;
+  final Value<String> memberId;
+  final Value<int> amountMinor;
+  final Value<int> rowid;
+  const EntryPayersCompanion({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.id = const Value.absent(),
+    this.entryId = const Value.absent(),
+    this.memberId = const Value.absent(),
+    this.amountMinor = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EntryPayersCompanion.insert({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String id,
+    required String entryId,
+    required String memberId,
+    required int amountMinor,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       entryId = Value(entryId),
+       memberId = Value(memberId),
+       amountMinor = Value(amountMinor);
+  static Insertable<EntryPayer> custom({
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? id,
+    Expression<String>? entryId,
+    Expression<String>? memberId,
+    Expression<int>? amountMinor,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (id != null) 'id': id,
+      if (entryId != null) 'entry_id': entryId,
+      if (memberId != null) 'member_id': memberId,
+      if (amountMinor != null) 'amount_minor': amountMinor,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EntryPayersCompanion copyWith({
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String>? id,
+    Value<String>? entryId,
+    Value<String>? memberId,
+    Value<int>? amountMinor,
+    Value<int>? rowid,
+  }) {
+    return EntryPayersCompanion(
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      id: id ?? this.id,
+      entryId: entryId ?? this.entryId,
+      memberId: memberId ?? this.memberId,
+      amountMinor: amountMinor ?? this.amountMinor,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (entryId.present) {
+      map['entry_id'] = Variable<String>(entryId.value);
+    }
+    if (memberId.present) {
+      map['member_id'] = Variable<String>(memberId.value);
+    }
+    if (amountMinor.present) {
+      map['amount_minor'] = Variable<int>(amountMinor.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EntryPayersCompanion(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('entryId: $entryId, ')
+          ..write('memberId: $memberId, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RecurringRulesTable extends RecurringRules
+    with TableInfo<$RecurringRulesTable, RecurringRule> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecurringRulesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMinorMeta = const VerificationMeta(
+    'amountMinor',
+  );
+  @override
+  late final GeneratedColumn<int> amountMinor = GeneratedColumn<int>(
+    'amount_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('INR'),
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _toAccountIdMeta = const VerificationMeta(
+    'toAccountId',
+  );
+  @override
+  late final GeneratedColumn<String> toAccountId = GeneratedColumn<String>(
+    'to_account_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _payeeMeta = const VerificationMeta('payee');
+  @override
+  late final GeneratedColumn<String> payee = GeneratedColumn<String>(
+    'payee',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _projectIdMeta = const VerificationMeta(
+    'projectId',
+  );
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+    'project_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _frequencyMeta = const VerificationMeta(
+    'frequency',
+  );
+  @override
+  late final GeneratedColumn<String> frequency = GeneratedColumn<String>(
+    'frequency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _intervalMeta = const VerificationMeta(
+    'interval',
+  );
+  @override
+  late final GeneratedColumn<int> interval = GeneratedColumn<int>(
+    'interval',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _dayOfMonthMeta = const VerificationMeta(
+    'dayOfMonth',
+  );
+  @override
+  late final GeneratedColumn<int> dayOfMonth = GeneratedColumn<int>(
+    'day_of_month',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _weekdayMeta = const VerificationMeta(
+    'weekday',
+  );
+  @override
+  late final GeneratedColumn<int> weekday = GeneratedColumn<int>(
+    'weekday',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startDate = GeneratedColumn<DateTime>(
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endDateMeta = const VerificationMeta(
+    'endDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> endDate = GeneratedColumn<DateTime>(
+    'end_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _maxCountMeta = const VerificationMeta(
+    'maxCount',
+  );
+  @override
+  late final GeneratedColumn<int> maxCount = GeneratedColumn<int>(
+    'max_count',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _postedCountMeta = const VerificationMeta(
+    'postedCount',
+  );
+  @override
+  late final GeneratedColumn<int> postedCount = GeneratedColumn<int>(
+    'posted_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _skippedCountMeta = const VerificationMeta(
+    'skippedCount',
+  );
+  @override
+  late final GeneratedColumn<int> skippedCount = GeneratedColumn<int>(
+    'skipped_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _nextDueMeta = const VerificationMeta(
+    'nextDue',
+  );
+  @override
+  late final GeneratedColumn<DateTime> nextDue = GeneratedColumn<DateTime>(
+    'next_due',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _autoPostMeta = const VerificationMeta(
+    'autoPost',
+  );
+  @override
+  late final GeneratedColumn<bool> autoPost = GeneratedColumn<bool>(
+    'auto_post',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("auto_post" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _remindDaysBeforeMeta = const VerificationMeta(
+    'remindDaysBefore',
+  );
+  @override
+  late final GeneratedColumn<String> remindDaysBefore = GeneratedColumn<String>(
+    'remind_days_before',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _isSubscriptionMeta = const VerificationMeta(
+    'isSubscription',
+  );
+  @override
+  late final GeneratedColumn<bool> isSubscription = GeneratedColumn<bool>(
+    'is_subscription',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_subscription" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('active'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    updatedAt,
+    deletedAt,
+    id,
+    name,
+    kind,
+    amountMinor,
+    currency,
+    categoryId,
+    accountId,
+    toAccountId,
+    payee,
+    projectId,
+    note,
+    frequency,
+    interval,
+    dayOfMonth,
+    weekday,
+    startDate,
+    endDate,
+    maxCount,
+    postedCount,
+    skippedCount,
+    nextDue,
+    autoPost,
+    remindDaysBefore,
+    isSubscription,
+    status,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recurring_rules';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RecurringRule> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('amount_minor')) {
+      context.handle(
+        _amountMinorMeta,
+        amountMinor.isAcceptableOrUnknown(
+          data['amount_minor']!,
+          _amountMinorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMinorMeta);
+    }
+    if (data.containsKey('currency')) {
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    }
+    if (data.containsKey('to_account_id')) {
+      context.handle(
+        _toAccountIdMeta,
+        toAccountId.isAcceptableOrUnknown(
+          data['to_account_id']!,
+          _toAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('payee')) {
+      context.handle(
+        _payeeMeta,
+        payee.isAcceptableOrUnknown(data['payee']!, _payeeMeta),
+      );
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(
+        _projectIdMeta,
+        projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('frequency')) {
+      context.handle(
+        _frequencyMeta,
+        frequency.isAcceptableOrUnknown(data['frequency']!, _frequencyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_frequencyMeta);
+    }
+    if (data.containsKey('interval')) {
+      context.handle(
+        _intervalMeta,
+        interval.isAcceptableOrUnknown(data['interval']!, _intervalMeta),
+      );
+    }
+    if (data.containsKey('day_of_month')) {
+      context.handle(
+        _dayOfMonthMeta,
+        dayOfMonth.isAcceptableOrUnknown(
+          data['day_of_month']!,
+          _dayOfMonthMeta,
+        ),
+      );
+    }
+    if (data.containsKey('weekday')) {
+      context.handle(
+        _weekdayMeta,
+        weekday.isAcceptableOrUnknown(data['weekday']!, _weekdayMeta),
+      );
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(
+        _endDateMeta,
+        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
+      );
+    }
+    if (data.containsKey('max_count')) {
+      context.handle(
+        _maxCountMeta,
+        maxCount.isAcceptableOrUnknown(data['max_count']!, _maxCountMeta),
+      );
+    }
+    if (data.containsKey('posted_count')) {
+      context.handle(
+        _postedCountMeta,
+        postedCount.isAcceptableOrUnknown(
+          data['posted_count']!,
+          _postedCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('skipped_count')) {
+      context.handle(
+        _skippedCountMeta,
+        skippedCount.isAcceptableOrUnknown(
+          data['skipped_count']!,
+          _skippedCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('next_due')) {
+      context.handle(
+        _nextDueMeta,
+        nextDue.isAcceptableOrUnknown(data['next_due']!, _nextDueMeta),
+      );
+    }
+    if (data.containsKey('auto_post')) {
+      context.handle(
+        _autoPostMeta,
+        autoPost.isAcceptableOrUnknown(data['auto_post']!, _autoPostMeta),
+      );
+    }
+    if (data.containsKey('remind_days_before')) {
+      context.handle(
+        _remindDaysBeforeMeta,
+        remindDaysBefore.isAcceptableOrUnknown(
+          data['remind_days_before']!,
+          _remindDaysBeforeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_subscription')) {
+      context.handle(
+        _isSubscriptionMeta,
+        isSubscription.isAcceptableOrUnknown(
+          data['is_subscription']!,
+          _isSubscriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RecurringRule map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecurringRule(
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      amountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_minor'],
+      )!,
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      ),
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      ),
+      toAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}to_account_id'],
+      ),
+      payee: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payee'],
+      ),
+      projectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project_id'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      )!,
+      frequency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}frequency'],
+      )!,
+      interval: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}interval'],
+      )!,
+      dayOfMonth: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}day_of_month'],
+      ),
+      weekday: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}weekday'],
+      ),
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}start_date'],
+      )!,
+      endDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}end_date'],
+      ),
+      maxCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}max_count'],
+      ),
+      postedCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}posted_count'],
+      )!,
+      skippedCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}skipped_count'],
+      )!,
+      nextDue: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}next_due'],
+      ),
+      autoPost: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}auto_post'],
+      )!,
+      remindDaysBefore: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remind_days_before'],
+      )!,
+      isSubscription: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_subscription'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RecurringRulesTable createAlias(String alias) {
+    return $RecurringRulesTable(attachedDatabase, alias);
+  }
+}
+
+class RecurringRule extends DataClass implements Insertable<RecurringRule> {
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String id;
+
+  /// Display name ("Rent", "Netflix"); empty falls back to payee or category.
+  final String name;
+
+  /// expense | income | transfer
+  final String kind;
+  final int amountMinor;
+  final String currency;
+  final String? categoryId;
+  final String? accountId;
+  final String? toAccountId;
+  final String? payee;
+  final String? projectId;
+  final String note;
+
+  /// daily | weekly | monthly | yearly; a custom schedule is one of these
+  /// with [interval] above one.
+  final String frequency;
+  final int interval;
+
+  /// 1..31, -1 = last day of the month, 0 = the month start day setting.
+  final int? dayOfMonth;
+
+  /// ISO weekday 1..7 for weekly rules.
+  final int? weekday;
+  final DateTime startDate;
+  final DateTime? endDate;
+  final int? maxCount;
+
+  /// Occurrences already posted or skipped, counted against [maxCount].
+  final int postedCount;
+
+  /// How many of [postedCount] were skipped rather than added.
+  final int skippedCount;
+
+  /// Next occurrence not yet posted or skipped; null once the rule ended.
+  final DateTime? nextDue;
+
+  /// Post due occurrences without asking; false lists them as Upcoming to confirm.
+  final bool autoPost;
+
+  /// Comma separated days before the due date to notify ("3,0").
+  final String remindDaysBefore;
+  final bool isSubscription;
+
+  /// active | paused | ended
+  final String status;
+  final DateTime createdAt;
+  const RecurringRule({
+    required this.updatedAt,
+    this.deletedAt,
+    required this.id,
+    required this.name,
+    required this.kind,
+    required this.amountMinor,
+    required this.currency,
+    this.categoryId,
+    this.accountId,
+    this.toAccountId,
+    this.payee,
+    this.projectId,
+    required this.note,
+    required this.frequency,
+    required this.interval,
+    this.dayOfMonth,
+    this.weekday,
+    required this.startDate,
+    this.endDate,
+    this.maxCount,
+    required this.postedCount,
+    required this.skippedCount,
+    this.nextDue,
+    required this.autoPost,
+    required this.remindDaysBefore,
+    required this.isSubscription,
+    required this.status,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['kind'] = Variable<String>(kind);
+    map['amount_minor'] = Variable<int>(amountMinor);
+    map['currency'] = Variable<String>(currency);
+    if (!nullToAbsent || categoryId != null) {
+      map['category_id'] = Variable<String>(categoryId);
+    }
+    if (!nullToAbsent || accountId != null) {
+      map['account_id'] = Variable<String>(accountId);
+    }
+    if (!nullToAbsent || toAccountId != null) {
+      map['to_account_id'] = Variable<String>(toAccountId);
+    }
+    if (!nullToAbsent || payee != null) {
+      map['payee'] = Variable<String>(payee);
+    }
+    if (!nullToAbsent || projectId != null) {
+      map['project_id'] = Variable<String>(projectId);
+    }
+    map['note'] = Variable<String>(note);
+    map['frequency'] = Variable<String>(frequency);
+    map['interval'] = Variable<int>(interval);
+    if (!nullToAbsent || dayOfMonth != null) {
+      map['day_of_month'] = Variable<int>(dayOfMonth);
+    }
+    if (!nullToAbsent || weekday != null) {
+      map['weekday'] = Variable<int>(weekday);
+    }
+    map['start_date'] = Variable<DateTime>(startDate);
+    if (!nullToAbsent || endDate != null) {
+      map['end_date'] = Variable<DateTime>(endDate);
+    }
+    if (!nullToAbsent || maxCount != null) {
+      map['max_count'] = Variable<int>(maxCount);
+    }
+    map['posted_count'] = Variable<int>(postedCount);
+    map['skipped_count'] = Variable<int>(skippedCount);
+    if (!nullToAbsent || nextDue != null) {
+      map['next_due'] = Variable<DateTime>(nextDue);
+    }
+    map['auto_post'] = Variable<bool>(autoPost);
+    map['remind_days_before'] = Variable<String>(remindDaysBefore);
+    map['is_subscription'] = Variable<bool>(isSubscription);
+    map['status'] = Variable<String>(status);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  RecurringRulesCompanion toCompanion(bool nullToAbsent) {
+    return RecurringRulesCompanion(
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      id: Value(id),
+      name: Value(name),
+      kind: Value(kind),
+      amountMinor: Value(amountMinor),
+      currency: Value(currency),
+      categoryId: categoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryId),
+      accountId: accountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountId),
+      toAccountId: toAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(toAccountId),
+      payee: payee == null && nullToAbsent
+          ? const Value.absent()
+          : Value(payee),
+      projectId: projectId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(projectId),
+      note: Value(note),
+      frequency: Value(frequency),
+      interval: Value(interval),
+      dayOfMonth: dayOfMonth == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dayOfMonth),
+      weekday: weekday == null && nullToAbsent
+          ? const Value.absent()
+          : Value(weekday),
+      startDate: Value(startDate),
+      endDate: endDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endDate),
+      maxCount: maxCount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(maxCount),
+      postedCount: Value(postedCount),
+      skippedCount: Value(skippedCount),
+      nextDue: nextDue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextDue),
+      autoPost: Value(autoPost),
+      remindDaysBefore: Value(remindDaysBefore),
+      isSubscription: Value(isSubscription),
+      status: Value(status),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory RecurringRule.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecurringRule(
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      kind: serializer.fromJson<String>(json['kind']),
+      amountMinor: serializer.fromJson<int>(json['amountMinor']),
+      currency: serializer.fromJson<String>(json['currency']),
+      categoryId: serializer.fromJson<String?>(json['categoryId']),
+      accountId: serializer.fromJson<String?>(json['accountId']),
+      toAccountId: serializer.fromJson<String?>(json['toAccountId']),
+      payee: serializer.fromJson<String?>(json['payee']),
+      projectId: serializer.fromJson<String?>(json['projectId']),
+      note: serializer.fromJson<String>(json['note']),
+      frequency: serializer.fromJson<String>(json['frequency']),
+      interval: serializer.fromJson<int>(json['interval']),
+      dayOfMonth: serializer.fromJson<int?>(json['dayOfMonth']),
+      weekday: serializer.fromJson<int?>(json['weekday']),
+      startDate: serializer.fromJson<DateTime>(json['startDate']),
+      endDate: serializer.fromJson<DateTime?>(json['endDate']),
+      maxCount: serializer.fromJson<int?>(json['maxCount']),
+      postedCount: serializer.fromJson<int>(json['postedCount']),
+      skippedCount: serializer.fromJson<int>(json['skippedCount']),
+      nextDue: serializer.fromJson<DateTime?>(json['nextDue']),
+      autoPost: serializer.fromJson<bool>(json['autoPost']),
+      remindDaysBefore: serializer.fromJson<String>(json['remindDaysBefore']),
+      isSubscription: serializer.fromJson<bool>(json['isSubscription']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'kind': serializer.toJson<String>(kind),
+      'amountMinor': serializer.toJson<int>(amountMinor),
+      'currency': serializer.toJson<String>(currency),
+      'categoryId': serializer.toJson<String?>(categoryId),
+      'accountId': serializer.toJson<String?>(accountId),
+      'toAccountId': serializer.toJson<String?>(toAccountId),
+      'payee': serializer.toJson<String?>(payee),
+      'projectId': serializer.toJson<String?>(projectId),
+      'note': serializer.toJson<String>(note),
+      'frequency': serializer.toJson<String>(frequency),
+      'interval': serializer.toJson<int>(interval),
+      'dayOfMonth': serializer.toJson<int?>(dayOfMonth),
+      'weekday': serializer.toJson<int?>(weekday),
+      'startDate': serializer.toJson<DateTime>(startDate),
+      'endDate': serializer.toJson<DateTime?>(endDate),
+      'maxCount': serializer.toJson<int?>(maxCount),
+      'postedCount': serializer.toJson<int>(postedCount),
+      'skippedCount': serializer.toJson<int>(skippedCount),
+      'nextDue': serializer.toJson<DateTime?>(nextDue),
+      'autoPost': serializer.toJson<bool>(autoPost),
+      'remindDaysBefore': serializer.toJson<String>(remindDaysBefore),
+      'isSubscription': serializer.toJson<bool>(isSubscription),
+      'status': serializer.toJson<String>(status),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  RecurringRule copyWith({
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? id,
+    String? name,
+    String? kind,
+    int? amountMinor,
+    String? currency,
+    Value<String?> categoryId = const Value.absent(),
+    Value<String?> accountId = const Value.absent(),
+    Value<String?> toAccountId = const Value.absent(),
+    Value<String?> payee = const Value.absent(),
+    Value<String?> projectId = const Value.absent(),
+    String? note,
+    String? frequency,
+    int? interval,
+    Value<int?> dayOfMonth = const Value.absent(),
+    Value<int?> weekday = const Value.absent(),
+    DateTime? startDate,
+    Value<DateTime?> endDate = const Value.absent(),
+    Value<int?> maxCount = const Value.absent(),
+    int? postedCount,
+    int? skippedCount,
+    Value<DateTime?> nextDue = const Value.absent(),
+    bool? autoPost,
+    String? remindDaysBefore,
+    bool? isSubscription,
+    String? status,
+    DateTime? createdAt,
+  }) => RecurringRule(
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    id: id ?? this.id,
+    name: name ?? this.name,
+    kind: kind ?? this.kind,
+    amountMinor: amountMinor ?? this.amountMinor,
+    currency: currency ?? this.currency,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
+    accountId: accountId.present ? accountId.value : this.accountId,
+    toAccountId: toAccountId.present ? toAccountId.value : this.toAccountId,
+    payee: payee.present ? payee.value : this.payee,
+    projectId: projectId.present ? projectId.value : this.projectId,
+    note: note ?? this.note,
+    frequency: frequency ?? this.frequency,
+    interval: interval ?? this.interval,
+    dayOfMonth: dayOfMonth.present ? dayOfMonth.value : this.dayOfMonth,
+    weekday: weekday.present ? weekday.value : this.weekday,
+    startDate: startDate ?? this.startDate,
+    endDate: endDate.present ? endDate.value : this.endDate,
+    maxCount: maxCount.present ? maxCount.value : this.maxCount,
+    postedCount: postedCount ?? this.postedCount,
+    skippedCount: skippedCount ?? this.skippedCount,
+    nextDue: nextDue.present ? nextDue.value : this.nextDue,
+    autoPost: autoPost ?? this.autoPost,
+    remindDaysBefore: remindDaysBefore ?? this.remindDaysBefore,
+    isSubscription: isSubscription ?? this.isSubscription,
+    status: status ?? this.status,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  RecurringRule copyWithCompanion(RecurringRulesCompanion data) {
+    return RecurringRule(
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      amountMinor: data.amountMinor.present
+          ? data.amountMinor.value
+          : this.amountMinor,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      toAccountId: data.toAccountId.present
+          ? data.toAccountId.value
+          : this.toAccountId,
+      payee: data.payee.present ? data.payee.value : this.payee,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      note: data.note.present ? data.note.value : this.note,
+      frequency: data.frequency.present ? data.frequency.value : this.frequency,
+      interval: data.interval.present ? data.interval.value : this.interval,
+      dayOfMonth: data.dayOfMonth.present
+          ? data.dayOfMonth.value
+          : this.dayOfMonth,
+      weekday: data.weekday.present ? data.weekday.value : this.weekday,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      maxCount: data.maxCount.present ? data.maxCount.value : this.maxCount,
+      postedCount: data.postedCount.present
+          ? data.postedCount.value
+          : this.postedCount,
+      skippedCount: data.skippedCount.present
+          ? data.skippedCount.value
+          : this.skippedCount,
+      nextDue: data.nextDue.present ? data.nextDue.value : this.nextDue,
+      autoPost: data.autoPost.present ? data.autoPost.value : this.autoPost,
+      remindDaysBefore: data.remindDaysBefore.present
+          ? data.remindDaysBefore.value
+          : this.remindDaysBefore,
+      isSubscription: data.isSubscription.present
+          ? data.isSubscription.value
+          : this.isSubscription,
+      status: data.status.present ? data.status.value : this.status,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecurringRule(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('kind: $kind, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('currency: $currency, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('accountId: $accountId, ')
+          ..write('toAccountId: $toAccountId, ')
+          ..write('payee: $payee, ')
+          ..write('projectId: $projectId, ')
+          ..write('note: $note, ')
+          ..write('frequency: $frequency, ')
+          ..write('interval: $interval, ')
+          ..write('dayOfMonth: $dayOfMonth, ')
+          ..write('weekday: $weekday, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('maxCount: $maxCount, ')
+          ..write('postedCount: $postedCount, ')
+          ..write('skippedCount: $skippedCount, ')
+          ..write('nextDue: $nextDue, ')
+          ..write('autoPost: $autoPost, ')
+          ..write('remindDaysBefore: $remindDaysBefore, ')
+          ..write('isSubscription: $isSubscription, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    updatedAt,
+    deletedAt,
+    id,
+    name,
+    kind,
+    amountMinor,
+    currency,
+    categoryId,
+    accountId,
+    toAccountId,
+    payee,
+    projectId,
+    note,
+    frequency,
+    interval,
+    dayOfMonth,
+    weekday,
+    startDate,
+    endDate,
+    maxCount,
+    postedCount,
+    skippedCount,
+    nextDue,
+    autoPost,
+    remindDaysBefore,
+    isSubscription,
+    status,
+    createdAt,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecurringRule &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.kind == this.kind &&
+          other.amountMinor == this.amountMinor &&
+          other.currency == this.currency &&
+          other.categoryId == this.categoryId &&
+          other.accountId == this.accountId &&
+          other.toAccountId == this.toAccountId &&
+          other.payee == this.payee &&
+          other.projectId == this.projectId &&
+          other.note == this.note &&
+          other.frequency == this.frequency &&
+          other.interval == this.interval &&
+          other.dayOfMonth == this.dayOfMonth &&
+          other.weekday == this.weekday &&
+          other.startDate == this.startDate &&
+          other.endDate == this.endDate &&
+          other.maxCount == this.maxCount &&
+          other.postedCount == this.postedCount &&
+          other.skippedCount == this.skippedCount &&
+          other.nextDue == this.nextDue &&
+          other.autoPost == this.autoPost &&
+          other.remindDaysBefore == this.remindDaysBefore &&
+          other.isSubscription == this.isSubscription &&
+          other.status == this.status &&
+          other.createdAt == this.createdAt);
+}
+
+class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> kind;
+  final Value<int> amountMinor;
+  final Value<String> currency;
+  final Value<String?> categoryId;
+  final Value<String?> accountId;
+  final Value<String?> toAccountId;
+  final Value<String?> payee;
+  final Value<String?> projectId;
+  final Value<String> note;
+  final Value<String> frequency;
+  final Value<int> interval;
+  final Value<int?> dayOfMonth;
+  final Value<int?> weekday;
+  final Value<DateTime> startDate;
+  final Value<DateTime?> endDate;
+  final Value<int?> maxCount;
+  final Value<int> postedCount;
+  final Value<int> skippedCount;
+  final Value<DateTime?> nextDue;
+  final Value<bool> autoPost;
+  final Value<String> remindDaysBefore;
+  final Value<bool> isSubscription;
+  final Value<String> status;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const RecurringRulesCompanion({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.amountMinor = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.toAccountId = const Value.absent(),
+    this.payee = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.note = const Value.absent(),
+    this.frequency = const Value.absent(),
+    this.interval = const Value.absent(),
+    this.dayOfMonth = const Value.absent(),
+    this.weekday = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.maxCount = const Value.absent(),
+    this.postedCount = const Value.absent(),
+    this.skippedCount = const Value.absent(),
+    this.nextDue = const Value.absent(),
+    this.autoPost = const Value.absent(),
+    this.remindDaysBefore = const Value.absent(),
+    this.isSubscription = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RecurringRulesCompanion.insert({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String id,
+    this.name = const Value.absent(),
+    required String kind,
+    required int amountMinor,
+    this.currency = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.toAccountId = const Value.absent(),
+    this.payee = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.note = const Value.absent(),
+    required String frequency,
+    this.interval = const Value.absent(),
+    this.dayOfMonth = const Value.absent(),
+    this.weekday = const Value.absent(),
+    required DateTime startDate,
+    this.endDate = const Value.absent(),
+    this.maxCount = const Value.absent(),
+    this.postedCount = const Value.absent(),
+    this.skippedCount = const Value.absent(),
+    this.nextDue = const Value.absent(),
+    this.autoPost = const Value.absent(),
+    this.remindDaysBefore = const Value.absent(),
+    this.isSubscription = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       kind = Value(kind),
+       amountMinor = Value(amountMinor),
+       frequency = Value(frequency),
+       startDate = Value(startDate);
+  static Insertable<RecurringRule> custom({
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? kind,
+    Expression<int>? amountMinor,
+    Expression<String>? currency,
+    Expression<String>? categoryId,
+    Expression<String>? accountId,
+    Expression<String>? toAccountId,
+    Expression<String>? payee,
+    Expression<String>? projectId,
+    Expression<String>? note,
+    Expression<String>? frequency,
+    Expression<int>? interval,
+    Expression<int>? dayOfMonth,
+    Expression<int>? weekday,
+    Expression<DateTime>? startDate,
+    Expression<DateTime>? endDate,
+    Expression<int>? maxCount,
+    Expression<int>? postedCount,
+    Expression<int>? skippedCount,
+    Expression<DateTime>? nextDue,
+    Expression<bool>? autoPost,
+    Expression<String>? remindDaysBefore,
+    Expression<bool>? isSubscription,
+    Expression<String>? status,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (kind != null) 'kind': kind,
+      if (amountMinor != null) 'amount_minor': amountMinor,
+      if (currency != null) 'currency': currency,
+      if (categoryId != null) 'category_id': categoryId,
+      if (accountId != null) 'account_id': accountId,
+      if (toAccountId != null) 'to_account_id': toAccountId,
+      if (payee != null) 'payee': payee,
+      if (projectId != null) 'project_id': projectId,
+      if (note != null) 'note': note,
+      if (frequency != null) 'frequency': frequency,
+      if (interval != null) 'interval': interval,
+      if (dayOfMonth != null) 'day_of_month': dayOfMonth,
+      if (weekday != null) 'weekday': weekday,
+      if (startDate != null) 'start_date': startDate,
+      if (endDate != null) 'end_date': endDate,
+      if (maxCount != null) 'max_count': maxCount,
+      if (postedCount != null) 'posted_count': postedCount,
+      if (skippedCount != null) 'skipped_count': skippedCount,
+      if (nextDue != null) 'next_due': nextDue,
+      if (autoPost != null) 'auto_post': autoPost,
+      if (remindDaysBefore != null) 'remind_days_before': remindDaysBefore,
+      if (isSubscription != null) 'is_subscription': isSubscription,
+      if (status != null) 'status': status,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RecurringRulesCompanion copyWith({
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String>? id,
+    Value<String>? name,
+    Value<String>? kind,
+    Value<int>? amountMinor,
+    Value<String>? currency,
+    Value<String?>? categoryId,
+    Value<String?>? accountId,
+    Value<String?>? toAccountId,
+    Value<String?>? payee,
+    Value<String?>? projectId,
+    Value<String>? note,
+    Value<String>? frequency,
+    Value<int>? interval,
+    Value<int?>? dayOfMonth,
+    Value<int?>? weekday,
+    Value<DateTime>? startDate,
+    Value<DateTime?>? endDate,
+    Value<int?>? maxCount,
+    Value<int>? postedCount,
+    Value<int>? skippedCount,
+    Value<DateTime?>? nextDue,
+    Value<bool>? autoPost,
+    Value<String>? remindDaysBefore,
+    Value<bool>? isSubscription,
+    Value<String>? status,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return RecurringRulesCompanion(
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      id: id ?? this.id,
+      name: name ?? this.name,
+      kind: kind ?? this.kind,
+      amountMinor: amountMinor ?? this.amountMinor,
+      currency: currency ?? this.currency,
+      categoryId: categoryId ?? this.categoryId,
+      accountId: accountId ?? this.accountId,
+      toAccountId: toAccountId ?? this.toAccountId,
+      payee: payee ?? this.payee,
+      projectId: projectId ?? this.projectId,
+      note: note ?? this.note,
+      frequency: frequency ?? this.frequency,
+      interval: interval ?? this.interval,
+      dayOfMonth: dayOfMonth ?? this.dayOfMonth,
+      weekday: weekday ?? this.weekday,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      maxCount: maxCount ?? this.maxCount,
+      postedCount: postedCount ?? this.postedCount,
+      skippedCount: skippedCount ?? this.skippedCount,
+      nextDue: nextDue ?? this.nextDue,
+      autoPost: autoPost ?? this.autoPost,
+      remindDaysBefore: remindDaysBefore ?? this.remindDaysBefore,
+      isSubscription: isSubscription ?? this.isSubscription,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (amountMinor.present) {
+      map['amount_minor'] = Variable<int>(amountMinor.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (toAccountId.present) {
+      map['to_account_id'] = Variable<String>(toAccountId.value);
+    }
+    if (payee.present) {
+      map['payee'] = Variable<String>(payee.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (frequency.present) {
+      map['frequency'] = Variable<String>(frequency.value);
+    }
+    if (interval.present) {
+      map['interval'] = Variable<int>(interval.value);
+    }
+    if (dayOfMonth.present) {
+      map['day_of_month'] = Variable<int>(dayOfMonth.value);
+    }
+    if (weekday.present) {
+      map['weekday'] = Variable<int>(weekday.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<DateTime>(startDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<DateTime>(endDate.value);
+    }
+    if (maxCount.present) {
+      map['max_count'] = Variable<int>(maxCount.value);
+    }
+    if (postedCount.present) {
+      map['posted_count'] = Variable<int>(postedCount.value);
+    }
+    if (skippedCount.present) {
+      map['skipped_count'] = Variable<int>(skippedCount.value);
+    }
+    if (nextDue.present) {
+      map['next_due'] = Variable<DateTime>(nextDue.value);
+    }
+    if (autoPost.present) {
+      map['auto_post'] = Variable<bool>(autoPost.value);
+    }
+    if (remindDaysBefore.present) {
+      map['remind_days_before'] = Variable<String>(remindDaysBefore.value);
+    }
+    if (isSubscription.present) {
+      map['is_subscription'] = Variable<bool>(isSubscription.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecurringRulesCompanion(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('kind: $kind, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('currency: $currency, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('accountId: $accountId, ')
+          ..write('toAccountId: $toAccountId, ')
+          ..write('payee: $payee, ')
+          ..write('projectId: $projectId, ')
+          ..write('note: $note, ')
+          ..write('frequency: $frequency, ')
+          ..write('interval: $interval, ')
+          ..write('dayOfMonth: $dayOfMonth, ')
+          ..write('weekday: $weekday, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('maxCount: $maxCount, ')
+          ..write('postedCount: $postedCount, ')
+          ..write('skippedCount: $skippedCount, ')
+          ..write('nextDue: $nextDue, ')
+          ..write('autoPost: $autoPost, ')
+          ..write('remindDaysBefore: $remindDaysBefore, ')
+          ..write('isSubscription: $isSubscription, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -10066,9 +12103,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $RemindersTable reminders = $RemindersTable(this);
+  late final $EntryPayersTable entryPayers = $EntryPayersTable(this);
+  late final $RecurringRulesTable recurringRules = $RecurringRulesTable(this);
   late final Index entriesProjectId = Index(
     'entries_project_id',
     'CREATE INDEX entries_project_id ON entries (project_id)',
+  );
+  late final Index entriesRecurringId = Index(
+    'entries_recurring_id',
+    'CREATE INDEX entries_recurring_id ON entries (recurring_id)',
   );
   late final Index projectFieldsProjectId = Index(
     'project_fields_project_id',
@@ -10085,6 +12128,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index remindersStatusDue = Index(
     'reminders_status_due',
     'CREATE INDEX reminders_status_due ON reminders (status, due_at)',
+  );
+  late final Index entryPayersEntryId = Index(
+    'entry_payers_entry_id',
+    'CREATE INDEX entry_payers_entry_id ON entry_payers (entry_id)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -10105,11 +12152,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     projectFields,
     entryFieldValues,
     reminders,
+    entryPayers,
+    recurringRules,
     entriesProjectId,
+    entriesRecurringId,
     projectFieldsProjectId,
     entryFieldValuesEntryId,
     remindersGroupId,
     remindersStatusDue,
+    entryPayersEntryId,
   ];
 }
 
@@ -10847,6 +12898,7 @@ typedef $$EntriesTableCreateCompanionBuilder = EntriesCompanion Function({
   Value<String?> splitMethod,
   Value<String> tags,
   Value<String?> projectId,
+  Value<String?> recurringId,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -10870,6 +12922,7 @@ typedef $$EntriesTableUpdateCompanionBuilder = EntriesCompanion Function({
   Value<String?> splitMethod,
   Value<String> tags,
   Value<String?> projectId,
+  Value<String?> recurringId,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -10975,6 +13028,11 @@ class $$EntriesTableFilterComposer
 
   ColumnFilters<String> get projectId => $composableBuilder(
     column: $table.projectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recurringId => $composableBuilder(
+    column: $table.recurringId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11088,6 +13146,11 @@ class $$EntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get recurringId => $composableBuilder(
+    column: $table.recurringId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -11172,6 +13235,11 @@ class $$EntriesTableAnnotationComposer
   GeneratedColumn<String> get projectId =>
       $composableBuilder(column: $table.projectId, builder: (column) => column);
 
+  GeneratedColumn<String> get recurringId => $composableBuilder(
+    column: $table.recurringId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
@@ -11223,6 +13291,7 @@ class $$EntriesTableTableManager
                 Value<String?> splitMethod = const Value.absent(),
                 Value<String> tags = const Value.absent(),
                 Value<String?> projectId = const Value.absent(),
+                Value<String?> recurringId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => EntriesCompanion(
@@ -11245,6 +13314,7 @@ class $$EntriesTableTableManager
                 splitMethod: splitMethod,
                 tags: tags,
                 projectId: projectId,
+                recurringId: recurringId,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -11269,6 +13339,7 @@ class $$EntriesTableTableManager
                 Value<String?> splitMethod = const Value.absent(),
                 Value<String> tags = const Value.absent(),
                 Value<String?> projectId = const Value.absent(),
+                Value<String?> recurringId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => EntriesCompanion.insert(
@@ -11291,6 +13362,7 @@ class $$EntriesTableTableManager
                 splitMethod: splitMethod,
                 tags: tags,
                 projectId: projectId,
+                recurringId: recurringId,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -13012,6 +15084,7 @@ typedef $$SmsLogTableCreateCompanionBuilder = SmsLogCompanion Function({
   Value<String?> parsedJson,
   Value<String?> entryId,
   Value<DateTime> createdAt,
+  Value<DateTime?> clearedAt,
   Value<int> rowid,
 });
 typedef $$SmsLogTableUpdateCompanionBuilder = SmsLogCompanion Function({
@@ -13023,6 +15096,7 @@ typedef $$SmsLogTableUpdateCompanionBuilder = SmsLogCompanion Function({
   Value<String?> parsedJson,
   Value<String?> entryId,
   Value<DateTime> createdAt,
+  Value<DateTime?> clearedAt,
   Value<int> rowid,
 });
 
@@ -13072,6 +15146,11 @@ class $$SmsLogTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get clearedAt => $composableBuilder(
+    column: $table.clearedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -13124,6 +15203,11 @@ class $$SmsLogTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get clearedAt => $composableBuilder(
+    column: $table.clearedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SmsLogTableAnnotationComposer
@@ -13162,6 +15246,9 @@ class $$SmsLogTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get clearedAt =>
+      $composableBuilder(column: $table.clearedAt, builder: (column) => column);
 }
 
 class $$SmsLogTableTableManager
@@ -13200,6 +15287,7 @@ class $$SmsLogTableTableManager
                 Value<String?> parsedJson = const Value.absent(),
                 Value<String?> entryId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> clearedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SmsLogCompanion(
                 id: id,
@@ -13210,6 +15298,7 @@ class $$SmsLogTableTableManager
                 parsedJson: parsedJson,
                 entryId: entryId,
                 createdAt: createdAt,
+                clearedAt: clearedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -13222,6 +15311,7 @@ class $$SmsLogTableTableManager
                 Value<String?> parsedJson = const Value.absent(),
                 Value<String?> entryId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> clearedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SmsLogCompanion.insert(
                 id: id,
@@ -13232,6 +15322,7 @@ class $$SmsLogTableTableManager
                 parsedJson: parsedJson,
                 entryId: entryId,
                 createdAt: createdAt,
+                clearedAt: clearedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -14932,6 +17023,900 @@ typedef $$RemindersTableProcessedTableManager =
       Reminder,
       PrefetchHooks Function()
     >;
+typedef $$EntryPayersTableCreateCompanionBuilder =
+    EntryPayersCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      required String id,
+      required String entryId,
+      required String memberId,
+      required int amountMinor,
+      Value<int> rowid,
+    });
+typedef $$EntryPayersTableUpdateCompanionBuilder =
+    EntryPayersCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String> id,
+      Value<String> entryId,
+      Value<String> memberId,
+      Value<int> amountMinor,
+      Value<int> rowid,
+    });
+
+class $$EntryPayersTableFilterComposer
+    extends Composer<_$AppDatabase, $EntryPayersTable> {
+  $$EntryPayersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get memberId => $composableBuilder(
+    column: $table.memberId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$EntryPayersTableOrderingComposer
+    extends Composer<_$AppDatabase, $EntryPayersTable> {
+  $$EntryPayersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get memberId => $composableBuilder(
+    column: $table.memberId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EntryPayersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EntryPayersTable> {
+  $$EntryPayersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get entryId =>
+      $composableBuilder(column: $table.entryId, builder: (column) => column);
+
+  GeneratedColumn<String> get memberId =>
+      $composableBuilder(column: $table.memberId, builder: (column) => column);
+
+  GeneratedColumn<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => column,
+  );
+}
+
+class $$EntryPayersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EntryPayersTable,
+          EntryPayer,
+          $$EntryPayersTableFilterComposer,
+          $$EntryPayersTableOrderingComposer,
+          $$EntryPayersTableAnnotationComposer,
+          $$EntryPayersTableCreateCompanionBuilder,
+          $$EntryPayersTableUpdateCompanionBuilder,
+          (
+            EntryPayer,
+            BaseReferences<_$AppDatabase, $EntryPayersTable, EntryPayer>,
+          ),
+          EntryPayer,
+          PrefetchHooks Function()
+        > {
+  $$EntryPayersTableTableManager(_$AppDatabase db, $EntryPayersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EntryPayersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EntryPayersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EntryPayersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> entryId = const Value.absent(),
+                Value<String> memberId = const Value.absent(),
+                Value<int> amountMinor = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EntryPayersCompanion(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                entryId: entryId,
+                memberId: memberId,
+                amountMinor: amountMinor,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String id,
+                required String entryId,
+                required String memberId,
+                required int amountMinor,
+                Value<int> rowid = const Value.absent(),
+              }) => EntryPayersCompanion.insert(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                entryId: entryId,
+                memberId: memberId,
+                amountMinor: amountMinor,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$EntryPayersTable, EntryPayer>(table),
+                  BaseReferences<_$AppDatabase, $EntryPayersTable, EntryPayer>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$EntryPayersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EntryPayersTable,
+      EntryPayer,
+      $$EntryPayersTableFilterComposer,
+      $$EntryPayersTableOrderingComposer,
+      $$EntryPayersTableAnnotationComposer,
+      $$EntryPayersTableCreateCompanionBuilder,
+      $$EntryPayersTableUpdateCompanionBuilder,
+      (
+        EntryPayer,
+        BaseReferences<_$AppDatabase, $EntryPayersTable, EntryPayer>,
+      ),
+      EntryPayer,
+      PrefetchHooks Function()
+    >;
+typedef $$RecurringRulesTableCreateCompanionBuilder =
+    RecurringRulesCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      required String id,
+      Value<String> name,
+      required String kind,
+      required int amountMinor,
+      Value<String> currency,
+      Value<String?> categoryId,
+      Value<String?> accountId,
+      Value<String?> toAccountId,
+      Value<String?> payee,
+      Value<String?> projectId,
+      Value<String> note,
+      required String frequency,
+      Value<int> interval,
+      Value<int?> dayOfMonth,
+      Value<int?> weekday,
+      required DateTime startDate,
+      Value<DateTime?> endDate,
+      Value<int?> maxCount,
+      Value<int> postedCount,
+      Value<int> skippedCount,
+      Value<DateTime?> nextDue,
+      Value<bool> autoPost,
+      Value<String> remindDaysBefore,
+      Value<bool> isSubscription,
+      Value<String> status,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$RecurringRulesTableUpdateCompanionBuilder =
+    RecurringRulesCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String> id,
+      Value<String> name,
+      Value<String> kind,
+      Value<int> amountMinor,
+      Value<String> currency,
+      Value<String?> categoryId,
+      Value<String?> accountId,
+      Value<String?> toAccountId,
+      Value<String?> payee,
+      Value<String?> projectId,
+      Value<String> note,
+      Value<String> frequency,
+      Value<int> interval,
+      Value<int?> dayOfMonth,
+      Value<int?> weekday,
+      Value<DateTime> startDate,
+      Value<DateTime?> endDate,
+      Value<int?> maxCount,
+      Value<int> postedCount,
+      Value<int> skippedCount,
+      Value<DateTime?> nextDue,
+      Value<bool> autoPost,
+      Value<String> remindDaysBefore,
+      Value<bool> isSubscription,
+      Value<String> status,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$RecurringRulesTableFilterComposer
+    extends Composer<_$AppDatabase, $RecurringRulesTable> {
+  $$RecurringRulesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get toAccountId => $composableBuilder(
+    column: $table.toAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payee => $composableBuilder(
+    column: $table.payee,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get frequency => $composableBuilder(
+    column: $table.frequency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get interval => $composableBuilder(
+    column: $table.interval,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dayOfMonth => $composableBuilder(
+    column: $table.dayOfMonth,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get weekday => $composableBuilder(
+    column: $table.weekday,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get maxCount => $composableBuilder(
+    column: $table.maxCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get postedCount => $composableBuilder(
+    column: $table.postedCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get skippedCount => $composableBuilder(
+    column: $table.skippedCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get nextDue => $composableBuilder(
+    column: $table.nextDue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get autoPost => $composableBuilder(
+    column: $table.autoPost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remindDaysBefore => $composableBuilder(
+    column: $table.remindDaysBefore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSubscription => $composableBuilder(
+    column: $table.isSubscription,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RecurringRulesTableOrderingComposer
+    extends Composer<_$AppDatabase, $RecurringRulesTable> {
+  $$RecurringRulesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get toAccountId => $composableBuilder(
+    column: $table.toAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payee => $composableBuilder(
+    column: $table.payee,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get frequency => $composableBuilder(
+    column: $table.frequency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get interval => $composableBuilder(
+    column: $table.interval,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dayOfMonth => $composableBuilder(
+    column: $table.dayOfMonth,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get weekday => $composableBuilder(
+    column: $table.weekday,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get maxCount => $composableBuilder(
+    column: $table.maxCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get postedCount => $composableBuilder(
+    column: $table.postedCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get skippedCount => $composableBuilder(
+    column: $table.skippedCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get nextDue => $composableBuilder(
+    column: $table.nextDue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get autoPost => $composableBuilder(
+    column: $table.autoPost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remindDaysBefore => $composableBuilder(
+    column: $table.remindDaysBefore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isSubscription => $composableBuilder(
+    column: $table.isSubscription,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RecurringRulesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RecurringRulesTable> {
+  $$RecurringRulesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get toAccountId => $composableBuilder(
+    column: $table.toAccountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payee =>
+      $composableBuilder(column: $table.payee, builder: (column) => column);
+
+  GeneratedColumn<String> get projectId =>
+      $composableBuilder(column: $table.projectId, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get frequency =>
+      $composableBuilder(column: $table.frequency, builder: (column) => column);
+
+  GeneratedColumn<int> get interval =>
+      $composableBuilder(column: $table.interval, builder: (column) => column);
+
+  GeneratedColumn<int> get dayOfMonth => $composableBuilder(
+    column: $table.dayOfMonth,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get weekday =>
+      $composableBuilder(column: $table.weekday, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<int> get maxCount =>
+      $composableBuilder(column: $table.maxCount, builder: (column) => column);
+
+  GeneratedColumn<int> get postedCount => $composableBuilder(
+    column: $table.postedCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get skippedCount => $composableBuilder(
+    column: $table.skippedCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get nextDue =>
+      $composableBuilder(column: $table.nextDue, builder: (column) => column);
+
+  GeneratedColumn<bool> get autoPost =>
+      $composableBuilder(column: $table.autoPost, builder: (column) => column);
+
+  GeneratedColumn<String> get remindDaysBefore => $composableBuilder(
+    column: $table.remindDaysBefore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isSubscription => $composableBuilder(
+    column: $table.isSubscription,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$RecurringRulesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RecurringRulesTable,
+          RecurringRule,
+          $$RecurringRulesTableFilterComposer,
+          $$RecurringRulesTableOrderingComposer,
+          $$RecurringRulesTableAnnotationComposer,
+          $$RecurringRulesTableCreateCompanionBuilder,
+          $$RecurringRulesTableUpdateCompanionBuilder,
+          (
+            RecurringRule,
+            BaseReferences<_$AppDatabase, $RecurringRulesTable, RecurringRule>,
+          ),
+          RecurringRule,
+          PrefetchHooks Function()
+        > {
+  $$RecurringRulesTableTableManager(
+    _$AppDatabase db,
+    $RecurringRulesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecurringRulesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecurringRulesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RecurringRulesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<int> amountMinor = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<String?> accountId = const Value.absent(),
+                Value<String?> toAccountId = const Value.absent(),
+                Value<String?> payee = const Value.absent(),
+                Value<String?> projectId = const Value.absent(),
+                Value<String> note = const Value.absent(),
+                Value<String> frequency = const Value.absent(),
+                Value<int> interval = const Value.absent(),
+                Value<int?> dayOfMonth = const Value.absent(),
+                Value<int?> weekday = const Value.absent(),
+                Value<DateTime> startDate = const Value.absent(),
+                Value<DateTime?> endDate = const Value.absent(),
+                Value<int?> maxCount = const Value.absent(),
+                Value<int> postedCount = const Value.absent(),
+                Value<int> skippedCount = const Value.absent(),
+                Value<DateTime?> nextDue = const Value.absent(),
+                Value<bool> autoPost = const Value.absent(),
+                Value<String> remindDaysBefore = const Value.absent(),
+                Value<bool> isSubscription = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RecurringRulesCompanion(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                name: name,
+                kind: kind,
+                amountMinor: amountMinor,
+                currency: currency,
+                categoryId: categoryId,
+                accountId: accountId,
+                toAccountId: toAccountId,
+                payee: payee,
+                projectId: projectId,
+                note: note,
+                frequency: frequency,
+                interval: interval,
+                dayOfMonth: dayOfMonth,
+                weekday: weekday,
+                startDate: startDate,
+                endDate: endDate,
+                maxCount: maxCount,
+                postedCount: postedCount,
+                skippedCount: skippedCount,
+                nextDue: nextDue,
+                autoPost: autoPost,
+                remindDaysBefore: remindDaysBefore,
+                isSubscription: isSubscription,
+                status: status,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String id,
+                Value<String> name = const Value.absent(),
+                required String kind,
+                required int amountMinor,
+                Value<String> currency = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<String?> accountId = const Value.absent(),
+                Value<String?> toAccountId = const Value.absent(),
+                Value<String?> payee = const Value.absent(),
+                Value<String?> projectId = const Value.absent(),
+                Value<String> note = const Value.absent(),
+                required String frequency,
+                Value<int> interval = const Value.absent(),
+                Value<int?> dayOfMonth = const Value.absent(),
+                Value<int?> weekday = const Value.absent(),
+                required DateTime startDate,
+                Value<DateTime?> endDate = const Value.absent(),
+                Value<int?> maxCount = const Value.absent(),
+                Value<int> postedCount = const Value.absent(),
+                Value<int> skippedCount = const Value.absent(),
+                Value<DateTime?> nextDue = const Value.absent(),
+                Value<bool> autoPost = const Value.absent(),
+                Value<String> remindDaysBefore = const Value.absent(),
+                Value<bool> isSubscription = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RecurringRulesCompanion.insert(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                name: name,
+                kind: kind,
+                amountMinor: amountMinor,
+                currency: currency,
+                categoryId: categoryId,
+                accountId: accountId,
+                toAccountId: toAccountId,
+                payee: payee,
+                projectId: projectId,
+                note: note,
+                frequency: frequency,
+                interval: interval,
+                dayOfMonth: dayOfMonth,
+                weekday: weekday,
+                startDate: startDate,
+                endDate: endDate,
+                maxCount: maxCount,
+                postedCount: postedCount,
+                skippedCount: skippedCount,
+                nextDue: nextDue,
+                autoPost: autoPost,
+                remindDaysBefore: remindDaysBefore,
+                isSubscription: isSubscription,
+                status: status,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RecurringRulesTable, RecurringRule>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $RecurringRulesTable,
+                    RecurringRule
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RecurringRulesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RecurringRulesTable,
+      RecurringRule,
+      $$RecurringRulesTableFilterComposer,
+      $$RecurringRulesTableOrderingComposer,
+      $$RecurringRulesTableAnnotationComposer,
+      $$RecurringRulesTableCreateCompanionBuilder,
+      $$RecurringRulesTableUpdateCompanionBuilder,
+      (
+        RecurringRule,
+        BaseReferences<_$AppDatabase, $RecurringRulesTable, RecurringRule>,
+      ),
+      RecurringRule,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -14964,4 +17949,8 @@ class $AppDatabaseManager {
       $$EntryFieldValuesTableTableManager(_db, _db.entryFieldValues);
   $$RemindersTableTableManager get reminders =>
       $$RemindersTableTableManager(_db, _db.reminders);
+  $$EntryPayersTableTableManager get entryPayers =>
+      $$EntryPayersTableTableManager(_db, _db.entryPayers);
+  $$RecurringRulesTableTableManager get recurringRules =>
+      $$RecurringRulesTableTableManager(_db, _db.recurringRules);
 }

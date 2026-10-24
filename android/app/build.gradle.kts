@@ -53,4 +53,7 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // NotificationCompat for the bank SMS notification (also pulled in by plugins).
+    implementation("androidx.core:core:1.13.1")
+    testImplementation("junit:junit:4.13.2")
 }

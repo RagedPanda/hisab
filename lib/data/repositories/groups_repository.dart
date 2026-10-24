@@ -59,7 +59,7 @@ class GroupDetail {
   /// Every member ever in the group, soft-deleted ones included, so names in
   /// history never fall back to "Unknown".
   final List<Member> allMembers;
-  final List<(Entry, List<Split>)> entries;
+  final List<GroupEntry> entries;
   final List<Settlement> settlements;
   final GroupBalances balances;
 
@@ -74,6 +74,10 @@ class GroupDetail {
 
   Member? get me => members.where((member) => member.isMe).firstOrNull;
 }
+
+/// A group expense with its splits and, when several members paid, its payer
+/// rows (empty for a single payer).
+typedef GroupEntry = (Entry, List<Split>, List<EntryPayer>);
 
 class GroupsRepository {
   GroupsRepository(this.db);
@@ -111,23 +115,34 @@ class GroupsRepository {
   Stream<List<Settlement>> watchSettlements(String groupId) => _settlementsQuery(groupId).watch();
   Future<List<Settlement>> getSettlements(String groupId) => _settlementsQuery(groupId).get();
 
-  /// Group entries with their splits; emits whenever either changes.
-  Stream<List<(Entry, List<Split>)>> watchGroupEntries(String groupId) =>
+  /// Group entries with their splits and payers; emits whenever the entries change.
+  Stream<List<GroupEntry>> watchGroupEntries(String groupId) =>
       _entriesQuery(groupId).watch().asyncMap(_withSplits);
 
-  Future<List<(Entry, List<Split>)>> getGroupEntries(String groupId) async =>
+  Future<List<GroupEntry>> getGroupEntries(String groupId) async =>
       _withSplits(await _entriesQuery(groupId).get());
 
-  Future<List<(Entry, List<Split>)>> _withSplits(List<Entry> entries) async {
+  /// Loads the splits and payer rows of [entries] in one query each.
+  Future<List<GroupEntry>> _withSplits(List<Entry> entries) async {
     final ids = entries.map((e) => e.id).toList();
-    final splits = ids.isEmpty
-        ? <Split>[]
-        : await (db.select(db.splits)..where((t) => t.entryId.isIn(ids) & t.deletedAt.isNull())).get();
-    return [for (final e in entries) (e, splits.where((s) => s.entryId == e.id).toList())];
+    if (ids.isEmpty) return const [];
+    final splits = await (db.select(db.splits)..where((t) => t.entryId.isIn(ids) & t.deletedAt.isNull())).get();
+    final payers = await (db.select(db.entryPayers)..where((t) => t.entryId.isIn(ids) & t.deletedAt.isNull())).get();
+    final splitsByEntry = _groupByEntry(splits, (split) => split.entryId);
+    final payersByEntry = _groupByEntry(payers, (payer) => payer.entryId);
+    return [for (final e in entries) (e, splitsByEntry[e.id] ?? const <Split>[], payersByEntry[e.id] ?? const <EntryPayer>[])];
+  }
+
+  static Map<String, List<T>> _groupByEntry<T>(List<T> rows, String Function(T row) entryIdOf) {
+    final grouped = <String, List<T>>{};
+    for (final row in rows) {
+      (grouped[entryIdOf(row)] ??= []).add(row);
+    }
+    return grouped;
   }
 
   /// Tables whose changes can move a group's balances.
-  List<TableInfo> get _ledgerTables => [db.groups, db.members, db.entries, db.splits, db.settlements];
+  List<TableInfo> get _ledgerTables => [db.groups, db.members, db.entries, db.splits, db.entryPayers, db.settlements];
 
   Stream<GroupBalances> watchBalances(String groupId) => db.watchTables(_ledgerTables, () => getBalances(groupId));
 
@@ -197,25 +212,31 @@ class GroupsRepository {
   }
 
   /// Expenses with a payer, as timeline entries keyed by entry id.
-  static Map<String, TimelineExpense> timelineOf(List<(Entry, List<Split>)> entries) => {
-        for (final (entry, splits) in entries)
-          if (ledgerExpenseOf(entry, splits) case final expense?) entry.id: timelineExpenseOf(entry.occurredAt, expense),
+  static Map<String, TimelineExpense> timelineOf(List<GroupEntry> entries) => {
+        for (final (entry, splits, payers) in entries)
+          if (ledgerExpenseOf(entry, splits, payers) case final expense?) entry.id: timelineExpenseOf(entry.occurredAt, expense),
       };
 
-  /// The ledger form of a group expense, or null when it has no payer.
-  static LedgerExpense? ledgerExpenseOf(Entry entry, List<Split> splits) => entry.paidByMemberId == null
-      ? null
-      : LedgerExpense(paidByMemberId: entry.paidByMemberId!, shares: [for (final split in splits) SplitShare(split.memberId, split.amountMinor)]);
+  /// The ledger form of a group expense, or null when it has no payer. Payer
+  /// rows win over [Entry.paidByMemberId] when several members paid.
+  static LedgerExpense? ledgerExpenseOf(Entry entry, List<Split> splits, [List<EntryPayer> payers = const []]) {
+    final shares = [for (final split in splits) SplitShare(split.memberId, split.amountMinor)];
+    if (payers.isNotEmpty) {
+      return LedgerExpense.multi(payers: [for (final payer in payers) SplitShare(payer.memberId, payer.amountMinor)], shares: shares);
+    }
+    final payerId = entry.paidByMemberId;
+    return payerId == null ? null : LedgerExpense(paidByMemberId: payerId, shares: shares);
+  }
 
   static GroupBalances computeBalances({
     required List<Member> members,
-    required List<(Entry, List<Split>)> entries,
+    required List<GroupEntry> entries,
     required List<Settlement> settlements,
     required bool simplify,
   }) {
     final ledger = [
-      for (final (entry, splits) in entries)
-        ?ledgerExpenseOf(entry, splits),
+      for (final (entry, splits, payers) in entries)
+        ?ledgerExpenseOf(entry, splits, payers),
     ];
     final paid = [
       for (final s in settlements)

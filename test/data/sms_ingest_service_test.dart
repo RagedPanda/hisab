@@ -8,7 +8,10 @@ import 'package:hisab/data/repositories/sms_log_repository.dart';
 import 'package:hisab/data/sms/sms_channel.dart';
 import 'package:hisab/data/sms/sms_ingest_service.dart';
 import 'package:hisab/data/sms/sms_reminder_linker.dart';
+import 'package:hisab/data/sms/sms_sync_cursor.dart';
 import 'package:hisab/domain/reminders/sms_reminder_match.dart';
+import 'package:hisab/domain/sms/sms_outcome.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_reminder_payment_port.dart';
 
@@ -20,17 +23,45 @@ void main() {
   late AccountsRepository accounts;
   late SmsLogRepository smsLog;
   late SmsIngestService service;
+  late FakeSmsSource source;
+  late SmsSyncCursor cursor;
 
-  setUp(() {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
     db = AppDatabase(NativeDatabase.memory());
     accounts = AccountsRepository(db);
     smsLog = SmsLogRepository(db);
-    service = SmsIngestService(smsLog: smsLog, accounts: accounts, categories: CategoriesRepository(db), entries: EntriesRepository(db));
+    source = FakeSmsSource();
+    cursor = SmsSyncCursor(await SharedPreferences.getInstance());
+    service = SmsIngestService(smsLog: smsLog, accounts: accounts, categories: CategoriesRepository(db), entries: EntriesRepository(db), cursor: cursor, source: source, homeCurrencyCode: () => 'INR');
   });
 
   tearDown(() => db.close());
 
   Future<List<String>> accountNames() async => (await accounts.getAll()).map((a) => a.name).toList();
+
+  test('#95: a pasted SMS does not move the inbox scan start', () async {
+    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    source.inbox.add(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: yesterday));
+    await service.ingest(RawSms(sender: RawSms.pastedSender, body: _atmDebit, receivedAt: DateTime.now()), autoAdd: false, force: true);
+
+    final result = await service.sync(autoAdd: false);
+
+    expect(result.scanned, 1);
+    expect(result.pending, 1, reason: 'the older inbox SMS is still read');
+    expect(source.lastSince!.isBefore(yesterday), isTrue, reason: 'first scan looks back the full window');
+  });
+
+  test('the scan starts at the newest inbox SMS already logged', () async {
+    final twoDaysAgo = DateTime.now().subtract(const Duration(days: 2));
+    final logged = DateTime(twoDaysAgo.year, twoDaysAgo.month, twoDaysAgo.day, 9, 30);
+    await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: logged), autoAdd: false);
+    await service.ingest(RawSms(sender: RawSms.pastedSender, body: _atmDebit, receivedAt: DateTime.now()), autoAdd: false, force: true);
+
+    await service.sync(autoAdd: false);
+
+    expect(source.lastSince, logged.subtract(const Duration(minutes: 1)));
+  });
 
   test('IOS-04: a pending SMS creates no account until it is approved', () async {
     final received = DateTime(2026, 10, 21, 10, 0);
@@ -72,119 +103,69 @@ void main() {
     expect(SmsLogRepository.idFor('HDFCBK', _upiDebit, morning), isNot(SmsLogRepository.idFor('HDFCBK', _upiDebit, morning.add(const Duration(days: 1)))));
   });
 
-  group('paying reminders (R2)', () {
-    late FakeReminders reminders;
-    late SmsIngestService matchingService;
-    final received = DateTime(2026, 10, 21, 10, 0);
+  group('sync', () {
+    final now = DateTime(2026, 10, 22, 12);
+    final morning = DateTime(2026, 10, 22, 9);
 
-    setUp(() {
-      reminders = FakeReminders([
-        ReminderMatchCandidate(id: 'swiggy-one', kind: 'subscription', title: 'Swiggy One', dueAt: DateTime(2026, 10, 21), amountMinor: 45900, matchKeywords: const ['swiggy']),
-      ]);
-      matchingService = SmsIngestService(
-        smsLog: smsLog,
-        accounts: accounts,
-        categories: CategoriesRepository(db),
-        entries: EntriesRepository(db),
-        reminderLinker: SmsReminderLinker(smsLog: smsLog, reminders: reminders),
-      );
+    test('#103: notifications of queued messages are cancelled once processed, whatever the outcome', () async {
+      final clear = RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: morning);
+      final personal = RawSms(sender: '+919876500011', body: 'Rs.500 debited, send me the money', receivedAt: morning);
+      source.queue.addAll([clear, personal]);
+      source.inbox.add(RawSms(sender: 'HDFCBK', body: _atmDebit, receivedAt: morning));
+      final result = await service.sync(autoAdd: true, now: now);
+      expect(result.added, 2);
+      expect(source.cancelled, [clear, personal], reason: 'only queued messages were notified; inbox ones never were');
     });
 
-    test('an auto-added SMS pays the reminder it matches with the new entry', () async {
-      await matchingService.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
-      final row = (await smsLog.watchRecent().first).single;
-      expect(reminders.paid.single, (reminderId: 'swiggy-one', entryId: row.entryId!));
-      expect(row.matchedReminderId, 'swiggy-one');
+    test('a sync with nothing queued cancels nothing', () async {
+      await service.sync(autoAdd: false, now: now);
+      expect(source.cancelled, isEmpty);
     });
 
-    test('a pending SMS pays nothing until it is approved', () async {
-      await matchingService.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: false);
-      expect(reminders.paid, isEmpty);
-      final entryId = await matchingService.approvePending((await smsLog.watchPending().first).single);
-      expect(reminders.paid.single, (reminderId: 'swiggy-one', entryId: entryId!));
+    test('ingests messages queued while the app was closed', () async {
+      source.queue.add(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: morning));
+      final result = await service.sync(autoAdd: false, now: now);
+      expect(result.scanned, 1);
+      expect(result.pending, 1);
+      expect(source.queue, isEmpty, reason: 'draining empties the native queue');
     });
 
-    test('an SMS saved from the editor pays the reminder on linkSavedEntry', () async {
-      await matchingService.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: false);
-      final row = (await smsLog.watchPending().first).single;
-      expect(await matchingService.linkSavedEntry(row.id, 'edited-entry'), 'swiggy-one');
-      expect(reminders.paid.single, (reminderId: 'swiggy-one', entryId: 'edited-entry'));
+    test('#40: a debit-like SMS from a phone number in the inbox is ignored', () async {
+      source.inbox.add(RawSms(sender: '+19876500011', body: 'Rs.500 debited from A/c XX1234 - send me the money bro', receivedAt: morning));
+      final result = await service.sync(autoAdd: false, now: now);
+      expect(result.pending, 0);
+      expect(await db.select(db.smsLog).get(), isEmpty);
     });
 
-    test('an SMS that matches nothing leaves reminders alone', () async {
-      await matchingService.ingest(RawSms(sender: 'HDFCBK', body: _atmDebit, receivedAt: received), autoAdd: true);
-      expect(reminders.paid, isEmpty);
-    });
-  });
-
-  group('the same payment arriving twice (#46)', () {
-    const broadband = 'Rs.799.00 debited from A/c XX1234 on 23-10-26 to ACTFIBERNET. UPI Ref 629400000799';
-    late FakeReminders reminders;
-    late SmsIngestService matchingService;
-
-    setUp(() {
-      reminders = FakeReminders([
-        ReminderMatchCandidate(id: 'broadband-early', kind: 'bill', title: 'Broadband early', dueAt: DateTime(2026, 10, 24), amountMinor: 79900, matchKeywords: const ['actfibernet']),
-        ReminderMatchCandidate(id: 'broadband-late', kind: 'bill', title: 'Broadband late', dueAt: DateTime(2026, 10, 30), amountMinor: 79900, matchKeywords: const ['actfibernet']),
-      ]);
-      matchingService = SmsIngestService(
-        smsLog: smsLog,
-        accounts: accounts,
-        categories: CategoriesRepository(db),
-        entries: EntriesRepository(db),
-        reminderLinker: SmsReminderLinker(smsLog: smsLog, reminders: reminders),
-      );
+    test('a message both queued and in the inbox is ingested once', () async {
+      final sms = RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: morning);
+      source.queue.add(sms);
+      source.inbox.add(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: morning.add(const Duration(seconds: 2))));
+      final result = await service.sync(autoAdd: true, now: now);
+      expect(result.scanned, 2);
+      expect(result.added, 1);
+      expect((await db.select(db.entries).get()).length, 1);
     });
 
-    Future<int> entryCount() async => (await db.select(db.entries).get()).length;
-
-    test('pasting an approved SMS again on a later day adds nothing and pays no second reminder', () async {
-      await matchingService.ingest(RawSms(sender: 'PASTED', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: false, force: true);
-      await matchingService.approvePending((await smsLog.watchPending().first).single);
-      expect(reminders.paid.map((payment) => payment.reminderId), ['broadband-early']);
-
-      final again = await matchingService.ingest(RawSms(sender: 'PASTED', body: broadband, receivedAt: DateTime(2026, 10, 25, 20)), autoAdd: false, force: true);
-      expect(again, IngestStatus.duplicate);
-      expect(await smsLog.watchPending().first, isEmpty, reason: 'no second row to approve');
-      expect(reminders.paid.map((payment) => payment.reminderId), ['broadband-early'], reason: 'Broadband late stays pending');
-      expect(await entryCount(), 1);
+    test('the inbox scan starts at the stored cursor and advances it', () async {
+      final older = DateTime(2026, 10, 20, 9);
+      await cursor.write(older);
+      source.inbox.add(RawSms(sender: 'HDFCBK', body: _atmDebit, receivedAt: morning));
+      await service.sync(autoAdd: false, now: now);
+      expect(source.lastSince, older.subtract(const Duration(minutes: 1)));
+      expect(cursor.read(), morning);
     });
 
-    test('pasting an SMS the inbox already auto-added is a duplicate', () async {
-      await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: true);
-      final pasted = await matchingService.ingest(RawSms(sender: 'PASTED', body: '  $broadband\n', receivedAt: DateTime(2026, 10, 23, 18)), autoAdd: true, force: true);
-      expect(pasted, IngestStatus.duplicate);
-      expect(reminders.paid, hasLength(1));
-      expect(await entryCount(), 1);
+    test('a first sync looks back the full window', () async {
+      await service.sync(autoAdd: false, now: now, lookback: const Duration(days: 90));
+      expect(source.lastSince, now.subtract(const Duration(days: 90, minutes: 1)));
+      expect(cursor.read(), isNull, reason: 'nothing seen, nothing to remember');
     });
 
-    test('Undo of an auto-added SMS reopens the reminder it paid (decision 19)', () async {
-      final announced = <SmsAutoAdded>[];
-      final subscription = matchingService.autoAdded.listen(announced.add);
-      await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: true);
-      await Future<void>.delayed(Duration.zero);
-      await subscription.cancel();
-      expect(reminders.paid.single.reminderId, 'broadband-early');
-
-      await matchingService.undoAutoAdd(announced.single);
-
-      expect(reminders.reopened.single, (reminderId: 'broadband-early', entryId: announced.single.entryId));
-      final row = (await smsLog.getById(announced.single.smsId))!;
-      expect(row.status, 'ignored', reason: 'decision 1: the SMS stays ignored');
-      expect(row.matchedReminderId, isNull);
-      expect((await EntriesRepository(db).getEntry(announced.single.entryId))?.entry.deletedAt, isNotNull);
-      expect(await matchingService.ingest(RawSms(sender: 'PASTED', body: broadband, receivedAt: DateTime(2026, 10, 23, 18)), autoAdd: true, force: true),
-          IngestStatus.duplicate, reason: 'pasting the undone SMS does not pay it again');
-      expect(reminders.paid, hasLength(1));
-    });
-
-    test('a different payment to the same payee still pays the next reminder', () async {
-      await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: true);
-      const nextMonth = 'Rs.799.00 debited from A/c XX1234 on 29-10-26 to ACTFIBERNET. UPI Ref 630200000123';
-      final status = await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: nextMonth, receivedAt: DateTime(2026, 10, 29, 9)), autoAdd: true);
-      expect(status, IngestStatus.added);
-      expect(reminders.paid.map((payment) => payment.reminderId), ['broadband-early', 'broadband-late']);
-      expect(await entryCount(), 2);
+    test('overlapping calls run one after the other', () async {
+      source.queue.add(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: morning));
+      final results = await Future.wait([service.sync(autoAdd: true, now: now), service.sync(autoAdd: true, now: now)]);
+      expect(results.map((r) => r.added).toList(), [1, 0]);
     });
   });
 
@@ -247,4 +228,366 @@ void main() {
       expect(again, IngestStatus.duplicate, reason: 'a rescan must not add the undone SMS again');
     });
   });
+  group('foreign currency', () {
+    final received = DateTime(2026, 10, 21, 10, 0);
+    const foreign = {
+      'USD': 'USD 25.00 spent on your HDFC Bank Credit Card XX1234 at AMAZON US on 21-10-26.',
+      'EUR': 'EUR 40.00 spent on your HDFC Bank Credit Card XX1234 at ZARA PARIS on 21-10-26.',
+      'AED': 'AED 120.50 spent on your HDFC Bank Credit Card XX1234 at DUBAI MALL on 21-10-26.',
+    };
+    const home = {
+      'INR': 'INR 459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl.',
+      'Rs': 'Rs.459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl.',
+      '₹': '₹459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl.',
+      'no marker': 'A/c XX1234 debited by 459.00 on 21-10-26 to swiggy@ybl.',
+    };
+
+    for (final MapEntry(key: code, value: body) in foreign.entries) {
+      test('a $code SMS is ignored: not added and not queued for review', () async {
+        final announced = <SmsAutoAdded>[];
+        final subscription = service.autoAdded.listen(announced.add);
+        final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: body, receivedAt: received), autoAdd: true);
+        await Future<void>.delayed(Duration.zero);
+        await subscription.cancel();
+
+        expect(status, IngestStatus.foreignCurrency);
+        expect(announced, isEmpty);
+        expect(await smsLog.watchPending().first, isEmpty);
+        expect(await EntriesRepository(db).watchHasAnyEntries().first, isFalse);
+        final again = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: body, receivedAt: received), autoAdd: true);
+        expect(again, IngestStatus.duplicate, reason: 'a rescan must not read it again');
+      });
+    }
+
+    test('a foreign SMS is ignored with auto-add off too', () async {
+      final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: foreign['USD']!, receivedAt: received), autoAdd: false);
+      expect(status, IngestStatus.foreignCurrency);
+      expect(await smsLog.watchPending().first, isEmpty);
+    });
+
+    for (final MapEntry(key: marker, value: body) in home.entries) {
+      test('an SMS with $marker is processed', () async {
+        final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: body, receivedAt: received), autoAdd: true);
+        expect(status, IngestStatus.added);
+      });
+    }
+  });
+
+  group('SMS history', () {
+    final received = DateTime(2026, 10, 21, 10, 0);
+    Future<List<SmsHistoryRow>> history() => smsLog.watchHistory().first;
+
+    test('a non-bank message from a business sender is logged as not a bank message', () async {
+      final status = await service.ingest(RawSms(sender: 'AMAZON', body: 'Your order has shipped', receivedAt: received), autoAdd: true);
+      expect(status, IngestStatus.notBank);
+      final row = (await history()).single.log;
+      expect(row.status, SmsLogStatus.notBank);
+      expect(row.sender, 'AMAZON');
+      expect(row.receivedAt, received);
+      expect(row.body, isEmpty, reason: 'the text of OTPs and promotions is never stored');
+    });
+
+    test('a not-bank message is still recognised without its text and its re-delivery is not logged', () async {
+      const otp = 'Your OTP for login is 482913. Do not share it.';
+      await service.ingest(RawSms(sender: 'AMAZON', body: otp, receivedAt: received), autoAdd: true);
+      final again = await service.ingest(RawSms(sender: 'AMAZON', body: otp, receivedAt: received.add(const Duration(hours: 2))), autoAdd: true);
+      expect(again, IngestStatus.duplicate);
+      final rows = await history();
+      expect(rows.single.log.status, SmsLogStatus.notBank);
+      expect(rows.single.log.body, isEmpty);
+    });
+
+    test('not-bank text stored by an earlier build is wiped when the database opens', () async {
+      await db.into(db.smsLog).insert(SmsLogCompanion.insert(id: 'old', sender: 'AMAZON', body: 'Your OTP is 123456', receivedAt: received, status: SmsLogStatus.notBank));
+      await db.into(db.smsLog).insert(SmsLogCompanion.insert(id: 'bank', sender: 'HDFCBK', body: _upiDebit, receivedAt: received, status: SmsLogStatus.skipped));
+      await db.wipeUnkeptSmsText();
+      expect((await smsLog.getById('old'))!.body, isEmpty);
+      expect((await smsLog.getById('bank'))!.body, _upiDebit, reason: 'bank messages keep their text');
+    });
+
+    test('an OTP from a DLT business header (AX-AMAZON) is ignored with no text and no duplicate', () async {
+      const otp = 'Your OTP for login is 482913. Do not share it.';
+      final status = await service.ingest(RawSms(sender: 'AX-AMAZON', body: otp, receivedAt: received), autoAdd: true);
+      expect(status, IngestStatus.notBank);
+      await service.ingest(RawSms(sender: 'AX-AMAZON', body: otp, receivedAt: received.add(const Duration(hours: 2))), autoAdd: true);
+      final row = (await history()).single.log;
+      expect(row.sender, 'AX-AMAZON');
+      expect(row.status, SmsLogStatus.notBank);
+      expect(row.body, isEmpty);
+    });
+
+    // #74: promotions from 6-character business headers ended as Unreadable
+    // with their full text.
+    const businessPromos = {
+      'VM-SWIGGY': 'Craving biryani? Get 60% OFF up to Rs.120 on your next order. Use code TRYNEW. Order now: swgy.in/a1b2 T&C apply',
+      'JM-MYNTRA': 'END OF REASON SALE is LIVE! Flat 50-80% off on 1 lakh+ styles. Shop now: myntr.it/x9Yz',
+      'AD-ZOMATO': 'Rs.100 cashback credited? Not yet! Use code ZOMSAVE for 40% off your next 3 orders. Hurry, limited time!',
+      'BZ-FLPKRT': 'Big Billion Days: extra 10% off with SBI cards. Buy now before stocks run out!',
+    };
+    for (final MapEntry(key: sender, value: body) in businessPromos.entries) {
+      test('a promotion from $sender is ignored and its text discarded', () async {
+        final status = await service.ingest(RawSms(sender: sender, body: body, receivedAt: received), autoAdd: true);
+        expect(status, IngestStatus.notBank);
+        final row = (await history()).single.log;
+        expect(row.status, SmsLogStatus.notBank);
+        expect(smsOutcomeFor(row.status), SmsOutcome.ignored);
+        expect(row.body, isEmpty);
+      });
+    }
+
+    test('a business message without a transaction or promotion is ignored and its text discarded', () async {
+      final status = await service.ingest(
+          RawSms(sender: 'VM-SWIGGY', body: 'Your order from Meghana Foods has been delivered. Enjoy your meal!', receivedAt: received),
+          autoAdd: true);
+      expect(status, IngestStatus.notBank);
+      expect((await history()).single.log.body, isEmpty);
+    });
+
+    test('a transaction from a bank header not on the known list is still read', () async {
+      final status = await service.ingest(
+          RawSms(sender: 'VM-CANBNK', body: 'Rs.1,200.00 debited from A/c XX4321 on 21-10-26 to amazon@apl. UPI Ref 512345678901. -Canara Bank', receivedAt: received),
+          autoAdd: true);
+      expect(status, IngestStatus.added);
+    });
+
+    test('an unreadable text with a transaction signal from an unknown header stays re-processable', () async {
+      const body = 'Your A/c XX4321 has been linked to UPI ID ravi@cnrb.';
+      final status = await service.ingest(RawSms(sender: 'VM-CANBNK', body: body, receivedAt: received), autoAdd: true);
+      expect(status, IngestStatus.unparsed);
+      final row = (await history()).single.log;
+      expect(row.status, SmsLogStatus.skipped);
+      expect(row.body, body);
+    });
+
+    test('an OTP from a real bank header keeps no text and logs no duplicate', () async {
+      const otp = 'OTP for txn of Rs.2,500.00 at AMAZON on HDFC Bank card XX1234 is 739201. Do not share it with anyone.';
+      final status = await service.ingest(RawSms(sender: 'VM-HDFCBK', body: otp, receivedAt: received), autoAdd: true);
+      expect(status, IngestStatus.unparsed);
+      await service.ingest(RawSms(sender: 'VM-HDFCBK', body: otp, receivedAt: received.add(const Duration(hours: 2))), autoAdd: true);
+      final row = (await history()).single.log;
+      expect(row.status, SmsLogStatus.skipped);
+      expect(row.body, isEmpty);
+    });
+
+    test('OTP text stored under a bank sender by an earlier build is wiped when the database opens', () async {
+      await db.into(db.smsLog).insert(SmsLogCompanion.insert(id: 'otp', sender: 'AX-AMAZON', body: 'Your OTP is 123456', receivedAt: received, status: SmsLogStatus.skipped));
+      await db.into(db.smsLog).insert(SmsLogCompanion.insert(id: 'statement', sender: 'HDFCBK', body: 'Your statement is ready', receivedAt: received, status: SmsLogStatus.skipped));
+      await db.wipeUnkeptSmsText();
+      expect((await smsLog.getById('otp'))!.body, isEmpty);
+      expect((await smsLog.getById('statement'))!.body, 'Your statement is ready');
+    });
+
+    test('a message from a person is never kept', () async {
+      await service.ingest(RawSms(sender: '+919810000000', body: 'See you at 6', receivedAt: received), autoAdd: true);
+      expect(await history(), isEmpty);
+    });
+
+    test('a bank re-delivery gets its own duplicate row linked to the original entry', () async {
+      await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
+      final again = await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received.add(const Duration(minutes: 20))), autoAdd: true);
+      expect(again, IngestStatus.duplicate);
+      final rows = await history();
+      expect(rows.map((row) => row.log.status), [SmsLogStatus.duplicate, SmsLogStatus.added]);
+      expect(rows.first.log.entryId, rows.last.log.entryId);
+      expect(rows.first.hasEntry, isTrue);
+
+      await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received.add(const Duration(minutes: 20))), autoAdd: true);
+      expect(await history(), hasLength(2), reason: 'reading the re-delivery again adds nothing');
+    });
+
+    test('reading the same delivery again (live then inbox) is not a duplicate', () async {
+      await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
+      await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received.add(const Duration(seconds: 4))), autoAdd: true);
+      expect((await history()).single.log.status, SmsLogStatus.added);
+    });
+
+    test('a deleted entry no longer counts as linked', () async {
+      await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
+      final row = (await history()).single;
+      await EntriesRepository(db).deleteEntry(row.log.entryId!);
+      expect((await history()).single.hasEntry, isFalse);
+    });
+
+    test('re-processing a dismissed message puts it back up for review', () async {
+      await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: false);
+      final pending = (await history()).single.log;
+      await smsLog.setStatus(pending.id, SmsLogStatus.ignored);
+
+      final status = await service.reprocess((await smsLog.getById(pending.id))!, autoAdd: false);
+      expect(status, IngestStatus.pending);
+      final row = (await history()).single.log;
+      expect(row.id, pending.id);
+      expect(row.status, SmsLogStatus.pending);
+    });
+
+    test('re-processing an unreadable bank message forces it through the parser again', () async {
+      await service.ingest(RawSms(sender: 'HDFCBK', body: 'Your statement is ready on NetBanking.', receivedAt: received), autoAdd: true);
+      final row = (await history()).single.log;
+      expect(row.status, SmsLogStatus.skipped);
+      final status = await service.reprocess(row, autoAdd: true);
+      expect(status, IngestStatus.unparsed);
+      expect((await history()).single.log.status, SmsLogStatus.skipped);
+    });
+
+    test('clearing hides processed messages, keeps pending ones and still blocks re-import', () async {
+      await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
+      await service.ingest(RawSms(sender: 'HDFCBK', body: _atmDebit, receivedAt: received.add(const Duration(minutes: 5))), autoAdd: false);
+      final cleared = await smsLog.clearHistory(now: received.add(const Duration(days: 1)));
+      expect(cleared, 1);
+
+      final rows = await history();
+      expect(rows.single.log.status, SmsLogStatus.pending);
+      final again = await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
+      expect(again, IngestStatus.duplicate);
+      final entries = await db.select(db.entries).get();
+      expect(entries, hasLength(1), reason: 'the cleared message is not added a second time');
+      final wiped = await smsLog.getById(SmsLogRepository.idFor('HDFCBK', _upiDebit, received));
+      expect(wiped!.body, isEmpty);
+    });
+  });
+
+  group('paying reminders (R2)', () {
+    late FakeReminders reminders;
+    late SmsIngestService matchingService;
+    final received = DateTime(2026, 10, 21, 10, 0);
+
+    setUp(() {
+      reminders = FakeReminders([
+        ReminderMatchCandidate(id: 'swiggy-one', kind: 'subscription', title: 'Swiggy One', dueAt: DateTime(2026, 10, 21), amountMinor: 45900, matchKeywords: const ['swiggy']),
+      ]);
+      matchingService = SmsIngestService(
+        smsLog: smsLog,
+        accounts: accounts,
+        categories: CategoriesRepository(db),
+        entries: EntriesRepository(db),
+        cursor: cursor,
+        source: source,
+        homeCurrencyCode: () => 'INR',
+        reminderLinker: SmsReminderLinker(smsLog: smsLog, reminders: reminders),
+      );
+    });
+
+    test('an auto-added SMS pays the reminder it matches with the new entry', () async {
+      await matchingService.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
+      final row = (await smsLog.watchRecent().first).single;
+      expect(reminders.paid.single, (reminderId: 'swiggy-one', entryId: row.entryId!));
+      expect(row.matchedReminderId, 'swiggy-one');
+    });
+
+    test('a pending SMS pays nothing until it is approved', () async {
+      await matchingService.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: false);
+      expect(reminders.paid, isEmpty);
+      final entryId = await matchingService.approvePending((await smsLog.watchPending().first).single);
+      expect(reminders.paid.single, (reminderId: 'swiggy-one', entryId: entryId!));
+    });
+
+    test('an SMS saved from the editor pays the reminder on linkSavedEntry', () async {
+      await matchingService.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: false);
+      final row = (await smsLog.watchPending().first).single;
+      expect(await matchingService.linkSavedEntry(row.id, 'edited-entry'), 'swiggy-one');
+      expect(reminders.paid.single, (reminderId: 'swiggy-one', entryId: 'edited-entry'));
+    });
+
+    test('an SMS that matches nothing leaves reminders alone', () async {
+      await matchingService.ingest(RawSms(sender: 'HDFCBK', body: _atmDebit, receivedAt: received), autoAdd: true);
+      expect(reminders.paid, isEmpty);
+    });
+  });
+
+  group('the same payment arriving twice (#46)', () {
+    const broadband = 'Rs.799.00 debited from A/c XX1234 on 23-10-26 to ACTFIBERNET. UPI Ref 629400000799';
+    late FakeReminders reminders;
+    late SmsIngestService matchingService;
+
+    setUp(() {
+      reminders = FakeReminders([
+        ReminderMatchCandidate(id: 'broadband-early', kind: 'bill', title: 'Broadband early', dueAt: DateTime(2026, 10, 24), amountMinor: 79900, matchKeywords: const ['actfibernet']),
+        ReminderMatchCandidate(id: 'broadband-late', kind: 'bill', title: 'Broadband late', dueAt: DateTime(2026, 10, 30), amountMinor: 79900, matchKeywords: const ['actfibernet']),
+      ]);
+      matchingService = SmsIngestService(
+        smsLog: smsLog,
+        accounts: accounts,
+        categories: CategoriesRepository(db),
+        entries: EntriesRepository(db),
+        cursor: cursor,
+        source: source,
+        homeCurrencyCode: () => 'INR',
+        reminderLinker: SmsReminderLinker(smsLog: smsLog, reminders: reminders),
+      );
+    });
+
+    Future<int> entryCount() async => (await db.select(db.entries).get()).length;
+
+    test('pasting an approved SMS again on a later day adds nothing and pays no second reminder', () async {
+      await matchingService.ingest(RawSms(sender: 'PASTED', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: false, force: true);
+      await matchingService.approvePending((await smsLog.watchPending().first).single);
+      expect(reminders.paid.map((payment) => payment.reminderId), ['broadband-early']);
+
+      final again = await matchingService.ingest(RawSms(sender: 'PASTED', body: broadband, receivedAt: DateTime(2026, 10, 25, 20)), autoAdd: false, force: true);
+      expect(again, IngestStatus.duplicate);
+      expect(await smsLog.watchPending().first, isEmpty, reason: 'no second row to approve');
+      expect(reminders.paid.map((payment) => payment.reminderId), ['broadband-early'], reason: 'Broadband late stays pending');
+      expect(await entryCount(), 1);
+    });
+
+    test('pasting an SMS the inbox already auto-added is a duplicate', () async {
+      await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: true);
+      final pasted = await matchingService.ingest(RawSms(sender: 'PASTED', body: '  $broadband\n', receivedAt: DateTime(2026, 10, 23, 18)), autoAdd: true, force: true);
+      expect(pasted, IngestStatus.duplicate);
+      expect(reminders.paid, hasLength(1));
+      expect(await entryCount(), 1);
+    });
+
+    test('Undo of an auto-added SMS reopens the reminder it paid (decision 19)', () async {
+      final announced = <SmsAutoAdded>[];
+      final subscription = matchingService.autoAdded.listen(announced.add);
+      await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: true);
+      await Future<void>.delayed(Duration.zero);
+      await subscription.cancel();
+      expect(reminders.paid.single.reminderId, 'broadband-early');
+
+      await matchingService.undoAutoAdd(announced.single);
+
+      expect(reminders.reopened.single, (reminderId: 'broadband-early', entryId: announced.single.entryId));
+      final row = (await smsLog.getById(announced.single.smsId))!;
+      expect(row.status, SmsLogStatus.ignored, reason: 'decision 1: the SMS stays ignored');
+      expect(row.matchedReminderId, isNull);
+      expect((await EntriesRepository(db).getEntry(announced.single.entryId))?.entry.deletedAt, isNotNull);
+      expect(await matchingService.ingest(RawSms(sender: 'PASTED', body: broadband, receivedAt: DateTime(2026, 10, 23, 18)), autoAdd: true, force: true),
+          IngestStatus.duplicate, reason: 'pasting the undone SMS does not pay it again');
+      expect(reminders.paid, hasLength(1));
+    });
+
+    test('a different payment to the same payee still pays the next reminder', () async {
+      await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: true);
+      const nextMonth = 'Rs.799.00 debited from A/c XX1234 on 29-10-26 to ACTFIBERNET. UPI Ref 630200000123';
+      final status = await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: nextMonth, receivedAt: DateTime(2026, 10, 29, 9)), autoAdd: true);
+      expect(status, IngestStatus.added);
+      expect(reminders.paid.map((payment) => payment.reminderId), ['broadband-early', 'broadband-late']);
+      expect(await entryCount(), 2);
+    });
+  });
+}
+
+class FakeSmsSource implements SmsSource {
+  final queue = <RawSms>[];
+  final inbox = <RawSms>[];
+  DateTime? lastSince;
+  final cancelled = <RawSms>[];
+
+  @override
+  Future<void> cancelNotifications(List<RawSms> messages) async => cancelled.addAll(messages);
+
+  @override
+  Future<List<RawSms>> drainQueue() async {
+    final drained = List<RawSms>.of(queue);
+    queue.clear();
+    return drained;
+  }
+
+  @override
+  Future<List<RawSms>> readInbox({required DateTime since}) async {
+    lastSince = since;
+    return inbox.where((sms) => sms.receivedAt.isAfter(since)).toList();
+  }
 }

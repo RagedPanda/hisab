@@ -10,13 +10,14 @@ import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/sms/sms_channel.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
+import 'package:hisab/features/reminders/reminder_startup.dart';
 import 'package:hisab/features/shell/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/fake_notification_gateway.dart';
 
 Future<(ProviderContainer, AppDatabase)> _pumpReminders(WidgetTester tester, FakeNotificationGateway gateway, {String location = '/reminders'}) async {
-  SharedPreferences.setMockInitialValues({'onboarded': true});
+  SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR'});
   final prefs = await SharedPreferences.getInstance();
   final db = AppDatabase(NativeDatabase.memory());
   final container = ProviderContainer(overrides: [
@@ -233,6 +234,94 @@ void main() {
     expect(gateway.permissionRequests, 1);
     expect(find.text('Mobile'), findsOneWidget);
     expect(find.textContaining('Notifications are off'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('exact alarms denied: asked after the pre-prompt, late note on the list, resume re-posts exact', (tester) async {
+    final gateway = FakeNotificationGateway(notificationsAllowed: false, exactAlarmsAllowed: false);
+    final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');
+    appRouter.push('/reminders');
+    await _settle(tester);
+
+    await tester.tap(find.text('Add reminder'));
+    await _settle(tester);
+    await tester.enterText(find.byKey(const ValueKey('reminder-title')), 'Rent');
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('reminder-save')));
+    await _settle(tester);
+    await tester.tap(find.text('Allow'));
+    await _settle(tester);
+    expect(find.text('Get reminders on time'), findsOneWidget, reason: 'explained after the notification pre-prompt');
+    await tester.tap(find.text('Allow'));
+    await _settle(tester);
+    expect(gateway.exactRequests, 1);
+    expect(gateway.exactById.values, everyElement(isFalse), reason: 'denied: inexact fallback');
+
+    expect(find.text('Reminders may arrive late. Allow Alarms & reminders'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('reminders-late-note')));
+    await _settle(tester);
+    expect(gateway.exactRequests, 2);
+
+    final before = await gateway.permissionState();
+    gateway.exactAlarmsAllowed = true; // granted in Settings, then the app resumes
+    await recheckAlarmAccess(container, before);
+    await _settle(tester);
+    expect(gateway.exactById.values, everyElement(isTrue), reason: 're-posted exact');
+    expect(find.text('Reminders may arrive late. Allow Alarms & reminders'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Turn on -> notifications granted -> no throw -> Alarms & reminders sheet -> granted re-posts exact', (tester) async {
+    final gateway = FakeNotificationGateway(notificationsAllowed: false, exactAlarmsAllowed: false, grantExactOnRequest: true);
+    final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');
+    await _addBill(container);
+    appRouter.push('/reminders');
+    await _settle(tester);
+    expect(gateway.exactById.values, everyElement(isFalse), reason: 'no access yet: inexact');
+
+    await tester.tap(find.text('Turn on'));
+    await _settle(tester);
+    expect(tester.takeException(), isNull, reason: 'the banner goes away once granted; the flow must not use its ref');
+    expect(gateway.permissionRequests, 1);
+    expect(find.text('Get reminders on time'), findsOneWidget, reason: 'permission is re-read only at the end, so the banner stays while the sheet shows');
+    await tester.tap(find.text('Allow'));
+    await _settle(tester);
+    expect(tester.takeException(), isNull);
+    expect(gateway.exactRequests, 1);
+    expect(gateway.exactById.values, everyElement(isTrue), reason: 'granted: every alert re-posted exact');
+    expect(find.text('Reminders may arrive late. Allow Alarms & reminders'), findsNothing);
+    expect(find.text('Turn on'), findsNothing, reason: 'notifications on: the banner is gone');
+  });
+
+  testWidgets('Turn on in the notifications-off banner follows with the Alarms & reminders sheet', (tester) async {
+    final gateway = FakeNotificationGateway(notificationsAllowed: false, exactAlarmsAllowed: false);
+    final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');
+    await _addBill(container);
+    appRouter.push('/reminders');
+    await _settle(tester);
+
+    await tester.tap(find.text('Turn on'));
+    await _settle(tester);
+    expect(gateway.permissionRequests, 1);
+    expect(find.text('Get reminders on time'), findsOneWidget, reason: 'decision 22: reminders fire on time');
+    await tester.tap(find.text('Allow'));
+    await _settle(tester);
+    expect(gateway.exactRequests, 1);
+    expect(find.text('Reminders may arrive late. Allow Alarms & reminders'), findsOneWidget, reason: 'still denied, so the late note shows');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a 0 amount is no amount: hidden on the list and empty in the editor', (tester) async {
+    final gateway = FakeNotificationGateway();
+    final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');
+    await _addBill(container, amountMinor: 0);
+    appRouter.push('/reminders');
+    await _settle(tester);
+    expect(find.textContaining('₹0'), findsNothing);
+
+    await tester.tap(find.text('Electricity'));
+    await _settle(tester);
+    expect(tester.widget<TextField>(find.byKey(const ValueKey('reminder-amount'))).controller!.text, isEmpty);
     expect(tester.takeException(), isNull);
   });
 

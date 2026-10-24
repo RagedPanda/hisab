@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/l10n.dart';
-import '../sms/sms_auto_add_snackbar.dart';
 
-/// Tabs, the add button and, while the app is open, the Undo snackbar for
-/// entries added automatically from bank SMS.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.shell});
   final StatefulNavigationShell shell;
@@ -21,7 +18,6 @@ class AppShell extends StatelessWidget {
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) shell.goBranch(0);
       },
-      child: SmsAutoAddSnackbar(
       child: Scaffold(
       body: shell,
       floatingActionButton: showFab
@@ -40,7 +36,6 @@ class AppShell extends StatelessWidget {
           NavigationDestination(icon: const Icon(Icons.groups_outlined), selectedIcon: const Icon(Icons.groups), label: l10n.tabGroups),
           NavigationDestination(icon: const Icon(Icons.settings_outlined), selectedIcon: const Icon(Icons.settings), label: l10n.tabSettings),
         ],
-      ),
       ),
       ),
     );

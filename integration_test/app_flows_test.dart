@@ -5,17 +5,31 @@
 ///
 /// Tests 2..8 share one in-memory database so later flows (groups, dark mode,
 /// Hindi, backup) have realistic data on screen; test 1 and 9 use their own.
+///
+/// iOS, flow 31 (reminders; numbered 24, 28, 29 and 30 before main merges): the flow
+/// grants provisional notification authorization itself, which iOS does
+/// silently on a simulator that has never been asked (`xcrun simctl privacy` cannot grant notifications). Manual step:
+/// if Hisab's notifications were denied on the simulator before, uninstall the
+/// app (`xcrun simctl uninstall <udid> com.sarv.hisab`) or erase the simulator
+/// first, otherwise iOS keeps the denial and flow 31 fails its first expect.
+/// Android, flow 32 (salary day, numbered 25 and 29 before): the notification permission must be granted
+/// before the flow, or the Android 13+ system prompt covers the align dialog
+/// (#86). The driver does this with
+/// `adb shell pm grant com.sarv.hisab android.permission.POST_NOTIFICATIONS`;
+/// with several devices attached, set `ANDROID_SERIAL` to the `-d` device.
+/// Run another way, grant it by hand first. The flow checks it up front.
 library;
 
-import 'dart:async';
 import 'dart:io' show Platform;
 import 'dart:ui' as ui;
 
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show MethodCall, SystemChannels;
+import 'package:flutter/services.dart' show Clipboard, MethodCall, SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hisab/core/format.dart';
+import 'package:hisab/core/ids.dart';
 import 'package:hisab/core/money.dart';
 import 'package:hisab/core/notifications/reminder_payload.dart';
 import 'package:hisab/core/dates.dart';
@@ -30,13 +44,21 @@ import 'package:hisab/domain/categories/category_packs.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
 import 'package:hisab/domain/projects/project_math.dart';
+import 'package:hisab/domain/salary/salary_schedule.dart';
 import 'package:hisab/domain/split/debt_simplifier.dart';
 import 'package:hisab/domain/split/split_calculator.dart';
 import 'package:hisab/features/categories/categories_screen.dart';
 import 'package:hisab/features/dashboard/dashboard_screen.dart';
 import 'package:hisab/features/expense_editor/expense_editor_screen.dart';
+import 'package:hisab/features/groups/activity_screen.dart';
+import 'package:hisab/features/groups/group_detail_screen.dart';
 import 'package:hisab/features/reminders/reminder_startup.dart';
+import 'package:hisab/features/groups/group_export.dart';
+import 'package:hisab/features/groups/group_totals_screen.dart';
 import 'package:hisab/features/groups/settle_up_sheet.dart';
+import 'package:hisab/features/salary/salary_providers.dart';
+import 'package:hisab/features/salary/salary_reminder.dart';
+import 'package:hisab/features/salary/salary_setup_screen.dart';
 import 'package:hisab/features/split/split_editor.dart';
 import 'package:hisab/features/shell/widgets/common.dart';
 import 'package:hisab/l10n/category_names_hi.dart';
@@ -46,6 +68,7 @@ import 'package:intl/intl.dart';
 
 import 'harness.dart';
 import 'recording_notification_gateway.dart';
+import 'sms_history_flow.dart';
 
 const _milkTotalMinor = 20000; // 2 L @ 70 + 1 L @ 60
 const _restaurantMinor = 125000;
@@ -84,7 +107,24 @@ int _expectedSeededSpend(DateTime now, {required int entryCount}) {
   final range = monthRange(now);
   final hotelDate = now.subtract(const Duration(days: 3));
   final planned = planDemoEntries(count: entryCount, now: now).where((item) => item.kind == 'expense' && range.contains(item.occurredAt)).fold(0, (sum, item) => sum + item.amountMinor);
-  return planned + (range.contains(hotelDate) ? 300000 : 0);
+  return planned + (range.contains(hotelDate) ? 300000 : 0) + _sliceTopUpKeys.length * _sliceTopUpMinor;
+}
+
+/// One child in each of six parent categories. The demo plan spreads entries
+/// by date, so on many days (2026-10-24 among them) this month touches five
+/// or fewer parents and the donut has no "Others" slice; these make it six.
+const _sliceTopUpKeys = ['cab_auto', 'electricity', 'medicines', 'clothing', 'movies', 'salon'];
+const _sliceTopUpMinor = 10000;
+
+/// Adds a small expense in each of [_sliceTopUpKeys] at the start of [now]'s
+/// month, so the dashboard donut always draws the top five plus "Others".
+Future<void> _seedSliceTopUp(AppDatabase db, DateTime now) async {
+  final categories = await db.select(db.categories).get();
+  final entries = EntriesRepository(db);
+  for (final key in _sliceTopUpKeys) {
+    final categoryId = categories.firstWhere((category) => category.seedKey == key).id;
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: _sliceTopUpMinor, occurredAt: monthRange(now).start, categoryId: categoryId, payee: 'Top-up'));
+  }
 }
 
 /// The summary card headline; the same figure also appears in the donut centre
@@ -330,6 +370,7 @@ void main() {
   testWidgets('06 budgets: overall budget is exceeded, category budget has room', (tester) async {
     await pumpApp(tester, shared);
     await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Budgets'));
     await tapText(tester, 'Budgets');
     expect(find.text('No budgets yet'), findsOneWidget);
     await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Budget'));
@@ -441,7 +482,7 @@ void main() {
     // Expected balances straight from the domain layer.
     final entries = await shared.read(groupsRepositoryProvider).getGroupEntries(groupId);
     final ledger = [
-      for (final (entry, splits) in entries) LedgerExpense(paidByMemberId: entry.paidByMemberId!, shares: [for (final s in splits) SplitShare(s.memberId, s.amountMinor)]),
+      for (final (entry, splits, _) in entries) LedgerExpense(paidByMemberId: entry.paidByMemberId!, shares: [for (final s in splits) SplitShare(s.memberId, s.amountMinor)]),
     ];
     final net = computeNetBalances(memberIds: members.map((m) => m.id), expenses: ledger, settlements: const []);
     final nameOf = {for (final m in members) m.id: m.isMe ? 'You' : m.name};
@@ -542,6 +583,7 @@ void main() {
     addTearDown(fresh.container.dispose);
     await pumpApp(tester, fresh);
     await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Categories'));
     await tapText(tester, 'Categories');
     expect(find.text('Food & Dining'), findsOneWidget);
     await shoot(tester, 'categories_list');
@@ -586,7 +628,9 @@ void main() {
     await pumpApp(tester, shared);
     await goTab(tester, 'Settings');
     await shoot(tester, 'settings');
+    await scrollTo(tester, find.text('Bank SMS'));
     await tapText(tester, 'Bank SMS');
+    await waitFor(tester, find.text('Not available on iOS. Use the Shortcut or paste below.'));
     expect(find.text('Not available on iOS. Use the Shortcut or paste below.'), findsOneWidget);
     final readSwitch = tester.widget<SwitchListTile>(find.widgetWithText(SwitchListTile, 'Read bank SMS automatically'));
     expect(readSwitch.onChanged, isNull, reason: 'SMS reading must be disabled on iOS');
@@ -763,10 +807,11 @@ void main() {
     addTearDown(fresh.container.dispose);
     final now = DateTime.now();
     await seedDemoData(fresh.db, entryCount: kDashboardSeedEntries, now: now);
+    await _seedSliceTopUp(fresh.db, now);
     await pumpApp(tester, fresh);
     await settle(tester, 12);
     expect(find.text(_spentIn(now)), findsOneWidget);
-    await _expectSpent(tester, formatMinor(_expectedSeededSpend(now, entryCount: kDashboardSeedEntries), showDecimals: false), reason: 'hero spend = planned expenses this month + my hotel share');
+    await _expectSpent(tester, formatMinor(_expectedSeededSpend(now, entryCount: kDashboardSeedEntries), showDecimals: false), reason: 'hero spend = planned expenses this month + my hotel share + slice top-up');
     expect(find.byKey(kHeroCardKey), findsOneWidget);
     expect(find.text('Income'), findsOneWidget);
     expect(find.text('Daily avg'), findsOneWidget);
@@ -1039,6 +1084,7 @@ void main() {
     await pumpApp(tester, fresh);
     Future<void> openPacks() async {
       await goTab(tester, 'Settings');
+      await scrollTo(tester, find.text('Categories'));
       await tapText(tester, 'Categories');
       await tapFinder(tester, find.byKey(const ValueKey('categories.addPack')));
     }
@@ -1143,7 +1189,11 @@ void main() {
     expect(await projectOf(250000), carId);
 
     await tapFinder(tester, find.byType(FloatingActionButton));
-    expect(find.descendant(of: projectChip, matching: find.text('Swift car')), findsOneWidget, reason: 'the last project is remembered');
+    expect(
+      find.descendant(of: projectChip, matching: find.text('Swift car')),
+      findsOneWidget,
+      reason: 'the last project is remembered',
+    );
     await shoot(tester, 'editor_project_remembered');
     await tapFinder(tester, projectChip);
     await tapFinder(tester, option(kitchenId));
@@ -1241,7 +1291,16 @@ void main() {
       EntriesRepository.newExpense(id: milkId, amountMinor: 45000, occurredAt: thisMonth, categoryId: categoryOf('groceries'), payee: 'Sharma Dairy', note: 'Morning milk'),
       items: [EntryItemsCompanion.insert(id: 'paneer', entryId: milkId, name: 'Paneer', unitPriceMinor: 45000, amountMinor: 45000)],
     );
-    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 250000, occurredAt: thisMonth, categoryId: categoryOf('fuel'), accountId: hdfc.id, projectId: carId, note: 'Highway fill').copyWith(tags: const Value('#trip')));
+    await entries.saveEntry(
+      EntriesRepository.newExpense(
+        amountMinor: 250000,
+        occurredAt: thisMonth,
+        categoryId: categoryOf('fuel'),
+        accountId: hdfc.id,
+        projectId: carId,
+        note: 'Highway fill',
+      ).copyWith(tags: const Value('#trip')),
+    );
     await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 12000, occurredAt: thisMonth, note: 'Chai').copyWith(tags: const Value('#office')));
     await entries.saveEntry(EntriesRepository.newExpense(kind: 'income', amountMinor: 5000000, occurredAt: thisMonth, categoryId: categoryOf('salary'), payee: 'Acme'));
     await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 800000, occurredAt: lastMonth, categoryId: categoryOf('rent'), note: 'Old rent'));
@@ -1273,7 +1332,11 @@ void main() {
     expectResults(1);
     await clearAll();
     expect(find.byType(EntryTile), findsNWidgets(4));
-    expect(find.descendant(of: search, matching: find.text('chai')), findsNothing, reason: 'clear all empties the search box');
+    expect(
+      find.descendant(of: search, matching: find.text('chai')),
+      findsNothing,
+      reason: 'clear all empties the search box',
+    );
 
     await openFilters();
     expect(find.text('Filter entries'), findsOneWidget);
@@ -1288,7 +1351,11 @@ void main() {
     expectResults(1);
     expect(find.byKey(const ValueKey('entries.filter.account')), findsOneWidget);
     expect(find.byKey(const ValueKey('entries.filter.amount')), findsOneWidget);
-    expect(find.descendant(of: find.byKey(const ValueKey('entries.filters')), matching: find.text('2')), findsOneWidget, reason: 'the badge counts active filters');
+    expect(
+      find.descendant(of: find.byKey(const ValueKey('entries.filters')), matching: find.text('2')),
+      findsOneWidget,
+      reason: 'the badge counts active filters',
+    );
     await shoot(tester, 'entries_filtered');
     await tapFinder(tester, find.descendant(of: find.byKey(const ValueKey('entries.filter.account')), matching: find.byIcon(Icons.close)));
     expectResults(1);
@@ -1435,14 +1502,387 @@ void main() {
     await settle(tester, 6);
   });
 
-  testWidgets('24 reminders: create, real OS scheduling, mark paid with a prefilled entry, history, dark, Hindi', (tester) async {
+  testWidgets('24 groups: two members pay one dinner, the editor blocks a wrong total and the list says who paid', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final dinnerGroupId = await groups.createGroup(name: 'Dinner club', icon: 'restaurant', myName: 'You', otherMembers: ['Rahul', 'Priya']);
+    final members = await groups.getMembers(dinnerGroupId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => member.name == 'Rahul').id;
+    final priya = members.firstWhere((member) => member.name == 'Priya').id;
+    Finder payerField(String memberId) => find.byKey(Key('payer-amount-$memberId'));
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Dinner club');
+    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
+    await enterText(tester, _amountField(), '900');
+    await scrollTo(tester, _chip('2+ people'), within: find.byType(ExpenseEditorScreen));
+    await tapFinder(tester, _chip('2+ people'));
+    expect(tester.widget<ChoiceChip>(_chip('2+ people')).selected, isTrue);
+    expect(tester.widget<ChoiceChip>(_chip('You')).selected, isFalse, reason: 'single payer chips clear in multi-payer mode');
+    expect(find.text('${formatMinor(90000)} of ${formatMinor(90000)} assigned'), findsOneWidget, reason: 'the current payer starts covering the whole bill');
+
+    await scrollTo(tester, payerField(rahul), within: find.byType(ExpenseEditorScreen));
+    await enterText(tester, payerField(rahul), '600');
+    expect(find.text('${formatMinor(150000)} of ${formatMinor(90000)} assigned'), findsOneWidget);
+    await _saveEntry(tester, formatMinor(90000));
+    expect(find.text('Amounts paid must add up to ${formatMinor(90000)}'), findsOneWidget, reason: 'save is blocked until the payers cover the bill');
+    expect(find.byType(ExpenseEditorScreen), findsOneWidget);
+
+    await enterText(tester, payerField(me), '300');
+    expect(find.text('${formatMinor(90000)} of ${formatMinor(90000)} assigned'), findsOneWidget);
+    await scrollTo(tester, find.text('Paid by'), within: find.byType(ExpenseEditorScreen), up: true);
+    await shoot(tester, 'group_multiple_payers');
+    await _saveEntry(tester, formatMinor(90000));
+    expect(find.textContaining('Rahul and you paid ${formatMinor(90000)}'), findsOneWidget);
+    await shoot(tester, 'group_expenses_multiple_payers');
+
+    final detail = (await groups.getGroupDetail(dinnerGroupId))!;
+    expect(detail.balances.net, {me: 0, rahul: 30000, priya: -30000});
+    expect(detail.entries.single.$1.paidByMemberId, rahul, reason: 'the biggest payer is kept as the main payer');
+
+    await tapText(tester, 'Balances');
+    expect(find.text('Priya → Rahul'), findsOneWidget);
+    await tapText(tester, 'Expenses');
+    await tapFinder(tester, find.textContaining('Rahul and you paid'), frames: 12);
+    await scrollTo(tester, _chip('2+ people'), within: find.byType(ExpenseEditorScreen));
+    expect(tester.widget<ChoiceChip>(_chip('2+ people')).selected, isTrue, reason: 'editing keeps the payers');
+    expect(tester.widget<TextFormField>(payerField(rahul)).initialValue, '600');
+    expect(tester.widget<TextFormField>(payerField(me)).initialValue, '300');
+  });
+
+  testWidgets('30 group settings: type, default split with weights, currency label, notes, leave blocked, archive', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final flatId = await groups.createGroup(name: 'Flat 4B', icon: 'groups', myName: 'You', otherMembers: ['Rahul']);
+    final members = await groups.getMembers(flatId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => member.name == 'Rahul').id;
+    await groups.addSettlement(groupId: flatId, fromMemberId: me, toMemberId: rahul, amountMinor: 50000, occurredAt: DateTime.now());
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Flat 4B');
+    await tapFinder(tester, find.byType(PopupMenuButton<String>));
+    await tapText(tester, 'Group settings', frames: 12);
+
+    await tapFinder(tester, _chip('Home'));
+    var group = (await groups.getGroup(flatId))!;
+    expect((group.type, group.icon), ('home', 'home'), reason: 'the generic icon follows the new type');
+
+    await scrollTo(tester, _chip('Shares / ratio'));
+    await tapFinder(tester, _chip('Shares / ratio'));
+    await scrollTo(tester, find.byTooltip('More shares for Rahul'));
+    await tapFinder(tester, find.byTooltip('More shares for Rahul'));
+    expect(find.text('1.5 shares'), findsOneWidget);
+    await shoot(tester, 'group_settings_shares');
+
+    await scrollTo(tester, find.text('Same as app (${fresh.read(settingsProvider).currencySymbol})'));
+    await tapText(tester, 'Same as app (${fresh.read(settingsProvider).currencySymbol})', frames: 12);
+    await tapText(tester, '€  ·  EUR', frames: 12);
+    expect((await groups.getGroup(flatId))!.currencyLabel, '€');
+
+    await scrollTo(tester, find.text('Add a note for this group'));
+    await tapText(tester, 'Add a note for this group', frames: 12);
+    await enterText(tester, _dialogField(), 'Rent is due on the 1st');
+    await tapFinder(tester, _filled('Save'), frames: 12);
+    expect(find.text('Rent is due on the 1st'), findsOneWidget);
+
+    await scrollTo(tester, find.text('Leave group'));
+    await tapText(tester, 'Leave group');
+    expect(find.text('Settle up first. You can leave once nobody owes you and you owe nobody.'), findsOneWidget);
+    await shoot(tester, 'group_settings_bottom');
+
+    await goBack(tester);
+    expect(find.text('Rent is due on the 1st'), findsOneWidget, reason: 'notes show on the Expenses tab');
+    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'), frames: 12);
+    await scrollTo(tester, _chip('Shares / ratio'), within: find.byType(ExpenseEditorScreen));
+    expect(tester.widget<ChoiceChip>(_chip('Shares / ratio')).selected, isTrue, reason: 'new expenses start from the default split');
+    expect(find.textContaining('€'), findsWidgets, reason: 'the editor shows the group currency label');
+    await goBack(tester);
+
+    await tapFinder(tester, find.byType(PopupMenuButton<String>));
+    await tapText(tester, 'Archive group', frames: 12);
+    await tapFinder(tester, _filled('Archive'), frames: 12);
+    expect(find.text('This group is archived. Unarchive it to add expenses.'), findsOneWidget);
+    expect(find.widgetWithText(FloatingActionButton, 'Add expense'), findsNothing);
+    await shoot(tester, 'group_archived');
+    await goBack(tester);
+    expect(find.text('Archived (1)'), findsOneWidget);
+    group = (await groups.getGroup(flatId))!;
+    expect((group.defaultSplitMethod, group.archivedAt != null), ('shares', true));
+    expect((await groups.getMembers(flatId)).firstWhere((member) => member.id == rahul).weight, 1.5);
+  });
+
+  testWidgets('28 groups: edit and delete an expense, undo, then restore it from the activity log', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final movieGroupId = await groups.createGroup(name: 'Movie night', icon: 'movie', myName: 'You', otherMembers: ['Rahul']);
+    const title = 'Restaurants & Cafes';
+    Finder expenseRow() => find.descendant(of: find.byType(GroupDetailScreen), matching: find.text(title));
+    Future<void> deleteFromEditor() async {
+      await tapFinder(tester, expenseRow(), frames: 12);
+      await tapFinder(tester, find.byIcon(Icons.delete_outline));
+      await tapFinder(tester, _filled('Delete'), frames: 12);
+    }
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Movie night');
+    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _pickCategory(tester, 'restaurants', title);
+    await enterText(tester, _amountField(), '600');
+    await _saveEntry(tester, formatMinor(60000));
+    await tapFinder(tester, expenseRow(), frames: 12);
+    await enterText(tester, _amountField(), '900');
+    await _saveEntry(tester, formatMinor(90000));
+
+    await deleteFromEditor();
+    expect(find.text('Expense deleted'), findsOneWidget);
+    expect(expenseRow(), findsNothing);
+    await shoot(tester, 'group_expense_undo');
+    await tapText(tester, 'Undo', frames: 12);
+    expect(expenseRow(), findsOneWidget, reason: 'Undo brings the expense back');
+    expect((await groups.getGroupDetail(movieGroupId))!.entries.single.$2, hasLength(2), reason: 'with both shares');
+
+    await deleteFromEditor();
+    expect(expenseRow(), findsNothing);
+    await tapFinder(tester, find.byType(PopupMenuButton<String>));
+    await tapText(tester, 'Activity', frames: 12);
+    expect(find.byType(ActivityScreen), findsOneWidget);
+    expect(find.text('You deleted “$title”'), findsNWidgets(2));
+    expect(find.text('You restored “$title”'), findsOneWidget);
+    expect(find.text('You edited “$title”'), findsOneWidget);
+    expect(find.text('You added “$title”'), findsOneWidget);
+    expect(find.text('Amount: ${formatMinor(60000)} → ${formatMinor(90000)}'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Restore'), findsOneWidget, reason: 'only the latest deletion offers Restore');
+    await shoot(tester, 'group_activity');
+
+    await tapFinder(tester, find.widgetWithText(TextButton, 'Restore'), frames: 12);
+    expect(find.text('Expense restored'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Restore'), findsNothing);
+    expect(find.text('You restored “$title”'), findsNWidgets(2));
+    expect((await groups.getGroupDetail(movieGroupId))!.entries.single.$1.amountMinor, 90000);
+
+    await goBack(tester);
+    expect(expenseRow(), findsOneWidget);
+    await goBack(tester);
+    await tapFinder(tester, find.byTooltip('Activity'), frames: 12);
+    expect(find.text('All groups'), findsOneWidget);
+    expect(find.textContaining('Movie night ·'), findsWidgets, reason: 'the overall feed names each row\'s group');
+    await shoot(tester, 'all_activity');
+  });
+
+  testWidgets('29 groups: delete a group, then restore it with its expenses and payments from the activity log', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final clubId = await groups.createGroup(name: 'Book club', icon: 'book', myName: 'You', otherMembers: ['Rahul']);
+    final members = await groups.getMembers(clubId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => !member.isMe).id;
+    await groups.saveGroupExpense(
+      EntriesRepository.newExpense(id: 'books', amountMinor: 80000, occurredAt: DateTime.now(), note: 'Books', groupId: clubId, paidByMemberId: me, splitMethod: 'equal'),
+      splits: [
+        SplitsCompanion.insert(id: 'books-me', entryId: 'books', memberId: me, amountMinor: 40000),
+        SplitsCompanion.insert(id: 'books-rahul', entryId: 'books', memberId: rahul, amountMinor: 40000),
+      ],
+    );
+    await groups.addSettlement(groupId: clubId, fromMemberId: rahul, toMemberId: me, amountMinor: 10000);
+    final balancesBefore = (await groups.getBalances(clubId)).net;
+    await pumpApp(tester, fresh);
+    await tapText(tester, 'Groups', frames: 12);
+    await tapText(tester, 'Book club', frames: 12);
+
+    await tapFinder(tester, find.byType(PopupMenuButton<String>));
+    await tapText(tester, 'Delete group', frames: 8);
+    await tapText(tester, 'Delete', last: true, frames: 12);
+    expect(find.text('Book club'), findsNothing);
+
+    await tapFinder(tester, find.byTooltip('Activity'), frames: 12);
+    expect(find.text('You deleted the group “Book club”'), findsOneWidget);
+    expect(find.text('1 expense'), findsOneWidget);
+    await tapFinder(tester, find.widgetWithText(TextButton, 'Restore'), frames: 12);
+    expect(find.text('Group restored'), findsOneWidget);
+    expect(find.text('You restored the group “Book club”'), findsOneWidget);
+    expect((await groups.getBalances(clubId)).net, balancesBefore, reason: 'the expense and the payment come back as they were');
+
+    await goBack(tester);
+    expect(find.text('Book club'), findsOneWidget);
+  });
+
+  testWidgets('25 groups: copy a WhatsApp summary and export the ledger as CSV', (tester) async {
+    final exports = <({String fileName, String csv, String subject})>[];
+    final fresh = await createApp(overrides: [
+      csvFileSharerProvider.overrideWithValue(({required fileName, required csv, required subject}) async {
+        exports.add((fileName: fileName, csv: csv, subject: subject));
+        return true;
+      }),
+    ]);
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final entries = fresh.read(entriesRepositoryProvider);
+    final tripId = await groups.createGroup(name: 'Goa trip', icon: 'beach', myName: 'You', otherMembers: ['Rahul', 'Priya']);
+    final members = await groups.getMembers(tripId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => member.name == 'Rahul').id;
+    final priya = members.firstWhere((member) => member.name == 'Priya').id;
+    final today = DateTime.now();
+    await entries.saveEntry(
+      EntriesRepository.newExpense(id: 'export-hotel', amountMinor: 90000, occurredAt: today, groupId: tripId, paidByMemberId: rahul, splitMethod: 'equal', note: 'Hotel, sea view'),
+      splits: [for (final member in [me, rahul, priya]) SplitsCompanion.insert(id: 'export-hotel-$member', entryId: 'export-hotel', memberId: member, amountMinor: 30000)],
+      payers: [
+        EntryPayersCompanion.insert(id: 'export-hotel-rahul', entryId: 'export-hotel', memberId: rahul, amountMinor: 60000),
+        EntryPayersCompanion.insert(id: 'export-hotel-me', entryId: 'export-hotel', memberId: me, amountMinor: 30000),
+      ],
+    );
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Goa trip');
+    await tapFinder(tester, find.byTooltip('Share summary'));
+    expect(find.text('Export as CSV'), findsOneWidget);
+    await shoot(tester, 'group_share_options');
+    await tapText(tester, 'Copy as text', frames: 12);
+    final copied = (await Clipboard.getData('text/plain'))?.text ?? '';
+    expect(copied, startsWith('*Goa trip — balances*'));
+    expect(copied, contains('Priya owes Rahul ${formatMinor(30000)}'));
+    expect(copied, contains('Rahul gets back ${formatMinor(30000)}'));
+    expect(copied, contains('Group total: ${formatMinor(90000)}'));
+    expect(copied, contains('Your share: ${formatMinor(30000)}'));
+
+    await tapFinder(tester, find.byTooltip('Share summary'));
+    await tapFinder(tester, find.byKey(const Key('group-export-csv')), frames: 12);
+    expect(exports, hasLength(1));
+    final export = exports.single;
+    expect(export.fileName, endsWith('.csv'));
+    expect(export.fileName, startsWith('goa-trip-'));
+    expect(export.subject, 'Goa trip expenses');
+    final lines = export.csv.split('\r\n');
+    expect(lines.first, startsWith('Date,Description,Category,Cost,Paid by,You paid,'));
+    expect(lines[1], contains('"Hotel, sea view"'));
+    expect(lines[1], contains(',Rahul 600.00; You 300.00,'));
+    expect(lines[2], startsWith(',Total,,900.00,'), reason: 'a closing total row follows the last expense');
+  });
+
+  testWidgets('33 groups: totals for all time and one month, with several payers and an unequal split', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final entries = fresh.read(entriesRepositoryProvider);
+    final groupId = await groups.createGroup(name: 'Totals club', icon: 'restaurant', myName: 'You', otherMembers: ['Rahul', 'Priya']);
+    final members = await groups.getMembers(groupId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => member.name == 'Rahul').id;
+    final priya = members.firstWhere((member) => member.name == 'Priya').id;
+    final now = DateTime.now();
+    final lastMonth = DateTime(now.year, now.month - 1, 15);
+    Future<void> expense(String note, DateTime when, Map<String, int> shares, Map<String, int> paid) async {
+      final entryId = newId();
+      final total = shares.values.fold(0, (sum, amount) => sum + amount);
+      await entries.saveEntry(
+        EntriesRepository.newExpense(id: entryId, amountMinor: total, occurredAt: when, note: note, groupId: groupId, paidByMemberId: paid.keys.first, splitMethod: 'exact'),
+        splits: [for (final MapEntry(key: member, value: amount) in shares.entries) SplitsCompanion.insert(id: newId(), entryId: entryId, memberId: member, amountMinor: amount)],
+        payers: paid.length < 2 ? const [] : [for (final MapEntry(key: member, value: amount) in paid.entries) EntryPayersCompanion.insert(id: newId(), entryId: entryId, memberId: member, amountMinor: amount)],
+      );
+    }
+
+    // This month: Rahul 600 and I 300 pay a 900 dinner owed 200 / 300 / 400.
+    await expense('Dinner', now, {me: 20000, rahul: 30000, priya: 40000}, {rahul: 60000, me: 30000});
+    // Last month: Priya pays a 300 taxi shared equally.
+    await expense('Taxi', lastMonth, {me: 10000, rahul: 10000, priya: 10000}, {priya: 30000});
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Totals club');
+    await tapText(tester, 'Balances');
+    final card = find.byKey(kGroupTotalsCardKey);
+    expect(find.descendant(of: card, matching: find.text(formatMinor(120000))), findsOneWidget, reason: 'all-time group spending');
+    expect(find.descendant(of: card, matching: find.text(formatMinor(30000))), findsNWidgets(2), reason: 'I paid 300 and owe 200 + 100');
+
+    await tapFinder(tester, card, frames: 12);
+    expect(find.byType(GroupTotalsScreen), findsOneWidget);
+    expect(find.text('2 expenses'), findsOneWidget);
+    await shoot(tester, 'group_totals_all_time');
+
+    await tapFinder(tester, find.widgetWithText(ChoiceChip, formatMonthLabel(monthRange(now))), frames: 12);
+    expect(find.text('1 expense'), findsOneWidget);
+    expect(find.text(formatMinor(90000)), findsWidgets);
+    expect(find.text('+${formatMinor(10000)}'), findsOneWidget, reason: 'I paid 300 against a 200 share this month');
+    await scrollTo(tester, find.byType(MemberSpendChart), within: find.byType(GroupTotalsScreen));
+    await shoot(tester, 'group_totals_month_members');
+  });
+
+  testWidgets('26 subscriptions: add from templates, totals, sort by cost, pause, cancel, Hindi', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    await pumpApp(tester, fresh);
+
+    await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Subscriptions'));
+    await tapText(tester, 'Subscriptions');
+    expect(find.text('No subscriptions yet'), findsOneWidget);
+
+    Future<void> addFromTemplate(String template, String price) async {
+      await tapFinder(tester, find.byType(FloatingActionButton), frames: 10);
+      await tapFinder(tester, find.descendant(of: find.byType(DraggableScrollableSheet), matching: find.text(template)), frames: 10);
+      await enterText(tester, find.byKey(const Key('subscriptionPrice')), price);
+      await tapFinder(tester, _filled('Save'), frames: 12);
+    }
+
+    await addFromTemplate('Netflix', '649');
+    expect(find.text('₹649'), findsOneWidget, reason: 'monthly total');
+    expect(find.text('₹7,788'), findsOneWidget, reason: 'yearly total');
+    await addFromTemplate('Mobile recharge', '299');
+    expect(find.textContaining('Every 28 days'), findsOneWidget);
+    expect(find.text('₹974'), findsOneWidget, reason: '649 + 299 x 365 / 28 / 12');
+    expect(find.text('₹11,686'), findsOneWidget);
+    final rules = await fresh.db.select(fresh.db.recurringRules).get();
+    expect(rules.every((rule) => rule.isSubscription), isTrue);
+    expect(rules.firstWhere((rule) => rule.name == 'Mobile recharge').interval, 28);
+
+    double top(String text) => tester.getTopLeft(find.text(text)).dy;
+    expect(top('Netflix'), lessThan(top('Mobile recharge')), reason: 'cost high to low by default');
+    await tapFinder(tester, find.byIcon(Icons.sort));
+    await tapText(tester, 'Cost: low to high');
+    expect(top('Mobile recharge'), lessThan(top('Netflix')));
+
+    await tapText(tester, 'Netflix');
+    await tapText(tester, 'Pause');
+    expect(find.text('Paused'), findsOneWidget);
+    expect(find.text('₹325'), findsOneWidget, reason: 'paused subscriptions leave the totals');
+
+    await tapText(tester, 'Mobile recharge');
+    await tapText(tester, 'Mark as cancelled');
+    await tapText(tester, 'Mark as cancelled', last: true);
+    expect(find.text('Cancelled'), findsOneWidget);
+    expect(find.text('₹0'), findsNWidgets(2));
+    expect((await fresh.db.select(fresh.db.recurringRules).get()).map((rule) => rule.status).toSet(), {'paused', 'ended'});
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    expect(find.text(hi.subscriptions), findsOneWidget);
+    expect(find.text(hi.subscriptionPaused), findsOneWidget);
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+  });
+
+  testWidgets('27 SMS history: outcomes, filter chips, re-process, entry link, Hindi dark, clear', smsHistoryFlow);
+
+  testWidgets('31 reminders: create, real OS scheduling, mark paid with a prefilled entry, history, dark, Hindi', (tester) async {
     final gatewayLog = GatewayCallLog();
     final fresh = await createApp(overrides: [recordingGatewayOverride(gatewayLog)]);
     addTearDown(fresh.container.dispose);
     final gateway = fresh.read(notificationGatewayProvider);
-    // iOS: ask for the notification permission through the plugin (the system
-    // alert stays up; synthetic taps still reach Flutter underneath it).
-    if (Platform.isIOS) unawaited(gateway.requestPermission());
+    // iOS: grant provisional authorization up front, silently and with no
+    // system prompt, so the OS accepts the alerts and lists them (#60).
+    expect(await grantProvisionalNotificationsOnIOS(), isTrue, reason: 'iOS provisional authorization; see the header if this fails');
     await startReminderNotifications(fresh.container);
     await pumpApp(tester, fresh);
     final now = DateTime.now();
@@ -1471,16 +1911,10 @@ void main() {
     expect(electricity.amountMinor, 210000);
 
     // The alert is really with the OS: AlarmManager on Android, UNUserNotificationCenter on iOS.
-    // A fresh iOS simulator never grants permission headlessly and iOS then
-    // drops the request, so there check the schedule call instead (#60).
-    final osObservable = osPendingIsObservable(isIOS: Platform.isIOS, notificationsAllowed: (await gateway.permissionState()).notificationsAllowed);
     final electricityPayload = reminderPayload(electricity.id);
-    if (osObservable) {
-      final pending = await gateway.pending();
-      expect(pending.where((alert) => alert.payload == electricityPayload), isNotEmpty, reason: 'scheduled with the OS');
-    } else {
-      expect(gatewayLog.liveIdsFor(electricityPayload), isNotEmpty, reason: 'scheduled through the gateway (iOS without permission)');
-    }
+    final pending = await gateway.pending();
+    expect(pending.where((alert) => alert.payload == electricityPayload), isNotEmpty, reason: 'scheduled with the OS');
+    expect(gatewayLog.liveIdsFor(electricityPayload), isNotEmpty, reason: 'scheduled through the gateway');
 
     final scheduler = fresh.read(reminderSchedulerProvider);
     final card = await scheduler.save(ReminderDraft(kind: ReminderKind.card, title: 'HDFC credit card', dueAt: inDays(-2), amountMinor: 1845000, repeat: ReminderRepeat.monthly));
@@ -1498,14 +1932,14 @@ void main() {
     expect(find.byType(ExpenseEditorScreen), findsOneWidget);
     expect(find.widgetWithText(TextField, '2100'), findsOneWidget);
     await shoot(tester, 'reminder_paid_entry');
+    // The reminder has no category, so pick one or Save stops at "Pick a category" (#107).
+    await _pickCategory(tester, 'electricity', 'Electricity');
     await tapFinder(tester, find.textContaining('Save').last, frames: 16);
     final paid = (await fresh.read(remindersRepositoryProvider).getById(electricity.id))!;
     expect(paid.status, 'done');
     expect(paid.entryId, isNotNull);
-    if (osObservable) {
-      final pending = await gateway.pending();
-      expect(pending.where((alert) => alert.payload == electricityPayload), isEmpty, reason: 'paid reminder alerts cancelled');
-    }
+    final pendingAfterPaid = await gateway.pending();
+    expect(pendingAfterPaid.where((alert) => alert.payload == electricityPayload), isEmpty, reason: 'paid reminder alerts cancelled');
     expect(gatewayLog.liveIdsFor(electricityPayload), isEmpty, reason: 'paid reminder alerts cancelled through the gateway');
 
     await scheduler.skip(card);
@@ -1524,7 +1958,9 @@ void main() {
     await fresh.read(settingsProvider.notifier).update((s) => s.copyWith(localeCode: 'hi'));
     await settle(tester, 8);
     final hi = AppLocalizationsHi();
-    expect(find.text(hi.remindersTitle), findsOneWidget);
+    // Hindi uses "रिमाइंडर" for both the title and the FAB label, so check the title in the app bar (#108).
+    expect(find.descendant(of: find.byType(AppBar), matching: find.text(hi.remindersTitle)), findsOneWidget);
+    expect(find.descendant(of: find.byType(FloatingActionButton), matching: find.text(hi.reminderFab)), findsOneWidget);
     await shoot(tester, 'hi_dark_reminders_list');
     await fresh.read(settingsProvider.notifier).update((s) => s.copyWith(themeMode: ThemeMode.light));
     await settle(tester, 8);
@@ -1540,4 +1976,106 @@ void main() {
       await scheduler.delete(reminder.id);
     }
   });
+
+  testWidgets('32 salary day: set up from Settings, align month start, reminder clears when an SMS salary arrives, Hindi', (tester) async {
+    final alerts = _RecordingSalaryAlerts();
+    final fresh = await createApp(overrides: [salaryAlertSinkProvider.overrideWithValue(alerts)]);
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    Finder key(String id) => find.byKey(ValueKey(id));
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(monthStartDay: 25));
+    if (Platform.isAndroid) {
+      // Granted by the driver (see the header), so saving shows no system prompt.
+      final permission = await fresh.read(notificationGatewayProvider).permissionState();
+      expect(permission.notificationsAllowed, isTrue, reason: 'grant POST_NOTIFICATIONS before flow 32; see the file header');
+    }
+    await pumpApp(tester, fresh);
+
+    await goTab(tester, 'Settings');
+    await scrollTo(tester, key('settingsSalary'));
+    expect(find.text('Set up salary day'), findsOneWidget);
+    await tapFinder(tester, key('settingsSalary'), frames: 10);
+    expect(find.byType(SalarySetupScreen), findsOneWidget);
+    expect(tester.widget<FilledButton>(key('salarySave')).onPressed, isNull, reason: 'no amount yet');
+    expect(find.text('Your month starts on day 25, salary arrives on day 1'), findsOneWidget);
+    await enterText(tester, key('salaryAmount'), '85000');
+    await shoot(tester, 'salary_setup');
+    await scrollTo(tester, key('salaryTolerance'), within: find.byType(SalarySetupScreen));
+    expect(find.text('Up to 4 days'), findsOneWidget, reason: 'default match window');
+    expect(find.text('Up to 15%'), findsOneWidget, reason: 'default amount tolerance');
+    await shoot(tester, 'salary_detection');
+    await tapFinder(tester, key('salarySave'), frames: 10);
+    expect(find.text('Start months on day 1?'), findsOneWidget);
+    await tapText(tester, 'Align', last: true, frames: 10);
+    expect(fresh.read(settingsProvider).monthStartDay, 1);
+    final salary = fresh.read(salarySettingsProvider);
+    expect(salary.isSetUp, isTrue);
+    expect(salary.amountMinor, 8500000);
+    final rule = (await (fresh.db.select(fresh.db.recurringRules)..where((t) => t.id.equals(salary.ruleId))).getSingle());
+    expect((rule.kind, rule.amountMinor, rule.dayOfMonth, rule.autoPost), ('income', 8500000, 1, false));
+    await scrollTo(tester, key('settingsSalary'));
+    expect(find.text('${formatMinor(8500000)} on day 1'), findsOneWidget);
+
+    // Expected three days ago, reminder one day after: "Salary not seen yet" is due now.
+    // The day change goes through the service like a save on the screen, as if
+    // made the day before the salary was due, so the rule and the setup agree
+    // and that cycle counts (nothing before the rule's start is late).
+    final now = DateTime.now();
+    final expected = DateTime(now.year, now.month, now.day - 3);
+    final moved = await fresh.read(salaryServiceProvider).saveSalaryRule(
+          settings: salary.copyWith(salaryDay: expected.day, shift: SalaryShift.sameDay, reminderDelayDays: 1),
+          today: DateTime(expected.year, expected.month, expected.day - 1),
+          monthStartDay: fresh.read(settingsProvider).monthStartDay,
+        );
+    await fresh.read(salarySettingsProvider.notifier).save(moved);
+    await settle(tester, 10);
+    expect(alerts.last, isA<ScheduleSalaryNotification>());
+    expect((alerts.last as ScheduleSalaryNotification).expected, expected);
+
+    // An SMS-added salary entry dismisses it without any user action.
+    await fresh.db.into(fresh.db.entries).insert(EntriesCompanion.insert(
+          id: 'sms-salary',
+          kind: 'income',
+          amountMinor: 8450000,
+          occurredAt: DateTime(expected.year, expected.month, expected.day, 11),
+          source: const Value('sms'),
+        ));
+    await settle(tester, 10);
+    expect(alerts.last, isA<CancelSalaryNotification>());
+    final linked = await (fresh.db.select(fresh.db.entries)..where((t) => t.id.equals('sms-salary'))).getSingle();
+    expect(linked.recurringId, salary.ruleId, reason: 'the SMS entry settles the rule occurrence');
+
+    await scrollTo(tester, key('settingsSalary'));
+    await tapFinder(tester, key('settingsSalary'), frames: 10);
+    expect(find.textContaining('Received'), findsOneWidget);
+    await shoot(tester, 'salary_received');
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    expect(find.text(hi.salaryTitle), findsWidgets);
+    await scrollTo(tester, key('salaryReminderSwitch'), within: find.byType(SalarySetupScreen));
+    expect(find.text(hi.salaryTolerance), findsOneWidget);
+    expect(find.text(hi.salaryReminder), findsOneWidget);
+    await shoot(tester, 'hi_salary_setup');
+    await goBack(tester);
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+  });
+}
+
+class _RecordingSalaryAlerts implements SalaryAlertSink {
+  final plans = <SalaryNotificationPlan>[];
+  SalaryNotificationPlan? get last => plans.isEmpty ? null : plans.last;
+
+  @override
+  String get locale => 'en';
+
+  @override
+  Future<bool> isPending() async => false;
+
+  @override
+  Future<bool> apply(SalaryNotificationPlan plan) async {
+    plans.add(plan);
+    return true;
+  }
 }

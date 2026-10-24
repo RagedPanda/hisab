@@ -3,14 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format.dart';
 import '../../core/money.dart';
+import '../../core/notifications/alarm_timing.dart';
 import '../../core/notifications/reminder_alert_text.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../domain/reminders/reminder_buckets.dart';
+import '../../domain/reminders/reminder_draft.dart';
 import '../../domain/reminders/reminder_kind.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import 'reminder_actions.dart';
+import 'reminder_late_note.dart';
 import 'reminder_editor.dart';
 import 'paid_via_sms_label.dart';
 import 'reminder_labels.dart';
@@ -93,10 +96,15 @@ class _UpcomingList extends ConsumerWidget {
     final l10n = context.l10n;
     final reminders = ref.watch(upcomingRemindersProvider).value ?? const <Reminder>[];
     final permission = ref.watch(notificationPermissionProvider).value;
-    final notificationsOff = permission != null && !permission.notificationsAllowed && reminders.any((r) => r.notifyAtMinute != null);
+    final hasAlerts = reminders.any((r) => r.notifyAtMinute != null);
+    final notificationsOff = permission != null && !permission.notificationsAllowed && hasAlerts;
     final now = DateTime.now();
     final buckets = groupByBucket(reminders.where((r) => r.dueAt != null), (Reminder r) => r.dueAt!, now);
-    final banner = notificationsOff ? const _NotificationsOffBanner() : null;
+    final banner = notificationsOff
+        ? const _NotificationsOffBanner()
+        : remindersMayArriveLate(permission, hasAlerts: hasAlerts)
+            ? const ReminderLateNote()
+            : null;
     if (reminders.isEmpty) {
       return EmptyState(
         icon: Icons.alarm,
@@ -142,7 +150,7 @@ class _NotificationsOffBanner extends ConsumerWidget {
           ]),
           Align(
             alignment: Alignment.centerRight,
-            child: TextButton(onPressed: () => turnOnReminderNotifications(ref), child: Text(context.l10n.notifTurnOn)),
+            child: TextButton(onPressed: () => turnOnReminderNotifications(context), child: Text(context.l10n.notifTurnOn)),
           ),
         ]),
       ),
@@ -248,8 +256,8 @@ class _HistoryList extends ConsumerWidget {
             ? l10n.reminderPaidOn(date)
             : l10n.reminderDoneOn(date);
     // What the linked entry paid wins over the reminder's expected amount.
-    final shownAmountMinor = paidAmountMinor ?? reminder.amountMinor;
-    final caption = shownAmountMinor == null ? status : '$status · ${formatMinor(shownAmountMinor, symbol: symbol)}';
+    final amount = paidAmountMinor ?? reminderAmountOrNone(reminder.amountMinor);
+    final caption = amount == null ? status : '$status · ${formatMinor(amount, symbol: symbol)}';
     final canUndo = now.difference(closedAt) <= kReminderUndoWindow;
     return ListTile(
       leading: CircleAvatar(child: Icon(reminderKindIcon(kind), size: 20)),

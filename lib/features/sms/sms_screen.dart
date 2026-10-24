@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/providers.dart';
@@ -45,13 +46,14 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
 
   Future<void> _ingestText(String text) async {
     final service = ref.read(smsIngestServiceProvider);
-    final status = await service.ingest(RawSms(sender: 'PASTED', body: text, receivedAt: DateTime.now()), autoAdd: ref.read(settingsProvider).smsAutoAdd, force: true);
+    final status = await service.ingest(RawSms(sender: RawSms.pastedSender, body: text, receivedAt: DateTime.now()), autoAdd: ref.read(settingsProvider).smsAutoAdd, force: true);
     if (!mounted) return;
     final l10n = context.l10n;
     setState(() => _lastResult = switch (status) {
           IngestStatus.pending => l10n.smsFoundReview,
           IngestStatus.added => l10n.smsAdded,
           IngestStatus.duplicate => l10n.smsDuplicate,
+          IngestStatus.foreignCurrency => l10n.smsForeignCurrency,
           _ => l10n.smsNotFound,
         });
   }
@@ -59,7 +61,6 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
   Future<void> _toggleSms(bool enable) async {
     final notifier = ref.read(settingsProvider.notifier);
     if (!enable) {
-      ref.read(smsIngestServiceProvider).stopListening();
       await notifier.update((s) => s.copyWith(smsEnabled: false));
       return;
     }
@@ -78,13 +79,16 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     final granted = await ref.read(smsIngestServiceProvider).requestPermission();
     if (!granted) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(context.l10n.smsPermissionDenied),
-          action: SnackBarAction(label: context.l10n.settings, onPressed: openAppSettings),
-        ));
+        showActionSnackBar(
+          ScaffoldMessenger.of(context),
+          message: context.l10n.smsPermissionDenied,
+          actionLabel: context.l10n.settings,
+          onAction: openAppSettings,
+        );
       }
       return;
     }
+    await ref.read(smsNotificationPromptProvider).ask();
     await notifier.update((s) => s.copyWith(smsEnabled: true));
     await _scan();
   }
@@ -93,8 +97,7 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     setState(() => _busy = true);
     final settings = ref.read(settingsProvider);
     final service = ref.read(smsIngestServiceProvider);
-    final result = await service.scanInbox(autoAdd: settings.smsAutoAdd);
-    service.startListening(autoAdd: () => ref.read(settingsProvider).smsAutoAdd);
+    final result = await service.sync(autoAdd: settings.smsAutoAdd);
     if (mounted) {
       setState(() {
         _busy = false;
@@ -144,6 +147,13 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
                   final text = await promptText(context, title: l10n.pasteBankSms, hint: l10n.pasteBankSmsHint);
                   if (text != null && text.isNotEmpty) await _ingestText(text);
                 },
+              ),
+              ListTile(
+                leading: const Icon(Icons.history),
+                title: Text(l10n.smsHistoryTitle),
+                subtitle: Text(l10n.smsHistoryHelp),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/sms/history'),
               ),
             ]),
           ),

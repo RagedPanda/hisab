@@ -38,18 +38,21 @@ String smsTransactionKeyForParsed(String body, ParsedTransaction parsed) => smsT
     );
 
 /// The key for a logged SMS from its stored parse ([ParsedTransaction.toJson]),
-/// or null when the row was never parsed.
+/// or null when the row was never parsed, or when its text was wiped (history
+/// cleared or not kept) and no bank reference is left to name it.
 String? smsTransactionKeyForStored(String body, Map<String, dynamic>? parsed) {
   final direction = parsed?['direction'];
   final amountMinor = parsed?['amountMinor'];
   final occurredAt = DateTime.tryParse('${parsed?['occurredAt']}');
+  final reference = parsed?['reference'] as String?;
   if (direction is! String || amountMinor is! int || occurredAt == null) return null;
+  if (body.trim().isEmpty && (reference?.trim() ?? '').isEmpty) return null;
   return smsTransactionKey(
     body: body,
     direction: direction,
     amountMinor: amountMinor,
     occurredAt: occurredAt,
-    reference: parsed?['reference'] as String?,
+    reference: reference,
   );
 }
 

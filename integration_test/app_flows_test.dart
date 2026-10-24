@@ -1599,6 +1599,8 @@ void main() {
 
     await tapText(tester, 'Restaurants & Cafes');
     await settle(tester, 8);
+    // The reopened editor starts at the top; the split chips are further down (#109).
+    await scrollTo(tester, _chip('By item'), within: editor);
     expect(tester.widget<ChoiceChip>(_chip('By item')).selected, isTrue, reason: 'editing keeps the by-item split');
     await scrollTo(tester, assignChip(priya).at(1), within: editor);
     expect([chipOn(assignChip(me).at(1)), chipOn(assignChip(rahul).at(1)), chipOn(assignChip(priya).at(1))], [false, true, false]);

@@ -16,6 +16,8 @@ import '../projects/project_detail_screen.dart';
 import '../projects/project_form_screen.dart';
 import '../projects/project_templates_screen.dart';
 import '../projects/projects_screen.dart';
+import '../salary/salary_setup_screen.dart';
+import '../salary/salary_reminder.dart';
 import '../settings/settings_screen.dart';
 import '../reminders/reminders_screen.dart';
 import '../sms/sms_history_screen.dart';
@@ -74,6 +76,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/categories', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoriesScreen()),
     GoRoute(path: '/categories/packs', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoryPacksScreen()),
     GoRoute(path: '/accounts', parentNavigatorKey: _rootKey, builder: (_, _) => const AccountsScreen()),
+    GoRoute(path: kSalaryLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const SalarySetupScreen()),
     GoRoute(path: '/budgets', parentNavigatorKey: _rootKey, builder: (_, _) => const BudgetsScreen()),
     GoRoute(
       path: '/recurring',

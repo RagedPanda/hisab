@@ -7,6 +7,7 @@ import 'core/theme.dart';
 import 'features/currency/first_launch_currency_screen.dart';
 import 'features/recurring/recurring_catch_up.dart';
 import 'features/recurring/recurring_list_model.dart';
+import 'features/salary/salary_reminder_watcher.dart';
 import 'features/shell/router.dart';
 import 'features/sms/sms_auto_add_snackbar.dart';
 import 'features/sms/sms_auto_sync.dart';
@@ -80,8 +81,10 @@ class _HisabAppState extends ConsumerState<HisabApp> {
       // Otherwise the SMS Undo snackbar sits above the navigator so it shows on
       // every route, including Bank SMS opened directly from a hisab://sms link.
       // SmsAutoSync drains queued SMS and catches up on the inbox on start and resume.
+      // SalaryReminderWatcher re-plans the salary-not-seen alert on start, resume
+      // and income changes.
       builder: (context, child) => settings.currencyConfirmed
-          ? SmsAutoSync(child: SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink()))
+          ? SalaryReminderWatcher(child: SmsAutoSync(child: SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink())))
           : const FirstLaunchCurrencyGate(),
     );
   }

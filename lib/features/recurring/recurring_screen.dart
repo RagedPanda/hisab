@@ -10,6 +10,7 @@ import '../../data/repositories/recurring_repository.dart';
 import '../../domain/recurring/repeat_draft.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
+import '../../l10n/rule_names.dart';
 import '../shell/widgets/common.dart';
 import 'recurring_list_model.dart';
 import 'repeat_sheet.dart';
@@ -30,7 +31,7 @@ String recurringHistoryLabel(AppLocalizations l10n, RecurringRule rule) {
 
 String recurringRuleTitle(BuildContext context, RecurringRuleView view) {
   final rule = view.rule;
-  if (rule.name.trim().isNotEmpty) return rule.name.trim();
+  if (rule.name.trim().isNotEmpty) return localizedRuleName(context.l10n, rule.name.trim());
   if ((rule.payee ?? '').trim().isNotEmpty) return rule.payee!.trim();
   final category = view.category;
   if (category != null) return category.displayName(context);
@@ -95,7 +96,7 @@ class RecurringRuleCard extends ConsumerWidget {
     final category = view.category;
     final repository = ref.read(recurringRepositoryProvider);
     final monthStartDay = ref.watch(settingsProvider).monthStartDay;
-    final summary = repeatSummary(l10n, RepeatDraft.fromSpec(specOf(rule), autoPost: rule.autoPost), rule.nextDue ?? rule.startDate, locale: locale);
+    final summary = repeatSummary(l10n, RepeatDraft.fromSpec(specOf(rule), autoPost: rule.autoPost), rule.nextDue ?? rule.startDate, locale: locale, dayOfMonth: rule.dayOfMonth);
     final nextDue = rule.nextDue;
     final when = switch (item.section) {
       RecurringSection.waiting => l10n.recurringDue(formatRowDate(nextDue!, locale: locale)),

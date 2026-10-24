@@ -1117,6 +1117,143 @@
   "smsReviewHelp": "These messages were not clear enough to add on their own. Add, edit or ignore each one.",
   "smsReviewUnread": "Could not read the amount",
   "smsReviewAddManually": "Add manually",
+  "salaryTitle": "Salary",
+  "salarySetUp": "Set up salary day",
+  "salaryIntro": "Hisab adds your salary as a monthly income you confirm, and gently reminds you if it has not arrived.",
+  "salarySummary": "{amount} on day {day}",
+  "@salarySummary": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "salaryAmount": "Monthly salary",
+  "salaryAccount": "Credited to",
+  "salaryAnyAccount": "Any account",
+  "salaryDay": "Salary day",
+  "salaryShiftLabel": "On a weekend or holiday",
+  "salaryShiftSameDay": "Same day",
+  "salaryShiftPrevious": "Previous working day",
+  "salaryShiftNext": "Next working day",
+  "salaryHolidays": "Bank holidays",
+  "salaryHolidaysHelp": "Skipped like weekends when the salary day moves",
+  "salaryAddHoliday": "Add holiday",
+  "salaryReminder": "Remind me if it has not arrived",
+  "salaryReminderDelay": "Remind after",
+  "salaryDaysAfter": "{days, plural, =1{1 day after} other{{days} days after}}",
+  "@salaryDaysAfter": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "salaryAligned": "Your month already starts on payday",
+  "salaryNotAligned": "Your month starts on day {monthStart}, salary arrives on day {salaryDay}",
+  "@salaryNotAligned": {
+    "placeholders": {
+      "monthStart": {
+        "type": "int"
+      },
+      "salaryDay": {
+        "type": "int"
+      }
+    }
+  },
+  "salaryAlignTitle": "Start months on day {day}?",
+  "@salaryAlignTitle": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "salaryAlignMessage": "Budgets and monthly totals will run from one salary to the next.",
+  "salaryAlignAction": "Align",
+  "salaryRemove": "Remove salary",
+  "salaryRemoveBody": "The Salary rule will be deleted. Salary entries you already have are kept.",
+  "salaryRemoved": "Salary removed",
+  "salarySaved": "Salary saved",
+  "salaryExpectedOn": "Expected {date}",
+  "@salaryExpectedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "salaryReceivedAmount": "Received {amount} on {date}",
+  "@salaryReceivedAmount": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "salaryLateSince": "Late: expected {date}",
+  "@salaryLateSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "salaryLastReceived": "Last received {amount} on {date}",
+  "@salaryLastReceived": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "salaryNextExpected": "Next expected {date}",
+  "@salaryNextExpected": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "salaryNotSeenTitle": "Salary not seen yet",
+  "salaryNotSeenBody": "It was expected on {date}. This clears by itself once it arrives.",
+  "@salaryNotSeenBody": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "salaryRuleName": "Salary",
+  "salaryMatchWindow": "Can arrive early by",
+  "salaryMatchWindowDays": "{days, plural, =1{Up to 1 day} other{Up to {days} days}}",
+  "@salaryMatchWindowDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "salaryTolerance": "Amount can differ by",
+  "salaryTolerancePercent": "Up to {percent}%",
+  "@salaryTolerancePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "salaryToleranceExact": "Exact amount only",
+  "salaryDetectionHelp": "An income counts as salary when it is this close to the amount and arrives no earlier than this, or any day later in the cycle.",
   "settleReminderTitle": "Settle up: {group}",
   "@settleReminderTitle": {"placeholders": {"group": {"type": "String"}}},
   "settleReminderOwesYou": "{name} owes you {amount}",

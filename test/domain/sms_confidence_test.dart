@@ -95,6 +95,13 @@ void main() {
       expect(looksLikeUnreadTransaction(''), isFalse);
     });
 
+    test('a card bill payment acknowledgement is skipped, not reviewed (#121)', () {
+      expect(
+        looksLikeUnreadTransaction('Payment of Rs.23456.00 has been received towards your HDFC Bank Credit Card XX9012 on 05-11-26. Thank you.'),
+        isFalse,
+      );
+    });
+
     test('balance-only alerts are ignored, not sent to review (#120)', () {
       const kotakBalance = 'Your Kotak Bank AC X3333 Avl Bal is Rs.22,145.00 as on 22-10-26 09:00 hrs. Download Kotak811 app.';
       expect(parseBankSms(sender: 'VM-KOTAKB', body: kotakBalance, receivedAt: DateTime(2026, 10, 22, 9)), isNull);

@@ -14,6 +14,13 @@ class FakeNotificationGateway implements NotificationGateway {
   final List<int> cancelled = [];
   int permissionRequests = 0;
   NotificationTap? launch;
+
+  /// When set, scheduling at or before this clock's time throws, as the
+  /// plugin's zonedSchedule does.
+  DateTime Function()? clock;
+
+  /// When true, exact scheduling throws (exact alarms revoked mid-way).
+  bool failExact = false;
   void Function(NotificationTap tap)? onTap;
 
   @override
@@ -24,6 +31,9 @@ class FakeNotificationGateway implements NotificationGateway {
 
   @override
   Future<void> schedule(AlertRequest request, {required bool exact}) async {
+    final now = clock?.call();
+    if (now != null && !request.fireAt.isAfter(now)) throw ArgumentError.value(request.fireAt, 'scheduledDate', 'Must be a date in the future');
+    if (exact && failExact) throw StateError('exact alarms not permitted');
     scheduled[request.id] = request;
     exactById[request.id] = exact;
   }

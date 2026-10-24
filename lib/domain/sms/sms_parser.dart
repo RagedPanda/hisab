@@ -162,8 +162,8 @@ ParsedTransaction? parseBankSms({
   final amountMinor = parseAmountToMinor(amountText);
   if (amountMinor == null || amountMinor == 0) return null;
 
+  if (_isCardPaymentAcknowledgement(text, lower)) return null;
   final reversal = _isReversal(lower);
-  if (!reversal && _isCardPaymentAcknowledgement(text, lower)) return null;
   final direction = reversal && _reversalIsCredit(lower) ? TxnDirection.credit : _direction(lower);
   if (direction == null) return null;
 
@@ -240,8 +240,13 @@ final _bankAccountWord = RegExp(r'\ba/c|\bacct\b|\baccount\b|\bac\b');
 /// the payee, the money left a bank account.
 bool _paysCardBillFromAccount(String lower) => _cardBillPayee.hasMatch(lower) && _bankAccountWord.hasMatch(lower);
 
+/// The card issuer confirming a bill payment. Skipped by the parser and
+/// kept out of review: the bank-side debit already records the payment.
 bool _isCardPaymentAcknowledgement(String text, String lower) =>
-    _cardPaymentReceived.hasMatch(text) && lower.contains('card') && !_paysCardBillFromAccount(lower);
+    !_isReversal(lower) &&
+    _cardPaymentReceived.hasMatch(text) &&
+    lower.contains('card') &&
+    !_paysCardBillFromAccount(lower);
 
 /// OTPs, promotions, set-up notices and other messages that move no money.
 bool _isIgnorable(String sender, String lower) {
@@ -471,6 +476,7 @@ bool looksLikeUnreadTransaction(String body, {String sender = ''}) {
   final lower = text.toLowerCase();
   if (text.isEmpty) return false;
   if (_isIgnorable(sender, lower)) return false;
+  if (_isCardPaymentAcknowledgement(text, lower)) return false;
   return _amountPattern.hasMatch(text) || _bareAmountPattern.hasMatch(text);
 }
 

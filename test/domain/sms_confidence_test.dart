@@ -94,5 +94,12 @@ void main() {
       expect(looksLikeUnreadTransaction('Dear customer, your new debit card has been dispatched.'), isFalse);
       expect(looksLikeUnreadTransaction(''), isFalse);
     });
+
+    test('a card bill payment acknowledgement is skipped, not reviewed (#121)', () {
+      expect(
+        looksLikeUnreadTransaction('Payment of Rs.23456.00 has been received towards your HDFC Bank Credit Card XX9012 on 05-11-26. Thank you.'),
+        isFalse,
+      );
+    });
   });
 }

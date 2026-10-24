@@ -3483,4 +3483,168 @@ class AppLocalizationsHi extends AppLocalizations {
   String upcomingCalendarDueCount(int count) {
     return '$count देय';
   }
+
+  @override
+  String get salaryTitle => 'वेतन';
+
+  @override
+  String get salarySetUp => 'वेतन का दिन सेट करें';
+
+  @override
+  String get salaryIntro =>
+      'हिसाब आपके वेतन को मासिक आय के रूप में जोड़ता है जिसे आप पक्का करते हैं, और न आने पर धीरे से याद दिलाता है।';
+
+  @override
+  String salarySummary(String amount, int day) {
+    return 'दिन $day को $amount';
+  }
+
+  @override
+  String get salaryAmount => 'मासिक वेतन';
+
+  @override
+  String get salaryAccount => 'किस खाते में आता है';
+
+  @override
+  String get salaryAnyAccount => 'कोई भी खाता';
+
+  @override
+  String get salaryDay => 'वेतन का दिन';
+
+  @override
+  String get salaryShiftLabel => 'छुट्टी या सप्ताहांत पड़ने पर';
+
+  @override
+  String get salaryShiftSameDay => 'उसी दिन';
+
+  @override
+  String get salaryShiftPrevious => 'पिछला कामकाजी दिन';
+
+  @override
+  String get salaryShiftNext => 'अगला कामकाजी दिन';
+
+  @override
+  String get salaryHolidays => 'बैंक छुट्टियाँ';
+
+  @override
+  String get salaryHolidaysHelp =>
+      'वेतन का दिन खिसकने पर इन्हें सप्ताहांत की तरह छोड़ा जाता है';
+
+  @override
+  String get salaryAddHoliday => 'छुट्टी जोड़ें';
+
+  @override
+  String get salaryReminder => 'न आने पर याद दिलाएँ';
+
+  @override
+  String get salaryReminderDelay => 'कब याद दिलाएँ';
+
+  @override
+  String salaryDaysAfter(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन बाद',
+      one: '1 दिन बाद',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salaryAligned => 'आपका महीना पहले से वेतन के दिन से शुरू होता है';
+
+  @override
+  String salaryNotAligned(int monthStart, int salaryDay) {
+    return 'आपका महीना दिन $monthStart से शुरू होता है, वेतन दिन $salaryDay को आता है';
+  }
+
+  @override
+  String salaryAlignTitle(int day) {
+    return 'महीना दिन $day से शुरू करें?';
+  }
+
+  @override
+  String get salaryAlignMessage =>
+      'बजट और मासिक कुल एक वेतन से अगले वेतन तक गिने जाएँगे।';
+
+  @override
+  String get salaryAlignAction => 'मिलाएँ';
+
+  @override
+  String get salaryRemove => 'वेतन हटाएँ';
+
+  @override
+  String get salaryRemoveBody =>
+      'वेतन नियम हटा दिया जाएगा। आपकी पहले की वेतन प्रविष्टियाँ बनी रहेंगी।';
+
+  @override
+  String get salaryRemoved => 'वेतन हटाया गया';
+
+  @override
+  String get salarySaved => 'वेतन सहेजा गया';
+
+  @override
+  String salaryExpectedOn(String date) {
+    return 'अपेक्षित $date';
+  }
+
+  @override
+  String salaryReceivedAmount(String date, String amount) {
+    return '$date को $amount मिला';
+  }
+
+  @override
+  String salaryLateSince(String date) {
+    return 'देर हो गई: $date को अपेक्षित था';
+  }
+
+  @override
+  String salaryLastReceived(String date, String amount) {
+    return 'पिछली बार $date को $amount मिला';
+  }
+
+  @override
+  String salaryNextExpected(String date) {
+    return 'अगला अपेक्षित $date';
+  }
+
+  @override
+  String get salaryNotSeenTitle => 'वेतन अभी नहीं दिखा';
+
+  @override
+  String salaryNotSeenBody(String date) {
+    return 'यह $date को आना था। आते ही यह अपने आप हट जाएगा।';
+  }
+
+  @override
+  String get salaryRuleName => 'वेतन';
+
+  @override
+  String get salaryMatchWindow => 'कितने दिन पहले आ सकता है';
+
+  @override
+  String salaryMatchWindowDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन तक',
+      one: '1 दिन तक',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salaryTolerance => 'रकम में कितना फ़र्क चलेगा';
+
+  @override
+  String salaryTolerancePercent(int percent) {
+    return '$percent% तक';
+  }
+
+  @override
+  String get salaryToleranceExact => 'सिर्फ़ यही रकम';
+
+  @override
+  String get salaryDetectionHelp =>
+      'कोई आमदनी वेतन मानी जाती है जब रकम इतनी क़रीब हो और वह इससे पहले न आए, या इस चक्र में बाद में कभी भी आए।';
 }

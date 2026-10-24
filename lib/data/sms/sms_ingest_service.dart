@@ -8,6 +8,7 @@ import '../../domain/sms/bank_senders.dart';
 import '../../domain/sms/parsed_transaction.dart';
 import '../../domain/sms/sms_catch_up.dart';
 import '../../domain/sms/sms_account_name.dart';
+import '../../domain/sms/payee_category_memory.dart';
 import '../../domain/sms/payee_normaliser.dart';
 import '../../domain/sms/sms_categorizer.dart';
 import '../../domain/sms/sms_confidence.dart';
@@ -19,6 +20,7 @@ import '../db/database.dart';
 import '../repositories/accounts_repository.dart';
 import '../repositories/categories_repository.dart';
 import '../repositories/entries_repository.dart';
+import '../repositories/payee_category_repository.dart';
 import '../repositories/sms_log_repository.dart';
 import 'sms_channel.dart';
 import 'sms_reminder_linker.dart';
@@ -58,6 +60,7 @@ class SmsIngestService {
     this.source = const PlatformSmsSource(),
     required this.homeCurrencyCode,
     this.reminderLinker,
+    this.payeeCategories,
   });
 
   final SmsLogRepository smsLog;
@@ -75,6 +78,10 @@ class SmsIngestService {
 
   /// Pays a pending reminder the new entry matches; null disables matching.
   final SmsReminderLinker? reminderLinker;
+
+  /// Categories the user chose per payee; they win over the keyword rules.
+  /// Null disables payee memory.
+  final PayeeCategoryRepository? payeeCategories;
 
   final _autoAddedController = StreamController<SmsAutoAdded>.broadcast();
 
@@ -172,7 +179,7 @@ class SmsIngestService {
       return IngestStatus.pending;
     }
     final account = await _ensureAccount(parsed);
-    final entryId = await _createEntry(id, parsed, categoryKey, account?.id);
+    final entryId = await _createEntry(id, parsed, await categoryIdFor(parsed), account?.id);
     await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.added, parsed: payload, entryId: entryId, transactionKey: transactionKey);
     await reminderLinker?.linkEntry(smsId: id, parsed: parsed, entryId: entryId);
     _autoAddedController.add(SmsAutoAdded(
@@ -222,7 +229,7 @@ class SmsIngestService {
     final parsed = parseBankSms(sender: row.sender, body: row.body, receivedAt: row.receivedAt);
     if (parsed == null) return null;
     final account = await _ensureAccount(parsed);
-    final entryId = await _createEntry(row.id, parsed, suggestCategoryKey(parsed), account?.id);
+    final entryId = await _createEntry(row.id, parsed, await categoryIdFor(parsed), account?.id);
     await smsLog.setStatus(row.id, SmsLogStatus.added, entryId: entryId);
     await reminderLinker?.linkEntry(smsId: row.id, parsed: parsed, entryId: entryId);
     return entryId;
@@ -247,15 +254,44 @@ class SmsIngestService {
     return parsed == null ? null : _ensureAccount(parsed);
   }
 
-  Future<String> _createEntry(String smsId, ParsedTransaction parsed, String categoryKey, String? accountId) async {
-    final category = await categories.findBySeedKey(categoryKey);
+  /// The category a new entry from [parsed] gets: the one the user chose for
+  /// this payee before, otherwise the keyword rules' suggestion.
+  Future<String?> categoryIdFor(ParsedTransaction parsed) async {
+    final remembered = await rememberedCategoryFor(kind: payeeKindFor(parsed.direction), counterparty: parsed.counterparty);
+    return remembered?.id ?? (await categories.findBySeedKey(suggestCategoryKey(parsed)))?.id;
+  }
+
+  /// The category remembered for [counterparty] on the [kind] side, if it is
+  /// still usable (not deleted, archived or of the other kind).
+  Future<Category?> rememberedCategoryFor({required String kind, required String? counterparty}) async {
+    final categoryId = await payeeCategories?.categoryIdFor(kind: kind, raw: counterparty);
+    if (categoryId == null) return null;
+    final category = await categories.byId(categoryId);
+    return isUsablePayeeCategory(category, kind) ? category : null;
+  }
+
+  /// Remembers [categoryId] for the payee of the logged SMS [smsId], so its
+  /// next messages get that category. Called when the user changes the
+  /// category of an SMS entry or answers the new-payee prompt.
+  Future<void> rememberCategoryForSms(String smsId, String categoryId) async {
+    final memory = payeeCategories;
+    final row = await smsLog.getById(smsId);
+    if (memory == null || row == null) return;
+    final parsed = parsedSmsPayee(row.parsedJson);
+    if (parsed == null) return;
+    final category = await categories.byId(categoryId);
+    if (!isUsablePayeeCategory(category, parsed.kind)) return;
+    await memory.remember(kind: parsed.kind, raw: parsed.counterparty, categoryId: categoryId);
+  }
+
+  Future<String> _createEntry(String smsId, ParsedTransaction parsed, String? categoryId, String? accountId) async {
     final id = newId();
     await entries.saveEntry(EntriesRepository.newExpense(
       id: id,
       kind: parsed.isDebit ? 'expense' : 'income',
       amountMinor: parsed.amountMinor,
       occurredAt: parsed.occurredAt,
-      categoryId: category?.id,
+      categoryId: categoryId,
       accountId: accountId,
       payee: _payeeFor(parsed),
       note: smsEntryNote(reference: parsed.reference, rawCounterparty: parsed.counterparty),

@@ -37,6 +37,16 @@ class Accounts extends Table with SyncColumns {
   IntColumn get color => integer()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
+  /// Credit cards only: day of month the statement is generated (1-31; short
+  /// months clamp to their last day) and the day the bill is due.
+  IntColumn get statementDay => integer().nullable()();
+  IntColumn get dueDay => integer().nullable()();
+  IntColumn get creditLimitMinor => integer().nullable()();
+
+  /// Amount billed on the most recent statement and that statement's date.
+  IntColumn get lastStatementMinor => integer().nullable()();
+  DateTimeColumn get lastStatementAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -348,7 +358,7 @@ class Reminders extends Table with SyncColumns {
   TextColumn get channel => text().withDefault(const Constant('share'))();
   TextColumn get message => text().withDefault(const Constant(''))();
 
-  // Due reminders (v9): bills, EMIs, card dues, subscriptions, insurance,
+  // Due reminders (v11): bills, EMIs, card dues, subscriptions, insurance,
   // documents and custom nudges. Kinds and values live in
   // lib/domain/reminders/reminder_kind.dart.
 
@@ -569,7 +579,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -643,8 +653,10 @@ class AppDatabase extends _$AppDatabase {
           // v16: the reminder a bank SMS paid and the transaction each message
           // reports (R2, auto-done on an SMS match).
           if (from < 16) await _upgradeToSmsReminderMatch(m);
-          // v17: categories remembered per SMS payee (daily-use, payee memory).
-          if (from < 17) await _upgradeToPayeeCategories(m);
+          // v17: credit card statement and due days, limit and last statement.
+          if (from < 17) await _upgradeToCardDetails(m);
+          // v18: categories remembered per SMS payee (daily-use, payee memory).
+          if (from < 18) await _upgradeToPayeeCategories(m);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -734,10 +746,19 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// v17 step. Adds the payee category memory table unless a pre-release
+  /// v18 step. Adds the payee category memory table unless a pre-release
   /// build of this feature already created it, so it is idempotent.
   Future<void> _upgradeToPayeeCategories(Migrator m) async {
     if (!await _schemaObjectExists('table', 'payee_categories')) await m.createTable(payeeCategories);
+  }
+
+  /// v17 step. Adds the credit card columns a table lacks; pre-release
+  /// builds of card dues stored them under schema 7.
+  Future<void> _upgradeToCardDetails(Migrator m) async {
+    final existing = await _columnNames('accounts');
+    for (final column in cardDetailColumns(accounts)) {
+      if (!existing.contains(column.name)) await m.addColumn(accounts, column);
+    }
   }
 
   Future<Set<String>> _columnNames(String table) async {
@@ -910,7 +931,16 @@ CategoriesCompanion seedCategoryRow(CategorySeed seed, {required String id, Stri
       units: Value(seed.units.join(',')),
     );
 
-/// Columns v9 added to [Reminders]; a v5..v8 database gains exactly these.
+/// The credit card columns added to accounts at schema v12.
+List<GeneratedColumn> cardDetailColumns($AccountsTable table) => [
+      table.statementDay,
+      table.dueDay,
+      table.creditLimitMinor,
+      table.lastStatementMinor,
+      table.lastStatementAt,
+    ];
+
+/// Columns v11 added to [Reminders]; a v5..v10 database gains exactly these.
 List<GeneratedColumn> dueReminderColumns($RemindersTable table) => [
       table.title,
       table.notes,

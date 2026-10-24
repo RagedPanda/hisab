@@ -6,6 +6,7 @@ import '../../core/notifications/notification_gateway.dart';
 import '../../core/notifications/reminder_payload.dart';
 import '../../core/notifications/reminder_tap_gate.dart';
 import '../../core/providers.dart';
+import '../groups/settle_reminder_service.dart';
 import '../salary/salary_reminder.dart';
 import '../shell/router.dart';
 
@@ -41,6 +42,7 @@ Future<void> startReminderNotifications(ProviderContainer container) async {
     await service.initialize(onTap: (tap) => handleReminderTap(container, tap));
     final launch = await service.launchTap();
     if (launch != null) await handleReminderTap(container, launch);
+    await container.read(settleReminderServiceProvider).refreshAll();
     NotificationPermissionState? known = await service.checkPermission();
     await container.read(reminderSchedulerProvider).rescheduleAll();
     // Re-post the salary alert now the plugin is ready (the first sync can beat it).

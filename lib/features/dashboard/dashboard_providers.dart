@@ -152,18 +152,6 @@ final budgetsOverviewProvider = Provider<AsyncValue<BudgetsOverview>>((ref) {
   });
 });
 
-// Upcoming (reminders land in phase 3; the slot and its empty state exist now)
-
-class UpcomingOverview {
-  const UpcomingOverview({required this.hasReminders, required this.dueSoonCount});
-  final bool hasReminders;
-  final int dueSoonCount;
-}
-
-final upcomingOverviewProvider = Provider<AsyncValue<UpcomingOverview>>(
-  (ref) => const AsyncData(UpcomingOverview(hasReminders: false, dueSoonCount: 0)),
-);
-
 // Accounts -------------------------------------------------------------------
 
 class AccountsOverview {

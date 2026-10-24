@@ -37,12 +37,15 @@ import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/backup/backup_service.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
+import 'package:hisab/data/repositories/recurring_repository.dart';
+import 'package:hisab/domain/recurring/recurrence.dart';
 import 'package:hisab/data/debug/demo_plan.dart';
 import 'package:hisab/data/debug/demo_seed.dart';
 import 'package:hisab/domain/backup/backup_codec.dart';
 import 'package:hisab/domain/categories/category_packs.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
+import 'package:hisab/features/upcoming/upcoming_calendar_screen.dart';
 import 'package:hisab/domain/projects/project_math.dart';
 import 'package:hisab/domain/salary/salary_schedule.dart';
 import 'package:hisab/domain/split/debt_simplifier.dart';
@@ -624,6 +627,7 @@ void main() {
     await shoot(tester, 'categories_income');
   });
 
+  // iOS only: Android offers SMS reading on this screen, so the flow is skipped there.
   testWidgets('10 bank SMS screen on iOS: reading disabled, paste auto-adds with Undo, unclear SMS wait for review', (tester) async {
     await pumpApp(tester, shared);
     await goTab(tester, 'Settings');
@@ -665,7 +669,7 @@ void main() {
     await tapText(tester, 'Ignore');
     expect(find.text('Nothing waiting'), findsOneWidget);
     await goBack(tester);
-  });
+  }, skip: !Platform.isIOS);
 
   testWidgets('11 settings: dark theme on every tab', (tester) async {
     addTearDown(() => shared.read(settingsProvider.notifier).update((s) => s.copyWith(themeMode: ThemeMode.light)));
@@ -827,7 +831,7 @@ void main() {
     await scrollTo(tester, find.byKey(kBudgetsCardKey));
     expect(find.text('Overall'), findsOneWidget, reason: 'overall budget row comes first');
     await scrollTo(tester, find.byKey(kAccountsCardKey));
-    expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsOneWidget, reason: 'upcoming slot is keyed even while it has no data');
+    expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsOneWidget, reason: 'the Upcoming card is keyed even while it shows its empty state');
     expect(find.text('HDFC Savings'), findsOneWidget);
     await scrollTo(tester, find.byKey(kGroupsCardKey));
     expect(find.text('Goa trip'), findsOneWidget);
@@ -1770,6 +1774,83 @@ void main() {
     expect(lines[2], startsWith(',Total,,900.00,'), reason: 'a closing total row follows the last expense');
   });
 
+  testWidgets('34 groups: split a pizza night by item with a shared delivery line, block an unassigned item, clear assignments', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final pizzaGroupId = await groups.createGroup(name: 'Pizza night', icon: 'restaurant', myName: 'You', otherMembers: ['Rahul', 'Priya']);
+    final members = await groups.getMembers(pizzaGroupId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => member.name == 'Rahul').id;
+    final priya = members.firstWhere((member) => member.name == 'Priya').id;
+    Finder assignChip(String memberId) => find.byWidgetPredicate((widget) {
+          final key = widget.key;
+          return widget is GestureDetector && key is ValueKey<String> && key.value.startsWith('assign-') && key.value.endsWith('-$memberId');
+        }, skipOffstage: false);
+    bool chipOn(Finder chip) => tester.widget<FilterChip>(find.descendant(of: chip, matching: find.byType(FilterChip))).selected;
+    final editor = find.byType(ExpenseEditorScreen);
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Pizza night');
+    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
+    await scrollTo(tester, find.text('Add items to split by item'), within: editor);
+    expect(_chip('By item'), findsNothing, reason: 'no items, no by-item split');
+
+    await scrollTo(tester, find.text('Add item'), within: editor, up: true);
+    await _addItem(tester, name: 'Pizza', qty: '1', price: '600');
+    await _addItem(tester, name: 'Coke', qty: '1', price: '150');
+    expect(tester.widget<ChoiceChip>(_chip('By item')).selected, isTrue, reason: 'the first item switches the split to by item');
+    expect(chipOn(assignChip(me).last) && chipOn(assignChip(rahul).last) && chipOn(assignChip(priya).last), isTrue, reason: 'everyone shares a new item');
+
+    await scrollTo(tester, assignChip(priya).last, within: editor);
+    await tapFinder(tester, assignChip(me).last);
+    await tapFinder(tester, assignChip(priya).last);
+    await tapFinder(tester, assignChip(rahul).last);
+    expect(find.text('Assign "Coke" to someone'), findsWidgets);
+    expect(tester.widget<FilledButton>(find.byKey(const ValueKey('editor.save'))).onPressed, isNull, reason: 'save waits until every item has someone');
+    await tapFinder(tester, assignChip(rahul).last);
+    expect(find.text('Assign "Coke" to someone'), findsNothing);
+
+    await scrollTo(tester, find.byKey(const Key('byItem.addExtras')), within: editor);
+    await tapFinder(tester, find.byKey(const Key('byItem.addExtras')));
+    await enterText(tester, find.ancestor(of: find.textContaining('Price per').last, matching: find.byType(TextField)).first, '90');
+    final rahulLine = '${formatMinor(38000)} · 2 items · 45%';
+    await scrollTo(tester, find.text(rahulLine), within: editor);
+    expect(find.text(rahulLine), findsOneWidget, reason: 'pizza 200 + coke 150 + a third of the 90 delivery');
+    expect(find.text('${formatMinor(23000)} · 1 item · 27%'), findsNWidgets(2));
+    await shoot(tester, 'group_by_item_split');
+    await scrollTo(tester, find.text('Pizza'), within: editor, up: true);
+    await shoot(tester, 'group_by_item_assign');
+    await _saveEntry(tester, formatMinor(84000));
+
+    final detail = (await groups.getGroupDetail(pizzaGroupId))!;
+    expect(detail.balances.net, {me: 61000, rahul: -38000, priya: -23000});
+    final entryId = detail.entries.single.$1.id;
+    final entries = fresh.read(entriesRepositoryProvider);
+    expect((await entries.getItemAssignments(entryId)).values.map((ids) => ids.length).toList()..sort(), [1, 3], reason: 'the delivery line is shared, not assigned');
+
+    await tapText(tester, 'Restaurants & Cafes');
+    await settle(tester, 8);
+    // The reopened editor starts at the top; the split chips are further down (#109).
+    await scrollTo(tester, _chip('By item'), within: editor);
+    expect(tester.widget<ChoiceChip>(_chip('By item')).selected, isTrue, reason: 'editing keeps the by-item split');
+    await scrollTo(tester, assignChip(priya).at(1), within: editor);
+    expect([chipOn(assignChip(me).at(1)), chipOn(assignChip(rahul).at(1)), chipOn(assignChip(priya).at(1))], [false, true, false]);
+
+    await scrollTo(tester, _chip('Equally'), within: editor);
+    await tapFinder(tester, _chip('Equally'));
+    expect(find.text('Item assignments will be cleared'), findsOneWidget);
+    await tapFinder(tester, find.byKey(const Key('byItem.clearConfirm')));
+    expect(tester.widget<ChoiceChip>(_chip('Equally')).selected, isTrue);
+    expect(assignChip(rahul), findsNothing, reason: 'the assign strips go with the by-item split');
+    await _saveEntry(tester, formatMinor(84000));
+    expect(await entries.getItemAssignments(entryId), isEmpty);
+    final equalNet = (await groups.getGroupDetail(pizzaGroupId))!.balances.net;
+    expect(equalNet, {me: 56000, rahul: -28000, priya: -28000});
+  });
+
   testWidgets('33 groups: totals for all time and one month, with several payers and an unequal split', (tester) async {
     final fresh = await createApp();
     addTearDown(fresh.container.dispose);
@@ -1896,6 +1977,9 @@ void main() {
     await shoot(tester, 'reminders_empty');
 
     await tapText(tester, 'Add reminder');
+    expect(find.text('Documents & renewals'), findsOneWidget);
+    await shoot(tester, 'new_reminder_sheet');
+    await tapFinder(tester, find.byKey(const ValueKey('new-reminder.blank')), frames: 12);
     await enterText(tester, find.byKey(const ValueKey('reminder-title')), 'Electricity bill');
     await enterText(tester, find.byKey(const ValueKey('reminder-amount')), '2100');
     FocusManager.instance.primaryFocus?.unfocus();
@@ -1952,6 +2036,8 @@ void main() {
     await settle(tester, 8);
     await shoot(tester, 'dark_reminders_list');
     await tapFinder(tester, find.byType(FloatingActionButton), frames: 12);
+    await shoot(tester, 'dark_new_reminder_sheet');
+    await tapFinder(tester, find.byKey(const ValueKey('new-reminder.preset.puc')), frames: 12);
     await shoot(tester, 'dark_reminder_editor');
     await goBack(tester);
 
@@ -1966,6 +2052,8 @@ void main() {
     await settle(tester, 8);
     await shoot(tester, 'hi_reminders_list');
     await tapFinder(tester, find.byType(FloatingActionButton), frames: 12);
+    await shoot(tester, 'hi_new_reminder_sheet');
+    await tapFinder(tester, find.byKey(const ValueKey('new-reminder.preset.puc')), frames: 12);
     await shoot(tester, 'hi_reminder_editor');
     await goBack(tester);
     await tapText(tester, hi.reminderTabHistory);
@@ -1975,6 +2063,42 @@ void main() {
     for (final reminder in await fresh.read(remindersRepositoryProvider).getUpcoming()) {
       await scheduler.delete(reminder.id);
     }
+  });
+
+  testWidgets('37 groups: schedule a settle-up reminder on the Balances tab, share a nudge, turn it off', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final flatGroupId = await groups.createGroup(name: 'Flat 302', icon: 'home', myName: 'You', otherMembers: ['Ravi']);
+    final members = await groups.getMembers(flatGroupId);
+    await groups.addSettlement(
+      groupId: flatGroupId,
+      fromMemberId: members.firstWhere((member) => member.isMe).id,
+      toMemberId: members.firstWhere((member) => member.name == 'Ravi').id,
+      amountMinor: 50000,
+      occurredAt: DateTime.now(),
+    );
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Flat 302');
+    await tapText(tester, 'Balances');
+    await scrollTo(tester, find.text('Remind me to settle up'));
+    expect(find.text('Settle-up reminder off'), findsOneWidget);
+    await tapText(tester, 'Remind me to settle up');
+    await tapText(tester, 'Ravi', last: true);
+    await shoot(tester, 'settle_reminder_sheet');
+    await tapText(tester, 'Save');
+    if (find.text('Not now').evaluate().isNotEmpty) await tapText(tester, 'Not now');
+    expect(find.text('Reminder on day 1 every month'), findsOneWidget);
+    final schedule = await fresh.read(settleScheduleRepositoryProvider).scheduleOf(flatGroupId);
+    expect(schedule?.memberId, members.firstWhere((member) => member.name == 'Ravi').id);
+    expect(find.byTooltip('Share a nudge'), findsOneWidget, reason: 'something is owed, so a nudge can be shared');
+    await shoot(tester, 'settle_reminder_on');
+
+    await tapText(tester, 'Remind me to settle up');
+    await tapText(tester, 'Turn off');
+    expect(find.text('Settle-up reminder off'), findsOneWidget);
+    expect(await fresh.read(settleScheduleRepositoryProvider).scheduleOf(flatGroupId), isNull);
   });
 
   testWidgets('32 salary day: set up from Settings, align month start, reminder clears when an SMS salary arrives, Hindi', (tester) async {
@@ -2061,6 +2185,64 @@ void main() {
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
     await settle(tester, 6);
   });
+
+  testWidgets('36 upcoming: overdue confirm-first rule, 7/30-day toggle, calendar dots and month switch, Hindi', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    final today = startOfDay(DateTime.now());
+    Finder key(String id) => find.byKey(ValueKey(id));
+    await fresh
+        .read(recurringRepositoryProvider)
+        .saveRule(
+          RecurringRepository.newRule(
+            name: 'Rent',
+            kind: 'expense',
+            amountMinor: 1500000,
+            frequency: RecurrenceFrequency.monthly,
+            dayOfMonth: today.subtract(const Duration(days: 3)).day,
+            startDate: today.subtract(const Duration(days: 3)),
+            autoPost: false,
+          ),
+        );
+    await fresh
+        .read(remindersRepositoryProvider)
+        .save(ReminderDraft(kind: ReminderKind.bill, title: 'Electricity', dueAt: today.add(const Duration(days: 12)), amountMinor: 184000));
+    await pumpApp(tester, fresh);
+
+    await scrollTo(tester, find.byKey(kUpcomingCardKey));
+    expect(find.text('Rent'), findsOneWidget, reason: 'a confirm-first rule past its date stays on the card');
+    expect(find.text('Electricity'), findsNothing, reason: 'a bill 12 days out is outside the 7-day window');
+    await shoot(tester, 'upcoming_card_week');
+    await tapFinder(tester, key('upcoming.window.month'), frames: 10);
+    expect(find.text('Electricity'), findsOneWidget, reason: 'the 30-day window brings the bill in');
+    expect(find.text('Rent'), findsNWidgets(2), reason: 'the overdue Rent and next month\'s Rent are two occurrences, each listed once');
+    await shoot(tester, 'upcoming_card_month');
+
+    await tapFinder(tester, key('upcoming.calendar'), frames: 10);
+    expect(find.byType(UpcomingCalendarScreen), findsOneWidget);
+    final monthLabel = tester.widget<Text>(key('upcoming.calendar.month')).data;
+    await shoot(tester, 'upcoming_calendar');
+    await tapFinder(tester, key('upcoming.calendar.day.${today.day}'), frames: 6);
+    await tapFinder(tester, find.byTooltip('Next month'), frames: 6);
+    expect(tester.widget<Text>(key('upcoming.calendar.month')).data, isNot(monthLabel), reason: 'the header follows the shown month');
+    await goBack(tester);
+
+    await scrollTo(tester, find.byKey(kUpcomingCardKey));
+    await tapFinder(tester, find.text('Rent').first, frames: 10);
+    expect(find.byKey(const ValueKey('upcoming.confirm.edit')), findsOneWidget, reason: 'an overdue confirm-first item offers Edit as the secondary action');
+    await shoot(tester, 'upcoming_confirm_sheet');
+    await tapFinder(tester, key('upcoming.confirm.post'), frames: 12);
+    expect(find.text('Rent'), findsOneWidget, reason: 'confirming posts the overdue Rent; next month stays listed');
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    await scrollTo(tester, find.byKey(kUpcomingCardKey));
+    expect(find.text(hi.upcoming), findsWidgets);
+    await shoot(tester, 'hi_upcoming_card');
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+  });
 }
 
 class _RecordingSalaryAlerts implements SalaryAlertSink {
@@ -2079,3 +2261,4 @@ class _RecordingSalaryAlerts implements SalaryAlertSink {
     return true;
   }
 }
+

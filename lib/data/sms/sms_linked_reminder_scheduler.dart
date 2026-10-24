@@ -10,6 +10,7 @@ class SmsLinkedReminderScheduler extends ReminderScheduler {
     required super.notifications,
     required this.smsLog,
     super.removeEntry,
+    super.settleSchedules,
     super.clock,
   });
 

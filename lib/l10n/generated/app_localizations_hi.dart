@@ -3369,6 +3369,36 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get byItemShared => 'साझा';
+
+  @override
+  String get byItemSharedHelp => 'जिनके पास कोई आइटम है, उनमें बराबर बँटेगा';
+
+  @override
+  String get byItemOnlyMe => 'सिर्फ़ मैं';
+
+  @override
+  String get byItemEveryone => 'सभी';
+
+  @override
+  String get byItemAddExtras => 'डिलीवरी, टैक्स या टिप';
+
+  @override
+  String get byItemHint => 'आइटम के हिसाब से बाँटने के लिए आइटम जोड़ें';
+
+  @override
+  String byItemSummary(String amount, int count, int percent) {
+    return '$amount · $count आइटम · $percent%';
+  }
+
+  @override
+  String get byItemClearTitle => 'आइटम का बँटवारा हट जाएगा';
+
+  @override
+  String get byItemClearBody =>
+      'आइटम बने रहेंगे, और हर आइटम फिर सब में बँटेगा।';
+
+  @override
   String get smsAddedMarker => 'एसएमएस से जोड़ा गया';
 
   @override
@@ -3399,6 +3429,90 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get smsReviewAddManually => 'खुद जोड़ें';
+
+  @override
+  String upcomingEmptyWithin(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'अगले $days दिनों में कुछ देय नहीं',
+      one: 'कल कुछ देय नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get upcomingEmptyHint =>
+      'दोहराए जाने वाले बिल, रिमाइंडर और कार्ड की देय तारीख़ें यहाँ दिखेंगी।';
+
+  @override
+  String upcomingWindowDays(int days) {
+    return '$days दिन';
+  }
+
+  @override
+  String upcomingOverdueBy(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन से बकाया',
+      one: '1 दिन से बकाया',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get upcomingDueToday => 'आज देय';
+
+  @override
+  String get upcomingDueTomorrow => 'कल देय';
+
+  @override
+  String upcomingDueInDays(int days, String date) {
+    return '$days दिन में · $date';
+  }
+
+  @override
+  String upcomingOverdueCount(int count) {
+    return '$count बकाया';
+  }
+
+  @override
+  String upcomingDueTotal(String amount) {
+    return '$amount चुकाने हैं';
+  }
+
+  @override
+  String upcomingShowAll(int count) {
+    return '$count और';
+  }
+
+  @override
+  String get upcomingCalendar => 'देय कैलेंडर';
+
+  @override
+  String get upcomingCalendarOpen => 'देय कैलेंडर खोलें';
+
+  @override
+  String get upcomingCalendarDayEmpty => 'इस दिन कुछ देय नहीं';
+
+  @override
+  String get upcomingCalendarPreviousMonth => 'पिछला महीना';
+
+  @override
+  String get upcomingCalendarNextMonth => 'अगला महीना';
+
+  @override
+  String get upcomingConfirm => 'पुष्टि करें';
+
+  @override
+  String get upcomingConfirmPrompt =>
+      'यह आपकी पुष्टि का इंतज़ार कर रहा है। इसे अभी अपनी एंट्री में जोड़ें?';
+
+  @override
+  String upcomingCalendarDueCount(int count) {
+    return '$count देय';
+  }
 
   @override
   String get salaryTitle => 'वेतन';
@@ -3563,6 +3677,180 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get salaryDetectionHelp =>
       'कोई आमदनी वेतन मानी जाती है जब रकम इतनी क़रीब हो और वह इससे पहले न आए, या इस चक्र में बाद में कभी भी आए।';
+
+  @override
+  String get documentRemindersSection => 'दस्तावेज़ और नवीनीकरण';
+
+  @override
+  String get documentRemindersHint =>
+      'पीयूसी, बीमा, पासपोर्ट और अन्य समाप्ति तिथियाँ';
+
+  @override
+  String get documentPresetVehicleInsurance => 'वाहन बीमा';
+
+  @override
+  String get documentPresetPuc => 'पीयूसी प्रमाणपत्र';
+
+  @override
+  String get documentPresetRcRenewal => 'आरसी नवीनीकरण';
+
+  @override
+  String get documentPresetDrivingLicence => 'ड्राइविंग लाइसेंस';
+
+  @override
+  String get documentPresetPassport => 'पासपोर्ट';
+
+  @override
+  String get documentPresetHealthInsurance => 'स्वास्थ्य बीमा प्रीमियम';
+
+  @override
+  String get documentPresetLifeInsurance => 'जीवन बीमा प्रीमियम';
+
+  @override
+  String get documentPresetWarranty => 'वारंटी समाप्ति';
+
+  @override
+  String get documentPresetAmc => 'एएमसी नवीनीकरण';
+
+  @override
+  String get documentPresetFdMaturity => 'एफ़डी परिपक्वता';
+
+  @override
+  String get documentPresetPropertyTax => 'संपत्ति कर';
+
+  @override
+  String get documentPresetRentAgreement => 'किराया अनुबंध नवीनीकरण';
+
+  @override
+  String get documentNumberLabel => 'दस्तावेज़ संख्या (वैकल्पिक)';
+
+  @override
+  String get documentNumberHint => 'पॉलिसी, पंजीकरण या प्रमाणपत्र संख्या';
+
+  @override
+  String get documentRemindersOnProject => 'रिमाइंडर';
+
+  @override
+  String get reminderRepeatHalfYearly => 'हर 6 महीने';
+
+  @override
+  String get reminderRepeatElevenMonths => 'हर 11 महीने';
+
+  @override
+  String get reminderRepeatFiveYears => 'हर 5 साल';
+
+  @override
+  String get reminderRepeatTenYears => 'हर 10 साल';
+
+  @override
+  String get documentPucOlderVehicleHint =>
+      'पुराने वाहनों (BS-IV से पहले) को हर 6 महीने पीयूसी चाहिए।';
+
+  @override
+  String settleReminderTitle(String group) {
+    return 'हिसाब बराबर करें: $group';
+  }
+
+  @override
+  String settleReminderOwesYou(String name, String amount) {
+    return '$name को आपको $amount देने हैं';
+  }
+
+  @override
+  String settleReminderYouOwe(String name, String amount) {
+    return 'आपको $name को $amount देने हैं';
+  }
+
+  @override
+  String settleReminderPeopleOweYou(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count लोगों को आपको $amount देने हैं',
+      one: '1 व्यक्ति को आपको $amount देने हैं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settleReminderYouOweTotal(String amount) {
+    return 'आपको कुल $amount देने हैं';
+  }
+
+  @override
+  String get settleReminderSheetTitle => 'हिसाब बराबर करने की याद दिलाएँ';
+
+  @override
+  String get settleReminderWith => 'किसके बारे में';
+
+  @override
+  String get settleReminderEveryone => 'सभी';
+
+  @override
+  String get settleReminderHowOften => 'कितनी बार';
+
+  @override
+  String get settleReminderMonthly => 'हर महीने';
+
+  @override
+  String get settleReminderWeekly => 'हर हफ़्ते';
+
+  @override
+  String get settleReminderOnDay => 'तारीख़';
+
+  @override
+  String get settleReminderLastDay => 'आख़िरी दिन';
+
+  @override
+  String settleReminderNextAt(String date) {
+    return 'अगली याद: $date';
+  }
+
+  @override
+  String get settleReminderTurnOff => 'बंद करें';
+
+  @override
+  String get settleReminderOffLabel => 'हिसाब की याद बंद है';
+
+  @override
+  String settleReminderMonthlySummary(String day) {
+    return 'हर महीने $day तारीख़ को याद';
+  }
+
+  @override
+  String settleReminderWeeklySummary(String weekday) {
+    return 'हर $weekday को याद';
+  }
+
+  @override
+  String get settleReminderMonthlyLastDaySummary =>
+      'हर महीने के आख़िरी दिन याद';
+
+  @override
+  String get groupRecurringAmountFixed =>
+      'इस बँटवारे में तय रकमें हैं, इसलिए यहाँ कुल रकम नहीं बदल सकती';
+
+  @override
+  String get groupRecurringUpcoming => 'दोहराए जाने वाले';
+
+  @override
+  String get settleReminderShareNudge => 'याद दिलाने वाला संदेश भेजें';
+
+  @override
+  String get groupRecurringExpenseOnly =>
+      'ग्रुप का दोहराने वाला नियम सिर्फ़ खर्च हो सकता है।';
+
+  @override
+  String groupRecurringYourShare(String amount) {
+    return 'आपका हिस्सा $amount';
+  }
+
+  @override
+  String get settleReminderPrePromptTitle => 'हिसाब बराबर करने की याद पाएँ';
+
+  @override
+  String get settleReminderPrePromptBody =>
+      'हिसाब आपके चुने दिन पर सिर्फ़ इस ग्रुप का हिसाब बराबर करने की याद दिलाएगा। कोई विज्ञापन नहीं।';
 
   @override
   String get smsReminderPaidViaSms => 'एसएमएस से भुगतान हुआ';

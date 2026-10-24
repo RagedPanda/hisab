@@ -235,4 +235,52 @@ void main() {
     expect(record.before, isNull);
     expect(record.latest, isNull);
   });
+
+  group('a deleted by-item expense keeps who shared each item (#127)', () {
+    const entryId = 'pizza-night';
+
+    Future<void> savePizza(Map<String, List<String>> assignments) => groups.saveGroupExpense(
+          EntriesRepository.newExpense(id: entryId, amountMinor: 80000, occurredAt: DateTime(2026, 10, 20), note: 'Pizza night', groupId: groupId, paidByMemberId: meId, splitMethod: 'byItem'),
+          items: [
+            EntryItemsCompanion.insert(id: 'pizza', entryId: entryId, name: 'Pizza', unitPriceMinor: 60000, amountMinor: 60000),
+            EntryItemsCompanion.insert(id: 'coke', entryId: entryId, name: 'Coke', unitPriceMinor: 20000, amountMinor: 20000),
+          ],
+          splits: [
+            SplitsCompanion.insert(id: 's-me', entryId: entryId, memberId: meId, amountMinor: 30000),
+            SplitsCompanion.insert(id: 's-rahul', entryId: entryId, memberId: rahulId, amountMinor: 50000),
+          ],
+          itemAssignments: assignments,
+        );
+
+    Map<String, List<String>> sorted(Map<String, List<String>> assignments) => {
+          for (final item in assignments.entries) item.key: [...item.value]..sort(),
+        };
+
+    Future<Map<String, List<String>>> assignmentsNow() async => sorted(await EntriesRepository(db).getItemAssignments(entryId));
+
+    test('Restore from the activity feed brings the item assignments back', () async {
+      await savePizza({'pizza': [meId, rahulId], 'coke': [rahulId]});
+      final expected = await assignmentsNow();
+      await groups.deleteGroupExpense(entryId);
+      expect(await assignmentsNow(), isEmpty);
+      final deletion = (await feed()).firstWhere((activity) => activity.subject == ActivitySubject.expense && activity.action == ActivityAction.deleted);
+
+      await groups.restoreDeleted(deletion);
+
+      expect(await assignmentsNow(), expected);
+      expect(await db.select(db.itemAssignments).get(), hasLength(3), reason: 'the same rows come back, none are duplicated');
+    });
+
+    test('Undo after delete brings the item assignments back, not ones an earlier edit removed', () async {
+      await savePizza({'pizza': [meId, rahulId], 'coke': [rahulId]});
+      await savePizza({'pizza': [meId], 'coke': [rahulId]});
+      final expected = await assignmentsNow();
+      await groups.deleteGroupExpense(entryId);
+
+      await groups.restoreGroupExpense(entryId);
+
+      expect(await assignmentsNow(), expected);
+      expect(expected['pizza'], [meId]);
+    });
+  });
 }

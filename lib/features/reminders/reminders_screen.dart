@@ -13,6 +13,7 @@ import '../../domain/reminders/reminder_kind.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import 'reminder_actions.dart';
+import 'new_reminder_sheet.dart';
 import 'reminder_late_note.dart';
 import 'reminder_editor.dart';
 import 'paid_via_sms_label.dart';
@@ -61,7 +62,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
           ? null
           : FloatingActionButton.extended(
               heroTag: 'add-reminder',
-              onPressed: () => showReminderEditor(context),
+              onPressed: () => showNewReminderFlow(context),
               icon: const Icon(Icons.add),
               label: Text(l10n.reminderFab),
             ),
@@ -110,7 +111,7 @@ class _UpcomingList extends ConsumerWidget {
         icon: Icons.alarm,
         title: l10n.remindersEmptyTitle,
         message: l10n.remindersEmptyBody,
-        action: FilledButton.tonal(onPressed: () => showReminderEditor(context), child: Text(l10n.reminderAdd)),
+        action: FilledButton.tonal(onPressed: () => showNewReminderFlow(context), child: Text(l10n.reminderAdd)),
       );
     }
     return ListView(
@@ -180,6 +181,7 @@ class _UpcomingTile extends ConsumerWidget {
       reminderDueCaption(l10n, dueAt: reminder.dueAt!, at: now, amountMinor: reminder.amountMinor, currencySymbol: symbol),
       if (snoozed) l10n.reminderSnoozedUntil(formatRowDate(reminder.snoozedUntil!, locale: locale)) else formatRowDate(reminder.dueAt!, locale: locale),
       if (repeat.repeats) reminderRepeatLabel(l10n, repeat),
+      if (reminder.documentNumber.isNotEmpty) reminder.documentNumber,
     ].join(' · ');
     return AnimatedContainer(
       duration: const Duration(milliseconds: 600),

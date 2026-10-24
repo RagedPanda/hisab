@@ -22,6 +22,8 @@ import '../settings/settings_screen.dart';
 import '../reminders/reminders_screen.dart';
 import '../sms/sms_history_screen.dart';
 import '../sms/sms_review_screen.dart';
+import '../upcoming/upcoming_calendar_screen.dart';
+import '../upcoming/upcoming_routes.dart';
 import '../sms/sms_screen.dart';
 import '../subscriptions/subscription_form_screen.dart';
 import '../subscriptions/subscriptions_screen.dart';
@@ -56,6 +58,9 @@ final appRouter = GoRouter(
       // The editor handles Back itself: it asks before discarding input and
       // falls back to home when there is nothing to pop to (#82).
       builder: (_, state) => ExpenseEditorScreen(
+        // A new key per URI, so going from one entry to another rebuilds the
+        // editor instead of keeping the previous entry's state.
+        key: ValueKey(state.uri.toString()),
         entryId: state.uri.queryParameters['id'],
         groupId: state.uri.queryParameters['group'],
         initialKind: state.uri.queryParameters['kind'],
@@ -64,7 +69,11 @@ final appRouter = GoRouter(
         reminderId: state.uri.queryParameters['reminder'],
       ),
     ),
-    GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(groupId: state.pathParameters['id']!)),
+    GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(
+          key: ValueKey(state.uri.toString()),
+          groupId: state.pathParameters['id']!,
+          initialTab: groupDetailInitialTab(state.uri.queryParameters['tab']),
+        )),
     GoRoute(path: '/groups/:id/totals', parentNavigatorKey: _rootKey, builder: (_, state) => GroupTotalsScreen(groupId: state.pathParameters['id']!)),
     GoRoute(path: '/groups/:id/settings', parentNavigatorKey: _rootKey, builder: (_, state) => GroupSettingsScreen(groupId: state.pathParameters['id']!)),
     GoRoute(path: '/groups/:id/activity', parentNavigatorKey: _rootKey, builder: (_, state) => ActivityScreen(groupId: state.pathParameters['id']!)),
@@ -115,6 +124,7 @@ final appRouter = GoRouter(
     ),
     GoRoute(path: '/reminders', parentNavigatorKey: _rootKey, builder: (_, _) => const RemindersScreen()),
     GoRoute(path: '/reminders/:id', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: RemindersScreen(highlightId: state.pathParameters['id']))),
+    GoRoute(path: kUpcomingCalendarRoute, parentNavigatorKey: _rootKey, builder: (_, _) => const UpcomingCalendarScreen()),
     GoRoute(path: '/sms', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: SmsScreen(sharedText: state.uri.queryParameters['text']))),
     GoRoute(path: '/sms/review', parentNavigatorKey: _rootKey, builder: (_, _) => const HomeFallbackPop(child: SmsReviewScreen())),
     GoRoute(path: '/sms/history', parentNavigatorKey: _rootKey, builder: (_, _) => const SmsHistoryScreen()),

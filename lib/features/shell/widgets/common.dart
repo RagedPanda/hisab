@@ -33,15 +33,18 @@ class IconBadge extends StatelessWidget {
 
 /// Amount text coloured by direction.
 class AmountText extends StatelessWidget {
-  const AmountText(this.minor, {super.key, required this.kind, this.style, this.signed = true});
+  const AmountText(this.minor, {super.key, required this.kind, this.style, this.signed = true, this.symbol});
   final int minor;
   final String kind;
   final TextStyle? style;
   final bool signed;
 
+  /// Currency symbol to show; the app's own when null (a group passes its label).
+  final String? symbol;
+
   @override
   Widget build(BuildContext context) {
-    final symbol = ProviderScope.containerOf(context).read(settingsProvider).currencySymbol;
+    final shownSymbol = symbol ?? ProviderScope.containerOf(context).read(settingsProvider).currencySymbol;
     final color = switch (kind) {
       'income' => const Color(0xFF2E9E6B),
       'expense' => const Color(0xFFD9534F),
@@ -49,7 +52,7 @@ class AmountText extends StatelessWidget {
     };
     final prefix = !signed ? '' : switch (kind) { 'income' => '+', 'expense' => '-', _ => '' };
     return Text(
-      '$prefix${formatMinor(minor, symbol: symbol)}',
+      '$prefix${formatMinor(minor, symbol: shownSymbol)}',
       style: (style ?? Theme.of(context).textTheme.bodyLarge)?.copyWith(color: color, fontWeight: FontWeight.w600).tabular,
     );
   }

@@ -12,6 +12,7 @@ import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
 import 'package:hisab/features/reminders/reminder_startup.dart';
 import 'package:hisab/features/shell/router.dart';
+import 'package:hisab/features/shell/widgets/common.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/fake_notification_gateway.dart';
@@ -70,7 +71,11 @@ void main() {
 
     await tester.tap(find.text('Add reminder'));
     await _settle(tester);
+    expect(find.text('Documents & renewals'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('new-reminder.blank')));
+    await _settle(tester);
     expect(find.text('New reminder'), findsOneWidget);
+    expect(find.byKey(const ValueKey('reminder-document-number')), findsNothing, reason: 'a plain bill has no document number');
     await tester.tap(find.byKey(const ValueKey('reminder-save')));
     await _settle(tester);
     expect(find.text('Enter a title'), findsOneWidget);
@@ -92,6 +97,8 @@ void main() {
     final gateway = FakeNotificationGateway();
     final (_, db) = await _pumpReminders(tester, gateway);
     await tester.tap(find.text('Add reminder'));
+    await _settle(tester);
+    await tester.tap(find.byKey(const ValueKey('new-reminder.blank')));
     await _settle(tester);
     await tester.enterText(find.byKey(const ValueKey('reminder-title')), 'Rent');
 
@@ -224,6 +231,8 @@ void main() {
 
     await tester.tap(find.byType(FloatingActionButton));
     await _settle(tester);
+    await tester.tap(find.byKey(const ValueKey('new-reminder.blank')));
+    await _settle(tester);
     await tester.enterText(find.byKey(const ValueKey('reminder-title')), 'Mobile');
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('reminder-save')));
@@ -244,6 +253,8 @@ void main() {
     await _settle(tester);
 
     await tester.tap(find.text('Add reminder'));
+    await _settle(tester);
+    await tester.tap(find.byKey(const ValueKey('new-reminder.blank')));
     await _settle(tester);
     await tester.enterText(find.byKey(const ValueKey('reminder-title')), 'Rent');
     await tester.pump();
@@ -332,6 +343,10 @@ void main() {
     await _settle(tester);
     await tester.scrollUntilVisible(find.text('Reminders'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('1 upcoming · notifications on'), findsOneWidget);
+    // Bring the row to the top so the bottom navigation bar cannot cover it
+    // however many rows other features add to Settings.
+    await tester.ensureVisible(find.text('Reminders'));
+    await _settle(tester);
     await tester.tap(find.text('Reminders'));
     await _settle(tester);
     expect(find.text('Electricity'), findsOneWidget);
@@ -345,5 +360,89 @@ void main() {
     appRouter.push('/reminders/$id');
     await _settle(tester);
     expect(find.text('Already marked paid'), findsOneWidget);
+  });
+
+  group('documents & renewals', () {
+    testWidgets('a PUC preset prefills the editor, links the only vehicle project and keeps the number', (tester) async {
+      final gateway = FakeNotificationGateway();
+      final (container, db) = await _pumpReminders(tester, gateway);
+      final scottyId = await container.read(projectsRepositoryProvider).create(name: 'Scotty', icon: 'directions_car', color: 0xFF2196F3, templateKey: 'vehicle');
+      await _settle(tester);
+
+      await tester.tap(find.text('Add reminder'));
+      await _settle(tester);
+      await tester.scrollUntilVisible(find.byKey(const ValueKey('new-reminder.preset.puc')), 100, scrollable: find.byType(Scrollable).last);
+      await tester.tap(find.byKey(const ValueKey('new-reminder.preset.puc')));
+      await _settle(tester);
+
+      final title = tester.widget<TextField>(find.byKey(const ValueKey('reminder-title')));
+      expect(title.controller!.text, 'PUC certificate');
+      expect(find.text('Every year'), findsOneWidget);
+      await tester.dragUntilVisible(find.text('15 days before'), find.byType(ChipRow).at(1), const Offset(-100, 0));
+      expect(find.text('15 days before'), findsOneWidget);
+      expect(find.textContaining('Older vehicles'), findsOneWidget);
+      await tester.scrollUntilVisible(find.byKey(const ValueKey('reminder-project')), 100, scrollable: find.byType(Scrollable).first);
+      expect(find.descendant(of: find.byKey(const ValueKey('reminder-project')), matching: find.text('Scotty')), findsOneWidget, reason: 'the only vehicle project is suggested');
+
+      await tester.enterText(find.byKey(const ValueKey('reminder-document-number')), 'dl01ab1234');
+      await tester.pump();
+      await tester.ensureVisible(find.byKey(const ValueKey('reminder-save')));
+      await tester.tap(find.byKey(const ValueKey('reminder-save')));
+      await _settle(tester);
+
+      final saved = await db.select(db.reminders).getSingle();
+      expect(saved.title, 'PUC certificate');
+      expect(saved.kind, 'document');
+      expect(saved.presetKey, 'puc');
+      expect(saved.projectId, scottyId);
+      expect(saved.documentNumber, 'dl01ab1234');
+      expect(saved.repeat, 'yearly');
+      expect(saved.remindDaysBefore, '15,7,1,0');
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('editing a passport reminder offers its ten-year cycle', (tester) async {
+      final gateway = FakeNotificationGateway();
+      final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');
+      await container.read(reminderSchedulerProvider).save(ReminderDraft(
+            kind: ReminderKind.document,
+            title: 'Passport',
+            dueAt: _inDays(200),
+            repeat: ReminderRepeat.everyTenYears,
+            remindDaysBefore: const [180, 0],
+            presetKey: 'passport',
+            documentNumber: 'Z1234567',
+          ));
+      appRouter.push('/reminders');
+      await _settle(tester);
+      expect(find.textContaining('Z1234567'), findsOneWidget);
+      await tester.tap(find.text('Passport'));
+      await _settle(tester);
+      expect(find.text('Every 10 years'), findsOneWidget);
+      await tester.dragUntilVisible(find.text('180 days before'), find.byType(ChipRow).at(1), const Offset(-100, 0));
+      expect(find.text('180 days before'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a project screen lists the reminders linked to it', (tester) async {
+      final gateway = FakeNotificationGateway();
+      final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');
+      final scottyId = await container.read(projectsRepositoryProvider).create(name: 'Scotty', icon: 'directions_car', color: 0xFF2196F3, templateKey: 'vehicle');
+      await container.read(reminderSchedulerProvider).save(ReminderDraft(
+            kind: ReminderKind.insurance,
+            title: 'Bike insurance',
+            dueAt: _inDays(20),
+            repeat: ReminderRepeat.yearly,
+            projectId: scottyId,
+            presetKey: 'vehicle_insurance',
+          ));
+      appRouter.push('/projects/$scottyId');
+      await _settle(tester);
+      await tester.scrollUntilVisible(find.text('Bike insurance'), 100,
+          scrollable: find.byType(Scrollable).first);
+      expect(find.text('Reminders'), findsWidgets);
+      expect(find.textContaining('Due in 20 days'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
   });
 }

@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import '../../core/ids.dart';
 import '../../core/money.dart';
 import '../../data/db/database.dart';
+import '../../domain/split/split_calculator.dart';
 import '../../l10n/l10n.dart';
 
 /// Mutable draft of one line item while editing.
 class ItemDraft {
-  ItemDraft({String? id, this.name = '', this.quantity = 1, this.unit, this.unitPriceMinor = 0}) : id = id ?? newId();
+  ItemDraft({String? id, this.name = '', this.quantity = 1, this.unit, this.unitPriceMinor = 0, this.isShared = false, this.memberIds})
+      : id = id ?? newId();
 
   final String id;
   final String name;
@@ -16,18 +18,44 @@ class ItemDraft {
   final String? unit;
   final int unitPriceMinor;
 
+  /// A common line (tax, delivery) in a by-item group split.
+  final bool isShared;
+
+  /// Who shares this item in a by-item group split; null until assigned.
+  final List<String>? memberIds;
+
   int get amountMinor => (unitPriceMinor * quantity).round();
 
-  ItemDraft copyWith({String? name, double? quantity, String? unit, bool clearUnit = false, int? unitPriceMinor}) => ItemDraft(
+  ItemDraft copyWith({
+    String? name,
+    double? quantity,
+    String? unit,
+    bool clearUnit = false,
+    int? unitPriceMinor,
+    bool? isShared,
+    List<String>? memberIds,
+  }) =>
+      ItemDraft(
         id: id,
         name: name ?? this.name,
         quantity: quantity ?? this.quantity,
         unit: clearUnit ? null : (unit ?? this.unit),
         unitPriceMinor: unitPriceMinor ?? this.unitPriceMinor,
+        isShared: isShared ?? this.isShared,
+        memberIds: memberIds ?? this.memberIds,
       );
 
-  static ItemDraft fromRow(EntryItem row) =>
-      ItemDraft(id: row.id, name: row.name, quantity: row.quantity, unit: row.unit, unitPriceMinor: row.unitPriceMinor);
+  static ItemDraft fromRow(EntryItem row, {List<String>? memberIds}) => ItemDraft(
+        id: row.id,
+        name: row.name,
+        quantity: row.quantity,
+        unit: row.unit,
+        unitPriceMinor: row.unitPriceMinor,
+        isShared: row.isShared,
+        memberIds: memberIds,
+      );
+
+  ItemSplitInput toSplitInput() => ItemSplitInput(amountMinor: amountMinor, memberIds: memberIds ?? const [], label: name.trim(), shared: isShared);
 
   EntryItemsCompanion toCompanion(String entryId) => EntryItemsCompanion.insert(
         id: id,
@@ -37,12 +65,16 @@ class ItemDraft {
         unit: Value(unit),
         unitPriceMinor: unitPriceMinor,
         amountMinor: amountMinor,
+        isShared: Value(isShared),
       );
 }
 
 class ItemRow extends StatefulWidget {
-  const ItemRow({super.key, required this.draft, required this.units, required this.symbol, required this.onChanged, required this.onRemove});
+  const ItemRow({super.key, required this.draft, required this.units, required this.symbol, required this.onChanged, required this.onRemove, this.footer});
   final ItemDraft draft;
+
+  /// Shown under the quantity and price line, e.g. who shares the item.
+  final Widget? footer;
   final List<String> units;
   final String symbol;
   final ValueChanged<ItemDraft> onChanged;
@@ -118,6 +150,7 @@ class _ItemRowState extends State<ItemRow> {
               ),
               const SizedBox(width: 8),
             ]),
+            if (widget.footer != null) Padding(padding: const EdgeInsets.only(top: 8, right: 8), child: widget.footer),
           ],
         ),
       ),

@@ -14,6 +14,7 @@ import '../../domain/split/debt_simplifier.dart';
 import '../../domain/split/group_settings.dart';
 import '../../domain/split/group_totals.dart';
 import '../../domain/split/settle_up_links.dart';
+import '../../domain/split/settle_reminder.dart' show kGroupBalancesTab;
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import '../../domain/split/group_export.dart' show exportFileName;
@@ -24,15 +25,25 @@ import 'group_totals_screen.dart';
 import 'member_display.dart';
 import 'member_sheet.dart';
 import 'record_payment_sheet.dart';
+import 'settle_reminder_service.dart';
+import 'settle_schedule_tile.dart';
 import 'settle_up_messages.dart';
 import 'settle_up_sheet.dart';
 
 /// One stream for the whole screen so every tab sees the same snapshot.
 final groupDetailProvider = StreamProvider.family((ref, String id) => ref.watch(groupsRepositoryProvider).watchGroupDetail(id));
 
+/// The group detail tab to open first for a `?tab=` query value: Expenses, Balances or Members.
+int groupDetailInitialTab(String? tab) => switch (tab) {
+      kGroupBalancesTab => 1,
+      'members' => 2,
+      _ => 0,
+    };
+
 class GroupDetailScreen extends ConsumerWidget {
-  const GroupDetailScreen({super.key, required this.groupId});
+  const GroupDetailScreen({super.key, required this.groupId, this.initialTab = 0});
   final String groupId;
+  final int initialTab;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,6 +51,11 @@ class GroupDetailScreen extends ConsumerWidget {
     final detail = ref.watch(groupDetailProvider(groupId)).value;
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
     final appSymbol = ref.watch(settingsProvider).currencySymbol;
+    // Balances changed: reword the group's scheduled settle-up alert. A no-op
+    // without a schedule, and nothing is written when the text is unchanged.
+    ref.listen(groupDetailProvider(groupId), (previous, next) {
+      if (previous?.value != null && next.value != null) ref.read(settleReminderServiceProvider).refreshGroup(groupId);
+    });
     if (detail == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final group = detail.group;
     final symbol = groupSymbol(currencyLabel: group.currencyLabel, appSymbol: appSymbol);
@@ -67,6 +83,7 @@ class GroupDetailScreen extends ConsumerWidget {
 
     return DefaultTabController(
       length: 3,
+      initialIndex: initialTab,
       child: Scaffold(
         appBar: AppBar(
           title: Text(group.name),
@@ -124,6 +141,7 @@ class GroupDetailScreen extends ConsumerWidget {
               timelineByEntryId: detail.timelineByEntryId,
               settledUpTo: detail.settledUpTo,
               myMemberId: myMemberId,
+              activeMemberIds: {for (final member in members) member.id},
               nameOf: nameOf,
               categoryById: categoryById,
               symbol: symbol,
@@ -394,6 +412,8 @@ class _BalancesTab extends ConsumerWidget {
               subtitle: Text(l10n.recordAPaymentHint),
               onTap: () => openPayment(),
             ),
+            const Divider(height: 1),
+            SettleScheduleTile(detail: detail, symbol: symbol),
           ]),
         ),
         if (settlements.isNotEmpty) ...[

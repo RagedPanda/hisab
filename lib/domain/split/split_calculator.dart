@@ -34,15 +34,20 @@ class SplitInput {
 }
 
 /// A line item assigned to one or more members (itemised split).
+///
+/// A [shared] item (tax, delivery, service charge) ignores [memberIds] and is
+/// split equally among everyone who holds at least one non-shared item.
 class ItemSplitInput {
   const ItemSplitInput({
     required this.amountMinor,
     required this.memberIds,
     this.label = '',
+    this.shared = false,
   });
   final int amountMinor;
   final List<String> memberIds;
   final String label;
+  final bool shared;
 }
 
 class SplitShare {
@@ -125,6 +130,7 @@ SplitOutcome computeSplit({
   required SplitMethod method,
   required List<SplitInput> inputs,
   List<ItemSplitInput> items = const [],
+  String? payerId,
 }) {
   if (totalMinor < 0) return const SplitOutcome.invalid(SplitError(SplitErrorCode.negativeTotal));
   switch (method) {
@@ -139,7 +145,7 @@ SplitOutcome computeSplit({
     case SplitMethod.adjustment:
       return _adjustment(totalMinor, inputs);
     case SplitMethod.byItem:
-      return _byItem(totalMinor, inputs, items);
+      return _byItem(totalMinor, inputs, items, payerId);
   }
 }
 
@@ -227,33 +233,49 @@ SplitOutcome _adjustment(int total, List<SplitInput> inputs) {
 /// Each item is split equally among its members; whatever is left of the
 /// total (tax, tip, delivery) is spread in proportion to each member's
 /// item subtotal. Members with no items pay nothing.
-SplitOutcome _byItem(int total, List<SplitInput> inputs, List<ItemSplitInput> items) {
+/// Each non-shared item is split equally among its members. Shared items and
+/// whatever the items leave of [total] (delivery, tax, tip) are split equally
+/// among the members holding at least one non-shared item, or among the
+/// included [inputs] when every item is shared. Every rounding remainder goes
+/// to [payerId] when the payer has a share, so nobody else pays a stray paisa.
+SplitOutcome _byItem(int total, List<SplitInput> inputs, List<ItemSplitInput> items, String? payerId) {
   if (items.isEmpty) return const SplitOutcome.invalid(SplitError(SplitErrorCode.noItems));
-  final itemSum = items.fold<int>(0, (acc, i) => acc + i.amountMinor);
+  final itemSum = items.fold<int>(0, (acc, item) => acc + item.amountMinor);
   if (itemSum > total) {
     return SplitOutcome.invalid(SplitError(SplitErrorCode.itemsExceed, amountMinor: itemSum - total));
   }
-  final subtotal = <String, int>{};
-  for (final item in items) {
+  final ownItems = items.where((item) => !item.shared).toList();
+  for (final item in ownItems) {
     if (item.memberIds.isEmpty) {
       return SplitOutcome.invalid(SplitError(SplitErrorCode.itemUnassigned, label: item.label));
     }
-    final parts = allocateProportionally(
-      item.amountMinor,
-      List.filled(item.memberIds.length, 1),
-    );
-    for (var i = 0; i < item.memberIds.length; i++) {
-      subtotal.update(item.memberIds[i], (v) => v + parts[i], ifAbsent: () => parts[i]);
+  }
+  final holders = _distinct([for (final item in ownItems) ...item.memberIds]);
+  final sharers = holders.isNotEmpty ? holders : [for (final input in inputs) if (input.included) input.memberId];
+  if (sharers.isEmpty) return const SplitOutcome.invalid(SplitError(SplitErrorCode.nobodyIncluded));
+  final sharedPool = total - ownItems.fold<int>(0, (acc, item) => acc + item.amountMinor);
+  final floors = <String, int>{for (final member in sharers) member: 0};
+  void addFloors(int amount, List<String> members) {
+    final distinctMembers = _distinct(members);
+    final part = amount ~/ distinctMembers.length;
+    for (final member in distinctMembers) {
+      floors.update(member, (value) => value + part, ifAbsent: () => part);
     }
   }
-  final members = subtotal.keys.toList();
-  final extras = allocateProportionally(
-    total - itemSum,
-    members.map((m) => subtotal[m]!.toDouble()).toList(),
-  );
+
+  for (final item in ownItems) {
+    addFloors(item.amountMinor, item.memberIds);
+  }
+  addFloors(sharedPool, sharers);
+  final members = floors.keys.toList();
+  final leftover = total - floors.values.fold<int>(0, (acc, value) => acc + value);
+  final remainderParts = members.contains(payerId)
+      ? [for (final member in members) member == payerId ? leftover : 0]
+      : allocateProportionally(leftover, List.filled(members.length, 1));
   return SplitOutcome([
-    for (var i = 0; i < members.length; i++)
-      SplitShare(members[i], subtotal[members[i]]! + extras[i]),
+    for (var i = 0; i < members.length; i++) SplitShare(members[i], floors[members[i]]! + remainderParts[i]),
   ]);
 }
+
+List<String> _distinct(List<String> ids) => ids.toSet().toList();
 

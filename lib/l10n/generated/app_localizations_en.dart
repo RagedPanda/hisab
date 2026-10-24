@@ -384,7 +384,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smsEntryNotice =>
-      'Created from a bank SMS. Editing it will not change your bank balance.';
+      'Added from SMS. Editing it will not change your bank balance.';
 
   @override
   String get saving => 'Saving…';
@@ -429,6 +429,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorPickBothAccounts => 'Pick both accounts for a transfer';
+
+  @override
+  String get errorPickAccount => 'Pick an account';
+
+  @override
+  String get errorSameAccount => 'From and To must be different accounts';
 
   @override
   String get errorItemName => 'Every item needs a name';
@@ -666,7 +672,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get money => 'Money';
 
   @override
-  String get currencySymbol => 'Currency symbol';
+  String get currency => 'Currency';
+
+  @override
+  String get currencyChooseTitle => 'Choose your currency';
+
+  @override
+  String get currencyChooseBody =>
+      'Amounts in Hisab show in this currency. You can change it later in Settings.';
+
+  @override
+  String get currencySearchHint => 'Search code, name or country';
+
+  @override
+  String currencyContinue(String currency) {
+    return 'Continue with $currency';
+  }
+
+  @override
+  String currencyNoMatch(String query) {
+    return 'No currency matches \"$query\"';
+  }
 
   @override
   String get monthStartsOn => 'Month starts on';
@@ -735,6 +761,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Free, open source, no ads, no account needed. Your data stays on your device.';
 
   @override
+  String get aboutMadeWithBefore => 'Made with';
+
+  @override
+  String get aboutMadeWithAfter => '';
+
+  @override
+  String get aboutMadeWithLabel => 'Made with love';
+
+  @override
   String get backupPassphrase => 'Backup passphrase';
 
   @override
@@ -770,7 +805,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsDuplicate => 'Already imported.';
 
   @override
+  String get smsForeignCurrency =>
+      'Only SMS in your home currency are supported, so this one was ignored.';
+
+  @override
   String get smsNotFound => 'Could not find a transaction in that text.';
+
+  @override
+  String get smsNotificationTitle => 'New bank transaction';
+
+  @override
+  String smsNotificationBodyAmount(String amount, String sender) {
+    return '$amount from $sender. Tap to review.';
+  }
+
+  @override
+  String smsNotificationBody(String sender) {
+    return 'From $sender. Tap to review.';
+  }
+
+  @override
+  String smsNotificationBodyAmountAutoAdd(String amount, String sender) {
+    return '$amount from $sender. Open Hisab to add it.';
+  }
+
+  @override
+  String smsNotificationBodyAutoAdd(String sender) {
+    return 'From $sender. Open Hisab to add it.';
+  }
 
   @override
   String get readBankSmsQuestion => 'Read bank SMS?';
@@ -799,10 +861,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not available on iOS. Use the Shortcut or paste below.';
 
   @override
-  String get smsAutoAddTitle => 'Add transactions without review';
+  String get smsAutoAddTitle => 'Add clear transactions automatically';
 
   @override
-  String get smsAutoAddHelp => 'Off: new SMS wait in the review list below.';
+  String get smsAutoAddHelp =>
+      'On: clear bank SMS are added right away with Undo. Unclear ones wait for review.';
 
   @override
   String get scanInboxNow => 'Scan inbox now';
@@ -1959,6 +2022,542 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedAddAnother => 'Saved. Add the next one.';
 
   @override
+  String get smsHistoryTitle => 'SMS history';
+
+  @override
+  String get smsHistoryHelp =>
+      'Every message Hisab processed and what happened to it';
+
+  @override
+  String get smsOutcomeAdded => 'Added';
+
+  @override
+  String get smsOutcomeDuplicate => 'Duplicate';
+
+  @override
+  String get smsOutcomeIgnored => 'Ignored';
+
+  @override
+  String get smsOutcomeUnparsed => 'Unreadable';
+
+  @override
+  String get smsOutcomePending => 'Pending';
+
+  @override
+  String get smsOutcomeUndone => 'Undone';
+
+  @override
+  String get smsHistoryNotBank => 'Not a bank message';
+
+  @override
+  String get smsHistoryDismissed => 'Dismissed from review';
+
+  @override
+  String get smsHistoryUnparsedDetail => 'No transaction found in the text';
+
+  @override
+  String get smsHistoryDuplicateDetail => 'Same message already processed';
+
+  @override
+  String get smsHistoryOpenEntry => 'Open entry';
+
+  @override
+  String get smsHistoryReprocess => 'Process again';
+
+  @override
+  String get smsHistoryClear => 'Clear history';
+
+  @override
+  String get smsHistoryClearQuestion => 'Clear SMS history?';
+
+  @override
+  String smsHistoryClearBody(int count) {
+    return 'Removes the text of $count processed messages from this device. Your entries and messages waiting for review stay, and cleared messages are never imported again.';
+  }
+
+  @override
+  String get smsHistoryClearConfirm => 'Clear';
+
+  @override
+  String get smsHistoryCleared => 'SMS history cleared';
+
+  @override
+  String get smsHistoryEmptyTitle => 'No messages processed yet';
+
+  @override
+  String get smsHistoryEmptyBody =>
+      'Bank SMS that Hisab reads or that you paste show up here.';
+
+  @override
+  String get smsHistoryEmptyFiltered => 'No messages with this outcome';
+
+  @override
+  String get smsHistoryTextNotKept => 'Message text not kept';
+
+  @override
+  String get recurringRepeat => 'Repeat';
+
+  @override
+  String get recurringDoesNotRepeat => 'Does not repeat';
+
+  @override
+  String get recurringDaily => 'Daily';
+
+  @override
+  String get recurringWeekly => 'Weekly';
+
+  @override
+  String get recurringMonthly => 'Monthly';
+
+  @override
+  String get recurringYearly => 'Yearly';
+
+  @override
+  String recurringEveryDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count days',
+      one: 'Every day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count weeks',
+      one: 'Every week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count months',
+      one: 'Every month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count years',
+      one: 'Every year',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringOnDay(int day) {
+    return 'on day $day';
+  }
+
+  @override
+  String get recurringOnLastDay => 'on the last day';
+
+  @override
+  String recurringOnWeekday(String weekday) {
+    return 'on $weekday';
+  }
+
+  @override
+  String recurringOnDate(String date) {
+    return 'on $date';
+  }
+
+  @override
+  String recurringUntil(String date) {
+    return 'until $date';
+  }
+
+  @override
+  String recurringTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: '1 time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recurringInterval => 'Repeat every';
+
+  @override
+  String get recurringLastDayOfMonth => 'On the last day of the month';
+
+  @override
+  String get recurringEnds => 'Ends';
+
+  @override
+  String get recurringEndNever => 'Never';
+
+  @override
+  String get recurringEndOnDate => 'On a date';
+
+  @override
+  String get recurringEndAfter => 'After';
+
+  @override
+  String get recurringOccurrences => 'Number of times';
+
+  @override
+  String get recurringAutoPost => 'Add automatically';
+
+  @override
+  String get recurringAutoPostHint =>
+      'When off, each one waits for you to confirm';
+
+  @override
+  String get recurringStopRepeating => 'Don\'t repeat';
+
+  @override
+  String get recurringDone => 'Done';
+
+  @override
+  String get recurringEndBeforeStart =>
+      'Pick an end date on or after the start';
+
+  @override
+  String get recurringPartOfRule => 'Part of a recurring entry';
+
+  @override
+  String get recurringTitle => 'Recurring';
+
+  @override
+  String get recurringNew => 'New recurring';
+
+  @override
+  String get recurringEdit => 'Edit recurring';
+
+  @override
+  String get recurringEmptyTitle => 'Nothing repeats yet';
+
+  @override
+  String get recurringEmptyBody =>
+      'Rent, SIP, EMI or salary: set it once and Hisab adds it on the day.';
+
+  @override
+  String get recurringSectionWaiting => 'Waiting for you';
+
+  @override
+  String get recurringSectionActive => 'Active';
+
+  @override
+  String get recurringSectionPaused => 'Paused';
+
+  @override
+  String get recurringSectionEnded => 'Ended';
+
+  @override
+  String recurringNext(String date) {
+    return 'Next $date';
+  }
+
+  @override
+  String recurringDue(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String recurringMoreWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'and $count more waiting',
+      one: 'and 1 more waiting',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recurringConfirm => 'Add';
+
+  @override
+  String get recurringSkip => 'Skip';
+
+  @override
+  String get recurringPause => 'Pause';
+
+  @override
+  String get recurringResume => 'Resume';
+
+  @override
+  String get recurringDeleted => 'Recurring entry deleted';
+
+  @override
+  String get recurringAdded => 'Entry added';
+
+  @override
+  String get recurringSkipped => 'Skipped';
+
+  @override
+  String recurringToConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recurring entries to confirm',
+      one: '1 recurring entry to confirm',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recurringPostedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added $count times',
+      one: 'Added once',
+      zero: 'Not added yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recurringNameLabel => 'Name (optional)';
+
+  @override
+  String get recurringNextOn => 'Next on';
+
+  @override
+  String get recurringRuleMissing => 'This recurring entry was deleted';
+
+  @override
+  String recurringDecrease(String label) {
+    return 'Decrease $label';
+  }
+
+  @override
+  String recurringIncrease(String label) {
+    return 'Increase $label';
+  }
+
+  @override
+  String get subscriptions => 'Subscriptions';
+
+  @override
+  String get subscriptionsMonthlyTotal => 'Per month';
+
+  @override
+  String get subscriptionsYearlyTotal => 'Per year';
+
+  @override
+  String subscriptionsActiveCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count active subscriptions',
+      one: '1 active subscription',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionsEmptyTitle => 'No subscriptions yet';
+
+  @override
+  String get subscriptionsEmptyBody =>
+      'Add Netflix, your phone recharge or the gym to see what they cost you each month and year.';
+
+  @override
+  String get subscriptionAdd => 'Add subscription';
+
+  @override
+  String get subscriptionEdit => 'Edit subscription';
+
+  @override
+  String get subscriptionPickService => 'Pick a service';
+
+  @override
+  String get subscriptionCustom => 'Something else';
+
+  @override
+  String get subscriptionPrice => 'Price per renewal';
+
+  @override
+  String get subscriptionCycle => 'Renews';
+
+  @override
+  String get subscriptionNextRenewal => 'Next renewal';
+
+  @override
+  String subscriptionStartedOn(String date) {
+    return 'Started $date';
+  }
+
+  @override
+  String get subscriptionAutoPost => 'Add to expenses on each renewal';
+
+  @override
+  String get subscriptionAutoPostHelp =>
+      'Off: tracked here only, no entries are added';
+
+  @override
+  String get subscriptionNameRequired => 'Enter a name';
+
+  @override
+  String get subscriptionPriceRequired => 'Enter the price';
+
+  @override
+  String subscriptionRenewsOn(String date) {
+    return 'Renews $date';
+  }
+
+  @override
+  String get subscriptionRenewsToday => 'Renews today';
+
+  @override
+  String subscriptionRenewsInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Renews in $days days',
+      one: 'Renews tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionOverdue(String date) {
+    return 'Was due $date';
+  }
+
+  @override
+  String get subscriptionPaused => 'Paused';
+
+  @override
+  String get subscriptionCancelled => 'Cancelled';
+
+  @override
+  String get subscriptionPause => 'Pause';
+
+  @override
+  String get subscriptionResume => 'Resume';
+
+  @override
+  String get subscriptionMarkCancelled => 'Mark as cancelled';
+
+  @override
+  String subscriptionCancelConfirm(String name) {
+    return 'Mark $name as cancelled?';
+  }
+
+  @override
+  String get subscriptionCancelConfirmBody =>
+      'No new charges are added and it leaves the totals. Past entries stay.';
+
+  @override
+  String get subscriptionDeleted => 'Subscription deleted';
+
+  @override
+  String subscriptionPerMonth(String amount) {
+    return '$amount/month';
+  }
+
+  @override
+  String get subscriptionSort => 'Sort';
+
+  @override
+  String get subscriptionSortCostHigh => 'Cost: high to low';
+
+  @override
+  String get subscriptionSortCostLow => 'Cost: low to high';
+
+  @override
+  String get subscriptionSortRenewal => 'Next renewal';
+
+  @override
+  String get subscriptionSortName => 'Name';
+
+  @override
+  String subscriptionEveryDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count days',
+      one: 'Every day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count weeks',
+      one: 'Every week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count months',
+      one: 'Every month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count years',
+      one: 'Every year',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionTemplateNetflix => 'Netflix';
+
+  @override
+  String get subscriptionTemplateAmazonPrime => 'Amazon Prime';
+
+  @override
+  String get subscriptionTemplateJiohotstar => 'JioHotstar';
+
+  @override
+  String get subscriptionTemplateSpotify => 'Spotify';
+
+  @override
+  String get subscriptionTemplateYoutubePremium => 'YouTube Premium';
+
+  @override
+  String get subscriptionTemplateMobileRecharge => 'Mobile recharge';
+
+  @override
+  String get subscriptionTemplateDth => 'DTH';
+
+  @override
+  String get subscriptionTemplateBroadband => 'Broadband';
+
+  @override
+  String get subscriptionTemplateGym => 'Gym';
+
+  @override
+  String get subscriptionTemplateCloudStorage => 'Cloud storage';
+
+  @override
+  String get subscriptionTemplateNewsApp => 'News app';
+
+  @override
   String get payersMultiple => '2+ people';
 
   @override
@@ -2154,6 +2753,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityGroupDeletedSnack => 'Group deleted';
 
   @override
+  String recurringAddedSkipped(int added, int skipped) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added added',
+      one: '1 added',
+      zero: 'None added',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: '$skipped skipped',
+      one: '1 skipped',
+    );
+    return '$_temp0, $_temp1';
+  }
+
+  @override
   String get groupExportCsv => 'Export as CSV';
 
   @override
@@ -2247,4 +2864,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String groupSummaryMemberShare(String name, String amount) {
     return '$name\'s share: $amount';
   }
+
+  @override
+  String get smsAddedMarker => 'Added from SMS';
+
+  @override
+  String smsAutoAddedOne(String amount) {
+    return 'Added $amount from SMS';
+  }
+
+  @override
+  String smsAutoAddedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added $count entries from SMS',
+      one: 'Added 1 entry from SMS',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get smsReviewTitle => 'SMS to review';
+
+  @override
+  String get smsReviewHelp =>
+      'These messages were not clear enough to add on their own. Add, edit or ignore each one.';
+
+  @override
+  String get smsReviewUnread => 'Could not read the amount';
+
+  @override
+  String get smsReviewAddManually => 'Add manually';
 }

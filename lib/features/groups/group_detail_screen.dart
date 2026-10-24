@@ -220,10 +220,7 @@ Future<void> confirmRemoveSettlement(BuildContext context, WidgetRef ref, Settle
   final repo = ref.read(groupsRepositoryProvider);
   await repo.deleteSettlement(settlement.id);
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    content: Text(l10n.paymentRemoved),
-    action: SnackBarAction(label: l10n.undo, onPressed: () => repo.restoreSettlement(settlement.id)),
-  ));
+  showUndoSnackBar(ScaffoldMessenger.of(context), message: l10n.paymentRemoved, undoLabel: l10n.undo, onUndo: () => repo.restoreSettlement(settlement.id));
 }
 
 class _BalancesTab extends ConsumerWidget {

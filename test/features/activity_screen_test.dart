@@ -41,7 +41,7 @@ Future<String> seedActivity(ProviderContainer container) async {
 
 /// An app container on a fresh in-memory database, disposed after the test.
 Future<ProviderContainer> createContainer() async {
-  SharedPreferences.setMockInitialValues({'onboarded': true});
+  SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR'});
   final prefs = await SharedPreferences.getInstance();
   final container = ProviderContainer(overrides: [
     sharedPreferencesProvider.overrideWithValue(prefs),

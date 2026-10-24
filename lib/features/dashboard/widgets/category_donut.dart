@@ -220,6 +220,10 @@ class _Centre extends StatelessWidget {
   }
 }
 
+/// Space between a legend row's percent and amount, so "100%" never runs
+/// into a long amount like "CHF 2,54,000" (#101).
+const double kLegendValueGap = 12;
+
 class _LegendRow extends StatelessWidget {
   const _LegendRow({required this.slice, required this.selected, required this.symbol, required this.onTap});
   final _Slice slice;
@@ -246,10 +250,11 @@ class _LegendRow extends StatelessWidget {
             Container(width: 10, height: 10, decoration: BoxDecoration(color: slice.color, shape: BoxShape.circle)),
             const SizedBox(width: 10),
             Expanded(child: Text(slice.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium)),
-            SizedBox(
-              width: 44,
-              child: Text(l10n.percentOf(sharePercent(slice.share)), textAlign: TextAlign.end, style: theme.textTheme.labelLarge?.tabular),
+            ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 44),
+              child: Text(l10n.percentOf(sharePercent(slice.share)), maxLines: 1, softWrap: false, textAlign: TextAlign.end, style: theme.textTheme.labelLarge?.tabular),
             ),
+            const SizedBox(width: kLegendValueGap),
             ConstrainedBox(
               constraints: const BoxConstraints(minWidth: 72),
               child: Text(formatMinor(slice.share.minor, symbol: symbol, showDecimals: false), textAlign: TextAlign.end, style: theme.textTheme.bodyMedium?.tabular),

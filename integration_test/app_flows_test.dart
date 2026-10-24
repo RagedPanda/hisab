@@ -344,6 +344,7 @@ void main() {
   testWidgets('06 budgets: overall budget is exceeded, category budget has room', (tester) async {
     await pumpApp(tester, shared);
     await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Budgets'));
     await tapText(tester, 'Budgets');
     expect(find.text('No budgets yet'), findsOneWidget);
     await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Budget'));
@@ -556,6 +557,7 @@ void main() {
     addTearDown(fresh.container.dispose);
     await pumpApp(tester, fresh);
     await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Categories'));
     await tapText(tester, 'Categories');
     expect(find.text('Food & Dining'), findsOneWidget);
     await shoot(tester, 'categories_list');
@@ -600,7 +602,9 @@ void main() {
     await pumpApp(tester, shared);
     await goTab(tester, 'Settings');
     await shoot(tester, 'settings');
+    await scrollTo(tester, find.text('Bank SMS'));
     await tapText(tester, 'Bank SMS');
+    await waitFor(tester, find.text('Not available on iOS. Use the Shortcut or paste below.'));
     expect(find.text('Not available on iOS. Use the Shortcut or paste below.'), findsOneWidget);
     final readSwitch = tester.widget<SwitchListTile>(find.widgetWithText(SwitchListTile, 'Read bank SMS automatically'));
     expect(readSwitch.onChanged, isNull, reason: 'SMS reading must be disabled on iOS');
@@ -1054,6 +1058,7 @@ void main() {
     await pumpApp(tester, fresh);
     Future<void> openPacks() async {
       await goTab(tester, 'Settings');
+      await scrollTo(tester, find.text('Categories'));
       await tapText(tester, 'Categories');
       await tapFinder(tester, find.byKey(const ValueKey('categories.addPack')));
     }

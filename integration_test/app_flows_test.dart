@@ -12,7 +12,7 @@
 /// if Hisab's notifications were denied on the simulator before, uninstall the
 /// app (`xcrun simctl uninstall <udid> com.sarv.hisab`) or erase the simulator
 /// first, otherwise iOS keeps the denial and flow 28 fails its first expect.
-/// Android, flow 25 (salary day): the notification permission must be granted
+/// Android, flow 29 (salary day, numbered 25 before): the notification permission must be granted
 /// before the flow, or the Android 13+ system prompt covers the align dialog
 /// (#86). The driver does this with
 /// `adb shell pm grant com.sarv.hisab android.permission.POST_NOTIFICATIONS`;
@@ -102,7 +102,24 @@ int _expectedSeededSpend(DateTime now, {required int entryCount}) {
   final range = monthRange(now);
   final hotelDate = now.subtract(const Duration(days: 3));
   final planned = planDemoEntries(count: entryCount, now: now).where((item) => item.kind == 'expense' && range.contains(item.occurredAt)).fold(0, (sum, item) => sum + item.amountMinor);
-  return planned + (range.contains(hotelDate) ? 300000 : 0);
+  return planned + (range.contains(hotelDate) ? 300000 : 0) + _sliceTopUpKeys.length * _sliceTopUpMinor;
+}
+
+/// One child in each of six parent categories. The demo plan spreads entries
+/// by date, so on many days (2026-10-24 among them) this month touches five
+/// or fewer parents and the donut has no "Others" slice; these make it six.
+const _sliceTopUpKeys = ['cab_auto', 'electricity', 'medicines', 'clothing', 'movies', 'salon'];
+const _sliceTopUpMinor = 10000;
+
+/// Adds a small expense in each of [_sliceTopUpKeys] at the start of [now]'s
+/// month, so the dashboard donut always draws the top five plus "Others".
+Future<void> _seedSliceTopUp(AppDatabase db, DateTime now) async {
+  final categories = await db.select(db.categories).get();
+  final entries = EntriesRepository(db);
+  for (final key in _sliceTopUpKeys) {
+    final categoryId = categories.firstWhere((category) => category.seedKey == key).id;
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: _sliceTopUpMinor, occurredAt: monthRange(now).start, categoryId: categoryId, payee: 'Top-up'));
+  }
 }
 
 /// The summary card headline; the same figure also appears in the donut centre
@@ -781,10 +798,11 @@ void main() {
     addTearDown(fresh.container.dispose);
     final now = DateTime.now();
     await seedDemoData(fresh.db, entryCount: kDashboardSeedEntries, now: now);
+    await _seedSliceTopUp(fresh.db, now);
     await pumpApp(tester, fresh);
     await settle(tester, 12);
     expect(find.text(_spentIn(now)), findsOneWidget);
-    await _expectSpent(tester, formatMinor(_expectedSeededSpend(now, entryCount: kDashboardSeedEntries), showDecimals: false), reason: 'hero spend = planned expenses this month + my hotel share');
+    await _expectSpent(tester, formatMinor(_expectedSeededSpend(now, entryCount: kDashboardSeedEntries), showDecimals: false), reason: 'hero spend = planned expenses this month + my hotel share + slice top-up');
     expect(find.byKey(kHeroCardKey), findsOneWidget);
     expect(find.text('Income'), findsOneWidget);
     expect(find.text('Daily avg'), findsOneWidget);
@@ -1739,7 +1757,7 @@ void main() {
     }
   });
 
-  testWidgets('25 salary day: set up from Settings, align month start, reminder clears when an SMS salary arrives, Hindi', (tester) async {
+  testWidgets('29 salary day: set up from Settings, align month start, reminder clears when an SMS salary arrives, Hindi', (tester) async {
     final alerts = _RecordingSalaryAlerts();
     final fresh = await createApp(overrides: [salaryAlertSinkProvider.overrideWithValue(alerts)]);
     addTearDown(fresh.container.dispose);
@@ -1749,7 +1767,7 @@ void main() {
     if (Platform.isAndroid) {
       // Granted by the driver (see the header), so saving shows no system prompt.
       final permission = await fresh.read(notificationGatewayProvider).permissionState();
-      expect(permission.notificationsAllowed, isTrue, reason: 'grant POST_NOTIFICATIONS before flow 25; see the file header');
+      expect(permission.notificationsAllowed, isTrue, reason: 'grant POST_NOTIFICATIONS before flow 29; see the file header');
     }
     await pumpApp(tester, fresh);
 

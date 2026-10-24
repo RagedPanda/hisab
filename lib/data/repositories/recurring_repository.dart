@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../core/dates.dart';
 import '../../core/ids.dart';
 import '../../domain/ledger/balance_effects.dart';
+import '../../domain/recurring/catch_up_schedule.dart';
 import '../../domain/recurring/recurrence.dart';
 import '../../domain/recurring/repeat_draft.dart';
 import '../db/database.dart';
@@ -171,6 +172,19 @@ class RecurringRepository {
         }
         return written;
       });
+
+  /// One foreground catch-up: posts what is due at [now] and returns when the
+  /// open app should run the next one.
+  Future<DateTime> catchUp({required DateTime now, int monthStartDay = 1}) async {
+    await postDue(now: now, monthStartDay: monthStartDay);
+    return nextWake(now: now);
+  }
+
+  /// When an open app should next run [postDue]: see [nextWakeAt].
+  Future<DateTime> nextWake({required DateTime now}) async {
+    final rules = await (db.select(db.recurringRules)..where((t) => t.deletedAt.isNull())).get();
+    return nextWakeAt([for (final rule in rules) (status: rule.status, nextDue: rule.nextDue)], now);
+  }
 
   /// Posts the oldest waiting occurrence of a confirm-first rule.
   Future<String?> confirmNext(String id, {int monthStartDay = 1}) => db.transaction(() async {

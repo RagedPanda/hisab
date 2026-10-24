@@ -6,7 +6,7 @@ import 'package:integration_test/integration_test_driver_extended.dart';
 const String kHisabPackage = 'com.sarv.hisab';
 
 /// `adb` arguments that grant the notification permission before the flows
-/// run, so no system prompt covers a dialog mid-flow (flow 25, #86). The
+/// run, so no system prompt covers a dialog mid-flow (flow 29, #86). The
 /// device is the one in `ANDROID_SERIAL` when set (adb reads it itself).
 List<String> grantNotificationsArgs({String package = kHisabPackage}) =>
     ['shell', 'pm', 'grant', package, 'android.permission.POST_NOTIFICATIONS'];

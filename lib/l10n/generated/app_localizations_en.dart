@@ -431,6 +431,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorPickBothAccounts => 'Pick both accounts for a transfer';
 
   @override
+  String get errorPickAccount => 'Pick an account';
+
+  @override
+  String get errorSameAccount => 'From and To must be different accounts';
+
+  @override
   String get errorItemName => 'Every item needs a name';
 
   @override
@@ -666,7 +672,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get money => 'Money';
 
   @override
-  String get currencySymbol => 'Currency symbol';
+  String get currency => 'Currency';
+
+  @override
+  String get currencyChooseTitle => 'Choose your currency';
+
+  @override
+  String get currencyChooseBody =>
+      'Amounts in Hisab show in this currency. You can change it later in Settings.';
+
+  @override
+  String get currencySearchHint => 'Search code, name or country';
+
+  @override
+  String currencyContinue(String currency) {
+    return 'Continue with $currency';
+  }
+
+  @override
+  String currencyNoMatch(String query) {
+    return 'No currency matches \"$query\"';
+  }
 
   @override
   String get monthStartsOn => 'Month starts on';
@@ -735,6 +761,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Free, open source, no ads, no account needed. Your data stays on your device.';
 
   @override
+  String get aboutMadeWithBefore => 'Made with';
+
+  @override
+  String get aboutMadeWithAfter => '';
+
+  @override
+  String get aboutMadeWithLabel => 'Made with love';
+
+  @override
   String get backupPassphrase => 'Backup passphrase';
 
   @override
@@ -787,6 +822,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String smsNotificationBody(String sender) {
     return 'From $sender. Tap to review.';
+  }
+
+  @override
+  String smsNotificationBodyAmountAutoAdd(String amount, String sender) {
+    return '$amount from $sender. Open Hisab to add it.';
+  }
+
+  @override
+  String smsNotificationBodyAutoAdd(String sender) {
+    return 'From $sender. Open Hisab to add it.';
   }
 
   @override

@@ -15,7 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/fake_notification_gateway.dart';
 
 Future<(ProviderContainer, AppDatabase)> _pumpReminders(WidgetTester tester, FakeNotificationGateway gateway, {String location = '/reminders'}) async {
-  SharedPreferences.setMockInitialValues({'onboarded': true});
+  SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR'});
   final prefs = await SharedPreferences.getInstance();
   final db = AppDatabase(NativeDatabase.memory());
   final container = ProviderContainer(overrides: [

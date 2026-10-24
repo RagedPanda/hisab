@@ -63,7 +63,23 @@ object SmsNotifier {
         return PendingIntent.getActivity(context, 0, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
-    private fun notificationId(sms: QueuedSms): Int = (sms.sender + sms.body).hashCode()
+    private fun notificationId(sms: QueuedSms): Int = SmsCapturePolicy.notificationId(sms.sender, sms.body)
+
+    /**
+     * Removes the notifications of messages the app has now processed
+     * (added, sent to review or ignored), and the group summary with them
+     * once no Bank SMS notification is left.
+     */
+    fun cancel(context: Context, messages: List<Pair<String, String>>) {
+        if (messages.isEmpty()) return
+        val manager = NotificationManagerCompat.from(context)
+        val cancelled = messages.map { (sender, body) -> SmsCapturePolicy.notificationId(sender, body) }
+        cancelled.forEach(manager::cancel)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+        val system = context.getSystemService(NotificationManager::class.java) ?: return
+        val active = system.activeNotifications.filter { it.notification.group == GROUP_KEY }.map { it.id }
+        if (SmsCapturePolicy.summaryOrphaned(active, cancelled, SUMMARY_ID)) manager.cancel(SUMMARY_ID)
+    }
 
     private fun ensureChannel(context: Context, name: String) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return

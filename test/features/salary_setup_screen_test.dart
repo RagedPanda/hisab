@@ -18,7 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/fake_notification_gateway.dart';
 
 Future<ProviderContainer> _pumpSalary(WidgetTester tester, {String localeCode = 'en', FakeNotificationGateway? gateway, Map<String, Object> prefsValues = const {}}) async {
-  SharedPreferences.setMockInitialValues({'onboarded': true, if (localeCode != 'en') 'localeCode': localeCode, ...prefsValues});
+  SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR', if (localeCode != 'en') 'localeCode': localeCode, ...prefsValues});
   final prefs = await SharedPreferences.getInstance();
   final db = AppDatabase(NativeDatabase.memory());
   final container = ProviderContainer(overrides: [

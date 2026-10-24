@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../core/ids.dart';
+import '../../domain/backup/seed_dedupe.dart';
 import '../../domain/categories/category_catalog.dart';
 import '../../domain/sms/sms_outcome.dart';
 
@@ -504,6 +505,8 @@ class AppDatabase extends _$AppDatabase {
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
           await wipeUnkeptSmsText();
+          // Heals installs where a restore doubled the seed (#63); writes nothing otherwise.
+          if (!details.wasCreated) await mergeSeededDuplicates();
         },
       );
 
@@ -577,6 +580,86 @@ class AppDatabase extends _$AppDatabase {
         color: 0xFF43A047,
       ));
     }
+  }
+
+  /// Folds duplicate seeded rows into one: categories sharing a seedKey and
+  /// extra untouched "Cash" accounts. References move to the kept row and the
+  /// duplicate is soft-deleted, so restoring the same backup again keeps it
+  /// gone. [preferIds] are kept over other copies (rows a restore just wrote).
+  Future<int> mergeSeededDuplicates({Set<String> preferIds = const {}}) => transaction(() async {
+        final categoryPlan = planSeedDedupe(await _seededCategoryCandidates(), preferIds: preferIds);
+        final accountPlan = planSeedDedupe(await _cashAccountCandidates(), preferIds: preferIds);
+        final now = DateTime.now();
+        for (final MapEntry(key: droppedId, value: keptId) in categoryPlan.entries) {
+          await (update(entries)..where((t) => t.categoryId.equals(droppedId)))
+              .write(EntriesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
+          await (update(budgets)..where((t) => t.categoryId.equals(droppedId)))
+              .write(BudgetsCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
+          await (update(recurringRules)..where((t) => t.categoryId.equals(droppedId)))
+              .write(RecurringRulesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
+          await (update(categories)..where((t) => t.parentId.equals(droppedId)))
+              .write(CategoriesCompanion(parentId: Value(keptId), updatedAt: Value(now)));
+          await (update(categories)..where((t) => t.id.equals(droppedId)))
+              .write(CategoriesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+        }
+        for (final droppedId in accountPlan.keys) {
+          await (update(accounts)..where((t) => t.id.equals(droppedId)))
+              .write(AccountsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+        }
+        return categoryPlan.length + accountPlan.length;
+      });
+
+  Future<List<SeedCandidate>> _seededCategoryCandidates() async {
+    final live = await (select(categories)..where((t) => t.seedKey.isNotNull() & t.deletedAt.isNull())).get();
+    final entryRefs = await _countBy(entries, entries.categoryId);
+    final budgetRefs = await _countBy(budgets, budgets.categoryId);
+    final ruleRefs = await _countBy(recurringRules, recurringRules.categoryId);
+    return [
+      for (final category in live)
+        SeedCandidate(
+          id: category.id,
+          key: category.seedKey!,
+          references: (entryRefs[category.id] ?? 0) + (budgetRefs[category.id] ?? 0) + (ruleRefs[category.id] ?? 0),
+        ),
+    ];
+  }
+
+  /// Only the seeded account's shape counts as a duplicate, and only an
+  /// empty one (no entries, zero balance) may be dropped.
+  Future<List<SeedCandidate>> _cashAccountCandidates() async {
+    final live = await (select(accounts)
+          ..where((t) => t.type.equals('cash') & t.name.equals('Cash') & t.deletedAt.isNull()))
+        .get();
+    final fromRefs = await _countBy(entries, entries.accountId);
+    final toRefs = await _countBy(entries, entries.toAccountId);
+    final ruleFromRefs = await _countBy(recurringRules, recurringRules.accountId);
+    final ruleToRefs = await _countBy(recurringRules, recurringRules.toAccountId);
+    return [
+      for (final account in live)
+        _cashCandidate(
+          account,
+          (fromRefs[account.id] ?? 0) + (toRefs[account.id] ?? 0) + (ruleFromRefs[account.id] ?? 0) + (ruleToRefs[account.id] ?? 0),
+        ),
+    ];
+  }
+
+  static SeedCandidate _cashCandidate(Account account, int references) => SeedCandidate(
+        id: account.id,
+        key: 'cash:Cash',
+        references: references,
+        removable: references == 0 && account.balanceMinor == 0,
+      );
+
+  /// Live-row count per value of [column] in [table].
+  Future<Map<String, int>> _countBy(TableInfo<Table, dynamic> table, GeneratedColumn<String> column) async {
+    final deletedAt = table.columnsByName['deleted_at']! as GeneratedColumn<DateTime>;
+    final count = column.count();
+    final rows = await (selectOnly(table)
+          ..addColumns([column, count])
+          ..where(column.isNotNull() & deletedAt.isNull())
+          ..groupBy([column]))
+        .get();
+    return {for (final row in rows) row.read(column)!: row.read(count)!};
   }
 }
 

@@ -824,6 +824,18 @@ abstract class AppLocalizations {
   /// **'Pick both accounts for a transfer'**
   String get errorPickBothAccounts;
 
+  /// No description provided for @errorPickAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an account'**
+  String get errorPickAccount;
+
+  /// No description provided for @errorSameAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'From and To must be different accounts'**
+  String get errorSameAccount;
+
   /// No description provided for @errorItemName.
   ///
   /// In en, this message translates to:
@@ -1232,11 +1244,41 @@ abstract class AppLocalizations {
   /// **'Money'**
   String get money;
 
-  /// No description provided for @currencySymbol.
+  /// No description provided for @currency.
   ///
   /// In en, this message translates to:
-  /// **'Currency symbol'**
-  String get currencySymbol;
+  /// **'Currency'**
+  String get currency;
+
+  /// No description provided for @currencyChooseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your currency'**
+  String get currencyChooseTitle;
+
+  /// No description provided for @currencyChooseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Amounts in Hisab show in this currency. You can change it later in Settings.'**
+  String get currencyChooseBody;
+
+  /// No description provided for @currencySearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search code, name or country'**
+  String get currencySearchHint;
+
+  /// No description provided for @currencyContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with {currency}'**
+  String currencyContinue(String currency);
+
+  /// No description provided for @currencyNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No currency matches \"{query}\"'**
+  String currencyNoMatch(String query);
 
   /// No description provided for @monthStartsOn.
   ///
@@ -1358,6 +1400,24 @@ abstract class AppLocalizations {
   /// **'Free, open source, no ads, no account needed. Your data stays on your device.'**
   String get aboutBody;
 
+  /// Text shown before the red heart icon at the bottom of Settings > About. May be empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with'**
+  String get aboutMadeWithBefore;
+
+  /// Text shown after the red heart icon at the bottom of Settings > About. May be empty.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get aboutMadeWithAfter;
+
+  /// Screen reader label for the Made with heart line.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with love'**
+  String get aboutMadeWithLabel;
+
   /// No description provided for @backupPassphrase.
   ///
   /// In en, this message translates to:
@@ -1447,6 +1507,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'From {sender}. Tap to review.'**
   String smsNotificationBody(String sender);
+
+  /// No description provided for @smsNotificationBodyAmountAutoAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} from {sender}. Open Hisab to add it.'**
+  String smsNotificationBodyAmountAutoAdd(String amount, String sender);
+
+  /// No description provided for @smsNotificationBodyAutoAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'From {sender}. Open Hisab to add it.'**
+  String smsNotificationBodyAutoAdd(String sender);
 
   /// No description provided for @readBankSmsQuestion.
   ///

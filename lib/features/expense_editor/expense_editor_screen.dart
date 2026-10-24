@@ -15,6 +15,7 @@ import '../../data/repositories/entry_removal.dart';
 import '../../data/repositories/project_fields_repository.dart';
 import '../../data/repositories/projects_repository.dart';
 import '../../data/repositories/recurring_repository.dart';
+import '../../domain/entries/entry_accounts.dart';
 import '../../domain/ledger/balance_effects.dart';
 import '../../domain/projects/project_fields.dart';
 import '../../domain/projects/project_math.dart';
@@ -26,7 +27,7 @@ import '../../domain/split/payers.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
-import '../accounts/account_choice_chips.dart';
+import '../accounts/grouped_account_picker.dart';
 import '../groups/member_display.dart';
 import '../categories/category_picker.dart';
 import '../projects/project_field_inputs.dart';
@@ -313,6 +314,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
+    final recentAccountIds = ref.watch(recentAccountIdsProvider).value ?? const <String>[];
     final symbol = settings.currencySymbol;
     final units = _category?.units.split(',').where((u) => u.isNotEmpty).toList() ?? const <String>[];
 
@@ -412,12 +414,27 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             const SizedBox(height: 8),
             Text(_kind == 'transfer' ? l10n.fromAccount : l10n.account, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 6),
-            AccountChoiceChips(accounts: accounts, selectedId: _accountId, onPick: (id) => setState(() => _accountId = id)),
+            GroupedAccountPicker(
+              key: const ValueKey('from-account'),
+              accounts: accounts,
+              recentAccountIds: recentAccountIds,
+              selectedId: _accountId,
+              onPick: (id) => setState(() {
+                _accountId = id;
+                _toAccountId = toAccountAfterFromChange(fromId: id, toId: _toAccountId);
+              }),
+            ),
             if (_kind == 'transfer') ...[
               const SizedBox(height: 12),
               Text(l10n.toAccount, style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 6),
-              AccountChoiceChips(accounts: accounts.where((a) => a.id != _accountId).toList(), selectedId: _toAccountId, onPick: (id) => setState(() => _toAccountId = id)),
+              GroupedAccountPicker(
+                key: const ValueKey('to-account'),
+                accounts: accounts.where((a) => a.id != _accountId).toList(),
+                recentAccountIds: recentAccountIds,
+                selectedId: _toAccountId,
+                onPick: (id) => setState(() => _toAccountId = id),
+              ),
             ],
           ],
           const SizedBox(height: 16),
@@ -641,6 +658,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     if (_payerAmounts.isEmpty && _paidByMemberId != null) _payerAmounts = {_paidByMemberId!: _amountMinor};
   }
 
+  String _accountProblemMessage(AppLocalizations l10n, EntryAccountProblem problem) => switch (problem) {
+        EntryAccountProblem.missingAccount => l10n.errorPickAccount,
+        EntryAccountProblem.missingBothAccounts => l10n.errorPickBothAccounts,
+        EntryAccountProblem.sameAccount => l10n.errorSameAccount,
+        EntryAccountProblem.none => '',
+      };
+
   Future<void> _save({bool addAnother = false}) async {
     final amount = _amountMinor;
     final l10n = context.l10n;
@@ -657,8 +681,15 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       messenger.showSnackBar(SnackBar(content: Text(l10n.errorPickCategory)));
       return;
     }
-    if (_kind == 'transfer' && (_accountId == null || _toAccountId == null)) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.errorPickBothAccounts)));
+    final accountProblem = entryAccountProblem(
+      kind: _kind,
+      inGroup: _groupId != null,
+      accountId: _accountId,
+      toAccountId: _toAccountId,
+      accountCreatedOnSave: _source == 'sms' && _smsId != null,
+    );
+    if (accountProblem != EntryAccountProblem.none) {
+      messenger.showSnackBar(SnackBar(content: Text(_accountProblemMessage(l10n, accountProblem))));
       return;
     }
     if (_items.any((i) => i.name.trim().isEmpty)) {
@@ -689,6 +720,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     setState(() => _saving = true);
     if (_source == 'sms' && _smsId != null && _accountId == null && _groupId == null) {
       _accountId = (await ref.read(smsIngestServiceProvider).ensureAccountForSms(_smsId!))?.id;
+      if (_accountId == null) {
+        if (mounted) setState(() => _saving = false);
+        messenger.showSnackBar(SnackBar(content: Text(l10n.errorPickAccount)));
+        return;
+      }
     }
     final id = _existingId ?? newId();
     final projectId = _kind == 'transfer' ? null : _projectId;

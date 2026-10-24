@@ -431,6 +431,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get errorPickBothAccounts => 'ट्रांसफ़र के लिए दोनों खाते चुनें';
 
   @override
+  String get errorPickAccount => 'खाता चुनें';
+
+  @override
+  String get errorSameAccount => 'दोनों खाते अलग होने चाहिए';
+
+  @override
   String get errorItemName => 'हर आइटम का नाम ज़रूरी है';
 
   @override
@@ -666,7 +672,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get money => 'पैसा';
 
   @override
-  String get currencySymbol => 'मुद्रा चिह्न';
+  String get currency => 'मुद्रा';
+
+  @override
+  String get currencyChooseTitle => 'अपनी मुद्रा चुनें';
+
+  @override
+  String get currencyChooseBody =>
+      'Hisab में रकम इसी मुद्रा में दिखेगी। आप इसे बाद में सेटिंग्स में बदल सकते हैं।';
+
+  @override
+  String get currencySearchHint => 'कोड, नाम या देश खोजें';
+
+  @override
+  String currencyContinue(String currency) {
+    return '$currency के साथ आगे बढ़ें';
+  }
+
+  @override
+  String currencyNoMatch(String query) {
+    return '\"$query\" से कोई मुद्रा नहीं मिली';
+  }
 
   @override
   String get monthStartsOn => 'महीना शुरू होता है';
@@ -735,6 +761,15 @@ class AppLocalizationsHi extends AppLocalizations {
       'मुफ़्त, ओपन सोर्स, कोई विज्ञापन नहीं, कोई अकाउंट नहीं। आपका डेटा आपके डिवाइस पर रहता है।';
 
   @override
+  String get aboutMadeWithBefore => '';
+
+  @override
+  String get aboutMadeWithAfter => 'से बनाया गया';
+
+  @override
+  String get aboutMadeWithLabel => 'प्यार से बनाया गया';
+
+  @override
   String get backupPassphrase => 'बैकअप पासफ़्रेज़';
 
   @override
@@ -787,6 +822,16 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String smsNotificationBody(String sender) {
     return '$sender से। देखने के लिए टैप करें।';
+  }
+
+  @override
+  String smsNotificationBodyAmountAutoAdd(String amount, String sender) {
+    return '$sender से $amount। जोड़ने के लिए हिसाब खोलें।';
+  }
+
+  @override
+  String smsNotificationBodyAutoAdd(String sender) {
+    return '$sender से। जोड़ने के लिए हिसाब खोलें।';
   }
 
   @override

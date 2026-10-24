@@ -8,6 +8,7 @@ import 'core/providers.dart';
 import 'data/db/database.dart';
 import 'data/debug/demo_seed.dart';
 import 'data/settings/currency_migration.dart';
+import 'features/reminders/reminder_startup.dart';
 
 /// Debug/profile builds started with `--dart-define=HISAB_SEED_ENTRIES=300`
 /// fill the database with that many demo entries once; release ignores it.
@@ -19,10 +20,9 @@ Future<void> main() async {
   final db = AppDatabase();
   if (!kReleaseMode && kSeedEntryCount > 0) await seedDemoData(db, entryCount: kSeedEntryCount);
   await migrateCurrencySetting(prefs, db);
-  runApp(
-    ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db)],
-      child: const HisabApp(),
-    ),
+  final container = ProviderContainer(
+    overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db)],
   );
+  runApp(UncontrolledProviderScope(container: container, child: const HisabApp()));
+  WidgetsBinding.instance.addPostFrameCallback((_) => startReminderNotifications(container));
 }

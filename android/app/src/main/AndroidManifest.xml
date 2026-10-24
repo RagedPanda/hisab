@@ -3,9 +3,17 @@
          the Play "SMS-based financial transaction tracking" exception; see docs/PERMISSIONS.md -->
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    <!-- "New bank transaction" notification for SMS captured while Hisab is closed.
-         Requested when the user turns on Bank SMS; capture works without it. -->
+    <!-- Due reminders (Settings > Reminders) and the "New bank transaction" notification
+         for SMS captured while Hisab is closed: local notifications only, nothing leaves
+         the device. Asked for when the first timed reminder is saved or Bank SMS is
+         turned on, never at launch; reminders and capture both work without it. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Exact alert times on Android 12+ when the user allows "Alarms & reminders";
+         without it reminders are posted inexact (a few minutes late), never blocked. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Re-post reminder alerts after a reboot or an app update. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <application
         android:label="Hisab"
         android:name="${applicationName}"
@@ -49,6 +57,18 @@
             <meta-data android:name="flutter_deeplinking_enabled" android:value="true" />
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
+        <!-- flutter_local_notifications: posts scheduled alerts, re-posts them after
+             reboot / app update, and runs the Snooze action without opening the app. -->
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
         <!-- Captures bank SMS while Hisab is closed (also after a reboot: SMS_RECEIVED
              is exempt from the implicit-broadcast limits). Only the system, which holds
              BROADCAST_SMS, may send to it. It does nothing until the user opts in. -->

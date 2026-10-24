@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/app.dart';
 import 'package:hisab/core/providers.dart';
+import 'package:hisab/core/settings.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/features/shell/router.dart';
 import 'package:integration_test/integration_test.dart';
@@ -29,9 +30,11 @@ class AppHandle {
   T read<T>(ProviderListenable<T> provider) => container.read(provider);
 }
 
-/// Creates a fresh in-memory database and preference store.
-Future<AppHandle> createApp({bool onboarded = true, List<Override> overrides = const []}) async {
-  SharedPreferences.setMockInitialValues({'onboarded': onboarded});
+/// Creates a fresh in-memory database and preference store. A home currency is
+/// saved by default so flows start on Home rather than the first-launch
+/// currency picker; pass `currencyCode: null` to land on the picker.
+Future<AppHandle> createApp({bool onboarded = true, String? currencyCode = 'INR', List<Override> overrides = const []}) async {
+  SharedPreferences.setMockInitialValues({'onboarded': onboarded, kCurrencyCodeKey: ?currencyCode});
   final prefs = await SharedPreferences.getInstance();
   final db = AppDatabase(NativeDatabase.memory());
   final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db), ...overrides]);

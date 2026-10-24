@@ -47,7 +47,9 @@ Future<void> smsHistoryFlow(WidgetTester tester) async {
 
   await pumpApp(tester, fresh);
   await goTab(tester, 'Settings');
+  await scrollTo(tester, find.text('Bank SMS'));
   await tapText(tester, 'Bank SMS');
+  await waitFor(tester, find.text('SMS history'));
   await tapText(tester, 'SMS history');
   for (final label in ['Added 1', 'Duplicate 1', 'Ignored 1', 'Unreadable 1', 'Pending 1']) {
     expect(await chip(label), findsOneWidget, reason: label);

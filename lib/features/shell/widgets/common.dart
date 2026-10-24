@@ -373,18 +373,18 @@ class BottomActionBar extends StatelessWidget {
 }
 
 /// Width below which icon-and-label segmented buttons no longer fit three
-/// segments without wrapping their labels mid-word (P1-5).
+/// segments side by side (P1-5).
 const double kCompactSegmentWidth = 380;
 
-/// A [ButtonSegment] that never wraps its label: on narrow screens it falls
-/// back to an icon with the label as tooltip.
+/// A [ButtonSegment] whose label is always shown. On narrow screens the icon
+/// is dropped to make room, and the label scales down rather than wrapping or
+/// truncating, so a segment is never left as an unlabeled icon.
 ButtonSegment<T> compactSegment<T>(BuildContext context, {required T value, required String label, required IconData icon}) {
   final narrow = MediaQuery.sizeOf(context).width < kCompactSegmentWidth;
   return ButtonSegment(
     value: value,
-    icon: Icon(icon),
-    label: narrow ? null : Text(label, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
-    tooltip: narrow ? label : null,
+    icon: narrow ? null : Icon(icon),
+    label: FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1, softWrap: false)),
   );
 }
 

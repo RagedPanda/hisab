@@ -4,10 +4,12 @@ import 'package:drift/drift.dart';
 
 import '../../core/ids.dart';
 import '../../domain/split/debt_simplifier.dart';
+import '../../domain/split/group_activity.dart';
 import '../../domain/split/group_timeline.dart';
 import '../../domain/split/split_calculator.dart';
 import '../db/database.dart';
 import '../db/watch_tables.dart';
+import 'entries_repository.dart';
 
 /// [Reminders.kind] for "please settle up" nudges sent from the balances tab.
 const settleUpReminderKind = 'settle_up';
@@ -79,9 +81,30 @@ class GroupDetail {
 /// rows (empty for a single payer).
 typedef GroupEntry = (Entry, List<Split>, List<EntryPayer>);
 
+/// The activity log as a feed shows it: decoded rows (newest first) with the
+/// names and groups they mention.
+class ActivityFeed {
+  const ActivityFeed({required this.activities, required this.membersById, required this.groupsById, required this.restorableIds, this.deletedExpenseIds = const {}});
+  final List<ActivityRecord> activities;
+
+  /// Every member of the groups shown, removed ones included.
+  final Map<String, Member> membersById;
+
+  /// The groups the rows belong to. Deleted groups appear only with their
+  /// own deletion and restore rows.
+  final Map<String, Group> groupsById;
+
+  /// Rows that offer Restore (see [restorableActivityIds]).
+  final Set<String> restorableIds;
+
+  /// Expenses the feed mentions that are deleted now, so rows do not open them.
+  final Set<String> deletedExpenseIds;
+}
+
 class GroupsRepository {
-  GroupsRepository(this.db);
+  GroupsRepository(this.db) : _entries = EntriesRepository(db);
   final AppDatabase db;
+  final EntriesRepository _entries;
 
   Stream<List<Group>> watchGroups() => (db.select(db.groups)
         ..where((t) => t.deletedAt.isNull())
@@ -292,11 +315,46 @@ class GroupsRepository {
   Future<void> updateGroup(GroupsCompanion group) =>
       (db.update(db.groups)..where((t) => t.id.equals(group.id.value))).write(group.copyWith(updatedAt: Value(DateTime.now())));
 
+  /// Soft-deletes a group and its live expenses, logging which expenses
+  /// those were so [restoreGroup] brings back exactly them. Members and
+  /// payments are left as they are; they disappear with the group.
   Future<void> deleteGroup(String id) => db.transaction(() async {
+        final group = await (db.select(db.groups)..where((t) => t.id.equals(id) & t.deletedAt.isNull())).getSingleOrNull();
+        if (group == null) return;
+        final liveExpenses = await (db.select(db.entries)..where((t) => t.groupId.equals(id) & t.deletedAt.isNull())).get();
         final now = DateTime.now();
         await (db.update(db.groups)..where((t) => t.id.equals(id))).write(GroupsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
-        await (db.update(db.entries)..where((t) => t.groupId.equals(id))).write(EntriesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+        await (db.update(db.entries)..where((t) => t.groupId.equals(id) & t.deletedAt.isNull())).write(EntriesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+        await _log(groupId: id, action: ActivityAction.deleted, subject: ActivitySubject.group, subjectId: id, before: _groupSnapshotOf(group, [for (final entry in liveExpenses) entry.id]));
       });
+
+  /// Brings back a deleted group with the expenses it had when deleted (not
+  /// ones deleted before it), so every balance is as it was. Older logs
+  /// without that list fall back to the expenses tombstoned with the group.
+  Future<void> restoreGroup(String id) => db.transaction(() async {
+        final group = await (db.select(db.groups)..where((t) => t.id.equals(id))).getSingleOrNull();
+        final deletedAt = group?.deletedAt;
+        if (group == null || deletedAt == null) return;
+        final deletedState = switch (await _lastDeletedSnapshot(id)) {
+          final GroupSnapshot snapshot => snapshot,
+          _ => null,
+        };
+        final now = DateTime.now();
+        await (db.update(db.groups)..where((t) => t.id.equals(id))).write(GroupsCompanion(deletedAt: const Value(null), updatedAt: Value(now)));
+        await (db.update(db.entries)
+              ..where((t) => t.groupId.equals(id) & (deletedState == null ? t.deletedAt.equals(deletedAt) : t.id.isIn(deletedState.expenseIds))))
+            .write(EntriesCompanion(deletedAt: const Value(null), updatedAt: Value(now)));
+        await _log(groupId: id, action: ActivityAction.restored, subject: ActivitySubject.group, subjectId: id, after: _groupSnapshotOf(group, deletedState?.expenseIds ?? const []));
+      });
+
+  static GroupSnapshot _groupSnapshotOf(Group group, List<String> expenseIds) => GroupSnapshot(name: group.name, icon: group.icon, expenseIds: expenseIds);
+
+  /// Restores whatever a feed row's deletion removed.
+  Future<void> restoreDeleted(ActivityRecord deletion) => switch (deletion.subject) {
+        ActivitySubject.expense => restoreGroupExpense(deletion.subjectId),
+        ActivitySubject.payment => restoreSettlement(deletion.subjectId),
+        ActivitySubject.group => restoreGroup(deletion.subjectId),
+      };
 
   Future<String> addMember(String groupId, String name, {String? phone, String? upiId}) async {
     final id = newId();
@@ -320,16 +378,19 @@ class GroupsRepository {
     String method = 'cash',
   }) async {
     final id = newId();
-    await db.into(db.settlements).insert(SettlementsCompanion.insert(
-          id: id,
-          groupId: groupId,
-          fromMemberId: fromMemberId,
-          toMemberId: toMemberId,
-          amountMinor: amountMinor,
-          occurredAt: occurredAt ?? DateTime.now(),
-          note: Value(note),
-          method: Value(method),
-        ));
+    await db.transaction(() async {
+      await db.into(db.settlements).insert(SettlementsCompanion.insert(
+            id: id,
+            groupId: groupId,
+            fromMemberId: fromMemberId,
+            toMemberId: toMemberId,
+            amountMinor: amountMinor,
+            occurredAt: occurredAt ?? DateTime.now(),
+            note: Value(note),
+            method: Value(method),
+          ));
+      await _logSettlementChange(id, ActivityAction.added, before: null);
+    });
     return id;
   }
 
@@ -344,22 +405,247 @@ class GroupsRepository {
     required String note,
     required String method,
   }) =>
-      (db.update(db.settlements)..where((t) => t.id.equals(id))).write(SettlementsCompanion(
-        fromMemberId: Value(fromMemberId),
-        toMemberId: Value(toMemberId),
-        amountMinor: Value(amountMinor),
-        occurredAt: Value(occurredAt),
-        note: Value(note),
-        method: Value(method),
-        updatedAt: Value(DateTime.now()),
-      ));
+      db.transaction(() async {
+        final before = await _settlementById(id);
+        await (db.update(db.settlements)..where((t) => t.id.equals(id))).write(SettlementsCompanion(
+          fromMemberId: Value(fromMemberId),
+          toMemberId: Value(toMemberId),
+          amountMinor: Value(amountMinor),
+          occurredAt: Value(occurredAt),
+          note: Value(note),
+          method: Value(method),
+          updatedAt: Value(DateTime.now()),
+        ));
+        await _logSettlementChange(id, ActivityAction.edited, before: before);
+      });
 
   Future<void> deleteSettlement(String id) => _setSettlementDeleted(id, DateTime.now());
 
-  Future<void> restoreSettlement(String id) => _setSettlementDeleted(id, null);
+  /// Brings back a deleted payment; does nothing if it is live or its group
+  /// is deleted.
+  Future<void> restoreSettlement(String id) async {
+    final settlement = await _settlementById(id);
+    if (settlement == null || settlement.deletedAt == null) return;
+    final group = await (db.select(db.groups)..where((t) => t.id.equals(settlement.groupId) & t.deletedAt.isNull())).getSingleOrNull();
+    if (group == null) return;
+    await _setSettlementDeleted(id, null);
+  }
 
-  Future<void> _setSettlementDeleted(String id, DateTime? deletedAt) => (db.update(db.settlements)..where((t) => t.id.equals(id)))
-      .write(SettlementsCompanion(deletedAt: Value(deletedAt), updatedAt: Value(DateTime.now())));
+  Future<void> _setSettlementDeleted(String id, DateTime? deletedAt) => db.transaction(() async {
+        final before = await _settlementById(id);
+        await (db.update(db.settlements)..where((t) => t.id.equals(id)))
+            .write(SettlementsCompanion(deletedAt: Value(deletedAt), updatedAt: Value(DateTime.now())));
+        await _logSettlementChange(id, deletedAt == null ? ActivityAction.restored : ActivityAction.deleted, before: before);
+      });
+
+  Future<Settlement?> _settlementById(String id) => (db.select(db.settlements)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  /// Logs [action] on a payment, comparing [before] with the row as it is now.
+  /// An edit that changed nothing visible is not logged.
+  Future<void> _logSettlementChange(String id, ActivityAction action, {required Settlement? before}) async {
+    final after = await _settlementById(id);
+    final settlement = after ?? before;
+    if (settlement == null) return;
+    final beforeSnapshot = before == null || action == ActivityAction.restored ? null : paymentSnapshotOf(before);
+    final afterSnapshot = after == null || action == ActivityAction.deleted ? null : paymentSnapshotOf(after);
+    if (action == ActivityAction.edited && beforeSnapshot != null && afterSnapshot != null && !isMeaningfulEdit(beforeSnapshot, afterSnapshot)) return;
+    await _log(groupId: settlement.groupId, action: action, subject: ActivitySubject.payment, subjectId: id, before: beforeSnapshot, after: afterSnapshot);
+  }
+
+  static PaymentSnapshot paymentSnapshotOf(Settlement settlement) => PaymentSnapshot(
+        fromMemberId: settlement.fromMemberId,
+        toMemberId: settlement.toMemberId,
+        amountMinor: settlement.amountMinor,
+        occurredAt: settlement.occurredAt,
+        method: settlement.method,
+        note: settlement.note,
+      );
+
+  /// Saves a group expense through [EntriesRepository.saveEntry] and logs it
+  /// as added or edited in the same transaction. The arguments are those of
+  /// [EntriesRepository.saveEntry].
+  Future<void> saveGroupExpense(
+    EntriesCompanion entry, {
+    List<EntryItemsCompanion> items = const [],
+    List<SplitsCompanion> splits = const [],
+    List<EntryFieldValuesCompanion>? fieldValues,
+    List<EntryPayersCompanion>? payers,
+  }) {
+    final entryId = entry.id.value;
+    return db.transaction(() async {
+      final before = await _expenseSnapshot(entryId, liveOnly: true);
+      await _entries.saveEntry(entry, items: items, splits: splits, fieldValues: fieldValues, payers: payers);
+      final after = await _expenseSnapshot(entryId, liveOnly: true);
+      final groupId = entry.groupId.present ? entry.groupId.value : null;
+      if (after == null || groupId == null) return;
+      if (before != null && !isMeaningfulEdit(before, after)) return;
+      await _log(
+        groupId: groupId,
+        action: before == null ? ActivityAction.added : ActivityAction.edited,
+        subject: ActivitySubject.expense,
+        subjectId: entryId,
+        before: before,
+        after: after,
+      );
+    });
+  }
+
+  /// Soft-deletes a group expense with its splits and payers and logs it, so
+  /// it can be put back by [restoreGroupExpense].
+  Future<void> deleteGroupExpense(String entryId) => db.transaction(() async {
+        final entry = await _entryById(entryId);
+        final before = await _expenseSnapshot(entryId, liveOnly: true);
+        await _entries.deleteEntry(entryId);
+        if (entry?.groupId == null || before == null) return;
+        await _log(groupId: entry!.groupId!, action: ActivityAction.deleted, subject: ActivitySubject.expense, subjectId: entryId, before: before);
+      });
+
+  /// Brings back a deleted group expense with exactly the split and payer
+  /// rows it had when it was deleted, and logs the restore. Does nothing if
+  /// the expense is not deleted or its group is gone.
+  Future<void> restoreGroupExpense(String entryId) => db.transaction(() async {
+        final entry = await _entryById(entryId);
+        final deletedAt = entry?.deletedAt;
+        final groupId = entry?.groupId;
+        if (entry == null || deletedAt == null || groupId == null) return;
+        final group = await (db.select(db.groups)..where((t) => t.id.equals(groupId) & t.deletedAt.isNull())).getSingleOrNull();
+        if (group == null) return;
+        final deletedState = switch (await _lastDeletedSnapshot(entryId)) {
+          final ExpenseSnapshot snapshot => snapshot,
+          _ => null,
+        };
+        final splitIds = [for (final share in deletedState?.shares ?? const <MemberAmount>[]) ?share.rowId];
+        final payerIds = [for (final payer in deletedState?.payers ?? const <MemberAmount>[]) ?payer.rowId];
+        final now = DateTime.now();
+        await (db.update(db.entries)..where((t) => t.id.equals(entryId))).write(EntriesCompanion(deletedAt: const Value(null), updatedAt: Value(now)));
+        // Rows logged at deletion win; older logs without row ids fall back to
+        // the rows tombstoned in the same delete.
+        await (db.update(db.splits)
+              ..where((t) => t.entryId.equals(entryId) & (splitIds.isEmpty ? t.deletedAt.equals(deletedAt) : t.id.isIn(splitIds))))
+            .write(SplitsCompanion(deletedAt: const Value(null), updatedAt: Value(now)));
+        await (db.update(db.entryPayers)
+              ..where((t) => t.entryId.equals(entryId) & (deletedState == null ? t.deletedAt.equals(deletedAt) : t.id.isIn(payerIds))))
+            .write(EntryPayersCompanion(deletedAt: const Value(null), updatedAt: Value(now)));
+        await _log(groupId: groupId, action: ActivityAction.restored, subject: ActivitySubject.expense, subjectId: entryId, after: await _expenseSnapshot(entryId, liveOnly: true));
+      });
+
+  Future<Entry?> _entryById(String id) => (db.select(db.entries)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  /// The state a deleted expense had when it was last deleted, from the log.
+  /// The state logged by the latest deletion of [subjectId], if readable.
+  Future<ActivitySnapshot?> _lastDeletedSnapshot(String subjectId) async {
+    final row = await (db.select(db.groupActivities)
+          ..where((t) => t.subjectId.equals(subjectId) & t.action.equals(ActivityAction.deleted.name) & t.deletedAt.isNull())
+          ..orderBy([(t) => OrderingTerm.desc(t.occurredAt), (t) => OrderingTerm.desc(t.rowId)])
+          ..limit(1))
+        .getSingleOrNull();
+    return ActivitySnapshot.decode(row?.beforeJson);
+  }
+
+  /// A group expense as the log stores it; null when it does not exist (or,
+  /// with [liveOnly], is deleted).
+  Future<ExpenseSnapshot?> _expenseSnapshot(String entryId, {required bool liveOnly}) async {
+    final entry = await _entryById(entryId);
+    if (entry == null || (liveOnly && entry.deletedAt != null)) return null;
+    final splits = await (db.select(db.splits)..where((t) => t.entryId.equals(entryId) & t.deletedAt.isNull())).get();
+    final payers = await (db.select(db.entryPayers)..where((t) => t.entryId.equals(entryId) & t.deletedAt.isNull())).get();
+    return expenseSnapshotOf(entry, splits, payers);
+  }
+
+  static ExpenseSnapshot expenseSnapshotOf(Entry entry, List<Split> splits, List<EntryPayer> payers) => ExpenseSnapshot(
+        amountMinor: entry.amountMinor,
+        occurredAt: entry.occurredAt,
+        note: entry.note,
+        payee: entry.payee,
+        categoryId: entry.categoryId,
+        payers: payers.isNotEmpty
+            ? [for (final payer in payers) MemberAmount(memberId: payer.memberId, amountMinor: payer.amountMinor, rowId: payer.id)]
+            : [if (entry.paidByMemberId case final payerId?) MemberAmount(memberId: payerId, amountMinor: entry.amountMinor)],
+        shares: [for (final split in splits) MemberAmount(memberId: split.memberId, amountMinor: split.amountMinor, rowId: split.id)],
+        splitMethod: entry.splitMethod,
+      );
+
+  /// Writes one activity row, attributed to my member in the group.
+  Future<void> _log({
+    required String groupId,
+    required ActivityAction action,
+    required ActivitySubject subject,
+    required String subjectId,
+    ActivitySnapshot? before,
+    ActivitySnapshot? after,
+  }) async {
+    final me = await (db.select(db.members)
+          ..where((t) => t.groupId.equals(groupId) & t.isMe.equals(true))
+          ..limit(1))
+        .getSingleOrNull();
+    await db.into(db.groupActivities).insert(GroupActivitiesCompanion.insert(
+          id: newId(),
+          groupId: groupId,
+          action: action.name,
+          subjectKind: subject.name,
+          subjectId: subjectId,
+          actorMemberId: Value(me?.id),
+          occurredAt: DateTime.now(),
+          beforeJson: Value(before?.encode()),
+          afterJson: Value(after?.encode()),
+        ));
+  }
+
+  /// The activity log, newest first: one group's, or every live group's when
+  /// [groupId] is null.
+  Stream<ActivityFeed> watchActivityFeed({String? groupId, int limit = 300}) =>
+      db.watchTables([db.groupActivities, db.groups, db.members, db.entries, db.settlements], () => getActivityFeed(groupId: groupId, limit: limit));
+
+  /// Live groups show all their activity; a deleted group shows only its own
+  /// deletion and restore rows, so it can be restored from the feed.
+  Future<ActivityFeed> getActivityFeed({String? groupId, int limit = 300}) async {
+    final groups = await (db.select(db.groups)..where((t) => groupId == null ? const Constant(true) : t.id.equals(groupId))).get();
+    if (groups.isEmpty) return const ActivityFeed(activities: [], membersById: {}, groupsById: {}, restorableIds: {});
+    final liveGroupIds = [for (final group in groups) if (group.deletedAt == null) group.id];
+    final deletedGroupIds = {for (final group in groups) if (group.deletedAt != null) group.id};
+    final rows = await (db.select(db.groupActivities)
+          ..where((t) =>
+              (t.groupId.isIn(liveGroupIds) | (t.groupId.isIn(deletedGroupIds) & t.subjectKind.equals(ActivitySubject.group.name))) & t.deletedAt.isNull())
+          // Times are stored to the second; insertion order breaks ties so an
+          // Undo right after a delete still lists after it.
+          ..orderBy([(t) => OrderingTerm.desc(t.occurredAt), (t) => OrderingTerm.desc(t.rowId)])
+          ..limit(limit))
+        .get();
+    final members = await (db.select(db.members)..where((t) => t.groupId.isIn([for (final group in groups) group.id]))).get();
+    final activities = [for (final row in rows) activityRecordOf(row)];
+    Set<String> mentioned(ActivitySubject subject) => {for (final activity in activities) if (activity.subject == subject) activity.subjectId};
+    final expenseIds = mentioned(ActivitySubject.expense);
+    final paymentIds = mentioned(ActivitySubject.payment);
+    final deletedExpenseIds = expenseIds.isEmpty
+        ? const <String>{}
+        : {for (final entry in await (db.select(db.entries)..where((t) => t.id.isIn(expenseIds) & t.deletedAt.isNotNull())).get()) entry.id};
+    final deletedPaymentIds = paymentIds.isEmpty
+        ? const <String>{}
+        : {for (final payment in await (db.select(db.settlements)..where((t) => t.id.isIn(paymentIds) & t.deletedAt.isNotNull())).get()) payment.id};
+    return ActivityFeed(
+      activities: activities,
+      membersById: {for (final member in members) member.id: member},
+      groupsById: {for (final group in groups) group.id: group},
+      restorableIds: restorableActivityIds(activities, deletedIds: {
+        ActivitySubject.expense: deletedExpenseIds,
+        ActivitySubject.payment: deletedPaymentIds,
+        ActivitySubject.group: deletedGroupIds,
+      }),
+      deletedExpenseIds: deletedExpenseIds,
+    );
+  }
+
+  static ActivityRecord activityRecordOf(GroupActivity row) => ActivityRecord(
+        id: row.id,
+        groupId: row.groupId,
+        action: activityActionFrom(row.action),
+        subject: activitySubjectFrom(row.subjectKind),
+        subjectId: row.subjectId,
+        actorMemberId: row.actorMemberId,
+        occurredAt: row.occurredAt,
+        before: ActivitySnapshot.decode(row.beforeJson),
+        after: ActivitySnapshot.decode(row.afterJson),
+      );
 
   /// Keeps every group's "me" member in sync with the name chosen in Settings.
   Future<void> renameMyMembers(String name) => (db.update(db.members)..where((t) => t.isMe.equals(true) & t.deletedAt.isNull()))

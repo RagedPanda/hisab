@@ -8,6 +8,7 @@ import '../categories/categories_screen.dart';
 import '../categories/category_packs_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../expense_editor/expense_editor_screen.dart';
+import '../groups/activity_screen.dart';
 import '../groups/group_detail_screen.dart';
 import '../groups/groups_screen.dart';
 import '../projects/project_detail_screen.dart';
@@ -49,18 +50,20 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/entry',
       parentNavigatorKey: _rootKey,
-      builder: (_, state) => HomeFallbackPop(
-        child: ExpenseEditorScreen(
-          entryId: state.uri.queryParameters['id'],
-          groupId: state.uri.queryParameters['group'],
-          initialKind: state.uri.queryParameters['kind'],
-          smsId: state.uri.queryParameters['sms'],
-          projectId: state.uri.queryParameters['project'],
-          reminderId: state.uri.queryParameters['reminder'],
-        ),
+      // The editor handles Back itself: it asks before discarding input and
+      // falls back to home when there is nothing to pop to (#82).
+      builder: (_, state) => ExpenseEditorScreen(
+        entryId: state.uri.queryParameters['id'],
+        groupId: state.uri.queryParameters['group'],
+        initialKind: state.uri.queryParameters['kind'],
+        smsId: state.uri.queryParameters['sms'],
+        projectId: state.uri.queryParameters['project'],
+        reminderId: state.uri.queryParameters['reminder'],
       ),
     ),
     GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(groupId: state.pathParameters['id']!)),
+    GoRoute(path: '/groups/:id/activity', parentNavigatorKey: _rootKey, builder: (_, state) => ActivityScreen(groupId: state.pathParameters['id']!)),
+    GoRoute(path: '/activity', parentNavigatorKey: _rootKey, builder: (_, _) => const ActivityScreen()),
     GoRoute(path: '/categories', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoriesScreen()),
     GoRoute(path: '/categories/packs', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoryPacksScreen()),
     GoRoute(

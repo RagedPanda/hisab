@@ -22,8 +22,13 @@ class AccountsRepository {
   Future<Account?> getById(String id) =>
       (db.select(db.accounts)..where((t) => t.id.equals(id) & t.deletedAt.isNull())).getSingleOrNull();
 
+  /// First live match; tolerates duplicates left by an old restore (#63).
   Future<Account?> findBySmsKey(String key) =>
-      (db.select(db.accounts)..where((t) => t.smsKey.equals(key) & t.deletedAt.isNull())).getSingleOrNull();
+      (db.select(db.accounts)
+            ..where((t) => t.smsKey.equals(key) & t.deletedAt.isNull())
+            ..orderBy([(t) => OrderingTerm.asc(t.sortOrder), (t) => OrderingTerm.asc(t.id)])
+            ..limit(1))
+          .getSingleOrNull();
 
   Future<Account> create({
     required String name,

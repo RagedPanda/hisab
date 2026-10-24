@@ -698,6 +698,30 @@ abstract class AppLocalizations {
   /// **'Edit entry'**
   String get editEntry;
 
+  /// No description provided for @discardEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this entry?'**
+  String get discardEntryTitle;
+
+  /// No description provided for @discardEntryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What you entered will be lost.'**
+  String get discardEntryBody;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditing;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
   /// No description provided for @groupExpense.
   ///
   /// In en, this message translates to:
@@ -823,6 +847,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick both accounts for a transfer'**
   String get errorPickBothAccounts;
+
+  /// No description provided for @errorPickAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an account'**
+  String get errorPickAccount;
+
+  /// No description provided for @errorSameAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'From and To must be different accounts'**
+  String get errorSameAccount;
 
   /// No description provided for @errorItemName.
   ///
@@ -1232,11 +1268,41 @@ abstract class AppLocalizations {
   /// **'Money'**
   String get money;
 
-  /// No description provided for @currencySymbol.
+  /// No description provided for @currency.
   ///
   /// In en, this message translates to:
-  /// **'Currency symbol'**
-  String get currencySymbol;
+  /// **'Currency'**
+  String get currency;
+
+  /// No description provided for @currencyChooseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your currency'**
+  String get currencyChooseTitle;
+
+  /// No description provided for @currencyChooseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Amounts in Hisab show in this currency. You can change it later in Settings.'**
+  String get currencyChooseBody;
+
+  /// No description provided for @currencySearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search code, name or country'**
+  String get currencySearchHint;
+
+  /// No description provided for @currencyContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with {currency}'**
+  String currencyContinue(String currency);
+
+  /// No description provided for @currencyNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No currency matches \"{query}\"'**
+  String currencyNoMatch(String query);
 
   /// No description provided for @monthStartsOn.
   ///
@@ -1358,6 +1424,24 @@ abstract class AppLocalizations {
   /// **'Free, open source, no ads, no account needed. Your data stays on your device.'**
   String get aboutBody;
 
+  /// Text shown before the red heart icon at the bottom of Settings > About. May be empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with'**
+  String get aboutMadeWithBefore;
+
+  /// Text shown after the red heart icon at the bottom of Settings > About. May be empty.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get aboutMadeWithAfter;
+
+  /// Screen reader label for the Made with heart line.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with love'**
+  String get aboutMadeWithLabel;
+
   /// No description provided for @backupPassphrase.
   ///
   /// In en, this message translates to:
@@ -1447,6 +1531,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'From {sender}. Tap to review.'**
   String smsNotificationBody(String sender);
+
+  /// No description provided for @smsNotificationBodyAmountAutoAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} from {sender}. Open Hisab to add it.'**
+  String smsNotificationBodyAmountAutoAdd(String amount, String sender);
+
+  /// No description provided for @smsNotificationBodyAutoAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'From {sender}. Open Hisab to add it.'**
+  String smsNotificationBodyAutoAdd(String sender);
 
   /// No description provided for @readBankSmsQuestion.
   ///
@@ -4807,6 +4903,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'you'**
   String get youInList;
+
+  /// No description provided for @activityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get activityTitle;
+
+  /// No description provided for @activityEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity yet'**
+  String get activityEmptyTitle;
+
+  /// No description provided for @activityEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses and payments you add, edit or delete show up here.'**
+  String get activityEmptyBody;
+
+  /// No description provided for @activityExpenseAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} added “{title}”'**
+  String activityExpenseAdded(String actor, String title);
+
+  /// No description provided for @activityExpenseEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} edited “{title}”'**
+  String activityExpenseEdited(String actor, String title);
+
+  /// No description provided for @activityExpenseDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} deleted “{title}”'**
+  String activityExpenseDeleted(String actor, String title);
+
+  /// No description provided for @activityExpenseRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} restored “{title}”'**
+  String activityExpenseRestored(String actor, String title);
+
+  /// No description provided for @activityPaymentAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} recorded a payment'**
+  String activityPaymentAdded(String actor);
+
+  /// No description provided for @activityPaymentEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} edited a payment'**
+  String activityPaymentEdited(String actor);
+
+  /// No description provided for @activityPaymentDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} removed a payment'**
+  String activityPaymentDeleted(String actor);
+
+  /// No description provided for @activityPaymentRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} restored a payment'**
+  String activityPaymentRestored(String actor);
+
+  /// No description provided for @activityExpenseLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} · paid by {payers}'**
+  String activityExpenseLine(String amount, String payers);
+
+  /// No description provided for @activityPaymentLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} paid {to} {amount}'**
+  String activityPaymentLine(String from, String to, String amount);
+
+  /// No description provided for @activityChangeAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount: {from} → {to}'**
+  String activityChangeAmount(String from, String to);
+
+  /// No description provided for @activityChangeDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date: {from} → {to}'**
+  String activityChangeDate(String from, String to);
+
+  /// No description provided for @activityChangeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description: {from} → {to}'**
+  String activityChangeDescription(String from, String to);
+
+  /// No description provided for @activityChangeCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category: {from} → {to}'**
+  String activityChangeCategory(String from, String to);
+
+  /// No description provided for @activityChangePayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid by: {from} → {to}'**
+  String activityChangePayers(String from, String to);
+
+  /// One payer and what they paid, in a list of several payers.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {amount}'**
+  String activityPayerAmount(String name, String amount);
+
+  /// No description provided for @activityChangeShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s share: {from} → {to}'**
+  String activityChangeShare(String name, String from, String to);
+
+  /// No description provided for @activityChangeMyShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Your share: {from} → {to}'**
+  String activityChangeMyShare(String from, String to);
+
+  /// No description provided for @activityChangeParties.
+  ///
+  /// In en, this message translates to:
+  /// **'Who paid whom: {from} → {to}'**
+  String activityChangeParties(String from, String to);
+
+  /// No description provided for @activityPartiesPair.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} to {to}'**
+  String activityPartiesPair(String from, String to);
+
+  /// No description provided for @activityChangeMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Method: {from} → {to}'**
+  String activityChangeMethod(String from, String to);
+
+  /// No description provided for @activityChangeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: {from} → {to}'**
+  String activityChangeNote(String from, String to);
+
+  /// No description provided for @activityNone.
+  ///
+  /// In en, this message translates to:
+  /// **'none'**
+  String get activityNone;
+
+  /// No description provided for @activityRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get activityRestore;
+
+  /// No description provided for @activityExpenseRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense restored'**
+  String get activityExpenseRestoredSnack;
+
+  /// No description provided for @activityExpenseDeletedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense deleted'**
+  String get activityExpenseDeletedSnack;
+
+  /// No description provided for @activityAllGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'All groups'**
+  String get activityAllGroups;
+
+  /// No description provided for @activityGroupDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} deleted the group “{name}”'**
+  String activityGroupDeleted(String actor, String name);
+
+  /// No description provided for @activityGroupRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} restored the group “{name}”'**
+  String activityGroupRestored(String actor, String name);
+
+  /// No description provided for @activityGroupEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} changed the group “{name}”'**
+  String activityGroupEdited(String actor, String name);
+
+  /// No description provided for @activityGroupLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No expenses} =1{1 expense} other{{count} expenses}}'**
+  String activityGroupLine(int count);
+
+  /// No description provided for @activityPaymentRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment restored'**
+  String get activityPaymentRestoredSnack;
+
+  /// No description provided for @activityGroupRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Group restored'**
+  String get activityGroupRestoredSnack;
+
+  /// No description provided for @activityGroupDeletedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Group deleted'**
+  String get activityGroupDeletedSnack;
 
   /// No description provided for @recurringAddedSkipped.
   ///

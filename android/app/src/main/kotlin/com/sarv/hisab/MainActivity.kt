@@ -10,6 +10,7 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import com.sarv.hisab.sms.SmsCaptureBridge
 import com.sarv.hisab.sms.SmsCaptureSettings
+import com.sarv.hisab.sms.SmsNotifier
 import com.sarv.hisab.sms.SmsQueue
 
 /**
@@ -48,6 +49,14 @@ class MainActivity : FlutterActivity() {
                     }
                 }
                 "drainQueue" -> result.success(SmsQueue.drain(this).map { it.toMap() })
+                "cancelNotifications" -> {
+                    val messages = (call.arguments as? List<*>).orEmpty().mapNotNull { row ->
+                        val map = row as? Map<*, *> ?: return@mapNotNull null
+                        (map["sender"] as? String ?: "") to (map["body"] as? String ?: "")
+                    }
+                    SmsNotifier.cancel(this, messages)
+                    result.success(null)
+                }
                 "configureCapture" -> {
                     val arguments = call.arguments as? Map<*, *> ?: emptyMap<Any, Any>()
                     SmsCaptureSettings.save(this, SmsCaptureSettings.fromArguments(arguments))

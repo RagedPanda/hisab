@@ -18,7 +18,7 @@ const _upiDebit = 'Rs.459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl (
 
 /// Starts the real app at [location] on an in-memory database.
 Future<ProviderContainer> _pumpAppAt(WidgetTester tester, String location) async {
-  SharedPreferences.setMockInitialValues({'onboarded': true, 'smsEnabled': true});
+  SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR', 'smsEnabled': true});
   final prefs = await SharedPreferences.getInstance();
   final container = ProviderContainer(overrides: [
     sharedPreferencesProvider.overrideWithValue(prefs),

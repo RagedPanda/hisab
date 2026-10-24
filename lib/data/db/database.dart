@@ -2,7 +2,9 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../core/ids.dart';
+import '../../domain/backup/seed_dedupe.dart';
 import '../../domain/categories/category_catalog.dart';
+import '../../domain/categories/category_packs.dart';
 import '../../domain/sms/sms_outcome.dart';
 
 part 'database.g.dart';
@@ -313,7 +315,7 @@ class Reminders extends Table with SyncColumns {
   TextColumn get channel => text().withDefault(const Constant('share'))();
   TextColumn get message => text().withDefault(const Constant(''))();
 
-  // Due reminders (v9): bills, EMIs, card dues, subscriptions, insurance,
+  // Due reminders (v11): bills, EMIs, card dues, subscriptions, insurance,
   // documents and custom nudges. Kinds and values live in
   // lib/domain/reminders/reminder_kind.dart.
 
@@ -441,6 +443,33 @@ class SmsLog extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Who added, edited, deleted or restored which group expense or payment,
+/// and when, with the state before and after as JSON snapshots (see
+/// `domain/split/group_activity.dart`).
+@TableIndex(name: 'group_activities_group_id', columns: {#groupId})
+class GroupActivities extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get groupId => text()();
+
+  /// added | edited | deleted | restored
+  TextColumn get action => text()();
+
+  /// expense | payment
+  TextColumn get subjectKind => text()();
+
+  /// The entry or settlement id.
+  TextColumn get subjectId => text()();
+
+  /// The member who made the change; the device's own member until sync.
+  TextColumn get actorMemberId => text().nullable()();
+  DateTimeColumn get occurredAt => dateTime()();
+  TextColumn get beforeJson => text().nullable()();
+  TextColumn get afterJson => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   Accounts,
   Categories,
@@ -458,6 +487,7 @@ class SmsLog extends Table {
   Reminders,
   EntryPayers,
   RecurringRules,
+  GroupActivities,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
@@ -507,20 +537,27 @@ class AppDatabase extends _$AppDatabase {
           }
           // v8: SMS history can be cleared without forgetting processed messages.
           if (from < 8) await m.addColumn(smsLog, smsLog.clearedAt);
-          // v9: due reminders (bills, EMIs, cards, documents) on the v5 reminders
+          // v10: group activity log (groups parity, undo and history).
+          if (from < 10) {
+            await m.createTable(groupActivities);
+            await m.createIndex(groupActivitiesGroupId);
+          }
+          // v11: due reminders (bills, EMIs, cards, documents) on the v5 reminders
           // table: new columns only, so existing rows are kept as they are.
-          if (from < 9) await _upgradeToDueReminders(m, from);
+          if (from < 11) await _upgradeToDueReminders(m, from);
           // v12: credit card statement and due days, limit and last statement.
-          // v11 is reserved for another in-flight migration.
           if (from < 12) await _upgradeToCardDetails(m);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
           await wipeUnkeptSmsText();
+          // Heals installs where a restore doubled the seed (#63); writes nothing otherwise.
+          if (!details.wasCreated) await mergeSeededDuplicates();
+          if (!details.wasCreated) await recolourRetiredSeeds();
         },
       );
 
-  /// v9 step. A v5..v8 table gains the due-reminder columns it lacks (a table
+  /// v11 step. A v5..v10 table gains the due-reminder columns it lacks (a table
   /// created at v5 or later by this version already has them all). Checking
   /// what exists also upgrades pre-release builds of the reminders feature,
   /// which stored these columns and the index under schema 6 without
@@ -600,6 +637,104 @@ class AppDatabase extends _$AppDatabase {
       ));
     }
   }
+
+  /// Moves seeded categories still on a retired default colour to the
+  /// current palette; colours the user picked are left alone. Writes nothing
+  /// once every row is current.
+  Future<int> recolourRetiredSeeds() async {
+    final seedColors = {for (final seed in [...flattenCatalog(), ...packOnlySeeds()]) seed.key: seed.color};
+    final seeded = await (select(categories)..where((t) => t.seedKey.isNotNull())).get();
+    var recoloured = 0;
+    for (final category in seeded) {
+      final seedColor = seedColors[category.seedKey];
+      final target = seedColor == null ? null : recolouredSeed(current: category.color, seedColor: seedColor);
+      if (target == null) continue;
+      await (update(categories)..where((t) => t.id.equals(category.id)))
+          .write(CategoriesCompanion(color: Value(target), updatedAt: Value(DateTime.now())));
+      recoloured++;
+    }
+    return recoloured;
+  }
+
+  /// Folds duplicate seeded rows into one: categories sharing a seedKey and
+  /// extra untouched "Cash" accounts. References move to the kept row and the
+  /// duplicate is soft-deleted, so restoring the same backup again keeps it
+  /// gone. [preferIds] are kept over other copies (rows a restore just wrote).
+  Future<int> mergeSeededDuplicates({Set<String> preferIds = const {}}) => transaction(() async {
+        final categoryPlan = planSeedDedupe(await _seededCategoryCandidates(), preferIds: preferIds);
+        final accountPlan = planSeedDedupe(await _cashAccountCandidates(), preferIds: preferIds);
+        final now = DateTime.now();
+        for (final MapEntry(key: droppedId, value: keptId) in categoryPlan.entries) {
+          await (update(entries)..where((t) => t.categoryId.equals(droppedId)))
+              .write(EntriesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
+          await (update(budgets)..where((t) => t.categoryId.equals(droppedId)))
+              .write(BudgetsCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
+          await (update(recurringRules)..where((t) => t.categoryId.equals(droppedId)))
+              .write(RecurringRulesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
+          await (update(categories)..where((t) => t.parentId.equals(droppedId)))
+              .write(CategoriesCompanion(parentId: Value(keptId), updatedAt: Value(now)));
+          await (update(categories)..where((t) => t.id.equals(droppedId)))
+              .write(CategoriesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+        }
+        for (final droppedId in accountPlan.keys) {
+          await (update(accounts)..where((t) => t.id.equals(droppedId)))
+              .write(AccountsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+        }
+        return categoryPlan.length + accountPlan.length;
+      });
+
+  Future<List<SeedCandidate>> _seededCategoryCandidates() async {
+    final live = await (select(categories)..where((t) => t.seedKey.isNotNull() & t.deletedAt.isNull())).get();
+    final entryRefs = await _countBy(entries, entries.categoryId);
+    final budgetRefs = await _countBy(budgets, budgets.categoryId);
+    final ruleRefs = await _countBy(recurringRules, recurringRules.categoryId);
+    return [
+      for (final category in live)
+        SeedCandidate(
+          id: category.id,
+          key: category.seedKey!,
+          references: (entryRefs[category.id] ?? 0) + (budgetRefs[category.id] ?? 0) + (ruleRefs[category.id] ?? 0),
+        ),
+    ];
+  }
+
+  /// Only the seeded account's shape counts as a duplicate, and only an
+  /// empty one (no entries, zero balance) may be dropped.
+  Future<List<SeedCandidate>> _cashAccountCandidates() async {
+    final live = await (select(accounts)
+          ..where((t) => t.type.equals('cash') & t.name.equals('Cash') & t.deletedAt.isNull()))
+        .get();
+    final fromRefs = await _countBy(entries, entries.accountId);
+    final toRefs = await _countBy(entries, entries.toAccountId);
+    final ruleFromRefs = await _countBy(recurringRules, recurringRules.accountId);
+    final ruleToRefs = await _countBy(recurringRules, recurringRules.toAccountId);
+    return [
+      for (final account in live)
+        _cashCandidate(
+          account,
+          (fromRefs[account.id] ?? 0) + (toRefs[account.id] ?? 0) + (ruleFromRefs[account.id] ?? 0) + (ruleToRefs[account.id] ?? 0),
+        ),
+    ];
+  }
+
+  static SeedCandidate _cashCandidate(Account account, int references) => SeedCandidate(
+        id: account.id,
+        key: 'cash:Cash',
+        references: references,
+        removable: references == 0 && account.balanceMinor == 0,
+      );
+
+  /// Live-row count per value of [column] in [table].
+  Future<Map<String, int>> _countBy(TableInfo<Table, dynamic> table, GeneratedColumn<String> column) async {
+    final deletedAt = table.columnsByName['deleted_at']! as GeneratedColumn<DateTime>;
+    final count = column.count();
+    final rows = await (selectOnly(table)
+          ..addColumns([column, count])
+          ..where(column.isNotNull() & deletedAt.isNull())
+          ..groupBy([column]))
+        .get();
+    return {for (final row in rows) row.read(column)!: row.read(count)!};
+  }
 }
 
 /// Insert row for a catalog or pack seed. [packKey] marks categories a pack created.
@@ -617,7 +752,6 @@ CategoriesCompanion seedCategoryRow(CategorySeed seed, {required String id, Stri
       units: Value(seed.units.join(',')),
     );
 
-/// Columns v9 added to [Reminders]; a v5..v8 database gains exactly these.
 /// The credit card columns added to accounts at schema v12.
 List<GeneratedColumn> cardDetailColumns($AccountsTable table) => [
       table.statementDay,
@@ -627,6 +761,7 @@ List<GeneratedColumn> cardDetailColumns($AccountsTable table) => [
       table.lastStatementAt,
     ];
 
+/// Columns v11 added to [Reminders]; a v5..v10 database gains exactly these.
 List<GeneratedColumn> dueReminderColumns($RemindersTable table) => [
       table.title,
       table.notes,

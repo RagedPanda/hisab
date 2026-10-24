@@ -11,7 +11,7 @@ import 'package:hisab/features/accounts/accounts_screen.dart';
 import 'package:hisab/features/accounts/card_account_screen.dart';
 import 'package:hisab/features/shell/router.dart';
 
-import '../app_flow_test.dart' show pumpApp, settle, enter;
+import '../support/app_harness.dart' show pumpApp, settle, enter;
 import '../core/fake_notification_gateway.dart';
 
 void main() {

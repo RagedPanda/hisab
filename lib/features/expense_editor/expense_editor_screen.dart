@@ -15,6 +15,7 @@ import '../../data/repositories/entry_removal.dart';
 import '../../data/repositories/project_fields_repository.dart';
 import '../../data/repositories/projects_repository.dart';
 import '../../data/repositories/recurring_repository.dart';
+import '../../domain/entries/entry_accounts.dart';
 import '../../domain/ledger/balance_effects.dart';
 import '../../domain/projects/project_fields.dart';
 import '../../domain/projects/project_math.dart';
@@ -26,7 +27,7 @@ import '../../domain/split/payers.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
-import '../accounts/account_choice_chips.dart';
+import '../accounts/grouped_account_picker.dart';
 import '../groups/member_display.dart';
 import '../categories/category_picker.dart';
 import '../projects/project_field_inputs.dart';
@@ -36,6 +37,7 @@ import '../shell/widgets/common.dart';
 import '../split/payers_editor.dart';
 import '../split/split_editor.dart';
 import 'calculator_sheet.dart';
+import 'editor_draft.dart';
 import 'item_row.dart';
 
 class ExpenseEditorScreen extends ConsumerStatefulWidget {
@@ -108,6 +110,60 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   bool get _isEditing => widget.entryId != null;
   bool get _hasItems => _items.isNotEmpty;
 
+  /// The input the editor opened with (or was reset to by "Save & add
+  /// another"); leaving with anything different asks first (#82).
+  String? _openedWith;
+
+  /// Whether the last build saw unsaved input, so typing only rebuilds when
+  /// that flips and Back's behaviour has to change.
+  bool _unsavedAtBuild = false;
+
+  String get _draft => editorDraftFingerprint(
+        kind: _kind,
+        amountMinor: _hasItems ? _itemsTotalMinor : parseAmountToMinor(_amountController.text),
+        note: _noteController.text,
+        payee: _payeeController.text,
+        occurredAt: _occurredAt,
+        categoryId: _category?.id,
+        accountId: _accountId,
+        toAccountId: _toAccountId,
+        projectId: _projectId,
+        paidByMemberId: _paidByMemberId,
+        multiplePayers: _multiplePayers,
+        payerAmounts: _payerAmounts,
+        splitMethod: _splitMethod,
+        splitInputs: _splitInputs,
+        items: _items,
+        fieldValues: _fieldValues,
+        repeat: _repeat,
+      );
+
+  bool get _hasUnsavedInput => _openedWith != null && _draft != _openedWith;
+
+  void _onTextChanged() {
+    if (mounted && _hasUnsavedInput != _unsavedAtBuild) setState(() {});
+  }
+
+  /// Back, the back gesture or the close button with unsaved input lands
+  /// here instead of leaving: Keep editing stays, Discard leaves.
+  Future<void> _confirmDiscard() async {
+    final l10n = context.l10n;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.discardEntryTitle),
+        content: Text(l10n.discardEntryBody),
+        actions: [
+          TextButton(key: const Key('keep-editing'), onPressed: () => Navigator.pop(context, false), child: Text(l10n.keepEditing)),
+          FilledButton(key: const Key('discard-entry'), onPressed: () => Navigator.pop(context, true), child: Text(l10n.discard)),
+        ],
+      ),
+    );
+    if (discard != true || !mounted) return;
+    setState(() => _openedWith = null);
+    popOrGoHome(context);
+  }
+
   /// "Save & add another" is offered for new entries typed by hand; SMS
   /// entries and edits close the editor on save.
   bool get _canAddAnother => !_isEditing && widget.smsId == null && widget.reminderId == null && _source != 'sms';
@@ -123,6 +179,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _groupId = widget.groupId;
     _projectId = widget.projectId;
     _smsId = widget.smsId;
+    for (final controller in [_amountController, _noteController, _payeeController]) {
+      controller.addListener(_onTextChanged);
+    }
     _load();
     _amountFocus.addListener(_stopAmountAutofocus);
   }
@@ -186,6 +245,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     }
     await _loadProjectFields();
     if (_category != null) await _refreshSuggestions();
+    _openedWith = _draft;
     if (mounted) setState(() => _loaded = true);
   }
 
@@ -309,10 +369,27 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _unsavedAtBuild = _hasUnsavedInput;
+    return PopScope(
+      canPop: !_unsavedAtBuild && context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_hasUnsavedInput) {
+          _confirmDiscard();
+        } else {
+          context.go(kHomeLocation);
+        }
+      },
+      child: _form(context),
+    );
+  }
+
+  Widget _form(BuildContext context) {
     if (!_loaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
+    final recentAccountIds = ref.watch(recentAccountIdsProvider).value ?? const <String>[];
     final symbol = settings.currencySymbol;
     final units = _category?.units.split(',').where((u) => u.isNotEmpty).toList() ?? const <String>[];
 
@@ -326,6 +403,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               icon: const Icon(Icons.delete_outline),
               onPressed: () async {
                 if (await confirmDialog(context, title: l10n.deleteEntryQuestion)) {
+                  if (_groupId != null) {
+                    await _deleteGroupExpense(_existingId!);
+                    if (context.mounted) popOrGoHome(context);
+                    return;
+                  }
                   await ref.read(entriesRepositoryProvider).deleteEntry(_existingId!);
                   if (_previousSnapshot != null) {
                     await ref.read(accountsRepositoryProvider).applyBalanceDeltas(deleteDeltas(_previousSnapshot!));
@@ -412,12 +494,27 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             const SizedBox(height: 8),
             Text(_kind == 'transfer' ? l10n.fromAccount : l10n.account, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 6),
-            AccountChoiceChips(accounts: accounts, selectedId: _accountId, onPick: (id) => setState(() => _accountId = id)),
+            GroupedAccountPicker(
+              key: const ValueKey('from-account'),
+              accounts: accounts,
+              recentAccountIds: recentAccountIds,
+              selectedId: _accountId,
+              onPick: (id) => setState(() {
+                _accountId = id;
+                _toAccountId = toAccountAfterFromChange(fromId: id, toId: _toAccountId);
+              }),
+            ),
             if (_kind == 'transfer') ...[
               const SizedBox(height: 12),
               Text(l10n.toAccount, style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 6),
-              AccountChoiceChips(accounts: accounts.where((a) => a.id != _accountId).toList(), selectedId: _toAccountId, onPick: (id) => setState(() => _toAccountId = id)),
+              GroupedAccountPicker(
+                key: const ValueKey('to-account'),
+                accounts: accounts.where((a) => a.id != _accountId).toList(),
+                recentAccountIds: recentAccountIds,
+                selectedId: _toAccountId,
+                onPick: (id) => setState(() => _toAccountId = id),
+              ),
             ],
           ],
           const SizedBox(height: 16),
@@ -530,6 +627,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _payerAmounts = {};
       if (_groupId != null) _splitInputs = defaultSplitInputs(_members, _splitMethod);
       _saving = false;
+      _openedWith = _draft;
     });
     _amountFocus.requestFocus();
   }
@@ -641,6 +739,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     if (_payerAmounts.isEmpty && _paidByMemberId != null) _payerAmounts = {_paidByMemberId!: _amountMinor};
   }
 
+  String _accountProblemMessage(AppLocalizations l10n, EntryAccountProblem problem) => switch (problem) {
+        EntryAccountProblem.missingAccount => l10n.errorPickAccount,
+        EntryAccountProblem.missingBothAccounts => l10n.errorPickBothAccounts,
+        EntryAccountProblem.sameAccount => l10n.errorSameAccount,
+        EntryAccountProblem.none => '',
+      };
+
   Future<void> _save({bool addAnother = false}) async {
     final amount = _amountMinor;
     final l10n = context.l10n;
@@ -657,8 +762,15 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       messenger.showSnackBar(SnackBar(content: Text(l10n.errorPickCategory)));
       return;
     }
-    if (_kind == 'transfer' && (_accountId == null || _toAccountId == null)) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.errorPickBothAccounts)));
+    final accountProblem = entryAccountProblem(
+      kind: _kind,
+      inGroup: _groupId != null,
+      accountId: _accountId,
+      toAccountId: _toAccountId,
+      accountCreatedOnSave: _source == 'sms' && _smsId != null,
+    );
+    if (accountProblem != EntryAccountProblem.none) {
+      messenger.showSnackBar(SnackBar(content: Text(_accountProblemMessage(l10n, accountProblem))));
       return;
     }
     if (_items.any((i) => i.name.trim().isEmpty)) {
@@ -689,6 +801,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     setState(() => _saving = true);
     if (_source == 'sms' && _smsId != null && _accountId == null && _groupId == null) {
       _accountId = (await ref.read(smsIngestServiceProvider).ensureAccountForSms(_smsId!))?.id;
+      if (_accountId == null) {
+        if (mounted) setState(() => _saving = false);
+        messenger.showSnackBar(SnackBar(content: Text(l10n.errorPickAccount)));
+        return;
+      }
     }
     final id = _existingId ?? newId();
     final projectId = _kind == 'transfer' ? null : _projectId;
@@ -709,7 +826,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       projectId: projectId,
     ).copyWith(toAccountId: Value(_kind == 'transfer' ? _toAccountId : null));
     final weights = {for (final i in _splitInputs) i.memberId: i};
-    await ref.read(entriesRepositoryProvider).saveEntry(
+    // Group expenses go through the groups repository so the change is logged.
+    final save = _groupId == null ? ref.read(entriesRepositoryProvider).saveEntry : ref.read(groupsRepositoryProvider).saveGroupExpense;
+    await save(
           entry,
           items: [for (final draft in _items) draft.toCompanion(id)],
           splits: [
@@ -749,6 +868,16 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     } else {
       popOrGoHome(context);
     }
+  }
+
+  /// Deletes a group expense (logged in its activity) and offers Undo on the
+  /// screen underneath, since this one closes.
+  Future<void> _deleteGroupExpense(String entryId) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    final groups = ref.read(groupsRepositoryProvider);
+    await groups.deleteGroupExpense(entryId);
+    showUndoSnackBar(messenger, message: l10n.activityExpenseDeletedSnack, undoLabel: l10n.undo, onUndo: () => groups.restoreGroupExpense(entryId));
   }
 
   /// Turns the entry just saved into the first occurrence of a new rule.

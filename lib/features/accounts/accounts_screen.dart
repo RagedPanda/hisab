@@ -15,16 +15,8 @@ import '../../domain/cards/card_summary.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import '../reminders/reminder_actions.dart';
+import 'account_type_label.dart';
 import 'card_reminder_sync.dart';
-
-/// (stored type value, icon name). Labels come from [_typeLabel].
-
-String _typeLabel(AppLocalizations l10n, String type) => switch (type) {
-      'bank' => l10n.accountTypeBank,
-      'card' => l10n.accountTypeCard,
-      'wallet' => l10n.accountTypeWallet,
-      _ => l10n.accountTypeCash,
-    };
 
 class AccountsScreen extends ConsumerWidget {
   const AccountsScreen({super.key});
@@ -113,7 +105,7 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
               Wrap(
                 spacing: 8,
                 children: [
-                  for (final option in kAccountTypeIcons.keys) ChoiceChip(label: Text(_typeLabel(l10n, option)), selected: type == option, onSelected: (_) => setSheetState(() {
+                  for (final option in kAccountTypeIcons.keys) ChoiceChip(label: Text(accountTypeLabel(l10n, option)), selected: type == option, onSelected: (_) => setSheetState(() {
                             balanceNegative = balanceNegativeAfterTypeChange(negative: balanceNegative, enteredMinor: parseAmountToMinor(balanceController.text) ?? 0, toType: option);
                             type = option;
                           })),

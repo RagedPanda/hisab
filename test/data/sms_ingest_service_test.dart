@@ -36,6 +36,29 @@ void main() {
 
   Future<List<String>> accountNames() async => (await accounts.getAll()).map((a) => a.name).toList();
 
+  test('#95: a pasted SMS does not move the inbox scan start', () async {
+    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    source.inbox.add(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: yesterday));
+    await service.ingest(RawSms(sender: RawSms.pastedSender, body: _atmDebit, receivedAt: DateTime.now()), autoAdd: false, force: true);
+
+    final result = await service.sync(autoAdd: false);
+
+    expect(result.scanned, 1);
+    expect(result.pending, 1, reason: 'the older inbox SMS is still read');
+    expect(source.lastSince!.isBefore(yesterday), isTrue, reason: 'first scan looks back the full window');
+  });
+
+  test('the scan starts at the newest inbox SMS already logged', () async {
+    final twoDaysAgo = DateTime.now().subtract(const Duration(days: 2));
+    final logged = DateTime(twoDaysAgo.year, twoDaysAgo.month, twoDaysAgo.day, 9, 30);
+    await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: logged), autoAdd: false);
+    await service.ingest(RawSms(sender: RawSms.pastedSender, body: _atmDebit, receivedAt: DateTime.now()), autoAdd: false, force: true);
+
+    await service.sync(autoAdd: false);
+
+    expect(source.lastSince, logged.subtract(const Duration(minutes: 1)));
+  });
+
   test('IOS-04: a pending SMS creates no account until it is approved', () async {
     final received = DateTime(2026, 10, 21, 10, 0);
     final status = await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: false);
@@ -79,6 +102,21 @@ void main() {
   group('sync', () {
     final now = DateTime(2026, 10, 22, 12);
     final morning = DateTime(2026, 10, 22, 9);
+
+    test('#103: notifications of queued messages are cancelled once processed, whatever the outcome', () async {
+      final clear = RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: morning);
+      final personal = RawSms(sender: '+919876500011', body: 'Rs.500 debited, send me the money', receivedAt: morning);
+      source.queue.addAll([clear, personal]);
+      source.inbox.add(RawSms(sender: 'HDFCBK', body: _atmDebit, receivedAt: morning));
+      final result = await service.sync(autoAdd: true, now: now);
+      expect(result.added, 2);
+      expect(source.cancelled, [clear, personal], reason: 'only queued messages were notified; inbox ones never were');
+    });
+
+    test('a sync with nothing queued cancels nothing', () async {
+      await service.sync(autoAdd: false, now: now);
+      expect(source.cancelled, isEmpty);
+    });
 
     test('ingests messages queued while the app was closed', () async {
       source.queue.add(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: morning));
@@ -409,6 +447,10 @@ class FakeSmsSource implements SmsSource {
   final queue = <RawSms>[];
   final inbox = <RawSms>[];
   DateTime? lastSince;
+  final cancelled = <RawSms>[];
+
+  @override
+  Future<void> cancelNotifications(List<RawSms> messages) async => cancelled.addAll(messages);
 
   @override
   Future<List<RawSms>> drainQueue() async {

@@ -360,6 +360,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get editEntry => 'लेन-देन बदलें';
 
   @override
+  String get discardEntryTitle => 'यह लेन-देन छोड़ दें?';
+
+  @override
+  String get discardEntryBody => 'आपने जो भरा है वह खो जाएगा।';
+
+  @override
+  String get keepEditing => 'भरना जारी रखें';
+
+  @override
+  String get discard => 'छोड़ दें';
+
+  @override
   String get groupExpense => 'ग्रुप खर्च';
 
   @override
@@ -429,6 +441,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get errorPickBothAccounts => 'ट्रांसफ़र के लिए दोनों खाते चुनें';
+
+  @override
+  String get errorPickAccount => 'खाता चुनें';
+
+  @override
+  String get errorSameAccount => 'दोनों खाते अलग होने चाहिए';
 
   @override
   String get errorItemName => 'हर आइटम का नाम ज़रूरी है';
@@ -666,7 +684,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get money => 'पैसा';
 
   @override
-  String get currencySymbol => 'मुद्रा चिह्न';
+  String get currency => 'मुद्रा';
+
+  @override
+  String get currencyChooseTitle => 'अपनी मुद्रा चुनें';
+
+  @override
+  String get currencyChooseBody =>
+      'Hisab में रकम इसी मुद्रा में दिखेगी। आप इसे बाद में सेटिंग्स में बदल सकते हैं।';
+
+  @override
+  String get currencySearchHint => 'कोड, नाम या देश खोजें';
+
+  @override
+  String currencyContinue(String currency) {
+    return '$currency के साथ आगे बढ़ें';
+  }
+
+  @override
+  String currencyNoMatch(String query) {
+    return '\"$query\" से कोई मुद्रा नहीं मिली';
+  }
 
   @override
   String get monthStartsOn => 'महीना शुरू होता है';
@@ -735,6 +773,15 @@ class AppLocalizationsHi extends AppLocalizations {
       'मुफ़्त, ओपन सोर्स, कोई विज्ञापन नहीं, कोई अकाउंट नहीं। आपका डेटा आपके डिवाइस पर रहता है।';
 
   @override
+  String get aboutMadeWithBefore => '';
+
+  @override
+  String get aboutMadeWithAfter => 'से बनाया गया';
+
+  @override
+  String get aboutMadeWithLabel => 'प्यार से बनाया गया';
+
+  @override
   String get backupPassphrase => 'बैकअप पासफ़्रेज़';
 
   @override
@@ -787,6 +834,16 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String smsNotificationBody(String sender) {
     return '$sender से। देखने के लिए टैप करें।';
+  }
+
+  @override
+  String smsNotificationBodyAmountAutoAdd(String amount, String sender) {
+    return '$sender से $amount। जोड़ने के लिए हिसाब खोलें।';
+  }
+
+  @override
+  String smsNotificationBodyAutoAdd(String sender) {
+    return '$sender से। जोड़ने के लिए हिसाब खोलें।';
   }
 
   @override
@@ -2913,6 +2970,177 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get youInList => 'आप';
+
+  @override
+  String get activityTitle => 'गतिविधि';
+
+  @override
+  String get activityEmptyTitle => 'अभी कोई गतिविधि नहीं';
+
+  @override
+  String get activityEmptyBody =>
+      'आप जो खर्च और भुगतान जोड़ते, बदलते या हटाते हैं, वे यहाँ दिखेंगे।';
+
+  @override
+  String activityExpenseAdded(String actor, String title) {
+    return '$actor ने “$title” जोड़ा';
+  }
+
+  @override
+  String activityExpenseEdited(String actor, String title) {
+    return '$actor ने “$title” बदला';
+  }
+
+  @override
+  String activityExpenseDeleted(String actor, String title) {
+    return '$actor ने “$title” हटाया';
+  }
+
+  @override
+  String activityExpenseRestored(String actor, String title) {
+    return '$actor ने “$title” वापस लाया';
+  }
+
+  @override
+  String activityPaymentAdded(String actor) {
+    return '$actor ने भुगतान दर्ज किया';
+  }
+
+  @override
+  String activityPaymentEdited(String actor) {
+    return '$actor ने भुगतान बदला';
+  }
+
+  @override
+  String activityPaymentDeleted(String actor) {
+    return '$actor ने भुगतान हटाया';
+  }
+
+  @override
+  String activityPaymentRestored(String actor) {
+    return '$actor ने भुगतान वापस लाया';
+  }
+
+  @override
+  String activityExpenseLine(String amount, String payers) {
+    return '$amount · भुगतान: $payers';
+  }
+
+  @override
+  String activityPaymentLine(String from, String to, String amount) {
+    return '$from ने $to को $amount दिए';
+  }
+
+  @override
+  String activityChangeAmount(String from, String to) {
+    return 'राशि: $from → $to';
+  }
+
+  @override
+  String activityChangeDate(String from, String to) {
+    return 'तारीख: $from → $to';
+  }
+
+  @override
+  String activityChangeDescription(String from, String to) {
+    return 'विवरण: $from → $to';
+  }
+
+  @override
+  String activityChangeCategory(String from, String to) {
+    return 'श्रेणी: $from → $to';
+  }
+
+  @override
+  String activityChangePayers(String from, String to) {
+    return 'भुगतान किया: $from → $to';
+  }
+
+  @override
+  String activityPayerAmount(String name, String amount) {
+    return '$name $amount';
+  }
+
+  @override
+  String activityChangeShare(String name, String from, String to) {
+    return '$name का हिस्सा: $from → $to';
+  }
+
+  @override
+  String activityChangeMyShare(String from, String to) {
+    return 'आपका हिस्सा: $from → $to';
+  }
+
+  @override
+  String activityChangeParties(String from, String to) {
+    return 'किसने किसे दिया: $from → $to';
+  }
+
+  @override
+  String activityPartiesPair(String from, String to) {
+    return '$from से $to को';
+  }
+
+  @override
+  String activityChangeMethod(String from, String to) {
+    return 'तरीका: $from → $to';
+  }
+
+  @override
+  String activityChangeNote(String from, String to) {
+    return 'नोट: $from → $to';
+  }
+
+  @override
+  String get activityNone => 'कुछ नहीं';
+
+  @override
+  String get activityRestore => 'वापस लाएँ';
+
+  @override
+  String get activityExpenseRestoredSnack => 'खर्च वापस आ गया';
+
+  @override
+  String get activityExpenseDeletedSnack => 'खर्च हटाया गया';
+
+  @override
+  String get activityAllGroups => 'सभी ग्रुप';
+
+  @override
+  String activityGroupDeleted(String actor, String name) {
+    return '$actor ने ग्रुप “$name” हटाया';
+  }
+
+  @override
+  String activityGroupRestored(String actor, String name) {
+    return '$actor ने ग्रुप “$name” वापस लाया';
+  }
+
+  @override
+  String activityGroupEdited(String actor, String name) {
+    return '$actor ने ग्रुप “$name” बदला';
+  }
+
+  @override
+  String activityGroupLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count खर्च',
+      one: '1 खर्च',
+      zero: 'कोई खर्च नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activityPaymentRestoredSnack => 'भुगतान वापस आ गया';
+
+  @override
+  String get activityGroupRestoredSnack => 'ग्रुप वापस आ गया';
+
+  @override
+  String get activityGroupDeletedSnack => 'ग्रुप हटाया गया';
 
   @override
   String recurringAddedSkipped(int added, int skipped) {

@@ -106,4 +106,53 @@ void main() {
     await reopened.close();
     await dir.delete(recursive: true);
   });
+
+  test('startup repoints recurring rules and keeps a Cash account a rule uses', () async {
+    final dir = await Directory.systemTemp.createTemp('hisab_dedupe_rules');
+    final file = File('${dir.path}/hisab.sqlite');
+    final first = AppDatabase(NativeDatabase(file));
+    await liveCategories(first);
+    await insertDuplicateSeed(first);
+    await addEntry(first, categoryId: 'dup-food', accountId: 'dup-cash');
+    await first
+        .into(first.entries)
+        .insert(
+          EntriesCompanion.insert(
+            id: 'entry-2',
+            kind: 'expense',
+            amountMinor: 100,
+            occurredAt: DateTime(2026, 10, 2),
+            categoryId: const Value('dup-food'),
+          ),
+        );
+    final seededFood = (await liveCategories(first)).firstWhere((c) => c.seedKey == 'food' && c.id != 'dup-food');
+    final seededCash = (await liveAccounts(first)).firstWhere((a) => a.id != 'dup-cash');
+    await first
+        .into(first.recurringRules)
+        .insert(
+          RecurringRulesCompanion.insert(
+            id: 'rule-1',
+            kind: 'expense',
+            amountMinor: 50000,
+            frequency: 'monthly',
+            startDate: DateTime(2026, 10, 1),
+            categoryId: Value(seededFood.id),
+            accountId: Value(seededCash.id),
+          ),
+        );
+    await first.close();
+
+    final reopened = AppDatabase(NativeDatabase(file));
+    final rule = await (reopened.select(reopened.recurringRules)..where((t) => t.id.equals('rule-1'))).getSingle();
+    final keptFood = (await CategoriesRepository(reopened).findBySeedKey('food'))!;
+    expect((await liveCategories(reopened)).length, catalogSize);
+    expect(keptFood.id, 'dup-food', reason: 'the copy with more references wins');
+    expect(rule.categoryId, 'dup-food', reason: 'the rule follows its category into the kept copy');
+    expect((await liveAccounts(reopened)).map((a) => a.id).toSet(), {
+      'dup-cash',
+      seededCash.id,
+    }, reason: 'a Cash account a rule uses is not dropped');
+    await reopened.close();
+    await dir.delete(recursive: true);
+  });
 }

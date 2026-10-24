@@ -1,26 +1,25 @@
 package com.sarv.hisab
 
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Telephony
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import com.sarv.hisab.sms.SmsCaptureBridge
+import com.sarv.hisab.sms.SmsCaptureSettings
+import com.sarv.hisab.sms.SmsNotifier
+import com.sarv.hisab.sms.SmsQueue
 
 /**
- * Exposes the device SMS inbox to Dart. Only runs when the user has granted
+ * Exposes the device SMS inbox and the background capture queue
+ * (see sms/SmsReceiver.kt) to Dart. Only runs when the user has granted
  * READ_SMS / RECEIVE_SMS from the in-app opt-in; the Dart side never calls
  * these methods before that. Nothing is sent off the device.
  */
 class MainActivity : FlutterActivity() {
-    private var receiver: BroadcastReceiver? = null
-
     // Text shared from another app arrives as ACTION_SEND. Turn it into the
     // hisab://sms?text=... link before Flutter reads the intent, so the
     // router opens the SMS paste screen as it does for any deep link.
@@ -49,41 +48,33 @@ class MainActivity : FlutterActivity() {
                         result.error("permission", "READ_SMS not granted", null)
                     }
                 }
+                "drainQueue" -> result.success(SmsQueue.drain(this).map { it.toMap() })
+                "cancelNotifications" -> {
+                    val messages = (call.arguments as? List<*>).orEmpty().mapNotNull { row ->
+                        val map = row as? Map<*, *> ?: return@mapNotNull null
+                        (map["sender"] as? String ?: "") to (map["body"] as? String ?: "")
+                    }
+                    SmsNotifier.cancel(this, messages)
+                    result.success(null)
+                }
+                "configureCapture" -> {
+                    val arguments = call.arguments as? Map<*, *> ?: emptyMap<Any, Any>()
+                    SmsCaptureSettings.save(this, SmsCaptureSettings.fromArguments(arguments))
+                    result.success(null)
+                }
                 else -> result.notImplemented()
             }
         }
 
+        // Live signal from the manifest receiver (SmsReceiver) while the app runs;
+        // Dart answers each one by draining the native queue.
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL).setStreamHandler(object : EventChannel.StreamHandler {
             override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
-                val newReceiver = object : BroadcastReceiver() {
-                    override fun onReceive(context: Context, intent: Intent) {
-                        if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
-                        val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent) ?: return
-                        if (messages.isEmpty()) return
-                        // Multipart SMS arrive as several PDUs from the same sender; join them.
-                        val body = messages.joinToString("") { it.messageBody ?: "" }
-                        events.success(
-                            mapOf(
-                                "sender" to (messages[0].displayOriginatingAddress ?: ""),
-                                "body" to body,
-                                "date" to messages[0].timestampMillis,
-                            )
-                        )
-                    }
-                }
-                val filter = IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    registerReceiver(newReceiver, filter, Context.RECEIVER_EXPORTED)
-                } else {
-                    @Suppress("UnspecifiedRegisterReceiverFlag")
-                    registerReceiver(newReceiver, filter)
-                }
-                receiver = newReceiver
+                SmsCaptureBridge.sink = events
             }
 
             override fun onCancel(arguments: Any?) {
-                receiver?.let { unregisterReceiver(it) }
-                receiver = null
+                SmsCaptureBridge.sink = null
             }
         })
     }
@@ -115,9 +106,18 @@ class MainActivity : FlutterActivity() {
         return rows
     }
 
+    override fun onResume() {
+        super.onResume()
+        SmsCaptureBridge.appVisible = true
+    }
+
+    override fun onPause() {
+        SmsCaptureBridge.appVisible = false
+        super.onPause()
+    }
+
     override fun onDestroy() {
-        receiver?.let { unregisterReceiver(it) }
-        receiver = null
+        SmsCaptureBridge.sink = null
         super.onDestroy()
     }
 

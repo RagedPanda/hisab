@@ -4,6 +4,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import '../../core/ids.dart';
 import '../../domain/backup/seed_dedupe.dart';
 import '../../domain/categories/category_catalog.dart';
+import '../../domain/categories/category_packs.dart';
 import '../../domain/sms/sms_outcome.dart';
 
 part 'database.g.dart';
@@ -125,6 +126,23 @@ class Groups extends Table with SyncColumns {
   /// Project this group's expenses roll up into (no UI yet; see roadmap R1).
   TextColumn get projectId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Trip, home, couple or other (see `GroupType`); sets the default icon and
+  /// the empty-state wording (v7, group settings).
+  TextColumn get type => text().withDefault(const Constant('other'))();
+
+  /// Split method pre-selected for new expenses: equal, shares or percent (v7).
+  TextColumn get defaultSplitMethod => text().withDefault(const Constant('equal'))();
+
+  /// Free-text notes shown as a card on the Expenses tab (v7).
+  TextColumn get notes => text().withDefault(const Constant(''))();
+
+  /// Currency symbol shown for this group's amounts; null follows the app
+  /// setting. A label only: amounts are never converted (v7).
+  TextColumn get currencyLabel => text().nullable()();
+
+  /// When the group was archived (or left); null while active (v7).
+  DateTimeColumn get archivedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -432,6 +450,33 @@ class SmsLog extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Who added, edited, deleted or restored which group expense or payment,
+/// and when, with the state before and after as JSON snapshots (see
+/// `domain/split/group_activity.dart`).
+@TableIndex(name: 'group_activities_group_id', columns: {#groupId})
+class GroupActivities extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get groupId => text()();
+
+  /// added | edited | deleted | restored
+  TextColumn get action => text()();
+
+  /// expense | payment
+  TextColumn get subjectKind => text()();
+
+  /// The entry or settlement id.
+  TextColumn get subjectId => text()();
+
+  /// The member who made the change; the device's own member until sync.
+  TextColumn get actorMemberId => text().nullable()();
+  DateTimeColumn get occurredAt => dateTime()();
+  TextColumn get beforeJson => text().nullable()();
+  TextColumn get afterJson => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   Accounts,
   Categories,
@@ -449,12 +494,13 @@ class SmsLog extends Table {
   Reminders,
   EntryPayers,
   RecurringRules,
+  GroupActivities,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -498,23 +544,39 @@ class AppDatabase extends _$AppDatabase {
           }
           // v8: SMS history can be cleared without forgetting processed messages.
           if (from < 8) await m.addColumn(smsLog, smsLog.clearedAt);
-          // v9: due reminders (bills, EMIs, cards, documents) on the v5 reminders
+          // v9 was never shipped (it held the due-reminder step, now v12, before v10 merged).
+          // v10: group activity log (groups parity, undo and history).
+          if (from < 10) {
+            await m.createTable(groupActivities);
+            await m.createIndex(groupActivitiesGroupId);
+          }
+          // v11: group type, default split, notes, currency label and archiving (groups parity, group settings).
+          if (from < 11) {
+            await m.addColumn(groups, groups.type);
+            await m.addColumn(groups, groups.defaultSplitMethod);
+            await m.addColumn(groups, groups.notes);
+            await m.addColumn(groups, groups.currencyLabel);
+            await m.addColumn(groups, groups.archivedAt);
+          }
+          // v12: due reminders (bills, EMIs, cards, documents) on the v5 reminders
           // table: new columns only, so existing rows are kept as they are.
-          if (from < 9) await _upgradeToDueReminders(m, from);
+          if (from < 12) await _upgradeToDueReminders(m, from);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
           await wipeUnkeptSmsText();
           // Heals installs where a restore doubled the seed (#63); writes nothing otherwise.
           if (!details.wasCreated) await mergeSeededDuplicates();
+          if (!details.wasCreated) await recolourRetiredSeeds();
         },
       );
 
-  /// v9 step. A v5..v8 table gains the due-reminder columns it lacks (a table
-  /// created at v5 or later by this version already has them all). Checking
-  /// what exists also upgrades pre-release builds of the reminders feature,
-  /// which stored these columns and the index under schema 6 without
-  /// main's v6 entry_payers table.
+  /// v12 step. A v5..v11 table gains the due-reminder columns it lacks (a
+  /// table created at v5 or later by this version already has them all).
+  /// Checking what exists keeps it idempotent: it also upgrades pre-release
+  /// builds of the reminders feature, which stored these columns and the index
+  /// under schema 6 without main's v6 entry_payers table, and QA builds that
+  /// added them as schema 9.
   Future<void> _upgradeToDueReminders(Migrator m, int from) async {
     if (from >= 5) {
       final existing = await _columnNames('reminders');
@@ -580,6 +642,24 @@ class AppDatabase extends _$AppDatabase {
         color: 0xFF43A047,
       ));
     }
+  }
+
+  /// Moves seeded categories still on a retired default colour to the
+  /// current palette; colours the user picked are left alone. Writes nothing
+  /// once every row is current.
+  Future<int> recolourRetiredSeeds() async {
+    final seedColors = {for (final seed in [...flattenCatalog(), ...packOnlySeeds()]) seed.key: seed.color};
+    final seeded = await (select(categories)..where((t) => t.seedKey.isNotNull())).get();
+    var recoloured = 0;
+    for (final category in seeded) {
+      final seedColor = seedColors[category.seedKey];
+      final target = seedColor == null ? null : recolouredSeed(current: category.color, seedColor: seedColor);
+      if (target == null) continue;
+      await (update(categories)..where((t) => t.id.equals(category.id)))
+          .write(CategoriesCompanion(color: Value(target), updatedAt: Value(DateTime.now())));
+      recoloured++;
+    }
+    return recoloured;
   }
 
   /// Folds duplicate seeded rows into one: categories sharing a seedKey and

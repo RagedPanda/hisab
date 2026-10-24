@@ -31,23 +31,27 @@ class CategorySeed {
   final List<String> units;
 }
 
+// Expense parents are chosen so any two differ clearly (CIE76 delta E of 20
+// or more, see category_palette_test); several used to be near twins, such as
+// Transport and Travel in two blues (#70). Colours a release shipped
+// and later replaced are listed in retiredSeedColors so installs move over.
 const _food = 0xFFEF6C00;
 const _transport = 0xFF1E88E5;
-const _home = 0xFF6D4C41;
+const _home = 0xFF5D4037;
 const _bills = 0xFF00897B;
 const _health = 0xFFE53935;
 const _shopping = 0xFF8E24AA;
 const _fun = 0xFFD81B60;
 const _education = 0xFF3949AB;
-const _family = 0xFFF4511E;
+const _family = 0xFFC0CA33;
 const _personal = 0xFF00ACC1;
-const _travel = 0xFF039BE5;
+const _travel = 0xFFF9A825;
 const _finance = 0xFF43A047;
-const _pets = 0xFF7CB342;
-const _giving = 0xFFFB8C00;
-const _help = 0xFF5E35B1;
-const _social = 0xFFC0CA33;
-const _business = 0xFF546E7A;
+const _pets = 0xFFFDD835;
+const _giving = 0xFFF06292;
+const _help = 0xFF880E4F;
+const _social = 0xFF4527A0;
+const _business = 0xFF37474F;
 const _misc = 0xFF757575;
 const _income = 0xFF2E7D32;
 const _transfer = 0xFF607D8B;
@@ -234,4 +238,25 @@ CategorySeed? findSeed(String key) {
     if (seed.key == key) return seed;
   }
   return null;
+}
+
+/// Seed colours earlier releases used, mapped to what replaced them. A seeded
+/// category still showing one of these was never recoloured by the user.
+const Map<int, int> retiredSeedColors = {
+  0xFF6D4C41: _home,
+  0xFFF4511E: _family,
+  0xFF039BE5: _travel,
+  0xFF7CB342: _pets,
+  0xFFFB8C00: _giving,
+  0xFF5E35B1: _help,
+  0xFFC0CA33: _social,
+  0xFF546E7A: _business,
+};
+
+/// The colour a seeded category should move to, or null to leave it: only
+/// when its current colour is a retired default that now maps to the colour
+/// its seed ([seedColor]) has. Running it again changes nothing.
+int? recolouredSeed({required int current, required int seedColor}) {
+  final replacement = retiredSeedColors[current];
+  return replacement != null && replacement == seedColor && replacement != current ? replacement : null;
 }

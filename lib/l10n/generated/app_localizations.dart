@@ -698,6 +698,30 @@ abstract class AppLocalizations {
   /// **'Edit entry'**
   String get editEntry;
 
+  /// No description provided for @discardEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this entry?'**
+  String get discardEntryTitle;
+
+  /// No description provided for @discardEntryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What you entered will be lost.'**
+  String get discardEntryBody;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditing;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
   /// No description provided for @groupExpense.
   ///
   /// In en, this message translates to:
@@ -4705,6 +4729,564 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'you'**
   String get youInList;
+
+  /// No description provided for @groupTotalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Group totals'**
+  String get groupTotalsTitle;
+
+  /// No description provided for @groupTotalsAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get groupTotalsAllTime;
+
+  /// No description provided for @groupTotalsTotalSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Group total'**
+  String get groupTotalsTotalSpent;
+
+  /// No description provided for @groupTotalsYouPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'You paid'**
+  String get groupTotalsYouPaid;
+
+  /// No description provided for @groupTotalsYourShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Your share'**
+  String get groupTotalsYourShare;
+
+  /// No description provided for @groupTotalsNetChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change in your balance'**
+  String get groupTotalsNetChange;
+
+  /// No description provided for @groupTotalsPaymentsMade.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you made'**
+  String get groupTotalsPaymentsMade;
+
+  /// No description provided for @groupTotalsPaymentsReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you received'**
+  String get groupTotalsPaymentsReceived;
+
+  /// No description provided for @groupTotalsByMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid and share by member'**
+  String get groupTotalsByMember;
+
+  /// No description provided for @groupTotalsPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get groupTotalsPaid;
+
+  /// No description provided for @groupTotalsShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get groupTotalsShare;
+
+  /// No description provided for @groupTotalsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No expenses in this period'**
+  String get groupTotalsEmpty;
+
+  /// No description provided for @groupTotalsExpenseCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 expense} other{{count} expenses}}'**
+  String groupTotalsExpenseCount(int count);
+
+  /// No description provided for @groupTotalsMemberRow.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: paid {paid}, share {share}'**
+  String groupTotalsMemberRow(String name, String paid, String share);
+
+  /// No description provided for @groupTotalsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'See totals'**
+  String get groupTotalsOpen;
+
+  /// No description provided for @groupSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Group settings'**
+  String get groupSettingsTitle;
+
+  /// No description provided for @groupSettingsType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get groupSettingsType;
+
+  /// No description provided for @groupTypeTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip'**
+  String get groupTypeTrip;
+
+  /// No description provided for @groupTypeHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get groupTypeHome;
+
+  /// No description provided for @groupTypeCouple.
+  ///
+  /// In en, this message translates to:
+  /// **'Couple'**
+  String get groupTypeCouple;
+
+  /// No description provided for @groupTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get groupTypeOther;
+
+  /// No description provided for @groupSettingsIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get groupSettingsIcon;
+
+  /// No description provided for @groupSettingsDefaultSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Default split'**
+  String get groupSettingsDefaultSplit;
+
+  /// No description provided for @groupSettingsDefaultSplitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-selected for new expenses. Expenses already added keep their split.'**
+  String get groupSettingsDefaultSplitHint;
+
+  /// No description provided for @groupSettingsWeights.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares per member'**
+  String get groupSettingsWeights;
+
+  /// A member's share weight; count is the weight as a number, weight is it formatted (1.5).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 share} other{{weight} shares}}'**
+  String groupSettingsWeightValue(num count, String weight);
+
+  /// No description provided for @groupSettingsWeightLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Fewer shares for {name}'**
+  String groupSettingsWeightLess(String name);
+
+  /// No description provided for @groupSettingsWeightMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More shares for {name}'**
+  String groupSettingsWeightMore(String name);
+
+  /// No description provided for @groupSettingsCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency label'**
+  String get groupSettingsCurrency;
+
+  /// No description provided for @groupSettingsCurrencyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only changes the symbol shown in this group. Amounts are not converted.'**
+  String get groupSettingsCurrencyHint;
+
+  /// No description provided for @groupSettingsCurrencyAppDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Same as app ({symbol})'**
+  String groupSettingsCurrencyAppDefault(String symbol);
+
+  /// No description provided for @groupSettingsCurrencyOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other symbol'**
+  String get groupSettingsCurrencyOther;
+
+  /// No description provided for @groupSettingsSimplify.
+  ///
+  /// In en, this message translates to:
+  /// **'Simplify debts'**
+  String get groupSettingsSimplify;
+
+  /// No description provided for @groupSettingsSimplifyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Combines debts so the group needs fewer repayments. If Asha owes Ravi and Ravi owes Meena, Asha can pay Meena directly. Nobody pays or gets back a different total.'**
+  String get groupSettingsSimplifyBody;
+
+  /// No description provided for @groupSettingsSimplifySaves.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Saves 1 repayment right now} other{Saves {count} repayments right now}}'**
+  String groupSettingsSimplifySaves(int count);
+
+  /// No description provided for @groupSettingsNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get groupSettingsNotes;
+
+  /// No description provided for @groupSettingsNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi password, house rules, trip plan'**
+  String get groupSettingsNotesHint;
+
+  /// No description provided for @groupSettingsNotesAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note for this group'**
+  String get groupSettingsNotesAdd;
+
+  /// No description provided for @groupSettingsManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage group'**
+  String get groupSettingsManage;
+
+  /// No description provided for @groupArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive group'**
+  String get groupArchive;
+
+  /// No description provided for @groupArchiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive {name}?'**
+  String groupArchiveTitle(String name);
+
+  /// No description provided for @groupArchiveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The group moves to Archived on the groups list. Nothing is deleted, and you can unarchive it any time.'**
+  String get groupArchiveBody;
+
+  /// No description provided for @groupArchiveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get groupArchiveConfirm;
+
+  /// No description provided for @groupUnarchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive'**
+  String get groupUnarchive;
+
+  /// No description provided for @groupArchivedBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'This group is archived. Unarchive it to add expenses.'**
+  String get groupArchivedBanner;
+
+  /// No description provided for @groupLeftBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'You left this group. Its history stays here.'**
+  String get groupLeftBanner;
+
+  /// No description provided for @groupArchivedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived ({count})'**
+  String groupArchivedSection(int count);
+
+  /// No description provided for @groupLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave group'**
+  String get groupLeave;
+
+  /// No description provided for @groupLeaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave {name}?'**
+  String groupLeaveTitle(String name);
+
+  /// No description provided for @groupLeaveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You are removed from the group on this phone and it moves to Archived, so its history stays readable.'**
+  String get groupLeaveBody;
+
+  /// No description provided for @groupLeaveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get groupLeaveConfirm;
+
+  /// No description provided for @groupLeaveBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle up first. You can leave once nobody owes you and you owe nobody.'**
+  String get groupLeaveBlocked;
+
+  /// No description provided for @groupDeleteUnsettledBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This group still has unsettled balances. Deleting it removes every expense and payment, and it cannot be undone.'**
+  String get groupDeleteUnsettledBody;
+
+  /// No description provided for @groupEmptyTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tickets, stays and meals as you go; Hisab works out who owes whom.'**
+  String get groupEmptyTrip;
+
+  /// No description provided for @groupEmptyHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Add rent, bills and groceries; Hisab works out who owes whom.'**
+  String get groupEmptyHome;
+
+  /// No description provided for @groupEmptyCouple.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the dinners, groceries and trips you share; Hisab keeps the balance.'**
+  String get groupEmptyCouple;
+
+  /// No description provided for @activityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get activityTitle;
+
+  /// No description provided for @activityEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity yet'**
+  String get activityEmptyTitle;
+
+  /// No description provided for @activityEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses and payments you add, edit or delete show up here.'**
+  String get activityEmptyBody;
+
+  /// No description provided for @activityExpenseAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} added “{title}”'**
+  String activityExpenseAdded(String actor, String title);
+
+  /// No description provided for @activityExpenseEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} edited “{title}”'**
+  String activityExpenseEdited(String actor, String title);
+
+  /// No description provided for @activityExpenseDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} deleted “{title}”'**
+  String activityExpenseDeleted(String actor, String title);
+
+  /// No description provided for @activityExpenseRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} restored “{title}”'**
+  String activityExpenseRestored(String actor, String title);
+
+  /// No description provided for @activityPaymentAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} recorded a payment'**
+  String activityPaymentAdded(String actor);
+
+  /// No description provided for @activityPaymentEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} edited a payment'**
+  String activityPaymentEdited(String actor);
+
+  /// No description provided for @activityPaymentDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} removed a payment'**
+  String activityPaymentDeleted(String actor);
+
+  /// No description provided for @activityPaymentRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} restored a payment'**
+  String activityPaymentRestored(String actor);
+
+  /// No description provided for @activityExpenseLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} · paid by {payers}'**
+  String activityExpenseLine(String amount, String payers);
+
+  /// No description provided for @activityPaymentLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} paid {to} {amount}'**
+  String activityPaymentLine(String from, String to, String amount);
+
+  /// No description provided for @activityChangeAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount: {from} → {to}'**
+  String activityChangeAmount(String from, String to);
+
+  /// No description provided for @activityChangeDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date: {from} → {to}'**
+  String activityChangeDate(String from, String to);
+
+  /// No description provided for @activityChangeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description: {from} → {to}'**
+  String activityChangeDescription(String from, String to);
+
+  /// No description provided for @activityChangeCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category: {from} → {to}'**
+  String activityChangeCategory(String from, String to);
+
+  /// No description provided for @activityChangePayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid by: {from} → {to}'**
+  String activityChangePayers(String from, String to);
+
+  /// One payer and what they paid, in a list of several payers.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {amount}'**
+  String activityPayerAmount(String name, String amount);
+
+  /// No description provided for @activityChangeShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s share: {from} → {to}'**
+  String activityChangeShare(String name, String from, String to);
+
+  /// No description provided for @activityChangeMyShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Your share: {from} → {to}'**
+  String activityChangeMyShare(String from, String to);
+
+  /// No description provided for @activityChangeParties.
+  ///
+  /// In en, this message translates to:
+  /// **'Who paid whom: {from} → {to}'**
+  String activityChangeParties(String from, String to);
+
+  /// No description provided for @activityPartiesPair.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} to {to}'**
+  String activityPartiesPair(String from, String to);
+
+  /// No description provided for @activityChangeMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Method: {from} → {to}'**
+  String activityChangeMethod(String from, String to);
+
+  /// No description provided for @activityChangeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: {from} → {to}'**
+  String activityChangeNote(String from, String to);
+
+  /// No description provided for @activityNone.
+  ///
+  /// In en, this message translates to:
+  /// **'none'**
+  String get activityNone;
+
+  /// No description provided for @activityRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get activityRestore;
+
+  /// No description provided for @activityExpenseRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense restored'**
+  String get activityExpenseRestoredSnack;
+
+  /// No description provided for @activityExpenseDeletedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense deleted'**
+  String get activityExpenseDeletedSnack;
+
+  /// No description provided for @activityAllGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'All groups'**
+  String get activityAllGroups;
+
+  /// No description provided for @activityGroupDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} deleted the group “{name}”'**
+  String activityGroupDeleted(String actor, String name);
+
+  /// No description provided for @activityGroupRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} restored the group “{name}”'**
+  String activityGroupRestored(String actor, String name);
+
+  /// No description provided for @activityGroupEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} changed the group “{name}”'**
+  String activityGroupEdited(String actor, String name);
+
+  /// No description provided for @activityGroupLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No expenses} =1{1 expense} other{{count} expenses}}'**
+  String activityGroupLine(int count);
+
+  /// No description provided for @activityPaymentRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment restored'**
+  String get activityPaymentRestoredSnack;
+
+  /// No description provided for @activityGroupRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Group restored'**
+  String get activityGroupRestoredSnack;
+
+  /// No description provided for @activityGroupDeletedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Group deleted'**
+  String get activityGroupDeletedSnack;
 
   /// No description provided for @recurringAddedSkipped.
   ///

@@ -39,8 +39,29 @@ List<CategoryShare> categoryShares(Map<String, int> totals, {int top = 5}) {
   ];
 }
 
-/// Whole percent for a legend row, so a list of rows reads 44, 30, 26.
-int sharePercent(CategoryShare share) => (share.fraction * 100).round();
+/// Whole percents for [shares], in order, that always total 100 (largest
+/// remainder): each share gets its floor, then the shares that lost the most
+/// to rounding get one more point until the total is reached. Ties go to the
+/// earlier (bigger) share. Rounding each share alone can total 99 or 101.
+List<int> sharePercents(List<CategoryShare> shares) => largestRemainderPercents([for (final share in shares) share.minor]);
+
+/// Largest-remainder split of [amounts] into whole percents summing to 100.
+/// Non-positive amounts get 0; all-zero input gives all zeros. Exact on ints.
+List<int> largestRemainderPercents(List<int> amounts) {
+  final total = amounts.fold<int>(0, (sum, amount) => sum + (amount > 0 ? amount : 0));
+  if (total == 0) return [for (final _ in amounts) 0];
+  final scaled = [for (final amount in amounts) amount > 0 ? amount * 100 : 0];
+  final floors = [for (final value in scaled) value ~/ total];
+  final remainders = [for (final value in scaled) value % total];
+  final shortfall = 100 - floors.fold<int>(0, (sum, value) => sum + value);
+  final byRemainder = [for (var index = 0; index < amounts.length; index++) index]
+    ..sort((a, b) {
+      final larger = remainders[b].compareTo(remainders[a]);
+      return larger != 0 ? larger : a.compareTo(b);
+    });
+  final bumped = byRemainder.take(shortfall).toSet();
+  return [for (var index = 0; index < amounts.length; index++) floors[index] + (bumped.contains(index) ? 1 : 0)];
+}
 
 /// Rotation (degrees, fl_chart `startDegreeOffset`) that puts the middle of
 /// slice [index] at 12 o'clock; 0 when nothing is selected.

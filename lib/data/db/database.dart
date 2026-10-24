@@ -109,8 +109,30 @@ class EntryItems extends Table with SyncColumns {
   IntColumn get amountMinor => integer()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
+  /// A common line (tax, delivery, service charge) in a by-item group split:
+  /// split equally among everyone holding a non-shared item.
+  BoolColumn get isShared => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// Who shares one line item of a by-item group split. The id is
+/// `'<entryItemId>:<memberId>'`, so re-assigning a member revives the same row.
+/// The materialised result still lands in Splits, so balances read only Splits.
+@TableIndex(name: 'item_assignments_entry_item_id', columns: {#entryItemId})
+class ItemAssignments extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get entryItemId => text()();
+  TextColumn get memberId => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {entryItemId, memberId},
+      ];
 }
 
 class Groups extends Table with SyncColumns {
@@ -302,6 +324,7 @@ class EntryFieldValues extends Table with SyncColumns {
 /// reminders, recurring-expense prompts and the like share history and sync.
 @TableIndex(name: 'reminders_group_id', columns: {#groupId})
 @TableIndex(name: 'reminders_status_due', columns: {#status, #dueAt})
+@TableIndex(name: 'reminders_project_id', columns: {#projectId})
 class Reminders extends Table with SyncColumns {
   TextColumn get id => text()();
 
@@ -366,6 +389,17 @@ class Reminders extends Table with SyncColumns {
   /// The next occurrence spawned when this repeating reminder was paid or skipped,
   /// so undo can remove it again.
   TextColumn get nextId => text().nullable()();
+
+  // Document reminders (v14): PUC, passport, insurance and other renewals.
+
+  /// Project the reminder belongs to (projects.id), e.g. the Vehicle project's PUC.
+  TextColumn get projectId => text().nullable()();
+
+  /// Policy, registration or document number, kept for reference.
+  TextColumn get documentNumber => text().withDefault(const Constant(''))();
+
+  /// Document preset the reminder was made from (lib/domain/reminders/document_presets.dart).
+  TextColumn get presetKey => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -501,12 +535,13 @@ class GroupActivities extends Table with SyncColumns {
   EntryPayers,
   RecurringRules,
   GroupActivities,
+  ItemAssignments,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -567,8 +602,16 @@ class AppDatabase extends _$AppDatabase {
           // v12: due reminders (bills, EMIs, cards, documents) on the v5 reminders
           // table: new columns only, so existing rows are kept as they are.
           if (from < 12) await _upgradeToDueReminders(m, from);
-          // v13: recurring group expenses (groups parity) on recurring_rules.
-          if (from < 13) await _upgradeToGroupRecurring(m);
+          // v13: by-item group splits, shared lines and who shares each item.
+          if (from < 13) {
+            await m.addColumn(entryItems, entryItems.isShared);
+            await m.createTable(itemAssignments);
+            await m.createIndex(itemAssignmentsEntryItemId);
+          }
+          // v14: document reminders link to a project and keep a document number.
+          if (from < 14) await _upgradeToDocumentReminders(m, from);
+          // v15: recurring group expenses (groups parity) on recurring_rules.
+          if (from < 15) await _upgradeToGroupRecurring(m);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -599,7 +642,26 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// v13 step. Lets recurring rules post into a group: recurring_rules gains
+  /// v14 step. A v5..v13 reminders table gains the project link, document
+  /// number and preset key it lacks (a table created at v5 or later by this
+  /// version already has them), plus the project index. Checking what exists
+  /// keeps it idempotent, and it heals pre-release builds of this feature,
+  /// which added these columns as schema 7 and so skipped main's v7 recurring
+  /// step.
+  Future<void> _upgradeToDocumentReminders(Migrator m, int from) async {
+    if (from >= 5) {
+      final existing = await _columnNames('reminders');
+      for (final column in documentReminderColumns(reminders)) {
+        if (!existing.contains(column.name)) await m.addColumn(reminders, column);
+      }
+    }
+    if (!await _schemaObjectExists('index', 'reminders_project_id')) await m.createIndex(remindersProjectId);
+    if (!await _schemaObjectExists('table', 'recurring_rules')) await m.createTable(recurringRules);
+    if (!(await _columnNames('entries')).contains('recurring_id')) await m.addColumn(entries, entries.recurringId);
+    if (!await _schemaObjectExists('index', 'entries_recurring_id')) await m.createIndex(entriesRecurringId);
+  }
+
+  /// v15 step. Lets recurring rules post into a group: recurring_rules gains
   /// the group columns it lacks (a table created at v7 or later by this version
   /// already has them). Checking what exists keeps it idempotent, and also
   /// heals pre-release builds of this feature, which stored these columns as
@@ -798,3 +860,6 @@ List<GeneratedColumn> dueReminderColumns($RemindersTable table) => [
       table.snoozedUntil,
       table.nextId,
     ];
+
+/// Columns v14 added to [Reminders]; a v13 database gains exactly these.
+List<GeneratedColumn> documentReminderColumns($RemindersTable table) => [table.projectId, table.documentNumber, table.presetKey];

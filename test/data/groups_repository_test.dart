@@ -297,6 +297,49 @@ void main() {
     });
   });
 
+  group('item assignments', () {
+    const entryId = 'pizza-night';
+
+    Future<void> savePizza(Map<String, List<String>>? assignments, {List<String> itemIds = const ['pizza', 'coke']}) => entries.saveEntry(
+          EntriesRepository.newExpense(id: entryId, amountMinor: 80000, occurredAt: DateTime(2026, 10, 3), groupId: 'g1', paidByMemberId: 'me', splitMethod: 'byItem'),
+          items: [
+            for (final itemId in itemIds) EntryItemsCompanion.insert(id: itemId, entryId: entryId, name: itemId, unitPriceMinor: 40000, amountMinor: 40000),
+          ],
+          itemAssignments: assignments,
+        );
+
+    test('save and load who shares each item', () async {
+      await savePizza({'pizza': ['me', 'rahul'], 'coke': ['rahul']});
+      expect(await entries.getItemAssignments(entryId), {'pizza': ['me', 'rahul'], 'coke': ['rahul']});
+    });
+
+    test('saving again replaces assignments and revives a re-added member', () async {
+      await savePizza({'pizza': ['me', 'rahul'], 'coke': ['rahul']});
+      await savePizza({'pizza': ['me'], 'coke': ['rahul']});
+      expect(await entries.getItemAssignments(entryId), {'pizza': ['me'], 'coke': ['rahul']});
+      await savePizza({'pizza': ['me', 'rahul'], 'coke': ['rahul']});
+      expect((await entries.getItemAssignments(entryId))['pizza'], unorderedEquals(['me', 'rahul']));
+      expect(await db.select(db.itemAssignments).get(), hasLength(3), reason: 'one row per item and member, reused');
+    });
+
+    test('null keeps assignments, an empty map clears them, a dropped item hides its row', () async {
+      await savePizza({'pizza': ['me'], 'coke': ['rahul']});
+      await savePizza(null);
+      expect(await entries.getItemAssignments(entryId), hasLength(2));
+      await savePizza(null, itemIds: ['pizza']);
+      expect(await entries.getItemAssignments(entryId), {'pizza': ['me']});
+      await savePizza(const {});
+      expect(await entries.getItemAssignments(entryId), isEmpty);
+    });
+
+    test('deleting the entry tombstones its assignments', () async {
+      await savePizza({'pizza': ['me']});
+      await entries.deleteEntry(entryId);
+      final rows = await db.select(db.itemAssignments).get();
+      expect(rows.single.deletedAt, isNotNull);
+    });
+  });
+
   group('group settings', () {
     test('a new group is an active other-type group with an equal default split', () async {
       final groupId = await groups.createGroup(name: 'Flat', icon: 'groups', myName: 'Me');

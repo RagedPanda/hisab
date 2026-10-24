@@ -3369,6 +3369,36 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get byItemShared => 'साझा';
+
+  @override
+  String get byItemSharedHelp => 'जिनके पास कोई आइटम है, उनमें बराबर बँटेगा';
+
+  @override
+  String get byItemOnlyMe => 'सिर्फ़ मैं';
+
+  @override
+  String get byItemEveryone => 'सभी';
+
+  @override
+  String get byItemAddExtras => 'डिलीवरी, टैक्स या टिप';
+
+  @override
+  String get byItemHint => 'आइटम के हिसाब से बाँटने के लिए आइटम जोड़ें';
+
+  @override
+  String byItemSummary(String amount, int count, int percent) {
+    return '$amount · $count आइटम · $percent%';
+  }
+
+  @override
+  String get byItemClearTitle => 'आइटम का बँटवारा हट जाएगा';
+
+  @override
+  String get byItemClearBody =>
+      'आइटम बने रहेंगे, और हर आइटम फिर सब में बँटेगा।';
+
+  @override
   String get smsAddedMarker => 'एसएमएस से जोड़ा गया';
 
   @override
@@ -3647,6 +3677,74 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get salaryDetectionHelp =>
       'कोई आमदनी वेतन मानी जाती है जब रकम इतनी क़रीब हो और वह इससे पहले न आए, या इस चक्र में बाद में कभी भी आए।';
+
+  @override
+  String get documentRemindersSection => 'दस्तावेज़ और नवीनीकरण';
+
+  @override
+  String get documentRemindersHint =>
+      'पीयूसी, बीमा, पासपोर्ट और अन्य समाप्ति तिथियाँ';
+
+  @override
+  String get documentPresetVehicleInsurance => 'वाहन बीमा';
+
+  @override
+  String get documentPresetPuc => 'पीयूसी प्रमाणपत्र';
+
+  @override
+  String get documentPresetRcRenewal => 'आरसी नवीनीकरण';
+
+  @override
+  String get documentPresetDrivingLicence => 'ड्राइविंग लाइसेंस';
+
+  @override
+  String get documentPresetPassport => 'पासपोर्ट';
+
+  @override
+  String get documentPresetHealthInsurance => 'स्वास्थ्य बीमा प्रीमियम';
+
+  @override
+  String get documentPresetLifeInsurance => 'जीवन बीमा प्रीमियम';
+
+  @override
+  String get documentPresetWarranty => 'वारंटी समाप्ति';
+
+  @override
+  String get documentPresetAmc => 'एएमसी नवीनीकरण';
+
+  @override
+  String get documentPresetFdMaturity => 'एफ़डी परिपक्वता';
+
+  @override
+  String get documentPresetPropertyTax => 'संपत्ति कर';
+
+  @override
+  String get documentPresetRentAgreement => 'किराया अनुबंध नवीनीकरण';
+
+  @override
+  String get documentNumberLabel => 'दस्तावेज़ संख्या (वैकल्पिक)';
+
+  @override
+  String get documentNumberHint => 'पॉलिसी, पंजीकरण या प्रमाणपत्र संख्या';
+
+  @override
+  String get documentRemindersOnProject => 'रिमाइंडर';
+
+  @override
+  String get reminderRepeatHalfYearly => 'हर 6 महीने';
+
+  @override
+  String get reminderRepeatElevenMonths => 'हर 11 महीने';
+
+  @override
+  String get reminderRepeatFiveYears => 'हर 5 साल';
+
+  @override
+  String get reminderRepeatTenYears => 'हर 10 साल';
+
+  @override
+  String get documentPucOlderVehicleHint =>
+      'पुराने वाहनों (BS-IV से पहले) को हर 6 महीने पीयूसी चाहिए।';
 
   @override
   String settleReminderTitle(String group) {

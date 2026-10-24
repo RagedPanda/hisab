@@ -316,6 +316,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               icon: const Icon(Icons.delete_outline),
               onPressed: () async {
                 if (await confirmDialog(context, title: l10n.deleteEntryQuestion)) {
+                  if (_groupId != null) {
+                    await _deleteGroupExpense(_existingId!);
+                    if (context.mounted) popOrGoHome(context);
+                    return;
+                  }
                   await ref.read(entriesRepositoryProvider).deleteEntry(_existingId!);
                   if (_previousSnapshot != null) {
                     await ref.read(accountsRepositoryProvider).applyBalanceDeltas(deleteDeltas(_previousSnapshot!));
@@ -733,7 +738,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       projectId: projectId,
     ).copyWith(toAccountId: Value(_kind == 'transfer' ? _toAccountId : null));
     final weights = {for (final i in _splitInputs) i.memberId: i};
-    await ref.read(entriesRepositoryProvider).saveEntry(
+    // Group expenses go through the groups repository so the change is logged.
+    final save = _groupId == null ? ref.read(entriesRepositoryProvider).saveEntry : ref.read(groupsRepositoryProvider).saveGroupExpense;
+    await save(
           entry,
           items: [for (final draft in _items) draft.toCompanion(id)],
           splits: [
@@ -769,6 +776,16 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     } else {
       popOrGoHome(context);
     }
+  }
+
+  /// Deletes a group expense (logged in its activity) and offers Undo on the
+  /// screen underneath, since this one closes.
+  Future<void> _deleteGroupExpense(String entryId) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    final groups = ref.read(groupsRepositoryProvider);
+    await groups.deleteGroupExpense(entryId);
+    showUndoSnackBar(messenger, message: l10n.activityExpenseDeletedSnack, undoLabel: l10n.undo, onUndo: () => groups.restoreGroupExpense(entryId));
   }
 
   /// Turns the entry just saved into the first occurrence of a new rule.

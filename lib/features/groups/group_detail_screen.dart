@@ -74,6 +74,8 @@ class GroupDetailScreen extends ConsumerWidget {
               onSelected: (value) async {
                 final repo = ref.read(groupsRepositoryProvider);
                 switch (value) {
+                  case 'activity':
+                    context.push('/groups/${group.id}/activity');
                   case 'rename':
                     final name = await promptText(context, title: l10n.renameGroup, initial: group.name);
                     if (name != null && name.isNotEmpty) await repo.updateGroup(GroupsCompanion(id: Value(group.id), name: Value(name)));
@@ -87,6 +89,7 @@ class GroupDetailScreen extends ConsumerWidget {
                 }
               },
               itemBuilder: (_) => [
+                PopupMenuItem(value: 'activity', child: Text(l10n.activityTitle)),
                 PopupMenuItem(value: 'rename', child: Text(l10n.rename)),
                 PopupMenuItem(value: 'simplify', child: Text(group.simplifyDebts ? l10n.simplifyOff : l10n.simplifyOn)),
                 PopupMenuItem(value: 'delete', child: Text(l10n.deleteGroup)),

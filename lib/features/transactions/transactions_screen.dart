@@ -98,7 +98,7 @@ class TransactionsScreen extends ConsumerWidget {
       final facts = entryFacts(context, d);
       return matchesEntryFilter(routeFilter, facts) && matchesEntryFilter(filter, facts) && matchesSearch(search, facts);
     }).toList();
-    final groups = _groupByDay(entries);
+    final groups = groupConsecutiveByDay(entries, (details) => details.entry.occurredAt);
     final narrowed = search.trim().isNotEmpty || !filter.isEmpty || kindFilter != null || !routeFilters.isEmpty;
     void clearAll() {
       ref.read(_searchProvider.notifier).set('');
@@ -175,7 +175,7 @@ class TransactionsScreen extends ConsumerWidget {
                         itemCount: groups.length,
                         itemBuilder: (context, index) {
                           final group = groups[index];
-                          final dayTotal = group.entries.where((d) => d.entry.kind == 'expense').fold(0, (sum, d) => sum + d.myAmountMinor);
+                          final dayTotal = group.items.where((d) => d.entry.kind == 'expense').fold(0, (sum, d) => sum + d.myAmountMinor);
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -188,7 +188,7 @@ class TransactionsScreen extends ConsumerWidget {
                               ),
                               Card(
                                 child: Column(children: [
-                                  for (final details in group.entries)
+                                  for (final details in group.items)
                                     EntryTile(details: details, onTap: () => context.push('/entry?id=${details.entry.id}')),
                                 ]),
                               ),
@@ -202,22 +202,6 @@ class TransactionsScreen extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _DayGroup {
-  _DayGroup(this.day) : entries = [];
-  final DateTime day;
-  final List<EntryDetails> entries;
-}
-
-List<_DayGroup> _groupByDay(List<EntryDetails> entries) {
-  final groups = <_DayGroup>[];
-  for (final details in entries) {
-    final day = startOfDay(details.entry.occurredAt);
-    if (groups.isEmpty || groups.last.day != day) groups.add(_DayGroup(day));
-    groups.last.entries.add(details);
-  }
-  return groups;
 }
 
 class _RouteFilterChip extends StatelessWidget {

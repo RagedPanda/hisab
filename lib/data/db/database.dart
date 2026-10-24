@@ -386,6 +386,33 @@ class SmsLog extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Who added, edited, deleted or restored which group expense or payment,
+/// and when, with the state before and after as JSON snapshots (see
+/// `domain/split/group_activity.dart`).
+@TableIndex(name: 'group_activities_group_id', columns: {#groupId})
+class GroupActivities extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get groupId => text()();
+
+  /// added | edited | deleted | restored
+  TextColumn get action => text()();
+
+  /// expense | payment
+  TextColumn get subjectKind => text()();
+
+  /// The entry or settlement id.
+  TextColumn get subjectId => text()();
+
+  /// The member who made the change; the device's own member until sync.
+  TextColumn get actorMemberId => text().nullable()();
+  DateTimeColumn get occurredAt => dateTime()();
+  TextColumn get beforeJson => text().nullable()();
+  TextColumn get afterJson => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   Accounts,
   Categories,
@@ -403,12 +430,13 @@ class SmsLog extends Table {
   Reminders,
   EntryPayers,
   RecurringRules,
+  GroupActivities,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -452,6 +480,12 @@ class AppDatabase extends _$AppDatabase {
           }
           // v8: SMS history can be cleared without forgetting processed messages.
           if (from < 8) await m.addColumn(smsLog, smsLog.clearedAt);
+          // v10: group activity log (groups parity, undo and history).
+          // v9 is reserved for another in-flight migration.
+          if (from < 10) {
+            await m.createTable(groupActivities);
+            await m.createIndex(groupActivitiesGroupId);
+          }
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');

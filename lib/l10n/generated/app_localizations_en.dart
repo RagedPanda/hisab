@@ -2582,6 +2582,141 @@ class AppLocalizationsEn extends AppLocalizations {
   String get youInList => 'you';
 
   @override
+  String get activityTitle => 'Activity';
+
+  @override
+  String get activityEmptyTitle => 'No activity yet';
+
+  @override
+  String get activityEmptyBody =>
+      'Expenses and payments you add, edit or delete show up here.';
+
+  @override
+  String activityExpenseAdded(String actor, String title) {
+    return '$actor added “$title”';
+  }
+
+  @override
+  String activityExpenseEdited(String actor, String title) {
+    return '$actor edited “$title”';
+  }
+
+  @override
+  String activityExpenseDeleted(String actor, String title) {
+    return '$actor deleted “$title”';
+  }
+
+  @override
+  String activityExpenseRestored(String actor, String title) {
+    return '$actor restored “$title”';
+  }
+
+  @override
+  String activityPaymentAdded(String actor) {
+    return '$actor recorded a payment';
+  }
+
+  @override
+  String activityPaymentEdited(String actor) {
+    return '$actor edited a payment';
+  }
+
+  @override
+  String activityPaymentDeleted(String actor) {
+    return '$actor removed a payment';
+  }
+
+  @override
+  String activityPaymentRestored(String actor) {
+    return '$actor restored a payment';
+  }
+
+  @override
+  String activityExpenseLine(String amount, String payers) {
+    return '$amount · paid by $payers';
+  }
+
+  @override
+  String activityPaymentLine(String from, String to, String amount) {
+    return '$from paid $to $amount';
+  }
+
+  @override
+  String activityChangeAmount(String from, String to) {
+    return 'Amount: $from → $to';
+  }
+
+  @override
+  String activityChangeDate(String from, String to) {
+    return 'Date: $from → $to';
+  }
+
+  @override
+  String activityChangeDescription(String from, String to) {
+    return 'Description: $from → $to';
+  }
+
+  @override
+  String activityChangeCategory(String from, String to) {
+    return 'Category: $from → $to';
+  }
+
+  @override
+  String activityChangePayers(String from, String to) {
+    return 'Paid by: $from → $to';
+  }
+
+  @override
+  String activityPayerAmount(String name, String amount) {
+    return '$name $amount';
+  }
+
+  @override
+  String activityChangeShare(String name, String from, String to) {
+    return '$name\'s share: $from → $to';
+  }
+
+  @override
+  String activityChangeMyShare(String from, String to) {
+    return 'Your share: $from → $to';
+  }
+
+  @override
+  String activityChangeParties(String from, String to) {
+    return 'Who paid whom: $from → $to';
+  }
+
+  @override
+  String activityPartiesPair(String from, String to) {
+    return '$from to $to';
+  }
+
+  @override
+  String activityChangeMethod(String from, String to) {
+    return 'Method: $from → $to';
+  }
+
+  @override
+  String activityChangeNote(String from, String to) {
+    return 'Note: $from → $to';
+  }
+
+  @override
+  String get activityNone => 'none';
+
+  @override
+  String get activityRestore => 'Restore';
+
+  @override
+  String get activityExpenseRestoredSnack => 'Expense restored';
+
+  @override
+  String get activityExpenseDeletedSnack => 'Expense deleted';
+
+  @override
+  String get activityAllGroups => 'All groups';
+
+  @override
   String recurringAddedSkipped(int added, int skipped) {
     String _temp0 = intl.Intl.pluralLogic(
       added,

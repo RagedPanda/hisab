@@ -9,6 +9,21 @@ import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/domain/sms/sms_transaction_key.dart';
 
+/// Undoes the v18 step (the payee category memory table) on a database
+/// created at the current schema, so older rewinds start from v17.
+Future<void> dropVersion18(AppDatabase db) async {
+  await db.customStatement('DROP TABLE payee_categories');
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 17
+/// (credit card columns, but no payee category memory).
+Future<void> rewindToVersion17(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
+  await db.customStatement('PRAGMA user_version = 17');
+  await db.close();
+}
+
 /// Undoes the v17 step (credit card columns on accounts) on a database
 /// created at the current schema, so older rewinds start from v16.
 Future<void> dropVersion17(AppDatabase db) async {
@@ -21,6 +36,7 @@ Future<void> dropVersion17(AppDatabase db) async {
 /// (SMS-to-reminder link, but no credit card columns).
 Future<void> rewindToVersion16(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await db.customStatement('PRAGMA user_version = 16');
   await db.close();
@@ -30,6 +46,7 @@ Future<void> rewindToVersion16(File file) async {
 /// which already had the credit card columns at a lower schema number.
 Future<void> rewindToPreReleaseCardDetails(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion16(db);
   await dropVersion15(db);
   await dropVersion14(db);
@@ -112,6 +129,7 @@ Future<void> dropVersion7(AppDatabase db) async {
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -141,6 +159,7 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -165,6 +184,7 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -188,6 +208,7 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -210,6 +231,7 @@ Future<void> rewindToVersion4(File file) async {
 /// rules).
 Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -229,6 +251,7 @@ Future<void> rewindToVersion5(File file) async {
 /// (entry payers, but no recurring rules).
 Future<void> rewindToVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -248,6 +271,7 @@ Future<void> rewindToVersion6(File file) async {
 /// schema 6 without main's v6 entry_payers, v7 and v8 steps.
 Future<void> rewindToPreReleaseRemindersVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -266,6 +290,7 @@ Future<void> rewindToPreReleaseRemindersVersion6(File file) async {
 /// (recurring rules, but SMS history could not be cleared).
 Future<void> rewindToVersion7(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -283,6 +308,7 @@ Future<void> rewindToVersion7(File file) async {
 /// (SMS history clearing, but no group activity log and no due-reminder columns).
 Future<void> rewindToVersion8(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -299,6 +325,7 @@ Future<void> rewindToVersion8(File file) async {
 /// (group activity log, but no group settings and no due-reminder columns).
 Future<void> rewindToVersion10(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -314,6 +341,7 @@ Future<void> rewindToVersion10(File file) async {
 /// (group settings, but no due-reminder columns).
 Future<void> rewindToVersion11(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -328,6 +356,7 @@ Future<void> rewindToVersion11(File file) async {
 /// (due-reminder columns, but no by-item assignments or SMS-to-reminder link).
 Future<void> rewindToVersion12(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -343,6 +372,7 @@ Future<void> rewindToVersion12(File file) async {
 /// never ran.
 Future<void> rewindToSmsMatchPreReleaseVersion7(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion15(db);
   await dropVersion14(db);
@@ -361,6 +391,7 @@ Future<void> rewindToSmsMatchPreReleaseVersion7(File file) async {
 /// reminders as schema 9 without main's v8 sms_log.cleared_at.
 Future<void> rewindToGroupRecurringQaVersion9(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion14(db);
@@ -376,6 +407,7 @@ Future<void> rewindToGroupRecurringQaVersion9(File file) async {
 /// added the due-reminder columns as schema 9 before v10 existed.
 Future<void> rewindToRemindersQaVersion9(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -391,6 +423,7 @@ Future<void> rewindToRemindersQaVersion9(File file) async {
 /// (group recurring rules, but no SMS-to-reminder link).
 Future<void> rewindToVersion15(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await db.customStatement('PRAGMA user_version = 15');
@@ -401,6 +434,7 @@ Future<void> rewindToVersion15(File file) async {
 /// (document reminders, but recurring rules cannot post into a group).
 Future<void> rewindToVersion14(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -412,6 +446,7 @@ Future<void> rewindToVersion14(File file) async {
 /// (by-item assignments, but no project link or document number).
 Future<void> rewindToVersion13(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -425,6 +460,7 @@ Future<void> rewindToVersion13(File file) async {
 /// under schema 7 without main's v7, v8, v10 and v11 steps.
 Future<void> rewindToDocumentRemindersPreReleaseVersion7(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
   await dropVersion17(db);
   await dropVersion16(db);
   await dropVersion15(db);
@@ -874,6 +910,51 @@ void main() {
     expect(await db.select(db.recurringRules).get(), isEmpty, reason: 'main\'s v7 recurring table is healed in');
     expect(await db.select(db.entryPayers).get(), isEmpty);
     expect(await db.select(db.groupActivities).get(), isEmpty);
+    await db.close();
+  });
+
+  for (final (from, rewind) in [(5, rewindToVersion5), (10, rewindToVersion10), (13, rewindToVersion13), (15, rewindToVersion15), (16, rewindToVersion16), (17, rewindToVersion17)]) {
+    test('upgrading from schema $from with data adds the payee category memory and keeps entries and SMS', () async {
+      final seed = AppDatabase(NativeDatabase(file));
+      final cash = (await seed.select(seed.accounts).get()).first;
+      await EntriesRepository(seed).saveEntry(EntriesRepository.newExpense(id: 'e1', kind: 'expense', amountMinor: 45900, occurredAt: DateTime(2026, 10, 21), accountId: cash.id, payee: 'Rahul Sharma', source: 'sms', smsId: 's1'));
+      await seed.into(seed.smsLog).insert(SmsLogCompanion.insert(id: 's1', sender: 'HDFCBK', body: 'Rs 459 debited to rahul.sharma@okaxis', receivedAt: DateTime(2026, 10, 21), status: 'added', entryId: const Value('e1')));
+      await seed.close();
+      await rewind(file);
+
+      final db = AppDatabase(NativeDatabase(file));
+      final version = await db.customSelect('PRAGMA user_version').getSingle();
+      expect(version.data['user_version'], db.schemaVersion);
+      expect((await db.select(db.entries).getSingle()).payee, 'Rahul Sharma', reason: 'existing entries survive the upgrade');
+      expect((await db.select(db.smsLog).getSingle()).entryId, 'e1');
+      expect(await db.select(db.payeeCategories).get(), isEmpty);
+      await db.into(db.payeeCategories).insert(PayeeCategoriesCompanion.insert(id: 'expense|vpa:rahul.sharma@okaxis', payee: 'Rahul Sharma', categoryId: 'c1'));
+      expect((await db.select(db.payeeCategories).getSingle()).categoryId, 'c1');
+      await db.close();
+    });
+  }
+
+  test('the payee memory step is idempotent when a pre-release build already made the table', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.payeeCategories).insert(PayeeCategoriesCompanion.insert(id: 'expense|name:swiggy', payee: 'Swiggy', categoryId: 'c9'));
+    await seed.customStatement('PRAGMA user_version = 17');
+    await seed.close();
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    expect((await db.select(db.payeeCategories).getSingle()).categoryId, 'c9', reason: 'the existing table and its rows are kept');
+    await db.close();
+  });
+
+  test('a fresh install at schema 18 has the payee category memory table', () async {
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], 18);
+    final tables = await db.customSelect("SELECT name FROM sqlite_master WHERE type = 'table'").get();
+    expect(tables.map((row) => row.data['name']), contains('payee_categories'));
+    await db.into(db.payeeCategories).insert(PayeeCategoriesCompanion.insert(id: 'income|vpa:9876543210@ybl', payee: '9876543210@ybl', categoryId: 'c2'));
+    expect((await db.select(db.payeeCategories).getSingle()).deletedAt, isNull);
     await db.close();
   });
 

@@ -100,6 +100,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   Group? _group;
   String _source = 'manual';
   String? _smsId;
+
+  /// Category the screen opened with, so a change on an SMS entry is remembered for its payee.
+  String? _loadedCategoryId;
   bool _loaded = false;
   bool _saving = false;
   String? _existingId;
@@ -256,6 +259,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     await _loadProjectFields();
     if (_category != null) await _refreshSuggestions();
     _openedWith = _draft;
+    _loadedCategoryId = _category?.id;
     if (mounted) setState(() => _loaded = true);
   }
 
@@ -324,7 +328,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _payeeController.text = (parsed['counterparty'] as String?) ?? '';
     _source = 'sms';
     final categoryKey = parsed['suggestedCategory'] as String?;
-    if (categoryKey != null) _category = await ref.read(categoriesRepositoryProvider).findBySeedKey(categoryKey);
+    // A category the user chose for this payee before wins over the keyword rules.
+    _category = await ref.read(smsIngestServiceProvider).rememberedCategoryFor(kind: _kind, counterparty: parsed['counterparty'] as String?);
+    if (_category == null && categoryKey != null) _category = await ref.read(categoriesRepositoryProvider).findBySeedKey(categoryKey);
     final accountKey = parsed['accountKey'] as String?;
     if (accountKey != null) _accountId = (await ref.read(accountsRepositoryProvider).findBySmsKey(accountKey))?.id;
   }
@@ -946,6 +952,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     await _applyBalanceChange(amount);
     if (_canRepeat && _repeat != null) await _startRule(_repeat!, entry);
     if (_smsId != null) await ref.read(smsLogRepositoryProvider).setStatus(_smsId!, 'added', entryId: id);
+    final pickedCategoryId = _category?.id;
+    if (_source == 'sms' && _smsId != null && _kind != 'transfer' && pickedCategoryId != null && pickedCategoryId != _loadedCategoryId) {
+      await ref.read(smsIngestServiceProvider).rememberCategoryForSms(_smsId!, pickedCategoryId);
+    }
     if (widget.reminderId != null && !_isEditing) {
       await ref.read(reminderSchedulerProvider).markDone(widget.reminderId!, entryId: id);
       messenger.showSnackBar(SnackBar(content: Text(l10n.reminderMarkedPaid)));

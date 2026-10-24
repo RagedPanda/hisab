@@ -8,7 +8,10 @@ import '../../../core/format.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../data/db/database.dart';
+import '../../../data/repositories/payee_category_repository.dart';
+import '../../../domain/sms/payee_category_memory.dart';
 import '../../../domain/sms/payee_normaliser.dart';
+import '../../categories/category_picker.dart';
 import '../../../l10n/category_names.dart';
 import '../../../l10n/l10n.dart';
 import '../../shell/widgets/common.dart';
@@ -32,7 +35,14 @@ class SmsReviewCard extends ConsumerWidget {
     final smsLog = ref.read(smsLogRepositoryProvider);
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
     final categoryKey = parsed?['suggestedCategory'] as String?;
-    final category = categoryKey == null ? null : categories.where((c) => c.seedKey == categoryKey).firstOrNull;
+    final memory = ref.watch(payeeMemoryProvider).value ?? const <String, String>{};
+    final payee = parsedSmsPayee(row.parsedJson);
+    final rememberedId = payee == null ? null : rememberedCategoryId(memory, kind: payee.kind, raw: payee.counterparty);
+    final remembered = categories.where((c) => c.id == rememberedId).firstOrNull;
+    final category = isUsablePayeeCategory(remembered, payee?.kind ?? kPayeeExpense)
+        ? remembered
+        : (categoryKey == null ? null : categories.where((c) => c.seedKey == categoryKey).firstOrNull);
+    final asksForCategory = payee != null && asksForPayeeCategory(payee, memory);
     final occurredAt = DateTime.tryParse(parsed?['occurredAt'] as String? ?? '') ?? row.receivedAt;
     final locale = Localizations.localeOf(context).toString();
     final counterparty = parsed?['counterparty'] as String?;
@@ -67,6 +77,7 @@ class SmsReviewCard extends ConsumerWidget {
                     ].join(' · '),
               style: theme.textTheme.bodySmall,
             ),
+            if (asksForCategory) _PayeeCategoryPrompt(smsId: row.id, kind: payee.kind, payee: normalisePayee(payee.counterparty!)),
             const SizedBox(height: 4),
             Text(row.body, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline)),
             Row(children: [
@@ -88,6 +99,41 @@ class SmsReviewCard extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Asks once for the category of a new person paid over UPI. Picking one
+/// remembers it for that payee (this card then shows it, and Add uses it);
+/// ignoring the prompt stores nothing.
+class _PayeeCategoryPrompt extends ConsumerWidget {
+  const _PayeeCategoryPrompt({required this.smsId, required this.kind, required this.payee});
+  final String smsId;
+  final String kind;
+  final String payee;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(children: [
+        Icon(Icons.person_outline, size: 18, color: theme.colorScheme.primary),
+        const SizedBox(width: 6),
+        Expanded(child: Text(l10n.smsPayeeAskTitle(payee), style: theme.textTheme.bodySmall)),
+        ActionChip(
+          label: Text(l10n.smsPayeePickCategory),
+          onPressed: () async {
+            final picked = await showCategoryPicker(context, kind: kind);
+            if (picked == null || !context.mounted) return;
+            final message = l10n.smsPayeeRemembered(picked.displayName(context), payee);
+            final messenger = ScaffoldMessenger.of(context);
+            await ref.read(smsIngestServiceProvider).rememberCategoryForSms(smsId, picked.id);
+            showTimedSnackBar(messenger, message);
+          },
+        ),
+      ]),
     );
   }
 }

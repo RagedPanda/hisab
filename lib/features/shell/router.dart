@@ -22,6 +22,7 @@ import '../salary/salary_reminder.dart';
 import '../settings/settings_screen.dart';
 import '../reminders/reminders_screen.dart';
 import '../sms/sms_history_screen.dart';
+import '../sms/sms_payees_screen.dart';
 import '../sms/sms_review_screen.dart';
 import '../upcoming/upcoming_calendar_screen.dart';
 import '../upcoming/upcoming_routes.dart';
@@ -136,5 +137,6 @@ final appRouter = GoRouter(
     GoRoute(path: '/sms', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: SmsScreen(sharedText: state.uri.queryParameters['text']))),
     GoRoute(path: '/sms/review', parentNavigatorKey: _rootKey, builder: (_, _) => const HomeFallbackPop(child: SmsReviewScreen())),
     GoRoute(path: '/sms/history', parentNavigatorKey: _rootKey, builder: (_, _) => const SmsHistoryScreen()),
+    GoRoute(path: '/sms/payees', parentNavigatorKey: _rootKey, builder: (_, _) => const SmsPayeesScreen()),
   ],
 );

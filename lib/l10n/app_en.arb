@@ -1386,5 +1386,18 @@
   "settleReminderPrePromptTitle": "Get reminded to settle up",
   "settleReminderPrePromptBody": "Hisab sends a notification on the day you choose, only to remind you to settle up with this group. No marketing.",
   "smsReminderPaidViaSms": "Paid via SMS",
-  "@smsReminderPaidViaSms": {"description": "Label on a reminder that a matching bank SMS marked done"}
+  "@smsReminderPaidViaSms": {"description": "Label on a reminder that a matching bank SMS marked done"},
+  "smsPayeesTitle": "Remembered payees",
+  "smsPayeesHelp": "Categories you chose for a payee, used for their next SMS",
+  "smsPayeesEmptyTitle": "No payees remembered yet",
+  "smsPayeesEmptyBody": "Change the category of an entry added from an SMS and Hisab uses it for that payee's next messages.",
+  "smsPayeeForget": "Forget {payee}",
+  "@smsPayeeForget": {"placeholders": {"payee": {"type": "String"}}},
+  "smsPayeeForgotten": "{payee} forgotten",
+  "@smsPayeeForgotten": {"placeholders": {"payee": {"type": "String"}}},
+  "smsPayeeAskTitle": "New person. Pick a category once for {payee}",
+  "@smsPayeeAskTitle": {"placeholders": {"payee": {"type": "String"}}},
+  "smsPayeePickCategory": "Pick category",
+  "smsPayeeRemembered": "Hisab will use {category} for {payee} from now on",
+  "@smsPayeeRemembered": {"placeholders": {"category": {"type": "String"}, "payee": {"type": "String"}}}
 }

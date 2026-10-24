@@ -24,7 +24,9 @@ class GroupsScreen extends ConsumerWidget {
     final totals = groupNetTotals(list.map((summary) => summary.myNetMinor));
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.groups)),
+      appBar: AppBar(title: Text(l10n.groups), actions: [
+        IconButton(tooltip: l10n.activityTitle, icon: const Icon(Icons.history), onPressed: () => context.push('/activity')),
+      ]),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'add-group',
         onPressed: () => showGroupForm(context, ref),

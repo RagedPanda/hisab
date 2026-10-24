@@ -12084,6 +12084,686 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
   }
 }
 
+class $GroupActivitiesTable extends GroupActivities
+    with TableInfo<$GroupActivitiesTable, GroupActivity> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GroupActivitiesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _actionMeta = const VerificationMeta('action');
+  @override
+  late final GeneratedColumn<String> action = GeneratedColumn<String>(
+    'action',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subjectKindMeta = const VerificationMeta(
+    'subjectKind',
+  );
+  @override
+  late final GeneratedColumn<String> subjectKind = GeneratedColumn<String>(
+    'subject_kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subjectIdMeta = const VerificationMeta(
+    'subjectId',
+  );
+  @override
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+    'subject_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _actorMemberIdMeta = const VerificationMeta(
+    'actorMemberId',
+  );
+  @override
+  late final GeneratedColumn<String> actorMemberId = GeneratedColumn<String>(
+    'actor_member_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _occurredAtMeta = const VerificationMeta(
+    'occurredAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> occurredAt = GeneratedColumn<DateTime>(
+    'occurred_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _beforeJsonMeta = const VerificationMeta(
+    'beforeJson',
+  );
+  @override
+  late final GeneratedColumn<String> beforeJson = GeneratedColumn<String>(
+    'before_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _afterJsonMeta = const VerificationMeta(
+    'afterJson',
+  );
+  @override
+  late final GeneratedColumn<String> afterJson = GeneratedColumn<String>(
+    'after_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    updatedAt,
+    deletedAt,
+    id,
+    groupId,
+    action,
+    subjectKind,
+    subjectId,
+    actorMemberId,
+    occurredAt,
+    beforeJson,
+    afterJson,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'group_activities';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GroupActivity> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
+    }
+    if (data.containsKey('action')) {
+      context.handle(
+        _actionMeta,
+        action.isAcceptableOrUnknown(data['action']!, _actionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_actionMeta);
+    }
+    if (data.containsKey('subject_kind')) {
+      context.handle(
+        _subjectKindMeta,
+        subjectKind.isAcceptableOrUnknown(
+          data['subject_kind']!,
+          _subjectKindMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_subjectKindMeta);
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(
+        _subjectIdMeta,
+        subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_subjectIdMeta);
+    }
+    if (data.containsKey('actor_member_id')) {
+      context.handle(
+        _actorMemberIdMeta,
+        actorMemberId.isAcceptableOrUnknown(
+          data['actor_member_id']!,
+          _actorMemberIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('occurred_at')) {
+      context.handle(
+        _occurredAtMeta,
+        occurredAt.isAcceptableOrUnknown(data['occurred_at']!, _occurredAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_occurredAtMeta);
+    }
+    if (data.containsKey('before_json')) {
+      context.handle(
+        _beforeJsonMeta,
+        beforeJson.isAcceptableOrUnknown(data['before_json']!, _beforeJsonMeta),
+      );
+    }
+    if (data.containsKey('after_json')) {
+      context.handle(
+        _afterJsonMeta,
+        afterJson.isAcceptableOrUnknown(data['after_json']!, _afterJsonMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GroupActivity map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GroupActivity(
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      action: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}action'],
+      )!,
+      subjectKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_kind'],
+      )!,
+      subjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_id'],
+      )!,
+      actorMemberId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}actor_member_id'],
+      ),
+      occurredAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}occurred_at'],
+      )!,
+      beforeJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}before_json'],
+      ),
+      afterJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}after_json'],
+      ),
+    );
+  }
+
+  @override
+  $GroupActivitiesTable createAlias(String alias) {
+    return $GroupActivitiesTable(attachedDatabase, alias);
+  }
+}
+
+class GroupActivity extends DataClass implements Insertable<GroupActivity> {
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String id;
+  final String groupId;
+
+  /// added | edited | deleted | restored
+  final String action;
+
+  /// expense | payment
+  final String subjectKind;
+
+  /// The entry or settlement id.
+  final String subjectId;
+
+  /// The member who made the change; the device's own member until sync.
+  final String? actorMemberId;
+  final DateTime occurredAt;
+  final String? beforeJson;
+  final String? afterJson;
+  const GroupActivity({
+    required this.updatedAt,
+    this.deletedAt,
+    required this.id,
+    required this.groupId,
+    required this.action,
+    required this.subjectKind,
+    required this.subjectId,
+    this.actorMemberId,
+    required this.occurredAt,
+    this.beforeJson,
+    this.afterJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['id'] = Variable<String>(id);
+    map['group_id'] = Variable<String>(groupId);
+    map['action'] = Variable<String>(action);
+    map['subject_kind'] = Variable<String>(subjectKind);
+    map['subject_id'] = Variable<String>(subjectId);
+    if (!nullToAbsent || actorMemberId != null) {
+      map['actor_member_id'] = Variable<String>(actorMemberId);
+    }
+    map['occurred_at'] = Variable<DateTime>(occurredAt);
+    if (!nullToAbsent || beforeJson != null) {
+      map['before_json'] = Variable<String>(beforeJson);
+    }
+    if (!nullToAbsent || afterJson != null) {
+      map['after_json'] = Variable<String>(afterJson);
+    }
+    return map;
+  }
+
+  GroupActivitiesCompanion toCompanion(bool nullToAbsent) {
+    return GroupActivitiesCompanion(
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      id: Value(id),
+      groupId: Value(groupId),
+      action: Value(action),
+      subjectKind: Value(subjectKind),
+      subjectId: Value(subjectId),
+      actorMemberId: actorMemberId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actorMemberId),
+      occurredAt: Value(occurredAt),
+      beforeJson: beforeJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(beforeJson),
+      afterJson: afterJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(afterJson),
+    );
+  }
+
+  factory GroupActivity.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GroupActivity(
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      id: serializer.fromJson<String>(json['id']),
+      groupId: serializer.fromJson<String>(json['groupId']),
+      action: serializer.fromJson<String>(json['action']),
+      subjectKind: serializer.fromJson<String>(json['subjectKind']),
+      subjectId: serializer.fromJson<String>(json['subjectId']),
+      actorMemberId: serializer.fromJson<String?>(json['actorMemberId']),
+      occurredAt: serializer.fromJson<DateTime>(json['occurredAt']),
+      beforeJson: serializer.fromJson<String?>(json['beforeJson']),
+      afterJson: serializer.fromJson<String?>(json['afterJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'id': serializer.toJson<String>(id),
+      'groupId': serializer.toJson<String>(groupId),
+      'action': serializer.toJson<String>(action),
+      'subjectKind': serializer.toJson<String>(subjectKind),
+      'subjectId': serializer.toJson<String>(subjectId),
+      'actorMemberId': serializer.toJson<String?>(actorMemberId),
+      'occurredAt': serializer.toJson<DateTime>(occurredAt),
+      'beforeJson': serializer.toJson<String?>(beforeJson),
+      'afterJson': serializer.toJson<String?>(afterJson),
+    };
+  }
+
+  GroupActivity copyWith({
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? id,
+    String? groupId,
+    String? action,
+    String? subjectKind,
+    String? subjectId,
+    Value<String?> actorMemberId = const Value.absent(),
+    DateTime? occurredAt,
+    Value<String?> beforeJson = const Value.absent(),
+    Value<String?> afterJson = const Value.absent(),
+  }) => GroupActivity(
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    id: id ?? this.id,
+    groupId: groupId ?? this.groupId,
+    action: action ?? this.action,
+    subjectKind: subjectKind ?? this.subjectKind,
+    subjectId: subjectId ?? this.subjectId,
+    actorMemberId: actorMemberId.present
+        ? actorMemberId.value
+        : this.actorMemberId,
+    occurredAt: occurredAt ?? this.occurredAt,
+    beforeJson: beforeJson.present ? beforeJson.value : this.beforeJson,
+    afterJson: afterJson.present ? afterJson.value : this.afterJson,
+  );
+  GroupActivity copyWithCompanion(GroupActivitiesCompanion data) {
+    return GroupActivity(
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      id: data.id.present ? data.id.value : this.id,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      action: data.action.present ? data.action.value : this.action,
+      subjectKind: data.subjectKind.present
+          ? data.subjectKind.value
+          : this.subjectKind,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      actorMemberId: data.actorMemberId.present
+          ? data.actorMemberId.value
+          : this.actorMemberId,
+      occurredAt: data.occurredAt.present
+          ? data.occurredAt.value
+          : this.occurredAt,
+      beforeJson: data.beforeJson.present
+          ? data.beforeJson.value
+          : this.beforeJson,
+      afterJson: data.afterJson.present ? data.afterJson.value : this.afterJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroupActivity(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('groupId: $groupId, ')
+          ..write('action: $action, ')
+          ..write('subjectKind: $subjectKind, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('actorMemberId: $actorMemberId, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('beforeJson: $beforeJson, ')
+          ..write('afterJson: $afterJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    updatedAt,
+    deletedAt,
+    id,
+    groupId,
+    action,
+    subjectKind,
+    subjectId,
+    actorMemberId,
+    occurredAt,
+    beforeJson,
+    afterJson,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GroupActivity &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.id == this.id &&
+          other.groupId == this.groupId &&
+          other.action == this.action &&
+          other.subjectKind == this.subjectKind &&
+          other.subjectId == this.subjectId &&
+          other.actorMemberId == this.actorMemberId &&
+          other.occurredAt == this.occurredAt &&
+          other.beforeJson == this.beforeJson &&
+          other.afterJson == this.afterJson);
+}
+
+class GroupActivitiesCompanion extends UpdateCompanion<GroupActivity> {
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String> id;
+  final Value<String> groupId;
+  final Value<String> action;
+  final Value<String> subjectKind;
+  final Value<String> subjectId;
+  final Value<String?> actorMemberId;
+  final Value<DateTime> occurredAt;
+  final Value<String?> beforeJson;
+  final Value<String?> afterJson;
+  final Value<int> rowid;
+  const GroupActivitiesCompanion({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.id = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.action = const Value.absent(),
+    this.subjectKind = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.actorMemberId = const Value.absent(),
+    this.occurredAt = const Value.absent(),
+    this.beforeJson = const Value.absent(),
+    this.afterJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GroupActivitiesCompanion.insert({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String id,
+    required String groupId,
+    required String action,
+    required String subjectKind,
+    required String subjectId,
+    this.actorMemberId = const Value.absent(),
+    required DateTime occurredAt,
+    this.beforeJson = const Value.absent(),
+    this.afterJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       groupId = Value(groupId),
+       action = Value(action),
+       subjectKind = Value(subjectKind),
+       subjectId = Value(subjectId),
+       occurredAt = Value(occurredAt);
+  static Insertable<GroupActivity> custom({
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? id,
+    Expression<String>? groupId,
+    Expression<String>? action,
+    Expression<String>? subjectKind,
+    Expression<String>? subjectId,
+    Expression<String>? actorMemberId,
+    Expression<DateTime>? occurredAt,
+    Expression<String>? beforeJson,
+    Expression<String>? afterJson,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (id != null) 'id': id,
+      if (groupId != null) 'group_id': groupId,
+      if (action != null) 'action': action,
+      if (subjectKind != null) 'subject_kind': subjectKind,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (actorMemberId != null) 'actor_member_id': actorMemberId,
+      if (occurredAt != null) 'occurred_at': occurredAt,
+      if (beforeJson != null) 'before_json': beforeJson,
+      if (afterJson != null) 'after_json': afterJson,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GroupActivitiesCompanion copyWith({
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String>? id,
+    Value<String>? groupId,
+    Value<String>? action,
+    Value<String>? subjectKind,
+    Value<String>? subjectId,
+    Value<String?>? actorMemberId,
+    Value<DateTime>? occurredAt,
+    Value<String?>? beforeJson,
+    Value<String?>? afterJson,
+    Value<int>? rowid,
+  }) {
+    return GroupActivitiesCompanion(
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      id: id ?? this.id,
+      groupId: groupId ?? this.groupId,
+      action: action ?? this.action,
+      subjectKind: subjectKind ?? this.subjectKind,
+      subjectId: subjectId ?? this.subjectId,
+      actorMemberId: actorMemberId ?? this.actorMemberId,
+      occurredAt: occurredAt ?? this.occurredAt,
+      beforeJson: beforeJson ?? this.beforeJson,
+      afterJson: afterJson ?? this.afterJson,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (action.present) {
+      map['action'] = Variable<String>(action.value);
+    }
+    if (subjectKind.present) {
+      map['subject_kind'] = Variable<String>(subjectKind.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (actorMemberId.present) {
+      map['actor_member_id'] = Variable<String>(actorMemberId.value);
+    }
+    if (occurredAt.present) {
+      map['occurred_at'] = Variable<DateTime>(occurredAt.value);
+    }
+    if (beforeJson.present) {
+      map['before_json'] = Variable<String>(beforeJson.value);
+    }
+    if (afterJson.present) {
+      map['after_json'] = Variable<String>(afterJson.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroupActivitiesCompanion(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('groupId: $groupId, ')
+          ..write('action: $action, ')
+          ..write('subjectKind: $subjectKind, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('actorMemberId: $actorMemberId, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('beforeJson: $beforeJson, ')
+          ..write('afterJson: $afterJson, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -12105,6 +12785,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $RemindersTable reminders = $RemindersTable(this);
   late final $EntryPayersTable entryPayers = $EntryPayersTable(this);
   late final $RecurringRulesTable recurringRules = $RecurringRulesTable(this);
+  late final $GroupActivitiesTable groupActivities = $GroupActivitiesTable(
+    this,
+  );
   late final Index entriesProjectId = Index(
     'entries_project_id',
     'CREATE INDEX entries_project_id ON entries (project_id)',
@@ -12133,6 +12816,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'entry_payers_entry_id',
     'CREATE INDEX entry_payers_entry_id ON entry_payers (entry_id)',
   );
+  late final Index groupActivitiesGroupId = Index(
+    'group_activities_group_id',
+    'CREATE INDEX group_activities_group_id ON group_activities (group_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -12154,6 +12841,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     reminders,
     entryPayers,
     recurringRules,
+    groupActivities,
     entriesProjectId,
     entriesRecurringId,
     projectFieldsProjectId,
@@ -12161,6 +12849,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     remindersGroupId,
     remindersStatusDue,
     entryPayersEntryId,
+    groupActivitiesGroupId,
   ];
 }
 
@@ -17917,6 +18606,339 @@ typedef $$RecurringRulesTableProcessedTableManager =
       RecurringRule,
       PrefetchHooks Function()
     >;
+typedef $$GroupActivitiesTableCreateCompanionBuilder =
+    GroupActivitiesCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      required String id,
+      required String groupId,
+      required String action,
+      required String subjectKind,
+      required String subjectId,
+      Value<String?> actorMemberId,
+      required DateTime occurredAt,
+      Value<String?> beforeJson,
+      Value<String?> afterJson,
+      Value<int> rowid,
+    });
+typedef $$GroupActivitiesTableUpdateCompanionBuilder =
+    GroupActivitiesCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String> id,
+      Value<String> groupId,
+      Value<String> action,
+      Value<String> subjectKind,
+      Value<String> subjectId,
+      Value<String?> actorMemberId,
+      Value<DateTime> occurredAt,
+      Value<String?> beforeJson,
+      Value<String?> afterJson,
+      Value<int> rowid,
+    });
+
+class $$GroupActivitiesTableFilterComposer
+    extends Composer<_$AppDatabase, $GroupActivitiesTable> {
+  $$GroupActivitiesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get action => $composableBuilder(
+    column: $table.action,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectKind => $composableBuilder(
+    column: $table.subjectKind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get actorMemberId => $composableBuilder(
+    column: $table.actorMemberId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get beforeJson => $composableBuilder(
+    column: $table.beforeJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get afterJson => $composableBuilder(
+    column: $table.afterJson,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GroupActivitiesTableOrderingComposer
+    extends Composer<_$AppDatabase, $GroupActivitiesTable> {
+  $$GroupActivitiesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get action => $composableBuilder(
+    column: $table.action,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectKind => $composableBuilder(
+    column: $table.subjectKind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get actorMemberId => $composableBuilder(
+    column: $table.actorMemberId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get beforeJson => $composableBuilder(
+    column: $table.beforeJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get afterJson => $composableBuilder(
+    column: $table.afterJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GroupActivitiesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GroupActivitiesTable> {
+  $$GroupActivitiesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get groupId =>
+      $composableBuilder(column: $table.groupId, builder: (column) => column);
+
+  GeneratedColumn<String> get action =>
+      $composableBuilder(column: $table.action, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectKind => $composableBuilder(
+    column: $table.subjectKind,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<String> get actorMemberId => $composableBuilder(
+    column: $table.actorMemberId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get beforeJson => $composableBuilder(
+    column: $table.beforeJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get afterJson =>
+      $composableBuilder(column: $table.afterJson, builder: (column) => column);
+}
+
+class $$GroupActivitiesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GroupActivitiesTable,
+          GroupActivity,
+          $$GroupActivitiesTableFilterComposer,
+          $$GroupActivitiesTableOrderingComposer,
+          $$GroupActivitiesTableAnnotationComposer,
+          $$GroupActivitiesTableCreateCompanionBuilder,
+          $$GroupActivitiesTableUpdateCompanionBuilder,
+          (
+            GroupActivity,
+            BaseReferences<_$AppDatabase, $GroupActivitiesTable, GroupActivity>,
+          ),
+          GroupActivity,
+          PrefetchHooks Function()
+        > {
+  $$GroupActivitiesTableTableManager(
+    _$AppDatabase db,
+    $GroupActivitiesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GroupActivitiesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GroupActivitiesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GroupActivitiesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> groupId = const Value.absent(),
+                Value<String> action = const Value.absent(),
+                Value<String> subjectKind = const Value.absent(),
+                Value<String> subjectId = const Value.absent(),
+                Value<String?> actorMemberId = const Value.absent(),
+                Value<DateTime> occurredAt = const Value.absent(),
+                Value<String?> beforeJson = const Value.absent(),
+                Value<String?> afterJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GroupActivitiesCompanion(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                groupId: groupId,
+                action: action,
+                subjectKind: subjectKind,
+                subjectId: subjectId,
+                actorMemberId: actorMemberId,
+                occurredAt: occurredAt,
+                beforeJson: beforeJson,
+                afterJson: afterJson,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String id,
+                required String groupId,
+                required String action,
+                required String subjectKind,
+                required String subjectId,
+                Value<String?> actorMemberId = const Value.absent(),
+                required DateTime occurredAt,
+                Value<String?> beforeJson = const Value.absent(),
+                Value<String?> afterJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GroupActivitiesCompanion.insert(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                groupId: groupId,
+                action: action,
+                subjectKind: subjectKind,
+                subjectId: subjectId,
+                actorMemberId: actorMemberId,
+                occurredAt: occurredAt,
+                beforeJson: beforeJson,
+                afterJson: afterJson,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$GroupActivitiesTable, GroupActivity>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $GroupActivitiesTable,
+                    GroupActivity
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GroupActivitiesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GroupActivitiesTable,
+      GroupActivity,
+      $$GroupActivitiesTableFilterComposer,
+      $$GroupActivitiesTableOrderingComposer,
+      $$GroupActivitiesTableAnnotationComposer,
+      $$GroupActivitiesTableCreateCompanionBuilder,
+      $$GroupActivitiesTableUpdateCompanionBuilder,
+      (
+        GroupActivity,
+        BaseReferences<_$AppDatabase, $GroupActivitiesTable, GroupActivity>,
+      ),
+      GroupActivity,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -17953,4 +18975,6 @@ class $AppDatabaseManager {
       $$EntryPayersTableTableManager(_db, _db.entryPayers);
   $$RecurringRulesTableTableManager get recurringRules =>
       $$RecurringRulesTableTableManager(_db, _db.recurringRules);
+  $$GroupActivitiesTableTableManager get groupActivities =>
+      $$GroupActivitiesTableTableManager(_db, _db.groupActivities);
 }

@@ -31,7 +31,9 @@ class AppHandle {
 
 /// Creates a fresh in-memory database and preference store.
 Future<AppHandle> createApp({bool onboarded = true, List<Override> overrides = const []}) async {
-  SharedPreferences.setMockInitialValues({'onboarded': onboarded});
+  // An onboarded install has confirmed its currency; otherwise the first-launch
+  // currency gate covers every screen.
+  SharedPreferences.setMockInitialValues({'onboarded': onboarded, if (onboarded) 'currencyCode': 'INR'});
   final prefs = await SharedPreferences.getInstance();
   final db = AppDatabase(NativeDatabase.memory());
   final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db), ...overrides]);

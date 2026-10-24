@@ -95,13 +95,16 @@ class SmsIngestService {
 
   Future<SmsSyncResult> _sync({required bool autoAdd, required Duration lookback, required DateTime now}) async {
     final queued = await source.drainQueue();
-    final since = catchUpSince(now: now, cursor: cursor.read(), lastLogged: await smsLog.latestReceivedAt(), lookback: lookback);
+    final since = catchUpSince(now: now, cursor: cursor.read(), lastLogged: await smsLog.latestReceivedAt(excludingSender: RawSms.pastedSender), lookback: lookback);
     final inbox = await source.readInbox(since: since);
     final counts = <IngestStatus, int>{};
     for (final message in [...queued, ...inbox]) {
       final status = await ingest(message, autoAdd: autoAdd);
       counts[status] = (counts[status] ?? 0) + 1;
     }
+    // Every queued message is now added, waiting in review or ignored, and
+    // the app shows that itself, so its background notification goes (#103).
+    await source.cancelNotifications(queued);
     final advanced = advanceCursor(cursor.read(), inbox.map((message) => message.receivedAt));
     if (advanced != null) await cursor.write(advanced);
     return SmsSyncResult(scanned: queued.length + inbox.length, pending: counts[IngestStatus.pending] ?? 0, added: counts[IngestStatus.added] ?? 0);

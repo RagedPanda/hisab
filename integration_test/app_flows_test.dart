@@ -6,12 +6,12 @@
 /// Tests 2..8 share one in-memory database so later flows (groups, dark mode,
 /// Hindi, backup) have realistic data on screen; test 1 and 9 use their own.
 ///
-/// iOS, flow 28 (reminders; numbered 24 before the main merge): the flow
+/// iOS, flow 29 (reminders; numbered 24, then 28, before main merges): the flow
 /// grants provisional notification authorization itself, which iOS does
 /// silently on a simulator that has never been asked (`xcrun simctl privacy` cannot grant notifications). Manual step:
 /// if Hisab's notifications were denied on the simulator before, uninstall the
 /// app (`xcrun simctl uninstall <udid> com.sarv.hisab`) or erase the simulator
-/// first, otherwise iOS keeps the denial and flow 28 fails its first expect.
+/// first, otherwise iOS keeps the denial and flow 29 fails its first expect.
 library;
 
 import 'dart:ui' as ui;
@@ -40,6 +40,8 @@ import 'package:hisab/domain/split/split_calculator.dart';
 import 'package:hisab/features/categories/categories_screen.dart';
 import 'package:hisab/features/dashboard/dashboard_screen.dart';
 import 'package:hisab/features/expense_editor/expense_editor_screen.dart';
+import 'package:hisab/features/groups/activity_screen.dart';
+import 'package:hisab/features/groups/group_detail_screen.dart';
 import 'package:hisab/features/reminders/reminder_startup.dart';
 import 'package:hisab/features/groups/group_export.dart';
 import 'package:hisab/features/groups/settle_up_sheet.dart';
@@ -91,7 +93,24 @@ int _expectedSeededSpend(DateTime now, {required int entryCount}) {
   final range = monthRange(now);
   final hotelDate = now.subtract(const Duration(days: 3));
   final planned = planDemoEntries(count: entryCount, now: now).where((item) => item.kind == 'expense' && range.contains(item.occurredAt)).fold(0, (sum, item) => sum + item.amountMinor);
-  return planned + (range.contains(hotelDate) ? 300000 : 0);
+  return planned + (range.contains(hotelDate) ? 300000 : 0) + _sliceTopUpKeys.length * _sliceTopUpMinor;
+}
+
+/// One child in each of six parent categories. The demo plan spreads entries
+/// by date, so on many days (2026-10-24 among them) this month touches five
+/// or fewer parents and the donut has no "Others" slice; these make it six.
+const _sliceTopUpKeys = ['cab_auto', 'electricity', 'medicines', 'clothing', 'movies', 'salon'];
+const _sliceTopUpMinor = 10000;
+
+/// Adds a small expense in each of [_sliceTopUpKeys] at the start of [now]'s
+/// month, so the dashboard donut always draws the top five plus "Others".
+Future<void> _seedSliceTopUp(AppDatabase db, DateTime now) async {
+  final categories = await db.select(db.categories).get();
+  final entries = EntriesRepository(db);
+  for (final key in _sliceTopUpKeys) {
+    final categoryId = categories.firstWhere((category) => category.seedKey == key).id;
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: _sliceTopUpMinor, occurredAt: monthRange(now).start, categoryId: categoryId, payee: 'Top-up'));
+  }
 }
 
 /// The summary card headline; the same figure also appears in the donut centre
@@ -770,10 +789,11 @@ void main() {
     addTearDown(fresh.container.dispose);
     final now = DateTime.now();
     await seedDemoData(fresh.db, entryCount: kDashboardSeedEntries, now: now);
+    await _seedSliceTopUp(fresh.db, now);
     await pumpApp(tester, fresh);
     await settle(tester, 12);
     expect(find.text(_spentIn(now)), findsOneWidget);
-    await _expectSpent(tester, formatMinor(_expectedSeededSpend(now, entryCount: kDashboardSeedEntries), showDecimals: false), reason: 'hero spend = planned expenses this month + my hotel share');
+    await _expectSpent(tester, formatMinor(_expectedSeededSpend(now, entryCount: kDashboardSeedEntries), showDecimals: false), reason: 'hero spend = planned expenses this month + my hotel share + slice top-up');
     expect(find.byKey(kHeroCardKey), findsOneWidget);
     expect(find.text('Income'), findsOneWidget);
     expect(find.text('Daily avg'), findsOneWidget);
@@ -1515,6 +1535,66 @@ void main() {
     expect(tester.widget<TextFormField>(payerField(me)).initialValue, '300');
   });
 
+  testWidgets('28 groups: edit and delete an expense, undo, then restore it from the activity log', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final movieGroupId = await groups.createGroup(name: 'Movie night', icon: 'movie', myName: 'You', otherMembers: ['Rahul']);
+    const title = 'Restaurants & Cafes';
+    Finder expenseRow() => find.descendant(of: find.byType(GroupDetailScreen), matching: find.text(title));
+    Future<void> deleteFromEditor() async {
+      await tapFinder(tester, expenseRow(), frames: 12);
+      await tapFinder(tester, find.byIcon(Icons.delete_outline));
+      await tapFinder(tester, _filled('Delete'), frames: 12);
+    }
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Movie night');
+    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _pickCategory(tester, 'restaurants', title);
+    await enterText(tester, _amountField(), '600');
+    await _saveEntry(tester, formatMinor(60000));
+    await tapFinder(tester, expenseRow(), frames: 12);
+    await enterText(tester, _amountField(), '900');
+    await _saveEntry(tester, formatMinor(90000));
+
+    await deleteFromEditor();
+    expect(find.text('Expense deleted'), findsOneWidget);
+    expect(expenseRow(), findsNothing);
+    await shoot(tester, 'group_expense_undo');
+    await tapText(tester, 'Undo', frames: 12);
+    expect(expenseRow(), findsOneWidget, reason: 'Undo brings the expense back');
+    expect((await groups.getGroupDetail(movieGroupId))!.entries.single.$2, hasLength(2), reason: 'with both shares');
+
+    await deleteFromEditor();
+    expect(expenseRow(), findsNothing);
+    await tapFinder(tester, find.byType(PopupMenuButton<String>));
+    await tapText(tester, 'Activity', frames: 12);
+    expect(find.byType(ActivityScreen), findsOneWidget);
+    expect(find.text('You deleted “$title”'), findsNWidgets(2));
+    expect(find.text('You restored “$title”'), findsOneWidget);
+    expect(find.text('You edited “$title”'), findsOneWidget);
+    expect(find.text('You added “$title”'), findsOneWidget);
+    expect(find.text('Amount: ${formatMinor(60000)} → ${formatMinor(90000)}'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Restore'), findsOneWidget, reason: 'only the latest deletion offers Restore');
+    await shoot(tester, 'group_activity');
+
+    await tapFinder(tester, find.widgetWithText(TextButton, 'Restore'), frames: 12);
+    expect(find.text('Expense restored'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Restore'), findsNothing);
+    expect(find.text('You restored “$title”'), findsNWidgets(2));
+    expect((await groups.getGroupDetail(movieGroupId))!.entries.single.$1.amountMinor, 90000);
+
+    await goBack(tester);
+    expect(expenseRow(), findsOneWidget);
+    await goBack(tester);
+    await tapFinder(tester, find.byTooltip('Activity'), frames: 12);
+    expect(find.text('All groups'), findsOneWidget);
+    expect(find.textContaining('Movie night ·'), findsWidgets, reason: 'the overall feed names each row\'s group');
+    await shoot(tester, 'all_activity');
+  });
+
   testWidgets('25 groups: copy a WhatsApp summary and export the ledger as CSV', (tester) async {
     final exports = <({String fileName, String csv, String subject})>[];
     final fresh = await createApp(overrides: [
@@ -1626,7 +1706,7 @@ void main() {
 
   testWidgets('27 SMS history: outcomes, filter chips, re-process, entry link, Hindi dark, clear', smsHistoryFlow);
 
-  testWidgets('28 reminders: create, real OS scheduling, mark paid with a prefilled entry, history, dark, Hindi', (tester) async {
+  testWidgets('29 reminders: create, real OS scheduling, mark paid with a prefilled entry, history, dark, Hindi', (tester) async {
     final gatewayLog = GatewayCallLog();
     final fresh = await createApp(overrides: [recordingGatewayOverride(gatewayLog)]);
     addTearDown(fresh.container.dispose);

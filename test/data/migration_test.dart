@@ -7,13 +7,19 @@ import 'package:hisab/core/ids.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 
-/// Undoes the v9 step (due-reminder columns and their index on reminders)
-/// on a database created at the current schema, so older rewinds start from v8.
-Future<void> dropVersion9(AppDatabase db) async {
+/// Undoes the v11 step (due-reminder columns and their index on reminders)
+/// on a database created at the current schema, so older rewinds start from v10.
+Future<void> dropVersion11(AppDatabase db) async {
   await db.customStatement('DROP INDEX reminders_status_due');
   for (final column in dueReminderColumns(db.reminders)) {
     await db.customStatement('ALTER TABLE reminders DROP COLUMN ${column.name}');
   }
+}
+
+/// Undoes the v10 step (group activity log) on a database created at the
+/// current schema, so older rewinds start from v8 (v9 was never shipped).
+Future<void> dropVersion10(AppDatabase db) async {
+  await db.customStatement('DROP TABLE group_activities');
 }
 
 /// Undoes the v8 step (sms_log.cleared_at) on a database created at the
@@ -34,7 +40,8 @@ Future<void> dropVersion7(AppDatabase db) async {
 /// the upgrade path runs against a real file, the way an installed app sees it.
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await dropVersion9(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
   await dropVersion8(db);
   await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
@@ -56,7 +63,8 @@ Future<void> rewindToVersion1(File file) async {
 /// (projects, but no payment method on settlements).
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await dropVersion9(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
   await dropVersion8(db);
   await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
@@ -73,7 +81,8 @@ Future<void> rewindToVersion2(File file) async {
 /// (no project fields yet).
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await dropVersion9(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
   await dropVersion8(db);
   await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
@@ -89,7 +98,8 @@ Future<void> rewindToVersion3(File file) async {
 /// (no member UPI IDs, no reminders).
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await dropVersion9(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
   await dropVersion8(db);
   await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
@@ -104,7 +114,8 @@ Future<void> rewindToVersion4(File file) async {
 /// rules).
 Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await dropVersion9(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
   await dropVersion8(db);
   await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
@@ -116,19 +127,11 @@ Future<void> rewindToVersion5(File file) async {
 /// (entry payers, but no recurring rules).
 Future<void> rewindToVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await dropVersion9(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
   await dropVersion8(db);
   await dropVersion7(db);
   await db.customStatement('PRAGMA user_version = 6');
-  await db.close();
-}
-
-/// Rewinds a freshly created database to the schema on main at version 8
-/// (generic reminders table without the due-reminder columns).
-Future<void> rewindToVersion8(File file) async {
-  final db = AppDatabase(NativeDatabase(file));
-  await dropVersion9(db);
-  await db.customStatement('PRAGMA user_version = 8');
   await db.close();
 }
 
@@ -137,6 +140,7 @@ Future<void> rewindToVersion8(File file) async {
 /// schema 6 without main's v6 entry_payers, v7 and v8 steps.
 Future<void> rewindToPreReleaseRemindersVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion10(db);
   await dropVersion8(db);
   await dropVersion7(db);
   await db.customStatement('DROP TABLE entry_payers');
@@ -148,9 +152,38 @@ Future<void> rewindToPreReleaseRemindersVersion6(File file) async {
 /// (recurring rules, but SMS history could not be cleared).
 Future<void> rewindToVersion7(File file) async {
   final db = AppDatabase(NativeDatabase(file));
-  await dropVersion9(db);
+  await dropVersion11(db);
+  await dropVersion10(db);
   await dropVersion8(db);
   await db.customStatement('PRAGMA user_version = 7');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 8
+/// (SMS history clearing, but no group activity log and no due-reminder columns).
+Future<void> rewindToVersion8(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion11(db);
+  await dropVersion10(db);
+  await db.customStatement('PRAGMA user_version = 8');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 10
+/// (group activity log, but no due-reminder columns).
+Future<void> rewindToVersion10(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion11(db);
+  await db.customStatement('PRAGMA user_version = 10');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema of #28 QA builds, which
+/// added the due-reminder columns as schema 9 before v10 existed.
+Future<void> rewindToRemindersQaVersion9(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion10(db);
+  await db.customStatement('PRAGMA user_version = 9');
   await db.close();
 }
 
@@ -228,6 +261,23 @@ void main() {
     await db.close();
   });
 
+  test('upgrading from schema 8 adds the group activity log and keeps expenses', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.entries).insert(EntriesRepository.newExpense(id: 'e1', amountMinor: 90000, occurredAt: DateTime(2026, 10, 20), groupId: 'g1', paidByMemberId: 'm1', splitMethod: 'equal'));
+    await seed.close();
+    await rewindToVersion8(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    expect((await db.select(db.entries).getSingle()).id, 'e1', reason: 'existing rows survive the upgrade');
+    await db.into(db.groupActivities).insert(GroupActivitiesCompanion.insert(id: 'a1', groupId: 'g1', action: 'added', subjectKind: 'expense', subjectId: 'e1', occurredAt: DateTime(2026, 10, 20)));
+    final activity = await db.select(db.groupActivities).getSingle();
+    expect(activity.beforeJson, isNull);
+    expect(activity.deletedAt, isNull);
+    await db.close();
+  });
+
   test('upgrading from schema 5 adds the entry payers table and keeps single payers', () async {
     final seed = AppDatabase(NativeDatabase(file));
     await seed.into(seed.entries).insert(EntriesRepository.newExpense(id: 'e1', amountMinor: 90000, occurredAt: DateTime(2026, 10, 20), groupId: 'g1', paidByMemberId: 'm1', splitMethod: 'equal'));
@@ -263,7 +313,7 @@ void main() {
     await db.close();
   });
 
-  for (final (from, rewind) in [(5, rewindToVersion5), (6, rewindToVersion6), (7, rewindToVersion7), (8, rewindToVersion8)]) {
+  for (final (from, rewind) in [(5, rewindToVersion5), (6, rewindToVersion6), (7, rewindToVersion7), (8, rewindToVersion8), (10, rewindToVersion10)]) {
     test('upgrading from schema $from adds due-reminder columns and keeps settle-up rows', () async {
       final seed = AppDatabase(NativeDatabase(file));
       await seed.into(seed.reminders).insert(RemindersCompanion.insert(id: 'r1', kind: 'settle_up', groupId: const Value('g1'), memberId: const Value('m1'), sentAt: Value(DateTime(2026, 10, 20)), message: const Value('Pay me back')));
@@ -290,6 +340,42 @@ void main() {
       await db.close();
     });
   }
+
+  test('upgrading from schema 10 with data adds due-reminder columns and keeps entries, activity and reminders', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.entries).insert(EntriesRepository.newExpense(id: 'e1', amountMinor: 90000, occurredAt: DateTime(2026, 10, 20), groupId: 'g1', paidByMemberId: 'm1', splitMethod: 'equal'));
+    await seed.into(seed.groupActivities).insert(GroupActivitiesCompanion.insert(id: 'a1', groupId: 'g1', action: 'added', subjectKind: 'expense', subjectId: 'e1', occurredAt: DateTime(2026, 10, 20)));
+    await seed.into(seed.reminders).insert(RemindersCompanion.insert(id: 'r1', kind: 'settle_up', groupId: const Value('g1'), memberId: const Value('m1'), sentAt: Value(DateTime(2026, 10, 21)), message: const Value('Pay me back')));
+    await seed.close();
+    await rewindToVersion10(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], 11);
+    expect((await db.select(db.entries).getSingle()).amountMinor, 90000);
+    expect((await db.select(db.groupActivities).getSingle()).subjectId, 'e1', reason: 'the v10 activity log is kept');
+    final settleUp = await db.select(db.reminders).getSingle();
+    expect(settleUp.message, 'Pay me back');
+    expect(settleUp.status, 'pending');
+    expect(settleUp.dueAt, isNull);
+    await db.into(db.reminders).insert(RemindersCompanion.insert(id: 'r2', kind: 'bill', title: const Value('Rent'), amountMinor: const Value(1500000), dueAt: Value(DateTime(2026, 11, 1))));
+    expect((await (db.select(db.reminders)..where((row) => row.id.equals('r2'))).getSingle()).title, 'Rent');
+    await db.close();
+  });
+
+  test('upgrading a reminders QA build (schema 9 with due columns) does not re-add them and adds the activity log', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.reminders).insert(RemindersCompanion.insert(id: 'r1', kind: 'bill', title: const Value('Card bill'), amountMinor: const Value(500000), dueAt: Value(DateTime(2026, 11, 3))));
+    await seed.close();
+    await rewindToRemindersQaVersion9(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    expect((await db.select(db.reminders).getSingle()).title, 'Card bill');
+    expect(await db.select(db.groupActivities).get(), isEmpty);
+    await db.close();
+  });
 
   test('upgrading a pre-release reminders build (schema 6 with due columns) keeps its reminders and adds entry payers', () async {
     final seed = AppDatabase(NativeDatabase(file));

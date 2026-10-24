@@ -24,6 +24,13 @@ object SmsCapturePolicy {
     fun shouldNotify(body: String): Boolean =
         !otpHint.containsMatchIn(body) && Regex("(debited|credited|spent|withdrawn|sent|received|paid)", RegexOption.IGNORE_CASE).containsMatchIn(body)
 
+    /** Notification id for one captured SMS, shared by post and cancel. */
+    fun notificationId(sender: String, body: String): Int = (sender + body).hashCode()
+
+    /** Whether the group summary should go: none of the remaining Bank SMS notifications is a message. */
+    fun summaryOrphaned(activeIds: Collection<Int>, cancelledIds: Collection<Int>, summaryId: Int): Boolean =
+        (activeIds - cancelledIds.toSet() - summaryId).isEmpty()
+
     private val amount = Regex("(?:rs\\.?|inr|₹)\\s*:?\\s*([0-9][0-9,]*(?:\\.\\d{1,2})?)", RegexOption.IGNORE_CASE)
 
     /** "₹459" or "₹1,250.50" for the first rupee amount in [body], or null. */

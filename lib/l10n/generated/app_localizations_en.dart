@@ -360,6 +360,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editEntry => 'Edit entry';
 
   @override
+  String get discardEntryTitle => 'Discard this entry?';
+
+  @override
+  String get discardEntryBody => 'What you entered will be lost.';
+
+  @override
+  String get keepEditing => 'Keep editing';
+
+  @override
+  String get discard => 'Discard';
+
+  @override
   String get groupExpense => 'Group expense';
 
   @override

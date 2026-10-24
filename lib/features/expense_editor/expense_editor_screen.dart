@@ -35,6 +35,7 @@ import '../shell/widgets/common.dart';
 import '../split/payers_editor.dart';
 import '../split/split_editor.dart';
 import 'calculator_sheet.dart';
+import 'editor_draft.dart';
 import 'item_row.dart';
 
 class ExpenseEditorScreen extends ConsumerStatefulWidget {
@@ -103,6 +104,60 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   bool get _isEditing => widget.entryId != null;
   bool get _hasItems => _items.isNotEmpty;
 
+  /// The input the editor opened with (or was reset to by "Save & add
+  /// another"); leaving with anything different asks first (#82).
+  String? _openedWith;
+
+  /// Whether the last build saw unsaved input, so typing only rebuilds when
+  /// that flips and Back's behaviour has to change.
+  bool _unsavedAtBuild = false;
+
+  String get _draft => editorDraftFingerprint(
+        kind: _kind,
+        amountMinor: _hasItems ? _itemsTotalMinor : parseAmountToMinor(_amountController.text),
+        note: _noteController.text,
+        payee: _payeeController.text,
+        occurredAt: _occurredAt,
+        categoryId: _category?.id,
+        accountId: _accountId,
+        toAccountId: _toAccountId,
+        projectId: _projectId,
+        paidByMemberId: _paidByMemberId,
+        multiplePayers: _multiplePayers,
+        payerAmounts: _payerAmounts,
+        splitMethod: _splitMethod,
+        splitInputs: _splitInputs,
+        items: _items,
+        fieldValues: _fieldValues,
+        repeat: _repeat,
+      );
+
+  bool get _hasUnsavedInput => _openedWith != null && _draft != _openedWith;
+
+  void _onTextChanged() {
+    if (mounted && _hasUnsavedInput != _unsavedAtBuild) setState(() {});
+  }
+
+  /// Back, the back gesture or the close button with unsaved input lands
+  /// here instead of leaving: Keep editing stays, Discard leaves.
+  Future<void> _confirmDiscard() async {
+    final l10n = context.l10n;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.discardEntryTitle),
+        content: Text(l10n.discardEntryBody),
+        actions: [
+          TextButton(key: const Key('keep-editing'), onPressed: () => Navigator.pop(context, false), child: Text(l10n.keepEditing)),
+          FilledButton(key: const Key('discard-entry'), onPressed: () => Navigator.pop(context, true), child: Text(l10n.discard)),
+        ],
+      ),
+    );
+    if (discard != true || !mounted) return;
+    setState(() => _openedWith = null);
+    popOrGoHome(context);
+  }
+
   /// "Save & add another" is offered for new entries typed by hand; SMS
   /// entries and edits close the editor on save.
   bool get _canAddAnother => !_isEditing && widget.smsId == null && _source != 'sms';
@@ -118,6 +173,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _groupId = widget.groupId;
     _projectId = widget.projectId;
     _smsId = widget.smsId;
+    for (final controller in [_amountController, _noteController, _payeeController]) {
+      controller.addListener(_onTextChanged);
+    }
     _load();
     _amountFocus.addListener(_stopAmountAutofocus);
   }
@@ -187,6 +245,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     }
     await _loadProjectFields();
     if (_category != null) await _refreshSuggestions();
+    _openedWith = _draft;
     if (mounted) setState(() => _loaded = true);
   }
 
@@ -298,6 +357,22 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _unsavedAtBuild = _hasUnsavedInput;
+    return PopScope(
+      canPop: !_unsavedAtBuild && context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_hasUnsavedInput) {
+          _confirmDiscard();
+        } else {
+          context.go(kHomeLocation);
+        }
+      },
+      child: _form(context),
+    );
+  }
+
+  Widget _form(BuildContext context) {
     if (!_loaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
@@ -540,6 +615,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _payerAmounts = {};
       if (_groupId != null) _splitInputs = defaultSplitInputs(_members, _splitMethod);
       _saving = false;
+      _openedWith = _draft;
     });
     _amountFocus.requestFocus();
   }

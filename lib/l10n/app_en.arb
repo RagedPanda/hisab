@@ -122,6 +122,10 @@
 
   "newEntry": "New entry",
   "editEntry": "Edit entry",
+  "discardEntryTitle": "Discard this entry?",
+  "discardEntryBody": "What you entered will be lost.",
+  "keepEditing": "Keep editing",
+  "discard": "Discard",
   "groupExpense": "Group expense",
   "deleteEntryQuestion": "Delete this entry?",
   "totalOfItems": "Total of {count} items",

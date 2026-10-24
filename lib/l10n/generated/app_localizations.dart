@@ -698,6 +698,30 @@ abstract class AppLocalizations {
   /// **'Edit entry'**
   String get editEntry;
 
+  /// No description provided for @discardEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this entry?'**
+  String get discardEntryTitle;
+
+  /// No description provided for @discardEntryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What you entered will be lost.'**
+  String get discardEntryBody;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditing;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
   /// No description provided for @groupExpense.
   ///
   /// In en, this message translates to:

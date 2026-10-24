@@ -627,20 +627,26 @@ void main() {
     await shoot(tester, 'categories_income');
   });
 
-  // iOS only: Android offers SMS reading on this screen, so the flow is skipped there.
-  testWidgets('10 bank SMS screen on iOS: reading disabled, paste auto-adds with Undo, unclear SMS wait for review', (tester) async {
+  // The reading-disabled checks are iOS only (Android offers SMS reading on
+  // this screen); paste, auto-add, Undo and the review queue run on both.
+  testWidgets('10 bank SMS screen: reading disabled on iOS, paste auto-adds with Undo, unclear SMS wait for review', (tester) async {
     await pumpApp(tester, shared);
     await goTab(tester, 'Settings');
     await shoot(tester, 'settings');
     await scrollTo(tester, find.text('Bank SMS'));
     await tapText(tester, 'Bank SMS');
-    await waitFor(tester, find.text('Not available on iOS. Use the Shortcut or paste below.'));
-    expect(find.text('Not available on iOS. Use the Shortcut or paste below.'), findsOneWidget);
+    await waitFor(tester, find.text('Paste an SMS'));
     final readSwitch = tester.widget<SwitchListTile>(find.widgetWithText(SwitchListTile, 'Read bank SMS automatically'));
-    expect(readSwitch.onChanged, isNull, reason: 'SMS reading must be disabled on iOS');
-    expect(readSwitch.value, isFalse);
-    expect(find.text('Scan inbox now'), findsNothing);
-    await shoot(tester, 'sms_ios');
+    if (Platform.isIOS) {
+      expect(find.text('Not available on iOS. Use the Shortcut or paste below.'), findsOneWidget);
+      expect(readSwitch.onChanged, isNull, reason: 'SMS reading must be disabled on iOS');
+      expect(readSwitch.value, isFalse);
+      expect(find.text('Scan inbox now'), findsNothing);
+      await shoot(tester, 'sms_ios');
+    } else {
+      expect(readSwitch.onChanged, isNotNull, reason: 'Android offers SMS reading');
+      await shoot(tester, 'sms_android');
+    }
     await tapText(tester, 'Paste an SMS');
     await enterText(tester, _dialogField(), 'Rs.500.00 debited from A/c XX1234 on 20-Oct-25 to merchant@upi (UPI Ref No 123456789012)');
     await tapFinder(tester, _filled('Save'), frames: 12);
@@ -669,7 +675,7 @@ void main() {
     await tapText(tester, 'Ignore');
     expect(find.text('Nothing waiting'), findsOneWidget);
     await goBack(tester);
-  }, skip: !Platform.isIOS);
+  });
 
   testWidgets('11 settings: dark theme on every tab', (tester) async {
     addTearDown(() => shared.read(settingsProvider.notifier).update((s) => s.copyWith(themeMode: ThemeMode.light)));

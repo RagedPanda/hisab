@@ -16,7 +16,6 @@ import '../../domain/budget/budget_math.dart';
 import '../../domain/categories/category_filter.dart';
 import '../../domain/ledger/personal_totals.dart';
 import '../../domain/projects/project_math.dart';
-import '../../domain/split/group_net.dart';
 import '../../domain/stats/category_shares.dart';
 import '../../domain/stats/month_summary.dart';
 import '../../domain/stats/spend_series.dart';
@@ -180,10 +179,14 @@ class GroupsOverview {
   bool get isEmpty => shown.isEmpty;
 }
 
-final groupsOverviewProvider = Provider<AsyncValue<GroupsOverview>>((ref) => mapAsync(ref.watch(groupSummariesProvider), (summaries) {
-      final totals = groupNetTotals(summaries.map((summary) => summary.myNetMinor));
-      return GroupsOverview(shown: summaries.take(kGroupsCardRows).toList(), owedToMe: totals.owedToMe, iOwe: totals.iOwe);
-    }));
+final groupsOverviewProvider = Provider<AsyncValue<GroupsOverview>>((ref) {
+  final appSymbol = ref.watch(settingsProvider).currencySymbol;
+  return mapAsync(ref.watch(groupSummariesProvider), (summaries) {
+    final totals = groupTotalsInAppCurrency(summaries, appSymbol: appSymbol);
+    final active = summaries.where((summary) => summary.group.archivedAt == null);
+    return GroupsOverview(shown: active.take(kGroupsCardRows).toList(), owedToMe: totals.owedToMe, iOwe: totals.iOwe);
+  });
+});
 
 // Recent ---------------------------------------------------------------------
 

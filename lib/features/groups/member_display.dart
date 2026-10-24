@@ -23,6 +23,22 @@ String resolvedMyName(AppLocalizations l10n, AppSettings settings) => settings.m
 /// Short label used in balance lines: "You" for the me member, else the name.
 String memberShortName(AppLocalizations l10n, Member member) => member.isMe ? l10n.you : member.name;
 
+/// Joins names as "A", "A and B" or "A, B and C", using the locale's [and].
+String joinNames(List<String> names, String Function(String first, String last) and) =>
+    names.length < 2 ? names.join() : and(names.sublist(0, names.length - 1).join(', '), names.last);
+
+/// Who paid an expense, for its list line: one payer reads as their name;
+/// several read as "Rahul and you", with me last and in lower case.
+String payerNamesLine(AppLocalizations l10n, List<String> payerIds, {required String? myMemberId, required String Function(String memberId) nameOf}) {
+  if (payerIds.length < 2) return payerIds.map(nameOf).join();
+  final includesMe = payerIds.contains(myMemberId);
+  return joinNames([
+    for (final id in payerIds)
+      if (id != myMemberId) nameOf(id),
+    if (includesMe) l10n.youInList,
+  ], l10n.namesAnd);
+}
+
 String memberInitial(Member member) {
   final name = member.name.trim();
   return name.isEmpty ? '?' : name[0].toUpperCase();

@@ -37,3 +37,15 @@ DateRange yearRange(DateTime anchor) =>
 
 bool isSameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
+
+/// Splits [items], already sorted by date, into runs that share a calendar
+/// day, in the same order. Used by day-headed lists.
+List<({DateTime day, List<T> items})> groupConsecutiveByDay<T>(Iterable<T> items, DateTime Function(T item) dateOf) {
+  final groups = <({DateTime day, List<T> items})>[];
+  for (final item in items) {
+    final day = startOfDay(dateOf(item));
+    if (groups.isEmpty || groups.last.day != day) groups.add((day: day, items: <T>[]));
+    groups.last.items.add(item);
+  }
+  return groups;
+}

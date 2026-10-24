@@ -31,7 +31,7 @@ class DashboardScreen extends ConsumerWidget {
     final recurringWaiting = ref.watch(recurringWaitingCountProvider);
     final gutter = dashboardGutter(MediaQuery.sizeOf(context).width);
     final cards = <Widget>[
-      if (pending.isNotEmpty) _ActionBanner(icon: Icons.sms_outlined, label: l10n.smsToReview(pending.length), route: '/sms'),
+      if (pending.isNotEmpty) _ActionBanner(icon: Icons.sms_outlined, label: l10n.smsToReview(pending.length), route: '/sms/review'),
       if (recurringWaiting > 0) _ActionBanner(key: const ValueKey('dashboard.recurringBanner'), icon: Icons.repeat, label: l10n.recurringToConfirm(recurringWaiting), route: '/recurring'),
       const HeroCard(),
       const UpcomingCard(),
@@ -53,7 +53,7 @@ class DashboardScreen extends ConsumerWidget {
               if (pending.isNotEmpty)
                 IconButton(
                   tooltip: l10n.smsToReview(pending.length),
-                  onPressed: () => context.push('/sms'),
+                  onPressed: () => context.push('/sms/review'),
                   icon: Badge(label: Text('${pending.length}'), child: const Icon(Icons.sms_outlined)),
                 ),
               const MonthSwitcher(),

@@ -122,3 +122,12 @@ RecurringSection sectionOf({required String status, required bool autoPost, requ
 /// How many occurrences of a confirm-first rule are waiting at [now].
 int waitingCount(RecurrenceSpec spec, {required DateTime nextDue, required DateTime now, required int postedCount, int monthStartDay = 1}) =>
     dueOccurrences(spec, nextDue: nextDue, now: now, postedCount: postedCount, monthStartDay: monthStartDay).length;
+
+/// How a rule's used slots split into entries added and occurrences skipped.
+/// [postedCount] counts both, so the added number is what is left after the
+/// skips; it never goes below zero.
+({int added, int skipped}) recurringTally({required int postedCount, required int skippedCount}) {
+  final used = postedCount < 0 ? 0 : postedCount;
+  final skipped = skippedCount.clamp(0, used);
+  return (added: used - skipped, skipped: skipped);
+}

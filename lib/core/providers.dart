@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/backup/backup_service.dart';
 import '../data/db/database.dart';
 import '../data/repositories/accounts_repository.dart';
+import '../data/repositories/entry_removal.dart';
 import '../data/repositories/budgets_repository.dart';
 import '../data/repositories/categories_repository.dart';
 import '../data/repositories/entries_repository.dart';
@@ -13,11 +15,17 @@ import '../data/repositories/projects_repository.dart';
 import '../data/repositories/recurring_repository.dart';
 import '../data/repositories/reminders_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
+import '../data/sms/sms_channel.dart';
 import '../data/sms/sms_ingest_service.dart';
+import '../data/sms/sms_notification_prompt.dart';
+import '../data/sms/sms_sync_cursor.dart';
 import '../domain/entries/entry_filter.dart';
+import '../domain/sms/sms_currency.dart';
+import '../domain/sms/sms_parser.dart';
 import '../domain/stats/dashboard_ledger.dart';
 import '../domain/stats/spend_series.dart';
 import 'dates.dart';
+import 'home_currency.dart';
 import 'notifications/notification_gateway.dart';
 import 'notifications/notification_service.dart';
 import 'notifications/plugin_notification_gateway.dart';
@@ -41,8 +49,8 @@ final budgetsRepositoryProvider = Provider((ref) => BudgetsRepository(ref.watch(
 final projectsRepositoryProvider = Provider((ref) => ProjectsRepository(ref.watch(databaseProvider)));
 final projectFieldsRepositoryProvider = Provider((ref) => ProjectFieldsRepository(ref.watch(databaseProvider)));
 final smsLogRepositoryProvider = Provider((ref) => SmsLogRepository(ref.watch(databaseProvider)));
-final recurringRepositoryProvider = Provider((ref) => RecurringRepository(ref.watch(databaseProvider)));
 final remindersRepositoryProvider = Provider((ref) => RemindersRepository(ref.watch(databaseProvider)));
+final recurringRepositoryProvider = Provider((ref) => RecurringRepository(ref.watch(databaseProvider)));
 
 class SettingsNotifier extends Notifier<AppSettings> {
   @override
@@ -88,6 +96,7 @@ final selectedRangeProvider = Provider<DateRange>((ref) {
 final categoriesProvider = StreamProvider((ref) => ref.watch(categoriesRepositoryProvider).watchAll());
 final allCategoriesProvider = StreamProvider((ref) => ref.watch(categoriesRepositoryProvider).watchAll(includeArchived: true));
 final accountsProvider = StreamProvider((ref) => ref.watch(accountsRepositoryProvider).watchAll());
+final recentAccountIdsProvider = StreamProvider((ref) => ref.watch(entriesRepositoryProvider).watchRecentAccountIds());
 final budgetsProvider = StreamProvider((ref) => ref.watch(budgetsRepositoryProvider).watchAll());
 final groupSummariesProvider = StreamProvider((ref) => ref.watch(groupsRepositoryProvider).watchSummaries());
 
@@ -97,7 +106,16 @@ final projectViewsProvider = StreamProvider<List<ProjectView>>((ref) {
   return ref.watch(projectsRepositoryProvider).watchViews(monthStartDay: monthStartDay);
 });
 final recurringViewsProvider = StreamProvider((ref) => ref.watch(recurringRepositoryProvider).watchViews());
-final pendingSmsProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryProvider).watchPending());
+/// SMS waiting for review. Rows in another currency, queued before such SMS
+/// were ignored, are left out so they neither show nor count on Home.
+final pendingSmsProvider = StreamProvider((ref) {
+  final homeCurrency = ref.watch(homeCurrencyCodeProvider);
+  return ref
+      .watch(smsLogRepositoryProvider)
+      .watchPending()
+      .map((rows) => rows.where((row) => !isForeignCurrency(smsCurrencyCode(row.body), homeCurrency)).toList());
+});
+final smsHistoryProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryProvider).watchHistory());
 
 final monthEntriesProvider = StreamProvider((ref) {
   final range = ref.watch(selectedRangeProvider);
@@ -149,6 +167,16 @@ final smsIngestServiceProvider = Provider((ref) => SmsIngestService(
       accounts: ref.watch(accountsRepositoryProvider),
       categories: ref.watch(categoriesRepositoryProvider),
       entries: ref.watch(entriesRepositoryProvider),
+      cursor: SmsSyncCursor(ref.watch(sharedPreferencesProvider)),
+      homeCurrencyCode: () => ref.read(homeCurrencyCodeProvider),
+    ));
+
+/// Requests POST_NOTIFICATIONS for Bank SMS notifications; a no-op off Android.
+final smsNotificationPromptProvider = Provider((ref) => SmsNotificationPrompt(
+      ref.watch(sharedPreferencesProvider),
+      request: () async {
+        if (SmsChannel.isSupported) await Permission.notification.request();
+      },
     ));
 
 final backupServiceProvider = Provider((ref) => BackupService(ref.watch(databaseProvider)));
@@ -176,6 +204,11 @@ final notificationServiceProvider = Provider((ref) {
 final reminderSchedulerProvider = Provider((ref) => ReminderScheduler(
       reminders: ref.watch(remindersRepositoryProvider),
       notifications: ref.watch(notificationServiceProvider),
+      removeEntry: (entryId) => deleteEntryReversingBalances(
+        entries: ref.read(entriesRepositoryProvider),
+        accounts: ref.read(accountsRepositoryProvider),
+        entryId: entryId,
+      ),
     ));
 
 /// Pending due reminders, earliest (overdue) first.

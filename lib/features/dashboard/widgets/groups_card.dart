@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme.dart';
+import '../../../domain/split/group_settings.dart';
 import '../../../l10n/l10n.dart';
 import '../../groups/net_badge.dart';
 import '../../shell/widgets/common.dart';
@@ -47,7 +48,7 @@ class GroupsCard extends ConsumerWidget {
                     leading: IconBadge(icon: summary.group.icon, color: kSeedColor.toARGB32()),
                     title: Text(summary.group.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
                     subtitle: Text(l10n.memberCount(summary.members.length)),
-                    trailing: GroupNetBadge(net: summary.myNetMinor, symbol: symbol),
+                    trailing: GroupNetBadge(net: summary.myNetMinor, symbol: groupSymbol(currencyLabel: summary.group.currencyLabel, appSymbol: symbol)),
                     onTap: () => context.push('/groups/${summary.group.id}'),
                   ),
               ],

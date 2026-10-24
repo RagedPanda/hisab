@@ -698,6 +698,30 @@ abstract class AppLocalizations {
   /// **'Edit entry'**
   String get editEntry;
 
+  /// No description provided for @discardEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this entry?'**
+  String get discardEntryTitle;
+
+  /// No description provided for @discardEntryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What you entered will be lost.'**
+  String get discardEntryBody;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditing;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
   /// No description provided for @groupExpense.
   ///
   /// In en, this message translates to:
@@ -743,7 +767,7 @@ abstract class AppLocalizations {
   /// No description provided for @smsEntryNotice.
   ///
   /// In en, this message translates to:
-  /// **'Created from a bank SMS. Editing it will not change your bank balance.'**
+  /// **'Added from SMS. Editing it will not change your bank balance.'**
   String get smsEntryNotice;
 
   /// No description provided for @saving.
@@ -823,6 +847,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick both accounts for a transfer'**
   String get errorPickBothAccounts;
+
+  /// No description provided for @errorPickAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an account'**
+  String get errorPickAccount;
+
+  /// No description provided for @errorSameAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'From and To must be different accounts'**
+  String get errorSameAccount;
 
   /// No description provided for @errorItemName.
   ///
@@ -1232,11 +1268,41 @@ abstract class AppLocalizations {
   /// **'Money'**
   String get money;
 
-  /// No description provided for @currencySymbol.
+  /// No description provided for @currency.
   ///
   /// In en, this message translates to:
-  /// **'Currency symbol'**
-  String get currencySymbol;
+  /// **'Currency'**
+  String get currency;
+
+  /// No description provided for @currencyChooseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your currency'**
+  String get currencyChooseTitle;
+
+  /// No description provided for @currencyChooseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Amounts in Hisab show in this currency. You can change it later in Settings.'**
+  String get currencyChooseBody;
+
+  /// No description provided for @currencySearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search code, name or country'**
+  String get currencySearchHint;
+
+  /// No description provided for @currencyContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with {currency}'**
+  String currencyContinue(String currency);
+
+  /// No description provided for @currencyNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No currency matches \"{query}\"'**
+  String currencyNoMatch(String query);
 
   /// No description provided for @monthStartsOn.
   ///
@@ -1358,6 +1424,24 @@ abstract class AppLocalizations {
   /// **'Free, open source, no ads, no account needed. Your data stays on your device.'**
   String get aboutBody;
 
+  /// Text shown before the red heart icon at the bottom of Settings > About. May be empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with'**
+  String get aboutMadeWithBefore;
+
+  /// Text shown after the red heart icon at the bottom of Settings > About. May be empty.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get aboutMadeWithAfter;
+
+  /// Screen reader label for the Made with heart line.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with love'**
+  String get aboutMadeWithLabel;
+
   /// No description provided for @backupPassphrase.
   ///
   /// In en, this message translates to:
@@ -1418,11 +1502,47 @@ abstract class AppLocalizations {
   /// **'Already imported.'**
   String get smsDuplicate;
 
+  /// No description provided for @smsForeignCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Only SMS in your home currency are supported, so this one was ignored.'**
+  String get smsForeignCurrency;
+
   /// No description provided for @smsNotFound.
   ///
   /// In en, this message translates to:
   /// **'Could not find a transaction in that text.'**
   String get smsNotFound;
+
+  /// No description provided for @smsNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New bank transaction'**
+  String get smsNotificationTitle;
+
+  /// No description provided for @smsNotificationBodyAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} from {sender}. Tap to review.'**
+  String smsNotificationBodyAmount(String amount, String sender);
+
+  /// No description provided for @smsNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'From {sender}. Tap to review.'**
+  String smsNotificationBody(String sender);
+
+  /// No description provided for @smsNotificationBodyAmountAutoAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} from {sender}. Open Hisab to add it.'**
+  String smsNotificationBodyAmountAutoAdd(String amount, String sender);
+
+  /// No description provided for @smsNotificationBodyAutoAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'From {sender}. Open Hisab to add it.'**
+  String smsNotificationBodyAutoAdd(String sender);
 
   /// No description provided for @readBankSmsQuestion.
   ///
@@ -1469,13 +1589,13 @@ abstract class AppLocalizations {
   /// No description provided for @smsAutoAddTitle.
   ///
   /// In en, this message translates to:
-  /// **'Add transactions without review'**
+  /// **'Add clear transactions automatically'**
   String get smsAutoAddTitle;
 
   /// No description provided for @smsAutoAddHelp.
   ///
   /// In en, this message translates to:
-  /// **'Off: new SMS wait in the review list below.'**
+  /// **'On: clear bank SMS are added right away with Undo. Unclear ones wait for review.'**
   String get smsAutoAddHelp;
 
   /// No description provided for @scanInboxNow.
@@ -1909,114 +2029,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nothing due in the next two weeks'**
   String get upcomingEmpty;
-
-  /// No description provided for @upcomingEmptyWithin.
-  ///
-  /// In en, this message translates to:
-  /// **'{days, plural, =1{Nothing due tomorrow} other{Nothing due in the next {days} days}}'**
-  String upcomingEmptyWithin(int days);
-
-  /// No description provided for @upcomingEmptyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Recurring bills, reminders and card dues show up here.'**
-  String get upcomingEmptyHint;
-
-  /// No description provided for @upcomingWindowDays.
-  ///
-  /// In en, this message translates to:
-  /// **'{days} days'**
-  String upcomingWindowDays(int days);
-
-  /// No description provided for @upcomingOverdueBy.
-  ///
-  /// In en, this message translates to:
-  /// **'{days, plural, =1{Overdue by 1 day} other{Overdue by {days} days}}'**
-  String upcomingOverdueBy(int days);
-
-  /// No description provided for @upcomingDueToday.
-  ///
-  /// In en, this message translates to:
-  /// **'Due today'**
-  String get upcomingDueToday;
-
-  /// No description provided for @upcomingDueTomorrow.
-  ///
-  /// In en, this message translates to:
-  /// **'Due tomorrow'**
-  String get upcomingDueTomorrow;
-
-  /// No description provided for @upcomingDueInDays.
-  ///
-  /// In en, this message translates to:
-  /// **'In {days} days · {date}'**
-  String upcomingDueInDays(int days, String date);
-
-  /// No description provided for @upcomingOverdueCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} overdue'**
-  String upcomingOverdueCount(int count);
-
-  /// No description provided for @upcomingDueTotal.
-  ///
-  /// In en, this message translates to:
-  /// **'{amount} to pay'**
-  String upcomingDueTotal(String amount);
-
-  /// No description provided for @upcomingShowAll.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 more} other{{count} more}}'**
-  String upcomingShowAll(int count);
-
-  /// No description provided for @upcomingCalendar.
-  ///
-  /// In en, this message translates to:
-  /// **'Due calendar'**
-  String get upcomingCalendar;
-
-  /// No description provided for @upcomingCalendarOpen.
-  ///
-  /// In en, this message translates to:
-  /// **'Open due calendar'**
-  String get upcomingCalendarOpen;
-
-  /// No description provided for @upcomingCalendarDayEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing due on this day'**
-  String get upcomingCalendarDayEmpty;
-
-  /// No description provided for @upcomingCalendarPreviousMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous month'**
-  String get upcomingCalendarPreviousMonth;
-
-  /// No description provided for @upcomingCalendarNextMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'Next month'**
-  String get upcomingCalendarNextMonth;
-
-  /// No description provided for @upcomingConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm'**
-  String get upcomingConfirm;
-
-  /// No description provided for @upcomingConfirmPrompt.
-  ///
-  /// In en, this message translates to:
-  /// **'This is waiting for you to confirm. Add it to your entries now?'**
-  String get upcomingConfirmPrompt;
-
-  /// No description provided for @upcomingCalendarDueCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 due} other{{count} due}}'**
-  String upcomingCalendarDueCount(int count);
 
   /// No description provided for @memberCount.
   ///
@@ -3464,6 +3476,588 @@ abstract class AppLocalizations {
   /// **'Saved. Add the next one.'**
   String get savedAddAnother;
 
+  /// No description provided for @remindersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get remindersTitle;
+
+  /// No description provided for @remindersUpcomingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing due} =1{1 upcoming} other{{count} upcoming}}'**
+  String remindersUpcomingCount(int count);
+
+  /// No description provided for @remindersNotificationsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'notifications on'**
+  String get remindersNotificationsOn;
+
+  /// No description provided for @remindersNotificationsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'notifications off'**
+  String get remindersNotificationsOff;
+
+  /// No description provided for @remindersSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} · {state}'**
+  String remindersSettingsSubtitle(String count, String state);
+
+  /// No description provided for @reminderTabHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get reminderTabHistory;
+
+  /// No description provided for @reminderSectionOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get reminderSectionOverdue;
+
+  /// No description provided for @reminderSectionThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get reminderSectionThisWeek;
+
+  /// No description provided for @reminderSectionLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get reminderSectionLater;
+
+  /// No description provided for @reminderAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add reminder'**
+  String get reminderAdd;
+
+  /// No description provided for @reminderFab.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder'**
+  String get reminderFab;
+
+  /// No description provided for @remindersEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No reminders yet'**
+  String get remindersEmptyTitle;
+
+  /// No description provided for @remindersEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills, rent, EMIs, renewals: add one and Hisab will nudge you before it\'s due.'**
+  String get remindersEmptyBody;
+
+  /// No description provided for @reminderHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid and skipped reminders show up here.'**
+  String get reminderHistoryEmpty;
+
+  /// No description provided for @reminderSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip this time'**
+  String get reminderSkip;
+
+  /// No description provided for @reminderDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder deleted'**
+  String get reminderDeleted;
+
+  /// No description provided for @reminderMarkedPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked paid'**
+  String get reminderMarkedPaid;
+
+  /// No description provided for @reminderMarkedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked done'**
+  String get reminderMarkedDone;
+
+  /// No description provided for @reminderSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped this time'**
+  String get reminderSkipped;
+
+  /// No description provided for @reminderSnoozedUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Snoozed until {date}'**
+  String reminderSnoozedUntil(String date);
+
+  /// No description provided for @reminderAlreadyDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Already marked paid'**
+  String get reminderAlreadyDone;
+
+  /// No description provided for @reminderPaidOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid {date}'**
+  String reminderPaidOn(String date);
+
+  /// No description provided for @reminderDoneOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Done {date}'**
+  String reminderDoneOn(String date);
+
+  /// No description provided for @reminderSkippedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped {date}'**
+  String reminderSkippedOn(String date);
+
+  /// No description provided for @reminderNextDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Next due {date}'**
+  String reminderNextDue(String date);
+
+  /// No description provided for @notifOffBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off. Reminders will only show in the app.'**
+  String get notifOffBanner;
+
+  /// No description provided for @notifTurnOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get notifTurnOn;
+
+  /// No description provided for @remindersLateNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders may arrive late. Allow Alarms & reminders'**
+  String get remindersLateNote;
+
+  /// No description provided for @exactAlarmPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get reminders on time'**
+  String get exactAlarmPromptTitle;
+
+  /// No description provided for @exactAlarmPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To alert you at the exact time you set, Android needs Hisab\'s \"Alarms & reminders\" setting. Without it, reminders may arrive late.'**
+  String get exactAlarmPromptBody;
+
+  /// No description provided for @notifPrePromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get reminded before it\'s due'**
+  String get notifPrePromptTitle;
+
+  /// No description provided for @notifPrePromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Hisab sends a notification at the time you choose, only for your reminders. No marketing.'**
+  String get notifPrePromptBody;
+
+  /// No description provided for @reminderPaidSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid {title}?'**
+  String reminderPaidSheetTitle(String title);
+
+  /// No description provided for @reminderPaidSheetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an expense of {amount} and mark this paid.'**
+  String reminderPaidSheetBody(String amount);
+
+  /// No description provided for @reminderAddEntryAndMark.
+  ///
+  /// In en, this message translates to:
+  /// **'Add entry & mark paid'**
+  String get reminderAddEntryAndMark;
+
+  /// No description provided for @reminderJustMark.
+  ///
+  /// In en, this message translates to:
+  /// **'Just mark paid'**
+  String get reminderJustMark;
+
+  /// No description provided for @reminderNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New reminder'**
+  String get reminderNew;
+
+  /// No description provided for @reminderEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit reminder'**
+  String get reminderEditTitle;
+
+  /// No description provided for @reminderKindBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill'**
+  String get reminderKindBill;
+
+  /// No description provided for @reminderKindEmi.
+  ///
+  /// In en, this message translates to:
+  /// **'EMI'**
+  String get reminderKindEmi;
+
+  /// No description provided for @reminderKindCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Card bill'**
+  String get reminderKindCard;
+
+  /// No description provided for @reminderKindSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get reminderKindSubscription;
+
+  /// No description provided for @reminderKindInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Insurance'**
+  String get reminderKindInsurance;
+
+  /// No description provided for @reminderKindDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Document'**
+  String get reminderKindDocument;
+
+  /// No description provided for @reminderKindCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get reminderKindCustom;
+
+  /// No description provided for @reminderTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get reminderTitleLabel;
+
+  /// No description provided for @reminderTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Electricity bill'**
+  String get reminderTitleHint;
+
+  /// No description provided for @reminderTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a title'**
+  String get reminderTitleRequired;
+
+  /// No description provided for @reminderAmountOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (optional)'**
+  String get reminderAmountOptional;
+
+  /// No description provided for @reminderDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date'**
+  String get reminderDueDate;
+
+  /// No description provided for @reminderRepeatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get reminderRepeatLabel;
+
+  /// No description provided for @reminderRepeatOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Once'**
+  String get reminderRepeatOnce;
+
+  /// No description provided for @reminderRepeatWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every week'**
+  String get reminderRepeatWeekly;
+
+  /// No description provided for @reminderRepeatMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every month'**
+  String get reminderRepeatMonthly;
+
+  /// No description provided for @reminderRepeatQuarterly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 3 months'**
+  String get reminderRepeatQuarterly;
+
+  /// No description provided for @reminderRepeatYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every year'**
+  String get reminderRepeatYearly;
+
+  /// No description provided for @reminderNotifyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me'**
+  String get reminderNotifyLabel;
+
+  /// No description provided for @reminderNotifyOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'On the day'**
+  String get reminderNotifyOnDay;
+
+  /// No description provided for @reminderNotifyDaysBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day before} other{{days} days before}}'**
+  String reminderNotifyDaysBefore(int days);
+
+  /// No description provided for @reminderNotifyEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify me'**
+  String get reminderNotifyEnabled;
+
+  /// No description provided for @reminderNotifyAt.
+  ///
+  /// In en, this message translates to:
+  /// **'At {time}'**
+  String reminderNotifyAt(String time);
+
+  /// No description provided for @reminderNotifyPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'First alert: {when}'**
+  String reminderNotifyPreview(String when);
+
+  /// No description provided for @reminderNoAlertsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'All alert times have passed; it will show as due in the app.'**
+  String get reminderNoAlertsLeft;
+
+  /// No description provided for @reminderPickDaysError.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick at least one day'**
+  String get reminderPickDaysError;
+
+  /// No description provided for @reminderSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save reminder'**
+  String get reminderSave;
+
+  /// No description provided for @reminderNoAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'No account'**
+  String get reminderNoAccount;
+
+  /// No description provided for @reminderChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill & due-date reminders'**
+  String get reminderChannelName;
+
+  /// No description provided for @reminderChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts before bills, EMIs, card dues and renewals are due'**
+  String get reminderChannelDescription;
+
+  /// No description provided for @reminderMarkPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark paid'**
+  String get reminderMarkPaid;
+
+  /// No description provided for @reminderMarkDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get reminderMarkDone;
+
+  /// No description provided for @reminderSnoozeOneDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Snooze 1 day'**
+  String get reminderSnoozeOneDay;
+
+  /// No description provided for @reminderDueToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Due today'**
+  String get reminderDueToday;
+
+  /// No description provided for @reminderDueInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Due tomorrow} other{Due in {days} days}}'**
+  String reminderDueInDays(int days);
+
+  /// No description provided for @reminderOverdueDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Overdue by 1 day} other{Overdue by {days} days}}'**
+  String reminderOverdueDays(int days);
+
+  /// No description provided for @smsHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS history'**
+  String get smsHistoryTitle;
+
+  /// No description provided for @smsHistoryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Every message Hisab processed and what happened to it'**
+  String get smsHistoryHelp;
+
+  /// No description provided for @smsOutcomeAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get smsOutcomeAdded;
+
+  /// No description provided for @smsOutcomeDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get smsOutcomeDuplicate;
+
+  /// No description provided for @smsOutcomeIgnored.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignored'**
+  String get smsOutcomeIgnored;
+
+  /// No description provided for @smsOutcomeUnparsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreadable'**
+  String get smsOutcomeUnparsed;
+
+  /// No description provided for @smsOutcomePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get smsOutcomePending;
+
+  /// No description provided for @smsOutcomeUndone.
+  ///
+  /// In en, this message translates to:
+  /// **'Undone'**
+  String get smsOutcomeUndone;
+
+  /// No description provided for @smsHistoryNotBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a bank message'**
+  String get smsHistoryNotBank;
+
+  /// No description provided for @smsHistoryDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismissed from review'**
+  String get smsHistoryDismissed;
+
+  /// No description provided for @smsHistoryUnparsedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'No transaction found in the text'**
+  String get smsHistoryUnparsedDetail;
+
+  /// No description provided for @smsHistoryDuplicateDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Same message already processed'**
+  String get smsHistoryDuplicateDetail;
+
+  /// No description provided for @smsHistoryOpenEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Open entry'**
+  String get smsHistoryOpenEntry;
+
+  /// No description provided for @smsHistoryReprocess.
+  ///
+  /// In en, this message translates to:
+  /// **'Process again'**
+  String get smsHistoryReprocess;
+
+  /// No description provided for @smsHistoryClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear history'**
+  String get smsHistoryClear;
+
+  /// No description provided for @smsHistoryClearQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear SMS history?'**
+  String get smsHistoryClearQuestion;
+
+  /// No description provided for @smsHistoryClearBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes the text of {count} processed messages from this device. Your entries and messages waiting for review stay, and cleared messages are never imported again.'**
+  String smsHistoryClearBody(int count);
+
+  /// No description provided for @smsHistoryClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get smsHistoryClearConfirm;
+
+  /// No description provided for @smsHistoryCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS history cleared'**
+  String get smsHistoryCleared;
+
+  /// No description provided for @smsHistoryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages processed yet'**
+  String get smsHistoryEmptyTitle;
+
+  /// No description provided for @smsHistoryEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank SMS that Hisab reads or that you paste show up here.'**
+  String get smsHistoryEmptyBody;
+
+  /// No description provided for @smsHistoryEmptyFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages with this outcome'**
+  String get smsHistoryEmptyFiltered;
+
+  /// No description provided for @smsHistoryTextNotKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Message text not kept'**
+  String get smsHistoryTextNotKept;
+
   /// No description provided for @recurringRepeat.
   ///
   /// In en, this message translates to:
@@ -3782,437 +4376,1211 @@ abstract class AppLocalizations {
   /// **'This recurring entry was deleted'**
   String get recurringRuleMissing;
 
-  /// No description provided for @remindersTitle.
+  /// No description provided for @recurringDecrease.
   ///
   /// In en, this message translates to:
-  /// **'Reminders'**
-  String get remindersTitle;
+  /// **'Decrease {label}'**
+  String recurringDecrease(String label);
 
-  /// No description provided for @remindersUpcomingCount.
+  /// No description provided for @recurringIncrease.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =0{Nothing due} =1{1 upcoming} other{{count} upcoming}}'**
-  String remindersUpcomingCount(int count);
+  /// **'Increase {label}'**
+  String recurringIncrease(String label);
 
-  /// No description provided for @remindersNotificationsOn.
+  /// No description provided for @subscriptions.
   ///
   /// In en, this message translates to:
-  /// **'notifications on'**
-  String get remindersNotificationsOn;
+  /// **'Subscriptions'**
+  String get subscriptions;
 
-  /// No description provided for @remindersNotificationsOff.
+  /// No description provided for @subscriptionsMonthlyTotal.
   ///
   /// In en, this message translates to:
-  /// **'notifications off'**
-  String get remindersNotificationsOff;
+  /// **'Per month'**
+  String get subscriptionsMonthlyTotal;
 
-  /// No description provided for @remindersSettingsSubtitle.
+  /// No description provided for @subscriptionsYearlyTotal.
   ///
   /// In en, this message translates to:
-  /// **'{count} · {state}'**
-  String remindersSettingsSubtitle(String count, String state);
+  /// **'Per year'**
+  String get subscriptionsYearlyTotal;
 
-  /// No description provided for @reminderTabHistory.
+  /// No description provided for @subscriptionsActiveCount.
   ///
   /// In en, this message translates to:
-  /// **'History'**
-  String get reminderTabHistory;
+  /// **'{count, plural, =1{1 active subscription} other{{count} active subscriptions}}'**
+  String subscriptionsActiveCount(int count);
 
-  /// No description provided for @reminderSectionOverdue.
+  /// No description provided for @subscriptionsEmptyTitle.
   ///
   /// In en, this message translates to:
-  /// **'Overdue'**
-  String get reminderSectionOverdue;
+  /// **'No subscriptions yet'**
+  String get subscriptionsEmptyTitle;
 
-  /// No description provided for @reminderSectionThisWeek.
+  /// No description provided for @subscriptionsEmptyBody.
   ///
   /// In en, this message translates to:
-  /// **'This week'**
-  String get reminderSectionThisWeek;
+  /// **'Add Netflix, your phone recharge or the gym to see what they cost you each month and year.'**
+  String get subscriptionsEmptyBody;
 
-  /// No description provided for @reminderSectionLater.
+  /// No description provided for @subscriptionAdd.
   ///
   /// In en, this message translates to:
-  /// **'Later'**
-  String get reminderSectionLater;
+  /// **'Add subscription'**
+  String get subscriptionAdd;
 
-  /// No description provided for @reminderAdd.
+  /// No description provided for @subscriptionEdit.
   ///
   /// In en, this message translates to:
-  /// **'Add reminder'**
-  String get reminderAdd;
+  /// **'Edit subscription'**
+  String get subscriptionEdit;
 
-  /// No description provided for @reminderFab.
+  /// No description provided for @subscriptionPickService.
   ///
   /// In en, this message translates to:
-  /// **'Reminder'**
-  String get reminderFab;
+  /// **'Pick a service'**
+  String get subscriptionPickService;
 
-  /// No description provided for @remindersEmptyTitle.
+  /// No description provided for @subscriptionCustom.
   ///
   /// In en, this message translates to:
-  /// **'No reminders yet'**
-  String get remindersEmptyTitle;
+  /// **'Something else'**
+  String get subscriptionCustom;
 
-  /// No description provided for @remindersEmptyBody.
+  /// No description provided for @subscriptionPrice.
   ///
   /// In en, this message translates to:
-  /// **'Bills, rent, EMIs, renewals: add one and Hisab will nudge you before it\'s due.'**
-  String get remindersEmptyBody;
+  /// **'Price per renewal'**
+  String get subscriptionPrice;
 
-  /// No description provided for @reminderHistoryEmpty.
+  /// No description provided for @subscriptionCycle.
   ///
   /// In en, this message translates to:
-  /// **'Paid and skipped reminders show up here.'**
-  String get reminderHistoryEmpty;
+  /// **'Renews'**
+  String get subscriptionCycle;
 
-  /// No description provided for @reminderSkip.
+  /// No description provided for @subscriptionNextRenewal.
   ///
   /// In en, this message translates to:
-  /// **'Skip this time'**
-  String get reminderSkip;
+  /// **'Next renewal'**
+  String get subscriptionNextRenewal;
 
-  /// No description provided for @reminderDeleted.
+  /// No description provided for @subscriptionStartedOn.
   ///
   /// In en, this message translates to:
-  /// **'Reminder deleted'**
-  String get reminderDeleted;
+  /// **'Started {date}'**
+  String subscriptionStartedOn(String date);
 
-  /// No description provided for @reminderMarkedPaid.
+  /// No description provided for @subscriptionAutoPost.
   ///
   /// In en, this message translates to:
-  /// **'Marked paid'**
-  String get reminderMarkedPaid;
+  /// **'Add to expenses on each renewal'**
+  String get subscriptionAutoPost;
 
-  /// No description provided for @reminderMarkedDone.
+  /// No description provided for @subscriptionAutoPostHelp.
   ///
   /// In en, this message translates to:
-  /// **'Marked done'**
-  String get reminderMarkedDone;
+  /// **'Off: tracked here only, no entries are added'**
+  String get subscriptionAutoPostHelp;
 
-  /// No description provided for @reminderSkipped.
+  /// No description provided for @subscriptionNameRequired.
   ///
   /// In en, this message translates to:
-  /// **'Skipped this time'**
-  String get reminderSkipped;
+  /// **'Enter a name'**
+  String get subscriptionNameRequired;
 
-  /// No description provided for @reminderSnoozedUntil.
+  /// No description provided for @subscriptionPriceRequired.
   ///
   /// In en, this message translates to:
-  /// **'Snoozed until {date}'**
-  String reminderSnoozedUntil(String date);
+  /// **'Enter the price'**
+  String get subscriptionPriceRequired;
 
-  /// No description provided for @reminderAlreadyDone.
+  /// No description provided for @subscriptionRenewsOn.
   ///
   /// In en, this message translates to:
-  /// **'Already marked paid'**
-  String get reminderAlreadyDone;
+  /// **'Renews {date}'**
+  String subscriptionRenewsOn(String date);
 
-  /// No description provided for @reminderPaidOn.
+  /// No description provided for @subscriptionRenewsToday.
   ///
   /// In en, this message translates to:
-  /// **'Paid {date}'**
-  String reminderPaidOn(String date);
+  /// **'Renews today'**
+  String get subscriptionRenewsToday;
 
-  /// No description provided for @reminderDoneOn.
+  /// No description provided for @subscriptionRenewsInDays.
   ///
   /// In en, this message translates to:
-  /// **'Done {date}'**
-  String reminderDoneOn(String date);
+  /// **'{days, plural, =1{Renews tomorrow} other{Renews in {days} days}}'**
+  String subscriptionRenewsInDays(int days);
 
-  /// No description provided for @reminderSkippedOn.
+  /// No description provided for @subscriptionOverdue.
   ///
   /// In en, this message translates to:
-  /// **'Skipped {date}'**
-  String reminderSkippedOn(String date);
+  /// **'Was due {date}'**
+  String subscriptionOverdue(String date);
 
-  /// No description provided for @reminderNextDue.
+  /// No description provided for @subscriptionPaused.
   ///
   /// In en, this message translates to:
-  /// **'Next due {date}'**
-  String reminderNextDue(String date);
+  /// **'Paused'**
+  String get subscriptionPaused;
 
-  /// No description provided for @notifOffBanner.
+  /// No description provided for @subscriptionCancelled.
   ///
   /// In en, this message translates to:
-  /// **'Notifications are off. Reminders will only show in the app.'**
-  String get notifOffBanner;
+  /// **'Cancelled'**
+  String get subscriptionCancelled;
 
-  /// No description provided for @notifTurnOn.
+  /// No description provided for @subscriptionPause.
   ///
   /// In en, this message translates to:
-  /// **'Turn on'**
-  String get notifTurnOn;
+  /// **'Pause'**
+  String get subscriptionPause;
 
-  /// No description provided for @reminderExactAlarmNote.
+  /// No description provided for @subscriptionResume.
   ///
   /// In en, this message translates to:
-  /// **'Alerts may come a few minutes late. Exact timing needs the Alarms & reminders permission.'**
-  String get reminderExactAlarmNote;
+  /// **'Resume'**
+  String get subscriptionResume;
 
-  /// No description provided for @notifPrePromptTitle.
+  /// No description provided for @subscriptionMarkCancelled.
   ///
   /// In en, this message translates to:
-  /// **'Get reminded before it\'s due'**
-  String get notifPrePromptTitle;
+  /// **'Mark as cancelled'**
+  String get subscriptionMarkCancelled;
 
-  /// No description provided for @notifPrePromptBody.
+  /// No description provided for @subscriptionCancelConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Hisab sends a notification at the time you choose, only for your reminders. No marketing.'**
-  String get notifPrePromptBody;
+  /// **'Mark {name} as cancelled?'**
+  String subscriptionCancelConfirm(String name);
 
-  /// No description provided for @reminderPaidSheetTitle.
+  /// No description provided for @subscriptionCancelConfirmBody.
   ///
   /// In en, this message translates to:
-  /// **'Paid {title}?'**
-  String reminderPaidSheetTitle(String title);
+  /// **'No new charges are added and it leaves the totals. Past entries stay.'**
+  String get subscriptionCancelConfirmBody;
 
-  /// No description provided for @reminderPaidSheetBody.
+  /// No description provided for @subscriptionDeleted.
   ///
   /// In en, this message translates to:
-  /// **'Add an expense of {amount} and mark this paid.'**
-  String reminderPaidSheetBody(String amount);
+  /// **'Subscription deleted'**
+  String get subscriptionDeleted;
 
-  /// No description provided for @reminderAddEntryAndMark.
+  /// No description provided for @subscriptionPerMonth.
   ///
   /// In en, this message translates to:
-  /// **'Add entry & mark paid'**
-  String get reminderAddEntryAndMark;
+  /// **'{amount}/month'**
+  String subscriptionPerMonth(String amount);
 
-  /// No description provided for @reminderJustMark.
+  /// No description provided for @subscriptionSort.
   ///
   /// In en, this message translates to:
-  /// **'Just mark paid'**
-  String get reminderJustMark;
+  /// **'Sort'**
+  String get subscriptionSort;
 
-  /// No description provided for @reminderNew.
+  /// No description provided for @subscriptionSortCostHigh.
   ///
   /// In en, this message translates to:
-  /// **'New reminder'**
-  String get reminderNew;
+  /// **'Cost: high to low'**
+  String get subscriptionSortCostHigh;
 
-  /// No description provided for @reminderEditTitle.
+  /// No description provided for @subscriptionSortCostLow.
   ///
   /// In en, this message translates to:
-  /// **'Edit reminder'**
-  String get reminderEditTitle;
+  /// **'Cost: low to high'**
+  String get subscriptionSortCostLow;
 
-  /// No description provided for @reminderKindBill.
+  /// No description provided for @subscriptionSortRenewal.
   ///
   /// In en, this message translates to:
-  /// **'Bill'**
-  String get reminderKindBill;
+  /// **'Next renewal'**
+  String get subscriptionSortRenewal;
 
-  /// No description provided for @reminderKindEmi.
+  /// No description provided for @subscriptionSortName.
   ///
   /// In en, this message translates to:
-  /// **'EMI'**
-  String get reminderKindEmi;
+  /// **'Name'**
+  String get subscriptionSortName;
 
-  /// No description provided for @reminderKindCard.
+  /// No description provided for @subscriptionEveryDays.
   ///
   /// In en, this message translates to:
-  /// **'Card bill'**
-  String get reminderKindCard;
+  /// **'{count, plural, =1{Every day} other{Every {count} days}}'**
+  String subscriptionEveryDays(int count);
 
-  /// No description provided for @reminderKindSubscription.
+  /// No description provided for @subscriptionEveryWeeks.
   ///
   /// In en, this message translates to:
-  /// **'Subscription'**
-  String get reminderKindSubscription;
+  /// **'{count, plural, =1{Every week} other{Every {count} weeks}}'**
+  String subscriptionEveryWeeks(int count);
 
-  /// No description provided for @reminderKindInsurance.
+  /// No description provided for @subscriptionEveryMonths.
   ///
   /// In en, this message translates to:
-  /// **'Insurance'**
-  String get reminderKindInsurance;
+  /// **'{count, plural, =1{Every month} other{Every {count} months}}'**
+  String subscriptionEveryMonths(int count);
 
-  /// No description provided for @reminderKindDocument.
+  /// No description provided for @subscriptionEveryYears.
   ///
   /// In en, this message translates to:
-  /// **'Document'**
-  String get reminderKindDocument;
+  /// **'{count, plural, =1{Every year} other{Every {count} years}}'**
+  String subscriptionEveryYears(int count);
 
-  /// No description provided for @reminderKindCustom.
+  /// No description provided for @subscriptionTemplateNetflix.
+  ///
+  /// In en, this message translates to:
+  /// **'Netflix'**
+  String get subscriptionTemplateNetflix;
+
+  /// No description provided for @subscriptionTemplateAmazonPrime.
+  ///
+  /// In en, this message translates to:
+  /// **'Amazon Prime'**
+  String get subscriptionTemplateAmazonPrime;
+
+  /// No description provided for @subscriptionTemplateJiohotstar.
+  ///
+  /// In en, this message translates to:
+  /// **'JioHotstar'**
+  String get subscriptionTemplateJiohotstar;
+
+  /// No description provided for @subscriptionTemplateSpotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify'**
+  String get subscriptionTemplateSpotify;
+
+  /// No description provided for @subscriptionTemplateYoutubePremium.
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube Premium'**
+  String get subscriptionTemplateYoutubePremium;
+
+  /// No description provided for @subscriptionTemplateMobileRecharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile recharge'**
+  String get subscriptionTemplateMobileRecharge;
+
+  /// No description provided for @subscriptionTemplateDth.
+  ///
+  /// In en, this message translates to:
+  /// **'DTH'**
+  String get subscriptionTemplateDth;
+
+  /// No description provided for @subscriptionTemplateBroadband.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadband'**
+  String get subscriptionTemplateBroadband;
+
+  /// No description provided for @subscriptionTemplateGym.
+  ///
+  /// In en, this message translates to:
+  /// **'Gym'**
+  String get subscriptionTemplateGym;
+
+  /// No description provided for @subscriptionTemplateCloudStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud storage'**
+  String get subscriptionTemplateCloudStorage;
+
+  /// No description provided for @subscriptionTemplateNewsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'News app'**
+  String get subscriptionTemplateNewsApp;
+
+  /// No description provided for @payersMultiple.
+  ///
+  /// In en, this message translates to:
+  /// **'2+ people'**
+  String get payersMultiple;
+
+  /// No description provided for @payersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter how much each person paid.'**
+  String get payersHelp;
+
+  /// No description provided for @payersAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'{assigned} of {total} assigned'**
+  String payersAssigned(String assigned, String total);
+
+  /// No description provided for @payersMustTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Amounts paid must add up to {total}'**
+  String payersMustTotal(String total);
+
+  /// No description provided for @namesAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'{first} and {last}'**
+  String namesAnd(String first, String last);
+
+  /// No description provided for @youInList.
+  ///
+  /// In en, this message translates to:
+  /// **'you'**
+  String get youInList;
+
+  /// No description provided for @groupTotalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Group totals'**
+  String get groupTotalsTitle;
+
+  /// No description provided for @groupTotalsAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get groupTotalsAllTime;
+
+  /// No description provided for @groupTotalsTotalSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Group total'**
+  String get groupTotalsTotalSpent;
+
+  /// No description provided for @groupTotalsYouPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'You paid'**
+  String get groupTotalsYouPaid;
+
+  /// No description provided for @groupTotalsYourShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Your share'**
+  String get groupTotalsYourShare;
+
+  /// No description provided for @groupTotalsNetChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change in your balance'**
+  String get groupTotalsNetChange;
+
+  /// No description provided for @groupTotalsPaymentsMade.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you made'**
+  String get groupTotalsPaymentsMade;
+
+  /// No description provided for @groupTotalsPaymentsReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you received'**
+  String get groupTotalsPaymentsReceived;
+
+  /// No description provided for @groupTotalsByMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid and share by member'**
+  String get groupTotalsByMember;
+
+  /// No description provided for @groupTotalsPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get groupTotalsPaid;
+
+  /// No description provided for @groupTotalsShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get groupTotalsShare;
+
+  /// No description provided for @groupTotalsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No expenses in this period'**
+  String get groupTotalsEmpty;
+
+  /// No description provided for @groupTotalsExpenseCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 expense} other{{count} expenses}}'**
+  String groupTotalsExpenseCount(int count);
+
+  /// No description provided for @groupTotalsMemberRow.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: paid {paid}, share {share}'**
+  String groupTotalsMemberRow(String name, String paid, String share);
+
+  /// No description provided for @groupTotalsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'See totals'**
+  String get groupTotalsOpen;
+
+  /// No description provided for @groupSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Group settings'**
+  String get groupSettingsTitle;
+
+  /// No description provided for @groupSettingsType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get groupSettingsType;
+
+  /// No description provided for @groupTypeTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip'**
+  String get groupTypeTrip;
+
+  /// No description provided for @groupTypeHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get groupTypeHome;
+
+  /// No description provided for @groupTypeCouple.
+  ///
+  /// In en, this message translates to:
+  /// **'Couple'**
+  String get groupTypeCouple;
+
+  /// No description provided for @groupTypeOther.
   ///
   /// In en, this message translates to:
   /// **'Other'**
-  String get reminderKindCustom;
+  String get groupTypeOther;
 
-  /// No description provided for @reminderTitleLabel.
+  /// No description provided for @groupSettingsIcon.
   ///
   /// In en, this message translates to:
-  /// **'Title'**
-  String get reminderTitleLabel;
+  /// **'Icon'**
+  String get groupSettingsIcon;
 
-  /// No description provided for @reminderTitleHint.
+  /// No description provided for @groupSettingsDefaultSplit.
   ///
   /// In en, this message translates to:
-  /// **'e.g. Electricity bill'**
-  String get reminderTitleHint;
+  /// **'Default split'**
+  String get groupSettingsDefaultSplit;
 
-  /// No description provided for @reminderTitleRequired.
+  /// No description provided for @groupSettingsDefaultSplitHint.
   ///
   /// In en, this message translates to:
-  /// **'Enter a title'**
-  String get reminderTitleRequired;
+  /// **'Pre-selected for new expenses. Expenses already added keep their split.'**
+  String get groupSettingsDefaultSplitHint;
 
-  /// No description provided for @reminderAmountOptional.
+  /// No description provided for @groupSettingsWeights.
   ///
   /// In en, this message translates to:
-  /// **'Amount (optional)'**
-  String get reminderAmountOptional;
+  /// **'Shares per member'**
+  String get groupSettingsWeights;
 
-  /// No description provided for @reminderDueDate.
+  /// A member's share weight; count is the weight as a number, weight is it formatted (1.5).
   ///
   /// In en, this message translates to:
-  /// **'Due date'**
-  String get reminderDueDate;
+  /// **'{count, plural, =1{1 share} other{{weight} shares}}'**
+  String groupSettingsWeightValue(num count, String weight);
 
-  /// No description provided for @reminderRepeatLabel.
+  /// No description provided for @groupSettingsWeightLess.
   ///
   /// In en, this message translates to:
-  /// **'Repeat'**
-  String get reminderRepeatLabel;
+  /// **'Fewer shares for {name}'**
+  String groupSettingsWeightLess(String name);
 
-  /// No description provided for @reminderRepeatOnce.
+  /// No description provided for @groupSettingsWeightMore.
   ///
   /// In en, this message translates to:
-  /// **'Once'**
-  String get reminderRepeatOnce;
+  /// **'More shares for {name}'**
+  String groupSettingsWeightMore(String name);
 
-  /// No description provided for @reminderRepeatWeekly.
+  /// No description provided for @groupSettingsCurrency.
   ///
   /// In en, this message translates to:
-  /// **'Every week'**
-  String get reminderRepeatWeekly;
+  /// **'Currency label'**
+  String get groupSettingsCurrency;
 
-  /// No description provided for @reminderRepeatMonthly.
+  /// No description provided for @groupSettingsCurrencyHint.
   ///
   /// In en, this message translates to:
-  /// **'Every month'**
-  String get reminderRepeatMonthly;
+  /// **'Only changes the symbol shown in this group. Amounts are not converted.'**
+  String get groupSettingsCurrencyHint;
 
-  /// No description provided for @reminderRepeatQuarterly.
+  /// No description provided for @groupSettingsCurrencyAppDefault.
   ///
   /// In en, this message translates to:
-  /// **'Every 3 months'**
-  String get reminderRepeatQuarterly;
+  /// **'Same as app ({symbol})'**
+  String groupSettingsCurrencyAppDefault(String symbol);
 
-  /// No description provided for @reminderRepeatYearly.
+  /// No description provided for @groupSettingsCurrencyOther.
   ///
   /// In en, this message translates to:
-  /// **'Every year'**
-  String get reminderRepeatYearly;
+  /// **'Other symbol'**
+  String get groupSettingsCurrencyOther;
 
-  /// No description provided for @reminderNotifyLabel.
+  /// No description provided for @groupSettingsSimplify.
   ///
   /// In en, this message translates to:
-  /// **'Remind me'**
-  String get reminderNotifyLabel;
+  /// **'Simplify debts'**
+  String get groupSettingsSimplify;
 
-  /// No description provided for @reminderNotifyOnDay.
+  /// No description provided for @groupSettingsSimplifyBody.
   ///
   /// In en, this message translates to:
-  /// **'On the day'**
-  String get reminderNotifyOnDay;
+  /// **'Combines debts so the group needs fewer repayments. If Asha owes Ravi and Ravi owes Meena, Asha can pay Meena directly. Nobody pays or gets back a different total.'**
+  String get groupSettingsSimplifyBody;
 
-  /// No description provided for @reminderNotifyDaysBefore.
+  /// No description provided for @groupSettingsSimplifySaves.
   ///
   /// In en, this message translates to:
-  /// **'{days, plural, =1{1 day before} other{{days} days before}}'**
-  String reminderNotifyDaysBefore(int days);
+  /// **'{count, plural, =1{Saves 1 repayment right now} other{Saves {count} repayments right now}}'**
+  String groupSettingsSimplifySaves(int count);
 
-  /// No description provided for @reminderNotifyEnabled.
+  /// No description provided for @groupSettingsNotes.
   ///
   /// In en, this message translates to:
-  /// **'Notify me'**
-  String get reminderNotifyEnabled;
+  /// **'Notes'**
+  String get groupSettingsNotes;
 
-  /// No description provided for @reminderNotifyAt.
+  /// No description provided for @groupSettingsNotesHint.
   ///
   /// In en, this message translates to:
-  /// **'At {time}'**
-  String reminderNotifyAt(String time);
+  /// **'Wi-Fi password, house rules, trip plan'**
+  String get groupSettingsNotesHint;
 
-  /// No description provided for @reminderNotifyPreview.
+  /// No description provided for @groupSettingsNotesAdd.
   ///
   /// In en, this message translates to:
-  /// **'First alert: {when}'**
-  String reminderNotifyPreview(String when);
+  /// **'Add a note for this group'**
+  String get groupSettingsNotesAdd;
 
-  /// No description provided for @reminderNoAlertsLeft.
+  /// No description provided for @groupSettingsManage.
   ///
   /// In en, this message translates to:
-  /// **'All alert times have passed; it will show as due in the app.'**
-  String get reminderNoAlertsLeft;
+  /// **'Manage group'**
+  String get groupSettingsManage;
 
-  /// No description provided for @reminderPickDaysError.
+  /// No description provided for @groupArchive.
   ///
   /// In en, this message translates to:
-  /// **'Pick at least one day'**
-  String get reminderPickDaysError;
+  /// **'Archive group'**
+  String get groupArchive;
 
-  /// No description provided for @reminderSave.
+  /// No description provided for @groupArchiveTitle.
   ///
   /// In en, this message translates to:
-  /// **'Save reminder'**
-  String get reminderSave;
+  /// **'Archive {name}?'**
+  String groupArchiveTitle(String name);
 
-  /// No description provided for @reminderNoAccount.
+  /// No description provided for @groupArchiveBody.
   ///
   /// In en, this message translates to:
-  /// **'No account'**
-  String get reminderNoAccount;
+  /// **'The group moves to Archived on the groups list. Nothing is deleted, and you can unarchive it any time.'**
+  String get groupArchiveBody;
 
-  /// No description provided for @reminderChannelName.
+  /// No description provided for @groupArchiveConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Bill & due-date reminders'**
-  String get reminderChannelName;
+  /// **'Archive'**
+  String get groupArchiveConfirm;
 
-  /// No description provided for @reminderChannelDescription.
+  /// No description provided for @groupUnarchive.
   ///
   /// In en, this message translates to:
-  /// **'Alerts before bills, EMIs, card dues and renewals are due'**
-  String get reminderChannelDescription;
+  /// **'Unarchive'**
+  String get groupUnarchive;
 
-  /// No description provided for @reminderMarkPaid.
+  /// No description provided for @groupArchivedBanner.
   ///
   /// In en, this message translates to:
-  /// **'Mark paid'**
-  String get reminderMarkPaid;
+  /// **'This group is archived. Unarchive it to add expenses.'**
+  String get groupArchivedBanner;
 
-  /// No description provided for @reminderMarkDone.
+  /// No description provided for @groupLeftBanner.
   ///
   /// In en, this message translates to:
-  /// **'Done'**
-  String get reminderMarkDone;
+  /// **'You left this group. Its history stays here.'**
+  String get groupLeftBanner;
 
-  /// No description provided for @reminderSnoozeOneDay.
+  /// No description provided for @groupArchivedSection.
   ///
   /// In en, this message translates to:
-  /// **'Snooze 1 day'**
-  String get reminderSnoozeOneDay;
+  /// **'Archived ({count})'**
+  String groupArchivedSection(int count);
 
-  /// No description provided for @reminderDueToday.
+  /// No description provided for @groupLeave.
   ///
   /// In en, this message translates to:
-  /// **'Due today'**
-  String get reminderDueToday;
+  /// **'Leave group'**
+  String get groupLeave;
 
-  /// No description provided for @reminderDueInDays.
+  /// No description provided for @groupLeaveTitle.
   ///
   /// In en, this message translates to:
-  /// **'{days, plural, =1{Due tomorrow} other{Due in {days} days}}'**
-  String reminderDueInDays(int days);
+  /// **'Leave {name}?'**
+  String groupLeaveTitle(String name);
 
-  /// No description provided for @reminderOverdueDays.
+  /// No description provided for @groupLeaveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You are removed from the group on this phone and it moves to Archived, so its history stays readable.'**
+  String get groupLeaveBody;
+
+  /// No description provided for @groupLeaveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get groupLeaveConfirm;
+
+  /// No description provided for @groupLeaveBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle up first. You can leave once nobody owes you and you owe nobody.'**
+  String get groupLeaveBlocked;
+
+  /// No description provided for @groupDeleteUnsettledBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This group still has unsettled balances. Deleting it removes every expense and payment, and it cannot be undone.'**
+  String get groupDeleteUnsettledBody;
+
+  /// No description provided for @groupEmptyTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tickets, stays and meals as you go; Hisab works out who owes whom.'**
+  String get groupEmptyTrip;
+
+  /// No description provided for @groupEmptyHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Add rent, bills and groceries; Hisab works out who owes whom.'**
+  String get groupEmptyHome;
+
+  /// No description provided for @groupEmptyCouple.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the dinners, groceries and trips you share; Hisab keeps the balance.'**
+  String get groupEmptyCouple;
+
+  /// No description provided for @activityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get activityTitle;
+
+  /// No description provided for @activityEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity yet'**
+  String get activityEmptyTitle;
+
+  /// No description provided for @activityEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses and payments you add, edit or delete show up here.'**
+  String get activityEmptyBody;
+
+  /// No description provided for @activityExpenseAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} added “{title}”'**
+  String activityExpenseAdded(String actor, String title);
+
+  /// No description provided for @activityExpenseEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} edited “{title}”'**
+  String activityExpenseEdited(String actor, String title);
+
+  /// No description provided for @activityExpenseDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} deleted “{title}”'**
+  String activityExpenseDeleted(String actor, String title);
+
+  /// No description provided for @activityExpenseRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} restored “{title}”'**
+  String activityExpenseRestored(String actor, String title);
+
+  /// No description provided for @activityPaymentAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} recorded a payment'**
+  String activityPaymentAdded(String actor);
+
+  /// No description provided for @activityPaymentEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} edited a payment'**
+  String activityPaymentEdited(String actor);
+
+  /// No description provided for @activityPaymentDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} removed a payment'**
+  String activityPaymentDeleted(String actor);
+
+  /// No description provided for @activityPaymentRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} restored a payment'**
+  String activityPaymentRestored(String actor);
+
+  /// No description provided for @activityExpenseLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} · paid by {payers}'**
+  String activityExpenseLine(String amount, String payers);
+
+  /// No description provided for @activityPaymentLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} paid {to} {amount}'**
+  String activityPaymentLine(String from, String to, String amount);
+
+  /// No description provided for @activityChangeAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount: {from} → {to}'**
+  String activityChangeAmount(String from, String to);
+
+  /// No description provided for @activityChangeDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date: {from} → {to}'**
+  String activityChangeDate(String from, String to);
+
+  /// No description provided for @activityChangeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description: {from} → {to}'**
+  String activityChangeDescription(String from, String to);
+
+  /// No description provided for @activityChangeCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category: {from} → {to}'**
+  String activityChangeCategory(String from, String to);
+
+  /// No description provided for @activityChangePayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid by: {from} → {to}'**
+  String activityChangePayers(String from, String to);
+
+  /// One payer and what they paid, in a list of several payers.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {amount}'**
+  String activityPayerAmount(String name, String amount);
+
+  /// No description provided for @activityChangeShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s share: {from} → {to}'**
+  String activityChangeShare(String name, String from, String to);
+
+  /// No description provided for @activityChangeMyShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Your share: {from} → {to}'**
+  String activityChangeMyShare(String from, String to);
+
+  /// No description provided for @activityChangeParties.
+  ///
+  /// In en, this message translates to:
+  /// **'Who paid whom: {from} → {to}'**
+  String activityChangeParties(String from, String to);
+
+  /// No description provided for @activityPartiesPair.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} to {to}'**
+  String activityPartiesPair(String from, String to);
+
+  /// No description provided for @activityChangeMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Method: {from} → {to}'**
+  String activityChangeMethod(String from, String to);
+
+  /// No description provided for @activityChangeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: {from} → {to}'**
+  String activityChangeNote(String from, String to);
+
+  /// No description provided for @activityNone.
+  ///
+  /// In en, this message translates to:
+  /// **'none'**
+  String get activityNone;
+
+  /// No description provided for @activityRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get activityRestore;
+
+  /// No description provided for @activityExpenseRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense restored'**
+  String get activityExpenseRestoredSnack;
+
+  /// No description provided for @activityExpenseDeletedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense deleted'**
+  String get activityExpenseDeletedSnack;
+
+  /// No description provided for @activityAllGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'All groups'**
+  String get activityAllGroups;
+
+  /// No description provided for @activityGroupDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} deleted the group “{name}”'**
+  String activityGroupDeleted(String actor, String name);
+
+  /// No description provided for @activityGroupRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} restored the group “{name}”'**
+  String activityGroupRestored(String actor, String name);
+
+  /// No description provided for @activityGroupEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} changed the group “{name}”'**
+  String activityGroupEdited(String actor, String name);
+
+  /// No description provided for @activityGroupLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No expenses} =1{1 expense} other{{count} expenses}}'**
+  String activityGroupLine(int count);
+
+  /// No description provided for @activityPaymentRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment restored'**
+  String get activityPaymentRestoredSnack;
+
+  /// No description provided for @activityGroupRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Group restored'**
+  String get activityGroupRestoredSnack;
+
+  /// No description provided for @activityGroupDeletedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Group deleted'**
+  String get activityGroupDeletedSnack;
+
+  /// No description provided for @recurringAddedSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{added, plural, =0{None added} =1{1 added} other{{added} added}}, {skipped, plural, =1{1 skipped} other{{skipped} skipped}}'**
+  String recurringAddedSkipped(int added, int skipped);
+
+  /// No description provided for @groupExportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export as CSV'**
+  String get groupExportCsv;
+
+  /// No description provided for @groupExportCsvSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'{group} expenses'**
+  String groupExportCsvSubject(String group);
+
+  /// No description provided for @groupExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t export the CSV'**
+  String get groupExportFailed;
+
+  /// No description provided for @groupCsvDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get groupCsvDate;
+
+  /// No description provided for @groupCsvDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get groupCsvDescription;
+
+  /// No description provided for @groupCsvCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get groupCsvCost;
+
+  /// No description provided for @groupCsvPaidBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid by'**
+  String get groupCsvPaidBy;
+
+  /// No description provided for @groupCsvPaidColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} paid'**
+  String groupCsvPaidColumn(String name);
+
+  /// No description provided for @groupCsvShareColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} share'**
+  String groupCsvShareColumn(String name);
+
+  /// No description provided for @groupCsvBalanceColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} balance'**
+  String groupCsvBalanceColumn(String name);
+
+  /// No description provided for @groupCsvPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get groupCsvPayment;
+
+  /// No description provided for @groupSummaryWhoPaysWhom.
+  ///
+  /// In en, this message translates to:
+  /// **'Who pays whom'**
+  String get groupSummaryWhoPaysWhom;
+
+  /// No description provided for @groupSummaryStandings.
+  ///
+  /// In en, this message translates to:
+  /// **'Where everyone stands'**
+  String get groupSummaryStandings;
+
+  /// No description provided for @groupSummaryYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {name} {amount}'**
+  String groupSummaryYouOwe(String name, String amount);
+
+  /// No description provided for @groupSummaryOwesYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes you {amount}'**
+  String groupSummaryOwesYou(String name, String amount);
+
+  /// No description provided for @groupSummaryGetsBack.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} gets back {amount}'**
+  String groupSummaryGetsBack(String name, String amount);
+
+  /// No description provided for @groupSummaryOwesInTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes {amount} in total'**
+  String groupSummaryOwesInTotal(String name, String amount);
+
+  /// No description provided for @groupSummaryYouGetBack.
+  ///
+  /// In en, this message translates to:
+  /// **'You get back {amount}'**
+  String groupSummaryYouGetBack(String amount);
+
+  /// No description provided for @groupSummaryYouOweInTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {amount} in total'**
+  String groupSummaryYouOweInTotal(String amount);
+
+  /// No description provided for @groupCsvTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get groupCsvTotal;
+
+  /// No description provided for @groupSummaryGroupTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Group total: {amount}'**
+  String groupSummaryGroupTotal(String amount);
+
+  /// No description provided for @groupSummaryYourShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Your share: {amount}'**
+  String groupSummaryYourShare(String amount);
+
+  /// No description provided for @groupSummaryMemberShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s share: {amount}'**
+  String groupSummaryMemberShare(String name, String amount);
+
+  /// No description provided for @smsAddedMarker.
+  ///
+  /// In en, this message translates to:
+  /// **'Added from SMS'**
+  String get smsAddedMarker;
+
+  /// No description provided for @smsAutoAddedOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {amount} from SMS'**
+  String smsAutoAddedOne(String amount);
+
+  /// No description provided for @smsAutoAddedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Added 1 entry from SMS} other{Added {count} entries from SMS}}'**
+  String smsAutoAddedMany(int count);
+
+  /// No description provided for @smsReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS to review'**
+  String get smsReviewTitle;
+
+  /// No description provided for @smsReviewHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'These messages were not clear enough to add on their own. Add, edit or ignore each one.'**
+  String get smsReviewHelp;
+
+  /// No description provided for @smsReviewUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the amount'**
+  String get smsReviewUnread;
+
+  /// No description provided for @smsReviewAddManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Add manually'**
+  String get smsReviewAddManually;
+
+  /// No description provided for @upcomingEmptyWithin.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Nothing due tomorrow} other{Nothing due in the next {days} days}}'**
+  String upcomingEmptyWithin(int days);
+
+  /// No description provided for @upcomingEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring bills, reminders and card dues show up here.'**
+  String get upcomingEmptyHint;
+
+  /// No description provided for @upcomingWindowDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days'**
+  String upcomingWindowDays(int days);
+
+  /// No description provided for @upcomingOverdueBy.
   ///
   /// In en, this message translates to:
   /// **'{days, plural, =1{Overdue by 1 day} other{Overdue by {days} days}}'**
-  String reminderOverdueDays(int days);
+  String upcomingOverdueBy(int days);
+
+  /// No description provided for @upcomingDueToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Due today'**
+  String get upcomingDueToday;
+
+  /// No description provided for @upcomingDueTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Due tomorrow'**
+  String get upcomingDueTomorrow;
+
+  /// No description provided for @upcomingDueInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'In {days} days · {date}'**
+  String upcomingDueInDays(int days, String date);
+
+  /// No description provided for @upcomingOverdueCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} overdue'**
+  String upcomingOverdueCount(int count);
+
+  /// No description provided for @upcomingDueTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} to pay'**
+  String upcomingDueTotal(String amount);
+
+  /// No description provided for @upcomingShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 more} other{{count} more}}'**
+  String upcomingShowAll(int count);
+
+  /// No description provided for @upcomingCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Due calendar'**
+  String get upcomingCalendar;
+
+  /// No description provided for @upcomingCalendarOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open due calendar'**
+  String get upcomingCalendarOpen;
+
+  /// No description provided for @upcomingCalendarDayEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing due on this day'**
+  String get upcomingCalendarDayEmpty;
+
+  /// No description provided for @upcomingCalendarPreviousMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous month'**
+  String get upcomingCalendarPreviousMonth;
+
+  /// No description provided for @upcomingCalendarNextMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Next month'**
+  String get upcomingCalendarNextMonth;
+
+  /// No description provided for @upcomingConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get upcomingConfirm;
+
+  /// No description provided for @upcomingConfirmPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'This is waiting for you to confirm. Add it to your entries now?'**
+  String get upcomingConfirmPrompt;
+
+  /// No description provided for @upcomingCalendarDueCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 due} other{{count} due}}'**
+  String upcomingCalendarDueCount(int count);
 }
 
 class _AppLocalizationsDelegate

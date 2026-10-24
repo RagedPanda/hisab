@@ -6,6 +6,7 @@ library;
 import 'dart:math';
 
 import '../../core/dates.dart';
+import '../../core/money.dart';
 import '../ledger/personal_totals.dart';
 
 /// Whole days a range spans.
@@ -120,5 +121,5 @@ String axisAmountLabel(double rupees, {String symbol = ''}) {
           : abs >= 1000
               ? '${trimmed(abs / 1000)}K'
               : trimmed(abs);
-  return '${rupees < 0 ? '-' : ''}$symbol$body';
+  return withCurrencySymbol(body, symbol: symbol, negative: rupees < 0);
 }

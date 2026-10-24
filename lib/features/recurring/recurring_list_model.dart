@@ -39,8 +39,21 @@ List<RecurringListItem> recurringListItems(List<RecurringRuleView> views, {requi
 /// Occurrences waiting for a confirm across every rule.
 int totalWaiting(List<RecurringListItem> items) => items.fold(0, (sum, item) => sum + item.waiting);
 
+/// The time of the last recurring catch-up. The list watches it so that
+/// confirm-first occurrences falling due at midnight or by resume show up
+/// without a restart, even when the catch-up itself writes nothing.
+class RecurringLastCatchUpNotifier extends Notifier<DateTime> {
+  @override
+  DateTime build() => DateTime.now();
+
+  void set(DateTime now) => state = now;
+}
+
+final recurringLastCatchUpProvider = NotifierProvider<RecurringLastCatchUpNotifier, DateTime>(RecurringLastCatchUpNotifier.new);
+
 final recurringListProvider = Provider<AsyncValue<List<RecurringListItem>>>((ref) {
   final monthStartDay = ref.watch(settingsProvider).monthStartDay;
+  ref.watch(recurringLastCatchUpProvider);
   return ref.watch(recurringViewsProvider).whenData((views) => recurringListItems(views, now: DateTime.now(), monthStartDay: monthStartDay));
 });
 

@@ -6,7 +6,7 @@ import '../../core/money.dart';
 import '../../core/theme.dart';
 import '../../core/providers.dart';
 import '../../data/repositories/groups_repository.dart';
-import '../../domain/split/group_net.dart';
+import '../../domain/split/group_settings.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import 'group_form.dart';
@@ -21,10 +21,14 @@ class GroupsScreen extends ConsumerWidget {
     final summaries = ref.watch(groupSummariesProvider);
     final symbol = ref.watch(settingsProvider).currencySymbol;
     final list = summaries.value ?? const <GroupSummary>[];
-    final totals = groupNetTotals(list.map((summary) => summary.myNetMinor));
+    final totals = groupTotalsInAppCurrency(list, appSymbol: symbol);
+    final active = [for (final summary in list) if (summary.group.archivedAt == null) summary];
+    final archived = [for (final summary in list) if (summary.group.archivedAt != null) summary];
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.groups)),
+      appBar: AppBar(title: Text(l10n.groups), actions: [
+        IconButton(tooltip: l10n.activityTitle, icon: const Icon(Icons.history), onPressed: () => context.push('/activity')),
+      ]),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'add-group',
         onPressed: () => showGroupForm(context, ref),
@@ -53,19 +57,44 @@ class GroupsScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                for (final summary in list)
-                  Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: IconBadge(icon: summary.group.icon, color: 0xFF0F6E6B),
-                      title: Text(summary.group.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text(l10n.groupSubtitle(summary.members.length, formatMinor(summary.totalSpentMinor, symbol: symbol, showDecimals: false, compact: true)), maxLines: 1, overflow: TextOverflow.ellipsis),
-                      trailing: GroupNetBadge(net: summary.myNetMinor, symbol: symbol),
-                      onTap: () => context.push('/groups/${summary.group.id}'),
+                for (final summary in active) _GroupTile(summary: summary, appSymbol: symbol),
+                if (archived.isNotEmpty)
+                  Theme(
+                    // No divider lines around the expansion tile, to match the cards.
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      key: const PageStorageKey('archived-groups'),
+                      tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+                      childrenPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.archive_outlined),
+                      title: Text(l10n.groupArchivedSection(archived.length)),
+                      children: [for (final summary in archived) _GroupTile(summary: summary, appSymbol: symbol)],
                     ),
                   ),
               ],
             ),
+    );
+  }
+}
+
+class _GroupTile extends StatelessWidget {
+  const _GroupTile({required this.summary, required this.appSymbol});
+  final GroupSummary summary;
+  final String appSymbol;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final symbol = groupSymbol(currencyLabel: summary.group.currencyLabel, appSymbol: appSymbol);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: IconBadge(icon: summary.group.icon, color: 0xFF0F6E6B),
+        title: Text(summary.group.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(l10n.groupSubtitle(summary.members.length, formatMinor(summary.totalSpentMinor, symbol: symbol, showDecimals: false, compact: true)), maxLines: 1, overflow: TextOverflow.ellipsis),
+        trailing: GroupNetBadge(net: summary.myNetMinor, symbol: symbol),
+        onTap: () => context.push('/groups/${summary.group.id}'),
+      ),
     );
   }
 }

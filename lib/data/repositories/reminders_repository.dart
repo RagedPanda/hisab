@@ -47,7 +47,7 @@ class RemindersRepository {
       kind: Value(draft.kind.key),
       title: Value(draft.title.trim()),
       notes: Value(draft.notes.trim()),
-      amountMinor: Value(draft.amountMinor),
+      amountMinor: Value(reminderAmountOrNone(draft.amountMinor)),
       toleranceMinor: Value(draft.toleranceMinor),
       matchKeywords: Value(draft.matchKeywords.trim().toLowerCase()),
       categoryId: Value(draft.categoryId),
@@ -161,7 +161,7 @@ ReminderDraft reminderDraftFrom(Reminder reminder) => ReminderDraft(
       toleranceMinor: reminder.toleranceMinor,
     );
 
-/// Fills the due-reminder fields a pre-v7 backup row lacks with their column
+/// Fills the due-reminder fields a pre-v6 backup row lacks with their column
 /// defaults, so older backups still restore.
 Map<String, dynamic> reminderJsonWithDefaults(Map<String, dynamic> json) => {
       'title': '',

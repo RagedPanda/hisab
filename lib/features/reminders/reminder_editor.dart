@@ -14,6 +14,7 @@ import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../categories/category_picker.dart';
 import '../shell/widgets/common.dart';
+import 'reminder_actions.dart';
 import 'reminder_labels.dart';
 
 /// Repeats offered in the editor; weekly suits few bills, so it stays out.
@@ -44,7 +45,7 @@ class ReminderEditor extends ConsumerStatefulWidget {
 
 class _ReminderEditorState extends ConsumerState<ReminderEditor> {
   late final _titleController = TextEditingController(text: widget.initial.title);
-  late final _amountController = TextEditingController(text: widget.initial.amountMinor == null ? '' : amountInputText(widget.initial.amountMinor!));
+  late final _amountController = TextEditingController(text: _initialAmountText(widget.initial.amountMinor));
   late final _notesController = TextEditingController(text: widget.initial.notes);
   late ReminderKind _kind = widget.initial.kind;
   late DateTime _dueAt = widget.initial.dueAt;
@@ -73,7 +74,7 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
         title: _titleController.text,
         dueAt: DateTime(_dueAt.year, _dueAt.month, _dueAt.day),
         notes: _notesController.text.trim(),
-        amountMinor: _kind.isMoney ? parseAmountToMinor(_amountController.text) : null,
+        amountMinor: _kind.isMoney ? reminderAmountOrNone(parseAmountToMinor(_amountController.text)) : null,
         categoryId: _kind.isMoney ? _categoryId : null,
         accountId: _kind.isMoney ? _accountId : null,
         recurringId: widget.initial.recurringId,
@@ -106,45 +107,20 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
     if (category != null) setState(() => _categoryId = category.id);
   }
 
-  /// Pre-permission sheet shown the first time a reminder with alerts is
-  /// saved while notifications are off; the reminder is saved either way.
-  Future<void> _askPermissionIfNeeded() async {
-    final permission = await ref.read(notificationServiceProvider).checkPermission();
-    if (permission.notificationsAllowed || !mounted) return;
-    final l10n = context.l10n;
-    final allow = await showModalBottomSheet<bool>(
-      context: context,
-      useRootNavigator: true,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.notifications_active_outlined, size: 48, color: Theme.of(sheetContext).colorScheme.primary),
-            const SizedBox(height: 12),
-            Text(l10n.notifPrePromptTitle, style: Theme.of(sheetContext).textTheme.titleLarge, textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            Text(l10n.notifPrePromptBody, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            Row(children: [
-              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext, false), child: Text(l10n.notNow))),
-              const SizedBox(width: 12),
-              Expanded(child: FilledButton(onPressed: () => Navigator.pop(sheetContext, true), child: Text(l10n.allow))),
-            ]),
-          ]),
-        ),
-      ),
-    );
-    if (allow ?? false) await ref.read(notificationServiceProvider).requestPermission();
-    ref.invalidate(notificationPermissionProvider);
+  /// The amount field starts empty for no amount, including a stored 0.
+  static String _initialAmountText(int? amountMinor) {
+    final amount = reminderAmountOrNone(amountMinor);
+    return amount == null ? '' : amountInputText(amount);
   }
 
   Future<void> _save() async {
     setState(() => _submitted = true);
     final draft = _draft;
-    if (draft.error != null || (_notify && _daysBefore.isEmpty) || _saving) return;
+    final amountInvalid = _kind.isMoney && amountErrorText(context, _amountController.text) != null;
+    if (draft.error != null || amountInvalid || (_notify && _daysBefore.isEmpty) || _saving) return;
     setState(() => _saving = true);
-    if (_notify) await _askPermissionIfNeeded();
+    // The reminder is saved whatever the answers.
+    if (_notify) await askReminderPermissionsIfNeeded(context);
     final id = await ref.read(reminderSchedulerProvider).save(draft);
     if (mounted) Navigator.pop(context, id);
   }
@@ -158,7 +134,6 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
     final category = categories.where((c) => c.id == _categoryId).firstOrNull;
-    final permission = ref.watch(notificationPermissionProvider).value;
     final draft = _draft;
     final titleError = _submitted && draft.error == ReminderDraftError.missingTitle ? l10n.reminderTitleRequired : null;
     final firstAlert = planAlerts(
@@ -213,7 +188,13 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
                         key: const ValueKey('reminder-amount'),
                         controller: _amountController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: InputDecoration(labelText: l10n.reminderAmountOptional, prefixText: '$symbol '),
+                        inputFormatters: amountInputFormatters,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          labelText: l10n.reminderAmountOptional,
+                          prefixText: '$symbol ',
+                          errorText: amountErrorText(context, _amountController.text),
+                        ),
                       ),
                     ],
                     gap,
@@ -280,20 +261,6 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
                       style: theme.textTheme.bodySmall?.copyWith(color: _submitted && _daysBefore.isEmpty ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant),
                     ),
                   ),
-                  if (permission != null && permission.notificationsAllowed && !permission.exactAlarmsAllowed)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 8, 0),
-                      child: Row(children: [
-                        Expanded(child: Text(l10n.reminderExactAlarmNote, style: theme.textTheme.bodySmall)),
-                        TextButton(
-                          onPressed: () async {
-                            await ref.read(notificationServiceProvider).requestExactAlarms();
-                            ref.invalidate(notificationPermissionProvider);
-                          },
-                          child: Text(l10n.notifTurnOn),
-                        ),
-                      ]),
-                    ),
                 ],
                 if (_kind.isMoney) ...[
                   gap,

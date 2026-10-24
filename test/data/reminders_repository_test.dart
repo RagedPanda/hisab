@@ -165,7 +165,7 @@ void main() {
     expect(again.matchKeywords, 'hdfc');
   });
 
-  test('a pre-v7 backup reminder restores with column defaults', () async {
+  test('a pre-v6 backup reminder restores with column defaults', () async {
     final legacy = {
       'id': 'old1',
       'kind': 'settle_up',
@@ -193,5 +193,13 @@ void main() {
   test('ReminderKind.of treats unknown keys as custom', () {
     expect(ReminderKind.of('emi'), ReminderKind.emi);
     expect(ReminderKind.of('mystery'), ReminderKind.custom);
+  });
+
+  test('an amount of 0 is stored as no amount (owner decision 23)', () async {
+    final id = await reminders.save(ReminderDraft(kind: ReminderKind.bill, title: 'Water', amountMinor: 0, dueAt: DateTime(2026, 11, 2), remindDaysBefore: const [0]));
+    expect((await reminders.getById(id))!.amountMinor, isNull);
+    expect(reminderAmountOrNone(0), isNull);
+    expect(reminderAmountOrNone(null), isNull);
+    expect(reminderAmountOrNone(15000), 15000);
   });
 }

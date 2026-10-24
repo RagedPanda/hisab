@@ -6,11 +6,14 @@ import '../../core/format.dart';
 import '../../core/money.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
+import '../../data/repositories/groups_repository.dart';
+import '../../domain/split/group_settings.dart';
 import '../../domain/split/group_timeline.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import 'expense_list_model.dart';
+import 'member_display.dart';
 import 'record_payment_sheet.dart';
 
 /// How one group's Expenses tab is being viewed. In memory only: a filter
@@ -42,6 +45,8 @@ class GroupExpensesTab extends ConsumerWidget {
   const GroupExpensesTab({
     super.key,
     required this.groupId,
+    this.groupType = GroupType.other,
+    this.notes = '',
     required this.entries,
     required this.settlements,
     required this.timelineByEntryId,
@@ -53,7 +58,13 @@ class GroupExpensesTab extends ConsumerWidget {
     required this.openPayment,
   });
   final String groupId;
-  final List<(Entry, List<Split>)> entries;
+
+  /// Picks the empty-state wording.
+  final GroupType groupType;
+
+  /// Group notes from settings, shown as a card on top when not empty.
+  final String notes;
+  final List<GroupEntry> entries;
   final List<Settlement> settlements;
   final Map<String, TimelineExpense> timelineByEntryId;
   final DateTime? settledUpTo;
@@ -66,13 +77,16 @@ class GroupExpensesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final notesCard = notes.trim().isEmpty ? null : _NotesCard(notes: notes.trim(), onTap: () => context.push('/groups/$groupId/settings'));
     if (entries.isEmpty && settlements.isEmpty) {
-      return EmptyState(icon: Icons.receipt_long_outlined, title: l10n.noGroupExpensesTitle, message: l10n.noGroupExpensesBody);
+      final empty = EmptyState(icon: Icons.receipt_long_outlined, title: l10n.noGroupExpensesTitle, message: _emptyMessage(l10n));
+      if (notesCard == null) return empty;
+      return ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 96), children: [notesCard, empty]);
     }
     final view = ref.watch(expenseListViewsProvider)[groupId] ?? const ExpenseListView();
     final filter = view.filter ?? defaultExpenseFilter(settledUpTo);
     final rows = <LedgerRow<Object>>[
-      for (final (entry, _) in entries)
+      for (final (entry, _, _) in entries)
         if (timelineByEntryId[entry.id] case final timeline?)
           LedgerRow(source: (entry, timeline), occurredAt: entry.occurredAt, totalMinor: entry.amountMinor, involvesMe: expenseInvolves(myMemberId, timeline)),
       for (final settlement in settlements)
@@ -90,6 +104,7 @@ class GroupExpensesTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
       children: [
+        ?notesCard,
         Wrap(
           spacing: 8,
           children: [
@@ -107,6 +122,13 @@ class GroupExpensesTab extends ConsumerWidget {
       ],
     );
   }
+
+  String _emptyMessage(AppLocalizations l10n) => switch (groupType) {
+        GroupType.trip => l10n.groupEmptyTrip,
+        GroupType.home => l10n.groupEmptyHome,
+        GroupType.couple => l10n.groupEmptyCouple,
+        GroupType.other => l10n.noGroupExpensesBody,
+      };
 
   /// Month headers and dividers stand alone; consecutive rows share a card.
   List<Widget> _sections(BuildContext context, List<ExpenseListItem<Object>> items, {required VoidCallback onToggleOlder}) {
@@ -142,7 +164,7 @@ class GroupExpensesTab extends ConsumerWidget {
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context).toString();
     final category = categoryById[entry.categoryId];
-    final payers = timeline.paidMinor.keys.map(nameOf).toList();
+    final payers = payerNamesLine(l10n, timeline.paidMinor.keys.toList(), myMemberId: myMemberId, nameOf: nameOf);
     final effect = expenseEffectFor(myMemberId, timeline);
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
     final (label, color) = switch (effect.kind) {
@@ -155,7 +177,7 @@ class GroupExpensesTab extends ConsumerWidget {
       leading: IconBadge(icon: category?.icon, color: category?.color ?? 0xFF607D8B),
       title: Text(entry.note.isNotEmpty ? entry.note : (entry.payee ?? category?.displayName(context) ?? l10n.kindExpense), maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
-        '${formatRowDate(entry.occurredAt, locale: locale)} · ${l10n.payerPaidAmount(payers.join(', '), formatMinor(entry.amountMinor, symbol: symbol))}',
+        '${formatRowDate(entry.occurredAt, locale: locale)} · ${l10n.payerPaidAmount(payers, formatMinor(entry.amountMinor, symbol: symbol))}',
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
@@ -292,6 +314,27 @@ class _Notice extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 24, 4, 8),
       child: Text(text, textAlign: TextAlign.center, style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+    );
+  }
+}
+
+/// The group's notes from settings; tapping opens settings to edit them.
+class _NotesCard extends StatelessWidget {
+  const _NotesCard({required this.notes, required this.onTap});
+  final String notes;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: const Icon(Icons.sticky_note_2_outlined),
+        title: Text(context.l10n.groupSettingsNotes, style: theme.textTheme.labelLarge),
+        subtitle: Text(notes, maxLines: 4, overflow: TextOverflow.ellipsis),
+        onTap: onTap,
+      ),
     );
   }
 }

@@ -97,12 +97,16 @@ class PluginNotificationGateway implements NotificationGateway {
           priority: Priority.high,
           icon: '@drawable/ic_notification',
           category: AndroidNotificationCategory.reminder,
-          actions: [
-            AndroidNotificationAction(kMarkPaidActionId, request.markPaidLabel, showsUserInterface: true),
-            AndroidNotificationAction(kSnoozeActionId, request.snoozeLabel),
-          ],
+          actions: request.withActions
+              ? [
+                  AndroidNotificationAction(kMarkPaidActionId, request.markPaidLabel, showsUserInterface: true),
+                  AndroidNotificationAction(kSnoozeActionId, request.snoozeLabel),
+                ]
+              : null,
         ),
-        iOS: DarwinNotificationDetails(categoryIdentifier: request.isMoney ? _moneyCategoryId : _doneCategoryId),
+        iOS: DarwinNotificationDetails(
+          categoryIdentifier: request.withActions ? (request.isMoney ? _moneyCategoryId : _doneCategoryId) : null,
+        ),
       ),
     );
   }

@@ -1,28 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../domain/currency/currency_lookup.dart';
+import '../domain/sms/sms_confidence.dart';
+
+/// Preference behind Settings > "Month starts on"; also read by backups.
+const String kMonthStartDayPref = 'monthStartDay';
+
+/// Preference key for the ISO 4217 home currency code.
+const String kCurrencyCodeKey = 'currencyCode';
+
+/// Preference key of the old free-text symbol; read only to migrate.
+const String kLegacyCurrencySymbolKey = 'currencySymbol';
+
 /// User preferences persisted outside the database.
 class AppSettings {
   const AppSettings({
-    this.currencySymbol = '₹',
+    this.currencyCode = kDefaultCurrencyCode,
+    this.currencyConfirmed = true,
     this.monthStartDay = 1,
     this.themeMode = ThemeMode.system,
     this.smsEnabled = false,
-    this.smsAutoAdd = false,
+    this.smsAutoAdd = true,
+    this.smsAutoAddChosen = false,
     this.myName = '',
     this.onboarded = false,
     this.localeCode = '',
   });
 
-  final String currencySymbol;
+  /// ISO 4217 code of the home currency; the symbol is derived from it.
+  final String currencyCode;
+
+  /// False only on a fresh install until the first-launch screen stores a
+  /// currency. Upgrades are migrated at startup and never see that screen.
+  final bool currencyConfirmed;
+
+  String get currencySymbol => symbolForCurrencyCode(currencyCode);
   final int monthStartDay;
   final ThemeMode themeMode;
 
   /// Whether the user has opted in to reading bank SMS.
   final bool smsEnabled;
 
-  /// Add parsed SMS transactions directly instead of queueing for review.
+  /// Add confidently parsed SMS transactions directly instead of queueing
+  /// them for review. On unless the user turned it off.
   final bool smsAutoAdd;
+
+  /// Whether the user ever flipped [smsAutoAdd] themselves.
+  final bool smsAutoAddChosen;
   final String myName;
   final bool onboarded;
 
@@ -32,43 +57,54 @@ class AppSettings {
   Locale? get locale => localeCode.isEmpty ? null : Locale(localeCode);
 
   AppSettings copyWith({
-    String? currencySymbol,
+    String? currencyCode,
+    bool? currencyConfirmed,
     int? monthStartDay,
     ThemeMode? themeMode,
     bool? smsEnabled,
     bool? smsAutoAdd,
+    bool? smsAutoAddChosen,
     String? myName,
     bool? onboarded,
     String? localeCode,
   }) =>
       AppSettings(
-        currencySymbol: currencySymbol ?? this.currencySymbol,
+        currencyCode: currencyCode ?? this.currencyCode,
+        currencyConfirmed: currencyConfirmed ?? this.currencyConfirmed,
         monthStartDay: monthStartDay ?? this.monthStartDay,
         themeMode: themeMode ?? this.themeMode,
         smsEnabled: smsEnabled ?? this.smsEnabled,
         smsAutoAdd: smsAutoAdd ?? this.smsAutoAdd,
+        smsAutoAddChosen: smsAutoAddChosen ?? this.smsAutoAddChosen,
         myName: myName ?? this.myName,
         onboarded: onboarded ?? this.onboarded,
         localeCode: localeCode ?? this.localeCode,
       );
 
   static AppSettings fromPrefs(SharedPreferences prefs) => AppSettings(
-        currencySymbol: prefs.getString('currencySymbol') ?? '₹',
-        monthStartDay: prefs.getInt('monthStartDay') ?? 1,
+        currencyCode: prefs.getString(kCurrencyCodeKey) ?? currencyCodeForLegacySymbol(prefs.getString(kLegacyCurrencySymbolKey)),
+        currencyConfirmed: prefs.containsKey(kCurrencyCodeKey),
+        monthStartDay: prefs.getInt(kMonthStartDayPref) ?? 1,
         themeMode: ThemeMode.values[prefs.getInt('themeMode') ?? ThemeMode.system.index],
         smsEnabled: prefs.getBool('smsEnabled') ?? false,
-        smsAutoAdd: prefs.getBool('smsAutoAdd') ?? false,
+        smsAutoAdd: resolveSmsAutoAdd(storedValue: prefs.getBool('smsAutoAdd'), userChose: prefs.getBool('smsAutoAddChosen') ?? false),
+        smsAutoAddChosen: prefs.getBool('smsAutoAddChosen') ?? false,
         myName: prefs.getString('myName') ?? '',
         onboarded: prefs.getBool('onboarded') ?? false,
         localeCode: prefs.getString('localeCode') ?? '',
       );
 
   Future<void> writeTo(SharedPreferences prefs) async {
-    await prefs.setString('currencySymbol', currencySymbol);
-    await prefs.setInt('monthStartDay', monthStartDay);
+    if (currencyConfirmed) {
+      await prefs.setString(kCurrencyCodeKey, currencyCode);
+      // Older builds still read the symbol, so a downgrade keeps the currency.
+      await prefs.setString(kLegacyCurrencySymbolKey, currencySymbol);
+    }
+    await prefs.setInt(kMonthStartDayPref, monthStartDay);
     await prefs.setInt('themeMode', themeMode.index);
     await prefs.setBool('smsEnabled', smsEnabled);
     await prefs.setBool('smsAutoAdd', smsAutoAdd);
+    await prefs.setBool('smsAutoAddChosen', smsAutoAddChosen);
     await prefs.setString('myName', myName);
     await prefs.setBool('onboarded', onboarded);
     await prefs.setString('localeCode', localeCode);

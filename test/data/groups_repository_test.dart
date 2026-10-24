@@ -240,4 +240,168 @@ void main() {
     expect((await restoredGroups.getMembers(groupId)).firstWhere((member) => member.id == rahul).upiId, 'rahul@ybl');
     expect((await restoredGroups.getGroupDetail(groupId))!.lastRemindedAt, {rahul: DateTime(2026, 10, 9)});
   });
+
+  group('several payers', () {
+    late String groupId;
+    late String me;
+    late String rahul;
+    late String priya;
+    const entryId = 'dinner';
+
+    Future<void> saveDinner({required Map<String, int> paid}) => entries.saveEntry(
+          EntriesRepository.newExpense(id: entryId, amountMinor: 90000, occurredAt: DateTime(2026, 10, 2), groupId: groupId, paidByMemberId: paid.keys.first, splitMethod: 'equal'),
+          splits: [
+            for (final member in [me, rahul, priya]) SplitsCompanion.insert(id: '$entryId-$member', entryId: entryId, memberId: member, amountMinor: 30000),
+          ],
+          payers: paid.length < 2
+              ? const []
+              : [for (final payer in paid.entries) EntryPayersCompanion.insert(id: '$entryId-paid-${payer.key}', entryId: entryId, memberId: payer.key, amountMinor: payer.value)],
+        );
+
+    setUp(() async {
+      groupId = await groups.createGroup(name: 'Goa', icon: 'beach', myName: 'Me', otherMembers: ['Priya', 'Rahul']);
+      final members = await groups.getMembers(groupId);
+      me = members.firstWhere((m) => m.isMe).id;
+      rahul = members.firstWhere((m) => m.name == 'Rahul').id;
+      priya = members.firstWhere((m) => m.name == 'Priya').id;
+    });
+
+    test('balances credit every payer with what they paid', () async {
+      await saveDinner(paid: {rahul: 60000, me: 30000});
+      final detail = (await groups.getGroupDetail(groupId))!;
+      expect(detail.balances.net, {me: 0, rahul: 30000, priya: -30000});
+      expect(detail.timelineByEntryId[entryId]!.paidMinor, {rahul: 60000, me: 30000});
+      expect(detail.entries.single.$3, hasLength(2));
+    });
+
+    test('switching back to one payer drops the old payer rows', () async {
+      await saveDinner(paid: {rahul: 60000, me: 30000});
+      await saveDinner(paid: {me: 90000});
+      expect(await entries.getPayers(entryId), isEmpty);
+      expect((await groups.getGroupDetail(groupId))!.balances.net, {me: 60000, rahul: -30000, priya: -30000});
+    });
+
+    test('deleting the expense removes its payers', () async {
+      await saveDinner(paid: {rahul: 60000, me: 30000});
+      await entries.deleteEntry(entryId);
+      expect(await entries.getPayers(entryId), isEmpty);
+      expect((await groups.getGroupDetail(groupId))!.balances.net.values.every((amount) => amount == 0), isTrue);
+    });
+
+    test('backup round-trips the payer rows', () async {
+      await saveDinner(paid: {rahul: 60000, me: 30000});
+      final restored = AppDatabase(NativeDatabase.memory());
+      addTearDown(restored.close);
+      await BackupService(restored).importSnapshot(await BackupService(db).snapshot());
+      expect((await GroupsRepository(restored).getGroupDetail(groupId))!.balances.net, {me: 0, rahul: 30000, priya: -30000});
+    });
+  });
+
+  group('group settings', () {
+    test('a new group is an active other-type group with an equal default split', () async {
+      final groupId = await groups.createGroup(name: 'Flat', icon: 'groups', myName: 'Me');
+      final group = (await groups.getGroup(groupId))!;
+      expect((group.type, group.defaultSplitMethod, group.notes, group.currencyLabel, group.archivedAt), ('other', 'equal', '', null, null));
+    });
+
+    test('archive and unarchive keep the group and its expenses', () async {
+      final groupId = await groups.createGroup(name: 'Goa', icon: 'flight', myName: 'Me', otherMembers: ['Rahul']);
+      final members = await groups.getMembers(groupId);
+      await addGroupExpense(groupId, members.first.id, {members.first.id: 500, members.last.id: 500});
+
+      await groups.archiveGroup(groupId);
+      final summaries = await groups.getSummaries();
+      expect(summaries.single.group.archivedAt, isNotNull, reason: 'archived groups stay listed, under Archived');
+      expect((await groups.getGroupDetail(groupId))!.entries, hasLength(1));
+
+      await groups.unarchiveGroup(groupId);
+      expect((await groups.getGroup(groupId))!.archivedAt, isNull);
+    });
+
+    test('leaving is refused while I owe or am owed, and archives the group once settled', () async {
+      final groupId = await groups.createGroup(name: 'Goa', icon: 'flight', myName: 'Me', otherMembers: ['Rahul']);
+      final members = await groups.getMembers(groupId);
+      final me = members.firstWhere((member) => member.isMe);
+      final rahul = members.firstWhere((member) => !member.isMe);
+      await addGroupExpense(groupId, me.id, {me.id: 500, rahul.id: 500});
+
+      expect((await groups.getGroupDetail(groupId))!.canLeave, isFalse);
+      expect(await groups.leaveGroup(groupId), isFalse);
+      expect((await groups.getGroup(groupId))!.archivedAt, isNull, reason: 'a refused leave changes nothing');
+
+      await groups.addSettlement(groupId: groupId, fromMemberId: rahul.id, toMemberId: me.id, amountMinor: 500);
+      expect(await groups.leaveGroup(groupId), isTrue);
+      final detail = (await groups.getGroupDetail(groupId))!;
+      expect(detail.me, isNull);
+      expect(detail.group.archivedAt, isNotNull);
+      expect(detail.allMembers.map((member) => member.name), contains('Me'), reason: 'history still names me');
+    });
+
+    test('member weights and the currency label are saved', () async {
+      final groupId = await groups.createGroup(name: 'Euro trip', icon: 'flight', myName: 'Me', otherMembers: ['Rahul']);
+      final rahul = (await groups.getMembers(groupId)).firstWhere((member) => !member.isMe);
+      await groups.setMemberWeight(rahul.id, 2);
+      expect((await groups.getMembers(groupId)).firstWhere((member) => member.id == rahul.id).weight, 2);
+
+      await groups.setCurrencyLabel((await groups.getGroup(groupId))!, '€');
+      var group = (await groups.getGroup(groupId))!;
+      expect((group.currencyLabel, group.currency), ('€', 'EUR'));
+      await groups.setCurrencyLabel(group, null);
+      group = (await groups.getGroup(groupId))!;
+      expect((group.currencyLabel, group.currency), (null, 'EUR'));
+    });
+
+    test('app totals skip groups labelled in another currency', () async {
+      final home = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'Me', otherMembers: ['Rahul']);
+      final trip = await groups.createGroup(name: 'Paris', icon: 'flight', myName: 'Me', otherMembers: ['Rahul']);
+      for (final groupId in [home, trip]) {
+        final members = await groups.getMembers(groupId);
+        final me = members.firstWhere((member) => member.isMe);
+        final rahul = members.firstWhere((member) => !member.isMe);
+        await addGroupExpense(groupId, me.id, {me.id: 300, rahul.id: 300});
+      }
+      await groups.setCurrencyLabel((await groups.getGroup(trip))!, '€');
+      final totals = groupTotalsInAppCurrency(await groups.getSummaries(), appSymbol: '₹');
+      expect((totals.owedToMe, totals.iOwe), (300, 0));
+    });
+
+    test('app totals leave out archived groups', () async {
+      final home = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'Me', otherMembers: ['Rahul']);
+      final trip = await groups.createGroup(name: 'Goa', icon: 'flight', myName: 'Me', otherMembers: ['Rahul']);
+      for (final groupId in [home, trip]) {
+        final members = await groups.getMembers(groupId);
+        final me = members.firstWhere((member) => member.isMe);
+        final rahul = members.firstWhere((member) => !member.isMe);
+        await addGroupExpense(groupId, me.id, {me.id: 300, rahul.id: 300});
+      }
+      await groups.archiveGroup(trip);
+      final archived = groupTotalsInAppCurrency(await groups.getSummaries(), appSymbol: '₹');
+      expect((archived.owedToMe, archived.iOwe), (300, 0));
+      await groups.unarchiveGroup(trip);
+      final restored = groupTotalsInAppCurrency(await groups.getSummaries(), appSymbol: '₹');
+      expect((restored.owedToMe, restored.iOwe), (600, 0));
+    });
+
+    test('backup carries group settings and fills them in for older backups', () async {
+      final groupId = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'Me');
+      await groups.updateGroup(GroupsCompanion(id: Value(groupId), type: const Value('home'), defaultSplitMethod: const Value('shares'), notes: const Value('Rent on the 1st')));
+      final payload = await BackupService(db).snapshot();
+
+      final restored = AppDatabase(NativeDatabase.memory());
+      addTearDown(restored.close);
+      await BackupService(restored).importSnapshot(payload);
+      final group = (await GroupsRepository(restored).getGroup(groupId))!;
+      expect((group.type, group.defaultSplitMethod, group.notes), ('home', 'shares', 'Rent on the 1st'));
+
+      final oldRows = [
+        for (final row in payload['groups'] as List)
+          {...Map<String, dynamic>.from(row as Map)}..removeWhere((key, _) => const {'type', 'defaultSplitMethod', 'notes', 'currencyLabel', 'archivedAt'}.contains(key)),
+      ];
+      final older = AppDatabase(NativeDatabase.memory());
+      addTearDown(older.close);
+      await BackupService(older).importSnapshot({...payload, 'groups': oldRows});
+      final fromOld = (await GroupsRepository(older).getGroup(groupId))!;
+      expect((fromOld.type, fromOld.defaultSplitMethod, fromOld.notes, fromOld.archivedAt), ('other', 'equal', '', null));
+    });
+  });
 }

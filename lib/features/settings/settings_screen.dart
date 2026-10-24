@@ -7,11 +7,17 @@ import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/money.dart';
 import '../../core/providers.dart';
+import '../../domain/currency/currency_lookup.dart';
+import '../currency/currency_picker.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
 import '../reminders/reminders_settings_tile.dart';
+import '../salary/salary_providers.dart';
+import '../salary/salary_reminder.dart';
 import '../shell/widgets/common.dart';
+import 'made_with_love.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -21,6 +27,7 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final salary = ref.watch(salarySettingsProvider);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
       body: ListView(
@@ -63,12 +70,12 @@ class SettingsScreen extends ConsumerWidget {
             child: Column(children: [
               ListTile(
                 leading: const Icon(Icons.currency_rupee),
-                title: Text(l10n.currencySymbol),
-                trailing: SettingValue(settings.currencySymbol),
+                title: Text(l10n.currency),
+                trailing: SettingValue(currencyShortLabel(settings.currencyCode)),
                 visualDensity: VisualDensity.compact,
                 onTap: () async {
-                  final symbol = await promptText(context, title: l10n.currencySymbol, initial: settings.currencySymbol, hint: '₹, \$, €');
-                  if (symbol != null && symbol.isNotEmpty) await notifier.update((s) => s.copyWith(currencySymbol: symbol));
+                  final code = await showCurrencyPicker(context, selectedCode: settings.currencyCode);
+                  if (code != null) await notifier.update((s) => s.copyWith(currencyCode: code, currencyConfirmed: true));
                 },
               ),
               ListTile(
@@ -83,10 +90,23 @@ class SettingsScreen extends ConsumerWidget {
                   if (day != null && day >= 1 && day <= 28) await notifier.update((s) => s.copyWith(monthStartDay: day));
                 },
               ),
+              ListTile(
+                key: const Key('settingsSalary'),
+                leading: const Icon(Icons.payments_outlined),
+                title: Text(salary.isSetUp ? l10n.salaryTitle : l10n.salarySetUp),
+                subtitle: salary.isSetUp
+                    ? Text(l10n.salarySummary(formatMinor(salary.amountMinor, symbol: settings.currencySymbol), salary.salaryDay), maxLines: 1, overflow: TextOverflow.ellipsis)
+                    : null,
+                trailing: const Icon(Icons.chevron_right),
+                visualDensity: VisualDensity.compact,
+                onTap: () => context.push(kSalaryLocation),
+              ),
               ListTile(leading: const Icon(Icons.account_balance_outlined), title: Text(l10n.accounts), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/accounts')),
               ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.categories), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/categories')),
               ListTile(leading: const Icon(Icons.savings_outlined), title: Text(l10n.budgets), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/budgets')),
               ListTile(leading: const Icon(Icons.folder_outlined), title: Text(l10n.projects), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/projects')),
+              ListTile(leading: const Icon(Icons.repeat), title: Text(l10n.recurringTitle), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/recurring')),
+              ListTile(leading: const Icon(Icons.autorenew), title: Text(l10n.subscriptions), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/subscriptions')),
             ]),
           ),
           SectionHeader(l10n.automation),
@@ -145,6 +165,7 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: Text(l10n.aboutBody),
             ),
           ),
+          const MadeWithLove(),
         ],
       ),
     );
@@ -184,7 +205,7 @@ class SettingsScreen extends ConsumerWidget {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.passphraseTooShort)));
       return;
     }
-    final bytes = await ref.read(backupServiceProvider).exportEncrypted(passphrase);
+    final bytes = await ref.read(backupServiceProvider).exportEncrypted(passphrase, currencyCode: ref.read(settingsProvider).currencyCode);
     final dir = await getTemporaryDirectory();
     final stamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
     final file = File('${dir.path}/hisab-backup-$stamp.hisab');
@@ -201,9 +222,16 @@ class SettingsScreen extends ConsumerWidget {
     final passphrase = await promptText(context, title: l10n.backupPassphrase);
     if (passphrase == null || !context.mounted) return;
     try {
-      final written = await ref.read(backupServiceProvider).importEncrypted(data, passphrase);
+      final restored = await ref.read(backupServiceProvider).importEncrypted(data, passphrase);
+      // Settings sections (month start, salary) were written to prefs directly.
+      ref.invalidate(settingsProvider);
+      ref.invalidate(salarySettingsProvider);
+      final backupCurrency = restored.currencyCode;
+      if (backupCurrency != null) {
+        await ref.read(settingsProvider.notifier).update((s) => s.copyWith(currencyCode: backupCurrency, currencyConfirmed: true));
+      }
       await ref.read(reminderSchedulerProvider).rescheduleAll();
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(written))));
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(restored.written))));
     } catch (error) {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoreFailed('$error'))));
     }

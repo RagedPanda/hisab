@@ -4,14 +4,60 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/providers.dart';
 import 'core/theme.dart';
+import 'features/currency/first_launch_currency_screen.dart';
+import 'features/recurring/recurring_catch_up.dart';
+import 'features/recurring/recurring_list_model.dart';
+import 'features/salary/salary_reminder_watcher.dart';
 import 'features/shell/router.dart';
+import 'features/sms/sms_auto_add_snackbar.dart';
+import 'features/sms/sms_auto_sync.dart';
 import 'l10n/generated/app_localizations.dart';
 
-class HisabApp extends ConsumerWidget {
+class HisabApp extends ConsumerStatefulWidget {
   const HisabApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HisabApp> createState() => _HisabAppState();
+}
+
+class _HisabAppState extends ConsumerState<HisabApp> {
+  late final AppLifecycleListener _lifecycle;
+  late final RecurringCatchUp _catchUp = RecurringCatchUp(run: _postDueRecurring);
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(onResume: _catchUp.trigger);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _catchUp.trigger());
+    // A new, edited, paused or resumed rule can move the next wake earlier.
+    ref.listenManual(recurringViewsProvider, (_, _) => _catchUp.trigger());
+  }
+
+  @override
+  void dispose() {
+    _catchUp.dispose();
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  /// Posts recurring entries that fell due while the app was closed, in the
+  /// background, or since the last wake in the foreground, then refreshes the
+  /// Recurring list. Safe to run repeatedly: posting is idempotent.
+  /// Returns when the next occurrence falls due, so the open app wakes then.
+  Future<DateTime?> _postDueRecurring(DateTime now) async {
+    if (!mounted) return null;
+    try {
+      final wake = await ref.read(recurringRepositoryProvider).catchUp(now: now, monthStartDay: ref.read(settingsProvider).monthStartDay);
+      if (mounted) ref.read(recurringLastCatchUpProvider.notifier).set(now);
+      return wake;
+    } catch (error, stack) {
+      FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'recurring', context: ErrorDescription('posting due recurring entries')));
+      return null;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appName,
@@ -30,6 +76,16 @@ class HisabApp extends ConsumerWidget {
       themeAnimationDuration: const Duration(milliseconds: 300),
       themeAnimationCurve: Curves.easeOutCubic,
       routerConfig: appRouter,
+      // A fresh install picks its currency before Home. The router keeps its
+      // location (and any deep link) and shows it once the choice is saved.
+      // Otherwise the SMS Undo snackbar sits above the navigator so it shows on
+      // every route, including Bank SMS opened directly from a hisab://sms link.
+      // SmsAutoSync drains queued SMS and catches up on the inbox on start and resume.
+      // SalaryReminderWatcher re-plans the salary-not-seen alert on start, resume
+      // and income changes.
+      builder: (context, child) => settings.currencyConfirmed
+          ? SalaryReminderWatcher(child: SmsAutoSync(child: SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink())))
+          : const FirstLaunchCurrencyGate(),
     );
   }
 }

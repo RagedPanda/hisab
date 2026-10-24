@@ -11,10 +11,16 @@ import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/groups_repository.dart';
 import '../../domain/split/debt_simplifier.dart';
+import '../../domain/split/group_settings.dart';
+import '../../domain/split/group_totals.dart';
 import '../../domain/split/settle_up_links.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import '../../domain/split/group_export.dart' show exportFileName;
+import 'group_actions.dart';
 import 'group_expenses_tab.dart';
+import 'group_export.dart';
+import 'group_totals_screen.dart';
 import 'member_display.dart';
 import 'member_sheet.dart';
 import 'record_payment_sheet.dart';
@@ -33,9 +39,11 @@ class GroupDetailScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final detail = ref.watch(groupDetailProvider(groupId)).value;
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final appSymbol = ref.watch(settingsProvider).currencySymbol;
     if (detail == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final group = detail.group;
+    final symbol = groupSymbol(currencyLabel: group.currencyLabel, appSymbol: appSymbol);
+    final archived = group.archivedAt != null;
     final members = detail.members;
     final entries = detail.entries;
     final settlements = detail.settlements;
@@ -66,45 +74,51 @@ class GroupDetailScreen extends ConsumerWidget {
             IconButton(
               tooltip: l10n.shareSummary,
               icon: const Icon(Icons.ios_share),
-              onPressed: () => _showShareOptions(context, ref, detail: detail, symbol: symbol),
+              onPressed: () => _showShareOptions(context, ref, detail: detail, symbol: symbol, categoryById: categoryById),
             ),
             PopupMenuButton<String>(
               onSelected: (value) async {
-                final repo = ref.read(groupsRepositoryProvider);
                 switch (value) {
-                  case 'rename':
-                    final name = await promptText(context, title: l10n.renameGroup, initial: group.name);
-                    if (name != null && name.isNotEmpty) await repo.updateGroup(GroupsCompanion(id: Value(group.id), name: Value(name)));
-                  case 'simplify':
-                    await repo.updateGroup(GroupsCompanion(id: Value(group.id), simplifyDebts: Value(!group.simplifyDebts)));
+                  case 'activity':
+                    context.push('/groups/${group.id}/activity');
+                  case 'settings':
+                    await context.push('/groups/$groupId/settings');
+                  case 'archive':
+                    await confirmArchiveGroup(context, ref, detail);
+                  case 'unarchive':
+                    await ref.read(groupsRepositoryProvider).unarchiveGroup(group.id);
                   case 'delete':
-                    if (await confirmDialog(context, title: l10n.deleteNamed(group.name), message: l10n.deleteGroupBody, confirmLabel: l10n.delete)) {
-                      await repo.deleteGroup(group.id);
-                      if (context.mounted) context.pop();
-                    }
+                    if (await confirmDeleteGroup(context, ref, detail) && context.mounted) context.pop();
                 }
               },
               itemBuilder: (_) => [
-                PopupMenuItem(value: 'rename', child: Text(l10n.rename)),
-                PopupMenuItem(value: 'simplify', child: Text(group.simplifyDebts ? l10n.simplifyOff : l10n.simplifyOn)),
+                PopupMenuItem(value: 'activity', child: Text(l10n.activityTitle)),
+                PopupMenuItem(value: 'settings', child: Text(l10n.groupSettingsTitle)),
+                PopupMenuItem(value: archived ? 'unarchive' : 'archive', child: Text(archived ? l10n.groupUnarchive : l10n.groupArchive)),
                 PopupMenuItem(value: 'delete', child: Text(l10n.deleteGroup)),
               ],
             ),
           ],
           bottom: TabBar(tabs: [Tab(text: l10n.kindExpenses), Tab(text: l10n.balances), Tab(text: l10n.members)]),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          heroTag: 'add-group-expense',
-          onPressed: members.length < 2
-              ? () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.addMemberFirst)))
-              : () => context.push('/entry?group=$groupId'),
-          icon: const Icon(Icons.add),
-          label: Text(l10n.addExpense),
-        ),
-        body: TabBarView(
+        floatingActionButton: archived
+            ? null
+            : FloatingActionButton.extended(
+                heroTag: 'add-group-expense',
+                onPressed: members.length < 2
+                    ? () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.addMemberFirst)))
+                    : () => context.push('/entry?group=$groupId'),
+                icon: const Icon(Icons.add),
+                label: Text(l10n.addExpense),
+              ),
+        body: Column(children: [
+          if (archived) _ArchivedBanner(left: detail.me == null, onUnarchive: () => ref.read(groupsRepositoryProvider).unarchiveGroup(group.id)),
+          Expanded(child: TabBarView(
           children: [
             GroupExpensesTab(
               groupId: groupId,
+              groupType: GroupType.parse(group.type),
+              notes: group.notes,
               entries: entries,
               settlements: settlements,
               timelineByEntryId: detail.timelineByEntryId,
@@ -118,15 +132,30 @@ class GroupDetailScreen extends ConsumerWidget {
             _BalancesTab(detail: detail, nameOf: nameOf, symbol: symbol, openPayment: openPaymentSheet),
             _MembersTab(groupId: groupId, members: members, balances: balances, symbol: symbol),
           ],
-        ),
+        )),
+        ]),
       ),
     );
   }
 
-  /// Share balances summary, remind everyone who owes me, or copy the summary.
-  static Future<void> _showShareOptions(BuildContext context, WidgetRef ref, {required GroupDetail detail, required String symbol}) {
+  /// Share balances summary, remind everyone who owes me, copy the summary,
+  /// or export every expense and payment as CSV.
+  static Future<void> _showShareOptions(BuildContext context, WidgetRef ref, {required GroupDetail detail, required String symbol, required Map<String, Category> categoryById}) {
     final l10n = context.l10n;
-    final summary = summaryText(l10n, detail.group, detail.members, detail.balances, symbol);
+    final locale = Localizations.localeOf(context);
+    final summary = groupSummaryFor(l10n, detail, symbol: symbol);
+    Future<void> exportCsv() async {
+      try {
+        await ref.read(csvFileSharerProvider)(
+          fileName: exportFileName(detail.group.name, DateTime.now()),
+          csv: groupCsv(l10n, detail, categoryById: categoryById, locale: locale),
+          subject: l10n.groupExportCsvSubject(detail.group.name),
+        );
+      } on Exception {
+        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.groupExportFailed)));
+      }
+    }
+
     final myId = detail.me?.id;
     final owedToMe = [for (final transfer in detail.balances.suggested) if (settleRoleFor(transfer, myId) == SettleRole.remind) transfer];
     final nameById = {for (final member in detail.allMembers) member.id: memberShortName(l10n, member)};
@@ -177,21 +206,43 @@ class GroupDetailScreen extends ConsumerWidget {
                 if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.copied)));
               }),
             ),
+            ListTile(
+              key: const Key('group-export-csv'),
+              leading: const Icon(Icons.table_view_outlined),
+              title: Text(l10n.groupExportCsv),
+              onTap: () => run(exportCsv),
+            ),
           ]),
         );
       },
     );
   }
+}
 
-  static String summaryText(AppLocalizations l10n, Group group, List<Member> members, GroupBalances balances, String symbol) {
-    final buffer = StringBuffer('${l10n.shareHeader(group.name)}\n');
-    final byId = {for (final member in members) member.id: memberShortName(l10n, member)};
-    for (final transfer in balances.suggested) {
-      buffer.writeln(l10n.sharePays(byId[transfer.from] ?? l10n.unknown, byId[transfer.to] ?? l10n.unknown, formatMinor(transfer.amountMinor, symbol: symbol)));
-    }
-    if (balances.suggested.isEmpty) buffer.writeln(l10n.allSettledUp);
-    buffer.writeln('\n${l10n.sharedFromHisab}');
-    return buffer.toString();
+/// Shown above the tabs of an archived group, with Unarchive.
+class _ArchivedBanner extends StatelessWidget {
+  const _ArchivedBanner({required this.left, required this.onUnarchive});
+
+  /// I left the group, rather than only archiving it.
+  final bool left;
+  final VoidCallback onUnarchive;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+        child: Row(children: [
+          Icon(Icons.archive_outlined, color: scheme.onSecondaryContainer),
+          const SizedBox(width: 12),
+          Expanded(child: Text(left ? l10n.groupLeftBanner : l10n.groupArchivedBanner, style: TextStyle(color: scheme.onSecondaryContainer))),
+          TextButton(onPressed: onUnarchive, child: Text(l10n.groupUnarchive)),
+        ]),
+      ),
+    );
   }
 }
 
@@ -203,10 +254,7 @@ Future<void> confirmRemoveSettlement(BuildContext context, WidgetRef ref, Settle
   final repo = ref.read(groupsRepositoryProvider);
   await repo.deleteSettlement(settlement.id);
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    content: Text(l10n.paymentRemoved),
-    action: SnackBarAction(label: l10n.undo, onPressed: () => repo.restoreSettlement(settlement.id)),
-  ));
+  showUndoSnackBar(ScaffoldMessenger.of(context), message: l10n.paymentRemoved, undoLabel: l10n.undo, onUndo: () => repo.restoreSettlement(settlement.id));
 }
 
 class _BalancesTab extends ConsumerWidget {
@@ -294,6 +342,16 @@ class _BalancesTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
       children: [
+        if (detail.entries.isNotEmpty) ...[
+          SectionHeader(l10n.groupTotalsTitle),
+          GroupTotalsSummary(
+            key: kGroupTotalsCardKey,
+            totals: computeGroupTotals(expenses: detail.totalsExpenses, payments: detail.totalsPayments, myMemberId: detail.me?.id),
+            symbol: symbol,
+            showMine: detail.me != null,
+            onTap: () => context.push('/groups/${group.id}/totals'),
+          ),
+        ],
         SectionHeader(l10n.netBalances),
         Card(
           child: Column(children: [
@@ -321,7 +379,7 @@ class _BalancesTab extends ConsumerWidget {
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                    onPressed: () => ref.read(textSharerProvider)(GroupDetailScreen.summaryText(l10n, group, members, balances, symbol)),
+                    onPressed: () => ref.read(textSharerProvider)(groupSummaryFor(l10n, detail, symbol: symbol)),
                     icon: const Icon(Icons.ios_share, size: 18),
                     label: Text(l10n.shareSummaryAnyway),
                   ),

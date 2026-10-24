@@ -54,6 +54,7 @@ import 'package:intl/intl.dart';
 
 import 'harness.dart';
 import 'recording_notification_gateway.dart';
+import 'card_dues_flow.dart';
 import 'sms_history_flow.dart';
 
 const _milkTotalMinor = 20000; // 2 L @ 70 + 1 L @ 60
@@ -1743,6 +1744,7 @@ void main() {
   });
 
   testWidgets('27 SMS history: outcomes, filter chips, re-process, entry link, Hindi dark, clear', smsHistoryFlow);
+  testWidgets(kCardDuesFlowName, cardDuesFlow, timeout: const Timeout(Duration(minutes: 15)));
 
   testWidgets('28 reminders: create, real OS scheduling, mark paid with a prefilled entry, history, dark, Hindi', (tester) async {
     final gatewayLog = GatewayCallLog();

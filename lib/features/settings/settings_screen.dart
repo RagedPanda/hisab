@@ -13,6 +13,7 @@ import '../currency/currency_picker.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
 import '../shell/widgets/common.dart';
+import 'made_with_love.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -147,6 +148,7 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: Text(l10n.aboutBody),
             ),
           ),
+          const MadeWithLove(),
         ],
       ),
     );

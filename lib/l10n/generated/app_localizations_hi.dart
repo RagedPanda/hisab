@@ -755,6 +755,15 @@ class AppLocalizationsHi extends AppLocalizations {
       'मुफ़्त, ओपन सोर्स, कोई विज्ञापन नहीं, कोई अकाउंट नहीं। आपका डेटा आपके डिवाइस पर रहता है।';
 
   @override
+  String get aboutMadeWithBefore => '';
+
+  @override
+  String get aboutMadeWithAfter => 'से बनाया गया';
+
+  @override
+  String get aboutMadeWithLabel => 'प्यार से बनाया गया';
+
+  @override
   String get backupPassphrase => 'बैकअप पासफ़्रेज़';
 
   @override

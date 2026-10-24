@@ -1388,6 +1388,24 @@ abstract class AppLocalizations {
   /// **'Free, open source, no ads, no account needed. Your data stays on your device.'**
   String get aboutBody;
 
+  /// Text shown before the red heart icon at the bottom of Settings > About. May be empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with'**
+  String get aboutMadeWithBefore;
+
+  /// Text shown after the red heart icon at the bottom of Settings > About. May be empty.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get aboutMadeWithAfter;
+
+  /// Screen reader label for the Made with heart line.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with love'**
+  String get aboutMadeWithLabel;
+
   /// No description provided for @backupPassphrase.
   ///
   /// In en, this message translates to:

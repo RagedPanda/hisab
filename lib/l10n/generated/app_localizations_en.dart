@@ -755,6 +755,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Free, open source, no ads, no account needed. Your data stays on your device.';
 
   @override
+  String get aboutMadeWithBefore => 'Made with';
+
+  @override
+  String get aboutMadeWithAfter => '';
+
+  @override
+  String get aboutMadeWithLabel => 'Made with love';
+
+  @override
   String get backupPassphrase => 'Backup passphrase';
 
   @override

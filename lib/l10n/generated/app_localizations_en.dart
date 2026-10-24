@@ -3409,6 +3409,102 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsReviewAddManually => 'Add manually';
 
   @override
+  String upcomingEmptyWithin(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Nothing due in the next $days days',
+      one: 'Nothing due tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get upcomingEmptyHint =>
+      'Recurring bills, reminders and card dues show up here.';
+
+  @override
+  String upcomingWindowDays(int days) {
+    return '$days days';
+  }
+
+  @override
+  String upcomingOverdueBy(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Overdue by $days days',
+      one: 'Overdue by 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get upcomingDueToday => 'Due today';
+
+  @override
+  String get upcomingDueTomorrow => 'Due tomorrow';
+
+  @override
+  String upcomingDueInDays(int days, String date) {
+    return 'In $days days · $date';
+  }
+
+  @override
+  String upcomingOverdueCount(int count) {
+    return '$count overdue';
+  }
+
+  @override
+  String upcomingDueTotal(String amount) {
+    return '$amount to pay';
+  }
+
+  @override
+  String upcomingShowAll(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more',
+      one: '1 more',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get upcomingCalendar => 'Due calendar';
+
+  @override
+  String get upcomingCalendarOpen => 'Open due calendar';
+
+  @override
+  String get upcomingCalendarDayEmpty => 'Nothing due on this day';
+
+  @override
+  String get upcomingCalendarPreviousMonth => 'Previous month';
+
+  @override
+  String get upcomingCalendarNextMonth => 'Next month';
+
+  @override
+  String get upcomingConfirm => 'Confirm';
+
+  @override
+  String get upcomingConfirmPrompt =>
+      'This is waiting for you to confirm. Add it to your entries now?';
+
+  @override
+  String upcomingCalendarDueCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count due',
+      one: '1 due',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get salaryTitle => 'Salary';
 
   @override

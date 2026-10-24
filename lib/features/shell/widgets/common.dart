@@ -269,6 +269,7 @@ Future<String?> promptText(
   String? hint,
   TextInputType? keyboardType,
   List<TextInputFormatter>? inputFormatters,
+  int maxLines = 1,
 }) {
   final controller = TextEditingController(text: initial);
   controller.selection = TextSelection(baseOffset: 0, extentOffset: controller.text.length);
@@ -280,8 +281,10 @@ Future<String?> promptText(
         controller: controller,
         autofocus: true,
         decoration: InputDecoration(hintText: hint),
-        keyboardType: keyboardType,
+        keyboardType: maxLines > 1 ? TextInputType.multiline : keyboardType,
         inputFormatters: inputFormatters,
+        minLines: 1,
+        maxLines: maxLines,
         onSubmitted: (value) => Navigator.pop(context, value.trim()),
       ),
       actions: [

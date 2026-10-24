@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/app_icons.dart';
 import '../../core/providers.dart';
 import '../../l10n/l10n.dart';
 import 'member_display.dart';
@@ -33,17 +34,7 @@ Future<void> showGroupForm(BuildContext context, WidgetRef ref) {
               const SizedBox(height: 12),
               TextField(controller: membersController, decoration: InputDecoration(labelText: l10n.membersCommaSeparated, hintText: l10n.membersHint), textCapitalization: TextCapitalization.words),
               const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (final option in groupIcons)
-                    ChoiceChip(
-                      label: Icon(_icon(option), size: 20),
-                      selected: icon == option,
-                      onSelected: (_) => setSheetState(() => icon = option),
-                    ),
-                ],
-              ),
+              GroupIconPicker(selected: icon, onSelected: (option) => setSheetState(() => icon = option)),
               const SizedBox(height: 16),
               FilledButton(
                 style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
@@ -66,15 +57,23 @@ Future<void> showGroupForm(BuildContext context, WidgetRef ref) {
   );
 }
 
-IconData _icon(String name) => switch (name) {
-      'flight' => Icons.flight,
-      'home' => Icons.home,
-      'restaurant' => Icons.restaurant,
-      'celebration' => Icons.celebration,
-      'work' => Icons.work,
-      'sports_cricket' => Icons.sports_cricket,
-      'directions_car' => Icons.directions_car,
-      'favorite' => Icons.favorite,
-      'school' => Icons.school,
-      _ => Icons.groups,
-    };
+/// One chip per group icon; shared by the new-group form and group settings.
+class GroupIconPicker extends StatelessWidget {
+  const GroupIconPicker({super.key, required this.selected, required this.onSelected});
+  final String selected;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        children: [
+          for (final option in groupIcons)
+            ChoiceChip(
+              label: Icon(iconFor(option), size: 20),
+              selected: selected == option,
+              onSelected: (_) => onSelected(option),
+            ),
+        ],
+      );
+}

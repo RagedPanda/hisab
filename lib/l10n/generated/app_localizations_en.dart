@@ -3880,4 +3880,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smsReminderPaidViaSms => 'Paid via SMS';
+
+  @override
+  String safeToSpendPerDay(String amount) {
+    return 'Safe to spend $amount/day';
+  }
+
+  @override
+  String get safeToSpendOverBudget => 'Over budget';
 }

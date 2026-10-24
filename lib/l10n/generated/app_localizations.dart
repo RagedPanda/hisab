@@ -6175,6 +6175,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paid via SMS'**
   String get smsReminderPaidViaSms;
+
+  /// No description provided for @safeToSpendPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe to spend {amount}/day'**
+  String safeToSpendPerDay(String amount);
+
+  /// No description provided for @safeToSpendOverBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Over budget'**
+  String get safeToSpendOverBudget;
 }
 
 class _AppLocalizationsDelegate

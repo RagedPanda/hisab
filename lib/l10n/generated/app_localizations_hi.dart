@@ -3854,4 +3854,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get smsReminderPaidViaSms => 'एसएमएस से भुगतान हुआ';
+
+  @override
+  String safeToSpendPerDay(String amount) {
+    return 'सुरक्षित खर्च $amount/दिन';
+  }
+
+  @override
+  String get safeToSpendOverBudget => 'बजट से ऊपर';
 }

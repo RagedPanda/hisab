@@ -6,21 +6,24 @@ import '../../core/notifications/reminder_scheduler.dart';
 import '../../core/providers.dart';
 import '../../data/repositories/groups_repository.dart';
 import '../../data/repositories/settle_schedule_repository.dart';
+import '../../domain/split/group_settings.dart';
 import '../../domain/split/settle_reminder.dart';
 import '../../l10n/l10n.dart';
 import 'member_display.dart';
 import 'settle_up_messages.dart';
 
 /// What a group's settle-up notification says right now, about [memberId]
-/// (or everyone); null when that is all settled.
+/// (or everyone); null when that is all settled. Amounts use the group's own
+/// currency label when it has one, else [currencySymbol].
 SettleReminderText? settleReminderTextFor(AppLocalizations l10n, GroupDetail detail, {String? memberId, required String currencySymbol}) {
+  final symbol = groupSymbol(currencyLabel: detail.group.currencyLabel, appSymbol: currencySymbol);
   final memberById = {for (final member in detail.allMembers) member.id: member};
   return settleReminderNotification(
     l10n,
     facts: settleReminderFacts(detail.balances.suggested, myMemberId: detail.me?.id, withMemberId: memberId),
     groupName: detail.group.name,
     nameOf: (id) => memberById[id] == null ? l10n.unknown : memberShortName(l10n, memberById[id]!),
-    formatAmount: (amountMinor) => formatMinor(amountMinor, symbol: currencySymbol),
+    formatAmount: (amountMinor) => formatMinor(amountMinor, symbol: symbol),
     withMemberId: memberId,
   );
 }

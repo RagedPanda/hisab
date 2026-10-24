@@ -55,10 +55,7 @@ class BudgetsScreen extends ConsumerWidget {
     Future<void> remove(Budget budget) async {
       await repo.delete(budget.id);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(l10n.budgetRemoved),
-        action: SnackBarAction(label: l10n.undo, onPressed: () => repo.restore(budget.id)),
-      ));
+      showUndoSnackBar(ScaffoldMessenger.of(context), message: l10n.budgetRemoved, undoLabel: l10n.undo, onUndo: () => repo.restore(budget.id));
     }
 
     return Scaffold(

@@ -184,11 +184,16 @@ class SplitEditor extends StatelessWidget {
 }
 
 /// Default inputs for a method, so switching methods keeps a valid state.
+/// Shares start from each member's weight from group settings.
 List<SplitInput> defaultSplitInputs(List<Member> members, SplitMethod method) => [
       for (final m in members)
         SplitInput(
           memberId: m.id,
           included: true,
-          weight: method == SplitMethod.percent ? (100 / members.length) : (method == SplitMethod.shares ? 1 : 0),
+          weight: switch (method) {
+            SplitMethod.percent => 100 / members.length,
+            SplitMethod.shares => m.weight > 0 ? m.weight : 1,
+            _ => 0,
+          },
         ),
     ];

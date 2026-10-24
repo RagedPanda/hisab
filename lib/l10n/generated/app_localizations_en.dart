@@ -360,6 +360,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editEntry => 'Edit entry';
 
   @override
+  String get discardEntryTitle => 'Discard this entry?';
+
+  @override
+  String get discardEntryBody => 'What you entered will be lost.';
+
+  @override
+  String get keepEditing => 'Keep editing';
+
+  @override
+  String get discard => 'Discard';
+
+  @override
   String get groupExpense => 'Group expense';
 
   @override
@@ -384,7 +396,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smsEntryNotice =>
-      'Created from a bank SMS. Editing it will not change your bank balance.';
+      'Added from SMS. Editing it will not change your bank balance.';
 
   @override
   String get saving => 'Saving…';
@@ -429,6 +441,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorPickBothAccounts => 'Pick both accounts for a transfer';
+
+  @override
+  String get errorPickAccount => 'Pick an account';
+
+  @override
+  String get errorSameAccount => 'From and To must be different accounts';
 
   @override
   String get errorItemName => 'Every item needs a name';
@@ -666,7 +684,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get money => 'Money';
 
   @override
-  String get currencySymbol => 'Currency symbol';
+  String get currency => 'Currency';
+
+  @override
+  String get currencyChooseTitle => 'Choose your currency';
+
+  @override
+  String get currencyChooseBody =>
+      'Amounts in Hisab show in this currency. You can change it later in Settings.';
+
+  @override
+  String get currencySearchHint => 'Search code, name or country';
+
+  @override
+  String currencyContinue(String currency) {
+    return 'Continue with $currency';
+  }
+
+  @override
+  String currencyNoMatch(String query) {
+    return 'No currency matches \"$query\"';
+  }
 
   @override
   String get monthStartsOn => 'Month starts on';
@@ -735,6 +773,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Free, open source, no ads, no account needed. Your data stays on your device.';
 
   @override
+  String get aboutMadeWithBefore => 'Made with';
+
+  @override
+  String get aboutMadeWithAfter => '';
+
+  @override
+  String get aboutMadeWithLabel => 'Made with love';
+
+  @override
   String get backupPassphrase => 'Backup passphrase';
 
   @override
@@ -770,7 +817,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsDuplicate => 'Already imported.';
 
   @override
+  String get smsForeignCurrency =>
+      'Only SMS in your home currency are supported, so this one was ignored.';
+
+  @override
   String get smsNotFound => 'Could not find a transaction in that text.';
+
+  @override
+  String get smsNotificationTitle => 'New bank transaction';
+
+  @override
+  String smsNotificationBodyAmount(String amount, String sender) {
+    return '$amount from $sender. Tap to review.';
+  }
+
+  @override
+  String smsNotificationBody(String sender) {
+    return 'From $sender. Tap to review.';
+  }
+
+  @override
+  String smsNotificationBodyAmountAutoAdd(String amount, String sender) {
+    return '$amount from $sender. Open Hisab to add it.';
+  }
+
+  @override
+  String smsNotificationBodyAutoAdd(String sender) {
+    return 'From $sender. Open Hisab to add it.';
+  }
 
   @override
   String get readBankSmsQuestion => 'Read bank SMS?';
@@ -799,10 +873,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not available on iOS. Use the Shortcut or paste below.';
 
   @override
-  String get smsAutoAddTitle => 'Add transactions without review';
+  String get smsAutoAddTitle => 'Add clear transactions automatically';
 
   @override
-  String get smsAutoAddHelp => 'Off: new SMS wait in the review list below.';
+  String get smsAutoAddHelp =>
+      'On: clear bank SMS are added right away with Undo. Unclear ones wait for review.';
 
   @override
   String get scanInboxNow => 'Scan inbox now';
@@ -1959,108 +2034,359 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedAddAnother => 'Saved. Add the next one.';
 
   @override
-  String get payersMultiple => '2+ people';
+  String get remindersTitle => 'Reminders';
 
   @override
-  String get payersHelp => 'Enter how much each person paid.';
-
-  @override
-  String payersAssigned(String assigned, String total) {
-    return '$assigned of $total assigned';
-  }
-
-  @override
-  String payersMustTotal(String total) {
-    return 'Amounts paid must add up to $total';
-  }
-
-  @override
-  String namesAnd(String first, String last) {
-    return '$first and $last';
-  }
-
-  @override
-  String get youInList => 'you';
-
-  @override
-  String settleReminderTitle(String group) {
-    return 'Settle up: $group';
-  }
-
-  @override
-  String settleReminderOwesYou(String name, String amount) {
-    return '$name owes you $amount';
-  }
-
-  @override
-  String settleReminderYouOwe(String name, String amount) {
-    return 'You owe $name $amount';
-  }
-
-  @override
-  String settleReminderPeopleOweYou(int count, String amount) {
+  String remindersUpcomingCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count people owe you $amount',
-      one: '1 person owes you $amount',
+      other: '$count upcoming',
+      one: '1 upcoming',
+      zero: 'Nothing due',
     );
     return '$_temp0';
   }
 
   @override
-  String settleReminderYouOweTotal(String amount) {
-    return 'You owe $amount in all';
+  String get remindersNotificationsOn => 'notifications on';
+
+  @override
+  String get remindersNotificationsOff => 'notifications off';
+
+  @override
+  String remindersSettingsSubtitle(String count, String state) {
+    return '$count · $state';
   }
 
   @override
-  String get settleReminderSheetTitle => 'Remind me to settle up';
+  String get reminderTabHistory => 'History';
 
   @override
-  String get settleReminderWith => 'About';
+  String get reminderSectionOverdue => 'Overdue';
 
   @override
-  String get settleReminderEveryone => 'Everyone';
+  String get reminderSectionThisWeek => 'This week';
 
   @override
-  String get settleReminderHowOften => 'How often';
+  String get reminderSectionLater => 'Later';
 
   @override
-  String get settleReminderMonthly => 'Monthly';
+  String get reminderAdd => 'Add reminder';
 
   @override
-  String get settleReminderWeekly => 'Weekly';
+  String get reminderFab => 'Reminder';
 
   @override
-  String get settleReminderOnDay => 'On day';
+  String get remindersEmptyTitle => 'No reminders yet';
 
   @override
-  String get settleReminderLastDay => 'Last day';
+  String get remindersEmptyBody =>
+      'Bills, rent, EMIs, renewals: add one and Hisab will nudge you before it\'s due.';
 
   @override
-  String settleReminderNextAt(String date) {
-    return 'Next reminder: $date';
+  String get reminderHistoryEmpty => 'Paid and skipped reminders show up here.';
+
+  @override
+  String get reminderSkip => 'Skip this time';
+
+  @override
+  String get reminderDeleted => 'Reminder deleted';
+
+  @override
+  String get reminderMarkedPaid => 'Marked paid';
+
+  @override
+  String get reminderMarkedDone => 'Marked done';
+
+  @override
+  String get reminderSkipped => 'Skipped this time';
+
+  @override
+  String reminderSnoozedUntil(String date) {
+    return 'Snoozed until $date';
   }
 
   @override
-  String get settleReminderTurnOff => 'Turn off';
+  String get reminderAlreadyDone => 'Already marked paid';
 
   @override
-  String get settleReminderOffLabel => 'Settle-up reminder off';
-
-  @override
-  String settleReminderMonthlySummary(String day) {
-    return 'Reminder on day $day every month';
+  String reminderPaidOn(String date) {
+    return 'Paid $date';
   }
 
   @override
-  String settleReminderWeeklySummary(String weekday) {
-    return 'Reminder every $weekday';
+  String reminderDoneOn(String date) {
+    return 'Done $date';
   }
 
   @override
-  String get settleReminderMonthlyLastDaySummary =>
-      'Reminder on the last day of every month';
+  String reminderSkippedOn(String date) {
+    return 'Skipped $date';
+  }
+
+  @override
+  String reminderNextDue(String date) {
+    return 'Next due $date';
+  }
+
+  @override
+  String get notifOffBanner =>
+      'Notifications are off. Reminders will only show in the app.';
+
+  @override
+  String get notifTurnOn => 'Turn on';
+
+  @override
+  String get remindersLateNote =>
+      'Reminders may arrive late. Allow Alarms & reminders';
+
+  @override
+  String get exactAlarmPromptTitle => 'Get reminders on time';
+
+  @override
+  String get exactAlarmPromptBody =>
+      'To alert you at the exact time you set, Android needs Hisab\'s \"Alarms & reminders\" setting. Without it, reminders may arrive late.';
+
+  @override
+  String get notifPrePromptTitle => 'Get reminded before it\'s due';
+
+  @override
+  String get notifPrePromptBody =>
+      'Hisab sends a notification at the time you choose, only for your reminders. No marketing.';
+
+  @override
+  String reminderPaidSheetTitle(String title) {
+    return 'Paid $title?';
+  }
+
+  @override
+  String reminderPaidSheetBody(String amount) {
+    return 'Add an expense of $amount and mark this paid.';
+  }
+
+  @override
+  String get reminderAddEntryAndMark => 'Add entry & mark paid';
+
+  @override
+  String get reminderJustMark => 'Just mark paid';
+
+  @override
+  String get reminderNew => 'New reminder';
+
+  @override
+  String get reminderEditTitle => 'Edit reminder';
+
+  @override
+  String get reminderKindBill => 'Bill';
+
+  @override
+  String get reminderKindEmi => 'EMI';
+
+  @override
+  String get reminderKindCard => 'Card bill';
+
+  @override
+  String get reminderKindSubscription => 'Subscription';
+
+  @override
+  String get reminderKindInsurance => 'Insurance';
+
+  @override
+  String get reminderKindDocument => 'Document';
+
+  @override
+  String get reminderKindCustom => 'Other';
+
+  @override
+  String get reminderTitleLabel => 'Title';
+
+  @override
+  String get reminderTitleHint => 'e.g. Electricity bill';
+
+  @override
+  String get reminderTitleRequired => 'Enter a title';
+
+  @override
+  String get reminderAmountOptional => 'Amount (optional)';
+
+  @override
+  String get reminderDueDate => 'Due date';
+
+  @override
+  String get reminderRepeatLabel => 'Repeat';
+
+  @override
+  String get reminderRepeatOnce => 'Once';
+
+  @override
+  String get reminderRepeatWeekly => 'Every week';
+
+  @override
+  String get reminderRepeatMonthly => 'Every month';
+
+  @override
+  String get reminderRepeatQuarterly => 'Every 3 months';
+
+  @override
+  String get reminderRepeatYearly => 'Every year';
+
+  @override
+  String get reminderNotifyLabel => 'Remind me';
+
+  @override
+  String get reminderNotifyOnDay => 'On the day';
+
+  @override
+  String reminderNotifyDaysBefore(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days before',
+      one: '1 day before',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reminderNotifyEnabled => 'Notify me';
+
+  @override
+  String reminderNotifyAt(String time) {
+    return 'At $time';
+  }
+
+  @override
+  String reminderNotifyPreview(String when) {
+    return 'First alert: $when';
+  }
+
+  @override
+  String get reminderNoAlertsLeft =>
+      'All alert times have passed; it will show as due in the app.';
+
+  @override
+  String get reminderPickDaysError => 'Pick at least one day';
+
+  @override
+  String get reminderSave => 'Save reminder';
+
+  @override
+  String get reminderNoAccount => 'No account';
+
+  @override
+  String get reminderChannelName => 'Bill & due-date reminders';
+
+  @override
+  String get reminderChannelDescription =>
+      'Alerts before bills, EMIs, card dues and renewals are due';
+
+  @override
+  String get reminderMarkPaid => 'Mark paid';
+
+  @override
+  String get reminderMarkDone => 'Done';
+
+  @override
+  String get reminderSnoozeOneDay => 'Snooze 1 day';
+
+  @override
+  String get reminderDueToday => 'Due today';
+
+  @override
+  String reminderDueInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Due in $days days',
+      one: 'Due tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reminderOverdueDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Overdue by $days days',
+      one: 'Overdue by 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get smsHistoryTitle => 'SMS history';
+
+  @override
+  String get smsHistoryHelp =>
+      'Every message Hisab processed and what happened to it';
+
+  @override
+  String get smsOutcomeAdded => 'Added';
+
+  @override
+  String get smsOutcomeDuplicate => 'Duplicate';
+
+  @override
+  String get smsOutcomeIgnored => 'Ignored';
+
+  @override
+  String get smsOutcomeUnparsed => 'Unreadable';
+
+  @override
+  String get smsOutcomePending => 'Pending';
+
+  @override
+  String get smsOutcomeUndone => 'Undone';
+
+  @override
+  String get smsHistoryNotBank => 'Not a bank message';
+
+  @override
+  String get smsHistoryDismissed => 'Dismissed from review';
+
+  @override
+  String get smsHistoryUnparsedDetail => 'No transaction found in the text';
+
+  @override
+  String get smsHistoryDuplicateDetail => 'Same message already processed';
+
+  @override
+  String get smsHistoryOpenEntry => 'Open entry';
+
+  @override
+  String get smsHistoryReprocess => 'Process again';
+
+  @override
+  String get smsHistoryClear => 'Clear history';
+
+  @override
+  String get smsHistoryClearQuestion => 'Clear SMS history?';
+
+  @override
+  String smsHistoryClearBody(int count) {
+    return 'Removes the text of $count processed messages from this device. Your entries and messages waiting for review stay, and cleared messages are never imported again.';
+  }
+
+  @override
+  String get smsHistoryClearConfirm => 'Clear';
+
+  @override
+  String get smsHistoryCleared => 'SMS history cleared';
+
+  @override
+  String get smsHistoryEmptyTitle => 'No messages processed yet';
+
+  @override
+  String get smsHistoryEmptyBody =>
+      'Bank SMS that Hisab reads or that you paste show up here.';
+
+  @override
+  String get smsHistoryEmptyFiltered => 'No messages with this outcome';
+
+  @override
+  String get smsHistoryTextNotKept => 'Message text not kept';
 
   @override
   String get recurringRepeat => 'Repeat';
@@ -2302,289 +2628,658 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringRuleMissing => 'This recurring entry was deleted';
 
   @override
-  String get remindersTitle => 'Reminders';
+  String recurringDecrease(String label) {
+    return 'Decrease $label';
+  }
 
   @override
-  String remindersUpcomingCount(int count) {
+  String recurringIncrease(String label) {
+    return 'Increase $label';
+  }
+
+  @override
+  String get subscriptions => 'Subscriptions';
+
+  @override
+  String get subscriptionsMonthlyTotal => 'Per month';
+
+  @override
+  String get subscriptionsYearlyTotal => 'Per year';
+
+  @override
+  String subscriptionsActiveCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count upcoming',
-      one: '1 upcoming',
-      zero: 'Nothing due',
+      other: '$count active subscriptions',
+      one: '1 active subscription',
     );
     return '$_temp0';
   }
 
   @override
-  String get remindersNotificationsOn => 'notifications on';
+  String get subscriptionsEmptyTitle => 'No subscriptions yet';
 
   @override
-  String get remindersNotificationsOff => 'notifications off';
+  String get subscriptionsEmptyBody =>
+      'Add Netflix, your phone recharge or the gym to see what they cost you each month and year.';
 
   @override
-  String remindersSettingsSubtitle(String count, String state) {
-    return '$count · $state';
+  String get subscriptionAdd => 'Add subscription';
+
+  @override
+  String get subscriptionEdit => 'Edit subscription';
+
+  @override
+  String get subscriptionPickService => 'Pick a service';
+
+  @override
+  String get subscriptionCustom => 'Something else';
+
+  @override
+  String get subscriptionPrice => 'Price per renewal';
+
+  @override
+  String get subscriptionCycle => 'Renews';
+
+  @override
+  String get subscriptionNextRenewal => 'Next renewal';
+
+  @override
+  String subscriptionStartedOn(String date) {
+    return 'Started $date';
   }
 
   @override
-  String get reminderTabHistory => 'History';
+  String get subscriptionAutoPost => 'Add to expenses on each renewal';
 
   @override
-  String get reminderSectionOverdue => 'Overdue';
+  String get subscriptionAutoPostHelp =>
+      'Off: tracked here only, no entries are added';
 
   @override
-  String get reminderSectionThisWeek => 'This week';
+  String get subscriptionNameRequired => 'Enter a name';
 
   @override
-  String get reminderSectionLater => 'Later';
+  String get subscriptionPriceRequired => 'Enter the price';
 
   @override
-  String get reminderAdd => 'Add reminder';
-
-  @override
-  String get reminderFab => 'Reminder';
-
-  @override
-  String get remindersEmptyTitle => 'No reminders yet';
-
-  @override
-  String get remindersEmptyBody =>
-      'Bills, rent, EMIs, renewals: add one and Hisab will nudge you before it\'s due.';
-
-  @override
-  String get reminderHistoryEmpty => 'Paid and skipped reminders show up here.';
-
-  @override
-  String get reminderSkip => 'Skip this time';
-
-  @override
-  String get reminderDeleted => 'Reminder deleted';
-
-  @override
-  String get reminderMarkedPaid => 'Marked paid';
-
-  @override
-  String get reminderMarkedDone => 'Marked done';
-
-  @override
-  String get reminderSkipped => 'Skipped this time';
-
-  @override
-  String reminderSnoozedUntil(String date) {
-    return 'Snoozed until $date';
+  String subscriptionRenewsOn(String date) {
+    return 'Renews $date';
   }
 
   @override
-  String get reminderAlreadyDone => 'Already marked paid';
+  String get subscriptionRenewsToday => 'Renews today';
 
   @override
-  String reminderPaidOn(String date) {
-    return 'Paid $date';
-  }
-
-  @override
-  String reminderDoneOn(String date) {
-    return 'Done $date';
-  }
-
-  @override
-  String reminderSkippedOn(String date) {
-    return 'Skipped $date';
-  }
-
-  @override
-  String reminderNextDue(String date) {
-    return 'Next due $date';
-  }
-
-  @override
-  String get notifOffBanner =>
-      'Notifications are off. Reminders will only show in the app.';
-
-  @override
-  String get notifTurnOn => 'Turn on';
-
-  @override
-  String get reminderExactAlarmNote =>
-      'Alerts may come a few minutes late. Exact timing needs the Alarms & reminders permission.';
-
-  @override
-  String get notifPrePromptTitle => 'Get reminded before it\'s due';
-
-  @override
-  String get notifPrePromptBody =>
-      'Hisab sends a notification at the time you choose, only for your reminders. No marketing.';
-
-  @override
-  String reminderPaidSheetTitle(String title) {
-    return 'Paid $title?';
-  }
-
-  @override
-  String reminderPaidSheetBody(String amount) {
-    return 'Add an expense of $amount and mark this paid.';
-  }
-
-  @override
-  String get reminderAddEntryAndMark => 'Add entry & mark paid';
-
-  @override
-  String get reminderJustMark => 'Just mark paid';
-
-  @override
-  String get reminderNew => 'New reminder';
-
-  @override
-  String get reminderEditTitle => 'Edit reminder';
-
-  @override
-  String get reminderKindBill => 'Bill';
-
-  @override
-  String get reminderKindEmi => 'EMI';
-
-  @override
-  String get reminderKindCard => 'Card bill';
-
-  @override
-  String get reminderKindSubscription => 'Subscription';
-
-  @override
-  String get reminderKindInsurance => 'Insurance';
-
-  @override
-  String get reminderKindDocument => 'Document';
-
-  @override
-  String get reminderKindCustom => 'Other';
-
-  @override
-  String get reminderTitleLabel => 'Title';
-
-  @override
-  String get reminderTitleHint => 'e.g. Electricity bill';
-
-  @override
-  String get reminderTitleRequired => 'Enter a title';
-
-  @override
-  String get reminderAmountOptional => 'Amount (optional)';
-
-  @override
-  String get reminderDueDate => 'Due date';
-
-  @override
-  String get reminderRepeatLabel => 'Repeat';
-
-  @override
-  String get reminderRepeatOnce => 'Once';
-
-  @override
-  String get reminderRepeatWeekly => 'Every week';
-
-  @override
-  String get reminderRepeatMonthly => 'Every month';
-
-  @override
-  String get reminderRepeatQuarterly => 'Every 3 months';
-
-  @override
-  String get reminderRepeatYearly => 'Every year';
-
-  @override
-  String get reminderNotifyLabel => 'Remind me';
-
-  @override
-  String get reminderNotifyOnDay => 'On the day';
-
-  @override
-  String reminderNotifyDaysBefore(int days) {
+  String subscriptionRenewsInDays(int days) {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: '$days days before',
-      one: '1 day before',
+      other: 'Renews in $days days',
+      one: 'Renews tomorrow',
     );
     return '$_temp0';
   }
 
   @override
-  String get reminderNotifyEnabled => 'Notify me';
-
-  @override
-  String reminderNotifyAt(String time) {
-    return 'At $time';
+  String subscriptionOverdue(String date) {
+    return 'Was due $date';
   }
 
   @override
-  String reminderNotifyPreview(String when) {
-    return 'First alert: $when';
+  String get subscriptionPaused => 'Paused';
+
+  @override
+  String get subscriptionCancelled => 'Cancelled';
+
+  @override
+  String get subscriptionPause => 'Pause';
+
+  @override
+  String get subscriptionResume => 'Resume';
+
+  @override
+  String get subscriptionMarkCancelled => 'Mark as cancelled';
+
+  @override
+  String subscriptionCancelConfirm(String name) {
+    return 'Mark $name as cancelled?';
   }
 
   @override
-  String get reminderNoAlertsLeft =>
-      'All alert times have passed; it will show as due in the app.';
+  String get subscriptionCancelConfirmBody =>
+      'No new charges are added and it leaves the totals. Past entries stay.';
 
   @override
-  String get reminderPickDaysError => 'Pick at least one day';
+  String get subscriptionDeleted => 'Subscription deleted';
 
   @override
-  String get reminderSave => 'Save reminder';
+  String subscriptionPerMonth(String amount) {
+    return '$amount/month';
+  }
 
   @override
-  String get reminderNoAccount => 'No account';
+  String get subscriptionSort => 'Sort';
 
   @override
-  String get reminderChannelName => 'Bill & due-date reminders';
+  String get subscriptionSortCostHigh => 'Cost: high to low';
 
   @override
-  String get reminderChannelDescription =>
-      'Alerts before bills, EMIs, card dues and renewals are due';
+  String get subscriptionSortCostLow => 'Cost: low to high';
 
   @override
-  String get reminderMarkPaid => 'Mark paid';
+  String get subscriptionSortRenewal => 'Next renewal';
 
   @override
-  String get reminderMarkDone => 'Done';
+  String get subscriptionSortName => 'Name';
 
   @override
-  String get reminderSnoozeOneDay => 'Snooze 1 day';
-
-  @override
-  String get reminderDueToday => 'Due today';
-
-  @override
-  String reminderDueInDays(int days) {
+  String subscriptionEveryDays(int count) {
     String _temp0 = intl.Intl.pluralLogic(
-      days,
+      count,
       locale: localeName,
-      other: 'Due in $days days',
-      one: 'Due tomorrow',
+      other: 'Every $count days',
+      one: 'Every day',
     );
     return '$_temp0';
   }
 
   @override
-  String reminderOverdueDays(int days) {
+  String subscriptionEveryWeeks(int count) {
     String _temp0 = intl.Intl.pluralLogic(
-      days,
+      count,
       locale: localeName,
-      other: 'Overdue by $days days',
-      one: 'Overdue by 1 day',
+      other: 'Every $count weeks',
+      one: 'Every week',
     );
     return '$_temp0';
   }
 
   @override
-  String get groupRecurringAmountFixed =>
-      'This split uses fixed amounts, so the total can\'t change here';
+  String subscriptionEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count months',
+      one: 'Every month',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get groupRecurringUpcoming => 'Repeating';
+  String subscriptionEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count years',
+      one: 'Every year',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get settleReminderShareNudge => 'Share a nudge';
+  String get subscriptionTemplateNetflix => 'Netflix';
+
+  @override
+  String get subscriptionTemplateAmazonPrime => 'Amazon Prime';
+
+  @override
+  String get subscriptionTemplateJiohotstar => 'JioHotstar';
+
+  @override
+  String get subscriptionTemplateSpotify => 'Spotify';
+
+  @override
+  String get subscriptionTemplateYoutubePremium => 'YouTube Premium';
+
+  @override
+  String get subscriptionTemplateMobileRecharge => 'Mobile recharge';
+
+  @override
+  String get subscriptionTemplateDth => 'DTH';
+
+  @override
+  String get subscriptionTemplateBroadband => 'Broadband';
+
+  @override
+  String get subscriptionTemplateGym => 'Gym';
+
+  @override
+  String get subscriptionTemplateCloudStorage => 'Cloud storage';
+
+  @override
+  String get subscriptionTemplateNewsApp => 'News app';
+
+  @override
+  String get payersMultiple => '2+ people';
+
+  @override
+  String get payersHelp => 'Enter how much each person paid.';
+
+  @override
+  String payersAssigned(String assigned, String total) {
+    return '$assigned of $total assigned';
+  }
+
+  @override
+  String payersMustTotal(String total) {
+    return 'Amounts paid must add up to $total';
+  }
+
+  @override
+  String namesAnd(String first, String last) {
+    return '$first and $last';
+  }
+
+  @override
+  String get youInList => 'you';
+
+  @override
+  String get groupTotalsTitle => 'Group totals';
+
+  @override
+  String get groupTotalsAllTime => 'All time';
+
+  @override
+  String get groupTotalsTotalSpent => 'Group total';
+
+  @override
+  String get groupTotalsYouPaid => 'You paid';
+
+  @override
+  String get groupTotalsYourShare => 'Your share';
+
+  @override
+  String get groupTotalsNetChange => 'Change in your balance';
+
+  @override
+  String get groupTotalsPaymentsMade => 'Payments you made';
+
+  @override
+  String get groupTotalsPaymentsReceived => 'Payments you received';
+
+  @override
+  String get groupTotalsByMember => 'Paid and share by member';
+
+  @override
+  String get groupTotalsPaid => 'Paid';
+
+  @override
+  String get groupTotalsShare => 'Share';
+
+  @override
+  String get groupTotalsEmpty => 'No expenses in this period';
+
+  @override
+  String groupTotalsExpenseCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses',
+      one: '1 expense',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupTotalsMemberRow(String name, String paid, String share) {
+    return '$name: paid $paid, share $share';
+  }
+
+  @override
+  String get groupTotalsOpen => 'See totals';
+
+  @override
+  String get groupSettingsTitle => 'Group settings';
+
+  @override
+  String get groupSettingsType => 'Type';
+
+  @override
+  String get groupTypeTrip => 'Trip';
+
+  @override
+  String get groupTypeHome => 'Home';
+
+  @override
+  String get groupTypeCouple => 'Couple';
+
+  @override
+  String get groupTypeOther => 'Other';
+
+  @override
+  String get groupSettingsIcon => 'Icon';
+
+  @override
+  String get groupSettingsDefaultSplit => 'Default split';
+
+  @override
+  String get groupSettingsDefaultSplitHint =>
+      'Pre-selected for new expenses. Expenses already added keep their split.';
+
+  @override
+  String get groupSettingsWeights => 'Shares per member';
+
+  @override
+  String groupSettingsWeightValue(num count, String weight) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$weight shares',
+      one: '1 share',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupSettingsWeightLess(String name) {
+    return 'Fewer shares for $name';
+  }
+
+  @override
+  String groupSettingsWeightMore(String name) {
+    return 'More shares for $name';
+  }
+
+  @override
+  String get groupSettingsCurrency => 'Currency label';
+
+  @override
+  String get groupSettingsCurrencyHint =>
+      'Only changes the symbol shown in this group. Amounts are not converted.';
+
+  @override
+  String groupSettingsCurrencyAppDefault(String symbol) {
+    return 'Same as app ($symbol)';
+  }
+
+  @override
+  String get groupSettingsCurrencyOther => 'Other symbol';
+
+  @override
+  String get groupSettingsSimplify => 'Simplify debts';
+
+  @override
+  String get groupSettingsSimplifyBody =>
+      'Combines debts so the group needs fewer repayments. If Asha owes Ravi and Ravi owes Meena, Asha can pay Meena directly. Nobody pays or gets back a different total.';
+
+  @override
+  String groupSettingsSimplifySaves(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Saves $count repayments right now',
+      one: 'Saves 1 repayment right now',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupSettingsNotes => 'Notes';
+
+  @override
+  String get groupSettingsNotesHint => 'Wi-Fi password, house rules, trip plan';
+
+  @override
+  String get groupSettingsNotesAdd => 'Add a note for this group';
+
+  @override
+  String get groupSettingsManage => 'Manage group';
+
+  @override
+  String get groupArchive => 'Archive group';
+
+  @override
+  String groupArchiveTitle(String name) {
+    return 'Archive $name?';
+  }
+
+  @override
+  String get groupArchiveBody =>
+      'The group moves to Archived on the groups list. Nothing is deleted, and you can unarchive it any time.';
+
+  @override
+  String get groupArchiveConfirm => 'Archive';
+
+  @override
+  String get groupUnarchive => 'Unarchive';
+
+  @override
+  String get groupArchivedBanner =>
+      'This group is archived. Unarchive it to add expenses.';
+
+  @override
+  String get groupLeftBanner => 'You left this group. Its history stays here.';
+
+  @override
+  String groupArchivedSection(int count) {
+    return 'Archived ($count)';
+  }
+
+  @override
+  String get groupLeave => 'Leave group';
+
+  @override
+  String groupLeaveTitle(String name) {
+    return 'Leave $name?';
+  }
+
+  @override
+  String get groupLeaveBody =>
+      'You are removed from the group on this phone and it moves to Archived, so its history stays readable.';
+
+  @override
+  String get groupLeaveConfirm => 'Leave';
+
+  @override
+  String get groupLeaveBlocked =>
+      'Settle up first. You can leave once nobody owes you and you owe nobody.';
+
+  @override
+  String get groupDeleteUnsettledBody =>
+      'This group still has unsettled balances. Deleting it removes every expense and payment, and it cannot be undone.';
+
+  @override
+  String get groupEmptyTrip =>
+      'Add tickets, stays and meals as you go; Hisab works out who owes whom.';
+
+  @override
+  String get groupEmptyHome =>
+      'Add rent, bills and groceries; Hisab works out who owes whom.';
+
+  @override
+  String get groupEmptyCouple =>
+      'Add the dinners, groceries and trips you share; Hisab keeps the balance.';
+
+  @override
+  String get activityTitle => 'Activity';
+
+  @override
+  String get activityEmptyTitle => 'No activity yet';
+
+  @override
+  String get activityEmptyBody =>
+      'Expenses and payments you add, edit or delete show up here.';
+
+  @override
+  String activityExpenseAdded(String actor, String title) {
+    return '$actor added “$title”';
+  }
+
+  @override
+  String activityExpenseEdited(String actor, String title) {
+    return '$actor edited “$title”';
+  }
+
+  @override
+  String activityExpenseDeleted(String actor, String title) {
+    return '$actor deleted “$title”';
+  }
+
+  @override
+  String activityExpenseRestored(String actor, String title) {
+    return '$actor restored “$title”';
+  }
+
+  @override
+  String activityPaymentAdded(String actor) {
+    return '$actor recorded a payment';
+  }
+
+  @override
+  String activityPaymentEdited(String actor) {
+    return '$actor edited a payment';
+  }
+
+  @override
+  String activityPaymentDeleted(String actor) {
+    return '$actor removed a payment';
+  }
+
+  @override
+  String activityPaymentRestored(String actor) {
+    return '$actor restored a payment';
+  }
+
+  @override
+  String activityExpenseLine(String amount, String payers) {
+    return '$amount · paid by $payers';
+  }
+
+  @override
+  String activityPaymentLine(String from, String to, String amount) {
+    return '$from paid $to $amount';
+  }
+
+  @override
+  String activityChangeAmount(String from, String to) {
+    return 'Amount: $from → $to';
+  }
+
+  @override
+  String activityChangeDate(String from, String to) {
+    return 'Date: $from → $to';
+  }
+
+  @override
+  String activityChangeDescription(String from, String to) {
+    return 'Description: $from → $to';
+  }
+
+  @override
+  String activityChangeCategory(String from, String to) {
+    return 'Category: $from → $to';
+  }
+
+  @override
+  String activityChangePayers(String from, String to) {
+    return 'Paid by: $from → $to';
+  }
+
+  @override
+  String activityPayerAmount(String name, String amount) {
+    return '$name $amount';
+  }
+
+  @override
+  String activityChangeShare(String name, String from, String to) {
+    return '$name\'s share: $from → $to';
+  }
+
+  @override
+  String activityChangeMyShare(String from, String to) {
+    return 'Your share: $from → $to';
+  }
+
+  @override
+  String activityChangeParties(String from, String to) {
+    return 'Who paid whom: $from → $to';
+  }
+
+  @override
+  String activityPartiesPair(String from, String to) {
+    return '$from to $to';
+  }
+
+  @override
+  String activityChangeMethod(String from, String to) {
+    return 'Method: $from → $to';
+  }
+
+  @override
+  String activityChangeNote(String from, String to) {
+    return 'Note: $from → $to';
+  }
+
+  @override
+  String get activityNone => 'none';
+
+  @override
+  String get activityRestore => 'Restore';
+
+  @override
+  String get activityExpenseRestoredSnack => 'Expense restored';
+
+  @override
+  String get activityExpenseDeletedSnack => 'Expense deleted';
+
+  @override
+  String get activityAllGroups => 'All groups';
+
+  @override
+  String activityGroupDeleted(String actor, String name) {
+    return '$actor deleted the group “$name”';
+  }
+
+  @override
+  String activityGroupRestored(String actor, String name) {
+    return '$actor restored the group “$name”';
+  }
+
+  @override
+  String activityGroupEdited(String actor, String name) {
+    return '$actor changed the group “$name”';
+  }
+
+  @override
+  String activityGroupLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses',
+      one: '1 expense',
+      zero: 'No expenses',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activityPaymentRestoredSnack => 'Payment restored';
+
+  @override
+  String get activityGroupRestoredSnack => 'Group restored';
+
+  @override
+  String get activityGroupDeletedSnack => 'Group deleted';
+
+  @override
+  String recurringAddedSkipped(int added, int skipped) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added added',
+      one: '1 added',
+      zero: 'None added',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: '$skipped skipped',
+      one: '1 skipped',
+    );
+    return '$_temp0, $_temp1';
+  }
 
   @override
   String get groupExportCsv => 'Export as CSV';
@@ -2682,32 +3377,126 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String recurringDecrease(String label) {
-    return 'Decrease $label';
+  String get smsAddedMarker => 'Added from SMS';
+
+  @override
+  String smsAutoAddedOne(String amount) {
+    return 'Added $amount from SMS';
   }
 
   @override
-  String recurringIncrease(String label) {
-    return 'Increase $label';
-  }
-
-  @override
-  String recurringAddedSkipped(int added, int skipped) {
+  String smsAutoAddedMany(int count) {
     String _temp0 = intl.Intl.pluralLogic(
-      added,
+      count,
       locale: localeName,
-      other: '$added added',
-      one: '1 added',
-      zero: 'None added',
+      other: 'Added $count entries from SMS',
+      one: 'Added 1 entry from SMS',
     );
-    String _temp1 = intl.Intl.pluralLogic(
-      skipped,
-      locale: localeName,
-      other: '$skipped skipped',
-      one: '1 skipped',
-    );
-    return '$_temp0, $_temp1';
+    return '$_temp0';
   }
+
+  @override
+  String get smsReviewTitle => 'SMS to review';
+
+  @override
+  String get smsReviewHelp =>
+      'These messages were not clear enough to add on their own. Add, edit or ignore each one.';
+
+  @override
+  String get smsReviewUnread => 'Could not read the amount';
+
+  @override
+  String get smsReviewAddManually => 'Add manually';
+
+  @override
+  String settleReminderTitle(String group) {
+    return 'Settle up: $group';
+  }
+
+  @override
+  String settleReminderOwesYou(String name, String amount) {
+    return '$name owes you $amount';
+  }
+
+  @override
+  String settleReminderYouOwe(String name, String amount) {
+    return 'You owe $name $amount';
+  }
+
+  @override
+  String settleReminderPeopleOweYou(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people owe you $amount',
+      one: '1 person owes you $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settleReminderYouOweTotal(String amount) {
+    return 'You owe $amount in all';
+  }
+
+  @override
+  String get settleReminderSheetTitle => 'Remind me to settle up';
+
+  @override
+  String get settleReminderWith => 'About';
+
+  @override
+  String get settleReminderEveryone => 'Everyone';
+
+  @override
+  String get settleReminderHowOften => 'How often';
+
+  @override
+  String get settleReminderMonthly => 'Monthly';
+
+  @override
+  String get settleReminderWeekly => 'Weekly';
+
+  @override
+  String get settleReminderOnDay => 'On day';
+
+  @override
+  String get settleReminderLastDay => 'Last day';
+
+  @override
+  String settleReminderNextAt(String date) {
+    return 'Next reminder: $date';
+  }
+
+  @override
+  String get settleReminderTurnOff => 'Turn off';
+
+  @override
+  String get settleReminderOffLabel => 'Settle-up reminder off';
+
+  @override
+  String settleReminderMonthlySummary(String day) {
+    return 'Reminder on day $day every month';
+  }
+
+  @override
+  String settleReminderWeeklySummary(String weekday) {
+    return 'Reminder every $weekday';
+  }
+
+  @override
+  String get settleReminderMonthlyLastDaySummary =>
+      'Reminder on the last day of every month';
+
+  @override
+  String get groupRecurringAmountFixed =>
+      'This split uses fixed amounts, so the total can\'t change here';
+
+  @override
+  String get groupRecurringUpcoming => 'Repeating';
+
+  @override
+  String get settleReminderShareNudge => 'Share a nudge';
 
   @override
   String get groupRecurringExpenseOnly =>

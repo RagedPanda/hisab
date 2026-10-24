@@ -45,7 +45,7 @@ class ReminderEditor extends ConsumerStatefulWidget {
 
 class _ReminderEditorState extends ConsumerState<ReminderEditor> {
   late final _titleController = TextEditingController(text: widget.initial.title);
-  late final _amountController = TextEditingController(text: widget.initial.amountMinor == null ? '' : amountInputText(widget.initial.amountMinor!));
+  late final _amountController = TextEditingController(text: _initialAmountText(widget.initial.amountMinor));
   late final _notesController = TextEditingController(text: widget.initial.notes);
   late ReminderKind _kind = widget.initial.kind;
   late DateTime _dueAt = widget.initial.dueAt;
@@ -74,7 +74,7 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
         title: _titleController.text,
         dueAt: DateTime(_dueAt.year, _dueAt.month, _dueAt.day),
         notes: _notesController.text.trim(),
-        amountMinor: _kind.isMoney ? parseAmountToMinor(_amountController.text) : null,
+        amountMinor: _kind.isMoney ? reminderAmountOrNone(parseAmountToMinor(_amountController.text)) : null,
         categoryId: _kind.isMoney ? _categoryId : null,
         accountId: _kind.isMoney ? _accountId : null,
         recurringId: widget.initial.recurringId,
@@ -107,12 +107,20 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
     if (category != null) setState(() => _categoryId = category.id);
   }
 
+  /// The amount field starts empty for no amount, including a stored 0.
+  static String _initialAmountText(int? amountMinor) {
+    final amount = reminderAmountOrNone(amountMinor);
+    return amount == null ? '' : amountInputText(amount);
+  }
+
   Future<void> _save() async {
     setState(() => _submitted = true);
     final draft = _draft;
-    if (draft.error != null || (_notify && _daysBefore.isEmpty) || _saving) return;
+    final amountInvalid = _kind.isMoney && amountErrorText(context, _amountController.text) != null;
+    if (draft.error != null || amountInvalid || (_notify && _daysBefore.isEmpty) || _saving) return;
     setState(() => _saving = true);
-    if (_notify) await askNotificationPermissionIfNeeded(context, ref);
+    // The reminder is saved whatever the answers.
+    if (_notify) await askReminderPermissionsIfNeeded(context);
     final id = await ref.read(reminderSchedulerProvider).save(draft);
     if (mounted) Navigator.pop(context, id);
   }
@@ -126,7 +134,6 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
     final category = categories.where((c) => c.id == _categoryId).firstOrNull;
-    final permission = ref.watch(notificationPermissionProvider).value;
     final draft = _draft;
     final titleError = _submitted && draft.error == ReminderDraftError.missingTitle ? l10n.reminderTitleRequired : null;
     final firstAlert = planAlerts(
@@ -181,7 +188,13 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
                         key: const ValueKey('reminder-amount'),
                         controller: _amountController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: InputDecoration(labelText: l10n.reminderAmountOptional, prefixText: '$symbol '),
+                        inputFormatters: amountInputFormatters,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          labelText: l10n.reminderAmountOptional,
+                          prefixText: '$symbol ',
+                          errorText: amountErrorText(context, _amountController.text),
+                        ),
                       ),
                     ],
                     gap,
@@ -248,20 +261,6 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
                       style: theme.textTheme.bodySmall?.copyWith(color: _submitted && _daysBefore.isEmpty ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant),
                     ),
                   ),
-                  if (permission != null && permission.notificationsAllowed && !permission.exactAlarmsAllowed)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 8, 0),
-                      child: Row(children: [
-                        Expanded(child: Text(l10n.reminderExactAlarmNote, style: theme.textTheme.bodySmall)),
-                        TextButton(
-                          onPressed: () async {
-                            await ref.read(notificationServiceProvider).requestExactAlarms();
-                            ref.invalidate(notificationPermissionProvider);
-                          },
-                          child: Text(l10n.notifTurnOn),
-                        ),
-                      ]),
-                    ),
                 ],
                 if (_kind.isMoney) ...[
                   gap,

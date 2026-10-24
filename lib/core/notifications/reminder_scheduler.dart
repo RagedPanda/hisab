@@ -1,6 +1,7 @@
 import '../../data/repositories/reminders_repository.dart';
 import '../../data/repositories/settle_schedule_repository.dart';
 import '../../domain/reminders/reminder_draft.dart';
+import '../../domain/reminders/reminder_kind.dart';
 import 'notification_service.dart';
 import 'reminder_payload.dart';
 
@@ -10,13 +11,23 @@ import 'reminder_payload.dart';
 /// reminders (card dues, documents, salary, SMS matching...) call this, not
 /// the repository, so notifications never drift from the table.
 class ReminderScheduler {
-  ReminderScheduler({required this.reminders, required this.notifications, this.settleSchedules, DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
+  ReminderScheduler({
+    required this.reminders,
+    required this.notifications,
+    this.removeEntry,
+    this.settleSchedules,
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now;
 
   final RemindersRepository reminders;
 
   /// Groups' scheduled settle-up reminders, posted alongside due reminders.
   final SettleScheduleRepository? settleSchedules;
   final NotificationService notifications;
+
+  /// Deletes an entry and reverses its balance effect; [undoDone] uses it to
+  /// take back the entry that marking paid recorded. Null leaves entries alone.
+  final Future<void> Function(String entryId)? removeEntry;
   final DateTime Function() _clock;
 
   /// Re-posts the alerts of [id] from its stored row (or cancels them when it
@@ -54,9 +65,14 @@ class ReminderScheduler {
   }
 
   /// Reopens a paid or skipped reminder and drops the occurrence it spawned.
+  /// A full reversal: the entry recorded when marking it paid is deleted too,
+  /// so account and group balances return to what they were.
   Future<void> undoDone(String id) async {
+    final closed = await reminders.getById(id);
+    final linkedEntryId = closed?.status == ReminderStatus.pending ? null : closed?.entryId;
     final spawnedId = await reminders.undoDone(id);
     if (spawnedId != null) await notifications.cancel(spawnedId);
+    if (linkedEntryId != null) await removeEntry?.call(linkedEntryId);
     await refresh(id);
   }
 

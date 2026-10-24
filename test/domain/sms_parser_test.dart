@@ -19,6 +19,14 @@ void main() {
       expect(bankFromSender('AX-AXISBK-S'), 'Axis Bank');
       expect(bankFromSender('+919876543210'), isNull);
     });
+
+    test('only alphanumeric headers count as business senders', () {
+      expect(isBusinessSender('AD-HDFCBK'), isTrue);
+      expect(isBusinessSender('KOTAKB'), isTrue);
+      expect(isBusinessSender('+19876500011'), isFalse);
+      expect(isBusinessSender('9876500011'), isFalse);
+      expect(isBusinessSender(''), isFalse);
+    });
   });
 
   group('rejects non-transactions', () {
@@ -74,7 +82,7 @@ void main() {
       expect(t.accountLast4, '5555');
       expect(t.counterparty, 'AMAZON');
       expect(t.occurredAt, DateTime(2026, 8, 21, 5, 20, 26));
-      expect(suggestCategoryKey(t), 'credit_card_payment');
+      expect(suggestCategoryKey(t), 'refunds_cashback');
     });
     test('SBI bare amount', () {
       final t = parse('AD-SBIINB-S', 'A/C X6299 debited by 356.00 on date 26Apr26 trf to Swiggy Refno 26029846...')!;

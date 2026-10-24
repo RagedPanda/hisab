@@ -3986,4 +3986,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smsReminderPaidViaSms => 'Paid via SMS';
+
+  @override
+  String get numberFormatTitle => 'Number format';
+
+  @override
+  String get numberFormatAutomatic => 'Automatic';
+
+  @override
+  String get numberFormatAutomaticHelp => 'Follows your currency and region';
 }

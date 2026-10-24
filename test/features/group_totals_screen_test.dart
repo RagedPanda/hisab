@@ -14,7 +14,7 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/features/groups/group_totals_screen.dart';
 import 'package:hisab/features/shell/router.dart';
 
-import '../app_flow_test.dart' show settle;
+import '../support/app_harness.dart' show settle;
 
 /// Goa trip: Rahul and I paid a 1,000 hotel together (600 + 400) split
 /// 500 / 300 / 200, and Priya paid a 300 dinner split equally among three.
@@ -51,7 +51,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('balances tab shows group totals and opens the breakdown page', (tester) async {
-    SharedPreferences.setMockInitialValues({'onboarded': true});
+    SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR'});
     final prefs = await SharedPreferences.getInstance();
     final db = AppDatabase(NativeDatabase.memory());
     final groupId = (await tester.runAsync(() => _seedGoaTrip(db)))!;

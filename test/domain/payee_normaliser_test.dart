@@ -22,6 +22,19 @@ void main() {
       expect(normalisePayee('PhonePe Merchant'), 'PhonePe');
       expect(normalisePayee('Cafe Coffee Day'), 'Cafe Coffee Day');
     });
+    const parserCoverageCases = {
+      'Mr PRADEEP KUMAR': 'Pradeep Kumar',
+      'M/s SHARMA TRADERS': 'Sharma Traders',
+      'GREEN LEAF CAFE': 'Green Leaf Cafe',
+      'paytmqr281005050101@paytm': 'paytmqr281005050101@paytm',
+      'q123456789@ybl': 'q123456789@ybl',
+      'cred.club@axisb': 'CRED',
+      'licindia.premium@hdfcbank': 'LIC',
+      'tea.stall@okfederal': 'Tea Stall',
+    };
+    for (final MapEntry(key: raw, value: payee) in parserCoverageCases.entries) {
+      test('parser coverage: $raw', () => expect(normalisePayee(raw), payee));
+    }
     test('isVpa', () {
       expect(isVpa('ola.cabs@axisbank'), isTrue);
       expect(isVpa('Pay at store@home'), isFalse);

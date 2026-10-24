@@ -2,7 +2,10 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../core/ids.dart';
+import '../../domain/backup/seed_dedupe.dart';
 import '../../domain/categories/category_catalog.dart';
+import '../../domain/categories/category_packs.dart';
+import '../../domain/sms/sms_outcome.dart';
 
 part 'database.g.dart';
 
@@ -62,6 +65,7 @@ class Categories extends Table with SyncColumns {
 }
 
 @TableIndex(name: 'entries_project_id', columns: {#projectId})
+@TableIndex(name: 'entries_recurring_id', columns: {#recurringId})
 class Entries extends Table with SyncColumns {
   TextColumn get id => text()();
 
@@ -86,6 +90,9 @@ class Entries extends Table with SyncColumns {
 
   /// Project (vehicle, trip, construction...) this entry is tracked under.
   TextColumn get projectId => text().nullable()();
+
+  /// Recurring rule that produced (or started) this entry.
+  TextColumn get recurringId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
@@ -119,6 +126,23 @@ class Groups extends Table with SyncColumns {
   /// Project this group's expenses roll up into (no UI yet; see roadmap R1).
   TextColumn get projectId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Trip, home, couple or other (see `GroupType`); sets the default icon and
+  /// the empty-state wording (v7, group settings).
+  TextColumn get type => text().withDefault(const Constant('other'))();
+
+  /// Split method pre-selected for new expenses: equal, shares or percent (v7).
+  TextColumn get defaultSplitMethod => text().withDefault(const Constant('equal'))();
+
+  /// Free-text notes shown as a card on the Expenses tab (v7).
+  TextColumn get notes => text().withDefault(const Constant(''))();
+
+  /// Currency symbol shown for this group's amounts; null follows the app
+  /// setting. A label only: amounts are never converted (v7).
+  TextColumn get currencyLabel => text().nullable()();
+
+  /// When the group was archived (or left); null while active (v7).
+  DateTimeColumn get archivedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -301,6 +325,64 @@ class Reminders extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
+/// A template entry plus a schedule. Due occurrences become entries with
+/// [Entries.recurringId] set, either automatically ([autoPost]) or after the
+/// user confirms them. Schedule maths lives in `lib/domain/recurring`.
+class RecurringRules extends Table with SyncColumns {
+  TextColumn get id => text()();
+
+  /// Display name ("Rent", "Netflix"); empty falls back to payee or category.
+  TextColumn get name => text().withDefault(const Constant(''))();
+
+  /// expense | income | transfer
+  TextColumn get kind => text()();
+  IntColumn get amountMinor => integer()();
+  TextColumn get currency => text().withDefault(const Constant('INR'))();
+  TextColumn get categoryId => text().nullable()();
+  TextColumn get accountId => text().nullable()();
+  TextColumn get toAccountId => text().nullable()();
+  TextColumn get payee => text().nullable()();
+  TextColumn get projectId => text().nullable()();
+  TextColumn get note => text().withDefault(const Constant(''))();
+
+  /// daily | weekly | monthly | yearly; a custom schedule is one of these
+  /// with [interval] above one.
+  TextColumn get frequency => text()();
+  IntColumn get interval => integer().withDefault(const Constant(1))();
+
+  /// 1..31, -1 = last day of the month, 0 = the month start day setting.
+  IntColumn get dayOfMonth => integer().nullable()();
+
+  /// ISO weekday 1..7 for weekly rules.
+  IntColumn get weekday => integer().nullable()();
+  DateTimeColumn get startDate => dateTime()();
+  DateTimeColumn get endDate => dateTime().nullable()();
+  IntColumn get maxCount => integer().nullable()();
+
+  /// Occurrences already posted or skipped, counted against [maxCount].
+  IntColumn get postedCount => integer().withDefault(const Constant(0))();
+
+  /// How many of [postedCount] were skipped rather than added.
+  IntColumn get skippedCount => integer().withDefault(const Constant(0))();
+
+  /// Next occurrence not yet posted or skipped; null once the rule ended.
+  DateTimeColumn get nextDue => dateTime().nullable()();
+
+  /// Post due occurrences without asking; false lists them as Upcoming to confirm.
+  BoolColumn get autoPost => boolean().withDefault(const Constant(true))();
+
+  /// Comma separated days before the due date to notify ("3,0").
+  TextColumn get remindDaysBefore => text().withDefault(const Constant(''))();
+  BoolColumn get isSubscription => boolean().withDefault(const Constant(false))();
+
+  /// active | paused | ended
+  TextColumn get status => text().withDefault(const Constant('active'))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class SmsLog extends Table {
   /// Hash of sender+body+timestamp so a message is only processed once.
   TextColumn get id => text()();
@@ -308,11 +390,42 @@ class SmsLog extends Table {
   TextColumn get body => text()();
   DateTimeColumn get receivedAt => dateTime()();
 
-  /// pending | added | ignored | skipped
+  /// See SmsLogStatus: pending | added | ignored | skipped | not_bank | duplicate | undone
   TextColumn get status => text()();
   TextColumn get parsedJson => text().nullable()();
   TextColumn get entryId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Set when the user clears the SMS history. The row stays (with its body
+  /// wiped) so the message is still recognised and never processed twice.
+  DateTimeColumn get clearedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Who added, edited, deleted or restored which group expense or payment,
+/// and when, with the state before and after as JSON snapshots (see
+/// `domain/split/group_activity.dart`).
+@TableIndex(name: 'group_activities_group_id', columns: {#groupId})
+class GroupActivities extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get groupId => text()();
+
+  /// added | edited | deleted | restored
+  TextColumn get action => text()();
+
+  /// expense | payment
+  TextColumn get subjectKind => text()();
+
+  /// The entry or settlement id.
+  TextColumn get subjectId => text()();
+
+  /// The member who made the change; the device's own member until sync.
+  TextColumn get actorMemberId => text().nullable()();
+  DateTimeColumn get occurredAt => dateTime()();
+  TextColumn get beforeJson => text().nullable()();
+  TextColumn get afterJson => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -334,12 +447,14 @@ class SmsLog extends Table {
   EntryFieldValues,
   Reminders,
   EntryPayers,
+  RecurringRules,
+  GroupActivities,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -375,9 +490,35 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(entryPayers);
             await m.createIndex(entryPayersEntryId);
           }
+          // v7: recurring rules and the entries they post (R2, recurring entries).
+          if (from < 7) {
+            await m.createTable(recurringRules);
+            await m.addColumn(entries, entries.recurringId);
+            await m.createIndex(entriesRecurringId);
+          }
+          // v8: SMS history can be cleared without forgetting processed messages.
+          if (from < 8) await m.addColumn(smsLog, smsLog.clearedAt);
+          // v10: group activity log (groups parity, undo and history).
+          // v9 is reserved for another in-flight migration.
+          if (from < 10) {
+            await m.createTable(groupActivities);
+            await m.createIndex(groupActivitiesGroupId);
+          }
+          // v11: group type, default split, notes, currency label and archiving (groups parity, group settings).
+          if (from < 11) {
+            await m.addColumn(groups, groups.type);
+            await m.addColumn(groups, groups.defaultSplitMethod);
+            await m.addColumn(groups, groups.notes);
+            await m.addColumn(groups, groups.currencyLabel);
+            await m.addColumn(groups, groups.archivedAt);
+          }
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
+          await wipeUnkeptSmsText();
+          // Heals installs where a restore doubled the seed (#63); writes nothing otherwise.
+          if (!details.wasCreated) await mergeSeededDuplicates();
+          if (!details.wasCreated) await recolourRetiredSeeds();
         },
       );
 
@@ -385,6 +526,16 @@ class AppDatabase extends _$AppDatabase {
         name: 'hisab',
         native: const DriftNativeOptions(shareAcrossIsolates: true),
       );
+
+  /// Drops SMS text the log may not keep ([keepsSmsText]: not-bank messages,
+  /// OTPs and promotions) that an earlier build or a restored backup stored.
+  /// Idempotent, so it runs on every open.
+  Future<void> wipeUnkeptSmsText() async {
+    final rows = await (select(smsLog)..where((row) => row.body.equals('').not())).get();
+    final wipeIds = [for (final row in rows) if (!keepsSmsText(row.status, row.body)) row.id];
+    if (wipeIds.isEmpty) return;
+    await (update(smsLog)..where((row) => row.id.isIn(wipeIds))).write(const SmsLogCompanion(body: Value('')));
+  }
 
   /// Inserts the category catalog and a Cash account. Idempotent by seedKey.
   Future<void> seedDefaults() async {
@@ -412,6 +563,104 @@ class AppDatabase extends _$AppDatabase {
         color: 0xFF43A047,
       ));
     }
+  }
+
+  /// Moves seeded categories still on a retired default colour to the
+  /// current palette; colours the user picked are left alone. Writes nothing
+  /// once every row is current.
+  Future<int> recolourRetiredSeeds() async {
+    final seedColors = {for (final seed in [...flattenCatalog(), ...packOnlySeeds()]) seed.key: seed.color};
+    final seeded = await (select(categories)..where((t) => t.seedKey.isNotNull())).get();
+    var recoloured = 0;
+    for (final category in seeded) {
+      final seedColor = seedColors[category.seedKey];
+      final target = seedColor == null ? null : recolouredSeed(current: category.color, seedColor: seedColor);
+      if (target == null) continue;
+      await (update(categories)..where((t) => t.id.equals(category.id)))
+          .write(CategoriesCompanion(color: Value(target), updatedAt: Value(DateTime.now())));
+      recoloured++;
+    }
+    return recoloured;
+  }
+
+  /// Folds duplicate seeded rows into one: categories sharing a seedKey and
+  /// extra untouched "Cash" accounts. References move to the kept row and the
+  /// duplicate is soft-deleted, so restoring the same backup again keeps it
+  /// gone. [preferIds] are kept over other copies (rows a restore just wrote).
+  Future<int> mergeSeededDuplicates({Set<String> preferIds = const {}}) => transaction(() async {
+        final categoryPlan = planSeedDedupe(await _seededCategoryCandidates(), preferIds: preferIds);
+        final accountPlan = planSeedDedupe(await _cashAccountCandidates(), preferIds: preferIds);
+        final now = DateTime.now();
+        for (final MapEntry(key: droppedId, value: keptId) in categoryPlan.entries) {
+          await (update(entries)..where((t) => t.categoryId.equals(droppedId)))
+              .write(EntriesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
+          await (update(budgets)..where((t) => t.categoryId.equals(droppedId)))
+              .write(BudgetsCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
+          await (update(recurringRules)..where((t) => t.categoryId.equals(droppedId)))
+              .write(RecurringRulesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
+          await (update(categories)..where((t) => t.parentId.equals(droppedId)))
+              .write(CategoriesCompanion(parentId: Value(keptId), updatedAt: Value(now)));
+          await (update(categories)..where((t) => t.id.equals(droppedId)))
+              .write(CategoriesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+        }
+        for (final droppedId in accountPlan.keys) {
+          await (update(accounts)..where((t) => t.id.equals(droppedId)))
+              .write(AccountsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+        }
+        return categoryPlan.length + accountPlan.length;
+      });
+
+  Future<List<SeedCandidate>> _seededCategoryCandidates() async {
+    final live = await (select(categories)..where((t) => t.seedKey.isNotNull() & t.deletedAt.isNull())).get();
+    final entryRefs = await _countBy(entries, entries.categoryId);
+    final budgetRefs = await _countBy(budgets, budgets.categoryId);
+    final ruleRefs = await _countBy(recurringRules, recurringRules.categoryId);
+    return [
+      for (final category in live)
+        SeedCandidate(
+          id: category.id,
+          key: category.seedKey!,
+          references: (entryRefs[category.id] ?? 0) + (budgetRefs[category.id] ?? 0) + (ruleRefs[category.id] ?? 0),
+        ),
+    ];
+  }
+
+  /// Only the seeded account's shape counts as a duplicate, and only an
+  /// empty one (no entries, zero balance) may be dropped.
+  Future<List<SeedCandidate>> _cashAccountCandidates() async {
+    final live = await (select(accounts)
+          ..where((t) => t.type.equals('cash') & t.name.equals('Cash') & t.deletedAt.isNull()))
+        .get();
+    final fromRefs = await _countBy(entries, entries.accountId);
+    final toRefs = await _countBy(entries, entries.toAccountId);
+    final ruleFromRefs = await _countBy(recurringRules, recurringRules.accountId);
+    final ruleToRefs = await _countBy(recurringRules, recurringRules.toAccountId);
+    return [
+      for (final account in live)
+        _cashCandidate(
+          account,
+          (fromRefs[account.id] ?? 0) + (toRefs[account.id] ?? 0) + (ruleFromRefs[account.id] ?? 0) + (ruleToRefs[account.id] ?? 0),
+        ),
+    ];
+  }
+
+  static SeedCandidate _cashCandidate(Account account, int references) => SeedCandidate(
+        id: account.id,
+        key: 'cash:Cash',
+        references: references,
+        removable: references == 0 && account.balanceMinor == 0,
+      );
+
+  /// Live-row count per value of [column] in [table].
+  Future<Map<String, int>> _countBy(TableInfo<Table, dynamic> table, GeneratedColumn<String> column) async {
+    final deletedAt = table.columnsByName['deleted_at']! as GeneratedColumn<DateTime>;
+    final count = column.count();
+    final rows = await (selectOnly(table)
+          ..addColumns([column, count])
+          ..where(column.isNotNull() & deletedAt.isNull())
+          ..groupBy([column]))
+        .get();
+    return {for (final row in rows) row.read(column)!: row.read(count)!};
   }
 }
 

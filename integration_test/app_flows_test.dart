@@ -32,6 +32,8 @@ import 'package:hisab/domain/split/split_calculator.dart';
 import 'package:hisab/features/categories/categories_screen.dart';
 import 'package:hisab/features/dashboard/dashboard_screen.dart';
 import 'package:hisab/features/expense_editor/expense_editor_screen.dart';
+import 'package:hisab/features/groups/activity_screen.dart';
+import 'package:hisab/features/groups/group_detail_screen.dart';
 import 'package:hisab/features/groups/group_export.dart';
 import 'package:hisab/features/groups/group_totals_screen.dart';
 import 'package:hisab/features/groups/settle_up_sheet.dart';
@@ -43,6 +45,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:intl/intl.dart';
 
 import 'harness.dart';
+import 'sms_history_flow.dart';
 
 const _milkTotalMinor = 20000; // 2 L @ 70 + 1 L @ 60
 const _restaurantMinor = 125000;
@@ -81,7 +84,24 @@ int _expectedSeededSpend(DateTime now, {required int entryCount}) {
   final range = monthRange(now);
   final hotelDate = now.subtract(const Duration(days: 3));
   final planned = planDemoEntries(count: entryCount, now: now).where((item) => item.kind == 'expense' && range.contains(item.occurredAt)).fold(0, (sum, item) => sum + item.amountMinor);
-  return planned + (range.contains(hotelDate) ? 300000 : 0);
+  return planned + (range.contains(hotelDate) ? 300000 : 0) + _sliceTopUpKeys.length * _sliceTopUpMinor;
+}
+
+/// One child in each of six parent categories. The demo plan spreads entries
+/// by date, so on many days (2026-10-24 among them) this month touches five
+/// or fewer parents and the donut has no "Others" slice; these make it six.
+const _sliceTopUpKeys = ['cab_auto', 'electricity', 'medicines', 'clothing', 'movies', 'salon'];
+const _sliceTopUpMinor = 10000;
+
+/// Adds a small expense in each of [_sliceTopUpKeys] at the start of [now]'s
+/// month, so the dashboard donut always draws the top five plus "Others".
+Future<void> _seedSliceTopUp(AppDatabase db, DateTime now) async {
+  final categories = await db.select(db.categories).get();
+  final entries = EntriesRepository(db);
+  for (final key in _sliceTopUpKeys) {
+    final categoryId = categories.firstWhere((category) => category.seedKey == key).id;
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: _sliceTopUpMinor, occurredAt: monthRange(now).start, categoryId: categoryId, payee: 'Top-up'));
+  }
 }
 
 /// The summary card headline; the same figure also appears in the donut centre
@@ -579,7 +599,7 @@ void main() {
     await shoot(tester, 'categories_income');
   });
 
-  testWidgets('10 bank SMS screen on iOS: reading disabled, paste still works', (tester) async {
+  testWidgets('10 bank SMS screen on iOS: reading disabled, paste auto-adds with Undo, unclear SMS wait for review', (tester) async {
     await pumpApp(tester, shared);
     await goTab(tester, 'Settings');
     await shoot(tester, 'settings');
@@ -593,14 +613,30 @@ void main() {
     await tapText(tester, 'Paste an SMS');
     await enterText(tester, _dialogField(), 'Rs.500.00 debited from A/c XX1234 on 20-Oct-25 to merchant@upi (UPI Ref No 123456789012)');
     await tapFinder(tester, _filled('Save'), frames: 12);
-    expect(find.text('Transaction found. Review it below.'), findsOneWidget);
+    expect(find.text('Transaction added.'), findsOneWidget, reason: 'auto-add is on by default and this SMS names the account');
+    await waitFor(tester, find.textContaining('Added ${formatMinor(50000, showDecimals: false)} from SMS'));
+    await shoot(tester, 'sms_auto_added_undo');
+    await tapText(tester, 'Undo', frames: 12);
+    expect(find.text('To review (0)'), findsOneWidget, reason: 'Undo ignores the SMS; it does not come back for review');
+    await shoot(tester, 'sms_after_undo');
+
+    await tapText(tester, 'Paste an SMS');
+    await enterText(tester, _dialogField(), 'Paid Rs 250 to Ramesh');
+    await tapFinder(tester, _filled('Save'), frames: 12);
+    expect(find.text('Transaction found. Review it below.'), findsOneWidget, reason: 'no bank or account: not confident enough to add alone');
     expect(find.text('To review (1)'), findsOneWidget);
-    expect(find.text('Add ${formatMinor(50000, showDecimals: false)}'), findsOneWidget);
-    await shoot(tester, 'sms_pending');
-    await tapText(tester, 'Ignore');
-    expect(find.text('To review (0)'), findsOneWidget);
     final accountNames = (await shared.read(accountsRepositoryProvider).getAll()).map((a) => a.name).toList();
-    debugPrint('SMS-DIAG accounts after pasting and ignoring an SMS: $accountNames');
+    debugPrint('SMS-DIAG accounts after undo and an unclear SMS: $accountNames');
+    await goBack(tester);
+    await goTab(tester, 'Home');
+    await waitFor(tester, find.text('1 SMS to review'));
+    await shoot(tester, 'sms_home_review_row');
+    await tapText(tester, '1 SMS to review');
+    expect(find.text('SMS to review'), findsWidgets);
+    expect(find.text('Add ${formatMinor(25000, showDecimals: false)}'), findsOneWidget);
+    await shoot(tester, 'sms_review_queue');
+    await tapText(tester, 'Ignore');
+    expect(find.text('Nothing waiting'), findsOneWidget);
     await goBack(tester);
   });
 
@@ -744,10 +780,11 @@ void main() {
     addTearDown(fresh.container.dispose);
     final now = DateTime.now();
     await seedDemoData(fresh.db, entryCount: kDashboardSeedEntries, now: now);
+    await _seedSliceTopUp(fresh.db, now);
     await pumpApp(tester, fresh);
     await settle(tester, 12);
     expect(find.text(_spentIn(now)), findsOneWidget);
-    await _expectSpent(tester, formatMinor(_expectedSeededSpend(now, entryCount: kDashboardSeedEntries), showDecimals: false), reason: 'hero spend = planned expenses this month + my hotel share');
+    await _expectSpent(tester, formatMinor(_expectedSeededSpend(now, entryCount: kDashboardSeedEntries), showDecimals: false), reason: 'hero spend = planned expenses this month + my hotel share + slice top-up');
     expect(find.byKey(kHeroCardKey), findsOneWidget);
     expect(find.text('Income'), findsOneWidget);
     expect(find.text('Daily avg'), findsOneWidget);
@@ -1489,6 +1526,168 @@ void main() {
     expect(tester.widget<TextFormField>(payerField(me)).initialValue, '300');
   });
 
+  testWidgets('30 group settings: type, default split with weights, currency label, notes, leave blocked, archive', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final flatId = await groups.createGroup(name: 'Flat 4B', icon: 'groups', myName: 'You', otherMembers: ['Rahul']);
+    final members = await groups.getMembers(flatId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => member.name == 'Rahul').id;
+    await groups.addSettlement(groupId: flatId, fromMemberId: me, toMemberId: rahul, amountMinor: 50000, occurredAt: DateTime.now());
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Flat 4B');
+    await tapFinder(tester, find.byType(PopupMenuButton<String>));
+    await tapText(tester, 'Group settings', frames: 12);
+
+    await tapFinder(tester, _chip('Home'));
+    var group = (await groups.getGroup(flatId))!;
+    expect((group.type, group.icon), ('home', 'home'), reason: 'the generic icon follows the new type');
+
+    await scrollTo(tester, _chip('Shares / ratio'));
+    await tapFinder(tester, _chip('Shares / ratio'));
+    await scrollTo(tester, find.byTooltip('More shares for Rahul'));
+    await tapFinder(tester, find.byTooltip('More shares for Rahul'));
+    expect(find.text('1.5 shares'), findsOneWidget);
+    await shoot(tester, 'group_settings_shares');
+
+    await scrollTo(tester, find.text('Same as app (${fresh.read(settingsProvider).currencySymbol})'));
+    await tapText(tester, 'Same as app (${fresh.read(settingsProvider).currencySymbol})', frames: 12);
+    await tapText(tester, '€  ·  EUR', frames: 12);
+    expect((await groups.getGroup(flatId))!.currencyLabel, '€');
+
+    await scrollTo(tester, find.text('Add a note for this group'));
+    await tapText(tester, 'Add a note for this group', frames: 12);
+    await enterText(tester, _dialogField(), 'Rent is due on the 1st');
+    await tapFinder(tester, _filled('Save'), frames: 12);
+    expect(find.text('Rent is due on the 1st'), findsOneWidget);
+
+    await scrollTo(tester, find.text('Leave group'));
+    await tapText(tester, 'Leave group');
+    expect(find.text('Settle up first. You can leave once nobody owes you and you owe nobody.'), findsOneWidget);
+    await shoot(tester, 'group_settings_bottom');
+
+    await goBack(tester);
+    expect(find.text('Rent is due on the 1st'), findsOneWidget, reason: 'notes show on the Expenses tab');
+    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'), frames: 12);
+    await scrollTo(tester, _chip('Shares / ratio'), within: find.byType(ExpenseEditorScreen));
+    expect(tester.widget<ChoiceChip>(_chip('Shares / ratio')).selected, isTrue, reason: 'new expenses start from the default split');
+    expect(find.textContaining('€'), findsWidgets, reason: 'the editor shows the group currency label');
+    await goBack(tester);
+
+    await tapFinder(tester, find.byType(PopupMenuButton<String>));
+    await tapText(tester, 'Archive group', frames: 12);
+    await tapFinder(tester, _filled('Archive'), frames: 12);
+    expect(find.text('This group is archived. Unarchive it to add expenses.'), findsOneWidget);
+    expect(find.widgetWithText(FloatingActionButton, 'Add expense'), findsNothing);
+    await shoot(tester, 'group_archived');
+    await goBack(tester);
+    expect(find.text('Archived (1)'), findsOneWidget);
+    group = (await groups.getGroup(flatId))!;
+    expect((group.defaultSplitMethod, group.archivedAt != null), ('shares', true));
+    expect((await groups.getMembers(flatId)).firstWhere((member) => member.id == rahul).weight, 1.5);
+  });
+
+  testWidgets('28 groups: edit and delete an expense, undo, then restore it from the activity log', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final movieGroupId = await groups.createGroup(name: 'Movie night', icon: 'movie', myName: 'You', otherMembers: ['Rahul']);
+    const title = 'Restaurants & Cafes';
+    Finder expenseRow() => find.descendant(of: find.byType(GroupDetailScreen), matching: find.text(title));
+    Future<void> deleteFromEditor() async {
+      await tapFinder(tester, expenseRow(), frames: 12);
+      await tapFinder(tester, find.byIcon(Icons.delete_outline));
+      await tapFinder(tester, _filled('Delete'), frames: 12);
+    }
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Movie night');
+    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _pickCategory(tester, 'restaurants', title);
+    await enterText(tester, _amountField(), '600');
+    await _saveEntry(tester, formatMinor(60000));
+    await tapFinder(tester, expenseRow(), frames: 12);
+    await enterText(tester, _amountField(), '900');
+    await _saveEntry(tester, formatMinor(90000));
+
+    await deleteFromEditor();
+    expect(find.text('Expense deleted'), findsOneWidget);
+    expect(expenseRow(), findsNothing);
+    await shoot(tester, 'group_expense_undo');
+    await tapText(tester, 'Undo', frames: 12);
+    expect(expenseRow(), findsOneWidget, reason: 'Undo brings the expense back');
+    expect((await groups.getGroupDetail(movieGroupId))!.entries.single.$2, hasLength(2), reason: 'with both shares');
+
+    await deleteFromEditor();
+    expect(expenseRow(), findsNothing);
+    await tapFinder(tester, find.byType(PopupMenuButton<String>));
+    await tapText(tester, 'Activity', frames: 12);
+    expect(find.byType(ActivityScreen), findsOneWidget);
+    expect(find.text('You deleted “$title”'), findsNWidgets(2));
+    expect(find.text('You restored “$title”'), findsOneWidget);
+    expect(find.text('You edited “$title”'), findsOneWidget);
+    expect(find.text('You added “$title”'), findsOneWidget);
+    expect(find.text('Amount: ${formatMinor(60000)} → ${formatMinor(90000)}'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Restore'), findsOneWidget, reason: 'only the latest deletion offers Restore');
+    await shoot(tester, 'group_activity');
+
+    await tapFinder(tester, find.widgetWithText(TextButton, 'Restore'), frames: 12);
+    expect(find.text('Expense restored'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Restore'), findsNothing);
+    expect(find.text('You restored “$title”'), findsNWidgets(2));
+    expect((await groups.getGroupDetail(movieGroupId))!.entries.single.$1.amountMinor, 90000);
+
+    await goBack(tester);
+    expect(expenseRow(), findsOneWidget);
+    await goBack(tester);
+    await tapFinder(tester, find.byTooltip('Activity'), frames: 12);
+    expect(find.text('All groups'), findsOneWidget);
+    expect(find.textContaining('Movie night ·'), findsWidgets, reason: 'the overall feed names each row\'s group');
+    await shoot(tester, 'all_activity');
+  });
+
+  testWidgets('29 groups: delete a group, then restore it with its expenses and payments from the activity log', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final clubId = await groups.createGroup(name: 'Book club', icon: 'book', myName: 'You', otherMembers: ['Rahul']);
+    final members = await groups.getMembers(clubId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => !member.isMe).id;
+    await groups.saveGroupExpense(
+      EntriesRepository.newExpense(id: 'books', amountMinor: 80000, occurredAt: DateTime.now(), note: 'Books', groupId: clubId, paidByMemberId: me, splitMethod: 'equal'),
+      splits: [
+        SplitsCompanion.insert(id: 'books-me', entryId: 'books', memberId: me, amountMinor: 40000),
+        SplitsCompanion.insert(id: 'books-rahul', entryId: 'books', memberId: rahul, amountMinor: 40000),
+      ],
+    );
+    await groups.addSettlement(groupId: clubId, fromMemberId: rahul, toMemberId: me, amountMinor: 10000);
+    final balancesBefore = (await groups.getBalances(clubId)).net;
+    await pumpApp(tester, fresh);
+    await tapText(tester, 'Groups', frames: 12);
+    await tapText(tester, 'Book club', frames: 12);
+
+    await tapFinder(tester, find.byType(PopupMenuButton<String>));
+    await tapText(tester, 'Delete group', frames: 8);
+    await tapText(tester, 'Delete', last: true, frames: 12);
+    expect(find.text('Book club'), findsNothing);
+
+    await tapFinder(tester, find.byTooltip('Activity'), frames: 12);
+    expect(find.text('You deleted the group “Book club”'), findsOneWidget);
+    expect(find.text('1 expense'), findsOneWidget);
+    await tapFinder(tester, find.widgetWithText(TextButton, 'Restore'), frames: 12);
+    expect(find.text('Group restored'), findsOneWidget);
+    expect(find.text('You restored the group “Book club”'), findsOneWidget);
+    expect((await groups.getBalances(clubId)).net, balancesBefore, reason: 'the expense and the payment come back as they were');
+
+    await goBack(tester);
+    expect(find.text('Book club'), findsOneWidget);
+  });
+
   testWidgets('25 groups: copy a WhatsApp summary and export the ledger as CSV', (tester) async {
     final exports = <({String fileName, String csv, String subject})>[];
     final fresh = await createApp(overrides: [
@@ -1543,7 +1742,7 @@ void main() {
     expect(lines[2], startsWith(',Total,,900.00,'), reason: 'a closing total row follows the last expense');
   });
 
-  testWidgets('26 groups: totals for all time and one month, with several payers and an unequal split', (tester) async {
+  testWidgets('33 groups: totals for all time and one month, with several payers and an unequal split', (tester) async {
     final fresh = await createApp();
     addTearDown(fresh.container.dispose);
     final groups = fresh.read(groupsRepositoryProvider);
@@ -1590,4 +1789,61 @@ void main() {
     await scrollTo(tester, find.byType(MemberSpendChart), within: find.byType(GroupTotalsScreen));
     await shoot(tester, 'group_totals_month_members');
   });
+
+  testWidgets('26 subscriptions: add from templates, totals, sort by cost, pause, cancel, Hindi', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    await pumpApp(tester, fresh);
+
+    await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Subscriptions'));
+    await tapText(tester, 'Subscriptions');
+    expect(find.text('No subscriptions yet'), findsOneWidget);
+
+    Future<void> addFromTemplate(String template, String price) async {
+      await tapFinder(tester, find.byType(FloatingActionButton), frames: 10);
+      await tapFinder(tester, find.descendant(of: find.byType(DraggableScrollableSheet), matching: find.text(template)), frames: 10);
+      await enterText(tester, find.byKey(const Key('subscriptionPrice')), price);
+      await tapFinder(tester, _filled('Save'), frames: 12);
+    }
+
+    await addFromTemplate('Netflix', '649');
+    expect(find.text('₹649'), findsOneWidget, reason: 'monthly total');
+    expect(find.text('₹7,788'), findsOneWidget, reason: 'yearly total');
+    await addFromTemplate('Mobile recharge', '299');
+    expect(find.textContaining('Every 28 days'), findsOneWidget);
+    expect(find.text('₹974'), findsOneWidget, reason: '649 + 299 x 365 / 28 / 12');
+    expect(find.text('₹11,686'), findsOneWidget);
+    final rules = await fresh.db.select(fresh.db.recurringRules).get();
+    expect(rules.every((rule) => rule.isSubscription), isTrue);
+    expect(rules.firstWhere((rule) => rule.name == 'Mobile recharge').interval, 28);
+
+    double top(String text) => tester.getTopLeft(find.text(text)).dy;
+    expect(top('Netflix'), lessThan(top('Mobile recharge')), reason: 'cost high to low by default');
+    await tapFinder(tester, find.byIcon(Icons.sort));
+    await tapText(tester, 'Cost: low to high');
+    expect(top('Mobile recharge'), lessThan(top('Netflix')));
+
+    await tapText(tester, 'Netflix');
+    await tapText(tester, 'Pause');
+    expect(find.text('Paused'), findsOneWidget);
+    expect(find.text('₹325'), findsOneWidget, reason: 'paused subscriptions leave the totals');
+
+    await tapText(tester, 'Mobile recharge');
+    await tapText(tester, 'Mark as cancelled');
+    await tapText(tester, 'Mark as cancelled', last: true);
+    expect(find.text('Cancelled'), findsOneWidget);
+    expect(find.text('₹0'), findsNWidgets(2));
+    expect((await fresh.db.select(fresh.db.recurringRules).get()).map((rule) => rule.status).toSet(), {'paused', 'ended'});
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    expect(find.text(hi.subscriptions), findsOneWidget);
+    expect(find.text(hi.subscriptionPaused), findsOneWidget);
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+  });
+
+  testWidgets('27 SMS history: outcomes, filter chips, re-process, entry link, Hindi dark, clear', smsHistoryFlow);
 }

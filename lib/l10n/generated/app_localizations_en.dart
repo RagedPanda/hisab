@@ -2876,6 +2876,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get youInList => 'you';
 
   @override
+  String get groupTotalsTitle => 'Group totals';
+
+  @override
+  String get groupTotalsAllTime => 'All time';
+
+  @override
+  String get groupTotalsTotalSpent => 'Group total';
+
+  @override
+  String get groupTotalsYouPaid => 'You paid';
+
+  @override
+  String get groupTotalsYourShare => 'Your share';
+
+  @override
+  String get groupTotalsNetChange => 'Change in your balance';
+
+  @override
+  String get groupTotalsPaymentsMade => 'Payments you made';
+
+  @override
+  String get groupTotalsPaymentsReceived => 'Payments you received';
+
+  @override
+  String get groupTotalsByMember => 'Paid and share by member';
+
+  @override
+  String get groupTotalsPaid => 'Paid';
+
+  @override
+  String get groupTotalsShare => 'Share';
+
+  @override
+  String get groupTotalsEmpty => 'No expenses in this period';
+
+  @override
+  String groupTotalsExpenseCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses',
+      one: '1 expense',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupTotalsMemberRow(String name, String paid, String share) {
+    return '$name: paid $paid, share $share';
+  }
+
+  @override
+  String get groupTotalsOpen => 'See totals';
+
+  @override
   String get groupSettingsTitle => 'Group settings';
 
   @override

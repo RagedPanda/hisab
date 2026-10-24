@@ -14,6 +14,7 @@ import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/features/expense_editor/expense_editor_screen.dart';
+import 'package:hisab/features/groups/group_totals_screen.dart';
 import 'package:hisab/features/shell/router.dart';
 import 'package:integration_test/integration_test.dart';
 
@@ -30,6 +31,7 @@ void main() {
     final groupId = await _seedGroup(app);
     final settledGroupId = await _seedSettledGroup(app);
     final squareGroupId = await _seedSquareGroup(app);
+    final archivedGroupId = await _seedArchivedGroup(app);
     await pumpApp(tester, app);
 
     for (final (locale, mode) in _configs) {
@@ -38,9 +40,32 @@ void main() {
       appRouter.go('/groups/$groupId');
       await settle(tester, 10);
       await shoot(tester, 'group_expenses_$tag');
+      appRouter.go('/groups/$groupId/settings');
+      await settle(tester, 10);
+      await shoot(tester, 'group_settings_top_$tag');
+      await tester.drag(find.byType(ListView).first, const Offset(0, -700));
+      await settle(tester, 10);
+      await shoot(tester, 'group_settings_middle_$tag');
+      await tester.drag(find.byType(ListView).first, const Offset(0, -1400));
+      await settle(tester, 10);
+      await shoot(tester, 'group_settings_bottom_$tag');
+      await tapFinder(tester, find.byIcon(Icons.currency_exchange), frames: 12);
+      await shoot(tester, 'group_currency_sheet_$tag');
+      await _popSheet(tester);
+      appRouter.go('/groups/$archivedGroupId');
+      await settle(tester, 10);
+      await shoot(tester, 'group_archived_$tag');
+      appRouter.go('/groups/$groupId');
+      await settle(tester, 10);
       await tester.tap(find.byType(Tab).at(1));
       await settle(tester, 10);
       await shoot(tester, 'group_balances_$tag');
+      await tapFinder(tester, find.byKey(kGroupTotalsCardKey), frames: 12);
+      await shoot(tester, 'group_totals_$tag');
+      await scrollTo(tester, find.byType(MemberSpendChart), within: find.byType(GroupTotalsScreen));
+      await shoot(tester, 'group_totals_members_$tag');
+      appRouter.pop();
+      await settle(tester, 10);
 
       // The first transfer row is Rahul -> You: Remind, then Record payment.
       await tapFinder(tester, find.byType(TextButton).at(1), frames: 12);
@@ -96,6 +121,11 @@ void main() {
       appRouter.go('/groups');
       await settle(tester, 10);
       await shoot(tester, 'groups_list_$tag');
+      await scrollTo(tester, find.byIcon(Icons.archive_outlined));
+      await tapFinder(tester, find.byIcon(Icons.archive_outlined), frames: 10);
+      await scrollTo(tester, find.text('Old flat'));
+      await shoot(tester, 'groups_list_archived_$tag');
+      await tapFinder(tester, find.byIcon(Icons.archive_outlined), frames: 10);
     }
   });
 }
@@ -122,32 +152,47 @@ Future<void> _closeSheet(WidgetTester tester) async {
 Future<String> _seedGroup(AppHandle app) async {
   final groups = app.read(groupsRepositoryProvider);
   final entries = app.read(entriesRepositoryProvider);
+  final categories = app.read(categoriesRepositoryProvider);
+  Future<String?> categoryId(String seedKey) async => (await categories.findBySeedKey(seedKey))?.id;
   final groupId = await groups.createGroup(name: 'Goa trip', icon: 'flight', myName: 'You', otherMembers: ['Rahul', 'Priya']);
   final members = await groups.getMembers(groupId);
   final me = members.firstWhere((m) => m.isMe).id;
   final rahul = members.firstWhere((m) => m.name == 'Rahul').id;
   final priya = members.firstWhere((m) => m.name == 'Priya').id;
-  Future<void> expense(String note, String payer, int total, List<String> sharers, DateTime when) async {
+  Future<void> expense(String note, String payer, int total, List<String> sharers, DateTime when, String categoryKey) async {
     final entryId = newId();
     final each = total ~/ sharers.length;
     await entries.saveEntry(
-      EntriesRepository.newExpense(id: entryId, amountMinor: total, occurredAt: when, note: note, groupId: groupId, paidByMemberId: payer, splitMethod: 'equal'),
+      EntriesRepository.newExpense(id: entryId, amountMinor: total, occurredAt: when, note: note, groupId: groupId, paidByMemberId: payer, splitMethod: 'equal', categoryId: await categoryId(categoryKey)),
       splits: [for (final member in sharers) SplitsCompanion.insert(id: newId(), entryId: entryId, memberId: member, amountMinor: each)],
     );
   }
 
-  await expense('Villa', me, 900000, [me, rahul, priya], DateTime(2026, 10, 3));
-  await expense('Scooter rent', rahul, 240000, [me, rahul, priya], DateTime(2026, 10, 4));
-  await expense('Dinner at Thalassa', priya, 450000, [me, rahul, priya], DateTime(2026, 10, 5));
+  await expense('Villa', me, 900000, [me, rahul, priya], DateTime(2026, 10, 3), 'travel');
+  await expense('Scooter rent', rahul, 240000, [me, rahul, priya], DateTime(2026, 10, 4), 'transport');
+  await expense('Dinner at Thalassa', priya, 450000, [me, rahul, priya], DateTime(2026, 10, 5), 'food');
   await groups.addSettlement(groupId: groupId, fromMemberId: priya, toMemberId: me, amountMinor: 100000, occurredAt: DateTime(2026, 10, 6), method: 'upi');
   // Paid half each and shared by the two payers, so it shows "Rahul and you
   // paid" without moving any balance.
   await entries.saveEntry(
-    EntriesRepository.newExpense(id: _sharedFuelId, amountMinor: 60000, occurredAt: DateTime(2026, 10, 7), note: 'Fuel', groupId: groupId, paidByMemberId: rahul, splitMethod: 'equal'),
+    EntriesRepository.newExpense(id: _sharedFuelId, amountMinor: 60000, occurredAt: DateTime(2026, 10, 7), note: 'Fuel', groupId: groupId, paidByMemberId: rahul, splitMethod: 'equal', categoryId: await categoryId('transport')),
     splits: [for (final member in [me, rahul]) SplitsCompanion.insert(id: newId(), entryId: _sharedFuelId, memberId: member, amountMinor: 30000)],
     payers: [for (final member in [rahul, me]) EntryPayersCompanion.insert(id: newId(), entryId: _sharedFuelId, memberId: member, amountMinor: 30000)],
   );
   await groups.updateMember(MembersCompanion(id: Value(rahul), phone: const Value('98765 43210')));
+  // Group settings: a trip that splits by shares, Rahul counting double, with notes.
+  await groups.updateGroup(GroupsCompanion(id: Value(groupId), type: const Value('trip'), defaultSplitMethod: const Value('shares'), notes: const Value('Villa keys are with Priya. Checkout 11 am Sunday.')));
+  await groups.setMemberWeight(rahul, 2);
+  return groupId;
+}
+
+/// Old flat: an archived home group with no expenses, for the banner, the
+/// home-type empty state and the Archived section of the groups list.
+Future<String> _seedArchivedGroup(AppHandle app) async {
+  final groups = app.read(groupsRepositoryProvider);
+  final groupId = await groups.createGroup(name: 'Old flat', icon: 'home', myName: 'You', otherMembers: ['Rahul']);
+  await groups.updateGroup(GroupsCompanion(id: Value(groupId), type: const Value('home')));
+  await groups.archiveGroup(groupId);
   return groupId;
 }
 

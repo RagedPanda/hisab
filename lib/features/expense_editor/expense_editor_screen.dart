@@ -23,6 +23,7 @@ import '../../domain/projects/project_picker.dart';
 import '../../domain/projects/project_templates.dart';
 import '../../domain/recurring/repeat_draft.dart';
 import '../../domain/reminders/reminder_draft.dart';
+import '../../domain/split/group_settings.dart';
 import '../../domain/split/payers.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
@@ -92,6 +93,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   Map<String, FieldReading> _fieldValues = const {};
   List<ItemSuggestion> _suggestions = const [];
   List<Member> _members = const [];
+  Group? _group;
   String _source = 'manual';
   String? _smsId;
   bool _loaded = false;
@@ -240,6 +242,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       if (_groupId != null) {
         await _loadMembers();
         _paidByMemberId = _members.where((m) => m.isMe).firstOrNull?.id ?? _members.firstOrNull?.id;
+        // New expenses start from the group's default split; saved ones keep theirs.
+        _splitMethod = parseDefaultSplitMethod(_group?.defaultSplitMethod);
         _splitInputs = defaultSplitInputs(_members, _splitMethod);
       }
     }
@@ -331,8 +335,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _accountId = reminder.accountId ?? _accountId;
   }
 
+  /// Loads the group's members and the group itself (default split, currency label).
   Future<void> _loadMembers() async {
-    _members = await ref.read(groupsRepositoryProvider).getMembers(_groupId!);
+    final repo = ref.read(groupsRepositoryProvider);
+    _members = await repo.getMembers(_groupId!);
+    _group = await repo.getGroup(_groupId!);
   }
 
   List<SplitInput> _inputsFromSplits(List<Split> splits) {
@@ -390,7 +397,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     final settings = ref.watch(settingsProvider);
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
     final recentAccountIds = ref.watch(recentAccountIdsProvider).value ?? const <String>[];
-    final symbol = settings.currencySymbol;
+    final symbol = groupSymbol(currencyLabel: _groupId == null ? null : _group?.currencyLabel, appSymbol: settings.currencySymbol);
     final units = _category?.units.split(',').where((u) => u.isNotEmpty).toList() ?? const <String>[];
 
     return Scaffold(
@@ -782,7 +789,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       if (_multiplePayers) {
         final payers = payersFrom(_payerAmounts);
         if (payers.isEmpty || unassignedMinor(amount, payers) != 0) {
-          messenger.showSnackBar(SnackBar(content: Text(l10n.payersMustTotal(formatMinor(amount, symbol: ref.read(settingsProvider).currencySymbol)))));
+          messenger.showSnackBar(SnackBar(content: Text(l10n.payersMustTotal(formatMinor(amount, symbol: groupSymbol(currencyLabel: _group?.currencyLabel, appSymbol: ref.read(settingsProvider).currencySymbol))))));
           return;
         }
         _paidByMemberId = primaryPayerId(payers);

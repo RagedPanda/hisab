@@ -137,6 +137,23 @@ class Groups extends Table with SyncColumns {
   TextColumn get projectId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
+  /// Trip, home, couple or other (see `GroupType`); sets the default icon and
+  /// the empty-state wording (v7, group settings).
+  TextColumn get type => text().withDefault(const Constant('other'))();
+
+  /// Split method pre-selected for new expenses: equal, shares or percent (v7).
+  TextColumn get defaultSplitMethod => text().withDefault(const Constant('equal'))();
+
+  /// Free-text notes shown as a card on the Expenses tab (v7).
+  TextColumn get notes => text().withDefault(const Constant(''))();
+
+  /// Currency symbol shown for this group's amounts; null follows the app
+  /// setting. A label only: amounts are never converted (v7).
+  TextColumn get currencyLabel => text().nullable()();
+
+  /// When the group was archived (or left); null while active (v7).
+  DateTimeColumn get archivedAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -493,7 +510,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -537,16 +554,25 @@ class AppDatabase extends _$AppDatabase {
           }
           // v8: SMS history can be cleared without forgetting processed messages.
           if (from < 8) await m.addColumn(smsLog, smsLog.clearedAt);
+          // v9 was never shipped (it held the due-reminder step, now v12, before v10 merged).
           // v10: group activity log (groups parity, undo and history).
           if (from < 10) {
             await m.createTable(groupActivities);
             await m.createIndex(groupActivitiesGroupId);
           }
-          // v11: due reminders (bills, EMIs, cards, documents) on the v5 reminders
+          // v11: group type, default split, notes, currency label and archiving (groups parity, group settings).
+          if (from < 11) {
+            await m.addColumn(groups, groups.type);
+            await m.addColumn(groups, groups.defaultSplitMethod);
+            await m.addColumn(groups, groups.notes);
+            await m.addColumn(groups, groups.currencyLabel);
+            await m.addColumn(groups, groups.archivedAt);
+          }
+          // v12: due reminders (bills, EMIs, cards, documents) on the v5 reminders
           // table: new columns only, so existing rows are kept as they are.
-          if (from < 11) await _upgradeToDueReminders(m, from);
-          // v12: credit card statement and due days, limit and last statement.
-          if (from < 12) await _upgradeToCardDetails(m);
+          if (from < 12) await _upgradeToDueReminders(m, from);
+          // v13: credit card statement and due days, limit and last statement.
+          if (from < 13) await _upgradeToCardDetails(m);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -557,11 +583,12 @@ class AppDatabase extends _$AppDatabase {
         },
       );
 
-  /// v11 step. A v5..v10 table gains the due-reminder columns it lacks (a table
-  /// created at v5 or later by this version already has them all). Checking
-  /// what exists also upgrades pre-release builds of the reminders feature,
-  /// which stored these columns and the index under schema 6 without
-  /// main's v6 entry_payers table.
+  /// v12 step. A v5..v11 table gains the due-reminder columns it lacks (a
+  /// table created at v5 or later by this version already has them all).
+  /// Checking what exists keeps it idempotent: it also upgrades pre-release
+  /// builds of the reminders feature, which stored these columns and the index
+  /// under schema 6 without main's v6 entry_payers table, and QA builds that
+  /// added them as schema 9.
   Future<void> _upgradeToDueReminders(Migrator m, int from) async {
     if (from >= 5) {
       final existing = await _columnNames('reminders');
@@ -576,7 +603,7 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// v12 step. Adds the credit card columns a table lacks; pre-release
+  /// v13 step. Adds the credit card columns a table lacks; pre-release
   /// builds of card dues stored them under schema 7.
   Future<void> _upgradeToCardDetails(Migrator m) async {
     final existing = await _columnNames('accounts');

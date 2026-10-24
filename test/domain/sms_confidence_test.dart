@@ -94,5 +94,24 @@ void main() {
       expect(looksLikeUnreadTransaction('Dear customer, your new debit card has been dispatched.'), isFalse);
       expect(looksLikeUnreadTransaction(''), isFalse);
     });
+
+    test('a card bill payment acknowledgement is skipped, not reviewed (#121)', () {
+      expect(
+        looksLikeUnreadTransaction('Payment of Rs.23456.00 has been received towards your HDFC Bank Credit Card XX9012 on 05-11-26. Thank you.'),
+        isFalse,
+      );
+    });
+
+    test('balance-only alerts are ignored, not sent to review (#120)', () {
+      const kotakBalance = 'Your Kotak Bank AC X3333 Avl Bal is Rs.22,145.00 as on 22-10-26 09:00 hrs. Download Kotak811 app.';
+      expect(parseBankSms(sender: 'VM-KOTAKB', body: kotakBalance, receivedAt: DateTime(2026, 10, 22, 9)), isNull);
+      expect(looksLikeUnreadTransaction(kotakBalance, sender: 'VM-KOTAKB'), isFalse);
+      expect(looksLikeUnreadTransaction('Bal in Kotak Bank AC X3390 on 21-10-26 10:00 is Rs.9,000.00'), isFalse);
+      expect(looksLikeUnreadTransaction('Available limit on your SBI Credit Card ending 5512 is Rs 50,000.00 as on 21-10-26.'), isFalse);
+    });
+
+    test('a movement that only states the balance still goes to review', () {
+      expect(looksLikeUnreadTransaction('Your A/c XX1234 has been debited on 21-10-26. Avl Bal Rs 4,500.00'), isTrue);
+    });
   });
 }

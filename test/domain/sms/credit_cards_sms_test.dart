@@ -63,5 +63,17 @@ void main() {
       kind: TxnKind.general,
       accountLast4: '7781',
     ),
+    SmsCase(
+      'SBI Card "Transaction of ... made on your" spend (#121)',
+      sender: 'CP-SBICRD',
+      body: 'Transaction of Rs.799.00 made on your SBI Credit Card ending 3456 at NETFLIX COM on 20/10/26. If not done by you, report at https://sbicard.com/Dispute',
+      direction: TxnDirection.debit,
+      amountMinor: 79900,
+      kind: TxnKind.cardSpend,
+      isCreditCard: true,
+      accountLast4: '3456',
+      counterparty: 'NETFLIX COM',
+      occurredAt: DateTime(2026, 10, 20),
+    ),
   ]);
 }

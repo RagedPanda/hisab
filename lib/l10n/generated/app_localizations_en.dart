@@ -2982,6 +2982,223 @@ class AppLocalizationsEn extends AppLocalizations {
   String get youInList => 'you';
 
   @override
+  String get groupTotalsTitle => 'Group totals';
+
+  @override
+  String get groupTotalsAllTime => 'All time';
+
+  @override
+  String get groupTotalsTotalSpent => 'Group total';
+
+  @override
+  String get groupTotalsYouPaid => 'You paid';
+
+  @override
+  String get groupTotalsYourShare => 'Your share';
+
+  @override
+  String get groupTotalsNetChange => 'Change in your balance';
+
+  @override
+  String get groupTotalsPaymentsMade => 'Payments you made';
+
+  @override
+  String get groupTotalsPaymentsReceived => 'Payments you received';
+
+  @override
+  String get groupTotalsByMember => 'Paid and share by member';
+
+  @override
+  String get groupTotalsPaid => 'Paid';
+
+  @override
+  String get groupTotalsShare => 'Share';
+
+  @override
+  String get groupTotalsEmpty => 'No expenses in this period';
+
+  @override
+  String groupTotalsExpenseCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses',
+      one: '1 expense',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupTotalsMemberRow(String name, String paid, String share) {
+    return '$name: paid $paid, share $share';
+  }
+
+  @override
+  String get groupTotalsOpen => 'See totals';
+
+  @override
+  String get groupSettingsTitle => 'Group settings';
+
+  @override
+  String get groupSettingsType => 'Type';
+
+  @override
+  String get groupTypeTrip => 'Trip';
+
+  @override
+  String get groupTypeHome => 'Home';
+
+  @override
+  String get groupTypeCouple => 'Couple';
+
+  @override
+  String get groupTypeOther => 'Other';
+
+  @override
+  String get groupSettingsIcon => 'Icon';
+
+  @override
+  String get groupSettingsDefaultSplit => 'Default split';
+
+  @override
+  String get groupSettingsDefaultSplitHint =>
+      'Pre-selected for new expenses. Expenses already added keep their split.';
+
+  @override
+  String get groupSettingsWeights => 'Shares per member';
+
+  @override
+  String groupSettingsWeightValue(num count, String weight) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$weight shares',
+      one: '1 share',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupSettingsWeightLess(String name) {
+    return 'Fewer shares for $name';
+  }
+
+  @override
+  String groupSettingsWeightMore(String name) {
+    return 'More shares for $name';
+  }
+
+  @override
+  String get groupSettingsCurrency => 'Currency label';
+
+  @override
+  String get groupSettingsCurrencyHint =>
+      'Only changes the symbol shown in this group. Amounts are not converted.';
+
+  @override
+  String groupSettingsCurrencyAppDefault(String symbol) {
+    return 'Same as app ($symbol)';
+  }
+
+  @override
+  String get groupSettingsCurrencyOther => 'Other symbol';
+
+  @override
+  String get groupSettingsSimplify => 'Simplify debts';
+
+  @override
+  String get groupSettingsSimplifyBody =>
+      'Combines debts so the group needs fewer repayments. If Asha owes Ravi and Ravi owes Meena, Asha can pay Meena directly. Nobody pays or gets back a different total.';
+
+  @override
+  String groupSettingsSimplifySaves(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Saves $count repayments right now',
+      one: 'Saves 1 repayment right now',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupSettingsNotes => 'Notes';
+
+  @override
+  String get groupSettingsNotesHint => 'Wi-Fi password, house rules, trip plan';
+
+  @override
+  String get groupSettingsNotesAdd => 'Add a note for this group';
+
+  @override
+  String get groupSettingsManage => 'Manage group';
+
+  @override
+  String get groupArchive => 'Archive group';
+
+  @override
+  String groupArchiveTitle(String name) {
+    return 'Archive $name?';
+  }
+
+  @override
+  String get groupArchiveBody =>
+      'The group moves to Archived on the groups list. Nothing is deleted, and you can unarchive it any time.';
+
+  @override
+  String get groupArchiveConfirm => 'Archive';
+
+  @override
+  String get groupUnarchive => 'Unarchive';
+
+  @override
+  String get groupArchivedBanner =>
+      'This group is archived. Unarchive it to add expenses.';
+
+  @override
+  String get groupLeftBanner => 'You left this group. Its history stays here.';
+
+  @override
+  String groupArchivedSection(int count) {
+    return 'Archived ($count)';
+  }
+
+  @override
+  String get groupLeave => 'Leave group';
+
+  @override
+  String groupLeaveTitle(String name) {
+    return 'Leave $name?';
+  }
+
+  @override
+  String get groupLeaveBody =>
+      'You are removed from the group on this phone and it moves to Archived, so its history stays readable.';
+
+  @override
+  String get groupLeaveConfirm => 'Leave';
+
+  @override
+  String get groupLeaveBlocked =>
+      'Settle up first. You can leave once nobody owes you and you owe nobody.';
+
+  @override
+  String get groupDeleteUnsettledBody =>
+      'This group still has unsettled balances. Deleting it removes every expense and payment, and it cannot be undone.';
+
+  @override
+  String get groupEmptyTrip =>
+      'Add tickets, stays and meals as you go; Hisab works out who owes whom.';
+
+  @override
+  String get groupEmptyHome =>
+      'Add rent, bills and groceries; Hisab works out who owes whom.';
+
+  @override
+  String get groupEmptyCouple =>
+      'Add the dinners, groceries and trips you share; Hisab keeps the balance.';
+
+  @override
   String get activityTitle => 'Activity';
 
   @override
@@ -3296,4 +3513,168 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smsReviewAddManually => 'Add manually';
+
+  @override
+  String get salaryTitle => 'Salary';
+
+  @override
+  String get salarySetUp => 'Set up salary day';
+
+  @override
+  String get salaryIntro =>
+      'Hisab adds your salary as a monthly income you confirm, and gently reminds you if it has not arrived.';
+
+  @override
+  String salarySummary(String amount, int day) {
+    return '$amount on day $day';
+  }
+
+  @override
+  String get salaryAmount => 'Monthly salary';
+
+  @override
+  String get salaryAccount => 'Credited to';
+
+  @override
+  String get salaryAnyAccount => 'Any account';
+
+  @override
+  String get salaryDay => 'Salary day';
+
+  @override
+  String get salaryShiftLabel => 'On a weekend or holiday';
+
+  @override
+  String get salaryShiftSameDay => 'Same day';
+
+  @override
+  String get salaryShiftPrevious => 'Previous working day';
+
+  @override
+  String get salaryShiftNext => 'Next working day';
+
+  @override
+  String get salaryHolidays => 'Bank holidays';
+
+  @override
+  String get salaryHolidaysHelp =>
+      'Skipped like weekends when the salary day moves';
+
+  @override
+  String get salaryAddHoliday => 'Add holiday';
+
+  @override
+  String get salaryReminder => 'Remind me if it has not arrived';
+
+  @override
+  String get salaryReminderDelay => 'Remind after';
+
+  @override
+  String salaryDaysAfter(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days after',
+      one: '1 day after',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salaryAligned => 'Your month already starts on payday';
+
+  @override
+  String salaryNotAligned(int monthStart, int salaryDay) {
+    return 'Your month starts on day $monthStart, salary arrives on day $salaryDay';
+  }
+
+  @override
+  String salaryAlignTitle(int day) {
+    return 'Start months on day $day?';
+  }
+
+  @override
+  String get salaryAlignMessage =>
+      'Budgets and monthly totals will run from one salary to the next.';
+
+  @override
+  String get salaryAlignAction => 'Align';
+
+  @override
+  String get salaryRemove => 'Remove salary';
+
+  @override
+  String get salaryRemoveBody =>
+      'The Salary rule will be deleted. Salary entries you already have are kept.';
+
+  @override
+  String get salaryRemoved => 'Salary removed';
+
+  @override
+  String get salarySaved => 'Salary saved';
+
+  @override
+  String salaryExpectedOn(String date) {
+    return 'Expected $date';
+  }
+
+  @override
+  String salaryReceivedAmount(String date, String amount) {
+    return 'Received $amount on $date';
+  }
+
+  @override
+  String salaryLateSince(String date) {
+    return 'Late: expected $date';
+  }
+
+  @override
+  String salaryLastReceived(String date, String amount) {
+    return 'Last received $amount on $date';
+  }
+
+  @override
+  String salaryNextExpected(String date) {
+    return 'Next expected $date';
+  }
+
+  @override
+  String get salaryNotSeenTitle => 'Salary not seen yet';
+
+  @override
+  String salaryNotSeenBody(String date) {
+    return 'It was expected on $date. This clears by itself once it arrives.';
+  }
+
+  @override
+  String get salaryRuleName => 'Salary';
+
+  @override
+  String get salaryMatchWindow => 'Can arrive early by';
+
+  @override
+  String salaryMatchWindowDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Up to $days days',
+      one: 'Up to 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salaryTolerance => 'Amount can differ by';
+
+  @override
+  String salaryTolerancePercent(int percent) {
+    return 'Up to $percent%';
+  }
+
+  @override
+  String get salaryToleranceExact => 'Exact amount only';
+
+  @override
+  String get salaryDetectionHelp =>
+      'An income counts as salary when it is this close to the amount and arrives no earlier than this, or any day later in the cycle.';
 }

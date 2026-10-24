@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hisab/domain/sms/parsed_transaction.dart';
 import 'package:hisab/domain/sms/sms_categorizer.dart';
 
 import 'sms_cases.dart';
@@ -18,5 +19,16 @@ void main() {
     for (final MapEntry(key: category, value: (sender, body)) in cases.entries) {
       test(category, () => expect(suggestCategoryKey(parseSms(sender, body)!), category));
     }
+  });
+
+  test('a refund credited to a credit card is a refund, not a card payment (#119)', () {
+    final parsed = parseSms(
+      'BP-ICICIT',
+      'Dear Customer, a refund of INR 1,299.00 from AMAZON has been credited to your ICICI Bank Credit Card XX2222 on 21-Oct-26.',
+    )!;
+    expect(parsed.isCreditCard, isTrue);
+    expect(parsed.direction, TxnDirection.credit);
+    expect(parsed.amountMinor, 129900);
+    expect(suggestCategoryKey(parsed), 'refunds_cashback');
   });
 }

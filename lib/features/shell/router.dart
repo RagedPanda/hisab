@@ -10,11 +10,15 @@ import '../dashboard/dashboard_screen.dart';
 import '../expense_editor/expense_editor_screen.dart';
 import '../groups/activity_screen.dart';
 import '../groups/group_detail_screen.dart';
+import '../groups/group_settings_screen.dart';
+import '../groups/group_totals_screen.dart';
 import '../groups/groups_screen.dart';
 import '../projects/project_detail_screen.dart';
 import '../projects/project_form_screen.dart';
 import '../projects/project_templates_screen.dart';
 import '../projects/projects_screen.dart';
+import '../salary/salary_setup_screen.dart';
+import '../salary/salary_reminder.dart';
 import '../settings/settings_screen.dart';
 import '../reminders/reminders_screen.dart';
 import '../sms/sms_history_screen.dart';
@@ -62,6 +66,8 @@ final appRouter = GoRouter(
       ),
     ),
     GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(groupId: state.pathParameters['id']!)),
+    GoRoute(path: '/groups/:id/totals', parentNavigatorKey: _rootKey, builder: (_, state) => GroupTotalsScreen(groupId: state.pathParameters['id']!)),
+    GoRoute(path: '/groups/:id/settings', parentNavigatorKey: _rootKey, builder: (_, state) => GroupSettingsScreen(groupId: state.pathParameters['id']!)),
     GoRoute(path: '/groups/:id/activity', parentNavigatorKey: _rootKey, builder: (_, state) => ActivityScreen(groupId: state.pathParameters['id']!)),
     GoRoute(path: '/activity', parentNavigatorKey: _rootKey, builder: (_, _) => const ActivityScreen()),
     GoRoute(path: '/categories', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoriesScreen()),
@@ -74,6 +80,7 @@ final appRouter = GoRouter(
         GoRoute(path: 'card/:id', parentNavigatorKey: _rootKey, builder: (_, state) => CardAccountScreen(accountId: state.pathParameters['id']!)),
       ],
     ),
+    GoRoute(path: kSalaryLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const SalarySetupScreen()),
     GoRoute(path: '/budgets', parentNavigatorKey: _rootKey, builder: (_, _) => const BudgetsScreen()),
     GoRoute(
       path: '/recurring',

@@ -136,6 +136,8 @@ const _debitWords = [
   'debited', 'spent', 'withdrawn', 'paid', 'sent', 'purchase', 'debit of', 'dr.', 'deducted',
   'transferred from', 'txn of', 'payment of', 'charged', 'debit card', 'done at',
   'debit by', 'has a debit', 'txn rs', 'txn inr', 'withdrawal of', 'used for', 'used at',
+  // "Transaction of Rs.799.00 made on your SBI Credit Card ending 3456".
+  'made on your', 'made using your', 'made at',
 ];
 const _creditWords = [
   'credited', 'received', 'deposited', 'refund', 'cashback', 'cr.', 'credit of', 'reversed',
@@ -160,17 +162,14 @@ ParsedTransaction? parseBankSms({
   final amountMinor = parseAmountToMinor(amountText);
   if (amountMinor == null || amountMinor == 0) return null;
 
+  if (_isCardPaymentAcknowledgement(text, lower)) return null;
   final reversal = _isReversal(lower);
-  if (!reversal && _isCardPaymentAcknowledgement(text, lower)) return null;
   final direction = reversal && _reversalIsCredit(lower) ? TxnDirection.credit : _direction(lower);
   if (direction == null) return null;
 
   final currency = (amountMatch == null ? null : _currencyCodeOf(amountMatch)) ?? 'INR';
 
-  final isCreditCard = (lower.contains('credit card') && !_paysCardBillFromAccount(lower)) ||
-      lower.contains('credit limit') ||
-      limitMatch != null ||
-      (RegExp(r'\bcard\b').hasMatch(lower) && !lower.contains('debit card') && !lower.contains('a/c'));
+  final isCreditCard = _isCreditCard(lower, hasLimit: limitMatch != null, hasBalance: balanceMatch != null);
   final instrument = _instrument(lower);
   final kind = _kind(
     lower: lower,
@@ -238,8 +237,25 @@ final _bankAccountWord = RegExp(r'\ba/c|\bacct\b|\baccount\b|\bac\b');
 /// the payee, the money left a bank account.
 bool _paysCardBillFromAccount(String lower) => _cardBillPayee.hasMatch(lower) && _bankAccountWord.hasMatch(lower);
 
+/// "BLOCK DC 5678", "Debit Card", or a bank account named next to the card.
+final _debitCardMarker = RegExp(r'\bdebit card\b|\bdc\b|a/c');
+
+/// Whether the message is about a credit card. A plain "Card 5678" is a
+/// credit card unless the message marks it as a debit card or shows an
+/// account balance: credit-card alerts show the available limit instead.
+bool _isCreditCard(String lower, {required bool hasLimit, required bool hasBalance}) =>
+    (lower.contains('credit card') && !_paysCardBillFromAccount(lower)) ||
+    lower.contains('credit limit') ||
+    hasLimit ||
+    (RegExp(r'\bcard\b').hasMatch(lower) && !hasBalance && !_debitCardMarker.hasMatch(lower));
+
+/// The card issuer confirming a bill payment. Skipped by the parser and
+/// kept out of review: the bank-side debit already records the payment.
 bool _isCardPaymentAcknowledgement(String text, String lower) =>
-    _cardPaymentReceived.hasMatch(text) && lower.contains('card') && !_paysCardBillFromAccount(lower);
+    !_isReversal(lower) &&
+    _cardPaymentReceived.hasMatch(text) &&
+    lower.contains('card') &&
+    !_paysCardBillFromAccount(lower);
 
 /// OTPs, promotions, set-up notices and other messages that move no money.
 bool _isIgnorable(String sender, String lower) {
@@ -415,7 +431,8 @@ final _sharedCounterparty = <RegExp>[
   RegExp(r'\b(?:to|from|by)?\s*vpa\s*[:\-]?\s*([\w.\-]+@[\w]+)', caseSensitive: false),
   RegExp(r'\b(?:to|from|by)\s+([\w.\-]+@[\w]+)', caseSensitive: false),
   RegExp(';\\s*$_name\\s+credited', caseSensitive: false),
-  RegExp('\\bupi[-/]\\d+[-/]$_name(?:(?=/)|$_nameEnd)', caseSensitive: false),
+  // "UPI/629.../SHOP" and Axis "UPI/P2M/629.../CHAAYOS" (P2M merchant, P2A person).
+  RegExp('\\bupi[-/](?:p2[am][-/])?\\d+[-/]$_name(?:(?=/)|$_nameEnd)', caseSensitive: false),
   RegExp('\\bneft\\s*cr[-/]\\w+[-/]$_name(?=[-/.]|\$)', caseSensitive: false),
   RegExp('\\binfo\\s*[:\\-]?\\s*(?:[A-Za-z]{2,5}[*/\\-])?(?:\\w*[*/\\-])?$_name(?=[*/.]|\\s+(?:on|avl|available|bal)\\b|\$)', caseSensitive: false),
 ];
@@ -468,6 +485,27 @@ bool looksLikeUnreadTransaction(String body, {String sender = ''}) {
   final lower = text.toLowerCase();
   if (text.isEmpty) return false;
   if (_isIgnorable(sender, lower)) return false;
+  if (_isBalanceOnly(text, lower)) return false;
+  if (_isCardPaymentAcknowledgement(text, lower)) return false;
   return _amountPattern.hasMatch(text) || _bareAmountPattern.hasMatch(text);
+}
+
+/// "Bal in Kotak Bank AC X3390 on 21-10-26 10:00 is Rs.9,000.00": a balance
+/// or limit named first and its amount stated later in the sentence.
+final _balanceStatement = RegExp(
+  '\\b(?:bal(?:ance)?|limit|lmt)\\b[^;!]{0,80}?\\bis\\s*:?\\s*$_currencyPrefix\\s*:?\\s*$_number',
+  caseSensitive: false,
+);
+
+/// "Your A/c X3333 Avl Bal is Rs.22,145.00 as on ...": every amount is a
+/// balance or limit and nothing says money moved, so there is nothing to
+/// review.
+bool _isBalanceOnly(String text, String lower) {
+  final balances = [
+    ..._balancePattern.allMatches(text),
+    ..._limitPattern.allMatches(text),
+    ..._balanceStatement.allMatches(text),
+  ];
+  return balances.isNotEmpty && _firstAmountOutside(text, balances) == null && _direction(lower) == null;
 }
 

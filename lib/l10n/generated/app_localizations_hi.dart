@@ -2972,6 +2972,225 @@ class AppLocalizationsHi extends AppLocalizations {
   String get youInList => 'आप';
 
   @override
+  String get groupTotalsTitle => 'ग्रुप का कुल हिसाब';
+
+  @override
+  String get groupTotalsAllTime => 'अब तक';
+
+  @override
+  String get groupTotalsTotalSpent => 'ग्रुप का कुल खर्च';
+
+  @override
+  String get groupTotalsYouPaid => 'आपने चुकाया';
+
+  @override
+  String get groupTotalsYourShare => 'आपका हिस्सा';
+
+  @override
+  String get groupTotalsNetChange => 'आपके बैलेंस में बदलाव';
+
+  @override
+  String get groupTotalsPaymentsMade => 'आपके किए भुगतान';
+
+  @override
+  String get groupTotalsPaymentsReceived => 'आपको मिले भुगतान';
+
+  @override
+  String get groupTotalsByMember => 'सदस्यवार चुकाया और हिस्सा';
+
+  @override
+  String get groupTotalsPaid => 'चुकाया';
+
+  @override
+  String get groupTotalsShare => 'हिस्सा';
+
+  @override
+  String get groupTotalsEmpty => 'इस अवधि में कोई खर्च नहीं';
+
+  @override
+  String groupTotalsExpenseCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count खर्च',
+      one: '1 खर्च',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupTotalsMemberRow(String name, String paid, String share) {
+    return '$name: चुकाया $paid, हिस्सा $share';
+  }
+
+  @override
+  String get groupTotalsOpen => 'पूरा हिसाब देखें';
+
+  @override
+  String get groupSettingsTitle => 'ग्रुप सेटिंग्स';
+
+  @override
+  String get groupSettingsType => 'प्रकार';
+
+  @override
+  String get groupTypeTrip => 'यात्रा';
+
+  @override
+  String get groupTypeHome => 'घर';
+
+  @override
+  String get groupTypeCouple => 'कपल';
+
+  @override
+  String get groupTypeOther => 'अन्य';
+
+  @override
+  String get groupSettingsIcon => 'आइकन';
+
+  @override
+  String get groupSettingsDefaultSplit => 'डिफ़ॉल्ट बँटवारा';
+
+  @override
+  String get groupSettingsDefaultSplitHint =>
+      'नए खर्चों के लिए पहले से चुना रहेगा। पहले से जोड़े गए खर्चों का बँटवारा नहीं बदलेगा।';
+
+  @override
+  String get groupSettingsWeights => 'हर सदस्य के हिस्से';
+
+  @override
+  String groupSettingsWeightValue(num count, String weight) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$weight हिस्से',
+      one: '1 हिस्सा',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupSettingsWeightLess(String name) {
+    return '$name के हिस्से घटाएँ';
+  }
+
+  @override
+  String groupSettingsWeightMore(String name) {
+    return '$name के हिस्से बढ़ाएँ';
+  }
+
+  @override
+  String get groupSettingsCurrency => 'मुद्रा चिह्न';
+
+  @override
+  String get groupSettingsCurrencyHint =>
+      'सिर्फ़ इस ग्रुप में दिखने वाला चिह्न बदलता है। रकम बदली नहीं जाती।';
+
+  @override
+  String groupSettingsCurrencyAppDefault(String symbol) {
+    return 'ऐप जैसा ($symbol)';
+  }
+
+  @override
+  String get groupSettingsCurrencyOther => 'दूसरा चिह्न';
+
+  @override
+  String get groupSettingsSimplify => 'उधार सरल करें';
+
+  @override
+  String get groupSettingsSimplifyBody =>
+      'उधार को जोड़कर ग्रुप में कम भुगतान करने पड़ते हैं। अगर आशा को रवि को देना है और रवि को मीना को, तो आशा सीधे मीना को दे सकती है। किसी का कुल लेना-देना नहीं बदलता।';
+
+  @override
+  String groupSettingsSimplifySaves(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'अभी $count भुगतान बचते हैं',
+      one: 'अभी 1 भुगतान बचता है',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupSettingsNotes => 'नोट्स';
+
+  @override
+  String get groupSettingsNotesHint =>
+      'वाई-फ़ाई पासवर्ड, घर के नियम, यात्रा का प्लान';
+
+  @override
+  String get groupSettingsNotesAdd => 'इस ग्रुप के लिए नोट जोड़ें';
+
+  @override
+  String get groupSettingsManage => 'ग्रुप प्रबंधन';
+
+  @override
+  String get groupArchive => 'ग्रुप आर्काइव करें';
+
+  @override
+  String groupArchiveTitle(String name) {
+    return '$name आर्काइव करें?';
+  }
+
+  @override
+  String get groupArchiveBody =>
+      'ग्रुप, ग्रुप सूची में \'आर्काइव\' में चला जाएगा। कुछ नहीं हटेगा, और आप इसे कभी भी आर्काइव से निकाल सकते हैं।';
+
+  @override
+  String get groupArchiveConfirm => 'आर्काइव करें';
+
+  @override
+  String get groupUnarchive => 'आर्काइव से निकालें';
+
+  @override
+  String get groupArchivedBanner =>
+      'यह ग्रुप आर्काइव है। खर्च जोड़ने के लिए इसे आर्काइव से निकालें।';
+
+  @override
+  String get groupLeftBanner =>
+      'आपने यह ग्रुप छोड़ दिया है। इसका इतिहास यहीं रहेगा।';
+
+  @override
+  String groupArchivedSection(int count) {
+    return 'आर्काइव ($count)';
+  }
+
+  @override
+  String get groupLeave => 'ग्रुप छोड़ें';
+
+  @override
+  String groupLeaveTitle(String name) {
+    return '$name छोड़ें?';
+  }
+
+  @override
+  String get groupLeaveBody =>
+      'आप इस फ़ोन पर ग्रुप से हट जाएँगे और ग्रुप आर्काइव में चला जाएगा, ताकि इसका इतिहास पढ़ा जा सके।';
+
+  @override
+  String get groupLeaveConfirm => 'छोड़ें';
+
+  @override
+  String get groupLeaveBlocked =>
+      'पहले हिसाब चुकता करें। जब न आपको किसी से लेना हो, न किसी को देना, तब ग्रुप छोड़ सकते हैं।';
+
+  @override
+  String get groupDeleteUnsettledBody =>
+      'इस ग्रुप में अभी हिसाब बाकी है। हटाने पर सभी खर्च और भुगतान हट जाएँगे, और यह वापस नहीं होगा।';
+
+  @override
+  String get groupEmptyTrip =>
+      'टिकट, ठहरने और खाने के खर्च जैसे-जैसे हों, जोड़ते जाएँ; किसे कितना देना है, Hisab हिसाब लगा देगा।';
+
+  @override
+  String get groupEmptyHome =>
+      'किराया, बिल और राशन जोड़ें; किसे कितना देना है, Hisab हिसाब लगा देगा।';
+
+  @override
+  String get groupEmptyCouple =>
+      'साथ के खाने, राशन और घूमने के खर्च जोड़ें; Hisab हिसाब रखेगा।';
+
+  @override
   String get activityTitle => 'गतिविधि';
 
   @override
@@ -3286,4 +3505,168 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get smsReviewAddManually => 'खुद जोड़ें';
+
+  @override
+  String get salaryTitle => 'वेतन';
+
+  @override
+  String get salarySetUp => 'वेतन का दिन सेट करें';
+
+  @override
+  String get salaryIntro =>
+      'हिसाब आपके वेतन को मासिक आय के रूप में जोड़ता है जिसे आप पक्का करते हैं, और न आने पर धीरे से याद दिलाता है।';
+
+  @override
+  String salarySummary(String amount, int day) {
+    return 'दिन $day को $amount';
+  }
+
+  @override
+  String get salaryAmount => 'मासिक वेतन';
+
+  @override
+  String get salaryAccount => 'किस खाते में आता है';
+
+  @override
+  String get salaryAnyAccount => 'कोई भी खाता';
+
+  @override
+  String get salaryDay => 'वेतन का दिन';
+
+  @override
+  String get salaryShiftLabel => 'छुट्टी या सप्ताहांत पड़ने पर';
+
+  @override
+  String get salaryShiftSameDay => 'उसी दिन';
+
+  @override
+  String get salaryShiftPrevious => 'पिछला कामकाजी दिन';
+
+  @override
+  String get salaryShiftNext => 'अगला कामकाजी दिन';
+
+  @override
+  String get salaryHolidays => 'बैंक छुट्टियाँ';
+
+  @override
+  String get salaryHolidaysHelp =>
+      'वेतन का दिन खिसकने पर इन्हें सप्ताहांत की तरह छोड़ा जाता है';
+
+  @override
+  String get salaryAddHoliday => 'छुट्टी जोड़ें';
+
+  @override
+  String get salaryReminder => 'न आने पर याद दिलाएँ';
+
+  @override
+  String get salaryReminderDelay => 'कब याद दिलाएँ';
+
+  @override
+  String salaryDaysAfter(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन बाद',
+      one: '1 दिन बाद',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salaryAligned => 'आपका महीना पहले से वेतन के दिन से शुरू होता है';
+
+  @override
+  String salaryNotAligned(int monthStart, int salaryDay) {
+    return 'आपका महीना दिन $monthStart से शुरू होता है, वेतन दिन $salaryDay को आता है';
+  }
+
+  @override
+  String salaryAlignTitle(int day) {
+    return 'महीना दिन $day से शुरू करें?';
+  }
+
+  @override
+  String get salaryAlignMessage =>
+      'बजट और मासिक कुल एक वेतन से अगले वेतन तक गिने जाएँगे।';
+
+  @override
+  String get salaryAlignAction => 'मिलाएँ';
+
+  @override
+  String get salaryRemove => 'वेतन हटाएँ';
+
+  @override
+  String get salaryRemoveBody =>
+      'वेतन नियम हटा दिया जाएगा। आपकी पहले की वेतन प्रविष्टियाँ बनी रहेंगी।';
+
+  @override
+  String get salaryRemoved => 'वेतन हटाया गया';
+
+  @override
+  String get salarySaved => 'वेतन सहेजा गया';
+
+  @override
+  String salaryExpectedOn(String date) {
+    return 'अपेक्षित $date';
+  }
+
+  @override
+  String salaryReceivedAmount(String date, String amount) {
+    return '$date को $amount मिला';
+  }
+
+  @override
+  String salaryLateSince(String date) {
+    return 'देर हो गई: $date को अपेक्षित था';
+  }
+
+  @override
+  String salaryLastReceived(String date, String amount) {
+    return 'पिछली बार $date को $amount मिला';
+  }
+
+  @override
+  String salaryNextExpected(String date) {
+    return 'अगला अपेक्षित $date';
+  }
+
+  @override
+  String get salaryNotSeenTitle => 'वेतन अभी नहीं दिखा';
+
+  @override
+  String salaryNotSeenBody(String date) {
+    return 'यह $date को आना था। आते ही यह अपने आप हट जाएगा।';
+  }
+
+  @override
+  String get salaryRuleName => 'वेतन';
+
+  @override
+  String get salaryMatchWindow => 'कितने दिन पहले आ सकता है';
+
+  @override
+  String salaryMatchWindowDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन तक',
+      one: '1 दिन तक',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salaryTolerance => 'रकम में कितना फ़र्क चलेगा';
+
+  @override
+  String salaryTolerancePercent(int percent) {
+    return '$percent% तक';
+  }
+
+  @override
+  String get salaryToleranceExact => 'सिर्फ़ यही रकम';
+
+  @override
+  String get salaryDetectionHelp =>
+      'कोई आमदनी वेतन मानी जाती है जब रकम इतनी क़रीब हो और वह इससे पहले न आए, या इस चक्र में बाद में कभी भी आए।';
 }

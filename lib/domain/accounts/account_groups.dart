@@ -24,6 +24,20 @@ List<AccountTypeGroup<T>> groupAccountsByType<T>(Iterable<T> accounts, String Fu
           AccountTypeGroup(type: type, accounts: ofType),
     ];
 
+/// The account a tap on [group]'s type selects: the selected account when it
+/// already belongs to the group, else the group's most recently used account
+/// ([recentIds] is most recent first), else its first account (#110).
+T accountToPickForType<T>(AccountTypeGroup<T> group, {required String? selectedId, required List<String> recentIds, required String Function(T) idOf}) {
+  final byId = {for (final account in group.accounts) idOf(account): account};
+  final current = byId[selectedId];
+  if (current != null) return current;
+  for (final id in recentIds) {
+    final recent = byId[id];
+    if (recent != null) return recent;
+  }
+  return group.accounts.first;
+}
+
 /// The type of the group holding the account [selectedId], or null.
 String? typeHolding<T>(List<AccountTypeGroup<T>> groups, String? selectedId, String Function(T) idOf) {
   if (selectedId == null) return null;

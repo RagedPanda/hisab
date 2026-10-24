@@ -22,9 +22,10 @@ final card = account('amex', 'Amex', 'card');
 
 /// Hosts the picker and keeps the picked id, as the entry editor does.
 class PickerHost extends StatefulWidget {
-  const PickerHost({super.key, required this.accounts, this.initialId});
+  const PickerHost({super.key, required this.accounts, this.initialId, this.recentAccountIds = const []});
   final List<Account> accounts;
   final String? initialId;
+  final List<String> recentAccountIds;
 
   @override
   State<PickerHost> createState() => PickerHostState();
@@ -35,15 +36,26 @@ class PickerHostState extends State<PickerHost> {
 
   @override
   Widget build(BuildContext context) =>
-      GroupedAccountPicker(accounts: widget.accounts, selectedId: picked, onPick: (id) => setState(() => picked = id));
+      GroupedAccountPicker(
+        accounts: widget.accounts,
+        recentAccountIds: widget.recentAccountIds,
+        selectedId: picked,
+        onPick: (id) => setState(() => picked = id),
+      );
 }
 
-Future<PickerHostState> pumpPicker(WidgetTester tester, List<Account> accounts, {String? initialId, Locale locale = const Locale('en')}) async {
+Future<PickerHostState> pumpPicker(
+  WidgetTester tester,
+  List<Account> accounts, {
+  String? initialId,
+  List<String> recentAccountIds = const [],
+  Locale locale = const Locale('en'),
+}) async {
   await tester.pumpWidget(MaterialApp(
     locale: locale,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    home: Scaffold(body: PickerHost(accounts: accounts, initialId: initialId)),
+    home: Scaffold(body: PickerHost(accounts: accounts, initialId: initialId, recentAccountIds: recentAccountIds)),
   ));
   await tester.pumpAndSettle();
   return tester.state<PickerHostState>(find.byType(PickerHost));
@@ -62,23 +74,35 @@ void main() {
     expect(find.text('HDFC'), findsNothing, reason: 'bank accounts stay hidden until the type is tapped');
   });
 
-  testWidgets('a type with several accounts reveals them with none picked; another type hides them', (tester) async {
+  testWidgets('a type with several accounts picks one and reveals the rest; another type hides them (#110)', (tester) async {
     final host = await pumpPicker(tester, [cash, hdfc, sbi], initialId: 'cash');
     await tester.tap(find.text('Bank account'));
     await tester.pumpAndSettle();
     expect(find.text('HDFC'), findsOneWidget);
     expect(find.text('SBI'), findsOneWidget);
-    expect(host.picked, isNull, reason: 'nothing is picked until the user chooses a bank');
-    expect(chipSelected(tester, 'HDFC') || chipSelected(tester, 'SBI'), isFalse);
+    expect(host.picked, 'hdfc', reason: 'with no history the first bank is picked, never none');
+    expect(chipSelected(tester, 'HDFC'), isTrue, reason: 'the chips agree with the picked account');
 
     await tester.tap(find.text('SBI'));
     await tester.pumpAndSettle();
     expect(host.picked, 'sbi');
 
+    await tester.tap(find.text('Bank account'));
+    await tester.pumpAndSettle();
+    expect(host.picked, 'sbi', reason: 'tapping the open type keeps the account already picked in it');
+
     await tester.tap(find.text('Cash'));
     await tester.pumpAndSettle();
     expect(find.text('SBI'), findsNothing);
     expect(host.picked, 'cash', reason: 'a type with one account picks it in one tap');
+  });
+
+  testWidgets('tapping a type picks its most recently used account (#110)', (tester) async {
+    final host = await pumpPicker(tester, [cash, hdfc, sbi], initialId: 'cash', recentAccountIds: const ['cash', 'sbi', 'hdfc']);
+    await tester.tap(find.text('Bank account'));
+    await tester.pumpAndSettle();
+    expect(host.picked, 'sbi');
+    expect(chipSelected(tester, 'SBI'), isTrue);
   });
 
   testWidgets('a preselected account opens its type and row', (tester) async {

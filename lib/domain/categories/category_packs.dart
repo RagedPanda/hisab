@@ -68,7 +68,7 @@ CategorySeed _reuseParent(String key, List<CategorySeed> children) {
 const _vehicleColor = 0xFF1E88E5;
 const _constructionColor = 0xFF8D6E63;
 const _renovationColor = 0xFF6D4C41;
-const _travelColor = 0xFF039BE5;
+const _travelColor = 0xFFF9A825;
 const _weddingColor = 0xFFD81B60;
 
 // Construction seeds, shared with the renovation pack so the two never duplicate.

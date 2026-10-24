@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/features/expense_editor/expense_editor_screen.dart';
 
-import '../app_flow_test.dart' show pumpApp;
+import '../support/app_harness.dart' show pumpApp;
 
 bool typingFocused() => FocusManager.instance.primaryFocus?.context?.findAncestorWidgetOfExactType<EditableText>() != null;
 

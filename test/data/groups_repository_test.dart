@@ -408,6 +408,25 @@ void main() {
       expect((totals.owedToMe, totals.iOwe), (300, 0));
     });
 
+    test('per-currency totals keep each label apart and skip archived groups', () async {
+      final home = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'Me', otherMembers: ['Rahul']);
+      final dubai = await groups.createGroup(name: 'Dubai', icon: 'flight', myName: 'Me', otherMembers: ['Rahul']);
+      final old = await groups.createGroup(name: 'Old trip', icon: 'flight', myName: 'Me', otherMembers: ['Rahul']);
+      for (final (groupId, share) in [(home, 300), (dubai, 1400), (old, 900)]) {
+        final members = await groups.getMembers(groupId);
+        final me = members.firstWhere((member) => member.isMe);
+        final rahul = members.firstWhere((member) => !member.isMe);
+        await addGroupExpense(groupId, me.id, {me.id: share, rahul.id: share});
+      }
+      await groups.setCurrencyLabel((await groups.getGroup(dubai))!, 'AED');
+      await groups.setCurrencyLabel((await groups.getGroup(old))!, 'AED');
+      await groups.archiveGroup(old);
+      expect(groupTotalsByCurrency(await groups.getSummaries(), appSymbol: '₹'), [
+        (symbol: '₹', owedToMe: 300, iOwe: 0),
+        (symbol: 'AED', owedToMe: 1400, iOwe: 0),
+      ]);
+    });
+
     test('app totals leave out archived groups', () async {
       final home = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'Me', otherMembers: ['Rahul']);
       final trip = await groups.createGroup(name: 'Goa', icon: 'flight', myName: 'Me', otherMembers: ['Rahul']);

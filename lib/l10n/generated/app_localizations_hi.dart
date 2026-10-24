@@ -649,6 +649,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get youOwe => 'आपको देने हैं';
 
   @override
+  String get groupsTotalsSeparator => ' · ';
+
+  @override
   String groupSubtitle(int count, String amount) {
     return '$count सदस्य · $amount खर्च';
   }

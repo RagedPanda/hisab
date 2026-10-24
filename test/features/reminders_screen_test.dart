@@ -310,6 +310,8 @@ void main() {
     await _settle(tester);
     await tester.scrollUntilVisible(find.text('Reminders'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('1 upcoming · notifications on'), findsOneWidget);
+    await tester.ensureVisible(find.text('Reminders'));
+    await tester.pump();
     await tester.tap(find.text('Reminders'));
     await _settle(tester);
     expect(find.text('Electricity'), findsOneWidget);

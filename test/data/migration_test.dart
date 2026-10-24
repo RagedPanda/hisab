@@ -463,7 +463,8 @@ void main() {
       final version = await db.customSelect('PRAGMA user_version').getSingle();
       expect(version.data['user_version'], db.schemaVersion);
       final passport = await db.select(db.reminders).getSingle();
-      expect(passport.title, 'Passport');
+      expect(passport.kind, 'document');
+      expect(passport.dueAt, DateTime(2027, 3, 1), reason: 'existing reminder rows survive the upgrade');
       expect(passport.projectId, isNull);
       expect(passport.documentNumber, '');
       expect(passport.presetKey, isNull);

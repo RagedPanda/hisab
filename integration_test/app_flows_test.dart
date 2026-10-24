@@ -1481,6 +1481,8 @@ void main() {
     expect(find.byType(ExpenseEditorScreen), findsOneWidget);
     expect(find.widgetWithText(TextField, '2100'), findsOneWidget);
     await shoot(tester, 'reminder_paid_entry');
+    // The reminder has no category, so pick one or Save stops at "Pick a category" (#107).
+    await _pickCategory(tester, 'electricity', 'Electricity');
     await tapFinder(tester, find.textContaining('Save').last, frames: 16);
     final paid = (await fresh.read(remindersRepositoryProvider).getById(electricity.id))!;
     expect(paid.status, 'done');
@@ -1505,7 +1507,9 @@ void main() {
     await fresh.read(settingsProvider.notifier).update((s) => s.copyWith(localeCode: 'hi'));
     await settle(tester, 8);
     final hi = AppLocalizationsHi();
-    expect(find.text(hi.remindersTitle), findsOneWidget);
+    // Hindi uses "रिमाइंडर" for both the title and the FAB label, so check the title in the app bar (#108).
+    expect(find.descendant(of: find.byType(AppBar), matching: find.text(hi.remindersTitle)), findsOneWidget);
+    expect(find.descendant(of: find.byType(FloatingActionButton), matching: find.text(hi.reminderFab)), findsOneWidget);
     await shoot(tester, 'hi_dark_reminders_list');
     await fresh.read(settingsProvider.notifier).update((s) => s.copyWith(themeMode: ThemeMode.light));
     await settle(tester, 8);

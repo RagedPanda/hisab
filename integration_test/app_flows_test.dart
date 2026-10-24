@@ -1605,11 +1605,11 @@ void main() {
     await scrollTo(tester, assignChip(priya).at(1), within: editor);
     expect([chipOn(assignChip(me).at(1)), chipOn(assignChip(rahul).at(1)), chipOn(assignChip(priya).at(1))], [false, true, false]);
 
-    await scrollTo(tester, _chip('Equal'), within: editor);
-    await tapFinder(tester, _chip('Equal'));
+    await scrollTo(tester, _chip('Equally'), within: editor);
+    await tapFinder(tester, _chip('Equally'));
     expect(find.text('Item assignments will be cleared'), findsOneWidget);
     await tapFinder(tester, find.byKey(const Key('byItem.clearConfirm')));
-    expect(tester.widget<ChoiceChip>(_chip('Equal')).selected, isTrue);
+    expect(tester.widget<ChoiceChip>(_chip('Equally')).selected, isTrue);
     expect(assignChip(rahul), findsNothing, reason: 'the assign strips go with the by-item split');
     await _saveEntry(tester, formatMinor(84000));
     expect(await entries.getItemAssignments(entryId), isEmpty);

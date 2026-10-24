@@ -3809,4 +3809,181 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get salaryDetectionHelp =>
       'An income counts as salary when it is this close to the amount and arrives no earlier than this, or any day later in the cycle.';
+
+  @override
+  String get documentRemindersSection => 'Documents & renewals';
+
+  @override
+  String get documentRemindersHint =>
+      'PUC, insurance, passport and other expiry dates';
+
+  @override
+  String get documentPresetVehicleInsurance => 'Vehicle insurance';
+
+  @override
+  String get documentPresetPuc => 'PUC certificate';
+
+  @override
+  String get documentPresetRcRenewal => 'RC renewal';
+
+  @override
+  String get documentPresetDrivingLicence => 'Driving licence';
+
+  @override
+  String get documentPresetPassport => 'Passport';
+
+  @override
+  String get documentPresetHealthInsurance => 'Health insurance premium';
+
+  @override
+  String get documentPresetLifeInsurance => 'Life insurance premium';
+
+  @override
+  String get documentPresetWarranty => 'Warranty expiry';
+
+  @override
+  String get documentPresetAmc => 'AMC renewal';
+
+  @override
+  String get documentPresetFdMaturity => 'FD maturity';
+
+  @override
+  String get documentPresetPropertyTax => 'Property tax';
+
+  @override
+  String get documentPresetRentAgreement => 'Rent agreement renewal';
+
+  @override
+  String get documentNumberLabel => 'Document number (optional)';
+
+  @override
+  String get documentNumberHint => 'Policy, registration or certificate number';
+
+  @override
+  String get documentRemindersOnProject => 'Reminders';
+
+  @override
+  String get reminderRepeatHalfYearly => 'Every 6 months';
+
+  @override
+  String get reminderRepeatElevenMonths => 'Every 11 months';
+
+  @override
+  String get reminderRepeatFiveYears => 'Every 5 years';
+
+  @override
+  String get reminderRepeatTenYears => 'Every 10 years';
+
+  @override
+  String get documentPucOlderVehicleHint =>
+      'Older vehicles (before BS-IV) need PUC every 6 months.';
+
+  @override
+  String settleReminderTitle(String group) {
+    return 'Settle up: $group';
+  }
+
+  @override
+  String settleReminderOwesYou(String name, String amount) {
+    return '$name owes you $amount';
+  }
+
+  @override
+  String settleReminderYouOwe(String name, String amount) {
+    return 'You owe $name $amount';
+  }
+
+  @override
+  String settleReminderPeopleOweYou(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people owe you $amount',
+      one: '1 person owes you $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settleReminderYouOweTotal(String amount) {
+    return 'You owe $amount in all';
+  }
+
+  @override
+  String get settleReminderSheetTitle => 'Remind me to settle up';
+
+  @override
+  String get settleReminderWith => 'About';
+
+  @override
+  String get settleReminderEveryone => 'Everyone';
+
+  @override
+  String get settleReminderHowOften => 'How often';
+
+  @override
+  String get settleReminderMonthly => 'Monthly';
+
+  @override
+  String get settleReminderWeekly => 'Weekly';
+
+  @override
+  String get settleReminderOnDay => 'On day';
+
+  @override
+  String get settleReminderLastDay => 'Last day';
+
+  @override
+  String settleReminderNextAt(String date) {
+    return 'Next reminder: $date';
+  }
+
+  @override
+  String get settleReminderTurnOff => 'Turn off';
+
+  @override
+  String get settleReminderOffLabel => 'Settle-up reminder off';
+
+  @override
+  String settleReminderMonthlySummary(String day) {
+    return 'Reminder on day $day every month';
+  }
+
+  @override
+  String settleReminderWeeklySummary(String weekday) {
+    return 'Reminder every $weekday';
+  }
+
+  @override
+  String get settleReminderMonthlyLastDaySummary =>
+      'Reminder on the last day of every month';
+
+  @override
+  String get groupRecurringAmountFixed =>
+      'This split uses fixed amounts, so the total can\'t change here';
+
+  @override
+  String get groupRecurringUpcoming => 'Repeating';
+
+  @override
+  String get settleReminderShareNudge => 'Share a nudge';
+
+  @override
+  String get groupRecurringExpenseOnly =>
+      'A group repeating rule can only be an expense.';
+
+  @override
+  String groupRecurringYourShare(String amount) {
+    return 'your share $amount';
+  }
+
+  @override
+  String get settleReminderPrePromptTitle => 'Get reminded to settle up';
+
+  @override
+  String get settleReminderPrePromptBody =>
+      'Hisab sends a notification on the day you choose, only to remind you to settle up with this group. No marketing.';
+
+  @override
+  String get smsReminderPaidViaSms => 'Paid via SMS';
 }

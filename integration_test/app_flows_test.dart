@@ -628,6 +628,7 @@ void main() {
     await shoot(tester, 'categories_income');
   });
 
+  // iOS only: Android offers SMS reading on this screen, so the flow is skipped there.
   testWidgets('10 bank SMS screen on iOS: reading disabled, paste auto-adds with Undo, unclear SMS wait for review', (tester) async {
     await pumpApp(tester, shared);
     await goTab(tester, 'Settings');
@@ -669,7 +670,7 @@ void main() {
     await tapText(tester, 'Ignore');
     expect(find.text('Nothing waiting'), findsOneWidget);
     await goBack(tester);
-  });
+  }, skip: !Platform.isIOS);
 
   testWidgets('11 settings: dark theme on every tab', (tester) async {
     addTearDown(() => shared.read(settingsProvider.notifier).update((s) => s.copyWith(themeMode: ThemeMode.light)));
@@ -1978,6 +1979,9 @@ void main() {
     await shoot(tester, 'reminders_empty');
 
     await tapText(tester, 'Add reminder');
+    expect(find.text('Documents & renewals'), findsOneWidget);
+    await shoot(tester, 'new_reminder_sheet');
+    await tapFinder(tester, find.byKey(const ValueKey('new-reminder.blank')), frames: 12);
     await enterText(tester, find.byKey(const ValueKey('reminder-title')), 'Electricity bill');
     await enterText(tester, find.byKey(const ValueKey('reminder-amount')), '2100');
     FocusManager.instance.primaryFocus?.unfocus();
@@ -2034,6 +2038,8 @@ void main() {
     await settle(tester, 8);
     await shoot(tester, 'dark_reminders_list');
     await tapFinder(tester, find.byType(FloatingActionButton), frames: 12);
+    await shoot(tester, 'dark_new_reminder_sheet');
+    await tapFinder(tester, find.byKey(const ValueKey('new-reminder.preset.puc')), frames: 12);
     await shoot(tester, 'dark_reminder_editor');
     await goBack(tester);
 
@@ -2048,6 +2054,8 @@ void main() {
     await settle(tester, 8);
     await shoot(tester, 'hi_reminders_list');
     await tapFinder(tester, find.byType(FloatingActionButton), frames: 12);
+    await shoot(tester, 'hi_new_reminder_sheet');
+    await tapFinder(tester, find.byKey(const ValueKey('new-reminder.preset.puc')), frames: 12);
     await shoot(tester, 'hi_reminder_editor');
     await goBack(tester);
     await tapText(tester, hi.reminderTabHistory);
@@ -2057,6 +2065,42 @@ void main() {
     for (final reminder in await fresh.read(remindersRepositoryProvider).getUpcoming()) {
       await scheduler.delete(reminder.id);
     }
+  });
+
+  testWidgets('37 groups: schedule a settle-up reminder on the Balances tab, share a nudge, turn it off', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final flatGroupId = await groups.createGroup(name: 'Flat 302', icon: 'home', myName: 'You', otherMembers: ['Ravi']);
+    final members = await groups.getMembers(flatGroupId);
+    await groups.addSettlement(
+      groupId: flatGroupId,
+      fromMemberId: members.firstWhere((member) => member.isMe).id,
+      toMemberId: members.firstWhere((member) => member.name == 'Ravi').id,
+      amountMinor: 50000,
+      occurredAt: DateTime.now(),
+    );
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Flat 302');
+    await tapText(tester, 'Balances');
+    await scrollTo(tester, find.text('Remind me to settle up'));
+    expect(find.text('Settle-up reminder off'), findsOneWidget);
+    await tapText(tester, 'Remind me to settle up');
+    await tapText(tester, 'Ravi', last: true);
+    await shoot(tester, 'settle_reminder_sheet');
+    await tapText(tester, 'Save');
+    if (find.text('Not now').evaluate().isNotEmpty) await tapText(tester, 'Not now');
+    expect(find.text('Reminder on day 1 every month'), findsOneWidget);
+    final schedule = await fresh.read(settleScheduleRepositoryProvider).scheduleOf(flatGroupId);
+    expect(schedule?.memberId, members.firstWhere((member) => member.name == 'Ravi').id);
+    expect(find.byTooltip('Share a nudge'), findsOneWidget, reason: 'something is owed, so a nudge can be shared');
+    await shoot(tester, 'settle_reminder_on');
+
+    await tapText(tester, 'Remind me to settle up');
+    await tapText(tester, 'Turn off');
+    expect(find.text('Settle-up reminder off'), findsOneWidget);
+    expect(await fresh.read(settleScheduleRepositoryProvider).scheduleOf(flatGroupId), isNull);
   });
 
   testWidgets('32 salary day: set up from Settings, align month start, reminder clears when an SMS salary arrives, Hindi', (tester) async {

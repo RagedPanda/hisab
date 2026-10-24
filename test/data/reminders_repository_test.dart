@@ -3,6 +3,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/data/backup/backup_service.dart';
 import 'package:hisab/data/db/database.dart';
+import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/data/repositories/reminders_repository.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
@@ -30,6 +31,24 @@ void main() {
         remindDaysBefore: const [0, 3],
         matchKeywords: 'Landlord|NEFT',
       );
+
+  test('paid amounts come from the linked entry, not the reminder (decision 16)', () async {
+    final entries = EntriesRepository(db);
+    await entries.saveEntry(EntriesRepository.newExpense(id: 'paid-more', amountMinor: 2550000, occurredAt: now));
+    await entries.saveEntry(EntriesRepository.newExpense(id: 'removed', amountMinor: 999, occurredAt: now));
+    final paid = await reminders.save(rent());
+    final skipped = await reminders.save(rent(repeat: ReminderRepeat.once));
+    final deletedEntry = await reminders.save(rent(repeat: ReminderRepeat.once));
+    final unlinked = await reminders.save(rent(repeat: ReminderRepeat.once));
+    await reminders.markDone(paid, entryId: 'paid-more');
+    await reminders.skip(skipped);
+    await reminders.markDone(deletedEntry, entryId: 'removed');
+    await entries.deleteEntry('removed');
+    await reminders.markDone(unlinked);
+
+    expect(await reminders.watchPaidAmounts().first, {paid: 2550000},
+        reason: 'skipped, unlinked and deleted-entry reminders fall back to their own amount');
+  });
 
   test('save stores a normalised row and update keeps the id', () async {
     final id = await reminders.save(rent());
@@ -201,5 +220,63 @@ void main() {
     expect(reminderAmountOrNone(0), isNull);
     expect(reminderAmountOrNone(null), isNull);
     expect(reminderAmountOrNone(15000), 15000);
+  });
+
+  group('document reminders', () {
+    ReminderDraft puc({String? id, String? projectId = 'scotty'}) => ReminderDraft(
+          id: id,
+          kind: ReminderKind.document,
+          title: 'PUC',
+          dueAt: DateTime(2027, 4, 30),
+          repeat: ReminderRepeat.halfYearly,
+          remindDaysBefore: const [15, 7, 1, 0],
+          projectId: projectId,
+          documentNumber: ' DL01AB1234 ',
+          presetKey: 'puc',
+        );
+
+    test('save keeps the project, preset and trimmed document number', () async {
+      final id = await reminders.save(puc());
+      final row = (await reminders.getById(id))!;
+      expect(row.projectId, 'scotty');
+      expect(row.presetKey, 'puc');
+      expect(row.documentNumber, 'DL01AB1234');
+      expect(row.repeat, 'half_yearly');
+      expect(row.remindDaysBefore, '15,7,1,0');
+    });
+
+    test('the editor draft keeps the project, preset and document number', () async {
+      final id = await reminders.save(puc());
+      final draft = reminderDraftFrom((await reminders.getById(id))!);
+      expect(draft.projectId, 'scotty');
+      expect(draft.presetKey, 'puc');
+      expect(draft.documentNumber, 'DL01AB1234');
+      expect(draft.repeat, ReminderRepeat.halfYearly);
+    });
+
+    test('unlinking a project on edit clears it', () async {
+      final id = await reminders.save(puc());
+      await reminders.save(puc(id: id, projectId: null));
+      expect((await reminders.getById(id))!.projectId, isNull);
+    });
+
+    test('renewing carries the project and document number to the next occurrence six months on', () async {
+      final id = await reminders.save(puc());
+      final nextId = (await reminders.markDone(id))!;
+      final next = (await reminders.getById(nextId))!;
+      expect(next.dueAt, DateTime(2027, 10, 30));
+      expect(next.projectId, 'scotty');
+      expect(next.documentNumber, 'DL01AB1234');
+      expect(next.presetKey, 'puc');
+    });
+
+    test('getForProject lists only that project\'s pending reminders', () async {
+      final scottyId = await reminders.save(puc());
+      await reminders.save(puc(projectId: 'car'));
+      await reminders.save(rent());
+      expect((await reminders.getForProject('scotty')).map((row) => row.id), [scottyId]);
+      await reminders.markDone(scottyId);
+      expect((await reminders.getForProject('scotty')).map((row) => row.dueAt), [DateTime(2027, 10, 30)]);
+    });
   });
 }

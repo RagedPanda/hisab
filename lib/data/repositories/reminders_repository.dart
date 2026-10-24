@@ -35,6 +35,19 @@ class RemindersRepository {
         ..limit(limit))
       .watch();
 
+  /// Pending reminders linked to [projectId], earliest due first.
+  Stream<List<Reminder>> watchForProject(String projectId) => (_pending()..where((t) => t.projectId.equals(projectId))).watch();
+  Future<List<Reminder>> getForProject(String projectId) => (_pending()..where((t) => t.projectId.equals(projectId))).get();
+
+  /// What each paid reminder's linked entry actually paid, by reminder id. A
+  /// bank SMS within tolerance (₹2,150 on a ₹2,100 bill) or an edited entry
+  /// differs from the reminder's amount; History shows the paid one.
+  Stream<Map<String, int>> watchPaidAmounts() {
+    final query = db.select(db.reminders).join([innerJoin(db.entries, db.entries.id.equalsExp(db.reminders.entryId))])
+      ..where(db.reminders.status.equals(ReminderStatus.done) & db.reminders.deletedAt.isNull() & db.entries.deletedAt.isNull());
+    return query.watch().map((rows) => {for (final row in rows) row.readTable(db.reminders).id: row.readTable(db.entries).amountMinor});
+  }
+
   Future<Reminder?> getById(String id) => (db.select(db.reminders)..where((t) => t.id.equals(id) & _isLiveDue(t))).getSingleOrNull();
   Stream<Reminder?> watchById(String id) => (db.select(db.reminders)..where((t) => t.id.equals(id) & _isLiveDue(t))).watchSingleOrNull();
 
@@ -66,6 +79,9 @@ class RemindersRepository {
       repeatDay: Value(draft.repeatDay),
       remindDaysBefore: Value(formatRemindDaysBefore(draft.remindDaysBefore)),
       notifyAtMinute: Value(draft.notifyAtMinute),
+      projectId: Value(draft.projectId),
+      documentNumber: Value(draft.documentNumber.trim()),
+      presetKey: Value(draft.presetKey),
       snoozedUntil: const Value(null),
       channel: const Value('notification'),
       updatedAt: Value(now),
@@ -166,9 +182,12 @@ ReminderDraft reminderDraftFrom(Reminder reminder) => ReminderDraft(
       notifyAtMinute: reminder.notifyAtMinute,
       matchKeywords: reminder.matchKeywords,
       toleranceMinor: reminder.toleranceMinor,
+      projectId: reminder.projectId,
+      documentNumber: reminder.documentNumber,
+      presetKey: reminder.presetKey,
     );
 
-/// Fills the due-reminder fields a pre-v6 backup row lacks with their column
+/// Fills the due-reminder fields a pre-v6 (or pre-v7) backup row lacks with their column
 /// defaults, so older backups still restore.
 Map<String, dynamic> reminderJsonWithDefaults(Map<String, dynamic> json) => {
       'title': '',
@@ -178,5 +197,6 @@ Map<String, dynamic> reminderJsonWithDefaults(Map<String, dynamic> json) => {
       'repeat': ReminderRepeat.once.key,
       'remindDaysBefore': '0',
       'status': ReminderStatus.pending,
+      'documentNumber': '',
       ...json,
     };

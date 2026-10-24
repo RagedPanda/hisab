@@ -70,7 +70,11 @@ final appRouter = GoRouter(
         reminderId: state.uri.queryParameters['reminder'],
       ),
     ),
-    GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(groupId: state.pathParameters['id']!)),
+    GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(
+          key: ValueKey(state.uri.toString()),
+          groupId: state.pathParameters['id']!,
+          initialTab: groupDetailInitialTab(state.uri.queryParameters['tab']),
+        )),
     GoRoute(path: '/groups/:id/totals', parentNavigatorKey: _rootKey, builder: (_, state) => GroupTotalsScreen(groupId: state.pathParameters['id']!)),
     GoRoute(path: '/groups/:id/settings', parentNavigatorKey: _rootKey, builder: (_, state) => GroupSettingsScreen(groupId: state.pathParameters['id']!)),
     GoRoute(path: '/groups/:id/activity', parentNavigatorKey: _rootKey, builder: (_, state) => ActivityScreen(groupId: state.pathParameters['id']!)),

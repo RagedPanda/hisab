@@ -25,13 +25,18 @@ List<int> parseRemindDaysBefore(String stored) {
 String formatRemindDaysBefore(Iterable<int> days) => parseRemindDaysBefore(days.join(',')).join(',');
 
 /// The [RecurrenceSpec] a repeating reminder due on [due] follows; null
-/// for one-off reminders. Quarterly is monthly with an interval of three.
+/// for one-off reminders. Quarterly, half-yearly and eleven-monthly are
+/// monthly with an interval; five and ten years are yearly with one.
 RecurrenceSpec? reminderRecurrence(DateTime due, ReminderRepeat repeat, {int? anchorDay}) => switch (repeat) {
       ReminderRepeat.once => null,
       ReminderRepeat.weekly => RecurrenceSpec(frequency: RecurrenceFrequency.weekly, start: due),
       ReminderRepeat.monthly => RecurrenceSpec(frequency: RecurrenceFrequency.monthly, start: due, dayOfMonth: anchorDay),
       ReminderRepeat.quarterly => RecurrenceSpec(frequency: RecurrenceFrequency.monthly, start: due, interval: 3, dayOfMonth: anchorDay),
+      ReminderRepeat.halfYearly => RecurrenceSpec(frequency: RecurrenceFrequency.monthly, start: due, interval: 6, dayOfMonth: anchorDay),
+      ReminderRepeat.everyElevenMonths => RecurrenceSpec(frequency: RecurrenceFrequency.monthly, start: due, interval: 11, dayOfMonth: anchorDay),
       ReminderRepeat.yearly => RecurrenceSpec(frequency: RecurrenceFrequency.yearly, start: due, dayOfMonth: anchorDay),
+      ReminderRepeat.everyFiveYears => RecurrenceSpec(frequency: RecurrenceFrequency.yearly, start: due, interval: 5, dayOfMonth: anchorDay),
+      ReminderRepeat.everyTenYears => RecurrenceSpec(frequency: RecurrenceFrequency.yearly, start: due, interval: 10, dayOfMonth: anchorDay),
     };
 
 /// The due date after [due] for [repeat]; null for one-off reminders.
@@ -108,9 +113,38 @@ List<PlannedAlert> planAlerts({
   ]..sort((a, b) => a.fireAt.compareTo(b.fireAt));
 }
 
+/// First slot of the later occurrences in [planOccurrenceAlerts]; the first
+/// occurrence uses slot 0, like an on-the-day alert.
+const int kOccurrenceSlotBase = 1000;
+
+/// Most occurrences [planOccurrenceAlerts] posts ahead for one reminder.
+const int kMaxOccurrencesAhead = 8;
+
+/// Notification slot of the occurrence at [index] in [planOccurrenceAlerts].
+int occurrenceSlot(int index) => index == 0 ? 0 : kOccurrenceSlotBase + index;
+
+/// One alert per time in [fireTimes] (several occurrences of a repeating
+/// reminder posted ahead), keeping only future ones. A snooze replaces every
+/// alert before it, as in [planAlerts].
+List<PlannedAlert> planOccurrenceAlerts({
+  required String reminderId,
+  required List<DateTime> fireTimes,
+  DateTime? snoozedUntil,
+  required DateTime now,
+}) {
+  final snoozed = snoozedUntil != null && snoozedUntil.isAfter(now);
+  return [
+    for (final (index, fireAt) in fireTimes.take(kMaxOccurrencesAhead).indexed)
+      if (fireAt.isAfter(now) && (!snoozed || fireAt.isAfter(snoozedUntil)))
+        PlannedAlert(notificationId: notificationIdFor(reminderId, occurrenceSlot(index)), fireAt: fireAt, daysBefore: 0),
+    if (snoozed) PlannedAlert(notificationId: notificationIdFor(reminderId, kSnoozeSlot), fireAt: snoozedUntil, daysBefore: kSnoozeSlot),
+  ]..sort((a, b) => a.fireAt.compareTo(b.fireAt));
+}
+
 /// Every notification id a reminder can ever use, so cancelling needs no lookup.
 List<int> allNotificationIdsFor(String reminderId, Iterable<int> daysBefore) => {
       for (final days in {...daysBefore, ...kRemindDaysBeforeChoices, ...kDocumentRemindDaysBefore}) notificationIdFor(reminderId, days),
+      for (var index = 1; index < kMaxOccurrencesAhead; index++) notificationIdFor(reminderId, occurrenceSlot(index)),
       notificationIdFor(reminderId, kSnoozeSlot),
     }.toList();
 

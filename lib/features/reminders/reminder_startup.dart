@@ -7,6 +7,7 @@ import '../../core/notifications/reminder_payload.dart';
 import '../../core/notifications/reminder_tap_gate.dart';
 import '../../core/providers.dart';
 import '../accounts/card_reminder_sync.dart';
+import '../groups/settle_reminder_service.dart';
 import '../salary/salary_reminder.dart';
 import '../shell/router.dart';
 
@@ -44,6 +45,7 @@ Future<void> startReminderNotifications(ProviderContainer container) async {
     await service.initialize(onTap: (tap) => handleReminderTap(container, tap));
     final launch = await service.launchTap();
     if (launch != null) await handleReminderTap(container, launch);
+    await container.read(settleReminderServiceProvider).refreshAll();
     NotificationPermissionState? known = await service.checkPermission();
     await syncCardReminderSafely(() => container.read(cardReminderSyncProvider).syncAll());
     container.read(cardReminderLiveSyncProvider);

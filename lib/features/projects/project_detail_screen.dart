@@ -17,6 +17,7 @@ import '../../l10n/l10n.dart';
 import '../dashboard/dashboard_providers.dart';
 import '../dashboard/widgets/category_donut.dart';
 import '../dashboard/widgets/trend_card.dart';
+import '../reminders/project_reminders_section.dart';
 import '../shell/widgets/common.dart';
 import 'project_fields_section.dart';
 import 'project_providers.dart';
@@ -104,6 +105,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 ),
               ],
             ],
+            ProjectRemindersSection(projectId: project.id),
             ProjectFieldsSection(projectId: project.id, fields: fields),
             SectionHeader(
               l10n.entries,

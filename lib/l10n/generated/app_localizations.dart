@@ -6055,6 +6055,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An income counts as salary when it is this close to the amount and arrives no earlier than this, or any day later in the cycle.'**
   String get salaryDetectionHelp;
+
+  /// No description provided for @documentRemindersSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents & renewals'**
+  String get documentRemindersSection;
+
+  /// No description provided for @documentRemindersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'PUC, insurance, passport and other expiry dates'**
+  String get documentRemindersHint;
+
+  /// No description provided for @documentPresetVehicleInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle insurance'**
+  String get documentPresetVehicleInsurance;
+
+  /// No description provided for @documentPresetPuc.
+  ///
+  /// In en, this message translates to:
+  /// **'PUC certificate'**
+  String get documentPresetPuc;
+
+  /// No description provided for @documentPresetRcRenewal.
+  ///
+  /// In en, this message translates to:
+  /// **'RC renewal'**
+  String get documentPresetRcRenewal;
+
+  /// No description provided for @documentPresetDrivingLicence.
+  ///
+  /// In en, this message translates to:
+  /// **'Driving licence'**
+  String get documentPresetDrivingLicence;
+
+  /// No description provided for @documentPresetPassport.
+  ///
+  /// In en, this message translates to:
+  /// **'Passport'**
+  String get documentPresetPassport;
+
+  /// No description provided for @documentPresetHealthInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Health insurance premium'**
+  String get documentPresetHealthInsurance;
+
+  /// No description provided for @documentPresetLifeInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Life insurance premium'**
+  String get documentPresetLifeInsurance;
+
+  /// No description provided for @documentPresetWarranty.
+  ///
+  /// In en, this message translates to:
+  /// **'Warranty expiry'**
+  String get documentPresetWarranty;
+
+  /// No description provided for @documentPresetAmc.
+  ///
+  /// In en, this message translates to:
+  /// **'AMC renewal'**
+  String get documentPresetAmc;
+
+  /// No description provided for @documentPresetFdMaturity.
+  ///
+  /// In en, this message translates to:
+  /// **'FD maturity'**
+  String get documentPresetFdMaturity;
+
+  /// No description provided for @documentPresetPropertyTax.
+  ///
+  /// In en, this message translates to:
+  /// **'Property tax'**
+  String get documentPresetPropertyTax;
+
+  /// No description provided for @documentPresetRentAgreement.
+  ///
+  /// In en, this message translates to:
+  /// **'Rent agreement renewal'**
+  String get documentPresetRentAgreement;
+
+  /// No description provided for @documentNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Document number (optional)'**
+  String get documentNumberLabel;
+
+  /// No description provided for @documentNumberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Policy, registration or certificate number'**
+  String get documentNumberHint;
+
+  /// No description provided for @documentRemindersOnProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get documentRemindersOnProject;
+
+  /// No description provided for @reminderRepeatHalfYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 6 months'**
+  String get reminderRepeatHalfYearly;
+
+  /// No description provided for @reminderRepeatElevenMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 11 months'**
+  String get reminderRepeatElevenMonths;
+
+  /// No description provided for @reminderRepeatFiveYears.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 5 years'**
+  String get reminderRepeatFiveYears;
+
+  /// No description provided for @reminderRepeatTenYears.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 10 years'**
+  String get reminderRepeatTenYears;
+
+  /// No description provided for @documentPucOlderVehicleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Older vehicles (before BS-IV) need PUC every 6 months.'**
+  String get documentPucOlderVehicleHint;
+
+  /// No description provided for @settleReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle up: {group}'**
+  String settleReminderTitle(String group);
+
+  /// No description provided for @settleReminderOwesYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes you {amount}'**
+  String settleReminderOwesYou(String name, String amount);
+
+  /// No description provided for @settleReminderYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {name} {amount}'**
+  String settleReminderYouOwe(String name, String amount);
+
+  /// No description provided for @settleReminderPeopleOweYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 person owes you {amount}} other{{count} people owe you {amount}}}'**
+  String settleReminderPeopleOweYou(int count, String amount);
+
+  /// No description provided for @settleReminderYouOweTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {amount} in all'**
+  String settleReminderYouOweTotal(String amount);
+
+  /// No description provided for @settleReminderSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me to settle up'**
+  String get settleReminderSheetTitle;
+
+  /// No description provided for @settleReminderWith.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settleReminderWith;
+
+  /// No description provided for @settleReminderEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get settleReminderEveryone;
+
+  /// No description provided for @settleReminderHowOften.
+  ///
+  /// In en, this message translates to:
+  /// **'How often'**
+  String get settleReminderHowOften;
+
+  /// No description provided for @settleReminderMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get settleReminderMonthly;
+
+  /// No description provided for @settleReminderWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get settleReminderWeekly;
+
+  /// No description provided for @settleReminderOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'On day'**
+  String get settleReminderOnDay;
+
+  /// No description provided for @settleReminderLastDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Last day'**
+  String get settleReminderLastDay;
+
+  /// No description provided for @settleReminderNextAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Next reminder: {date}'**
+  String settleReminderNextAt(String date);
+
+  /// No description provided for @settleReminderTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get settleReminderTurnOff;
+
+  /// No description provided for @settleReminderOffLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle-up reminder off'**
+  String get settleReminderOffLabel;
+
+  /// No description provided for @settleReminderMonthlySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder on day {day} every month'**
+  String settleReminderMonthlySummary(String day);
+
+  /// No description provided for @settleReminderWeeklySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder every {weekday}'**
+  String settleReminderWeeklySummary(String weekday);
+
+  /// No description provided for @settleReminderMonthlyLastDaySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder on the last day of every month'**
+  String get settleReminderMonthlyLastDaySummary;
+
+  /// No description provided for @groupRecurringAmountFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'This split uses fixed amounts, so the total can\'t change here'**
+  String get groupRecurringAmountFixed;
+
+  /// No description provided for @groupRecurringUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeating'**
+  String get groupRecurringUpcoming;
+
+  /// No description provided for @settleReminderShareNudge.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a nudge'**
+  String get settleReminderShareNudge;
+
+  /// No description provided for @groupRecurringExpenseOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'A group repeating rule can only be an expense.'**
+  String get groupRecurringExpenseOnly;
+
+  /// No description provided for @groupRecurringYourShare.
+  ///
+  /// In en, this message translates to:
+  /// **'your share {amount}'**
+  String groupRecurringYourShare(String amount);
+
+  /// No description provided for @settleReminderPrePromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get reminded to settle up'**
+  String get settleReminderPrePromptTitle;
+
+  /// No description provided for @settleReminderPrePromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Hisab sends a notification on the day you choose, only to remind you to settle up with this group. No marketing.'**
+  String get settleReminderPrePromptBody;
+
+  /// Label on a reminder that a matching bank SMS marked done
+  ///
+  /// In en, this message translates to:
+  /// **'Paid via SMS'**
+  String get smsReminderPaidViaSms;
 }
 
 class _AppLocalizationsDelegate

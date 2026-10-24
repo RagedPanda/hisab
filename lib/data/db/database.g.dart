@@ -6663,6 +6663,29 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _matchedReminderIdMeta = const VerificationMeta(
+    'matchedReminderId',
+  );
+  @override
+  late final GeneratedColumn<String> matchedReminderId =
+      GeneratedColumn<String>(
+        'matched_reminder_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _transactionKeyMeta = const VerificationMeta(
+    'transactionKey',
+  );
+  @override
+  late final GeneratedColumn<String> transactionKey = GeneratedColumn<String>(
+    'transaction_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -6695,6 +6718,8 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
     status,
     parsedJson,
     entryId,
+    matchedReminderId,
+    transactionKey,
     createdAt,
     clearedAt,
   ];
@@ -6759,6 +6784,24 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
         entryId.isAcceptableOrUnknown(data['entry_id']!, _entryIdMeta),
       );
     }
+    if (data.containsKey('matched_reminder_id')) {
+      context.handle(
+        _matchedReminderIdMeta,
+        matchedReminderId.isAcceptableOrUnknown(
+          data['matched_reminder_id']!,
+          _matchedReminderIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('transaction_key')) {
+      context.handle(
+        _transactionKeyMeta,
+        transactionKey.isAcceptableOrUnknown(
+          data['transaction_key']!,
+          _transactionKeyMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -6808,6 +6851,14 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
         DriftSqlType.string,
         data['${effectivePrefix}entry_id'],
       ),
+      matchedReminderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}matched_reminder_id'],
+      ),
+      transactionKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}transaction_key'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -6836,6 +6887,13 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
   final String status;
   final String? parsedJson;
   final String? entryId;
+
+  /// Reminder this message paid, when it matched one (R2 auto-done).
+  final String? matchedReminderId;
+
+  /// The bank transaction this message reports (see smsTransactionKey), so
+  /// the same payment pasted again or read from the inbox is not added twice.
+  final String? transactionKey;
   final DateTime createdAt;
 
   /// Set when the user clears the SMS history. The row stays (with its body
@@ -6849,6 +6907,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     required this.status,
     this.parsedJson,
     this.entryId,
+    this.matchedReminderId,
+    this.transactionKey,
     required this.createdAt,
     this.clearedAt,
   });
@@ -6865,6 +6925,12 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     }
     if (!nullToAbsent || entryId != null) {
       map['entry_id'] = Variable<String>(entryId);
+    }
+    if (!nullToAbsent || matchedReminderId != null) {
+      map['matched_reminder_id'] = Variable<String>(matchedReminderId);
+    }
+    if (!nullToAbsent || transactionKey != null) {
+      map['transaction_key'] = Variable<String>(transactionKey);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || clearedAt != null) {
@@ -6886,6 +6952,12 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       entryId: entryId == null && nullToAbsent
           ? const Value.absent()
           : Value(entryId),
+      matchedReminderId: matchedReminderId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(matchedReminderId),
+      transactionKey: transactionKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transactionKey),
       createdAt: Value(createdAt),
       clearedAt: clearedAt == null && nullToAbsent
           ? const Value.absent()
@@ -6906,6 +6978,10 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       status: serializer.fromJson<String>(json['status']),
       parsedJson: serializer.fromJson<String?>(json['parsedJson']),
       entryId: serializer.fromJson<String?>(json['entryId']),
+      matchedReminderId: serializer.fromJson<String?>(
+        json['matchedReminderId'],
+      ),
+      transactionKey: serializer.fromJson<String?>(json['transactionKey']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       clearedAt: serializer.fromJson<DateTime?>(json['clearedAt']),
     );
@@ -6921,6 +6997,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       'status': serializer.toJson<String>(status),
       'parsedJson': serializer.toJson<String?>(parsedJson),
       'entryId': serializer.toJson<String?>(entryId),
+      'matchedReminderId': serializer.toJson<String?>(matchedReminderId),
+      'transactionKey': serializer.toJson<String?>(transactionKey),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'clearedAt': serializer.toJson<DateTime?>(clearedAt),
     };
@@ -6934,6 +7012,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     String? status,
     Value<String?> parsedJson = const Value.absent(),
     Value<String?> entryId = const Value.absent(),
+    Value<String?> matchedReminderId = const Value.absent(),
+    Value<String?> transactionKey = const Value.absent(),
     DateTime? createdAt,
     Value<DateTime?> clearedAt = const Value.absent(),
   }) => SmsLogData(
@@ -6944,6 +7024,12 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     status: status ?? this.status,
     parsedJson: parsedJson.present ? parsedJson.value : this.parsedJson,
     entryId: entryId.present ? entryId.value : this.entryId,
+    matchedReminderId: matchedReminderId.present
+        ? matchedReminderId.value
+        : this.matchedReminderId,
+    transactionKey: transactionKey.present
+        ? transactionKey.value
+        : this.transactionKey,
     createdAt: createdAt ?? this.createdAt,
     clearedAt: clearedAt.present ? clearedAt.value : this.clearedAt,
   );
@@ -6960,6 +7046,12 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           ? data.parsedJson.value
           : this.parsedJson,
       entryId: data.entryId.present ? data.entryId.value : this.entryId,
+      matchedReminderId: data.matchedReminderId.present
+          ? data.matchedReminderId.value
+          : this.matchedReminderId,
+      transactionKey: data.transactionKey.present
+          ? data.transactionKey.value
+          : this.transactionKey,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       clearedAt: data.clearedAt.present ? data.clearedAt.value : this.clearedAt,
     );
@@ -6975,6 +7067,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           ..write('status: $status, ')
           ..write('parsedJson: $parsedJson, ')
           ..write('entryId: $entryId, ')
+          ..write('matchedReminderId: $matchedReminderId, ')
+          ..write('transactionKey: $transactionKey, ')
           ..write('createdAt: $createdAt, ')
           ..write('clearedAt: $clearedAt')
           ..write(')'))
@@ -6990,6 +7084,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     status,
     parsedJson,
     entryId,
+    matchedReminderId,
+    transactionKey,
     createdAt,
     clearedAt,
   );
@@ -7004,6 +7100,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           other.status == this.status &&
           other.parsedJson == this.parsedJson &&
           other.entryId == this.entryId &&
+          other.matchedReminderId == this.matchedReminderId &&
+          other.transactionKey == this.transactionKey &&
           other.createdAt == this.createdAt &&
           other.clearedAt == this.clearedAt);
 }
@@ -7016,6 +7114,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
   final Value<String> status;
   final Value<String?> parsedJson;
   final Value<String?> entryId;
+  final Value<String?> matchedReminderId;
+  final Value<String?> transactionKey;
   final Value<DateTime> createdAt;
   final Value<DateTime?> clearedAt;
   final Value<int> rowid;
@@ -7027,6 +7127,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     this.status = const Value.absent(),
     this.parsedJson = const Value.absent(),
     this.entryId = const Value.absent(),
+    this.matchedReminderId = const Value.absent(),
+    this.transactionKey = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.clearedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -7039,6 +7141,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     required String status,
     this.parsedJson = const Value.absent(),
     this.entryId = const Value.absent(),
+    this.matchedReminderId = const Value.absent(),
+    this.transactionKey = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.clearedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -7055,6 +7159,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     Expression<String>? status,
     Expression<String>? parsedJson,
     Expression<String>? entryId,
+    Expression<String>? matchedReminderId,
+    Expression<String>? transactionKey,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? clearedAt,
     Expression<int>? rowid,
@@ -7067,6 +7173,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
       if (status != null) 'status': status,
       if (parsedJson != null) 'parsed_json': parsedJson,
       if (entryId != null) 'entry_id': entryId,
+      if (matchedReminderId != null) 'matched_reminder_id': matchedReminderId,
+      if (transactionKey != null) 'transaction_key': transactionKey,
       if (createdAt != null) 'created_at': createdAt,
       if (clearedAt != null) 'cleared_at': clearedAt,
       if (rowid != null) 'rowid': rowid,
@@ -7081,6 +7189,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     Value<String>? status,
     Value<String?>? parsedJson,
     Value<String?>? entryId,
+    Value<String?>? matchedReminderId,
+    Value<String?>? transactionKey,
     Value<DateTime>? createdAt,
     Value<DateTime?>? clearedAt,
     Value<int>? rowid,
@@ -7093,6 +7203,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
       status: status ?? this.status,
       parsedJson: parsedJson ?? this.parsedJson,
       entryId: entryId ?? this.entryId,
+      matchedReminderId: matchedReminderId ?? this.matchedReminderId,
+      transactionKey: transactionKey ?? this.transactionKey,
       createdAt: createdAt ?? this.createdAt,
       clearedAt: clearedAt ?? this.clearedAt,
       rowid: rowid ?? this.rowid,
@@ -7123,6 +7235,12 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     if (entryId.present) {
       map['entry_id'] = Variable<String>(entryId.value);
     }
+    if (matchedReminderId.present) {
+      map['matched_reminder_id'] = Variable<String>(matchedReminderId.value);
+    }
+    if (transactionKey.present) {
+      map['transaction_key'] = Variable<String>(transactionKey.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -7145,6 +7263,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
           ..write('status: $status, ')
           ..write('parsedJson: $parsedJson, ')
           ..write('entryId: $entryId, ')
+          ..write('matchedReminderId: $matchedReminderId, ')
+          ..write('transactionKey: $transactionKey, ')
           ..write('createdAt: $createdAt, ')
           ..write('clearedAt: $clearedAt, ')
           ..write('rowid: $rowid')
@@ -9525,6 +9645,40 @@ class $RemindersTable extends Reminders
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _projectIdMeta = const VerificationMeta(
+    'projectId',
+  );
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+    'project_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _documentNumberMeta = const VerificationMeta(
+    'documentNumber',
+  );
+  @override
+  late final GeneratedColumn<String> documentNumber = GeneratedColumn<String>(
+    'document_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _presetKeyMeta = const VerificationMeta(
+    'presetKey',
+  );
+  @override
+  late final GeneratedColumn<String> presetKey = GeneratedColumn<String>(
+    'preset_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -9555,6 +9709,9 @@ class $RemindersTable extends Reminders
     status,
     snoozedUntil,
     nextId,
+    projectId,
+    documentNumber,
+    presetKey,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -9758,6 +9915,27 @@ class $RemindersTable extends Reminders
         nextId.isAcceptableOrUnknown(data['next_id']!, _nextIdMeta),
       );
     }
+    if (data.containsKey('project_id')) {
+      context.handle(
+        _projectIdMeta,
+        projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta),
+      );
+    }
+    if (data.containsKey('document_number')) {
+      context.handle(
+        _documentNumberMeta,
+        documentNumber.isAcceptableOrUnknown(
+          data['document_number']!,
+          _documentNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('preset_key')) {
+      context.handle(
+        _presetKeyMeta,
+        presetKey.isAcceptableOrUnknown(data['preset_key']!, _presetKeyMeta),
+      );
+    }
     return context;
   }
 
@@ -9879,6 +10057,18 @@ class $RemindersTable extends Reminders
         DriftSqlType.string,
         data['${effectivePrefix}next_id'],
       ),
+      projectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project_id'],
+      ),
+      documentNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_number'],
+      )!,
+      presetKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}preset_key'],
+      ),
     );
   }
 
@@ -9950,6 +10140,15 @@ class Reminder extends DataClass implements Insertable<Reminder> {
   /// The next occurrence spawned when this repeating reminder was paid or skipped,
   /// so undo can remove it again.
   final String? nextId;
+
+  /// Project the reminder belongs to (projects.id), e.g. the Vehicle project's PUC.
+  final String? projectId;
+
+  /// Policy, registration or document number, kept for reference.
+  final String documentNumber;
+
+  /// Document preset the reminder was made from (lib/domain/reminders/document_presets.dart).
+  final String? presetKey;
   const Reminder({
     required this.updatedAt,
     this.deletedAt,
@@ -9979,6 +10178,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     required this.status,
     this.snoozedUntil,
     this.nextId,
+    this.projectId,
+    required this.documentNumber,
+    this.presetKey,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -10042,6 +10244,13 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     }
     if (!nullToAbsent || nextId != null) {
       map['next_id'] = Variable<String>(nextId);
+    }
+    if (!nullToAbsent || projectId != null) {
+      map['project_id'] = Variable<String>(projectId);
+    }
+    map['document_number'] = Variable<String>(documentNumber);
+    if (!nullToAbsent || presetKey != null) {
+      map['preset_key'] = Variable<String>(presetKey);
     }
     return map;
   }
@@ -10108,6 +10317,13 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       nextId: nextId == null && nullToAbsent
           ? const Value.absent()
           : Value(nextId),
+      projectId: projectId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(projectId),
+      documentNumber: Value(documentNumber),
+      presetKey: presetKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(presetKey),
     );
   }
 
@@ -10145,6 +10361,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       status: serializer.fromJson<String>(json['status']),
       snoozedUntil: serializer.fromJson<DateTime?>(json['snoozedUntil']),
       nextId: serializer.fromJson<String?>(json['nextId']),
+      projectId: serializer.fromJson<String?>(json['projectId']),
+      documentNumber: serializer.fromJson<String>(json['documentNumber']),
+      presetKey: serializer.fromJson<String?>(json['presetKey']),
     );
   }
   @override
@@ -10179,6 +10398,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       'status': serializer.toJson<String>(status),
       'snoozedUntil': serializer.toJson<DateTime?>(snoozedUntil),
       'nextId': serializer.toJson<String?>(nextId),
+      'projectId': serializer.toJson<String?>(projectId),
+      'documentNumber': serializer.toJson<String>(documentNumber),
+      'presetKey': serializer.toJson<String?>(presetKey),
     };
   }
 
@@ -10211,6 +10433,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     String? status,
     Value<DateTime?> snoozedUntil = const Value.absent(),
     Value<String?> nextId = const Value.absent(),
+    Value<String?> projectId = const Value.absent(),
+    String? documentNumber,
+    Value<String?> presetKey = const Value.absent(),
   }) => Reminder(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -10242,6 +10467,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     status: status ?? this.status,
     snoozedUntil: snoozedUntil.present ? snoozedUntil.value : this.snoozedUntil,
     nextId: nextId.present ? nextId.value : this.nextId,
+    projectId: projectId.present ? projectId.value : this.projectId,
+    documentNumber: documentNumber ?? this.documentNumber,
+    presetKey: presetKey.present ? presetKey.value : this.presetKey,
   );
   Reminder copyWithCompanion(RemindersCompanion data) {
     return Reminder(
@@ -10289,6 +10517,11 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           ? data.snoozedUntil.value
           : this.snoozedUntil,
       nextId: data.nextId.present ? data.nextId.value : this.nextId,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      documentNumber: data.documentNumber.present
+          ? data.documentNumber.value
+          : this.documentNumber,
+      presetKey: data.presetKey.present ? data.presetKey.value : this.presetKey,
     );
   }
 
@@ -10322,7 +10555,10 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           ..write('notifyAtMinute: $notifyAtMinute, ')
           ..write('status: $status, ')
           ..write('snoozedUntil: $snoozedUntil, ')
-          ..write('nextId: $nextId')
+          ..write('nextId: $nextId, ')
+          ..write('projectId: $projectId, ')
+          ..write('documentNumber: $documentNumber, ')
+          ..write('presetKey: $presetKey')
           ..write(')'))
         .toString();
   }
@@ -10357,6 +10593,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     status,
     snoozedUntil,
     nextId,
+    projectId,
+    documentNumber,
+    presetKey,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -10389,7 +10628,10 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           other.notifyAtMinute == this.notifyAtMinute &&
           other.status == this.status &&
           other.snoozedUntil == this.snoozedUntil &&
-          other.nextId == this.nextId);
+          other.nextId == this.nextId &&
+          other.projectId == this.projectId &&
+          other.documentNumber == this.documentNumber &&
+          other.presetKey == this.presetKey);
 }
 
 class RemindersCompanion extends UpdateCompanion<Reminder> {
@@ -10421,6 +10663,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
   final Value<String> status;
   final Value<DateTime?> snoozedUntil;
   final Value<String?> nextId;
+  final Value<String?> projectId;
+  final Value<String> documentNumber;
+  final Value<String?> presetKey;
   final Value<int> rowid;
   const RemindersCompanion({
     this.updatedAt = const Value.absent(),
@@ -10451,6 +10696,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     this.status = const Value.absent(),
     this.snoozedUntil = const Value.absent(),
     this.nextId = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.documentNumber = const Value.absent(),
+    this.presetKey = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RemindersCompanion.insert({
@@ -10482,6 +10730,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     this.status = const Value.absent(),
     this.snoozedUntil = const Value.absent(),
     this.nextId = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.documentNumber = const Value.absent(),
+    this.presetKey = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        kind = Value(kind);
@@ -10514,6 +10765,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Expression<String>? status,
     Expression<DateTime>? snoozedUntil,
     Expression<String>? nextId,
+    Expression<String>? projectId,
+    Expression<String>? documentNumber,
+    Expression<String>? presetKey,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -10545,6 +10799,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       if (status != null) 'status': status,
       if (snoozedUntil != null) 'snoozed_until': snoozedUntil,
       if (nextId != null) 'next_id': nextId,
+      if (projectId != null) 'project_id': projectId,
+      if (documentNumber != null) 'document_number': documentNumber,
+      if (presetKey != null) 'preset_key': presetKey,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -10578,6 +10835,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Value<String>? status,
     Value<DateTime?>? snoozedUntil,
     Value<String?>? nextId,
+    Value<String?>? projectId,
+    Value<String>? documentNumber,
+    Value<String?>? presetKey,
     Value<int>? rowid,
   }) {
     return RemindersCompanion(
@@ -10609,6 +10869,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       status: status ?? this.status,
       snoozedUntil: snoozedUntil ?? this.snoozedUntil,
       nextId: nextId ?? this.nextId,
+      projectId: projectId ?? this.projectId,
+      documentNumber: documentNumber ?? this.documentNumber,
+      presetKey: presetKey ?? this.presetKey,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -10700,6 +10963,15 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     if (nextId.present) {
       map['next_id'] = Variable<String>(nextId.value);
     }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (documentNumber.present) {
+      map['document_number'] = Variable<String>(documentNumber.value);
+    }
+    if (presetKey.present) {
+      map['preset_key'] = Variable<String>(presetKey.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -10737,6 +11009,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
           ..write('status: $status, ')
           ..write('snoozedUntil: $snoozedUntil, ')
           ..write('nextId: $nextId, ')
+          ..write('projectId: $projectId, ')
+          ..write('documentNumber: $documentNumber, ')
+          ..write('presetKey: $presetKey, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -11455,6 +11730,28 @@ class $RecurringRulesTable extends RecurringRules
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _groupSplitMeta = const VerificationMeta(
+    'groupSplit',
+  );
+  @override
+  late final GeneratedColumn<String> groupSplit = GeneratedColumn<String>(
+    'group_split',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
   late final GeneratedColumn<String> status = GeneratedColumn<String>(
@@ -11505,6 +11802,8 @@ class $RecurringRulesTable extends RecurringRules
     autoPost,
     remindDaysBefore,
     isSubscription,
+    groupId,
+    groupSplit,
     status,
     createdAt,
   ];
@@ -11704,6 +12003,18 @@ class $RecurringRulesTable extends RecurringRules
         ),
       );
     }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    }
+    if (data.containsKey('group_split')) {
+      context.handle(
+        _groupSplitMeta,
+        groupSplit.isAcceptableOrUnknown(data['group_split']!, _groupSplitMeta),
+      );
+    }
     if (data.containsKey('status')) {
       context.handle(
         _statusMeta,
@@ -11829,6 +12140,14 @@ class $RecurringRulesTable extends RecurringRules
         DriftSqlType.bool,
         data['${effectivePrefix}is_subscription'],
       )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      ),
+      groupSplit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_split'],
+      ),
       status: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}status'],
@@ -11895,6 +12214,12 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
   final String remindDaysBefore;
   final bool isSubscription;
 
+  /// Group a recurring group expense (rent, maid, wifi) is posted to.
+  final String? groupId;
+
+  /// How a group rule splits and who pays: `GroupExpenseTemplate` as JSON.
+  final String? groupSplit;
+
   /// active | paused | ended
   final String status;
   final DateTime createdAt;
@@ -11925,6 +12250,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     required this.autoPost,
     required this.remindDaysBefore,
     required this.isSubscription,
+    this.groupId,
+    this.groupSplit,
     required this.status,
     required this.createdAt,
   });
@@ -11979,6 +12306,12 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     map['auto_post'] = Variable<bool>(autoPost);
     map['remind_days_before'] = Variable<String>(remindDaysBefore);
     map['is_subscription'] = Variable<bool>(isSubscription);
+    if (!nullToAbsent || groupId != null) {
+      map['group_id'] = Variable<String>(groupId);
+    }
+    if (!nullToAbsent || groupSplit != null) {
+      map['group_split'] = Variable<String>(groupSplit);
+    }
     map['status'] = Variable<String>(status);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -12034,6 +12367,12 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       autoPost: Value(autoPost),
       remindDaysBefore: Value(remindDaysBefore),
       isSubscription: Value(isSubscription),
+      groupId: groupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(groupId),
+      groupSplit: groupSplit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(groupSplit),
       status: Value(status),
       createdAt: Value(createdAt),
     );
@@ -12071,6 +12410,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       autoPost: serializer.fromJson<bool>(json['autoPost']),
       remindDaysBefore: serializer.fromJson<String>(json['remindDaysBefore']),
       isSubscription: serializer.fromJson<bool>(json['isSubscription']),
+      groupId: serializer.fromJson<String?>(json['groupId']),
+      groupSplit: serializer.fromJson<String?>(json['groupSplit']),
       status: serializer.fromJson<String>(json['status']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -12105,6 +12446,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       'autoPost': serializer.toJson<bool>(autoPost),
       'remindDaysBefore': serializer.toJson<String>(remindDaysBefore),
       'isSubscription': serializer.toJson<bool>(isSubscription),
+      'groupId': serializer.toJson<String?>(groupId),
+      'groupSplit': serializer.toJson<String?>(groupSplit),
       'status': serializer.toJson<String>(status),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -12137,6 +12480,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     bool? autoPost,
     String? remindDaysBefore,
     bool? isSubscription,
+    Value<String?> groupId = const Value.absent(),
+    Value<String?> groupSplit = const Value.absent(),
     String? status,
     DateTime? createdAt,
   }) => RecurringRule(
@@ -12166,6 +12511,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     autoPost: autoPost ?? this.autoPost,
     remindDaysBefore: remindDaysBefore ?? this.remindDaysBefore,
     isSubscription: isSubscription ?? this.isSubscription,
+    groupId: groupId.present ? groupId.value : this.groupId,
+    groupSplit: groupSplit.present ? groupSplit.value : this.groupSplit,
     status: status ?? this.status,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -12213,6 +12560,10 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
       isSubscription: data.isSubscription.present
           ? data.isSubscription.value
           : this.isSubscription,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      groupSplit: data.groupSplit.present
+          ? data.groupSplit.value
+          : this.groupSplit,
       status: data.status.present ? data.status.value : this.status,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -12247,6 +12598,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
           ..write('autoPost: $autoPost, ')
           ..write('remindDaysBefore: $remindDaysBefore, ')
           ..write('isSubscription: $isSubscription, ')
+          ..write('groupId: $groupId, ')
+          ..write('groupSplit: $groupSplit, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -12281,6 +12634,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
     autoPost,
     remindDaysBefore,
     isSubscription,
+    groupId,
+    groupSplit,
     status,
     createdAt,
   ]);
@@ -12314,6 +12669,8 @@ class RecurringRule extends DataClass implements Insertable<RecurringRule> {
           other.autoPost == this.autoPost &&
           other.remindDaysBefore == this.remindDaysBefore &&
           other.isSubscription == this.isSubscription &&
+          other.groupId == this.groupId &&
+          other.groupSplit == this.groupSplit &&
           other.status == this.status &&
           other.createdAt == this.createdAt);
 }
@@ -12345,6 +12702,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
   final Value<bool> autoPost;
   final Value<String> remindDaysBefore;
   final Value<bool> isSubscription;
+  final Value<String?> groupId;
+  final Value<String?> groupSplit;
   final Value<String> status;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -12375,6 +12734,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     this.autoPost = const Value.absent(),
     this.remindDaysBefore = const Value.absent(),
     this.isSubscription = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.groupSplit = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -12406,6 +12767,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     this.autoPost = const Value.absent(),
     this.remindDaysBefore = const Value.absent(),
     this.isSubscription = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.groupSplit = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -12441,6 +12804,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     Expression<bool>? autoPost,
     Expression<String>? remindDaysBefore,
     Expression<bool>? isSubscription,
+    Expression<String>? groupId,
+    Expression<String>? groupSplit,
     Expression<String>? status,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -12472,6 +12837,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
       if (autoPost != null) 'auto_post': autoPost,
       if (remindDaysBefore != null) 'remind_days_before': remindDaysBefore,
       if (isSubscription != null) 'is_subscription': isSubscription,
+      if (groupId != null) 'group_id': groupId,
+      if (groupSplit != null) 'group_split': groupSplit,
       if (status != null) 'status': status,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -12505,6 +12872,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     Value<bool>? autoPost,
     Value<String>? remindDaysBefore,
     Value<bool>? isSubscription,
+    Value<String?>? groupId,
+    Value<String?>? groupSplit,
     Value<String>? status,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
@@ -12536,6 +12905,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
       autoPost: autoPost ?? this.autoPost,
       remindDaysBefore: remindDaysBefore ?? this.remindDaysBefore,
       isSubscription: isSubscription ?? this.isSubscription,
+      groupId: groupId ?? this.groupId,
+      groupSplit: groupSplit ?? this.groupSplit,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -12623,6 +12994,12 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
     if (isSubscription.present) {
       map['is_subscription'] = Variable<bool>(isSubscription.value);
     }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (groupSplit.present) {
+      map['group_split'] = Variable<String>(groupSplit.value);
+    }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
     }
@@ -12664,6 +13041,8 @@ class RecurringRulesCompanion extends UpdateCompanion<RecurringRule> {
           ..write('autoPost: $autoPost, ')
           ..write('remindDaysBefore: $remindDaysBefore, ')
           ..write('isSubscription: $isSubscription, ')
+          ..write('groupId: $groupId, ')
+          ..write('groupSplit: $groupSplit, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -13758,6 +14137,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'entries_recurring_id',
     'CREATE INDEX entries_recurring_id ON entries (recurring_id)',
   );
+  late final Index smsLogTransactionKey = Index(
+    'sms_log_transaction_key',
+    'CREATE INDEX sms_log_transaction_key ON sms_log (transaction_key)',
+  );
   late final Index projectFieldsProjectId = Index(
     'project_fields_project_id',
     'CREATE INDEX project_fields_project_id ON project_fields (project_id)',
@@ -13773,6 +14156,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index remindersStatusDue = Index(
     'reminders_status_due',
     'CREATE INDEX reminders_status_due ON reminders (status, due_at)',
+  );
+  late final Index remindersProjectId = Index(
+    'reminders_project_id',
+    'CREATE INDEX reminders_project_id ON reminders (project_id)',
   );
   late final Index entryPayersEntryId = Index(
     'entry_payers_entry_id',
@@ -13811,10 +14198,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     itemAssignments,
     entriesProjectId,
     entriesRecurringId,
+    smsLogTransactionKey,
     projectFieldsProjectId,
     entryFieldValuesEntryId,
     remindersGroupId,
     remindersStatusDue,
+    remindersProjectId,
     entryPayersEntryId,
     groupActivitiesGroupId,
     itemAssignmentsEntryItemId,
@@ -16963,6 +17352,8 @@ typedef $$SmsLogTableCreateCompanionBuilder = SmsLogCompanion Function({
   required String status,
   Value<String?> parsedJson,
   Value<String?> entryId,
+  Value<String?> matchedReminderId,
+  Value<String?> transactionKey,
   Value<DateTime> createdAt,
   Value<DateTime?> clearedAt,
   Value<int> rowid,
@@ -16975,6 +17366,8 @@ typedef $$SmsLogTableUpdateCompanionBuilder = SmsLogCompanion Function({
   Value<String> status,
   Value<String?> parsedJson,
   Value<String?> entryId,
+  Value<String?> matchedReminderId,
+  Value<String?> transactionKey,
   Value<DateTime> createdAt,
   Value<DateTime?> clearedAt,
   Value<int> rowid,
@@ -17021,6 +17414,16 @@ class $$SmsLogTableFilterComposer
 
   ColumnFilters<String> get entryId => $composableBuilder(
     column: $table.entryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get matchedReminderId => $composableBuilder(
+    column: $table.matchedReminderId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get transactionKey => $composableBuilder(
+    column: $table.transactionKey,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -17079,6 +17482,16 @@ class $$SmsLogTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get matchedReminderId => $composableBuilder(
+    column: $table.matchedReminderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get transactionKey => $composableBuilder(
+    column: $table.transactionKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -17124,6 +17537,16 @@ class $$SmsLogTableAnnotationComposer
   GeneratedColumn<String> get entryId =>
       $composableBuilder(column: $table.entryId, builder: (column) => column);
 
+  GeneratedColumn<String> get matchedReminderId => $composableBuilder(
+    column: $table.matchedReminderId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get transactionKey => $composableBuilder(
+    column: $table.transactionKey,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -17166,6 +17589,8 @@ class $$SmsLogTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String?> parsedJson = const Value.absent(),
                 Value<String?> entryId = const Value.absent(),
+                Value<String?> matchedReminderId = const Value.absent(),
+                Value<String?> transactionKey = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> clearedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -17177,6 +17602,8 @@ class $$SmsLogTableTableManager
                 status: status,
                 parsedJson: parsedJson,
                 entryId: entryId,
+                matchedReminderId: matchedReminderId,
+                transactionKey: transactionKey,
                 createdAt: createdAt,
                 clearedAt: clearedAt,
                 rowid: rowid,
@@ -17190,6 +17617,8 @@ class $$SmsLogTableTableManager
                 required String status,
                 Value<String?> parsedJson = const Value.absent(),
                 Value<String?> entryId = const Value.absent(),
+                Value<String?> matchedReminderId = const Value.absent(),
+                Value<String?> transactionKey = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> clearedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -17201,6 +17630,8 @@ class $$SmsLogTableTableManager
                 status: status,
                 parsedJson: parsedJson,
                 entryId: entryId,
+                matchedReminderId: matchedReminderId,
+                transactionKey: transactionKey,
                 createdAt: createdAt,
                 clearedAt: clearedAt,
                 rowid: rowid,
@@ -18278,6 +18709,9 @@ typedef $$RemindersTableCreateCompanionBuilder = RemindersCompanion Function({
   Value<String> status,
   Value<DateTime?> snoozedUntil,
   Value<String?> nextId,
+  Value<String?> projectId,
+  Value<String> documentNumber,
+  Value<String?> presetKey,
   Value<int> rowid,
 });
 typedef $$RemindersTableUpdateCompanionBuilder = RemindersCompanion Function({
@@ -18309,6 +18743,9 @@ typedef $$RemindersTableUpdateCompanionBuilder = RemindersCompanion Function({
   Value<String> status,
   Value<DateTime?> snoozedUntil,
   Value<String?> nextId,
+  Value<String?> projectId,
+  Value<String> documentNumber,
+  Value<String?> presetKey,
   Value<int> rowid,
 });
 
@@ -18458,6 +18895,21 @@ class $$RemindersTableFilterComposer
 
   ColumnFilters<String> get nextId => $composableBuilder(
     column: $table.nextId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get presetKey => $composableBuilder(
+    column: $table.presetKey,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -18610,6 +19062,21 @@ class $$RemindersTableOrderingComposer
     column: $table.nextId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get presetKey => $composableBuilder(
+    column: $table.presetKey,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RemindersTableAnnotationComposer
@@ -18720,6 +19187,17 @@ class $$RemindersTableAnnotationComposer
 
   GeneratedColumn<String> get nextId =>
       $composableBuilder(column: $table.nextId, builder: (column) => column);
+
+  GeneratedColumn<String> get projectId =>
+      $composableBuilder(column: $table.projectId, builder: (column) => column);
+
+  GeneratedColumn<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get presetKey =>
+      $composableBuilder(column: $table.presetKey, builder: (column) => column);
 }
 
 class $$RemindersTableTableManager
@@ -18778,6 +19256,9 @@ class $$RemindersTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<DateTime?> snoozedUntil = const Value.absent(),
                 Value<String?> nextId = const Value.absent(),
+                Value<String?> projectId = const Value.absent(),
+                Value<String> documentNumber = const Value.absent(),
+                Value<String?> presetKey = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RemindersCompanion(
                 updatedAt: updatedAt,
@@ -18808,6 +19289,9 @@ class $$RemindersTableTableManager
                 status: status,
                 snoozedUntil: snoozedUntil,
                 nextId: nextId,
+                projectId: projectId,
+                documentNumber: documentNumber,
+                presetKey: presetKey,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -18840,6 +19324,9 @@ class $$RemindersTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<DateTime?> snoozedUntil = const Value.absent(),
                 Value<String?> nextId = const Value.absent(),
+                Value<String?> projectId = const Value.absent(),
+                Value<String> documentNumber = const Value.absent(),
+                Value<String?> presetKey = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RemindersCompanion.insert(
                 updatedAt: updatedAt,
@@ -18870,6 +19357,9 @@ class $$RemindersTableTableManager
                 status: status,
                 snoozedUntil: snoozedUntil,
                 nextId: nextId,
+                projectId: projectId,
+                documentNumber: documentNumber,
+                presetKey: presetKey,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -19161,6 +19651,8 @@ typedef $$RecurringRulesTableCreateCompanionBuilder =
       Value<bool> autoPost,
       Value<String> remindDaysBefore,
       Value<bool> isSubscription,
+      Value<String?> groupId,
+      Value<String?> groupSplit,
       Value<String> status,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -19193,6 +19685,8 @@ typedef $$RecurringRulesTableUpdateCompanionBuilder =
       Value<bool> autoPost,
       Value<String> remindDaysBefore,
       Value<bool> isSubscription,
+      Value<String?> groupId,
+      Value<String?> groupSplit,
       Value<String> status,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -19334,6 +19828,16 @@ class $$RecurringRulesTableFilterComposer
 
   ColumnFilters<bool> get isSubscription => $composableBuilder(
     column: $table.isSubscription,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get groupSplit => $composableBuilder(
+    column: $table.groupSplit,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -19487,6 +19991,16 @@ class $$RecurringRulesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get groupSplit => $composableBuilder(
+    column: $table.groupSplit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get status => $composableBuilder(
     column: $table.status,
     builder: (column) => ColumnOrderings(column),
@@ -19601,6 +20115,14 @@ class $$RecurringRulesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get groupId =>
+      $composableBuilder(column: $table.groupId, builder: (column) => column);
+
+  GeneratedColumn<String> get groupSplit => $composableBuilder(
+    column: $table.groupSplit,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
@@ -19667,6 +20189,8 @@ class $$RecurringRulesTableTableManager
                 Value<bool> autoPost = const Value.absent(),
                 Value<String> remindDaysBefore = const Value.absent(),
                 Value<bool> isSubscription = const Value.absent(),
+                Value<String?> groupId = const Value.absent(),
+                Value<String?> groupSplit = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -19697,6 +20221,8 @@ class $$RecurringRulesTableTableManager
                 autoPost: autoPost,
                 remindDaysBefore: remindDaysBefore,
                 isSubscription: isSubscription,
+                groupId: groupId,
+                groupSplit: groupSplit,
                 status: status,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -19729,6 +20255,8 @@ class $$RecurringRulesTableTableManager
                 Value<bool> autoPost = const Value.absent(),
                 Value<String> remindDaysBefore = const Value.absent(),
                 Value<bool> isSubscription = const Value.absent(),
+                Value<String?> groupId = const Value.absent(),
+                Value<String?> groupSplit = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -19759,6 +20287,8 @@ class $$RecurringRulesTableTableManager
                 autoPost: autoPost,
                 remindDaysBefore: remindDaysBefore,
                 isSubscription: isSubscription,
+                groupId: groupId,
+                groupSplit: groupSplit,
                 status: status,
                 createdAt: createdAt,
                 rowid: rowid,

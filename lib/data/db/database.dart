@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
@@ -6,6 +8,7 @@ import '../../domain/backup/seed_dedupe.dart';
 import '../../domain/categories/category_catalog.dart';
 import '../../domain/categories/category_packs.dart';
 import '../../domain/sms/sms_outcome.dart';
+import '../../domain/sms/sms_transaction_key.dart';
 
 part 'database.g.dart';
 
@@ -334,6 +337,7 @@ class EntryFieldValues extends Table with SyncColumns {
 /// reminders, recurring-expense prompts and the like share history and sync.
 @TableIndex(name: 'reminders_group_id', columns: {#groupId})
 @TableIndex(name: 'reminders_status_due', columns: {#status, #dueAt})
+@TableIndex(name: 'reminders_project_id', columns: {#projectId})
 class Reminders extends Table with SyncColumns {
   TextColumn get id => text()();
 
@@ -399,6 +403,17 @@ class Reminders extends Table with SyncColumns {
   /// so undo can remove it again.
   TextColumn get nextId => text().nullable()();
 
+  // Document reminders (v14): PUC, passport, insurance and other renewals.
+
+  /// Project the reminder belongs to (projects.id), e.g. the Vehicle project's PUC.
+  TextColumn get projectId => text().nullable()();
+
+  /// Policy, registration or document number, kept for reference.
+  TextColumn get documentNumber => text().withDefault(const Constant(''))();
+
+  /// Document preset the reminder was made from (lib/domain/reminders/document_presets.dart).
+  TextColumn get presetKey => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -453,6 +468,12 @@ class RecurringRules extends Table with SyncColumns {
   TextColumn get remindDaysBefore => text().withDefault(const Constant(''))();
   BoolColumn get isSubscription => boolean().withDefault(const Constant(false))();
 
+  /// Group a recurring group expense (rent, maid, wifi) is posted to.
+  TextColumn get groupId => text().nullable()();
+
+  /// How a group rule splits and who pays: `GroupExpenseTemplate` as JSON.
+  TextColumn get groupSplit => text().nullable()();
+
   /// active | paused | ended
   TextColumn get status => text().withDefault(const Constant('active'))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -461,6 +482,7 @@ class RecurringRules extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(name: 'sms_log_transaction_key', columns: {#transactionKey})
 class SmsLog extends Table {
   /// Hash of sender+body+timestamp so a message is only processed once.
   TextColumn get id => text()();
@@ -472,6 +494,13 @@ class SmsLog extends Table {
   TextColumn get status => text()();
   TextColumn get parsedJson => text().nullable()();
   TextColumn get entryId => text().nullable()();
+
+  /// Reminder this message paid, when it matched one (R2 auto-done).
+  TextColumn get matchedReminderId => text().nullable()();
+
+  /// The bank transaction this message reports (see smsTransactionKey), so
+  /// the same payment pasted again or read from the inbox is not added twice.
+  TextColumn get transactionKey => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   /// Set when the user clears the SMS history. The row stays (with its body
@@ -533,7 +562,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -600,8 +629,15 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(itemAssignments);
             await m.createIndex(itemAssignmentsEntryItemId);
           }
-          // v14: credit card statement and due days, limit and last statement.
-          if (from < 14) await _upgradeToCardDetails(m);
+          // v14: document reminders link to a project and keep a document number.
+          if (from < 14) await _upgradeToDocumentReminders(m, from);
+          // v15: recurring group expenses (groups parity) on recurring_rules.
+          if (from < 15) await _upgradeToGroupRecurring(m);
+          // v16: the reminder a bank SMS paid and the transaction each message
+          // reports (R2, auto-done on an SMS match).
+          if (from < 16) await _upgradeToSmsReminderMatch(m);
+          // v17: credit card statement and due days, limit and last statement.
+          if (from < 17) await _upgradeToCardDetails(m);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -632,7 +668,66 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// v14 step. Adds the credit card columns a table lacks; pre-release
+  /// v14 step. A v5..v13 reminders table gains the project link, document
+  /// number and preset key it lacks (a table created at v5 or later by this
+  /// version already has them), plus the project index. Checking what exists
+  /// keeps it idempotent, and it heals pre-release builds of this feature,
+  /// which added these columns as schema 7 and so skipped main's v7 recurring
+  /// step.
+  Future<void> _upgradeToDocumentReminders(Migrator m, int from) async {
+    if (from >= 5) {
+      final existing = await _columnNames('reminders');
+      for (final column in documentReminderColumns(reminders)) {
+        if (!existing.contains(column.name)) await m.addColumn(reminders, column);
+      }
+    }
+    if (!await _schemaObjectExists('index', 'reminders_project_id')) await m.createIndex(remindersProjectId);
+    if (!await _schemaObjectExists('table', 'recurring_rules')) await m.createTable(recurringRules);
+    if (!(await _columnNames('entries')).contains('recurring_id')) await m.addColumn(entries, entries.recurringId);
+    if (!await _schemaObjectExists('index', 'entries_recurring_id')) await m.createIndex(entriesRecurringId);
+  }
+
+  /// v15 step. Lets recurring rules post into a group: recurring_rules gains
+  /// the group columns it lacks (a table created at v7 or later by this version
+  /// already has them). Checking what exists keeps it idempotent, and also
+  /// heals pre-release builds of this feature, which stored these columns as
+  /// schema 8/9 and so skipped main's v8 sms_log.cleared_at step.
+  Future<void> _upgradeToGroupRecurring(Migrator m) async {
+    final ruleColumns = await _columnNames('recurring_rules');
+    for (final column in [recurringRules.groupId, recurringRules.groupSplit]) {
+      if (!ruleColumns.contains(column.name)) await m.addColumn(recurringRules, column);
+    }
+    if (!(await _columnNames('sms_log')).contains(smsLog.clearedAt.name)) await m.addColumn(smsLog, smsLog.clearedAt);
+  }
+
+  /// v16 step. Adds the SMS-to-reminder link and the transaction key with its
+  /// index, then backfills keys from stored parses. Checking what exists keeps
+  /// it idempotent, and it heals pre-release builds of this feature, which
+  /// added these columns as schema 7 and so skipped main's v7 recurring step.
+  Future<void> _upgradeToSmsReminderMatch(Migrator m) async {
+    final smsColumns = await _columnNames('sms_log');
+    if (!smsColumns.contains('matched_reminder_id')) await m.addColumn(smsLog, smsLog.matchedReminderId);
+    if (!smsColumns.contains('transaction_key')) await m.addColumn(smsLog, smsLog.transactionKey);
+    if (!await _schemaObjectExists('index', 'sms_log_transaction_key')) await m.createIndex(smsLogTransactionKey);
+    if (!await _schemaObjectExists('table', 'recurring_rules')) await m.createTable(recurringRules);
+    if (!(await _columnNames('entries')).contains('recurring_id')) await m.addColumn(entries, entries.recurringId);
+    if (!await _schemaObjectExists('index', 'entries_recurring_id')) await m.createIndex(entriesRecurringId);
+    await _backfillSmsTransactionKeys();
+  }
+
+  /// Gives logged messages without one their transaction key from the stored
+  /// parse, so pasting an old SMS again is still recognised.
+  Future<void> _backfillSmsTransactionKeys() async {
+    final rows = await customSelect('SELECT id, body, parsed_json FROM sms_log WHERE parsed_json IS NOT NULL AND transaction_key IS NULL').get();
+    for (final row in rows) {
+      final parsed = jsonDecode(row.read<String>('parsed_json')) as Map<String, dynamic>;
+      final key = smsTransactionKeyForStored(row.read<String>('body'), parsed);
+      if (key == null) continue;
+      await customUpdate('UPDATE sms_log SET transaction_key = ? WHERE id = ?', variables: [Variable(key), Variable(row.read<String>('id'))]);
+    }
+  }
+
+  /// v17 step. Adds the credit card columns a table lacks; pre-release
   /// builds of card dues stored them under schema 7.
   Future<void> _upgradeToCardDetails(Migrator m) async {
     final existing = await _columnNames('accounts');
@@ -836,3 +931,6 @@ List<GeneratedColumn> dueReminderColumns($RemindersTable table) => [
       table.snoozedUntil,
       table.nextId,
     ];
+
+/// Columns v14 added to [Reminders]; a v13 database gains exactly these.
+List<GeneratedColumn> documentReminderColumns($RemindersTable table) => [table.projectId, table.documentNumber, table.presetKey];

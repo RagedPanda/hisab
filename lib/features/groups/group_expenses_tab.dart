@@ -3,14 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
+import '../../core/providers.dart';
 import '../../core/money.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/groups_repository.dart';
+import '../../domain/recurring/repeat_draft.dart';
+import '../../domain/split/group_recurring.dart';
 import '../../domain/split/group_settings.dart';
 import '../../domain/split/group_timeline.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
+import '../recurring/recurring_list_model.dart';
+import '../recurring/recurring_screen.dart';
 import '../shell/widgets/common.dart';
 import 'expense_list_model.dart';
 import 'member_display.dart';
@@ -40,6 +45,16 @@ class ExpenseListViews extends Notifier<Map<String, ExpenseListView>> {
 
 final expenseListViewsProvider = NotifierProvider<ExpenseListViews, Map<String, ExpenseListView>>(ExpenseListViews.new);
 
+/// The group's repeating expenses (rent, maid, wifi) that have not ended,
+/// grouped waiting, active, paused like the personal Recurring screen.
+final groupRecurringItemsProvider = StreamProvider.family<List<RecurringListItem>, String>((ref, groupId) {
+  final monthStartDay = ref.watch(settingsProvider.select((settings) => settings.monthStartDay));
+  return ref.watch(recurringRepositoryProvider).watchViews(groupId: groupId).map((views) => [
+        for (final item in recurringListItems(views, now: DateTime.now(), monthStartDay: monthStartDay))
+          if (item.section != RecurringSection.ended) item,
+      ]);
+});
+
 /// The group's expenses and payments, newest first, as seen by me.
 class GroupExpensesTab extends ConsumerWidget {
   const GroupExpensesTab({
@@ -52,6 +67,7 @@ class GroupExpensesTab extends ConsumerWidget {
     required this.timelineByEntryId,
     required this.settledUpTo,
     required this.myMemberId,
+    required this.activeMemberIds,
     required this.nameOf,
     required this.categoryById,
     required this.symbol,
@@ -69,6 +85,9 @@ class GroupExpensesTab extends ConsumerWidget {
   final Map<String, TimelineExpense> timelineByEntryId;
   final DateTime? settledUpTo;
   final String? myMemberId;
+
+  /// Members still in the group, for each repeating rule's "your share".
+  final Set<String> activeMemberIds;
   final String Function(String) nameOf;
   final Map<String, Category> categoryById;
   final String symbol;
@@ -77,8 +96,9 @@ class GroupExpensesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final repeating = ref.watch(groupRecurringItemsProvider(groupId)).value ?? const <RecurringListItem>[];
     final notesCard = notes.trim().isEmpty ? null : _NotesCard(notes: notes.trim(), onTap: () => context.push('/groups/$groupId/settings'));
-    if (entries.isEmpty && settlements.isEmpty) {
+    if (entries.isEmpty && settlements.isEmpty && repeating.isEmpty) {
       final empty = EmptyState(icon: Icons.receipt_long_outlined, title: l10n.noGroupExpensesTitle, message: _emptyMessage(l10n));
       if (notesCard == null) return empty;
       return ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 96), children: [notesCard, empty]);
@@ -105,6 +125,25 @@ class GroupExpensesTab extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
       children: [
         ?notesCard,
+        if (repeating.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+            child: Text(l10n.groupRecurringUpcoming, style: Theme.of(context).textTheme.titleSmall),
+          ),
+          for (final (index, item) in repeating.indexed) ...[
+            // Section labels (Paused, Waiting) as on the personal Recurring screen;
+            // a plain list of active rules needs none.
+            if (index == 0 ? item.section != RecurringSection.active : repeating[index - 1].section != item.section)
+              SectionHeader(recurringSectionLabel(l10n, item.section), padding: const EdgeInsets.fromLTRB(4, 4, 4, 4)),
+            RecurringRuleCard(
+              key: ValueKey('group.recurring.${item.view.rule.id}'),
+              item: item,
+              symbol: symbol,
+              yourShareMinor: myShareOfGroupRule(item.view.rule.groupSplit, amountMinor: item.view.rule.amountMinor, activeMemberIds: activeMemberIds, myMemberId: myMemberId),
+            ),
+          ],
+          const SizedBox(height: 8),
+        ],
         Wrap(
           spacing: 8,
           children: [

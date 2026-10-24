@@ -110,4 +110,23 @@ void main() {
     expect(ReminderKind.values.where((k) => !k.isMoney), [ReminderKind.document, ReminderKind.custom]);
     expect(ReminderRepeat.fromKey('nonsense'), ReminderRepeat.once);
   });
+
+  group('planOccurrenceAlerts', () {
+    final now = DateTime(2026, 10, 26, 10);
+    final weeks = [for (var day = 26; day <= 47; day += 7) DateTime(2026, 10, day, 9)];
+
+    test('posts every future occurrence with its own id and drops past ones', () {
+      final alerts = planOccurrenceAlerts(reminderId: 'settle_schedule_g1', fireTimes: weeks, now: now);
+      expect(alerts.map((alert) => alert.fireAt), weeks.skip(1));
+      expect(alerts.map((alert) => alert.notificationId).toSet(), hasLength(3));
+      expect(allNotificationIdsFor('settle_schedule_g1', const [0]), containsAll(alerts.map((alert) => alert.notificationId)));
+    });
+
+    test('a snooze replaces the occurrences before it and keeps later ones', () {
+      final snoozedUntil = DateTime(2026, 11, 3, 9);
+      final alerts = planOccurrenceAlerts(reminderId: 'settle_schedule_g1', fireTimes: weeks, snoozedUntil: snoozedUntil, now: now);
+      expect(alerts.map((alert) => alert.fireAt), [snoozedUntil, weeks[2], weeks[3]]);
+      expect(alerts.first.daysBefore, kSnoozeSlot);
+    });
+  });
 }

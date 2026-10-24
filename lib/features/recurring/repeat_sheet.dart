@@ -5,8 +5,10 @@ import '../../domain/recurring/recurrence.dart';
 import '../../domain/recurring/repeat_draft.dart';
 import '../../l10n/l10n.dart';
 
-/// "Every month on day 5, 12 times" for [draft] starting on [start].
-String repeatSummary(AppLocalizations l10n, RepeatDraft draft, DateTime start, {String? locale}) {
+/// "Every month on day 5, 12 times" for [draft] starting on [start]. A saved
+/// rule passes its configured [dayOfMonth]: [start] is then a due date that a
+/// short month or a weekend shift may have moved off that day.
+String repeatSummary(AppLocalizations l10n, RepeatDraft draft, DateTime start, {String? locale, int? dayOfMonth}) {
   final interval = draft.interval < 1 ? 1 : draft.interval;
   final every = switch (draft.frequency) {
     RecurrenceFrequency.daily => l10n.recurringEveryDays(interval),
@@ -17,7 +19,7 @@ String repeatSummary(AppLocalizations l10n, RepeatDraft draft, DateTime start, {
   final anchor = switch (draft.frequency) {
     RecurrenceFrequency.daily => null,
     RecurrenceFrequency.weekly => l10n.recurringOnWeekday(formatWeekday(start, locale: locale)),
-    RecurrenceFrequency.monthly => draft.lastDayOfMonth ? l10n.recurringOnLastDay : l10n.recurringOnDay(start.day),
+    RecurrenceFrequency.monthly => draft.lastDayOfMonth ? l10n.recurringOnLastDay : l10n.recurringOnDay(dayOfMonth != null && dayOfMonth > 0 ? dayOfMonth : start.day),
     RecurrenceFrequency.yearly => l10n.recurringOnDate(formatDayMonth(start, locale: locale)),
   };
   final ending = switch (draft.end) {

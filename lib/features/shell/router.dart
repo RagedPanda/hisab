@@ -16,10 +16,14 @@ import '../projects/project_detail_screen.dart';
 import '../projects/project_form_screen.dart';
 import '../projects/project_templates_screen.dart';
 import '../projects/projects_screen.dart';
+import '../salary/salary_setup_screen.dart';
+import '../salary/salary_reminder.dart';
 import '../settings/settings_screen.dart';
 import '../reminders/reminders_screen.dart';
 import '../sms/sms_history_screen.dart';
 import '../sms/sms_review_screen.dart';
+import '../upcoming/upcoming_calendar_screen.dart';
+import '../upcoming/upcoming_routes.dart';
 import '../sms/sms_screen.dart';
 import '../subscriptions/subscription_form_screen.dart';
 import '../subscriptions/subscriptions_screen.dart';
@@ -73,6 +77,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/categories', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoriesScreen()),
     GoRoute(path: '/categories/packs', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoryPacksScreen()),
     GoRoute(path: '/accounts', parentNavigatorKey: _rootKey, builder: (_, _) => const AccountsScreen()),
+    GoRoute(path: kSalaryLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const SalarySetupScreen()),
     GoRoute(path: '/budgets', parentNavigatorKey: _rootKey, builder: (_, _) => const BudgetsScreen()),
     GoRoute(
       path: '/recurring',
@@ -115,6 +120,7 @@ final appRouter = GoRouter(
     ),
     GoRoute(path: '/reminders', parentNavigatorKey: _rootKey, builder: (_, _) => const RemindersScreen()),
     GoRoute(path: '/reminders/:id', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: RemindersScreen(highlightId: state.pathParameters['id']))),
+    GoRoute(path: kUpcomingCalendarRoute, parentNavigatorKey: _rootKey, builder: (_, _) => const UpcomingCalendarScreen()),
     GoRoute(path: '/sms', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: SmsScreen(sharedText: state.uri.queryParameters['text']))),
     GoRoute(path: '/sms/review', parentNavigatorKey: _rootKey, builder: (_, _) => const HomeFallbackPop(child: SmsReviewScreen())),
     GoRoute(path: '/sms/history', parentNavigatorKey: _rootKey, builder: (_, _) => const SmsHistoryScreen()),

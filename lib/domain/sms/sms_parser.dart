@@ -417,7 +417,8 @@ final _sharedCounterparty = <RegExp>[
   RegExp(r'\b(?:to|from|by)?\s*vpa\s*[:\-]?\s*([\w.\-]+@[\w]+)', caseSensitive: false),
   RegExp(r'\b(?:to|from|by)\s+([\w.\-]+@[\w]+)', caseSensitive: false),
   RegExp(';\\s*$_name\\s+credited', caseSensitive: false),
-  RegExp('\\bupi[-/]\\d+[-/]$_name(?:(?=/)|$_nameEnd)', caseSensitive: false),
+  // "UPI/629.../SHOP" and Axis "UPI/P2M/629.../CHAAYOS" (P2M merchant, P2A person).
+  RegExp('\\bupi[-/](?:p2[am][-/])?\\d+[-/]$_name(?:(?=/)|$_nameEnd)', caseSensitive: false),
   RegExp('\\bneft\\s*cr[-/]\\w+[-/]$_name(?=[-/.]|\$)', caseSensitive: false),
   RegExp('\\binfo\\s*[:\\-]?\\s*(?:[A-Za-z]{2,5}[*/\\-])?(?:\\w*[*/\\-])?$_name(?=[*/.]|\\s+(?:on|avl|available|bal)\\b|\$)', caseSensitive: false),
 ];

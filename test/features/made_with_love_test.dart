@@ -22,7 +22,7 @@ Finder get _redHeart => find.byWidgetPredicate((widget) => widget is Icon && wid
 
 void main() {
   testWidgets('Settings ends with "Made with" and a red heart at 360dp', (tester) async {
-    SharedPreferences.setMockInitialValues({'onboarded': true});
+    SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR'});
     final prefs = await SharedPreferences.getInstance();
     final container = ProviderContainer(overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),

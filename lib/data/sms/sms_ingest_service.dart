@@ -95,7 +95,7 @@ class SmsIngestService {
 
   Future<SmsSyncResult> _sync({required bool autoAdd, required Duration lookback, required DateTime now}) async {
     final queued = await source.drainQueue();
-    final since = catchUpSince(now: now, cursor: cursor.read(), lastLogged: await smsLog.latestReceivedAt(), lookback: lookback);
+    final since = catchUpSince(now: now, cursor: cursor.read(), lastLogged: await smsLog.latestReceivedAt(excludingSender: RawSms.pastedSender), lookback: lookback);
     final inbox = await source.readInbox(since: since);
     final counts = <IngestStatus, int>{};
     for (final message in [...queued, ...inbox]) {

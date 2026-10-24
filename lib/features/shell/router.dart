@@ -49,15 +49,15 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/entry',
       parentNavigatorKey: _rootKey,
-      builder: (_, state) => HomeFallbackPop(
-        child: ExpenseEditorScreen(
-          entryId: state.uri.queryParameters['id'],
-          groupId: state.uri.queryParameters['group'],
-          initialKind: state.uri.queryParameters['kind'],
-          smsId: state.uri.queryParameters['sms'],
-          projectId: state.uri.queryParameters['project'],
-          reminderId: state.uri.queryParameters['reminder'],
-        ),
+      // The editor handles Back itself: it asks before discarding input and
+      // falls back to home when there is nothing to pop to (#82).
+      builder: (_, state) => ExpenseEditorScreen(
+        entryId: state.uri.queryParameters['id'],
+        groupId: state.uri.queryParameters['group'],
+        initialKind: state.uri.queryParameters['kind'],
+        smsId: state.uri.queryParameters['sms'],
+        projectId: state.uri.queryParameters['project'],
+        reminderId: state.uri.queryParameters['reminder'],
       ),
     ),
     GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(groupId: state.pathParameters['id']!)),

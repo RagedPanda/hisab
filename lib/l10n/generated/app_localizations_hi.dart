@@ -360,6 +360,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get editEntry => 'लेन-देन बदलें';
 
   @override
+  String get discardEntryTitle => 'यह लेन-देन छोड़ दें?';
+
+  @override
+  String get discardEntryBody => 'आपने जो भरा है वह खो जाएगा।';
+
+  @override
+  String get keepEditing => 'भरना जारी रखें';
+
+  @override
+  String get discard => 'छोड़ दें';
+
+  @override
   String get groupExpense => 'ग्रुप खर्च';
 
   @override
@@ -2987,6 +2999,42 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get activityAllGroups => 'सभी ग्रुप';
+
+  @override
+  String activityGroupDeleted(String actor, String name) {
+    return '$actor ने ग्रुप “$name” हटाया';
+  }
+
+  @override
+  String activityGroupRestored(String actor, String name) {
+    return '$actor ने ग्रुप “$name” वापस लाया';
+  }
+
+  @override
+  String activityGroupEdited(String actor, String name) {
+    return '$actor ने ग्रुप “$name” बदला';
+  }
+
+  @override
+  String activityGroupLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count खर्च',
+      one: '1 खर्च',
+      zero: 'कोई खर्च नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activityPaymentRestoredSnack => 'भुगतान वापस आ गया';
+
+  @override
+  String get activityGroupRestoredSnack => 'ग्रुप वापस आ गया';
+
+  @override
+  String get activityGroupDeletedSnack => 'ग्रुप हटाया गया';
 
   @override
   String recurringAddedSkipped(int added, int skipped) {

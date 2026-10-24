@@ -6,12 +6,12 @@
 /// Tests 2..8 share one in-memory database so later flows (groups, dark mode,
 /// Hindi, backup) have realistic data on screen; test 1 and 9 use their own.
 ///
-/// iOS, flow 29 (reminders; numbered 24, then 28, before main merges): the flow
+/// iOS, flow 30 (reminders; numbered 24, 28 and 29 before main merges): the flow
 /// grants provisional notification authorization itself, which iOS does
 /// silently on a simulator that has never been asked (`xcrun simctl privacy` cannot grant notifications). Manual step:
 /// if Hisab's notifications were denied on the simulator before, uninstall the
 /// app (`xcrun simctl uninstall <udid> com.sarv.hisab`) or erase the simulator
-/// first, otherwise iOS keeps the denial and flow 29 fails its first expect.
+/// first, otherwise iOS keeps the denial and flow 30 fails its first expect.
 library;
 
 import 'dart:ui' as ui;
@@ -1595,6 +1595,44 @@ void main() {
     await shoot(tester, 'all_activity');
   });
 
+  testWidgets('29 groups: delete a group, then restore it with its expenses and payments from the activity log', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final groups = fresh.read(groupsRepositoryProvider);
+    final clubId = await groups.createGroup(name: 'Book club', icon: 'book', myName: 'You', otherMembers: ['Rahul']);
+    final members = await groups.getMembers(clubId);
+    final me = members.firstWhere((member) => member.isMe).id;
+    final rahul = members.firstWhere((member) => !member.isMe).id;
+    await groups.saveGroupExpense(
+      EntriesRepository.newExpense(id: 'books', amountMinor: 80000, occurredAt: DateTime.now(), note: 'Books', groupId: clubId, paidByMemberId: me, splitMethod: 'equal'),
+      splits: [
+        SplitsCompanion.insert(id: 'books-me', entryId: 'books', memberId: me, amountMinor: 40000),
+        SplitsCompanion.insert(id: 'books-rahul', entryId: 'books', memberId: rahul, amountMinor: 40000),
+      ],
+    );
+    await groups.addSettlement(groupId: clubId, fromMemberId: rahul, toMemberId: me, amountMinor: 10000);
+    final balancesBefore = (await groups.getBalances(clubId)).net;
+    await pumpApp(tester, fresh);
+    await tapText(tester, 'Groups', frames: 12);
+    await tapText(tester, 'Book club', frames: 12);
+
+    await tapFinder(tester, find.byType(PopupMenuButton<String>));
+    await tapText(tester, 'Delete group', frames: 8);
+    await tapText(tester, 'Delete', last: true, frames: 12);
+    expect(find.text('Book club'), findsNothing);
+
+    await tapFinder(tester, find.byTooltip('Activity'), frames: 12);
+    expect(find.text('You deleted the group “Book club”'), findsOneWidget);
+    expect(find.text('1 expense'), findsOneWidget);
+    await tapFinder(tester, find.widgetWithText(TextButton, 'Restore'), frames: 12);
+    expect(find.text('Group restored'), findsOneWidget);
+    expect(find.text('You restored the group “Book club”'), findsOneWidget);
+    expect((await groups.getBalances(clubId)).net, balancesBefore, reason: 'the expense and the payment come back as they were');
+
+    await goBack(tester);
+    expect(find.text('Book club'), findsOneWidget);
+  });
+
   testWidgets('25 groups: copy a WhatsApp summary and export the ledger as CSV', (tester) async {
     final exports = <({String fileName, String csv, String subject})>[];
     final fresh = await createApp(overrides: [
@@ -1706,7 +1744,7 @@ void main() {
 
   testWidgets('27 SMS history: outcomes, filter chips, re-process, entry link, Hindi dark, clear', smsHistoryFlow);
 
-  testWidgets('29 reminders: create, real OS scheduling, mark paid with a prefilled entry, history, dark, Hindi', (tester) async {
+  testWidgets('30 reminders: create, real OS scheduling, mark paid with a prefilled entry, history, dark, Hindi', (tester) async {
     final gatewayLog = GatewayCallLog();
     final fresh = await createApp(overrides: [recordingGatewayOverride(gatewayLog)]);
     addTearDown(fresh.container.dispose);

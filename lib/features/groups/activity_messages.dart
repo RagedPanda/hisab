@@ -28,9 +28,12 @@ ActivityWords activityWords(AppLocalizations l10n, ActivityRecord activity, Acti
   return switch (activity.latest) {
     final PaymentSnapshot payment => (headline: _paymentHeadline(l10n, activity.action, actor), details: _paymentDetails(l10n, activity, payment, format)),
     final ExpenseSnapshot expense => (headline: _expenseHeadline(l10n, activity.action, actor, expenseTitle(expense, format)), details: _expenseDetails(l10n, activity, expense, format)),
-    null => activity.subject == ActivitySubject.payment
-        ? (headline: _paymentHeadline(l10n, activity.action, actor), details: const <String>[])
-        : (headline: _expenseHeadline(l10n, activity.action, actor, l10n.kindExpense), details: const <String>[]),
+    final GroupSnapshot group => (headline: _groupHeadline(l10n, activity.action, actor, group.name), details: [l10n.activityGroupLine(group.expenseIds.length)]),
+    null => switch (activity.subject) {
+        ActivitySubject.payment => (headline: _paymentHeadline(l10n, activity.action, actor), details: const <String>[]),
+        ActivitySubject.group => (headline: _groupHeadline(l10n, activity.action, actor, l10n.unknown), details: const <String>[]),
+        ActivitySubject.expense => (headline: _expenseHeadline(l10n, activity.action, actor, l10n.kindExpense), details: const <String>[]),
+      },
   };
 }
 
@@ -52,6 +55,13 @@ String _paymentHeadline(AppLocalizations l10n, ActivityAction action, String act
       ActivityAction.edited => l10n.activityPaymentEdited(actor),
       ActivityAction.deleted => l10n.activityPaymentDeleted(actor),
       ActivityAction.restored => l10n.activityPaymentRestored(actor),
+    };
+
+/// Groups only log deletions and restores; anything else reads as a change.
+String _groupHeadline(AppLocalizations l10n, ActivityAction action, String actor, String name) => switch (action) {
+      ActivityAction.deleted => l10n.activityGroupDeleted(actor, name),
+      ActivityAction.restored => l10n.activityGroupRestored(actor, name),
+      ActivityAction.added || ActivityAction.edited => l10n.activityGroupEdited(actor, name),
     };
 
 List<String> _expenseDetails(AppLocalizations l10n, ActivityRecord activity, ExpenseSnapshot expense, ActivityFormatters format) =>

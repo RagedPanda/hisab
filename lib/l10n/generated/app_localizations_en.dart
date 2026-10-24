@@ -360,6 +360,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editEntry => 'Edit entry';
 
   @override
+  String get discardEntryTitle => 'Discard this entry?';
+
+  @override
+  String get discardEntryBody => 'What you entered will be lost.';
+
+  @override
+  String get keepEditing => 'Keep editing';
+
+  @override
+  String get discard => 'Discard';
+
+  @override
   String get groupExpense => 'Group expense';
 
   @override
@@ -2997,6 +3009,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activityAllGroups => 'All groups';
+
+  @override
+  String activityGroupDeleted(String actor, String name) {
+    return '$actor deleted the group “$name”';
+  }
+
+  @override
+  String activityGroupRestored(String actor, String name) {
+    return '$actor restored the group “$name”';
+  }
+
+  @override
+  String activityGroupEdited(String actor, String name) {
+    return '$actor changed the group “$name”';
+  }
+
+  @override
+  String activityGroupLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses',
+      one: '1 expense',
+      zero: 'No expenses',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activityPaymentRestoredSnack => 'Payment restored';
+
+  @override
+  String get activityGroupRestoredSnack => 'Group restored';
+
+  @override
+  String get activityGroupDeletedSnack => 'Group deleted';
 
   @override
   String recurringAddedSkipped(int added, int skipped) {

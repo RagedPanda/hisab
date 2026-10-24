@@ -698,6 +698,30 @@ abstract class AppLocalizations {
   /// **'Edit entry'**
   String get editEntry;
 
+  /// No description provided for @discardEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this entry?'**
+  String get discardEntryTitle;
+
+  /// No description provided for @discardEntryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What you entered will be lost.'**
+  String get discardEntryBody;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditing;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
   /// No description provided for @groupExpense.
   ///
   /// In en, this message translates to:
@@ -4885,6 +4909,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All groups'**
   String get activityAllGroups;
+
+  /// No description provided for @activityGroupDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} deleted the group “{name}”'**
+  String activityGroupDeleted(String actor, String name);
+
+  /// No description provided for @activityGroupRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} restored the group “{name}”'**
+  String activityGroupRestored(String actor, String name);
+
+  /// No description provided for @activityGroupEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'{actor} changed the group “{name}”'**
+  String activityGroupEdited(String actor, String name);
+
+  /// No description provided for @activityGroupLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No expenses} =1{1 expense} other{{count} expenses}}'**
+  String activityGroupLine(int count);
+
+  /// No description provided for @activityPaymentRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment restored'**
+  String get activityPaymentRestoredSnack;
+
+  /// No description provided for @activityGroupRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Group restored'**
+  String get activityGroupRestoredSnack;
+
+  /// No description provided for @activityGroupDeletedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Group deleted'**
+  String get activityGroupDeletedSnack;
 
   /// No description provided for @recurringAddedSkipped.
   ///

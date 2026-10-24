@@ -6,6 +6,7 @@ import '../../core/money.dart';
 import '../../core/theme.dart';
 import '../../core/providers.dart';
 import '../../data/repositories/groups_repository.dart';
+import '../../domain/split/group_net.dart';
 import '../../domain/split/group_settings.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
@@ -21,7 +22,10 @@ class GroupsScreen extends ConsumerWidget {
     final summaries = ref.watch(groupSummariesProvider);
     final symbol = ref.watch(settingsProvider).currencySymbol;
     final list = summaries.value ?? const <GroupSummary>[];
-    final totals = groupTotalsInAppCurrency(list, appSymbol: symbol);
+    final totals = groupTotalsByCurrency(list, appSymbol: symbol);
+    String sideText(bool owedToMe) => [
+          for (final amount in summarySideAmounts(totals, owedToMe: owedToMe)) _unbreakable(formatMinor(amount.minor, symbol: amount.symbol)),
+        ].join(l10n.groupsTotalsSeparator);
     final active = [for (final summary in list) if (summary.group.archivedAt == null) summary];
     final archived = [for (final summary in list) if (summary.group.archivedAt != null) summary];
 
@@ -50,9 +54,9 @@ class GroupsScreen extends ConsumerWidget {
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Row(children: [
-                      Expanded(child: _Total(label: l10n.youAreOwed, value: formatMinor(totals.owedToMe, symbol: symbol), color: kIncomeColor)),
-                      Expanded(child: _Total(label: l10n.youOwe, value: formatMinor(totals.iOwe, symbol: symbol), color: kExpenseColor)),
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Expanded(child: _Total(label: l10n.youAreOwed, value: sideText(true), color: kIncomeColor)),
+                      Expanded(child: _Total(label: l10n.youOwe, value: sideText(false), color: kExpenseColor)),
                     ]),
                   ),
                 ),
@@ -76,6 +80,10 @@ class GroupsScreen extends ConsumerWidget {
     );
   }
 }
+
+/// Keeps "AED 1,400" on one line, so a narrow summary wraps only between
+/// currencies.
+String _unbreakable(String amount) => amount.replaceAll(' ', '\u00A0');
 
 class _GroupTile extends StatelessWidget {
   const _GroupTile({required this.summary, required this.appSymbol});

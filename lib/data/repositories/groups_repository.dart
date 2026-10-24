@@ -104,6 +104,14 @@ class GroupDetail {
         if (summary.group.archivedAt == null && sharesAppCurrency(currencyLabel: summary.group.currencyLabel, appSymbol: appSymbol)) summary.myNetMinor,
     ]);
 
+/// What I am owed and owe across the active groups in [summaries], one total
+/// per currency (each group's label, or [appSymbol]), app currency first.
+/// Labels are never converted, so different currencies are never added.
+List<CurrencyTotals> groupTotalsByCurrency(Iterable<GroupSummary> summaries, {required String appSymbol}) => groupNetTotalsByCurrency([
+      for (final summary in summaries)
+        if (summary.group.archivedAt == null) (symbol: groupSymbol(currencyLabel: summary.group.currencyLabel, appSymbol: appSymbol), net: summary.myNetMinor),
+    ], appSymbol: appSymbol);
+
 /// A group expense with its splits and, when several members paid, its payer
 /// rows (empty for a single payer).
 typedef GroupEntry = (Entry, List<Split>, List<EntryPayer>);

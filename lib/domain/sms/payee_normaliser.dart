@@ -89,6 +89,20 @@ String normalisePayee(String raw) {
   return readable.isEmpty ? trimmed : readable;
 }
 
+/// Whether [raw] (a VPA or a name) is one of [kKnownPayeeHandles]' merchants.
+bool isKnownMerchantPayee(String raw) {
+  final trimmed = raw.trim();
+  final local = isVpa(trimmed) ? trimmed.substring(0, trimmed.indexOf('@')) : trimmed;
+  return _knownName(local) != null;
+}
+
+/// Whether [raw] is a VPA with no readable name in it (merchant QR codes,
+/// phone-number handles), which [normalisePayee] returns unchanged.
+bool isOpaqueVpa(String raw) {
+  final trimmed = raw.trim();
+  return isVpa(trimmed) && _opaqueHandle.hasMatch(trimmed.substring(0, trimmed.indexOf('@')));
+}
+
 String? _knownName(String local) {
   final lower = local.toLowerCase();
   final direct = kKnownPayeeHandles[lower];

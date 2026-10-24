@@ -85,6 +85,7 @@ class _HeroContent extends StatelessWidget {
                   _AnimatedAmount(minor: summary.expense, symbol: symbol, style: theme.textTheme.displaySmall?.copyWith(color: foreground, fontWeight: FontWeight.w700).tabular),
                   const SizedBox(height: 12),
                   if (summary.isEmpty) _EmptyRow(foreground: foreground) else _StatsRow(summary: summary, symbol: symbol, foreground: foreground),
+                  _SafeToSpendLine(symbol: symbol, foreground: foreground),
                 ],
               ),
             ),
@@ -162,6 +163,54 @@ class _StatsRow extends StatelessWidget {
         Expanded(child: _Stat(label: l10n.dailyAverage, value: l10n.perDay(formatMinor(summary.dailyAverageMinor, symbol: symbol, showDecimals: false)), foreground: foreground)),
         _MonthProgressRing(fraction: summary.elapsedFraction, elapsed: summary.daysElapsed, total: summary.daysInMonth, foreground: foreground),
       ],
+    );
+  }
+}
+
+/// "Safe to spend ₹Y/day" under the month's figures, only with an overall
+/// monthly budget; at ₹0 it adds a short over-budget hint.
+class _SafeToSpendLine extends ConsumerWidget {
+  const _SafeToSpendLine({required this.symbol, required this.foreground});
+  final String symbol;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final safe = ref.watch(safeToSpendProvider).value;
+    if (safe == null) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final style = theme.textTheme.labelLarge?.copyWith(color: foreground);
+    return Padding(
+      key: kSafeToSpendKey,
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        children: [
+          Icon(Icons.savings_outlined, size: 16, color: foreground.withValues(alpha: 0.85)),
+          const SizedBox(width: 6),
+          // Shrinks rather than ellipsises, so the amount is never cut off.
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l10n.safeToSpendPerDay(formatMinor(safe.perDayMinor, symbol: symbol, showDecimals: false)),
+                maxLines: 1,
+                style: style?.tabular,
+              ),
+            ),
+          ),
+          if (safe.isOver) ...[
+            const SizedBox(width: 8),
+            // Tint the pill, not the text, as the comparison pill does.
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(color: kExpenseColor.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(999)),
+              child: Text(l10n.safeToSpendOverBudget, maxLines: 1, style: theme.textTheme.labelMedium?.copyWith(color: foreground, fontWeight: FontWeight.w600)),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

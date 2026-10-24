@@ -13,6 +13,7 @@ import '../../data/repositories/groups_repository.dart';
 import '../../data/repositories/projects_repository.dart';
 import '../../domain/accounts/account_label.dart';
 import '../../domain/budget/budget_math.dart';
+import '../../domain/budget/safe_to_spend.dart';
 import '../../domain/categories/category_filter.dart';
 import '../../domain/ledger/personal_totals.dart';
 import '../../domain/projects/project_math.dart';
@@ -151,6 +152,23 @@ final budgetsOverviewProvider = Provider<AsyncValue<BudgetsOverview>>((ref) {
     return BudgetsOverview(shown: rows.shown, more: rows.more);
   });
 });
+
+/// "Safe to spend per day" for the hero card: the overall monthly budget's
+/// remainder over the days left in the cycle; null without such a budget or
+/// on a month other than the current one.
+final safeToSpendProvider = Provider<AsyncValue<SafeToSpend?>>((ref) => combineAsync(
+      ref.watch(budgetsOverviewProvider),
+      ref.watch(dashboardLedgerProvider),
+      (overview, ledger) {
+        final overall = overview.shown.where((view) => view.isOverall).firstOrNull;
+        return safeToSpend(
+          limitMinor: overall?.budget.amountMinor,
+          spentMinor: overall?.progress.spentMinor ?? 0,
+          cycle: ledger.range,
+          now: DateTime.now(),
+        );
+      },
+    ));
 
 // Accounts -------------------------------------------------------------------
 

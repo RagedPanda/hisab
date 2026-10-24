@@ -167,10 +167,7 @@ ParsedTransaction? parseBankSms({
 
   final currency = (amountMatch == null ? null : _currencyCodeOf(amountMatch)) ?? 'INR';
 
-  final isCreditCard = (lower.contains('credit card') && !_paysCardBillFromAccount(lower)) ||
-      lower.contains('credit limit') ||
-      limitMatch != null ||
-      (RegExp(r'\bcard\b').hasMatch(lower) && !lower.contains('debit card') && !lower.contains('a/c'));
+  final isCreditCard = _isCreditCard(lower, hasLimit: limitMatch != null, hasBalance: balanceMatch != null);
   final instrument = _instrument(lower);
   final kind = _kind(
     lower: lower,
@@ -237,6 +234,18 @@ final _bankAccountWord = RegExp(r'\ba/c|\bacct\b|\baccount\b|\bac\b');
 /// "Rs 15,000 debited from A/c XX7781 towards credit card bill": the card is
 /// the payee, the money left a bank account.
 bool _paysCardBillFromAccount(String lower) => _cardBillPayee.hasMatch(lower) && _bankAccountWord.hasMatch(lower);
+
+/// "BLOCK DC 5678", "Debit Card", or a bank account named next to the card.
+final _debitCardMarker = RegExp(r'\bdebit card\b|\bdc\b|a/c');
+
+/// Whether the message is about a credit card. A plain "Card 5678" is a
+/// credit card unless the message marks it as a debit card or shows an
+/// account balance: credit-card alerts show the available limit instead.
+bool _isCreditCard(String lower, {required bool hasLimit, required bool hasBalance}) =>
+    (lower.contains('credit card') && !_paysCardBillFromAccount(lower)) ||
+    lower.contains('credit limit') ||
+    hasLimit ||
+    (RegExp(r'\bcard\b').hasMatch(lower) && !hasBalance && !_debitCardMarker.hasMatch(lower));
 
 bool _isCardPaymentAcknowledgement(String text, String lower) =>
     _cardPaymentReceived.hasMatch(text) && lower.contains('card') && !_paysCardBillFromAccount(lower);

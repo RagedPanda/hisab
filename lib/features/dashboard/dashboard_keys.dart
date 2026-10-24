@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 
 const Key kSummarySpentKey = ValueKey('summary.spent');
 const Key kHeroCardKey = ValueKey('dashboard.hero');
+const Key kHeroTodayKey = ValueKey('dashboard.hero.today');
 const Key kTrendCardKey = ValueKey('dashboard.trend');
 const Key kCategoryCardKey = ValueKey('dashboard.categories');
 const Key kBudgetsCardKey = ValueKey('dashboard.budgets');

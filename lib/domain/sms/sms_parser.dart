@@ -136,6 +136,8 @@ const _debitWords = [
   'debited', 'spent', 'withdrawn', 'paid', 'sent', 'purchase', 'debit of', 'dr.', 'deducted',
   'transferred from', 'txn of', 'payment of', 'charged', 'debit card', 'done at',
   'debit by', 'has a debit', 'txn rs', 'txn inr', 'withdrawal of', 'used for', 'used at',
+  // "Transaction of Rs.799.00 made on your SBI Credit Card ending 3456".
+  'made on your', 'made using your', 'made at',
 ];
 const _creditWords = [
   'credited', 'received', 'deposited', 'refund', 'cashback', 'cr.', 'credit of', 'reversed',

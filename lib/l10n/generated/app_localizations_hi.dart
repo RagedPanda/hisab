@@ -431,6 +431,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get errorPickBothAccounts => 'ट्रांसफ़र के लिए दोनों खाते चुनें';
 
   @override
+  String get errorPickAccount => 'खाता चुनें';
+
+  @override
+  String get errorSameAccount => 'दोनों खाते अलग होने चाहिए';
+
+  @override
   String get errorItemName => 'हर आइटम का नाम ज़रूरी है';
 
   @override

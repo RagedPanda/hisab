@@ -121,6 +121,8 @@
   "errorAmountZero": "शून्य से ज़्यादा राशि लिखें",
   "errorPickCategory": "श्रेणी चुनें",
   "errorPickBothAccounts": "ट्रांसफ़र के लिए दोनों खाते चुनें",
+  "errorPickAccount": "खाता चुनें",
+  "errorSameAccount": "दोनों खाते अलग होने चाहिए",
   "errorItemName": "हर आइटम का नाम ज़रूरी है",
   "errorChoosePayer": "चुनें कि किसने दिया",
   "errorFixSplit": "पहले बँटवारा ठीक करें",

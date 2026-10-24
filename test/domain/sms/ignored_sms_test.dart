@@ -47,6 +47,7 @@ void main() {
     IgnoredSms('Axis card payment received', sender: 'AX-AXISCR-S', body: 'Payment of INR 3,000.00 has been received towards your Axis Bank Credit Card XX4321 on 20-10-26. Available limit INR 63,000.00.'),
     IgnoredSms('BOBCARD thank you for payment', sender: 'VM-BOBCRD-S', body: 'Thank you for the payment of Rs 4,000.00 towards your BOBCARD ending 7781 received on 20-10-2026.'),
     IgnoredSms('Amex payment received', sender: 'AM-AMEXIN-S', body: 'We have received your payment of INR 10,000.00 on your AMEX card ** 41007 on 20 October 2026. Thank you.'),
+    IgnoredSms('HDFC payment received towards the card (#121)', sender: 'JD-HDFCBK', body: 'Payment of Rs.23456.00 has been received towards your HDFC Bank Credit Card XX9012 on 05-11-26. Thank you.'),
     IgnoredSms('pasted card payment received', sender: 'PASTED', body: 'Payment of Rs 2,500.00 has been credited to your Kotak Credit Card XX1188 on 20-10-26. Thank you.'),
   ]);
 }

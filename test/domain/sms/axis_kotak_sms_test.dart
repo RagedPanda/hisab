@@ -35,6 +35,17 @@ void main() {
       kind: TxnKind.emi,
       accountLast4: '2211',
     ),
+    SmsCase(
+      'UPI P2M debit names the merchant after the reference (#121)',
+      sender: 'AX-AXISBK',
+      body: 'INR 60.00 debited A/c no. XX5555 22-10-26, 09:14:22 UPI/P2M/629555556666/CHAAYOS Not you? SMS BLOCKUPI Cust ID to 919951860002 Axis Bank',
+      direction: TxnDirection.debit,
+      amountMinor: 6000,
+      kind: TxnKind.general,
+      accountLast4: '5555',
+      instrument: Instrument.upi,
+      counterparty: 'CHAAYOS',
+    ),
   ]);
 
   runSmsCases('Kotak Mahindra Bank', const [

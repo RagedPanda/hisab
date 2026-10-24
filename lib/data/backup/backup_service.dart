@@ -109,7 +109,16 @@ class BackupService {
       await restore(db.recurringRules, 'recurringRules', RecurringRule.fromJson, (r) => r.id, (r) => r.updatedAt);
       // A backup from an older build may carry the text of not-bank SMS.
       await db.wipeUnkeptSmsText();
+      // A reinstall seeds fresh categories and a Cash account with new ids, so
+      // the backup's copies land beside them. Keep the backup's, drop the rest (#63).
+      await db.mergeSeededDuplicates(preferIds: {...restoredIds(payload, 'accounts'), ...restoredIds(payload, 'categories')});
     });
     return written;
   }
 }
+
+/// Ids of the rows a backup payload carries for [key].
+Set<String> restoredIds(Map<String, dynamic> payload, String key) => {
+      for (final raw in (payload[key] as List?) ?? const [])
+        if (raw is Map && raw['id'] is String) raw['id'] as String,
+    };

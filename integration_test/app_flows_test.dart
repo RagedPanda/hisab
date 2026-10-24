@@ -40,6 +40,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:intl/intl.dart';
 
 import 'harness.dart';
+import 'sms_history_flow.dart';
 
 const _milkTotalMinor = 20000; // 2 L @ 70 + 1 L @ 60
 const _restaurantMinor = 125000;
@@ -576,7 +577,7 @@ void main() {
     await shoot(tester, 'categories_income');
   });
 
-  testWidgets('10 bank SMS screen on iOS: reading disabled, paste still works', (tester) async {
+  testWidgets('10 bank SMS screen on iOS: reading disabled, paste auto-adds with Undo, unclear SMS wait for review', (tester) async {
     await pumpApp(tester, shared);
     await goTab(tester, 'Settings');
     await shoot(tester, 'settings');
@@ -590,14 +591,30 @@ void main() {
     await tapText(tester, 'Paste an SMS');
     await enterText(tester, _dialogField(), 'Rs.500.00 debited from A/c XX1234 on 20-Oct-25 to merchant@upi (UPI Ref No 123456789012)');
     await tapFinder(tester, _filled('Save'), frames: 12);
-    expect(find.text('Transaction found. Review it below.'), findsOneWidget);
+    expect(find.text('Transaction added.'), findsOneWidget, reason: 'auto-add is on by default and this SMS names the account');
+    await waitFor(tester, find.textContaining('Added ${formatMinor(50000, showDecimals: false)} from SMS'));
+    await shoot(tester, 'sms_auto_added_undo');
+    await tapText(tester, 'Undo', frames: 12);
+    expect(find.text('To review (0)'), findsOneWidget, reason: 'Undo ignores the SMS; it does not come back for review');
+    await shoot(tester, 'sms_after_undo');
+
+    await tapText(tester, 'Paste an SMS');
+    await enterText(tester, _dialogField(), 'Paid Rs 250 to Ramesh');
+    await tapFinder(tester, _filled('Save'), frames: 12);
+    expect(find.text('Transaction found. Review it below.'), findsOneWidget, reason: 'no bank or account: not confident enough to add alone');
     expect(find.text('To review (1)'), findsOneWidget);
-    expect(find.text('Add ${formatMinor(50000, showDecimals: false)}'), findsOneWidget);
-    await shoot(tester, 'sms_pending');
-    await tapText(tester, 'Ignore');
-    expect(find.text('To review (0)'), findsOneWidget);
     final accountNames = (await shared.read(accountsRepositoryProvider).getAll()).map((a) => a.name).toList();
-    debugPrint('SMS-DIAG accounts after pasting and ignoring an SMS: $accountNames');
+    debugPrint('SMS-DIAG accounts after undo and an unclear SMS: $accountNames');
+    await goBack(tester);
+    await goTab(tester, 'Home');
+    await waitFor(tester, find.text('1 SMS to review'));
+    await shoot(tester, 'sms_home_review_row');
+    await tapText(tester, '1 SMS to review');
+    expect(find.text('SMS to review'), findsWidgets);
+    expect(find.text('Add ${formatMinor(25000, showDecimals: false)}'), findsOneWidget);
+    await shoot(tester, 'sms_review_queue');
+    await tapText(tester, 'Ignore');
+    expect(find.text('Nothing waiting'), findsOneWidget);
     await goBack(tester);
   });
 
@@ -1539,4 +1556,61 @@ void main() {
     expect(lines[1], contains(',Rahul 600.00; You 300.00,'));
     expect(lines[2], startsWith(',Total,,900.00,'), reason: 'a closing total row follows the last expense');
   });
+
+  testWidgets('26 subscriptions: add from templates, totals, sort by cost, pause, cancel, Hindi', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final hi = AppLocalizationsHi();
+    await pumpApp(tester, fresh);
+
+    await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Subscriptions'));
+    await tapText(tester, 'Subscriptions');
+    expect(find.text('No subscriptions yet'), findsOneWidget);
+
+    Future<void> addFromTemplate(String template, String price) async {
+      await tapFinder(tester, find.byType(FloatingActionButton), frames: 10);
+      await tapFinder(tester, find.descendant(of: find.byType(DraggableScrollableSheet), matching: find.text(template)), frames: 10);
+      await enterText(tester, find.byKey(const Key('subscriptionPrice')), price);
+      await tapFinder(tester, _filled('Save'), frames: 12);
+    }
+
+    await addFromTemplate('Netflix', '649');
+    expect(find.text('₹649'), findsOneWidget, reason: 'monthly total');
+    expect(find.text('₹7,788'), findsOneWidget, reason: 'yearly total');
+    await addFromTemplate('Mobile recharge', '299');
+    expect(find.textContaining('Every 28 days'), findsOneWidget);
+    expect(find.text('₹974'), findsOneWidget, reason: '649 + 299 x 365 / 28 / 12');
+    expect(find.text('₹11,686'), findsOneWidget);
+    final rules = await fresh.db.select(fresh.db.recurringRules).get();
+    expect(rules.every((rule) => rule.isSubscription), isTrue);
+    expect(rules.firstWhere((rule) => rule.name == 'Mobile recharge').interval, 28);
+
+    double top(String text) => tester.getTopLeft(find.text(text)).dy;
+    expect(top('Netflix'), lessThan(top('Mobile recharge')), reason: 'cost high to low by default');
+    await tapFinder(tester, find.byIcon(Icons.sort));
+    await tapText(tester, 'Cost: low to high');
+    expect(top('Mobile recharge'), lessThan(top('Netflix')));
+
+    await tapText(tester, 'Netflix');
+    await tapText(tester, 'Pause');
+    expect(find.text('Paused'), findsOneWidget);
+    expect(find.text('₹325'), findsOneWidget, reason: 'paused subscriptions leave the totals');
+
+    await tapText(tester, 'Mobile recharge');
+    await tapText(tester, 'Mark as cancelled');
+    await tapText(tester, 'Mark as cancelled', last: true);
+    expect(find.text('Cancelled'), findsOneWidget);
+    expect(find.text('₹0'), findsNWidgets(2));
+    expect((await fresh.db.select(fresh.db.recurringRules).get()).map((rule) => rule.status).toSet(), {'paused', 'ended'});
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'hi'));
+    await settle(tester, 10);
+    expect(find.text(hi.subscriptions), findsOneWidget);
+    expect(find.text(hi.subscriptionPaused), findsOneWidget);
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
+    await settle(tester, 6);
+  });
+
+  testWidgets('27 SMS history: outcomes, filter chips, re-process, entry link, Hindi dark, clear', smsHistoryFlow);
 }

@@ -1,0 +1,67 @@
+import 'package:hisab/domain/sms/parsed_transaction.dart';
+
+import 'sms_cases.dart';
+
+void main() {
+  runSmsCases('Credit card issuers', [
+    SmsCase(
+      'American Express spend with five-digit card ending',
+      sender: 'VM-AMEXIN-S',
+      body: "Alert: You've spent INR 3,200.00 on your AMEX card ** 41007 at UBER INDIA on 21 October 2026 at 08:15 PM IST.",
+      direction: TxnDirection.debit,
+      amountMinor: 320000,
+      kind: TxnKind.cardSpend,
+      bank: 'American Express',
+      isCreditCard: true,
+      accountLast4: '1007',
+      counterparty: 'UBER INDIA',
+      payee: 'Uber',
+      occurredAt: DateTime(2026, 10, 21, 20, 15),
+    ),
+    const SmsCase(
+      'RBL credit card spend',
+      sender: 'VM-RBLCRD-S',
+      body: 'Dear Customer, INR 640.00 spent on your RBL Bank Credit Card XX2290 at ZEPTO on 21-10-2026. Available limit INR 39,360.00',
+      direction: TxnDirection.debit,
+      amountMinor: 64000,
+      kind: TxnKind.cardSpend,
+      bank: 'RBL Credit Card',
+      isCreditCard: true,
+      accountLast4: '2290',
+      payee: 'Zepto',
+    ),
+    const SmsCase(
+      'OneCard spend',
+      sender: 'VM-ONECRD-S',
+      body: 'You spent Rs. 1,099.00 on OneCard Credit Card XX8812 at AJIO on 21 Oct 2026. Avl limit Rs. 88,901.00',
+      direction: TxnDirection.debit,
+      amountMinor: 109900,
+      kind: TxnKind.cardSpend,
+      bank: 'OneCard',
+      isCreditCard: true,
+      accountLast4: '8812',
+      payee: 'AJIO',
+    ),
+    const SmsCase(
+      'HSBC card spend',
+      sender: 'VM-HSBCIN-S',
+      body: 'Your HSBC Credit Card ending 6620 has been used for INR 2,150.00 at CROMA on 21OCT26. Available credit limit INR 1,47,850.00.',
+      direction: TxnDirection.debit,
+      amountMinor: 215000,
+      kind: TxnKind.cardSpend,
+      bank: 'HSBC',
+      isCreditCard: true,
+      accountLast4: '6620',
+      counterparty: 'CROMA',
+    ),
+    const SmsCase(
+      'card bill paid from a bank account stays a debit',
+      sender: 'VM-HDFCBK-S',
+      body: 'Rs.15,000.00 debited from A/c XX7781 on 20-10-26 towards CRED CLUB credit card bill. UPI Ref 629450500001.',
+      direction: TxnDirection.debit,
+      amountMinor: 1500000,
+      kind: TxnKind.general,
+      accountLast4: '7781',
+    ),
+  ]);
+}

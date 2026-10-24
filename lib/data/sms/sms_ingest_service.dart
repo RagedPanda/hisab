@@ -6,9 +6,13 @@ import '../../core/ids.dart';
 import '../../core/theme.dart';
 import '../../domain/sms/bank_senders.dart';
 import '../../domain/sms/parsed_transaction.dart';
+import '../../domain/sms/sms_catch_up.dart';
 import '../../domain/sms/sms_account_name.dart';
 import '../../domain/sms/payee_normaliser.dart';
 import '../../domain/sms/sms_categorizer.dart';
+import '../../domain/sms/sms_confidence.dart';
+import '../../domain/sms/sms_currency.dart';
+import '../../domain/sms/sms_outcome.dart';
 import '../../domain/sms/sms_parser.dart';
 import '../db/database.dart';
 import '../repositories/accounts_repository.dart';
@@ -16,8 +20,30 @@ import '../repositories/categories_repository.dart';
 import '../repositories/entries_repository.dart';
 import '../repositories/sms_log_repository.dart';
 import 'sms_channel.dart';
+import 'sms_sync_cursor.dart';
 
-enum IngestStatus { duplicate, notBank, unparsed, pending, added }
+/// What [SmsIngestService.ingest] did with one message. [pending] means it
+/// is waiting in the review queue, whether it was read with low confidence
+/// or could not be read at all; [unparsed] means it was dropped.
+enum IngestStatus { duplicate, notBank, foreignCurrency, unparsed, pending, added }
+
+/// An entry that was created from an SMS without the user approving it.
+class SmsAutoAdded {
+  const SmsAutoAdded({required this.smsId, required this.entryId, required this.amountMinor, required this.isDebit, this.payee});
+  final String smsId;
+  final String entryId;
+  final int amountMinor;
+  final bool isDebit;
+  final String? payee;
+}
+
+/// What one [SmsIngestService.sync] did.
+class SmsSyncResult {
+  const SmsSyncResult({required this.scanned, required this.pending, required this.added});
+  final int scanned;
+  final int pending;
+  final int added;
+}
 
 /// Turns raw SMS into log rows, accounts and (optionally) entries.
 class SmsIngestService {
@@ -26,6 +52,9 @@ class SmsIngestService {
     required this.accounts,
     required this.categories,
     required this.entries,
+    required this.cursor,
+    this.source = const PlatformSmsSource(),
+    required this.homeCurrencyCode,
   });
 
   final SmsLogRepository smsLog;
@@ -33,7 +62,18 @@ class SmsIngestService {
   final CategoriesRepository categories;
   final EntriesRepository entries;
 
-  StreamSubscription<RawSms>? _liveSubscription;
+  final SmsSyncCursor cursor;
+  final SmsSource source;
+
+  Future<void> _syncChain = Future.value();
+
+  /// Read on every message, so a change of home currency applies at once.
+  final String Function() homeCurrencyCode;
+
+  final _autoAddedController = StreamController<SmsAutoAdded>.broadcast();
+
+  /// Every entry added automatically, so the open app can offer Undo.
+  Stream<SmsAutoAdded> get autoAdded => _autoAddedController.stream;
 
   Future<bool> requestPermission() async {
     if (!SmsChannel.isSupported) return false;
@@ -43,40 +83,60 @@ class SmsIngestService {
 
   Future<bool> hasPermission() async => SmsChannel.isSupported && await Permission.sms.isGranted;
 
-  /// Scans the inbox for bank messages newer than the last one we logged
-  /// (or [lookback] if the log is empty). Returns how many were queued/added.
-  Future<({int scanned, int pending, int added})> scanInbox({Duration lookback = const Duration(days: 90), required bool autoAdd}) async {
-    final since = (await smsLog.latestReceivedAt()) ?? DateTime.now().subtract(lookback);
-    final messages = await SmsChannel.readInbox(since: since.subtract(const Duration(minutes: 1)));
-    var pending = 0;
-    var added = 0;
-    for (final message in messages) {
+  /// Runs everything captured since the last sync through [ingest]: first the
+  /// messages the background receiver queued, then an inbox scan from the
+  /// stored cursor (or [lookback] on a first scan) for anything it missed.
+  /// Calls are serialised, so start, resume and live signals can overlap.
+  Future<SmsSyncResult> sync({required bool autoAdd, Duration lookback = const Duration(days: 90), DateTime? now}) {
+    final next = _syncChain.then((_) => _sync(autoAdd: autoAdd, lookback: lookback, now: now ?? DateTime.now()));
+    _syncChain = next.then((_) {}, onError: (_) {});
+    return next;
+  }
+
+  Future<SmsSyncResult> _sync({required bool autoAdd, required Duration lookback, required DateTime now}) async {
+    final queued = await source.drainQueue();
+    final since = catchUpSince(now: now, cursor: cursor.read(), lastLogged: await smsLog.latestReceivedAt(), lookback: lookback);
+    final inbox = await source.readInbox(since: since);
+    final counts = <IngestStatus, int>{};
+    for (final message in [...queued, ...inbox]) {
       final status = await ingest(message, autoAdd: autoAdd);
-      if (status == IngestStatus.pending) pending++;
-      if (status == IngestStatus.added) added++;
+      counts[status] = (counts[status] ?? 0) + 1;
     }
-    return (scanned: messages.length, pending: pending, added: added);
-  }
-
-  void startListening({required bool Function() autoAdd}) {
-    _liveSubscription ??= SmsChannel.incoming().listen((message) => ingest(message, autoAdd: autoAdd()));
-  }
-
-  void stopListening() {
-    _liveSubscription?.cancel();
-    _liveSubscription = null;
+    final advanced = advanceCursor(cursor.read(), inbox.map((message) => message.receivedAt));
+    if (advanced != null) await cursor.write(advanced);
+    return SmsSyncResult(scanned: queued.length + inbox.length, pending: counts[IngestStatus.pending] ?? 0, added: counts[IngestStatus.added] ?? 0);
   }
 
   /// Handles one message end to end. Safe to call repeatedly for the same SMS.
   Future<IngestStatus> ingest(RawSms message, {required bool autoAdd, bool force = false}) async {
     final id = SmsLogRepository.idFor(message.sender, message.body, message.receivedAt);
-    if (await smsLog.exists(id)) return IngestStatus.duplicate;
-    if (!force && !looksLikeBankSender(message.sender) && !_looksFinancial(message.body)) return IngestStatus.notBank;
+    final existing = await smsLog.getById(id);
+    if (existing != null) {
+      await _recordDuplicate(existing, message);
+      return IngestStatus.duplicate;
+    }
+    if (!force && !_worthIngesting(message)) {
+      if (!isPersonalSender(message.sender)) {
+        await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.notBank);
+      }
+      return IngestStatus.notBank;
+    }
+    if (isForeignCurrency(smsCurrencyCode(message.body), homeCurrencyCode())) {
+      // Cross-currency is not supported: logged so it is not read again, but
+      // neither added nor queued for review.
+      await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.skipped);
+      return IngestStatus.foreignCurrency;
+    }
 
     final parsed = parseBankSms(sender: message.sender, body: message.body, receivedAt: message.receivedAt);
     if (parsed == null) {
-      if (force || looksLikeBankSender(message.sender)) {
-        await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'skipped');
+      final route = routeForSms(parsed: null, autoAddEnabled: autoAdd, possibleTransaction: looksLikeUnreadTransaction(message.body, sender: message.sender));
+      if (route == SmsRoute.review) {
+        await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.pending);
+        return IngestStatus.pending;
+      }
+      if (!isPersonalSender(message.sender)) {
+        await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.skipped);
       }
       return IngestStatus.unparsed;
     }
@@ -93,14 +153,51 @@ class SmsIngestService {
       ..['accountKey'] = parsed.accountKey
       ..['accountId'] = known?.id;
 
-    if (!autoAdd) {
-      await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'pending', parsed: payload);
+    if (routeForSms(parsed: parsed, autoAddEnabled: autoAdd, possibleTransaction: true) != SmsRoute.autoAdd) {
+      await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.pending, parsed: payload);
       return IngestStatus.pending;
     }
     final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(id, parsed, categoryKey, account?.id);
-    await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: 'added', parsed: payload, entryId: entryId);
+    await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.added, parsed: payload, entryId: entryId);
+    _autoAddedController.add(SmsAutoAdded(
+      smsId: id,
+      entryId: entryId,
+      amountMinor: parsed.amountMinor,
+      isDebit: parsed.isDebit,
+      payee: _payeeFor(parsed),
+    ));
     return IngestStatus.added;
+  }
+
+  /// Reverses an automatic add: the entry is deleted and the SMS is marked
+  /// ignored, so it does not come back in the review queue.
+  Future<void> undoAutoAdd(SmsAutoAdded added) async {
+    await entries.deleteEntry(added.entryId);
+    await smsLog.setStatus(added.smsId, SmsLogStatus.ignored);
+  }
+
+  /// Runs an ignored or unparsed message through ingest again, e.g. after
+  /// the parser learned a new format. The old row is replaced.
+  Future<IngestStatus> reprocess(SmsLogData row, {required bool autoAdd}) async {
+    await smsLog.delete(row.id);
+    return ingest(RawSms(sender: row.sender, body: row.body, receivedAt: row.receivedAt), autoAdd: autoAdd, force: true);
+  }
+
+  /// A re-read of the same inbox message is silent; a bank re-delivery at a
+  /// different time gets its own history row, linked to the original's entry.
+  Future<void> _recordDuplicate(SmsLogData original, RawSms message) async {
+    if (!logsDuplicateOf(original.status, message.body) || isSameDelivery(original.receivedAt, message.receivedAt)) return;
+    final duplicateId = SmsLogRepository.duplicateIdFor(original.id, message.receivedAt);
+    if (await smsLog.exists(duplicateId)) return;
+    await smsLog.record(
+      id: duplicateId,
+      sender: message.sender,
+      body: message.body,
+      receivedAt: message.receivedAt,
+      status: SmsLogStatus.duplicate,
+      entryId: original.entryId,
+    );
   }
 
   /// Approves a pending log row into an entry with the suggested values.
@@ -109,7 +206,7 @@ class SmsIngestService {
     if (parsed == null) return null;
     final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(row.id, parsed, suggestCategoryKey(parsed), account?.id);
-    await smsLog.setStatus(row.id, 'added', entryId: entryId);
+    await smsLog.setStatus(row.id, SmsLogStatus.added, entryId: entryId);
     return entryId;
   }
 
@@ -132,13 +229,15 @@ class SmsIngestService {
       occurredAt: parsed.occurredAt,
       categoryId: category?.id,
       accountId: accountId,
-      payee: parsed.counterparty == null ? null : normalisePayee(parsed.counterparty!),
+      payee: _payeeFor(parsed),
       note: smsEntryNote(reference: parsed.reference, rawCounterparty: parsed.counterparty),
       source: 'sms',
       smsId: smsId,
     ));
     return id;
   }
+
+  static String? _payeeFor(ParsedTransaction parsed) => parsed.counterparty == null ? null : normalisePayee(parsed.counterparty!);
 
   Future<Account?> _ensureAccount(ParsedTransaction parsed) async {
     final key = parsed.accountKey;
@@ -159,6 +258,7 @@ class SmsIngestService {
     return created;
   }
 
-  static final _financialHint = RegExp(r'(debited|credited|spent|withdrawn|a/c|acct|upi|card|rs\.?\s?\d|inr\s?\d|₹)', caseSensitive: false);
-  static bool _looksFinancial(String body) => _financialHint.hasMatch(body);
+  /// Personal chats are never ingested, however much they read like a debit.
+  static bool _worthIngesting(RawSms message) =>
+      isBusinessSender(message.sender) && (looksLikeBankSender(message.sender) || hasTransactionSignal(message.body));
 }

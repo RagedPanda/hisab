@@ -2308,6 +2308,112 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get cardStatementDay => 'स्टेटमेंट की तारीख';
+
+  @override
+  String get cardDueDay => 'भुगतान की आखिरी तारीख';
+
+  @override
+  String get cardDayNotSet => 'सेट नहीं';
+
+  @override
+  String get cardCreditLimit => 'क्रेडिट लिमिट';
+
+  @override
+  String get cardLastStatementAmount => 'पिछले स्टेटमेंट की रकम';
+
+  @override
+  String get cardDetailsHint =>
+      'स्टेटमेंट और ड्यू की तारीख से हिसाब आपका बिलिंग साइकिल दिखाएगा और बिल की तारीख से पहले याद दिलाएगा।';
+
+  @override
+  String get cardOutstanding => 'बकाया';
+
+  @override
+  String get cardThisCycle => 'इस साइकिल में';
+
+  @override
+  String cardCycleDates(String start, String end) {
+    return '$start से $end';
+  }
+
+  @override
+  String get cardLastStatement => 'पिछला स्टेटमेंट';
+
+  @override
+  String cardStatementOn(String date) {
+    return '$date का स्टेटमेंट';
+  }
+
+  @override
+  String get cardNoStatement => 'दर्ज नहीं';
+
+  @override
+  String get cardAvailableLimit => 'बची हुई लिमिट';
+
+  @override
+  String cardOverLimitBy(String amount) {
+    return 'लिमिट से $amount ज़्यादा';
+  }
+
+  @override
+  String cardLimitUsed(int percent, String limit) {
+    return '$limit लिमिट का $percent% इस्तेमाल';
+  }
+
+  @override
+  String cardDueOn(String date) {
+    return 'ड्यू $date';
+  }
+
+  @override
+  String get cardPaid => 'चुका दिया';
+
+  @override
+  String cardAmountLeftToPay(String amount) {
+    return '$amount चुकाना बाकी';
+  }
+
+  @override
+  String get cardSetUpDays => 'स्टेटमेंट और ड्यू तारीख सेट करें';
+
+  @override
+  String get cardViewTransactions => 'लेन-देन देखें';
+
+  @override
+  String get cardNotFound => 'यह कार्ड हटा दिया गया है';
+
+  @override
+  String cardNextDue(String date) {
+    return 'अगला ड्यू $date';
+  }
+
+  @override
+  String cardInCredit(String amount) {
+    return '$amount क्रेडिट';
+  }
+
+  @override
+  String cardStatementOverAmountDue(String amount) {
+    return 'बकाया राशि ($amount) से ज़्यादा है। इसे उतना करें जितना अभी चुकाना बाकी है।';
+  }
+
+  @override
+  String get cardBalanceOwed => 'बकाया';
+
+  @override
+  String get cardBalanceCredit => 'क्रेडिट में';
+
+  @override
+  String get cardCreditOnCard => 'कार्ड पर क्रेडिट';
+
+  @override
+  String get balanceInAccount => 'खाते में';
+
+  @override
+  String get balanceOverdrawn => 'ओवरड्रॉन';
+
+  @override
   String get smsHistoryTitle => 'SMS इतिहास';
 
   @override

@@ -15,6 +15,13 @@ class AccountsRepository {
 
   Future<List<Account>> getAll() => _activeQuery().get();
 
+  /// One live account, or null once deleted.
+  Stream<Account?> watchById(String id) =>
+      (db.select(db.accounts)..where((t) => t.id.equals(id) & t.deletedAt.isNull())).watchSingleOrNull();
+
+  Future<Account?> getById(String id) =>
+      (db.select(db.accounts)..where((t) => t.id.equals(id) & t.deletedAt.isNull())).getSingleOrNull();
+
   /// First live match; tolerates duplicates left by an old restore (#63).
   Future<Account?> findBySmsKey(String key) =>
       (db.select(db.accounts)
@@ -32,6 +39,11 @@ class AccountsRepository {
     String? smsKey,
     int balanceMinor = 0,
     bool includeInTotal = true,
+    int? statementDay,
+    int? dueDay,
+    int? creditLimitMinor,
+    int? lastStatementMinor,
+    DateTime? lastStatementAt,
   }) async {
     final companion = AccountsCompanion.insert(
       id: newId(),
@@ -44,6 +56,11 @@ class AccountsRepository {
       balanceMinor: Value(balanceMinor),
       balanceAsOf: Value(balanceMinor == 0 ? null : DateTime.now()),
       includeInTotal: Value(includeInTotal),
+      statementDay: Value(statementDay),
+      dueDay: Value(dueDay),
+      creditLimitMinor: Value(creditLimitMinor),
+      lastStatementMinor: Value(lastStatementMinor),
+      lastStatementAt: Value(lastStatementAt),
     );
     await db.into(db.accounts).insert(companion);
     return (db.select(db.accounts)..where((t) => t.id.equals(companion.id.value))).getSingle();

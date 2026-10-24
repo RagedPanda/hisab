@@ -21,6 +21,7 @@ import 'package:integration_test/integration_test.dart';
 import 'harness.dart';
 
 const _sharedFuelId = 'tour-shared-fuel';
+const _pizzaNightId = 'tour-pizza-night';
 const _configs = [('en', ThemeMode.light), ('en', ThemeMode.dark), ('hi', ThemeMode.light), ('hi', ThemeMode.dark)];
 
 void main() {
@@ -31,6 +32,7 @@ void main() {
     final groupId = await _seedGroup(app);
     final settledGroupId = await _seedSettledGroup(app);
     final squareGroupId = await _seedSquareGroup(app);
+    await _seedByItemGroup(app);
     final archivedGroupId = await _seedArchivedGroup(app);
     await pumpApp(tester, app);
 
@@ -118,6 +120,13 @@ void main() {
       await scrollTo(tester, find.byKey(const Key('payers-assigned')), within: find.byType(ExpenseEditorScreen));
       await shoot(tester, 'expense_multiple_payers_$tag');
 
+      appRouter.go('/entry?id=$_pizzaNightId');
+      await settle(tester, 12);
+      await scrollTo(tester, find.byKey(const Key('byItem.addExtras')), within: find.byType(ExpenseEditorScreen));
+      await shoot(tester, 'expense_by_item_assign_$tag');
+      await scrollTo(tester, find.textContaining('45%'), within: find.byType(ExpenseEditorScreen));
+      await shoot(tester, 'expense_by_item_split_$tag');
+
       appRouter.go('/groups');
       await settle(tester, 10);
       await shoot(tester, 'groups_list_$tag');
@@ -194,6 +203,29 @@ Future<String> _seedArchivedGroup(AppHandle app) async {
   await groups.updateGroup(GroupsCompanion(id: Value(groupId), type: const Value('home')));
   await groups.archiveGroup(groupId);
   return groupId;
+}
+
+/// Pizza night: one by-item expense with a shared delivery line, for the
+/// assignment strips and the per-person summary.
+Future<void> _seedByItemGroup(AppHandle app) async {
+  final groups = app.read(groupsRepositoryProvider);
+  final groupId = await groups.createGroup(name: 'Pizza night', icon: 'restaurant', myName: 'You', otherMembers: ['Rahul', 'Priya']);
+  final members = await groups.getMembers(groupId);
+  final me = members.firstWhere((m) => m.isMe).id;
+  final rahul = members.firstWhere((m) => m.name == 'Rahul').id;
+  final priya = members.firstWhere((m) => m.name == 'Priya').id;
+  EntryItemsCompanion item(String id, String name, int price, {bool shared = false}) =>
+      EntryItemsCompanion.insert(id: id, entryId: _pizzaNightId, name: name, unitPriceMinor: price, amountMinor: price, isShared: Value(shared));
+  await app.read(entriesRepositoryProvider).saveEntry(
+    EntriesRepository.newExpense(id: _pizzaNightId, amountMinor: 84000, occurredAt: DateTime(2026, 10, 8), note: 'Pizza night', groupId: groupId, paidByMemberId: me, splitMethod: 'byItem'),
+    items: [item('tour-pizza', 'Pizza', 60000), item('tour-coke', 'Coke', 15000), item('tour-delivery', 'Delivery', 9000, shared: true)],
+    splits: [
+      SplitsCompanion.insert(id: newId(), entryId: _pizzaNightId, memberId: me, amountMinor: 23000),
+      SplitsCompanion.insert(id: newId(), entryId: _pizzaNightId, memberId: rahul, amountMinor: 38000),
+      SplitsCompanion.insert(id: newId(), entryId: _pizzaNightId, memberId: priya, amountMinor: 23000),
+    ],
+    itemAssignments: {'tour-pizza': [me, rahul, priya], 'tour-coke': [rahul]},
+  );
 }
 
 /// Flat dinners: Rahul squared up with me, then a fresh expense, so the

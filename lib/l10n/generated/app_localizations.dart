@@ -5606,6 +5606,60 @@ abstract class AppLocalizations {
   /// **'{name}\'s share: {amount}'**
   String groupSummaryMemberShare(String name, String amount);
 
+  /// No description provided for @byItemShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared'**
+  String get byItemShared;
+
+  /// No description provided for @byItemSharedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Split among everyone with an item'**
+  String get byItemSharedHelp;
+
+  /// No description provided for @byItemOnlyMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Only me'**
+  String get byItemOnlyMe;
+
+  /// No description provided for @byItemEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get byItemEveryone;
+
+  /// No description provided for @byItemAddExtras.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery, tax or tip'**
+  String get byItemAddExtras;
+
+  /// No description provided for @byItemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add items to split by item'**
+  String get byItemHint;
+
+  /// No description provided for @byItemSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} · {count, plural, =1{1 item} other{{count} items}} · {percent}%'**
+  String byItemSummary(String amount, int count, int percent);
+
+  /// No description provided for @byItemClearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Item assignments will be cleared'**
+  String get byItemClearTitle;
+
+  /// No description provided for @byItemClearBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Items stay, and everyone shares each one again.'**
+  String get byItemClearBody;
+
   /// No description provided for @smsAddedMarker.
   ///
   /// In en, this message translates to:
@@ -5647,6 +5701,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add manually'**
   String get smsReviewAddManually;
+
+  /// No description provided for @upcomingEmptyWithin.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Nothing due tomorrow} other{Nothing due in the next {days} days}}'**
+  String upcomingEmptyWithin(int days);
+
+  /// No description provided for @upcomingEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring bills, reminders and card dues show up here.'**
+  String get upcomingEmptyHint;
+
+  /// No description provided for @upcomingWindowDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days'**
+  String upcomingWindowDays(int days);
+
+  /// No description provided for @upcomingOverdueBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Overdue by 1 day} other{Overdue by {days} days}}'**
+  String upcomingOverdueBy(int days);
+
+  /// No description provided for @upcomingDueToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Due today'**
+  String get upcomingDueToday;
+
+  /// No description provided for @upcomingDueTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Due tomorrow'**
+  String get upcomingDueTomorrow;
+
+  /// No description provided for @upcomingDueInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'In {days} days · {date}'**
+  String upcomingDueInDays(int days, String date);
+
+  /// No description provided for @upcomingOverdueCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} overdue'**
+  String upcomingOverdueCount(int count);
+
+  /// No description provided for @upcomingDueTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} to pay'**
+  String upcomingDueTotal(String amount);
+
+  /// No description provided for @upcomingShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 more} other{{count} more}}'**
+  String upcomingShowAll(int count);
+
+  /// No description provided for @upcomingCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Due calendar'**
+  String get upcomingCalendar;
+
+  /// No description provided for @upcomingCalendarOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open due calendar'**
+  String get upcomingCalendarOpen;
+
+  /// No description provided for @upcomingCalendarDayEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing due on this day'**
+  String get upcomingCalendarDayEmpty;
+
+  /// No description provided for @upcomingCalendarPreviousMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous month'**
+  String get upcomingCalendarPreviousMonth;
+
+  /// No description provided for @upcomingCalendarNextMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Next month'**
+  String get upcomingCalendarNextMonth;
+
+  /// No description provided for @upcomingConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get upcomingConfirm;
+
+  /// No description provided for @upcomingConfirmPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'This is waiting for you to confirm. Add it to your entries now?'**
+  String get upcomingConfirmPrompt;
+
+  /// No description provided for @upcomingCalendarDueCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 due} other{{count} due}}'**
+  String upcomingCalendarDueCount(int count);
 
   /// No description provided for @salaryTitle.
   ///

@@ -232,13 +232,16 @@ class EntriesRepository {
   /// [fieldValues], when given, replace the project field values the entry
   /// recorded; null leaves them as they are. [payers], when given, replace
   /// the several-payer rows of a group expense (empty for a single payer);
-  /// null leaves them as they are.
+  /// null leaves them as they are. [itemAssignments], when given, replace who
+  /// shares each item of a by-item split (item id to member ids; empty clears
+  /// them); null leaves them as they are.
   Future<void> saveEntry(
     EntriesCompanion entry, {
     List<EntryItemsCompanion> items = const [],
     List<SplitsCompanion> splits = const [],
     List<EntryFieldValuesCompanion>? fieldValues,
     List<EntryPayersCompanion>? payers,
+    Map<String, List<String>>? itemAssignments,
   }) {
     final entryId = entry.id.value;
     final now = DateTime.now();
@@ -274,6 +277,20 @@ class EntriesRepository {
               ));
         }
       }
+      if (itemAssignments != null) {
+        await _tombstoneAssignments(entryId, now);
+        for (final assignment in itemAssignments.entries) {
+          for (final memberId in assignment.value) {
+            await db.into(db.itemAssignments).insertOnConflictUpdate(ItemAssignmentsCompanion.insert(
+                  id: '${assignment.key}:$memberId',
+                  entryItemId: assignment.key,
+                  memberId: memberId,
+                  updatedAt: Value(now),
+                  deletedAt: const Value(null),
+                ));
+          }
+        }
+      }
       if (fieldValues != null) {
         await (db.update(db.entryFieldValues)..where((t) => t.entryId.equals(entryId)))
             .write(EntryFieldValuesCompanion(deletedAt: Value(now), updatedAt: Value(now)));
@@ -297,7 +314,42 @@ class EntriesRepository {
           .write(SplitsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
       await (db.update(db.entryPayers)..where((t) => t.entryId.equals(id)))
           .write(EntryPayersCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+      await _tombstoneAssignments(id, now);
     });
+  }
+
+  /// Soft-deletes every item assignment under any item, live or not, of [entryId].
+  Future<void> _tombstoneAssignments(String entryId, DateTime now) =>
+      (db.update(db.itemAssignments)..where((t) => t.entryItemId.isInQuery(_itemIdsOf(entryId)) & t.deletedAt.isNull()))
+          .write(ItemAssignmentsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+
+  /// Brings back item assignments of [entryId] after [deleteEntry]: the rows
+  /// in [ids] when the deletion recorded them, otherwise the rows tombstoned
+  /// at [deletedAt], so a restored by-item expense keeps who shared each item.
+  Future<void> restoreAssignments(String entryId, {List<String>? ids, required DateTime deletedAt}) {
+    final now = DateTime.now();
+    return (db.update(db.itemAssignments)
+          ..where((t) => t.entryItemId.isInQuery(_itemIdsOf(entryId)) & (ids == null ? t.deletedAt.equals(deletedAt) : t.id.isIn(ids))))
+        .write(ItemAssignmentsCompanion(deletedAt: const Value(null), updatedAt: Value(now)));
+  }
+
+  /// Ids of every item, live or not, of [entryId], as a subquery.
+  JoinedSelectStatement<$EntryItemsTable, EntryItem> _itemIdsOf(String entryId) => db.selectOnly(db.entryItems)
+    ..addColumns([db.entryItems.id])
+    ..where(db.entryItems.entryId.equals(entryId));
+
+  /// Who shares each live item of [entryId]'s by-item split, in one query:
+  /// item id to member ids. Items nobody was assigned to are absent.
+  Future<Map<String, List<String>>> getItemAssignments(String entryId) async => assignmentsByItem(await getItemAssignmentRows(entryId));
+
+  /// The live assignment rows under the live items of [entryId].
+  Future<List<ItemAssignment>> getItemAssignmentRows(String entryId) async {
+    final rows = await (db.select(db.itemAssignments).join([
+      innerJoin(db.entryItems, db.entryItems.id.equalsExp(db.itemAssignments.entryItemId)),
+    ])
+          ..where(db.entryItems.entryId.equals(entryId) & db.entryItems.deletedAt.isNull() & db.itemAssignments.deletedAt.isNull()))
+        .get();
+    return [for (final row in rows) row.readTable(db.itemAssignments)];
   }
 
   /// The live several-payer rows of an entry; empty for a single payer.
@@ -400,4 +452,13 @@ class EntriesRepository {
         splitMethod: Value(splitMethod),
         projectId: Value(projectId),
       );
+}
+
+/// Groups assignment rows by item, keeping each item's members in row order.
+Map<String, List<String>> assignmentsByItem(Iterable<ItemAssignment> rows) {
+  final byItem = <String, List<String>>{};
+  for (final row in rows) {
+    byItem.putIfAbsent(row.entryItemId, () => []).add(row.memberId);
+  }
+  return byItem;
 }

@@ -28,9 +28,17 @@ Future<void> rewindToBeforeCardDetails(File file) async {
 /// which already had the credit card columns at a lower schema number.
 Future<void> rewindToPreReleaseCardDetails(File file) async {
   final db = AppDatabase(NativeDatabase(file));
+  await dropVersion13(db);
   await dropVersion12(db);
   await db.customStatement('PRAGMA user_version = 11');
   await db.close();
+}
+
+/// Undoes the v13 step (by-item assignments, shared item lines) on a
+/// database created at the current schema, so older rewinds start from v12.
+Future<void> dropVersion13(AppDatabase db) async {
+  await db.customStatement('DROP TABLE item_assignments');
+  await db.customStatement('ALTER TABLE entry_items DROP COLUMN is_shared');
 }
 
 /// Undoes the v12 step (due-reminder columns and their index on reminders)
@@ -75,6 +83,7 @@ Future<void> dropVersion7(AppDatabase db) async {
 Future<void> rewindToVersion1(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropCardDetails(db);
+  await dropVersion13(db);
   await dropVersion12(db);
   await dropVersion11(db);
   await dropVersion10(db);
@@ -100,6 +109,7 @@ Future<void> rewindToVersion1(File file) async {
 Future<void> rewindToVersion2(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropCardDetails(db);
+  await dropVersion13(db);
   await dropVersion12(db);
   await dropVersion11(db);
   await dropVersion10(db);
@@ -120,6 +130,7 @@ Future<void> rewindToVersion2(File file) async {
 Future<void> rewindToVersion3(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropCardDetails(db);
+  await dropVersion13(db);
   await dropVersion12(db);
   await dropVersion11(db);
   await dropVersion10(db);
@@ -139,6 +150,7 @@ Future<void> rewindToVersion3(File file) async {
 Future<void> rewindToVersion4(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropCardDetails(db);
+  await dropVersion13(db);
   await dropVersion12(db);
   await dropVersion11(db);
   await dropVersion10(db);
@@ -157,6 +169,7 @@ Future<void> rewindToVersion4(File file) async {
 Future<void> rewindToVersion5(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropCardDetails(db);
+  await dropVersion13(db);
   await dropVersion12(db);
   await dropVersion11(db);
   await dropVersion10(db);
@@ -172,6 +185,7 @@ Future<void> rewindToVersion5(File file) async {
 Future<void> rewindToVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropCardDetails(db);
+  await dropVersion13(db);
   await dropVersion12(db);
   await dropVersion11(db);
   await dropVersion10(db);
@@ -187,6 +201,7 @@ Future<void> rewindToVersion6(File file) async {
 Future<void> rewindToPreReleaseRemindersVersion6(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropCardDetails(db);
+  await dropVersion13(db);
   await dropVersion11(db);
   await dropVersion10(db);
   await dropVersion8(db);
@@ -201,6 +216,7 @@ Future<void> rewindToPreReleaseRemindersVersion6(File file) async {
 Future<void> rewindToVersion7(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropCardDetails(db);
+  await dropVersion13(db);
   await dropVersion12(db);
   await dropVersion11(db);
   await dropVersion10(db);
@@ -214,6 +230,7 @@ Future<void> rewindToVersion7(File file) async {
 Future<void> rewindToVersion8(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropCardDetails(db);
+  await dropVersion13(db);
   await dropVersion12(db);
   await dropVersion11(db);
   await dropVersion10(db);
@@ -226,6 +243,7 @@ Future<void> rewindToVersion8(File file) async {
 Future<void> rewindToVersion10(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropCardDetails(db);
+  await dropVersion13(db);
   await dropVersion12(db);
   await dropVersion11(db);
   await db.customStatement('PRAGMA user_version = 10');
@@ -237,8 +255,19 @@ Future<void> rewindToVersion10(File file) async {
 Future<void> rewindToVersion11(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropCardDetails(db);
+  await dropVersion13(db);
   await dropVersion12(db);
   await db.customStatement('PRAGMA user_version = 11');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 12
+/// (due-reminder columns, but no by-item assignments).
+Future<void> rewindToVersion12(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropCardDetails(db);
+  await dropVersion13(db);
+  await db.customStatement('PRAGMA user_version = 12');
   await db.close();
 }
 
@@ -247,6 +276,7 @@ Future<void> rewindToVersion11(File file) async {
 Future<void> rewindToRemindersQaVersion9(File file) async {
   final db = AppDatabase(NativeDatabase(file));
   await dropCardDetails(db);
+  await dropVersion13(db);
   await dropVersion11(db);
   await dropVersion10(db);
   await db.customStatement('PRAGMA user_version = 9');
@@ -356,6 +386,31 @@ void main() {
     final group = await db.select(db.groups).getSingle();
     expect((group.type, group.defaultSplitMethod, group.notes, group.currencyLabel, group.archivedAt), ('other', 'equal', '', null, null));
     expect((group.name, group.simplifyDebts), ('Goa', false), reason: 'existing rows survive the upgrade');
+    await db.close();
+  });
+
+  test('upgrading from schema 12 adds item assignments, leaves old items unshared and keeps due reminders', () async {
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.into(seed.entryItems).insert(EntryItemsCompanion.insert(id: 'i1', entryId: 'e1', name: 'Pizza', unitPriceMinor: 50000, amountMinor: 50000));
+    await seed.into(seed.reminders).insert(RemindersCompanion.insert(id: 'r1', kind: 'bill', title: const Value('Electricity'), amountMinor: const Value(120000)));
+    await seed.close();
+    await rewindToVersion12(file);
+
+    final db = AppDatabase(NativeDatabase(file));
+    final version = await db.customSelect('PRAGMA user_version').getSingle();
+    expect(version.data['user_version'], db.schemaVersion);
+    final item = await db.select(db.entryItems).getSingle();
+    expect(item.name, 'Pizza', reason: 'existing items survive the upgrade');
+    expect(item.isShared, isFalse);
+    final bill = await db.select(db.reminders).getSingle();
+    expect(bill.title, 'Electricity', reason: 'v12 due reminders survive the v13 step');
+    expect(bill.amountMinor, 120000);
+    await db.into(db.itemAssignments).insert(ItemAssignmentsCompanion.insert(id: 'i1:m1', entryItemId: 'i1', memberId: 'm1'));
+    await expectLater(
+      db.into(db.itemAssignments).insert(ItemAssignmentsCompanion.insert(id: 'other', entryItemId: 'i1', memberId: 'm1')),
+      throwsA(isA<SqliteException>()),
+      reason: 'one row per item and member',
+    );
     await db.close();
   });
 

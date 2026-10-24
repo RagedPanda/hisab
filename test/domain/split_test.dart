@@ -111,7 +111,7 @@ void main() {
       );
       expect(out.asMap(), {a: 4000, b: 3000, c: 3000});
     });
-    test('by item with shared tax', () {
+    test('by item: the leftover tax is split equally among item holders', () {
       final out = computeSplit(
         totalMinor: 11000,
         method: SplitMethod.byItem,
@@ -121,9 +121,77 @@ void main() {
           ItemSplitInput(amountMinor: 4000, memberIds: [a, b], label: 'Naan'),
         ],
       );
-      // a: 6000+2000 = 8000 of 10000 -> 80% of 1000 tax = 800
-      expect(out.asMap(), {a: 8800, b: 2200});
+      expect(out.asMap(), {a: 8500, b: 2500});
       expect(out.totalMinor, 11000);
+    });
+    test('by item: a shared item ignores its members and goes to everyone holding an item', () {
+      final out = computeSplit(
+        totalMinor: 9000,
+        method: SplitMethod.byItem,
+        inputs: const [],
+        items: const [
+          ItemSplitInput(amountMinor: 3000, memberIds: [a], label: 'Paneer'),
+          ItemSplitInput(amountMinor: 3000, memberIds: [b], label: 'Dal'),
+          ItemSplitInput(amountMinor: 3000, memberIds: [c], label: 'Delivery', shared: true),
+        ],
+      );
+      expect(out.asMap(), {a: 4500, b: 4500});
+    });
+    test('by item: rounding remainders go to the payer', () {
+      final out = computeSplit(
+        totalMinor: 1000,
+        method: SplitMethod.byItem,
+        inputs: const [],
+        payerId: c,
+        items: const [ItemSplitInput(amountMinor: 1000, memberIds: [a, b, c], label: 'Pizza')],
+      );
+      expect(out.asMap(), {a: 333, b: 333, c: 334});
+      final remainderOnB = computeSplit(
+        totalMinor: 1001,
+        method: SplitMethod.byItem,
+        inputs: const [],
+        payerId: b,
+        items: const [
+          ItemSplitInput(amountMinor: 500, memberIds: [a, b, c], label: 'Chai'),
+          ItemSplitInput(amountMinor: 501, memberIds: [a, b], label: 'Samosa'),
+        ],
+      );
+      expect(remainderOnB.asMap(), {a: 166 + 250, b: 166 + 250 + 3, c: 166});
+      expect(remainderOnB.totalMinor, 1001);
+    });
+    test('by item: a payer without a share leaves remainders spread in order', () {
+      final out = computeSplit(
+        totalMinor: 1000,
+        method: SplitMethod.byItem,
+        inputs: const [],
+        payerId: c,
+        items: const [ItemSplitInput(amountMinor: 1000, memberIds: [a, b, a], label: 'Pizza')],
+      );
+      expect(out.asMap(), {a: 500, b: 500});
+    });
+    test('by item: only shared items fall back to the included members', () {
+      final out = computeSplit(
+        totalMinor: 900,
+        method: SplitMethod.byItem,
+        inputs: const [SplitInput(memberId: a), SplitInput(memberId: b, included: false), SplitInput(memberId: c)],
+        items: const [ItemSplitInput(amountMinor: 900, memberIds: [], label: 'Cab', shared: true)],
+      );
+      expect(out.asMap(), {a: 450, c: 450});
+      expect(
+        computeSplit(totalMinor: 900, method: SplitMethod.byItem, inputs: const [], items: const [ItemSplitInput(amountMinor: 900, memberIds: [], shared: true)]).error,
+        const SplitError(SplitErrorCode.nobodyIncluded),
+      );
+    });
+    test('by item: errors for no items, items over the total and an unassigned item', () {
+      expect(computeSplit(totalMinor: 100, method: SplitMethod.byItem, inputs: const []).error, const SplitError(SplitErrorCode.noItems));
+      expect(
+        computeSplit(totalMinor: 100, method: SplitMethod.byItem, inputs: const [], items: const [ItemSplitInput(amountMinor: 150, memberIds: [a])]).error,
+        const SplitError(SplitErrorCode.itemsExceed, amountMinor: 50),
+      );
+      expect(
+        computeSplit(totalMinor: 100, method: SplitMethod.byItem, inputs: const [], items: const [ItemSplitInput(amountMinor: 100, memberIds: [], label: 'Tea')]).error,
+        const SplitError(SplitErrorCode.itemUnassigned, label: 'Tea'),
+      );
     });
   });
 

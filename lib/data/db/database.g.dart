@@ -3065,6 +3065,21 @@ class $EntryItemsTable extends EntryItems
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _isSharedMeta = const VerificationMeta(
+    'isShared',
+  );
+  @override
+  late final GeneratedColumn<bool> isShared = GeneratedColumn<bool>(
+    'is_shared',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_shared" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -3077,6 +3092,7 @@ class $EntryItemsTable extends EntryItems
     unitPriceMinor,
     amountMinor,
     sortOrder,
+    isShared,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3163,6 +3179,12 @@ class $EntryItemsTable extends EntryItems
         sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
       );
     }
+    if (data.containsKey('is_shared')) {
+      context.handle(
+        _isSharedMeta,
+        isShared.isAcceptableOrUnknown(data['is_shared']!, _isSharedMeta),
+      );
+    }
     return context;
   }
 
@@ -3212,6 +3234,10 @@ class $EntryItemsTable extends EntryItems
         DriftSqlType.int,
         data['${effectivePrefix}sort_order'],
       )!,
+      isShared: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_shared'],
+      )!,
     );
   }
 
@@ -3232,6 +3258,10 @@ class EntryItem extends DataClass implements Insertable<EntryItem> {
   final int unitPriceMinor;
   final int amountMinor;
   final int sortOrder;
+
+  /// A common line (tax, delivery, service charge) in a by-item group split:
+  /// split equally among everyone holding a non-shared item.
+  final bool isShared;
   const EntryItem({
     required this.updatedAt,
     this.deletedAt,
@@ -3243,6 +3273,7 @@ class EntryItem extends DataClass implements Insertable<EntryItem> {
     required this.unitPriceMinor,
     required this.amountMinor,
     required this.sortOrder,
+    required this.isShared,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3261,6 +3292,7 @@ class EntryItem extends DataClass implements Insertable<EntryItem> {
     map['unit_price_minor'] = Variable<int>(unitPriceMinor);
     map['amount_minor'] = Variable<int>(amountMinor);
     map['sort_order'] = Variable<int>(sortOrder);
+    map['is_shared'] = Variable<bool>(isShared);
     return map;
   }
 
@@ -3278,6 +3310,7 @@ class EntryItem extends DataClass implements Insertable<EntryItem> {
       unitPriceMinor: Value(unitPriceMinor),
       amountMinor: Value(amountMinor),
       sortOrder: Value(sortOrder),
+      isShared: Value(isShared),
     );
   }
 
@@ -3297,6 +3330,7 @@ class EntryItem extends DataClass implements Insertable<EntryItem> {
       unitPriceMinor: serializer.fromJson<int>(json['unitPriceMinor']),
       amountMinor: serializer.fromJson<int>(json['amountMinor']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      isShared: serializer.fromJson<bool>(json['isShared']),
     );
   }
   @override
@@ -3313,6 +3347,7 @@ class EntryItem extends DataClass implements Insertable<EntryItem> {
       'unitPriceMinor': serializer.toJson<int>(unitPriceMinor),
       'amountMinor': serializer.toJson<int>(amountMinor),
       'sortOrder': serializer.toJson<int>(sortOrder),
+      'isShared': serializer.toJson<bool>(isShared),
     };
   }
 
@@ -3327,6 +3362,7 @@ class EntryItem extends DataClass implements Insertable<EntryItem> {
     int? unitPriceMinor,
     int? amountMinor,
     int? sortOrder,
+    bool? isShared,
   }) => EntryItem(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -3338,6 +3374,7 @@ class EntryItem extends DataClass implements Insertable<EntryItem> {
     unitPriceMinor: unitPriceMinor ?? this.unitPriceMinor,
     amountMinor: amountMinor ?? this.amountMinor,
     sortOrder: sortOrder ?? this.sortOrder,
+    isShared: isShared ?? this.isShared,
   );
   EntryItem copyWithCompanion(EntryItemsCompanion data) {
     return EntryItem(
@@ -3355,6 +3392,7 @@ class EntryItem extends DataClass implements Insertable<EntryItem> {
           ? data.amountMinor.value
           : this.amountMinor,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      isShared: data.isShared.present ? data.isShared.value : this.isShared,
     );
   }
 
@@ -3370,7 +3408,8 @@ class EntryItem extends DataClass implements Insertable<EntryItem> {
           ..write('unit: $unit, ')
           ..write('unitPriceMinor: $unitPriceMinor, ')
           ..write('amountMinor: $amountMinor, ')
-          ..write('sortOrder: $sortOrder')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('isShared: $isShared')
           ..write(')'))
         .toString();
   }
@@ -3387,6 +3426,7 @@ class EntryItem extends DataClass implements Insertable<EntryItem> {
     unitPriceMinor,
     amountMinor,
     sortOrder,
+    isShared,
   );
   @override
   bool operator ==(Object other) =>
@@ -3401,7 +3441,8 @@ class EntryItem extends DataClass implements Insertable<EntryItem> {
           other.unit == this.unit &&
           other.unitPriceMinor == this.unitPriceMinor &&
           other.amountMinor == this.amountMinor &&
-          other.sortOrder == this.sortOrder);
+          other.sortOrder == this.sortOrder &&
+          other.isShared == this.isShared);
 }
 
 class EntryItemsCompanion extends UpdateCompanion<EntryItem> {
@@ -3415,6 +3456,7 @@ class EntryItemsCompanion extends UpdateCompanion<EntryItem> {
   final Value<int> unitPriceMinor;
   final Value<int> amountMinor;
   final Value<int> sortOrder;
+  final Value<bool> isShared;
   final Value<int> rowid;
   const EntryItemsCompanion({
     this.updatedAt = const Value.absent(),
@@ -3427,6 +3469,7 @@ class EntryItemsCompanion extends UpdateCompanion<EntryItem> {
     this.unitPriceMinor = const Value.absent(),
     this.amountMinor = const Value.absent(),
     this.sortOrder = const Value.absent(),
+    this.isShared = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   EntryItemsCompanion.insert({
@@ -3440,6 +3483,7 @@ class EntryItemsCompanion extends UpdateCompanion<EntryItem> {
     required int unitPriceMinor,
     required int amountMinor,
     this.sortOrder = const Value.absent(),
+    this.isShared = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        entryId = Value(entryId),
@@ -3457,6 +3501,7 @@ class EntryItemsCompanion extends UpdateCompanion<EntryItem> {
     Expression<int>? unitPriceMinor,
     Expression<int>? amountMinor,
     Expression<int>? sortOrder,
+    Expression<bool>? isShared,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3470,6 +3515,7 @@ class EntryItemsCompanion extends UpdateCompanion<EntryItem> {
       if (unitPriceMinor != null) 'unit_price_minor': unitPriceMinor,
       if (amountMinor != null) 'amount_minor': amountMinor,
       if (sortOrder != null) 'sort_order': sortOrder,
+      if (isShared != null) 'is_shared': isShared,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3485,6 +3531,7 @@ class EntryItemsCompanion extends UpdateCompanion<EntryItem> {
     Value<int>? unitPriceMinor,
     Value<int>? amountMinor,
     Value<int>? sortOrder,
+    Value<bool>? isShared,
     Value<int>? rowid,
   }) {
     return EntryItemsCompanion(
@@ -3498,6 +3545,7 @@ class EntryItemsCompanion extends UpdateCompanion<EntryItem> {
       unitPriceMinor: unitPriceMinor ?? this.unitPriceMinor,
       amountMinor: amountMinor ?? this.amountMinor,
       sortOrder: sortOrder ?? this.sortOrder,
+      isShared: isShared ?? this.isShared,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3535,6 +3583,9 @@ class EntryItemsCompanion extends UpdateCompanion<EntryItem> {
     if (sortOrder.present) {
       map['sort_order'] = Variable<int>(sortOrder.value);
     }
+    if (isShared.present) {
+      map['is_shared'] = Variable<bool>(isShared.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3554,6 +3605,7 @@ class EntryItemsCompanion extends UpdateCompanion<EntryItem> {
           ..write('unitPriceMinor: $unitPriceMinor, ')
           ..write('amountMinor: $amountMinor, ')
           ..write('sortOrder: $sortOrder, ')
+          ..write('isShared: $isShared, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -13300,6 +13352,377 @@ class GroupActivitiesCompanion extends UpdateCompanion<GroupActivity> {
   }
 }
 
+class $ItemAssignmentsTable extends ItemAssignments
+    with TableInfo<$ItemAssignmentsTable, ItemAssignment> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ItemAssignmentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entryItemIdMeta = const VerificationMeta(
+    'entryItemId',
+  );
+  @override
+  late final GeneratedColumn<String> entryItemId = GeneratedColumn<String>(
+    'entry_item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _memberIdMeta = const VerificationMeta(
+    'memberId',
+  );
+  @override
+  late final GeneratedColumn<String> memberId = GeneratedColumn<String>(
+    'member_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    updatedAt,
+    deletedAt,
+    id,
+    entryItemId,
+    memberId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'item_assignments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ItemAssignment> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('entry_item_id')) {
+      context.handle(
+        _entryItemIdMeta,
+        entryItemId.isAcceptableOrUnknown(
+          data['entry_item_id']!,
+          _entryItemIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_entryItemIdMeta);
+    }
+    if (data.containsKey('member_id')) {
+      context.handle(
+        _memberIdMeta,
+        memberId.isAcceptableOrUnknown(data['member_id']!, _memberIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_memberIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {entryItemId, memberId},
+  ];
+  @override
+  ItemAssignment map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ItemAssignment(
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      entryItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_item_id'],
+      )!,
+      memberId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}member_id'],
+      )!,
+    );
+  }
+
+  @override
+  $ItemAssignmentsTable createAlias(String alias) {
+    return $ItemAssignmentsTable(attachedDatabase, alias);
+  }
+}
+
+class ItemAssignment extends DataClass implements Insertable<ItemAssignment> {
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String id;
+  final String entryItemId;
+  final String memberId;
+  const ItemAssignment({
+    required this.updatedAt,
+    this.deletedAt,
+    required this.id,
+    required this.entryItemId,
+    required this.memberId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['id'] = Variable<String>(id);
+    map['entry_item_id'] = Variable<String>(entryItemId);
+    map['member_id'] = Variable<String>(memberId);
+    return map;
+  }
+
+  ItemAssignmentsCompanion toCompanion(bool nullToAbsent) {
+    return ItemAssignmentsCompanion(
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      id: Value(id),
+      entryItemId: Value(entryItemId),
+      memberId: Value(memberId),
+    );
+  }
+
+  factory ItemAssignment.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ItemAssignment(
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      id: serializer.fromJson<String>(json['id']),
+      entryItemId: serializer.fromJson<String>(json['entryItemId']),
+      memberId: serializer.fromJson<String>(json['memberId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'id': serializer.toJson<String>(id),
+      'entryItemId': serializer.toJson<String>(entryItemId),
+      'memberId': serializer.toJson<String>(memberId),
+    };
+  }
+
+  ItemAssignment copyWith({
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? id,
+    String? entryItemId,
+    String? memberId,
+  }) => ItemAssignment(
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    id: id ?? this.id,
+    entryItemId: entryItemId ?? this.entryItemId,
+    memberId: memberId ?? this.memberId,
+  );
+  ItemAssignment copyWithCompanion(ItemAssignmentsCompanion data) {
+    return ItemAssignment(
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      id: data.id.present ? data.id.value : this.id,
+      entryItemId: data.entryItemId.present
+          ? data.entryItemId.value
+          : this.entryItemId,
+      memberId: data.memberId.present ? data.memberId.value : this.memberId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemAssignment(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('entryItemId: $entryItemId, ')
+          ..write('memberId: $memberId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(updatedAt, deletedAt, id, entryItemId, memberId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ItemAssignment &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.id == this.id &&
+          other.entryItemId == this.entryItemId &&
+          other.memberId == this.memberId);
+}
+
+class ItemAssignmentsCompanion extends UpdateCompanion<ItemAssignment> {
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String> id;
+  final Value<String> entryItemId;
+  final Value<String> memberId;
+  final Value<int> rowid;
+  const ItemAssignmentsCompanion({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.id = const Value.absent(),
+    this.entryItemId = const Value.absent(),
+    this.memberId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ItemAssignmentsCompanion.insert({
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String id,
+    required String entryItemId,
+    required String memberId,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       entryItemId = Value(entryItemId),
+       memberId = Value(memberId);
+  static Insertable<ItemAssignment> custom({
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? id,
+    Expression<String>? entryItemId,
+    Expression<String>? memberId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (id != null) 'id': id,
+      if (entryItemId != null) 'entry_item_id': entryItemId,
+      if (memberId != null) 'member_id': memberId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ItemAssignmentsCompanion copyWith({
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String>? id,
+    Value<String>? entryItemId,
+    Value<String>? memberId,
+    Value<int>? rowid,
+  }) {
+    return ItemAssignmentsCompanion(
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      id: id ?? this.id,
+      entryItemId: entryItemId ?? this.entryItemId,
+      memberId: memberId ?? this.memberId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (entryItemId.present) {
+      map['entry_item_id'] = Variable<String>(entryItemId.value);
+    }
+    if (memberId.present) {
+      map['member_id'] = Variable<String>(memberId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemAssignmentsCompanion(')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('id: $id, ')
+          ..write('entryItemId: $entryItemId, ')
+          ..write('memberId: $memberId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -13322,6 +13745,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $EntryPayersTable entryPayers = $EntryPayersTable(this);
   late final $RecurringRulesTable recurringRules = $RecurringRulesTable(this);
   late final $GroupActivitiesTable groupActivities = $GroupActivitiesTable(
+    this,
+  );
+  late final $ItemAssignmentsTable itemAssignments = $ItemAssignmentsTable(
     this,
   );
   late final Index entriesProjectId = Index(
@@ -13356,6 +13782,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'group_activities_group_id',
     'CREATE INDEX group_activities_group_id ON group_activities (group_id)',
   );
+  late final Index itemAssignmentsEntryItemId = Index(
+    'item_assignments_entry_item_id',
+    'CREATE INDEX item_assignments_entry_item_id ON item_assignments (entry_item_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -13378,6 +13808,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     entryPayers,
     recurringRules,
     groupActivities,
+    itemAssignments,
     entriesProjectId,
     entriesRecurringId,
     projectFieldsProjectId,
@@ -13386,6 +13817,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     remindersStatusDue,
     entryPayersEntryId,
     groupActivitiesGroupId,
+    itemAssignmentsEntryItemId,
   ];
 }
 
@@ -14736,6 +15168,7 @@ typedef $$EntryItemsTableCreateCompanionBuilder = EntryItemsCompanion Function({
   required int unitPriceMinor,
   required int amountMinor,
   Value<int> sortOrder,
+  Value<bool> isShared,
   Value<int> rowid,
 });
 typedef $$EntryItemsTableUpdateCompanionBuilder = EntryItemsCompanion Function({
@@ -14749,6 +15182,7 @@ typedef $$EntryItemsTableUpdateCompanionBuilder = EntryItemsCompanion Function({
   Value<int> unitPriceMinor,
   Value<int> amountMinor,
   Value<int> sortOrder,
+  Value<bool> isShared,
   Value<int> rowid,
 });
 
@@ -14808,6 +15242,11 @@ class $$EntryItemsTableFilterComposer
 
   ColumnFilters<int> get sortOrder => $composableBuilder(
     column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isShared => $composableBuilder(
+    column: $table.isShared,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -14870,6 +15309,11 @@ class $$EntryItemsTableOrderingComposer
     column: $table.sortOrder,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isShared => $composableBuilder(
+    column: $table.isShared,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$EntryItemsTableAnnotationComposer
@@ -14914,6 +15358,9 @@ class $$EntryItemsTableAnnotationComposer
 
   GeneratedColumn<int> get sortOrder =>
       $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<bool> get isShared =>
+      $composableBuilder(column: $table.isShared, builder: (column) => column);
 }
 
 class $$EntryItemsTableTableManager
@@ -14957,6 +15404,7 @@ class $$EntryItemsTableTableManager
                 Value<int> unitPriceMinor = const Value.absent(),
                 Value<int> amountMinor = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
+                Value<bool> isShared = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => EntryItemsCompanion(
                 updatedAt: updatedAt,
@@ -14969,6 +15417,7 @@ class $$EntryItemsTableTableManager
                 unitPriceMinor: unitPriceMinor,
                 amountMinor: amountMinor,
                 sortOrder: sortOrder,
+                isShared: isShared,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -14983,6 +15432,7 @@ class $$EntryItemsTableTableManager
                 required int unitPriceMinor,
                 required int amountMinor,
                 Value<int> sortOrder = const Value.absent(),
+                Value<bool> isShared = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => EntryItemsCompanion.insert(
                 updatedAt: updatedAt,
@@ -14995,6 +15445,7 @@ class $$EntryItemsTableTableManager
                 unitPriceMinor: unitPriceMinor,
                 amountMinor: amountMinor,
                 sortOrder: sortOrder,
+                isShared: isShared,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -19679,6 +20130,223 @@ typedef $$GroupActivitiesTableProcessedTableManager =
       GroupActivity,
       PrefetchHooks Function()
     >;
+typedef $$ItemAssignmentsTableCreateCompanionBuilder =
+    ItemAssignmentsCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      required String id,
+      required String entryItemId,
+      required String memberId,
+      Value<int> rowid,
+    });
+typedef $$ItemAssignmentsTableUpdateCompanionBuilder =
+    ItemAssignmentsCompanion Function({
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String> id,
+      Value<String> entryItemId,
+      Value<String> memberId,
+      Value<int> rowid,
+    });
+
+class $$ItemAssignmentsTableFilterComposer
+    extends Composer<_$AppDatabase, $ItemAssignmentsTable> {
+  $$ItemAssignmentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entryItemId => $composableBuilder(
+    column: $table.entryItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get memberId => $composableBuilder(
+    column: $table.memberId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ItemAssignmentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ItemAssignmentsTable> {
+  $$ItemAssignmentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entryItemId => $composableBuilder(
+    column: $table.entryItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get memberId => $composableBuilder(
+    column: $table.memberId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ItemAssignmentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ItemAssignmentsTable> {
+  $$ItemAssignmentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get entryItemId => $composableBuilder(
+    column: $table.entryItemId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get memberId =>
+      $composableBuilder(column: $table.memberId, builder: (column) => column);
+}
+
+class $$ItemAssignmentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ItemAssignmentsTable,
+          ItemAssignment,
+          $$ItemAssignmentsTableFilterComposer,
+          $$ItemAssignmentsTableOrderingComposer,
+          $$ItemAssignmentsTableAnnotationComposer,
+          $$ItemAssignmentsTableCreateCompanionBuilder,
+          $$ItemAssignmentsTableUpdateCompanionBuilder,
+          (
+            ItemAssignment,
+            BaseReferences<
+              _$AppDatabase,
+              $ItemAssignmentsTable,
+              ItemAssignment
+            >,
+          ),
+          ItemAssignment,
+          PrefetchHooks Function()
+        > {
+  $$ItemAssignmentsTableTableManager(
+    _$AppDatabase db,
+    $ItemAssignmentsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ItemAssignmentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ItemAssignmentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ItemAssignmentsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> entryItemId = const Value.absent(),
+                Value<String> memberId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemAssignmentsCompanion(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                entryItemId: entryItemId,
+                memberId: memberId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String id,
+                required String entryItemId,
+                required String memberId,
+                Value<int> rowid = const Value.absent(),
+              }) => ItemAssignmentsCompanion.insert(
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                id: id,
+                entryItemId: entryItemId,
+                memberId: memberId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ItemAssignmentsTable, ItemAssignment>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ItemAssignmentsTable,
+                    ItemAssignment
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ItemAssignmentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ItemAssignmentsTable,
+      ItemAssignment,
+      $$ItemAssignmentsTableFilterComposer,
+      $$ItemAssignmentsTableOrderingComposer,
+      $$ItemAssignmentsTableAnnotationComposer,
+      $$ItemAssignmentsTableCreateCompanionBuilder,
+      $$ItemAssignmentsTableUpdateCompanionBuilder,
+      (
+        ItemAssignment,
+        BaseReferences<_$AppDatabase, $ItemAssignmentsTable, ItemAssignment>,
+      ),
+      ItemAssignment,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -19717,4 +20385,6 @@ class $AppDatabaseManager {
       $$RecurringRulesTableTableManager(_db, _db.recurringRules);
   $$GroupActivitiesTableTableManager get groupActivities =>
       $$GroupActivitiesTableTableManager(_db, _db.groupActivities);
+  $$ItemAssignmentsTableTableManager get itemAssignments =>
+      $$ItemAssignmentsTableTableManager(_db, _db.itemAssignments);
 }

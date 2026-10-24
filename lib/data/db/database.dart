@@ -119,8 +119,30 @@ class EntryItems extends Table with SyncColumns {
   IntColumn get amountMinor => integer()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
+  /// A common line (tax, delivery, service charge) in a by-item group split:
+  /// split equally among everyone holding a non-shared item.
+  BoolColumn get isShared => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// Who shares one line item of a by-item group split. The id is
+/// `'<entryItemId>:<memberId>'`, so re-assigning a member revives the same row.
+/// The materialised result still lands in Splits, so balances read only Splits.
+@TableIndex(name: 'item_assignments_entry_item_id', columns: {#entryItemId})
+class ItemAssignments extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get entryItemId => text()();
+  TextColumn get memberId => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {entryItemId, memberId},
+      ];
 }
 
 class Groups extends Table with SyncColumns {
@@ -505,12 +527,13 @@ class GroupActivities extends Table with SyncColumns {
   EntryPayers,
   RecurringRules,
   GroupActivities,
+  ItemAssignments,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -571,8 +594,14 @@ class AppDatabase extends _$AppDatabase {
           // v12: due reminders (bills, EMIs, cards, documents) on the v5 reminders
           // table: new columns only, so existing rows are kept as they are.
           if (from < 12) await _upgradeToDueReminders(m, from);
-          // v13: credit card statement and due days, limit and last statement.
-          if (from < 13) await _upgradeToCardDetails(m);
+          // v13: by-item group splits, shared lines and who shares each item.
+          if (from < 13) {
+            await m.addColumn(entryItems, entryItems.isShared);
+            await m.createTable(itemAssignments);
+            await m.createIndex(itemAssignmentsEntryItemId);
+          }
+          // v14: credit card statement and due days, limit and last statement.
+          if (from < 14) await _upgradeToCardDetails(m);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -603,7 +632,7 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// v13 step. Adds the credit card columns a table lacks; pre-release
+  /// v14 step. Adds the credit card columns a table lacks; pre-release
   /// builds of card dues stored them under schema 7.
   Future<void> _upgradeToCardDetails(Migrator m) async {
     final existing = await _columnNames('accounts');

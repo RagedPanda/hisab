@@ -24,6 +24,7 @@ import '../../domain/projects/project_templates.dart';
 import '../../domain/recurring/repeat_draft.dart';
 import '../../domain/reminders/reminder_draft.dart';
 import '../../domain/split/group_settings.dart';
+import '../../domain/split/item_split.dart';
 import '../../domain/split/payers.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
@@ -35,6 +36,7 @@ import '../projects/project_field_inputs.dart';
 import '../projects/project_picker_sheet.dart';
 import '../recurring/repeat_sheet.dart';
 import '../shell/widgets/common.dart';
+import '../split/item_assign_strip.dart';
 import '../split/payers_editor.dart';
 import '../split/split_editor.dart';
 import 'calculator_sheet.dart';
@@ -219,6 +221,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         if (_groupId != null) {
           await _loadMembers();
           _splitInputs = _inputsFromSplits(details.splits);
+          final assignments = await ref.read(entriesRepositoryProvider).getItemAssignments(entry.id);
+          _items = [for (final row in details.items) ItemDraft.fromRow(row, memberIds: assignments[row.id] ?? (row.isShared ? const [] : _everyone))];
           final payers = await ref.read(entriesRepositoryProvider).getPayers(entry.id);
           if (payers.isNotEmpty) {
             _multiplePayers = true;
@@ -368,11 +372,57 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   /// Mutates the item list and keeps the amount field bound to the items total (P1-2).
   /// When the last item is removed the last total stays prefilled and the field becomes editable again.
   void _updateItems(void Function() mutate) {
+    final hadItems = _hasItems;
     setState(() {
       mutate();
       if (_hasItems) _amountController.text = amountInputText(_itemsTotalMinor);
+      if (_groupId != null) _syncByItemSplit(hadItems: hadItems);
     });
   }
+
+  List<String> get _everyone => [for (final member in _members) member.id];
+
+  List<ItemSplitInput> get _itemInputs => [for (final draft in _items) draft.toSplitInput()];
+
+  bool get _isByItem => _groupId != null && _splitMethod == SplitMethod.byItem;
+
+  /// New group items start shared by everyone; the first item switches the
+  /// split to "By item" and removing the last one switches it back to equal.
+  void _syncByItemSplit({required bool hadItems}) {
+    _items = [for (final draft in _items) draft.memberIds == null ? draft.copyWith(memberIds: _everyone) : draft];
+    if (!hadItems && _hasItems) _setSplitMethod(SplitMethod.byItem);
+    if (!_hasItems && _splitMethod == SplitMethod.byItem) _setSplitMethod(SplitMethod.equal);
+  }
+
+  void _setSplitMethod(SplitMethod method) {
+    _splitMethod = method;
+    _splitInputs = defaultSplitInputs(_members, method);
+  }
+
+  /// Leaving "By item" drops the assignments, after a confirm when some
+  /// item is not simply split among everyone.
+  Future<void> _changeSplitMethod(SplitMethod method) async {
+    if (_splitMethod == SplitMethod.byItem && method != SplitMethod.byItem && hasCustomAssignments(_itemInputs, _everyone)) {
+      final l10n = context.l10n;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.byItemClearTitle),
+          content: Text(l10n.byItemClearBody),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(l10n.cancel)),
+            FilledButton(key: const Key('byItem.clearConfirm'), onPressed: () => Navigator.pop(dialogContext, true), child: Text(l10n.clear)),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+      _items = [for (final draft in _items) draft.copyWith(memberIds: _everyone, isShared: false)];
+    }
+    setState(() => _setSplitMethod(method));
+  }
+
+  /// The payer who absorbs rounding remainders of a by-item split.
+  String? get _remainderPayerId => _multiplePayers ? primaryPayerId(payersFrom(_payerAmounts)) ?? _paidByMemberId : _paidByMemberId;
 
   @override
   Widget build(BuildContext context) {
@@ -490,7 +540,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             const SizedBox(height: 8),
             _projectChip(l10n, ref.watch(projectViewsProvider).value ?? const <ProjectView>[]),
           ],
-          if (_kind == 'expense' && _groupId == null) _itemsSection(symbol, units),
+          if (_kind == 'expense') _itemsSection(symbol, units),
           if (_kind != 'transfer' && _projectFields.isNotEmpty) ...[
             SectionHeader(l10n.projectDetails, padding: const EdgeInsets.fromLTRB(0, 16, 0, 8)),
             ProjectFieldInputs(key: ValueKey('fields.$_projectId'), fields: _projectFields, values: _fieldValues, onChanged: (values) => setState(() => _fieldValues = values)),
@@ -586,10 +636,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     );
   }
 
+  /// A by-item split with an item nobody shares cannot be saved yet.
+  bool get _saveBlocked => _isByItem && anyItemUnassigned(_itemInputs);
+
   Widget _saveButtons(AppLocalizations l10n, String symbol) {
     final save = FilledButton(
       key: const ValueKey('editor.save'),
-      onPressed: _saving ? null : _save,
+      onPressed: _saving || _saveBlocked ? null : _save,
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: Text(_saving ? l10n.saving : l10n.saveAmount(formatMinor(_amountMinor, symbol: symbol))),
@@ -602,7 +655,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         Expanded(
           child: OutlinedButton(
             key: const ValueKey('editor.saveAndAddAnother'),
-            onPressed: _saving ? null : () => _save(addAnother: true),
+            onPressed: _saving || _saveBlocked ? null : () => _save(addAnother: true),
             child: FittedBox(fit: BoxFit.scaleDown, child: Text(l10n.saveAndAddAnother)),
           ),
         ),
@@ -632,6 +685,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _fieldValues = const {};
       _multiplePayers = false;
       _payerAmounts = {};
+      if (_splitMethod == SplitMethod.byItem) _splitMethod = SplitMethod.equal;
       if (_groupId != null) _splitInputs = defaultSplitInputs(_members, _splitMethod);
       _saving = false;
       _openedWith = _draft;
@@ -681,6 +735,27 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             symbol: symbol,
             onChanged: (draft) => _updateItems(() => _items[i] = draft),
             onRemove: () => _updateItems(() => _items.removeAt(i)),
+            footer: _isByItem
+                ? ItemAssignStrip(
+                    itemId: _items[i].id,
+                    itemLabel: _items[i].name.trim(),
+                    members: _members,
+                    memberIds: _items[i].memberIds ?? const [],
+                    shared: _items[i].isShared,
+                    onMembersChanged: (memberIds) => _updateItems(() => _items[i] = _items[i].copyWith(memberIds: memberIds)),
+                    onSharedChanged: (shared) => _updateItems(() => _items[i] = _items[i].copyWith(isShared: shared)),
+                  )
+                : null,
+          ),
+        if (_isByItem)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              key: const Key('byItem.addExtras'),
+              icon: const Icon(Icons.receipt_long_outlined, size: 18),
+              label: Text(l10n.byItemAddExtras),
+              onPressed: () => _updateItems(() => _items.add(ItemDraft(name: l10n.byItemAddExtras, isShared: true, memberIds: const []))),
+            ),
           ),
         if (_items.isEmpty && _suggestions.isEmpty)
           Text(l10n.itemsHelp,
@@ -729,10 +804,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           method: _splitMethod,
           inputs: _splitInputs,
           symbol: symbol,
-          onMethodChanged: (method) => setState(() {
-            _splitMethod = method;
-            _splitInputs = defaultSplitInputs(_members, method);
-          }),
+          items: _itemInputs,
+          payerId: _remainderPayerId,
+          onMethodChanged: _changeSplitMethod,
           onInputsChanged: (inputs) => setState(() => _splitInputs = inputs),
         ),
       ],
@@ -798,7 +872,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         messenger.showSnackBar(SnackBar(content: Text(l10n.errorChoosePayer)));
         return;
       }
-      outcome = computeSplit(totalMinor: amount, method: _splitMethod, inputs: _splitInputs);
+      outcome = computeSplit(totalMinor: amount, method: _splitMethod, inputs: _splitInputs, items: _itemInputs, payerId: _paidByMemberId);
       if (!outcome.isValid) {
         messenger.showSnackBar(SnackBar(content: Text(outcome.error == null ? l10n.errorFixSplit : splitErrorMessage(outcome.error!, l10n, ref.read(settingsProvider).currencySymbol))));
         return;
@@ -859,6 +933,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                       EntryPayersCompanion.insert(id: newId(), entryId: id, memberId: payer.memberId, amountMinor: payer.amountMinor),
                 ],
           fieldValues: projectId == null ? const [] : entryFieldValueRows(id, _fieldValues),
+          itemAssignments: _groupId == null
+              ? null
+              : {
+                  if (_isByItem)
+                    for (final draft in _items)
+                      if (!draft.isShared) draft.id: draft.memberIds ?? const [],
+                },
         );
     if (!_isEditing && _groupId == null && _kind != 'transfer') ref.read(lastProjectIdProvider.notifier).set(projectId);
     await _applyBalanceChange(amount);

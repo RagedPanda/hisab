@@ -14,6 +14,11 @@ class DateRange {
 DateTime startOfDay(DateTime value) =>
     DateTime(value.year, value.month, value.day);
 
+/// The calendar day containing [anchor]: local midnight up to (not
+/// including) the next midnight, so DST days keep their true length.
+DateRange dayRange(DateTime anchor) =>
+    DateRange(startOfDay(anchor), DateTime(anchor.year, anchor.month, anchor.day + 1));
+
 /// Returns the "month" containing [anchor] when months start on [startDay]
 /// (1 = calendar month; 25 = salary month running 25th to 24th).
 DateRange monthRange(DateTime anchor, {int startDay = 1}) {

@@ -3,6 +3,7 @@
 /// data is never touched, and provides screenshot + interaction utilities.
 library;
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:drift/native.dart';
@@ -173,12 +174,35 @@ Future<void> shoot(WidgetTester tester, String name) async {
     // Android renders to a SurfaceView that cannot be read back until it is
     // swapped for an image-backed surface; the binding reverts it after
     // every test, so convert once per test.
-    await binding.convertFlutterSurfaceToImage();
+    await _whilePumping(tester, binding.convertFlutterSurfaceToImage(), 'converting the surface for $numbered');
     _surfaceConverted = true;
     addTearDown(() => _surfaceConverted = false);
     await tester.pump();
   }
-  await binding.takeScreenshot(numbered);
+  await _whilePumping(tester, binding.takeScreenshot(numbered), 'capturing $numbered');
+}
+
+/// How long one in-app capture may take before the flow fails.
+const kShotTimeout = Duration(seconds: 30);
+
+/// Awaits [work] while pumping frames, and fails with [what] after
+/// [kShotTimeout] instead of stalling the run.
+///
+/// Android's capture (FlutterDeviceScreenshot.takeScreenshot) retries until
+/// the Flutter view hands it a frame it has not read yet. It asks for one
+/// with `scheduleFrame`, but the test binding only draws frames it pumps
+/// itself, so on a screen with nothing animating no new frame ever comes
+/// and the capture waits forever with the isolate idle (#99, Hindi dark
+/// card screen). Pumping until the capture returns always gives it one.
+Future<T> _whilePumping<T>(WidgetTester tester, Future<T> work, String what) async {
+  var finished = false;
+  unawaited(work.then<void>((_) => finished = true, onError: (Object _) => finished = true));
+  final deadline = DateTime.now().add(kShotTimeout);
+  while (!finished) {
+    if (DateTime.now().isAfter(deadline)) fail('Timed out after ${kShotTimeout.inSeconds} s $what (texts on screen: ${onstageTexts().take(12).toList()})');
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+  return work;
 }
 
 bool _surfaceConverted = false;

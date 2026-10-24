@@ -78,5 +78,5 @@ void main() {
         expect(find.byType(BottomSheet), findsNothing, reason: 'editor closed on $tag');
       }
     }
-  });
+  }, timeout: const Timeout(Duration(minutes: 15)));
 }

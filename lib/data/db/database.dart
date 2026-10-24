@@ -109,8 +109,30 @@ class EntryItems extends Table with SyncColumns {
   IntColumn get amountMinor => integer()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
+  /// A common line (tax, delivery, service charge) in a by-item group split:
+  /// split equally among everyone holding a non-shared item.
+  BoolColumn get isShared => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// Who shares one line item of a by-item group split. The id is
+/// `'<entryItemId>:<memberId>'`, so re-assigning a member revives the same row.
+/// The materialised result still lands in Splits, so balances read only Splits.
+@TableIndex(name: 'item_assignments_entry_item_id', columns: {#entryItemId})
+class ItemAssignments extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get entryItemId => text()();
+  TextColumn get memberId => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {entryItemId, memberId},
+      ];
 }
 
 class Groups extends Table with SyncColumns {
@@ -368,7 +390,7 @@ class Reminders extends Table with SyncColumns {
   /// so undo can remove it again.
   TextColumn get nextId => text().nullable()();
 
-  // Document reminders (v13): PUC, passport, insurance and other renewals.
+  // Document reminders (v14): PUC, passport, insurance and other renewals.
 
   /// Project the reminder belongs to (projects.id), e.g. the Vehicle project's PUC.
   TextColumn get projectId => text().nullable()();
@@ -507,12 +529,13 @@ class GroupActivities extends Table with SyncColumns {
   EntryPayers,
   RecurringRules,
   GroupActivities,
+  ItemAssignments,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -573,8 +596,14 @@ class AppDatabase extends _$AppDatabase {
           // v12: due reminders (bills, EMIs, cards, documents) on the v5 reminders
           // table: new columns only, so existing rows are kept as they are.
           if (from < 12) await _upgradeToDueReminders(m, from);
-          // v13: document reminders link to a project and keep a document number.
-          if (from < 13) await _upgradeToDocumentReminders(m, from);
+          // v13: by-item group splits, shared lines and who shares each item.
+          if (from < 13) {
+            await m.addColumn(entryItems, entryItems.isShared);
+            await m.createTable(itemAssignments);
+            await m.createIndex(itemAssignmentsEntryItemId);
+          }
+          // v14: document reminders link to a project and keep a document number.
+          if (from < 14) await _upgradeToDocumentReminders(m, from);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -605,7 +634,7 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// v13 step. A v5..v12 reminders table gains the project link, document
+  /// v14 step. A v5..v13 reminders table gains the project link, document
   /// number and preset key it lacks (a table created at v5 or later by this
   /// version already has them), plus the project index. Checking what exists
   /// keeps it idempotent, and it heals pre-release builds of this feature,
@@ -811,5 +840,5 @@ List<GeneratedColumn> dueReminderColumns($RemindersTable table) => [
       table.nextId,
     ];
 
-/// Columns v13 added to [Reminders]; a v12 database gains exactly these.
+/// Columns v14 added to [Reminders]; a v13 database gains exactly these.
 List<GeneratedColumn> documentReminderColumns($RemindersTable table) => [table.projectId, table.documentNumber, table.presetKey];

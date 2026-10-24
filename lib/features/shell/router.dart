@@ -58,6 +58,9 @@ final appRouter = GoRouter(
       // The editor handles Back itself: it asks before discarding input and
       // falls back to home when there is nothing to pop to (#82).
       builder: (_, state) => ExpenseEditorScreen(
+        // A new key per URI, so going from one entry to another rebuilds the
+        // editor instead of keeping the previous entry's state.
+        key: ValueKey(state.uri.toString()),
         entryId: state.uri.queryParameters['id'],
         groupId: state.uri.queryParameters['group'],
         initialKind: state.uri.queryParameters['kind'],

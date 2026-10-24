@@ -431,6 +431,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorPickBothAccounts => 'Pick both accounts for a transfer';
 
   @override
+  String get errorPickAccount => 'Pick an account';
+
+  @override
+  String get errorSameAccount => 'From and To must be different accounts';
+
+  @override
   String get errorItemName => 'Every item needs a name';
 
   @override

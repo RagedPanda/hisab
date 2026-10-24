@@ -146,6 +146,8 @@
   "errorAmountZero": "Enter an amount greater than zero",
   "errorPickCategory": "Pick a category",
   "errorPickBothAccounts": "Pick both accounts for a transfer",
+  "errorPickAccount": "Pick an account",
+  "errorSameAccount": "From and To must be different accounts",
   "errorItemName": "Every item needs a name",
   "errorChoosePayer": "Choose who paid",
   "errorFixSplit": "Fix the split first",

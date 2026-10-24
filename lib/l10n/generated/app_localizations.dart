@@ -824,6 +824,18 @@ abstract class AppLocalizations {
   /// **'Pick both accounts for a transfer'**
   String get errorPickBothAccounts;
 
+  /// No description provided for @errorPickAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an account'**
+  String get errorPickAccount;
+
+  /// No description provided for @errorSameAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'From and To must be different accounts'**
+  String get errorSameAccount;
+
   /// No description provided for @errorItemName.
   ///
   /// In en, this message translates to:

@@ -85,7 +85,7 @@ class BackupService {
           final incomingUpdated = updatedOf(incoming);
           if (currentUpdated != null && incomingUpdated != null && !incomingUpdated.isAfter(currentUpdated)) continue;
         }
-        await db.into(table).insertOnConflictUpdate(incoming as Insertable<D>);
+        await db.into(table).insertOnConflictUpdate(wholeRow(incoming as Insertable<D>));
         written++;
       }
     }
@@ -116,6 +116,11 @@ class BackupService {
     return written;
   }
 }
+
+/// [row] with every column written, nulls included. A data class inserts with
+/// null columns left out, so a newer backup row could never clear a local
+/// value such as deletedAt or a note (#91).
+Insertable<D> wholeRow<D>(Insertable<D> row) => RawValuesInsertable<D>(row.toColumns(false));
 
 /// Ids of the rows a backup payload carries for [key].
 Set<String> restoredIds(Map<String, dynamic> payload, String key) => {

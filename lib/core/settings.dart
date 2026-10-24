@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../domain/sms/sms_confidence.dart';
+
 /// Preference behind Settings > "Month starts on"; also read by backups.
 const String kMonthStartDayPref = 'monthStartDay';
 
@@ -11,7 +13,8 @@ class AppSettings {
     this.monthStartDay = 1,
     this.themeMode = ThemeMode.system,
     this.smsEnabled = false,
-    this.smsAutoAdd = false,
+    this.smsAutoAdd = true,
+    this.smsAutoAddChosen = false,
     this.myName = '',
     this.onboarded = false,
     this.localeCode = '',
@@ -24,8 +27,12 @@ class AppSettings {
   /// Whether the user has opted in to reading bank SMS.
   final bool smsEnabled;
 
-  /// Add parsed SMS transactions directly instead of queueing for review.
+  /// Add confidently parsed SMS transactions directly instead of queueing
+  /// them for review. On unless the user turned it off.
   final bool smsAutoAdd;
+
+  /// Whether the user ever flipped [smsAutoAdd] themselves.
+  final bool smsAutoAddChosen;
   final String myName;
   final bool onboarded;
 
@@ -40,6 +47,7 @@ class AppSettings {
     ThemeMode? themeMode,
     bool? smsEnabled,
     bool? smsAutoAdd,
+    bool? smsAutoAddChosen,
     String? myName,
     bool? onboarded,
     String? localeCode,
@@ -50,6 +58,7 @@ class AppSettings {
         themeMode: themeMode ?? this.themeMode,
         smsEnabled: smsEnabled ?? this.smsEnabled,
         smsAutoAdd: smsAutoAdd ?? this.smsAutoAdd,
+        smsAutoAddChosen: smsAutoAddChosen ?? this.smsAutoAddChosen,
         myName: myName ?? this.myName,
         onboarded: onboarded ?? this.onboarded,
         localeCode: localeCode ?? this.localeCode,
@@ -60,7 +69,8 @@ class AppSettings {
         monthStartDay: prefs.getInt(kMonthStartDayPref) ?? 1,
         themeMode: ThemeMode.values[prefs.getInt('themeMode') ?? ThemeMode.system.index],
         smsEnabled: prefs.getBool('smsEnabled') ?? false,
-        smsAutoAdd: prefs.getBool('smsAutoAdd') ?? false,
+        smsAutoAdd: resolveSmsAutoAdd(storedValue: prefs.getBool('smsAutoAdd'), userChose: prefs.getBool('smsAutoAddChosen') ?? false),
+        smsAutoAddChosen: prefs.getBool('smsAutoAddChosen') ?? false,
         myName: prefs.getString('myName') ?? '',
         onboarded: prefs.getBool('onboarded') ?? false,
         localeCode: prefs.getString('localeCode') ?? '',
@@ -72,6 +82,7 @@ class AppSettings {
     await prefs.setInt('themeMode', themeMode.index);
     await prefs.setBool('smsEnabled', smsEnabled);
     await prefs.setBool('smsAutoAdd', smsAutoAdd);
+    await prefs.setBool('smsAutoAddChosen', smsAutoAddChosen);
     await prefs.setString('myName', myName);
     await prefs.setBool('onboarded', onboarded);
     await prefs.setString('localeCode', localeCode);

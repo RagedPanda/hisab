@@ -4,6 +4,7 @@ library;
 
 import '../../core/dates.dart';
 import 'debt_simplifier.dart';
+import 'split_calculator.dart';
 
 /// An expense on the group timeline: who paid how much, and each member's share.
 class TimelineExpense {
@@ -93,12 +94,14 @@ bool expenseInvolves(String? memberId, TimelineExpense expense) =>
 bool paymentInvolves(String? memberId, TimelinePayment payment) =>
     memberId != null && (payment.fromMemberId == memberId || payment.toMemberId == memberId);
 
-/// Builds the timeline form of a ledger expense with a single payer.
-TimelineExpense timelineExpenseOf(DateTime occurredAt, LedgerExpense expense) {
-  final shares = <String, int>{};
-  for (final share in expense.shares) {
-    shares.update(share.memberId, (value) => value + share.amountMinor, ifAbsent: () => share.amountMinor);
+/// Builds the timeline form of a ledger expense.
+TimelineExpense timelineExpenseOf(DateTime occurredAt, LedgerExpense expense) =>
+    TimelineExpense(occurredAt: occurredAt, paidMinor: _sumByMember(expense.payers), shareMinor: _sumByMember(expense.shares));
+
+Map<String, int> _sumByMember(List<SplitShare> amounts) {
+  final byMember = <String, int>{};
+  for (final amount in amounts) {
+    byMember.update(amount.memberId, (value) => value + amount.amountMinor, ifAbsent: () => amount.amountMinor);
   }
-  final total = shares.values.fold(0, (sum, amount) => sum + amount);
-  return TimelineExpense(occurredAt: occurredAt, paidMinor: {expense.paidByMemberId: total}, shareMinor: shares);
+  return byMember;
 }

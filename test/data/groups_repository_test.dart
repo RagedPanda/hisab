@@ -240,4 +240,60 @@ void main() {
     expect((await restoredGroups.getMembers(groupId)).firstWhere((member) => member.id == rahul).upiId, 'rahul@ybl');
     expect((await restoredGroups.getGroupDetail(groupId))!.lastRemindedAt, {rahul: DateTime(2026, 10, 9)});
   });
+
+  group('several payers', () {
+    late String groupId;
+    late String me;
+    late String rahul;
+    late String priya;
+    const entryId = 'dinner';
+
+    Future<void> saveDinner({required Map<String, int> paid}) => entries.saveEntry(
+          EntriesRepository.newExpense(id: entryId, amountMinor: 90000, occurredAt: DateTime(2026, 10, 2), groupId: groupId, paidByMemberId: paid.keys.first, splitMethod: 'equal'),
+          splits: [
+            for (final member in [me, rahul, priya]) SplitsCompanion.insert(id: '$entryId-$member', entryId: entryId, memberId: member, amountMinor: 30000),
+          ],
+          payers: paid.length < 2
+              ? const []
+              : [for (final payer in paid.entries) EntryPayersCompanion.insert(id: '$entryId-paid-${payer.key}', entryId: entryId, memberId: payer.key, amountMinor: payer.value)],
+        );
+
+    setUp(() async {
+      groupId = await groups.createGroup(name: 'Goa', icon: 'beach', myName: 'Me', otherMembers: ['Priya', 'Rahul']);
+      final members = await groups.getMembers(groupId);
+      me = members.firstWhere((m) => m.isMe).id;
+      rahul = members.firstWhere((m) => m.name == 'Rahul').id;
+      priya = members.firstWhere((m) => m.name == 'Priya').id;
+    });
+
+    test('balances credit every payer with what they paid', () async {
+      await saveDinner(paid: {rahul: 60000, me: 30000});
+      final detail = (await groups.getGroupDetail(groupId))!;
+      expect(detail.balances.net, {me: 0, rahul: 30000, priya: -30000});
+      expect(detail.timelineByEntryId[entryId]!.paidMinor, {rahul: 60000, me: 30000});
+      expect(detail.entries.single.$3, hasLength(2));
+    });
+
+    test('switching back to one payer drops the old payer rows', () async {
+      await saveDinner(paid: {rahul: 60000, me: 30000});
+      await saveDinner(paid: {me: 90000});
+      expect(await entries.getPayers(entryId), isEmpty);
+      expect((await groups.getGroupDetail(groupId))!.balances.net, {me: 60000, rahul: -30000, priya: -30000});
+    });
+
+    test('deleting the expense removes its payers', () async {
+      await saveDinner(paid: {rahul: 60000, me: 30000});
+      await entries.deleteEntry(entryId);
+      expect(await entries.getPayers(entryId), isEmpty);
+      expect((await groups.getGroupDetail(groupId))!.balances.net.values.every((amount) => amount == 0), isTrue);
+    });
+
+    test('backup round-trips the payer rows', () async {
+      await saveDinner(paid: {rahul: 60000, me: 30000});
+      final restored = AppDatabase(NativeDatabase.memory());
+      addTearDown(restored.close);
+      await BackupService(restored).importSnapshot(await BackupService(db).snapshot());
+      expect((await GroupsRepository(restored).getGroupDetail(groupId))!.balances.net, {me: 0, rahul: 30000, priya: -30000});
+    });
+  });
 }

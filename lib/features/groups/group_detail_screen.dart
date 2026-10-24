@@ -14,7 +14,9 @@ import '../../domain/split/debt_simplifier.dart';
 import '../../domain/split/settle_up_links.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import '../../domain/split/group_export.dart' show exportFileName;
 import 'group_expenses_tab.dart';
+import 'group_export.dart';
 import 'member_display.dart';
 import 'member_sheet.dart';
 import 'record_payment_sheet.dart';
@@ -66,7 +68,7 @@ class GroupDetailScreen extends ConsumerWidget {
             IconButton(
               tooltip: l10n.shareSummary,
               icon: const Icon(Icons.ios_share),
-              onPressed: () => _showShareOptions(context, ref, detail: detail, symbol: symbol),
+              onPressed: () => _showShareOptions(context, ref, detail: detail, symbol: symbol, categoryById: categoryById),
             ),
             PopupMenuButton<String>(
               onSelected: (value) async {
@@ -123,10 +125,24 @@ class GroupDetailScreen extends ConsumerWidget {
     );
   }
 
-  /// Share balances summary, remind everyone who owes me, or copy the summary.
-  static Future<void> _showShareOptions(BuildContext context, WidgetRef ref, {required GroupDetail detail, required String symbol}) {
+  /// Share balances summary, remind everyone who owes me, copy the summary,
+  /// or export every expense and payment as CSV.
+  static Future<void> _showShareOptions(BuildContext context, WidgetRef ref, {required GroupDetail detail, required String symbol, required Map<String, Category> categoryById}) {
     final l10n = context.l10n;
-    final summary = summaryText(l10n, detail.group, detail.members, detail.balances, symbol);
+    final locale = Localizations.localeOf(context);
+    final summary = groupSummaryFor(l10n, detail, symbol: symbol);
+    Future<void> exportCsv() async {
+      try {
+        await ref.read(csvFileSharerProvider)(
+          fileName: exportFileName(detail.group.name, DateTime.now()),
+          csv: groupCsv(l10n, detail, categoryById: categoryById, locale: locale),
+          subject: l10n.groupExportCsvSubject(detail.group.name),
+        );
+      } on Exception {
+        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.groupExportFailed)));
+      }
+    }
+
     final myId = detail.me?.id;
     final owedToMe = [for (final transfer in detail.balances.suggested) if (settleRoleFor(transfer, myId) == SettleRole.remind) transfer];
     final nameById = {for (final member in detail.allMembers) member.id: memberShortName(l10n, member)};
@@ -177,21 +193,16 @@ class GroupDetailScreen extends ConsumerWidget {
                 if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.copied)));
               }),
             ),
+            ListTile(
+              key: const Key('group-export-csv'),
+              leading: const Icon(Icons.table_view_outlined),
+              title: Text(l10n.groupExportCsv),
+              onTap: () => run(exportCsv),
+            ),
           ]),
         );
       },
     );
-  }
-
-  static String summaryText(AppLocalizations l10n, Group group, List<Member> members, GroupBalances balances, String symbol) {
-    final buffer = StringBuffer('${l10n.shareHeader(group.name)}\n');
-    final byId = {for (final member in members) member.id: memberShortName(l10n, member)};
-    for (final transfer in balances.suggested) {
-      buffer.writeln(l10n.sharePays(byId[transfer.from] ?? l10n.unknown, byId[transfer.to] ?? l10n.unknown, formatMinor(transfer.amountMinor, symbol: symbol)));
-    }
-    if (balances.suggested.isEmpty) buffer.writeln(l10n.allSettledUp);
-    buffer.writeln('\n${l10n.sharedFromHisab}');
-    return buffer.toString();
   }
 }
 
@@ -203,10 +214,7 @@ Future<void> confirmRemoveSettlement(BuildContext context, WidgetRef ref, Settle
   final repo = ref.read(groupsRepositoryProvider);
   await repo.deleteSettlement(settlement.id);
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    content: Text(l10n.paymentRemoved),
-    action: SnackBarAction(label: l10n.undo, onPressed: () => repo.restoreSettlement(settlement.id)),
-  ));
+  showUndoSnackBar(ScaffoldMessenger.of(context), message: l10n.paymentRemoved, undoLabel: l10n.undo, onUndo: () => repo.restoreSettlement(settlement.id));
 }
 
 class _BalancesTab extends ConsumerWidget {
@@ -321,7 +329,7 @@ class _BalancesTab extends ConsumerWidget {
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                    onPressed: () => ref.read(textSharerProvider)(GroupDetailScreen.summaryText(l10n, group, members, balances, symbol)),
+                    onPressed: () => ref.read(textSharerProvider)(groupSummaryFor(l10n, detail, symbol: symbol)),
                     icon: const Icon(Icons.ios_share, size: 18),
                     label: Text(l10n.shareSummaryAnyway),
                   ),

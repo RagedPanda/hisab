@@ -93,11 +93,11 @@ class EntryTile extends StatelessWidget {
         color: category?.color ?? 0xFF607D8B,
       ),
       title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: subtitleParts.isEmpty
+      subtitle: subtitleParts.isEmpty && entry.source != 'sms'
           ? null
           : Row(children: [
               if (entry.source == 'sms') ...[
-                Icon(Icons.sms_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant, semanticLabel: l10n.sourceSms),
+                Icon(Icons.sms_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant, semanticLabel: l10n.smsAddedMarker),
                 const SizedBox(width: 4),
               ],
               Expanded(child: Text(subtitleParts.join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis)),
@@ -401,19 +401,39 @@ void popOrGoHome(BuildContext context) {
   }
 }
 
-/// Replaces whatever snackbar is showing with [message] and an Undo action.
-/// It times out like a plain snackbar instead of persisting, so a run of
-/// quick actions never queues stale messages behind each other.
+/// Replaces whatever snackbar is showing with [message] and one action
+/// button. Since Flutter 3.29 a snackbar with an action stays up until it is
+/// dismissed; this one times out like a plain snackbar instead (#47, #72), so
+/// every snackbar with an action in the app goes through here.
+void showActionSnackBar(
+  ScaffoldMessengerState messenger, {
+  required String message,
+  required String actionLabel,
+  required VoidCallback onAction,
+  Duration duration = const Duration(milliseconds: 4000),
+}) {
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message), persist: false, duration: duration, action: SnackBarAction(label: actionLabel, onPressed: onAction)));
+}
+
+/// [showActionSnackBar] with an Undo action, so a run of quick actions never
+/// queues stale messages behind each other.
 void showUndoSnackBar(
   ScaffoldMessengerState messenger, {
   required String message,
   required String undoLabel,
   required VoidCallback onUndo,
   Duration duration = const Duration(milliseconds: 4000),
-}) {
+}) =>
+    showActionSnackBar(messenger, message: message, actionLabel: undoLabel, onAction: onUndo, duration: duration);
+
+/// Replaces whatever snackbar is showing with [message]. It times out, so a
+/// result never lingers or queues behind an older one.
+void showTimedSnackBar(ScaffoldMessengerState messenger, String message) {
   messenger
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message), duration: duration, persist: false, action: SnackBarAction(label: undoLabel, onPressed: onUndo)));
+    ..showSnackBar(SnackBar(content: Text(message), persist: false));
 }
 
 /// Makes the system Back gesture return to Home instead of leaving the app
@@ -500,16 +520,18 @@ class _ChipRowState extends State<ChipRow> {
       separatorBuilder: (_, _) => const SizedBox(width: 8),
       itemBuilder: (_, index) => widget.children[index],
     );
+    // The mask stays in the tree either way: swapping it in and out would
+    // rebuild the list and throw away the scroll position at the far end.
     return SizedBox(
       height: kChipRowHeight,
-      child: _moreToTheRight ? ShaderMask(shaderCallback: _fadeShader, blendMode: BlendMode.dstIn, child: list) : list,
+      child: ShaderMask(shaderCallback: (bounds) => _fadeShader(bounds, fade: _moreToTheRight), blendMode: BlendMode.dstIn, child: list),
     );
   }
 
-  static Shader _fadeShader(Rect bounds) => LinearGradient(
+  static Shader _fadeShader(Rect bounds, {required bool fade}) => LinearGradient(
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
-        colors: const [Colors.white, Colors.white, Colors.transparent],
+        colors: [Colors.white, Colors.white, fade ? Colors.transparent : Colors.white],
         stops: [0, 1 - kChipRowFadeWidth / bounds.width, 1],
       ).createShader(bounds);
 }

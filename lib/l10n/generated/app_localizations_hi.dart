@@ -384,7 +384,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get smsEntryNotice =>
-      'बैंक एसएमएस से बना है। इसे बदलने से बैंक बैलेंस नहीं बदलेगा।';
+      'एसएमएस से जोड़ा गया। इसे बदलने से बैंक बैलेंस नहीं बदलेगा।';
 
   @override
   String get saving => 'सेव हो रहा है…';
@@ -770,7 +770,24 @@ class AppLocalizationsHi extends AppLocalizations {
   String get smsDuplicate => 'पहले ही जोड़ा जा चुका है।';
 
   @override
+  String get smsForeignCurrency =>
+      'केवल आपकी मुख्य मुद्रा वाले SMS समर्थित हैं, इसलिए यह SMS छोड़ दिया गया।';
+
+  @override
   String get smsNotFound => 'इस टेक्स्ट में कोई लेन-देन नहीं मिला।';
+
+  @override
+  String get smsNotificationTitle => 'नया बैंक लेन-देन';
+
+  @override
+  String smsNotificationBodyAmount(String amount, String sender) {
+    return '$sender से $amount। देखने के लिए टैप करें।';
+  }
+
+  @override
+  String smsNotificationBody(String sender) {
+    return '$sender से। देखने के लिए टैप करें।';
+  }
 
   @override
   String get readBankSmsQuestion => 'बैंक एसएमएस पढ़ें?';
@@ -799,11 +816,11 @@ class AppLocalizationsHi extends AppLocalizations {
       'iOS पर उपलब्ध नहीं। शॉर्टकट इस्तेमाल करें या नीचे पेस्ट करें।';
 
   @override
-  String get smsAutoAddTitle => 'बिना समीक्षा के लेन-देन जोड़ें';
+  String get smsAutoAddTitle => 'साफ़ लेन-देन अपने-आप जोड़ें';
 
   @override
   String get smsAutoAddHelp =>
-      'बंद: नए एसएमएस नीचे समीक्षा सूची में रुकते हैं।';
+      'चालू: साफ़ बैंक एसएमएस तुरंत जुड़ते हैं, पूर्ववत करने के विकल्प के साथ। अस्पष्ट एसएमएस समीक्षा के लिए रुकते हैं।';
 
   @override
   String get scanInboxNow => 'अभी इनबॉक्स स्कैन करें';
@@ -1952,6 +1969,360 @@ class AppLocalizationsHi extends AppLocalizations {
   String get savedAddAnother => 'सेव हो गया। अगला जोड़ें।';
 
   @override
+  String get remindersTitle => 'रिमाइंडर';
+
+  @override
+  String remindersUpcomingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count आने वाले',
+      one: '1 आने वाला',
+      zero: 'कुछ देय नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get remindersNotificationsOn => 'सूचनाएँ चालू';
+
+  @override
+  String get remindersNotificationsOff => 'सूचनाएँ बंद';
+
+  @override
+  String remindersSettingsSubtitle(String count, String state) {
+    return '$count · $state';
+  }
+
+  @override
+  String get reminderTabHistory => 'इतिहास';
+
+  @override
+  String get reminderSectionOverdue => 'बकाया';
+
+  @override
+  String get reminderSectionThisWeek => 'इस हफ़्ते';
+
+  @override
+  String get reminderSectionLater => 'बाद में';
+
+  @override
+  String get reminderAdd => 'रिमाइंडर जोड़ें';
+
+  @override
+  String get reminderFab => 'रिमाइंडर';
+
+  @override
+  String get remindersEmptyTitle => 'अभी कोई रिमाइंडर नहीं';
+
+  @override
+  String get remindersEmptyBody =>
+      'बिल, किराया, ईएमआई, रिन्यूअल: एक जोड़ें, हिसाब देय तारीख़ से पहले याद दिलाएगा।';
+
+  @override
+  String get reminderHistoryEmpty => 'चुकाए और छोड़े गए रिमाइंडर यहाँ दिखेंगे।';
+
+  @override
+  String get reminderSkip => 'इस बार छोड़ें';
+
+  @override
+  String get reminderDeleted => 'रिमाइंडर हटाया गया';
+
+  @override
+  String get reminderMarkedPaid => 'चुकाया गया';
+
+  @override
+  String get reminderMarkedDone => 'पूरा हुआ';
+
+  @override
+  String get reminderSkipped => 'इस बार छोड़ा गया';
+
+  @override
+  String reminderSnoozedUntil(String date) {
+    return '$date तक टाला गया';
+  }
+
+  @override
+  String get reminderAlreadyDone => 'पहले ही चुकाया जा चुका है';
+
+  @override
+  String reminderPaidOn(String date) {
+    return '$date को चुकाया';
+  }
+
+  @override
+  String reminderDoneOn(String date) {
+    return '$date को पूरा';
+  }
+
+  @override
+  String reminderSkippedOn(String date) {
+    return '$date को छोड़ा';
+  }
+
+  @override
+  String reminderNextDue(String date) {
+    return 'अगली देय तारीख़ $date';
+  }
+
+  @override
+  String get notifOffBanner =>
+      'सूचनाएँ बंद हैं। रिमाइंडर सिर्फ़ ऐप में दिखेंगे।';
+
+  @override
+  String get notifTurnOn => 'चालू करें';
+
+  @override
+  String get remindersLateNote =>
+      'रिमाइंडर देर से आ सकते हैं। \"अलार्म और रिमाइंडर\" की अनुमति दें';
+
+  @override
+  String get exactAlarmPromptTitle => 'रिमाइंडर समय पर पाएँ';
+
+  @override
+  String get exactAlarmPromptBody =>
+      'आपके चुने हुए सही समय पर सूचना देने के लिए Android को हिसाब की \"अलार्म और रिमाइंडर\" सेटिंग चाहिए। इसके बिना रिमाइंडर देर से आ सकते हैं।';
+
+  @override
+  String get notifPrePromptTitle => 'देय तारीख़ से पहले याद पाएँ';
+
+  @override
+  String get notifPrePromptBody =>
+      'हिसाब आपके चुने समय पर सिर्फ़ आपके रिमाइंडर की सूचना भेजेगा। कोई विज्ञापन नहीं।';
+
+  @override
+  String reminderPaidSheetTitle(String title) {
+    return '$title चुका दिया?';
+  }
+
+  @override
+  String reminderPaidSheetBody(String amount) {
+    return '$amount का खर्च जोड़ें और इसे चुकाया हुआ मानें।';
+  }
+
+  @override
+  String get reminderAddEntryAndMark => 'एंट्री जोड़ें और चुकाया मानें';
+
+  @override
+  String get reminderJustMark => 'बस चुकाया मानें';
+
+  @override
+  String get reminderNew => 'नया रिमाइंडर';
+
+  @override
+  String get reminderEditTitle => 'रिमाइंडर बदलें';
+
+  @override
+  String get reminderKindBill => 'बिल';
+
+  @override
+  String get reminderKindEmi => 'ईएमआई';
+
+  @override
+  String get reminderKindCard => 'कार्ड बिल';
+
+  @override
+  String get reminderKindSubscription => 'सब्सक्रिप्शन';
+
+  @override
+  String get reminderKindInsurance => 'बीमा';
+
+  @override
+  String get reminderKindDocument => 'दस्तावेज़';
+
+  @override
+  String get reminderKindCustom => 'अन्य';
+
+  @override
+  String get reminderTitleLabel => 'शीर्षक';
+
+  @override
+  String get reminderTitleHint => 'जैसे बिजली का बिल';
+
+  @override
+  String get reminderTitleRequired => 'शीर्षक लिखें';
+
+  @override
+  String get reminderAmountOptional => 'राशि (वैकल्पिक)';
+
+  @override
+  String get reminderDueDate => 'देय तारीख़';
+
+  @override
+  String get reminderRepeatLabel => 'दोहराएँ';
+
+  @override
+  String get reminderRepeatOnce => 'एक बार';
+
+  @override
+  String get reminderRepeatWeekly => 'हर हफ़्ते';
+
+  @override
+  String get reminderRepeatMonthly => 'हर महीने';
+
+  @override
+  String get reminderRepeatQuarterly => 'हर 3 महीने';
+
+  @override
+  String get reminderRepeatYearly => 'हर साल';
+
+  @override
+  String get reminderNotifyLabel => 'याद दिलाएँ';
+
+  @override
+  String get reminderNotifyOnDay => 'उसी दिन';
+
+  @override
+  String reminderNotifyDaysBefore(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन पहले',
+      one: '1 दिन पहले',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reminderNotifyEnabled => 'सूचना भेजें';
+
+  @override
+  String reminderNotifyAt(String time) {
+    return '$time बजे';
+  }
+
+  @override
+  String reminderNotifyPreview(String when) {
+    return 'पहली सूचना: $when';
+  }
+
+  @override
+  String get reminderNoAlertsLeft =>
+      'सूचना के सारे समय निकल गए; ऐप में देय दिखेगा।';
+
+  @override
+  String get reminderPickDaysError => 'कम से कम एक दिन चुनें';
+
+  @override
+  String get reminderSave => 'रिमाइंडर सेव करें';
+
+  @override
+  String get reminderNoAccount => 'कोई खाता नहीं';
+
+  @override
+  String get reminderChannelName => 'बिल और देय तारीख़ रिमाइंडर';
+
+  @override
+  String get reminderChannelDescription =>
+      'बिल, ईएमआई, कार्ड बकाया और रिन्यूअल से पहले सूचना';
+
+  @override
+  String get reminderMarkPaid => 'चुकाया';
+
+  @override
+  String get reminderMarkDone => 'हो गया';
+
+  @override
+  String get reminderSnoozeOneDay => '1 दिन टालें';
+
+  @override
+  String get reminderDueToday => 'आज देय';
+
+  @override
+  String reminderDueInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन में देय',
+      one: 'कल देय',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reminderOverdueDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन से बकाया',
+      one: '1 दिन से बकाया',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get smsHistoryTitle => 'SMS इतिहास';
+
+  @override
+  String get smsHistoryHelp => 'Hisab ने जो भी मैसेज देखे और उनका क्या हुआ';
+
+  @override
+  String get smsOutcomeAdded => 'जोड़ा गया';
+
+  @override
+  String get smsOutcomeDuplicate => 'दोहराया गया';
+
+  @override
+  String get smsOutcomeIgnored => 'छोड़ा गया';
+
+  @override
+  String get smsOutcomeUnparsed => 'पढ़ा नहीं जा सका';
+
+  @override
+  String get smsOutcomePending => 'समीक्षा बाकी';
+
+  @override
+  String get smsOutcomeUndone => 'वापस लिया';
+
+  @override
+  String get smsHistoryNotBank => 'बैंक का मैसेज नहीं';
+
+  @override
+  String get smsHistoryDismissed => 'समीक्षा से हटाया गया';
+
+  @override
+  String get smsHistoryUnparsedDetail => 'मैसेज में कोई लेनदेन नहीं मिला';
+
+  @override
+  String get smsHistoryDuplicateDetail => 'यही मैसेज पहले आ चुका है';
+
+  @override
+  String get smsHistoryOpenEntry => 'एंट्री खोलें';
+
+  @override
+  String get smsHistoryReprocess => 'फिर से जाँचें';
+
+  @override
+  String get smsHistoryClear => 'इतिहास साफ़ करें';
+
+  @override
+  String get smsHistoryClearQuestion => 'SMS इतिहास साफ़ करें?';
+
+  @override
+  String smsHistoryClearBody(int count) {
+    return 'इस डिवाइस से $count मैसेज का टेक्स्ट हट जाएगा। आपकी एंट्री और समीक्षा के लिए बाकी मैसेज बने रहेंगे, और साफ़ किए गए मैसेज दोबारा नहीं जोड़े जाएँगे।';
+  }
+
+  @override
+  String get smsHistoryClearConfirm => 'साफ़ करें';
+
+  @override
+  String get smsHistoryCleared => 'SMS इतिहास साफ़ हो गया';
+
+  @override
+  String get smsHistoryEmptyTitle => 'अभी तक कोई मैसेज नहीं';
+
+  @override
+  String get smsHistoryEmptyBody =>
+      'Hisab जो बैंक SMS पढ़ता है या आप पेस्ट करते हैं, वे यहाँ दिखेंगे।';
+
+  @override
+  String get smsHistoryEmptyFiltered => 'इस नतीजे वाला कोई मैसेज नहीं';
+
+  @override
+  String get smsHistoryTextNotKept => 'मैसेज का टेक्स्ट नहीं रखा गया';
+
+  @override
   String get recurringRepeat => 'दोहराएँ';
 
   @override
@@ -2190,6 +2561,399 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recurringRuleMissing => 'यह दोहराई जाने वाली एंट्री हटा दी गई है';
 
   @override
+  String recurringDecrease(String label) {
+    return '$label घटाएँ';
+  }
+
+  @override
+  String recurringIncrease(String label) {
+    return '$label बढ़ाएँ';
+  }
+
+  @override
+  String get subscriptions => 'सब्सक्रिप्शन';
+
+  @override
+  String get subscriptionsMonthlyTotal => 'हर महीने';
+
+  @override
+  String get subscriptionsYearlyTotal => 'हर साल';
+
+  @override
+  String subscriptionsActiveCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count चालू सब्सक्रिप्शन',
+      one: '1 चालू सब्सक्रिप्शन',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionsEmptyTitle => 'अभी कोई सब्सक्रिप्शन नहीं';
+
+  @override
+  String get subscriptionsEmptyBody =>
+      'Netflix, मोबाइल रिचार्ज या जिम जोड़ें और देखें कि हर महीने और हर साल कितना खर्च होता है।';
+
+  @override
+  String get subscriptionAdd => 'सब्सक्रिप्शन जोड़ें';
+
+  @override
+  String get subscriptionEdit => 'सब्सक्रिप्शन बदलें';
+
+  @override
+  String get subscriptionPickService => 'सेवा चुनें';
+
+  @override
+  String get subscriptionCustom => 'कुछ और';
+
+  @override
+  String get subscriptionPrice => 'हर रिन्यूअल की कीमत';
+
+  @override
+  String get subscriptionCycle => 'रिन्यू होता है';
+
+  @override
+  String get subscriptionNextRenewal => 'अगला रिन्यूअल';
+
+  @override
+  String subscriptionStartedOn(String date) {
+    return '$date से शुरू';
+  }
+
+  @override
+  String get subscriptionAutoPost => 'हर रिन्यूअल पर खर्च में जोड़ें';
+
+  @override
+  String get subscriptionAutoPostHelp =>
+      'बंद: सिर्फ़ यहाँ दिखेगा, कोई एंट्री नहीं जुड़ेगी';
+
+  @override
+  String get subscriptionNameRequired => 'नाम डालें';
+
+  @override
+  String get subscriptionPriceRequired => 'कीमत डालें';
+
+  @override
+  String subscriptionRenewsOn(String date) {
+    return '$date को रिन्यू';
+  }
+
+  @override
+  String get subscriptionRenewsToday => 'आज रिन्यू';
+
+  @override
+  String subscriptionRenewsInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन में रिन्यू',
+      one: 'कल रिन्यू',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionOverdue(String date) {
+    return '$date को देय था';
+  }
+
+  @override
+  String get subscriptionPaused => 'रुका हुआ';
+
+  @override
+  String get subscriptionCancelled => 'रद्द';
+
+  @override
+  String get subscriptionPause => 'रोकें';
+
+  @override
+  String get subscriptionResume => 'फिर शुरू करें';
+
+  @override
+  String get subscriptionMarkCancelled => 'रद्द मार्क करें';
+
+  @override
+  String subscriptionCancelConfirm(String name) {
+    return '$name को रद्द मार्क करें?';
+  }
+
+  @override
+  String get subscriptionCancelConfirmBody =>
+      'नए खर्च नहीं जुड़ेंगे और यह कुल में नहीं गिना जाएगा। पुरानी एंट्री बनी रहेंगी।';
+
+  @override
+  String get subscriptionDeleted => 'सब्सक्रिप्शन हटाया गया';
+
+  @override
+  String subscriptionPerMonth(String amount) {
+    return '$amount/महीना';
+  }
+
+  @override
+  String get subscriptionSort => 'क्रम';
+
+  @override
+  String get subscriptionSortCostHigh => 'कीमत: ज़्यादा से कम';
+
+  @override
+  String get subscriptionSortCostLow => 'कीमत: कम से ज़्यादा';
+
+  @override
+  String get subscriptionSortRenewal => 'अगला रिन्यूअल';
+
+  @override
+  String get subscriptionSortName => 'नाम';
+
+  @override
+  String subscriptionEveryDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count दिन',
+      one: 'रोज़',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count हफ़्ते',
+      one: 'हर हफ़्ते',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count महीने',
+      one: 'हर महीने',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subscriptionEveryYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'हर $count साल',
+      one: 'हर साल',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionTemplateNetflix => 'Netflix';
+
+  @override
+  String get subscriptionTemplateAmazonPrime => 'Amazon Prime';
+
+  @override
+  String get subscriptionTemplateJiohotstar => 'JioHotstar';
+
+  @override
+  String get subscriptionTemplateSpotify => 'Spotify';
+
+  @override
+  String get subscriptionTemplateYoutubePremium => 'YouTube Premium';
+
+  @override
+  String get subscriptionTemplateMobileRecharge => 'मोबाइल रिचार्ज';
+
+  @override
+  String get subscriptionTemplateDth => 'DTH';
+
+  @override
+  String get subscriptionTemplateBroadband => 'ब्रॉडबैंड';
+
+  @override
+  String get subscriptionTemplateGym => 'जिम';
+
+  @override
+  String get subscriptionTemplateCloudStorage => 'क्लाउड स्टोरेज';
+
+  @override
+  String get subscriptionTemplateNewsApp => 'न्यूज़ ऐप';
+
+  @override
+  String get payersMultiple => '2+ लोग';
+
+  @override
+  String get payersHelp => 'हर व्यक्ति ने कितना दिया, लिखें।';
+
+  @override
+  String payersAssigned(String assigned, String total) {
+    return '$total में से $assigned दर्ज';
+  }
+
+  @override
+  String payersMustTotal(String total) {
+    return 'दी गई रकम का जोड़ $total होना चाहिए';
+  }
+
+  @override
+  String namesAnd(String first, String last) {
+    return '$first और $last';
+  }
+
+  @override
+  String get youInList => 'आप';
+
+  @override
+  String recurringAddedSkipped(int added, int skipped) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added जोड़ी गईं',
+      one: '1 जोड़ी गई',
+      zero: 'कोई नहीं जोड़ी गई',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: '$skipped छोड़ी गईं',
+      one: '1 छोड़ी गई',
+    );
+    return '$_temp0, $_temp1';
+  }
+
+  @override
+  String get groupExportCsv => 'CSV फ़ाइल के रूप में एक्सपोर्ट करें';
+
+  @override
+  String groupExportCsvSubject(String group) {
+    return '$group के खर्च';
+  }
+
+  @override
+  String get groupExportFailed => 'CSV एक्सपोर्ट नहीं हो सका';
+
+  @override
+  String get groupCsvDate => 'तारीख';
+
+  @override
+  String get groupCsvDescription => 'विवरण';
+
+  @override
+  String get groupCsvCost => 'राशि';
+
+  @override
+  String get groupCsvPaidBy => 'किसने दिया';
+
+  @override
+  String groupCsvPaidColumn(String name) {
+    return '$name ने दिया';
+  }
+
+  @override
+  String groupCsvShareColumn(String name) {
+    return '$name का हिस्सा';
+  }
+
+  @override
+  String groupCsvBalanceColumn(String name) {
+    return '$name का बैलेंस';
+  }
+
+  @override
+  String get groupCsvPayment => 'भुगतान';
+
+  @override
+  String get groupSummaryWhoPaysWhom => 'किसे किसको देना है';
+
+  @override
+  String get groupSummaryStandings => 'किसका कितना हिसाब';
+
+  @override
+  String groupSummaryYouOwe(String name, String amount) {
+    return 'आपको $name को $amount देने हैं';
+  }
+
+  @override
+  String groupSummaryOwesYou(String name, String amount) {
+    return '$name को आपको $amount देने हैं';
+  }
+
+  @override
+  String groupSummaryGetsBack(String name, String amount) {
+    return '$name को $amount वापस मिलेंगे';
+  }
+
+  @override
+  String groupSummaryOwesInTotal(String name, String amount) {
+    return '$name को कुल $amount देने हैं';
+  }
+
+  @override
+  String groupSummaryYouGetBack(String amount) {
+    return 'आपको $amount वापस मिलेंगे';
+  }
+
+  @override
+  String groupSummaryYouOweInTotal(String amount) {
+    return 'आपको कुल $amount देने हैं';
+  }
+
+  @override
+  String get groupCsvTotal => 'कुल';
+
+  @override
+  String groupSummaryGroupTotal(String amount) {
+    return 'ग्रुप का कुल खर्च: $amount';
+  }
+
+  @override
+  String groupSummaryYourShare(String amount) {
+    return 'आपका हिस्सा: $amount';
+  }
+
+  @override
+  String groupSummaryMemberShare(String name, String amount) {
+    return '$name का हिस्सा: $amount';
+  }
+
+  @override
+  String get smsAddedMarker => 'एसएमएस से जोड़ा गया';
+
+  @override
+  String smsAutoAddedOne(String amount) {
+    return 'एसएमएस से $amount जोड़ा गया';
+  }
+
+  @override
+  String smsAutoAddedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'एसएमएस से $count एंट्री जोड़ी गईं',
+      one: 'एसएमएस से 1 एंट्री जोड़ी गई',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get smsReviewTitle => 'समीक्षा के लिए एसएमएस';
+
+  @override
+  String get smsReviewHelp =>
+      'ये संदेश अपने-आप जोड़ने लायक साफ़ नहीं थे। हर एक को जोड़ें, बदलें या अनदेखा करें।';
+
+  @override
+  String get smsReviewUnread => 'रकम पढ़ी नहीं जा सकी';
+
+  @override
+  String get smsReviewAddManually => 'खुद जोड़ें';
+
+  @override
   String get salaryTitle => 'वेतन';
 
   @override
@@ -2352,279 +3116,4 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get salaryDetectionHelp =>
       'कोई आमदनी वेतन मानी जाती है जब रकम इतनी क़रीब हो और वह इससे पहले न आए, या इस चक्र में बाद में कभी भी आए।';
-
-  @override
-  String get remindersTitle => 'रिमाइंडर';
-
-  @override
-  String remindersUpcomingCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count आने वाले',
-      one: '1 आने वाला',
-      zero: 'कुछ देय नहीं',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get remindersNotificationsOn => 'सूचनाएँ चालू';
-
-  @override
-  String get remindersNotificationsOff => 'सूचनाएँ बंद';
-
-  @override
-  String remindersSettingsSubtitle(String count, String state) {
-    return '$count · $state';
-  }
-
-  @override
-  String get reminderTabHistory => 'इतिहास';
-
-  @override
-  String get reminderSectionOverdue => 'बकाया';
-
-  @override
-  String get reminderSectionThisWeek => 'इस हफ़्ते';
-
-  @override
-  String get reminderSectionLater => 'बाद में';
-
-  @override
-  String get reminderAdd => 'रिमाइंडर जोड़ें';
-
-  @override
-  String get reminderFab => 'रिमाइंडर';
-
-  @override
-  String get remindersEmptyTitle => 'अभी कोई रिमाइंडर नहीं';
-
-  @override
-  String get remindersEmptyBody =>
-      'बिल, किराया, ईएमआई, रिन्यूअल: एक जोड़ें, हिसाब देय तारीख़ से पहले याद दिलाएगा।';
-
-  @override
-  String get reminderHistoryEmpty => 'चुकाए और छोड़े गए रिमाइंडर यहाँ दिखेंगे।';
-
-  @override
-  String get reminderSkip => 'इस बार छोड़ें';
-
-  @override
-  String get reminderDeleted => 'रिमाइंडर हटाया गया';
-
-  @override
-  String get reminderMarkedPaid => 'चुकाया गया';
-
-  @override
-  String get reminderMarkedDone => 'पूरा हुआ';
-
-  @override
-  String get reminderSkipped => 'इस बार छोड़ा गया';
-
-  @override
-  String reminderSnoozedUntil(String date) {
-    return '$date तक टाला गया';
-  }
-
-  @override
-  String get reminderAlreadyDone => 'पहले ही चुकाया जा चुका है';
-
-  @override
-  String reminderPaidOn(String date) {
-    return '$date को चुकाया';
-  }
-
-  @override
-  String reminderDoneOn(String date) {
-    return '$date को पूरा';
-  }
-
-  @override
-  String reminderSkippedOn(String date) {
-    return '$date को छोड़ा';
-  }
-
-  @override
-  String reminderNextDue(String date) {
-    return 'अगली देय तारीख़ $date';
-  }
-
-  @override
-  String get notifOffBanner =>
-      'सूचनाएँ बंद हैं। रिमाइंडर सिर्फ़ ऐप में दिखेंगे।';
-
-  @override
-  String get notifTurnOn => 'चालू करें';
-
-  @override
-  String get reminderExactAlarmNote =>
-      'सूचना कुछ मिनट देर से आ सकती है। सही समय के लिए \"अलार्म और रिमाइंडर\" अनुमति चाहिए।';
-
-  @override
-  String get notifPrePromptTitle => 'देय तारीख़ से पहले याद पाएँ';
-
-  @override
-  String get notifPrePromptBody =>
-      'हिसाब आपके चुने समय पर सिर्फ़ आपके रिमाइंडर की सूचना भेजेगा। कोई विज्ञापन नहीं।';
-
-  @override
-  String reminderPaidSheetTitle(String title) {
-    return '$title चुका दिया?';
-  }
-
-  @override
-  String reminderPaidSheetBody(String amount) {
-    return '$amount का खर्च जोड़ें और इसे चुकाया हुआ मानें।';
-  }
-
-  @override
-  String get reminderAddEntryAndMark => 'एंट्री जोड़ें और चुकाया मानें';
-
-  @override
-  String get reminderJustMark => 'बस चुकाया मानें';
-
-  @override
-  String get reminderNew => 'नया रिमाइंडर';
-
-  @override
-  String get reminderEditTitle => 'रिमाइंडर बदलें';
-
-  @override
-  String get reminderKindBill => 'बिल';
-
-  @override
-  String get reminderKindEmi => 'ईएमआई';
-
-  @override
-  String get reminderKindCard => 'कार्ड बिल';
-
-  @override
-  String get reminderKindSubscription => 'सब्सक्रिप्शन';
-
-  @override
-  String get reminderKindInsurance => 'बीमा';
-
-  @override
-  String get reminderKindDocument => 'दस्तावेज़';
-
-  @override
-  String get reminderKindCustom => 'अन्य';
-
-  @override
-  String get reminderTitleLabel => 'शीर्षक';
-
-  @override
-  String get reminderTitleHint => 'जैसे बिजली का बिल';
-
-  @override
-  String get reminderTitleRequired => 'शीर्षक लिखें';
-
-  @override
-  String get reminderAmountOptional => 'राशि (वैकल्पिक)';
-
-  @override
-  String get reminderDueDate => 'देय तारीख़';
-
-  @override
-  String get reminderRepeatLabel => 'दोहराएँ';
-
-  @override
-  String get reminderRepeatOnce => 'एक बार';
-
-  @override
-  String get reminderRepeatWeekly => 'हर हफ़्ते';
-
-  @override
-  String get reminderRepeatMonthly => 'हर महीने';
-
-  @override
-  String get reminderRepeatQuarterly => 'हर 3 महीने';
-
-  @override
-  String get reminderRepeatYearly => 'हर साल';
-
-  @override
-  String get reminderNotifyLabel => 'याद दिलाएँ';
-
-  @override
-  String get reminderNotifyOnDay => 'उसी दिन';
-
-  @override
-  String reminderNotifyDaysBefore(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: '$days दिन पहले',
-      one: '1 दिन पहले',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get reminderNotifyEnabled => 'सूचना भेजें';
-
-  @override
-  String reminderNotifyAt(String time) {
-    return '$time बजे';
-  }
-
-  @override
-  String reminderNotifyPreview(String when) {
-    return 'पहली सूचना: $when';
-  }
-
-  @override
-  String get reminderNoAlertsLeft =>
-      'सूचना के सारे समय निकल गए; ऐप में देय दिखेगा।';
-
-  @override
-  String get reminderPickDaysError => 'कम से कम एक दिन चुनें';
-
-  @override
-  String get reminderSave => 'रिमाइंडर सेव करें';
-
-  @override
-  String get reminderNoAccount => 'कोई खाता नहीं';
-
-  @override
-  String get reminderChannelName => 'बिल और देय तारीख़ रिमाइंडर';
-
-  @override
-  String get reminderChannelDescription =>
-      'बिल, ईएमआई, कार्ड बकाया और रिन्यूअल से पहले सूचना';
-
-  @override
-  String get reminderMarkPaid => 'चुकाया';
-
-  @override
-  String get reminderMarkDone => 'हो गया';
-
-  @override
-  String get reminderSnoozeOneDay => '1 दिन टालें';
-
-  @override
-  String get reminderDueToday => 'आज देय';
-
-  @override
-  String reminderDueInDays(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: '$days दिन में देय',
-      one: 'कल देय',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String reminderOverdueDays(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: '$days दिन से बकाया',
-      one: '1 दिन से बकाया',
-    );
-    return '$_temp0';
-  }
 }

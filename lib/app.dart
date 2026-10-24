@@ -6,6 +6,8 @@ import 'core/providers.dart';
 import 'core/theme.dart';
 import 'features/salary/salary_reminder_watcher.dart';
 import 'features/shell/router.dart';
+import 'features/sms/sms_auto_add_snackbar.dart';
+import 'features/sms/sms_auto_sync.dart';
 import 'l10n/generated/app_localizations.dart';
 
 class HisabApp extends ConsumerStatefulWidget {
@@ -61,7 +63,12 @@ class _HisabAppState extends ConsumerState<HisabApp> {
       themeAnimationDuration: const Duration(milliseconds: 300),
       themeAnimationCurve: Curves.easeOutCubic,
       routerConfig: appRouter,
-      builder: (context, child) => SalaryReminderWatcher(child: child ?? const SizedBox.shrink()),
+      // Above the navigator so the SMS Undo snackbar shows on every route,
+      // including Bank SMS opened directly from a hisab://sms link. SmsAutoSync
+      // drains queued SMS and catches up on the inbox on start and resume.
+      // SalaryReminderWatcher re-plans the salary-not-seen alert on start, resume
+      // and income changes.
+      builder: (context, child) => SalaryReminderWatcher(child: SmsAutoSync(child: SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink()))),
     );
   }
 }

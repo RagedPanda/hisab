@@ -17,7 +17,11 @@ import '../salary/salary_setup_screen.dart';
 import '../salary/salary_reminder.dart';
 import '../settings/settings_screen.dart';
 import '../reminders/reminders_screen.dart';
+import '../sms/sms_history_screen.dart';
+import '../sms/sms_review_screen.dart';
 import '../sms/sms_screen.dart';
+import '../subscriptions/subscription_form_screen.dart';
+import '../subscriptions/subscriptions_screen.dart';
 import '../transactions/transactions_screen.dart';
 import '../recurring/recurring_rule_form_screen.dart';
 import '../recurring/recurring_screen.dart';
@@ -73,6 +77,15 @@ final appRouter = GoRouter(
       ],
     ),
     GoRoute(
+      path: '/subscriptions',
+      parentNavigatorKey: _rootKey,
+      builder: (_, _) => const SubscriptionsScreen(),
+      routes: [
+        GoRoute(path: 'new', parentNavigatorKey: _rootKey, builder: (_, state) => SubscriptionFormScreen(templateKey: state.uri.queryParameters['template'])),
+        GoRoute(path: ':id/edit', parentNavigatorKey: _rootKey, builder: (_, state) => SubscriptionFormScreen(ruleId: state.pathParameters['id']!)),
+      ],
+    ),
+    GoRoute(
       path: '/projects',
       parentNavigatorKey: _rootKey,
       builder: (_, _) => const ProjectsScreen(),
@@ -96,5 +109,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/reminders', parentNavigatorKey: _rootKey, builder: (_, _) => const RemindersScreen()),
     GoRoute(path: '/reminders/:id', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: RemindersScreen(highlightId: state.pathParameters['id']))),
     GoRoute(path: '/sms', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: SmsScreen(sharedText: state.uri.queryParameters['text']))),
+    GoRoute(path: '/sms/review', parentNavigatorKey: _rootKey, builder: (_, _) => const HomeFallbackPop(child: SmsReviewScreen())),
+    GoRoute(path: '/sms/history', parentNavigatorKey: _rootKey, builder: (_, _) => const SmsHistoryScreen()),
   ],
 );

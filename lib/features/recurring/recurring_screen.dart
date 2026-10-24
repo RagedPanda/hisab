@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
 import '../../core/providers.dart';
+import '../../data/db/database.dart' show RecurringRule;
 import '../../data/repositories/recurring_repository.dart';
 import '../../domain/recurring/repeat_draft.dart';
 import '../../l10n/category_names.dart';
@@ -21,6 +22,12 @@ String recurringSectionLabel(AppLocalizations l10n, RecurringSection section) =>
     };
 
 /// What a rule is called in lists: its name, else payee, else category.
+/// "Added 3 times", or "2 added, 1 skipped" once any occurrence was skipped.
+String recurringHistoryLabel(AppLocalizations l10n, RecurringRule rule) {
+  final tally = recurringTally(postedCount: rule.postedCount, skippedCount: rule.skippedCount);
+  return tally.skipped == 0 ? l10n.recurringPostedCount(tally.added) : l10n.recurringAddedSkipped(tally.added, tally.skipped);
+}
+
 String recurringRuleTitle(BuildContext context, RecurringRuleView view) {
   final rule = view.rule;
   if (rule.name.trim().isNotEmpty) return localizedRuleName(context.l10n, rule.name.trim());
@@ -90,7 +97,7 @@ class RecurringRuleCard extends ConsumerWidget {
     final when = switch (item.section) {
       RecurringSection.waiting => l10n.recurringDue(formatRowDate(nextDue!, locale: locale)),
       RecurringSection.active => l10n.recurringNext(formatRowDate(nextDue!, locale: locale)),
-      RecurringSection.paused || RecurringSection.ended => l10n.recurringPostedCount(rule.postedCount),
+      RecurringSection.paused || RecurringSection.ended => recurringHistoryLabel(l10n, rule),
     };
     final waiting = item.section == RecurringSection.waiting;
     final messenger = ScaffoldMessenger.of(context);

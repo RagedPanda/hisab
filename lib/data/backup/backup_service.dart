@@ -38,6 +38,7 @@ class BackupService {
       'projectFields': await dump(db.projectFields),
       'entryFieldValues': await dump(db.entryFieldValues),
       'reminders': await dump(db.reminders),
+      'entryPayers': await dump(db.entryPayers),
       'recurringRules': await dump(db.recurringRules),
       for (final section in sections) section.key: ?section.export(),
     };
@@ -97,7 +98,10 @@ class BackupService {
       await restore(db.projectFields, 'projectFields', ProjectField.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.entryFieldValues, 'entryFieldValues', EntryFieldValue.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.reminders, 'reminders', (json) => Reminder.fromJson(reminderJsonWithDefaults(json)), (r) => r.id, (r) => r.updatedAt);
+      await restore(db.entryPayers, 'entryPayers', EntryPayer.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.recurringRules, 'recurringRules', RecurringRule.fromJson, (r) => r.id, (r) => r.updatedAt);
+      // A backup from an older build may carry the text of not-bank SMS.
+      await db.wipeUnkeptSmsText();
     });
     for (final section in sections) {
       if (payload[section.key] case final Map block) written += await section.restore(Map<String, dynamic>.from(block), db: db, payload: payload);

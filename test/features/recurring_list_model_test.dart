@@ -6,10 +6,11 @@ import 'package:hisab/data/repositories/recurring_repository.dart';
 import 'package:hisab/domain/recurring/recurrence.dart';
 import 'package:hisab/domain/recurring/repeat_draft.dart';
 import 'package:hisab/features/recurring/recurring_list_model.dart';
+import 'package:hisab/features/recurring/recurring_screen.dart';
 import 'package:hisab/features/recurring/repeat_sheet.dart';
 import 'package:hisab/l10n/generated/app_localizations.dart';
 
-RecurringRuleView view(String id, {String status = RecurringStatus.active, bool autoPost = true, DateTime? nextDue, int postedCount = 0}) => RecurringRuleView(
+RecurringRuleView view(String id, {String status = RecurringStatus.active, bool autoPost = true, DateTime? nextDue, int postedCount = 0, int skippedCount = 0}) => RecurringRuleView(
       rule: RecurringRule(
         id: id,
         name: id,
@@ -22,6 +23,7 @@ RecurringRuleView view(String id, {String status = RecurringStatus.active, bool 
         dayOfMonth: 5,
         startDate: DateTime(2026, 7, 5, 9),
         postedCount: postedCount,
+        skippedCount: skippedCount,
         nextDue: nextDue,
         autoPost: autoPost,
         remindDaysBefore: '',
@@ -68,5 +70,16 @@ void main() {
       expect(repeatSummary(en, const RepeatDraft(), DateTime(2026, 11, 2, 9), locale: 'en', dayOfMonth: 31), 'Every month on day 31');
       expect(repeatSummary(en, const RepeatDraft(lastDayOfMonth: true), DateTime(2026, 11, 30, 9), locale: 'en', dayOfMonth: kLastDayOfMonth), 'Every month on the last day');
     });
+  });
+
+  test('history label splits added and skipped when a slot was skipped', () {
+    final en = lookupAppLocalizations(const Locale('en'));
+    final hi = lookupAppLocalizations(const Locale('hi'));
+    final ended = view('ended', status: RecurringStatus.ended, postedCount: 3, skippedCount: 1).rule;
+    expect(recurringHistoryLabel(en, ended), '2 added, 1 skipped');
+    expect(recurringHistoryLabel(hi, ended), '2 जोड़ी गईं, 1 छोड़ी गई');
+    expect(recurringHistoryLabel(en, view('all', postedCount: 3, skippedCount: 3).rule), 'None added, 3 skipped');
+    final noSkips = view('plain', status: RecurringStatus.ended, postedCount: 3).rule;
+    expect(recurringHistoryLabel(en, noSkips), en.recurringPostedCount(3));
   });
 }

@@ -36,8 +36,13 @@ class CategoriesRepository {
 
   Future<List<Category>> getAll({bool includeArchived = false}) => _activeQuery(includeArchived: includeArchived).get();
 
+  /// First live match; tolerates duplicates left by an old restore (#63).
   Future<Category?> findBySeedKey(String key) =>
-      (db.select(db.categories)..where((t) => t.seedKey.equals(key) & t.deletedAt.isNull())).getSingleOrNull();
+      (db.select(db.categories)
+            ..where((t) => t.seedKey.equals(key) & t.deletedAt.isNull())
+            ..orderBy([(t) => OrderingTerm.asc(t.sortOrder), (t) => OrderingTerm.asc(t.id)])
+            ..limit(1))
+          .getSingleOrNull();
 
   Future<Category?> byId(String id) => (db.select(db.categories)..where((t) => t.id.equals(id))).getSingleOrNull();
 

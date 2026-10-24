@@ -83,7 +83,10 @@ class GroupDetailScreen extends ConsumerWidget {
                     await repo.updateGroup(GroupsCompanion(id: Value(group.id), simplifyDebts: Value(!group.simplifyDebts)));
                   case 'delete':
                     if (await confirmDialog(context, title: l10n.deleteNamed(group.name), message: l10n.deleteGroupBody, confirmLabel: l10n.delete)) {
+                      if (!context.mounted) return;
+                      final messenger = ScaffoldMessenger.of(context);
                       await repo.deleteGroup(group.id);
+                      showUndoSnackBar(messenger, message: l10n.activityGroupDeletedSnack, undoLabel: l10n.undo, onUndo: () => repo.restoreGroup(group.id));
                       if (context.mounted) context.pop();
                     }
                 }

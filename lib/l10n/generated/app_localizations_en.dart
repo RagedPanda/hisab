@@ -2717,6 +2717,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityAllGroups => 'All groups';
 
   @override
+  String activityGroupDeleted(String actor, String name) {
+    return '$actor deleted the group “$name”';
+  }
+
+  @override
+  String activityGroupRestored(String actor, String name) {
+    return '$actor restored the group “$name”';
+  }
+
+  @override
+  String activityGroupEdited(String actor, String name) {
+    return '$actor changed the group “$name”';
+  }
+
+  @override
+  String activityGroupLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses',
+      one: '1 expense',
+      zero: 'No expenses',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activityPaymentRestoredSnack => 'Payment restored';
+
+  @override
+  String get activityGroupRestoredSnack => 'Group restored';
+
+  @override
+  String get activityGroupDeletedSnack => 'Group deleted';
+
+  @override
   String recurringAddedSkipped(int added, int skipped) {
     String _temp0 = intl.Intl.pluralLogic(
       added,

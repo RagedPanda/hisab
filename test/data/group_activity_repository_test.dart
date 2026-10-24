@@ -140,7 +140,71 @@ void main() {
     expect(everything.membersById.keys, containsAll([meId, rahulId]));
     expect(await feed(group: groupId), hasLength(1));
     await groups.deleteGroup(otherId);
-    expect((await groups.getActivityFeed()).activities.single.groupId, groupId);
+    final afterDelete = (await groups.getActivityFeed()).activities;
+    expect([for (final activity in afterDelete) (activity.groupId, activity.subject)], [(otherId, ActivitySubject.group), (groupId, ActivitySubject.expense)],
+        reason: 'a deleted group keeps only its own deletion row');
+  });
+
+  test('a deleted payment offers Restore and comes back with the balances it had', () async {
+    await saveExpense('e1');
+    final paymentId = await groups.addSettlement(groupId: groupId, fromMemberId: rahulId, toMemberId: meId, amountMinor: 20000);
+    final balancesBefore = (await groups.getBalances(groupId)).net;
+    await groups.deleteSettlement(paymentId);
+    expect((await groups.getBalances(groupId)).net, isNot(balancesBefore));
+    final feedAfterDelete = await groups.getActivityFeed(groupId: groupId);
+    final deletion = feedAfterDelete.activities.firstWhere((activity) => activity.subject == ActivitySubject.payment && activity.action == ActivityAction.deleted);
+    expect(feedAfterDelete.restorableIds, {deletion.id});
+    await groups.restoreDeleted(deletion);
+    expect((await groups.getBalances(groupId)).net, balancesBefore);
+    final feedAfterRestore = await groups.getActivityFeed(groupId: groupId);
+    expect(feedAfterRestore.restorableIds, isEmpty);
+    expect(feedAfterRestore.activities.first.action, ActivityAction.restored);
+  });
+
+  test('a deleted group comes back with its members, expenses, payments and balances', () async {
+    await saveExpense('e1', payers: [
+      EntryPayersCompanion.insert(id: 'p1', entryId: 'e1', memberId: meId, amountMinor: 60000),
+      EntryPayersCompanion.insert(id: 'p2', entryId: 'e1', memberId: rahulId, amountMinor: 30000),
+    ]);
+    await saveExpense('e2', amountMinor: 40000, note: 'Taxi');
+    await saveExpense('gone', amountMinor: 10000, note: 'Chai');
+    await groups.deleteGroupExpense('gone');
+    await groups.addSettlement(groupId: groupId, fromMemberId: rahulId, toMemberId: meId, amountMinor: 5000);
+    final balancesBefore = (await groups.getBalances(groupId)).net;
+    final membersBefore = [for (final member in await groups.getMembers(groupId)) member.id];
+
+    await groups.deleteGroup(groupId);
+    expect(await groups.getSummaries(), isEmpty);
+    final overall = await groups.getActivityFeed();
+    final deletion = overall.activities.single;
+    expect((deletion.subject, deletion.action), (ActivitySubject.group, ActivityAction.deleted));
+    expect((deletion.before! as GroupSnapshot).expenseIds, unorderedEquals(['e1', 'e2']));
+    expect(overall.restorableIds, {deletion.id});
+    expect(overall.groupsById[groupId]?.name, 'Goa');
+
+    await groups.restoreDeleted(deletion);
+    expect((await groups.getSummaries()).map((summary) => summary.group.id), [groupId]);
+    expect([for (final member in await groups.getMembers(groupId)) member.id], membersBefore);
+    expect((await groups.getBalances(groupId)).net, balancesBefore);
+    expect((await groups.getSettlements(groupId)), hasLength(1));
+    expect([for (final expense in await groups.getGroupEntries(groupId)) expense.$1.id], unorderedEquals(['e1', 'e2']),
+        reason: 'an expense deleted before the group stays deleted');
+    final restoredFeed = await groups.getActivityFeed();
+    expect(restoredFeed.restorableIds.map((id) => restoredFeed.activities.firstWhere((activity) => activity.id == id).subjectId), ['gone'],
+        reason: 'only the earlier expense deletion is still restorable');
+    expect(restoredFeed.activities.first.action, ActivityAction.restored);
+  });
+
+  test('restoring a payment or group that is live, or a payment in a deleted group, does nothing', () async {
+    final paymentId = await groups.addSettlement(groupId: groupId, fromMemberId: rahulId, toMemberId: meId, amountMinor: 5000);
+    await groups.restoreSettlement(paymentId);
+    await groups.restoreGroup(groupId);
+    await groups.deleteSettlement(paymentId);
+    await groups.deleteGroup(groupId);
+    await groups.restoreSettlement(paymentId);
+    final rows = await db.select(db.groupActivities).get();
+    expect(rows.where((row) => row.action == ActivityAction.restored.name), isEmpty);
+    expect(await groups.getSettlements(groupId), isEmpty);
   });
 
   test('a removed member still resolves in the feed', () async {

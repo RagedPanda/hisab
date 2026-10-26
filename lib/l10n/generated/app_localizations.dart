@@ -206,6 +206,12 @@ abstract class AppLocalizations {
   /// **'Note'**
   String get note;
 
+  /// Header of the collapsible section that hides advanced fields in the entry editor
+  ///
+  /// In en, this message translates to:
+  /// **'More details'**
+  String get moreDetails;
+
   /// No description provided for @all.
   ///
   /// In en, this message translates to:

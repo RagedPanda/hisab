@@ -20,6 +20,10 @@
   "ok": "OK",
   "name": "Name",
   "note": "Note",
+  "moreDetails": "More details",
+  "@moreDetails": {
+    "description": "Header of the collapsible section that hides advanced fields in the entry editor"
+  },
   "all": "All",
   "others": "Others",
   "unknown": "Unknown",

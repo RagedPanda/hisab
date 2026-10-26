@@ -51,6 +51,8 @@
   "accountTypeWallet": "Wallet / UPI",
   "accountTypeCash": "Cash",
   "accounts": "Accounts",
+  "defaultAccount": "Default account",
+  "defaultAccountHelp": "New entries start on this account",
   "account": "Account",
   "newAccount": "New account",
   "editAccount": "Edit account",

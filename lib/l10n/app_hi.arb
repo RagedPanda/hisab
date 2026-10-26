@@ -41,6 +41,8 @@
   "accountTypeWallet": "वॉलेट/UPI",
   "accountTypeCash": "नकद",
   "accounts": "खाते",
+  "defaultAccount": "डिफ़ॉल्ट खाता",
+  "defaultAccountHelp": "नई प्रविष्टियाँ इसी खाते से शुरू होती हैं",
   "account": "खाता",
   "newAccount": "नया खाता",
   "editAccount": "खाता संपादित करें",

@@ -145,6 +145,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get accounts => 'खाते';
 
   @override
+  String get defaultAccount => 'डिफ़ॉल्ट खाता';
+
+  @override
+  String get defaultAccountHelp => 'नई प्रविष्टियाँ इसी खाते से शुरू होती हैं';
+
+  @override
   String get account => 'खाता';
 
   @override

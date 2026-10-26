@@ -344,6 +344,18 @@ abstract class AppLocalizations {
   /// **'Accounts'**
   String get accounts;
 
+  /// No description provided for @defaultAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Default account'**
+  String get defaultAccount;
+
+  /// No description provided for @defaultAccountHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'New entries start on this account'**
+  String get defaultAccountHelp;
+
   /// No description provided for @account.
   ///
   /// In en, this message translates to:

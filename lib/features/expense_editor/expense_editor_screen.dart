@@ -26,6 +26,7 @@ import '../../domain/projects/project_templates.dart';
 import '../../domain/recurring/repeat_draft.dart';
 import '../../domain/reminders/reminder_draft.dart';
 import '../../domain/split/group_recurring.dart';
+import '../../domain/accounts/default_account.dart';
 import '../../domain/split/group_settings.dart';
 import '../../domain/split/item_split.dart';
 import '../../domain/split/payers.dart';
@@ -257,7 +258,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     } else {
       if (widget.reminderId != null) await _prefillFromReminder(widget.reminderId!);
       final accounts = await ref.read(accountsRepositoryProvider).getAll();
-      _accountId ??= accounts.firstOrNull?.id;
+      _accountId ??= defaultEntryAccountId(accounts, configuredId: ref.read(settingsProvider).defaultAccountId);
       final projects = await ref.read(projectsRepositoryProvider).getAll(includeArchived: false);
       _projectId = initialEntryProjectId(
         explicitId: widget.projectId,

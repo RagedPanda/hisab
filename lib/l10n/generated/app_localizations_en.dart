@@ -762,13 +762,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreBackupHelp => 'Merges; newer local edits are kept';
 
   @override
-  String get cloudSync => 'Cloud sync';
-
-  @override
-  String get cloudSyncHelp =>
-      'Coming next: Google Drive on Android, iCloud on iOS, end-to-end encrypted with the same format as backups.';
-
-  @override
   String get about => 'About';
 
   @override

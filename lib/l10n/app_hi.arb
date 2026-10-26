@@ -218,8 +218,6 @@
   "exportBackupHelp": "AES-256, आपके चुने पासफ़्रेज़ से सुरक्षित",
   "restoreBackup": "बैकअप से वापस लाएँ",
   "restoreBackupHelp": "मिलाया जाता है; नए स्थानीय बदलाव बने रहते हैं",
-  "cloudSync": "क्लाउड सिंक",
-  "cloudSyncHelp": "आगे: Android पर Google Drive, iOS पर iCloud, बैकअप जैसे ही फ़ॉर्मैट में एंड-टू-एंड एन्क्रिप्टेड।",
   "about": "ऐप के बारे में",
   "aboutBody": "मुफ़्त, ओपन सोर्स, कोई विज्ञापन नहीं, कोई अकाउंट नहीं। आपका डेटा आपके डिवाइस पर रहता है।",
   "aboutMadeWithBefore": "",

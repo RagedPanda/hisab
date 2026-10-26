@@ -1406,18 +1406,6 @@ abstract class AppLocalizations {
   /// **'Merges; newer local edits are kept'**
   String get restoreBackupHelp;
 
-  /// No description provided for @cloudSync.
-  ///
-  /// In en, this message translates to:
-  /// **'Cloud sync'**
-  String get cloudSync;
-
-  /// No description provided for @cloudSyncHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Coming next: Google Drive on Android, iCloud on iOS, end-to-end encrypted with the same format as backups.'**
-  String get cloudSyncHelp;
-
   /// No description provided for @about.
   ///
   /// In en, this message translates to:

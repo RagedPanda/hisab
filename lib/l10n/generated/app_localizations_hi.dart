@@ -762,13 +762,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'मिलाया जाता है; नए स्थानीय बदलाव बने रहते हैं';
 
   @override
-  String get cloudSync => 'क्लाउड सिंक';
-
-  @override
-  String get cloudSyncHelp =>
-      'आगे: Android पर Google Drive, iOS पर iCloud, बैकअप जैसे ही फ़ॉर्मैट में एंड-टू-एंड एन्क्रिप्टेड।';
-
-  @override
   String get about => 'ऐप के बारे में';
 
   @override

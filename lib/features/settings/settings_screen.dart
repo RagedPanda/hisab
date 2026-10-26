@@ -161,11 +161,6 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: Text(l10n.restoreBackupHelp),
                 onTap: () => _import(context, ref),
               ),
-              ListTile(
-                leading: const Icon(Icons.cloud_outlined),
-                title: Text(l10n.cloudSync),
-                subtitle: Text(l10n.cloudSyncHelp),
-              ),
             ]),
           ),
           SectionHeader(l10n.about),

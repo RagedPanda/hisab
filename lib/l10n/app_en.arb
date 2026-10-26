@@ -261,8 +261,6 @@
   "exportBackupHelp": "AES-256, protected by a passphrase you choose",
   "restoreBackup": "Restore from backup",
   "restoreBackupHelp": "Merges; newer local edits are kept",
-  "cloudSync": "Cloud sync",
-  "cloudSyncHelp": "Coming next: Google Drive on Android, iCloud on iOS, end-to-end encrypted with the same format as backups.",
   "about": "About",
   "aboutBody": "Free, open source, no ads, no account needed. Your data stays on your device.",
   "aboutMadeWithBefore": "Made with",

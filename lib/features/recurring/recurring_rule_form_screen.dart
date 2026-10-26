@@ -95,7 +95,6 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
   String? _validationError(AppLocalizations l10n) {
     if (amountErrorText(context, _amountController.text, format: _moneyFormat) != null) return l10n.invalidAmount;
     if (_amountMinor <= 0) return l10n.errorAmountZero;
-    if (_kind != 'transfer' && _category == null) return l10n.errorPickCategory;
     if (_kind == 'transfer' && (_accountId == null || _toAccountId == null)) return l10n.errorPickBothAccounts;
     if (_existing?.groupId != null && !isGroupRuleKind(_kind)) return l10n.groupRecurringExpenseOnly;
     final groupTemplate = GroupExpenseTemplate.decode(_existing?.groupSplit);
@@ -210,8 +209,7 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: IconBadge(icon: _category?.icon ?? 'category', color: _category?.color ?? 0xFF9E9E9E),
-                title: Text(_category?.displayName(context) ?? l10n.chooseCategory),
-                subtitle: _category == null ? Text(l10n.required) : null,
+                title: Text(_category?.displayName(context) ?? l10n.uncategorised),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () async {
                   final picked = await showCategoryPicker(context, kind: _kind, selectedId: _category?.id);

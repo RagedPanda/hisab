@@ -103,6 +103,7 @@ void main() {
     await tapText(tester, 'Choose category');
     await enterText(tester, find.widgetWithText(TextField, 'Search categories'), 'rent');
     await tapText(tester, 'Rent');
+    await openMoreDetails(tester, reveals: _key('editor.repeat'));
     await scrollTo(tester, _key('editor.repeat'));
     expect(find.text('Does not repeat'), findsOneWidget);
     await tapFinder(tester, _key('editor.repeat'), frames: 10);
@@ -200,6 +201,7 @@ void main() {
     await settle(tester, 4);
     appRouter.push('/entry?id=${firstEntry.id}');
     await settle(tester, 10);
+    await openMoreDetails(tester, reveals: _key('editor.recurringRule'));
     await scrollTo(tester, _key('editor.recurringRule'));
     await tapFinder(tester, _key('editor.recurringRule'), frames: 10);
     expect(find.byType(RecurringRuleFormScreen), findsOneWidget);

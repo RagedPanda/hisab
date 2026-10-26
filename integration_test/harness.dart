@@ -121,6 +121,18 @@ Future<void> enterText(WidgetTester tester, Finder field, String text) async {
   await settle(tester, 3);
 }
 
+/// The entry editor tucks its advanced fields (date, note, payee, project,
+/// repeat, items) behind a "More details" tile that starts collapsed on a
+/// fresh entry. Opens it so those fields can be reached; a no-op when [reveals]
+/// (a field that appears once expanded) is already in the tree, e.g. when
+/// editing auto-expanded the section.
+Future<void> openMoreDetails(WidgetTester tester, {required Finder reveals}) async {
+  if (reveals.evaluate().isNotEmpty) return;
+  final tile = find.byKey(const ValueKey('editor.moreDetails'));
+  if (tile.evaluate().isEmpty) await scrollTo(tester, tile);
+  if (reveals.evaluate().isEmpty) await tapFinder(tester, tile);
+}
+
 /// Switches bottom tabs by label.
 Future<void> goTab(WidgetTester tester, String label) async {
   await tapFinder(tester, find.descendant(of: find.byType(NavigationBar), matching: find.text(label)));

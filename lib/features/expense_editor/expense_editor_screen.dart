@@ -5,6 +5,7 @@ import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/dates.dart';
 import '../../core/format.dart';
 import '../../core/ids.dart';
 import '../../core/money.dart';
@@ -115,6 +116,21 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   bool get _isEditing => widget.entryId != null;
   bool get _hasItems => _items.isNotEmpty;
+
+  /// Advanced fields collapse behind "More details" so a trivial spend shows
+  /// only amount/category/account. The section opens itself on first build
+  /// whenever something inside it would otherwise be hidden — when editing an
+  /// existing entry, or when any tucked-away field already has a non-default
+  /// value — so nothing the user (or a prefill) entered is ever out of sight.
+  bool get _startExpanded =>
+      _isEditing ||
+      _recurringId != null ||
+      _repeat != null ||
+      _items.isNotEmpty ||
+      _projectId != null ||
+      _noteController.text.trim().isNotEmpty ||
+      _payeeController.text.trim().isNotEmpty ||
+      !isSameDay(_occurredAt, DateTime.now());
 
   /// The input the editor opened with (or was reset to by "Save & add
   /// another"); leaving with anything different asks first (#82).
@@ -539,22 +555,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               title: Text(_category?.displayName(context) ?? l10n.uncategorised),
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
-                final picked = await showCategoryPicker(context, kind: _kind, selectedId: _category?.id);
+                final picked = await showCategoryPicker(context, kind: _kind, selectedId: _category?.id, allowClear: _category != null);
                 if (picked != null) {
-                  setState(() => _category = picked);
+                  setState(() => _category = identical(picked, clearedCategory) ? null : picked);
                   await _refreshSuggestions();
                 }
               },
             ),
-          if (_kind != 'transfer' && _groupId == null) ...[
-            const SizedBox(height: 8),
-            _projectChip(l10n, ref.watch(projectViewsProvider).value ?? const <ProjectView>[]),
-          ],
-          if (_kind == 'expense') _itemsSection(moneyFormat, units),
-          if (_kind != 'transfer' && _projectFields.isNotEmpty) ...[
-            SectionHeader(l10n.projectDetails, padding: const EdgeInsets.fromLTRB(0, 16, 0, 8)),
-            ProjectFieldInputs(key: ValueKey('fields.$_projectId'), fields: _projectFields, values: _fieldValues, onChanged: (values) => setState(() => _fieldValues = values)),
-          ],
           // Group expenses are a ledger between people, not an account
           // movement, so they never pick (or touch) a personal account.
           if (_groupId == null) ...[
@@ -585,50 +592,12 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             ],
           ],
           const SizedBox(height: 16),
-          Row(children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.calendar_today_outlined, size: 18),
-                label: Text(formatShortDate(_occurredAt, locale: Localizations.localeOf(context).toString())),
-                onPressed: () async {
-                  final picked = await showDatePicker(context: context, initialDate: _occurredAt, firstDate: DateTime(2000), lastDate: DateTime.now().add(const Duration(days: 365)));
-                  if (picked != null) setState(() => _occurredAt = DateTime(picked.year, picked.month, picked.day, _occurredAt.hour, _occurredAt.minute));
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.schedule, size: 18),
-                label: Text(formatTime(_occurredAt, locale: Localizations.localeOf(context).toString())),
-                onPressed: () async {
-                  final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_occurredAt));
-                  if (picked != null) setState(() => _occurredAt = DateTime(_occurredAt.year, _occurredAt.month, _occurredAt.day, picked.hour, picked.minute));
-                },
-              ),
-            ),
-          ]),
-          if (_canRepeat) ...[
-            const SizedBox(height: 8),
-            RepeatTile(draft: _repeat, start: _occurredAt, onChanged: (draft) => setState(() => _repeat = draft)),
+          if (_groupId == null)
+            _moreDetailsTile(context, l10n, moneyFormat, units)
+          else ...[
+            ..._detailFields(context, l10n, moneyFormat, units),
+            _groupSection(moneyFormat),
           ],
-          if (_recurringId != null) ...[
-            const SizedBox(height: 8),
-            ListTile(
-              key: const ValueKey('editor.recurringRule'),
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.repeat),
-              title: Text(l10n.recurringPartOfRule),
-              // Group rules are managed from the group's Upcoming list.
-              trailing: _groupId == null ? const Icon(Icons.chevron_right) : null,
-              onTap: _groupId == null ? () => context.push('/recurring/${_recurringId!}') : null,
-            ),
-          ],
-          const SizedBox(height: 16),
-          TextField(controller: _payeeController, decoration: InputDecoration(labelText: l10n.payeeLabel, prefixIcon: const Icon(Icons.storefront_outlined)), textCapitalization: TextCapitalization.words),
-          const SizedBox(height: 12),
-          TextField(controller: _noteController, decoration: InputDecoration(labelText: l10n.note, prefixIcon: const Icon(Icons.notes)), textCapitalization: TextCapitalization.sentences, maxLines: 2),
-          if (_groupId != null) _groupSection(moneyFormat),
           if (_source == 'sms')
             Padding(
               padding: const EdgeInsets.only(top: 12),
@@ -702,6 +671,85 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _openedWith = _draft;
     });
     _amountFocus.requestFocus();
+  }
+
+  /// The "More details" section for a personal entry: everything beyond
+  /// amount/category/account, collapsed unless [_startExpanded].
+  Widget _moreDetailsTile(BuildContext context, AppLocalizations l10n, MoneyFormat moneyFormat, List<String> units) {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        key: const ValueKey('editor.moreDetails'),
+        initiallyExpanded: _startExpanded,
+        shape: const Border(),
+        collapsedShape: const Border(),
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: EdgeInsets.zero,
+        expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+        title: Text(l10n.moreDetails),
+        children: _detailFields(context, l10n, moneyFormat, units),
+      ),
+    );
+  }
+
+  /// The advanced fields tucked behind "More details" (personal) or shown
+  /// inline above the split (group): project, items, date/time, repeat, note.
+  List<Widget> _detailFields(BuildContext context, AppLocalizations l10n, MoneyFormat moneyFormat, List<String> units) {
+    return [
+      if (_kind != 'transfer' && _groupId == null) ...[
+        const SizedBox(height: 8),
+        _projectChip(l10n, ref.watch(projectViewsProvider).value ?? const <ProjectView>[]),
+      ],
+      if (_kind == 'expense') _itemsSection(moneyFormat, units),
+      if (_kind != 'transfer' && _projectFields.isNotEmpty) ...[
+        SectionHeader(l10n.projectDetails, padding: const EdgeInsets.fromLTRB(0, 16, 0, 8)),
+        ProjectFieldInputs(key: ValueKey('fields.$_projectId'), fields: _projectFields, values: _fieldValues, onChanged: (values) => setState(() => _fieldValues = values)),
+      ],
+      const SizedBox(height: 16),
+      Row(children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.calendar_today_outlined, size: 18),
+            label: Text(formatShortDate(_occurredAt, locale: Localizations.localeOf(context).toString())),
+            onPressed: () async {
+              final picked = await showDatePicker(context: context, initialDate: _occurredAt, firstDate: DateTime(2000), lastDate: DateTime.now().add(const Duration(days: 365)));
+              if (picked != null) setState(() => _occurredAt = DateTime(picked.year, picked.month, picked.day, _occurredAt.hour, _occurredAt.minute));
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.schedule, size: 18),
+            label: Text(formatTime(_occurredAt, locale: Localizations.localeOf(context).toString())),
+            onPressed: () async {
+              final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_occurredAt));
+              if (picked != null) setState(() => _occurredAt = DateTime(_occurredAt.year, _occurredAt.month, _occurredAt.day, picked.hour, picked.minute));
+            },
+          ),
+        ),
+      ]),
+      if (_canRepeat) ...[
+        const SizedBox(height: 8),
+        RepeatTile(draft: _repeat, start: _occurredAt, onChanged: (draft) => setState(() => _repeat = draft)),
+      ],
+      if (_recurringId != null) ...[
+        const SizedBox(height: 8),
+        ListTile(
+          key: const ValueKey('editor.recurringRule'),
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.repeat),
+          title: Text(l10n.recurringPartOfRule),
+          // Group rules are managed from the group's Upcoming list.
+          trailing: _groupId == null ? const Icon(Icons.chevron_right) : null,
+          onTap: _groupId == null ? () => context.push('/recurring/${_recurringId!}') : null,
+        ),
+      ],
+      const SizedBox(height: 16),
+      TextField(controller: _payeeController, decoration: InputDecoration(labelText: l10n.payeeLabel, prefixIcon: const Icon(Icons.storefront_outlined)), textCapitalization: TextCapitalization.words),
+      const SizedBox(height: 12),
+      TextField(controller: _noteController, decoration: InputDecoration(labelText: l10n.note, prefixIcon: const Icon(Icons.notes)), textCapitalization: TextCapitalization.sentences, maxLines: 2),
+    ];
   }
 
   Widget _itemsSection(MoneyFormat moneyFormat, List<String> units) {

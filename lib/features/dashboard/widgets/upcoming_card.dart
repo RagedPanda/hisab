@@ -27,7 +27,9 @@ class UpcomingCard extends ConsumerWidget {
     return AsyncCard(
       value: overview,
       skeletonHeight: 120,
-      builder: (data) => DashboardSection(
+      builder: (data) {
+        if (data.isEmpty) return const SizedBox.shrink();
+        return DashboardSection(
         title: l10n.upcoming,
         trailing: IconButton(
           key: const ValueKey('upcoming.calendar'),
@@ -46,28 +48,25 @@ class UpcomingCard extends ConsumerWidget {
                 child: _UpcomingHeader(overview: data),
               ),
               const SizedBox(height: 4),
-              if (data.isEmpty)
-                _UpcomingEmpty(window: data.window)
-              else ...[
-                for (final item in data.shown)
-                  UpcomingItemTile(
-                    key: ValueKey('upcoming.${item.source.name}.${item.sourceId}.${item.dueAt.millisecondsSinceEpoch}'),
-                    item: item,
-                    onTap: () => openUpcomingItem(context, ref, item),
+              for (final item in data.shown)
+                UpcomingItemTile(
+                  key: ValueKey('upcoming.${item.source.name}.${item.sourceId}.${item.dueAt.millisecondsSinceEpoch}'),
+                  item: item,
+                  onTap: () => openUpcomingItem(context, ref, item),
+                ),
+              if (data.more > 0)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: SectionAction(label: l10n.upcomingShowAll(data.more), onPressed: openCalendar),
                   ),
-                if (data.more > 0)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: SectionAction(label: l10n.upcomingShowAll(data.more), onPressed: openCalendar),
-                    ),
-                  ),
-              ],
+                ),
             ],
           ),
         ),
-      ),
+      );
+      },
     );
   }
 }
@@ -113,33 +112,3 @@ class _UpcomingHeader extends ConsumerWidget {
   }
 }
 
-class _UpcomingEmpty extends StatelessWidget {
-  const _UpcomingEmpty({required this.window});
-  final UpcomingWindow window;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final theme = Theme.of(context);
-    return Padding(
-      key: const ValueKey('upcoming.empty'),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-      child: Row(
-        children: [
-          Icon(Icons.event_available_outlined, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l10n.upcomingEmptyWithin(window.days), style: theme.textTheme.bodyMedium),
-                const SizedBox(height: 2),
-                Text(l10n.upcomingEmptyHint, style: captionStyle(context)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

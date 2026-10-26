@@ -32,6 +32,11 @@ void main() {
     await tester.tap(find.textContaining('Milk').first);
     await settle(tester);
 
+    // Line items live behind "More details" now; open it first.
+    await tester.ensureVisible(find.text('More details'));
+    await tester.tap(find.text('More details'));
+    await settle(tester);
+
     await tester.tap(find.text('Add item'));
     await settle(tester);
     await enter(tester, find.widgetWithText(TextField, 'Item name').first, 'Buffalo milk');

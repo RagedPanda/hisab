@@ -64,6 +64,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get note => 'नोट';
 
   @override
+  String get moreDetails => 'अधिक विवरण';
+
+  @override
   String get all => 'सभी';
 
   @override

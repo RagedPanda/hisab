@@ -41,6 +41,17 @@ void main() {
     await tester.tap(find.text('Rent'));
     await pumpWithKeyboard(tester);
 
+    // The Repeat control now lives behind "More details"; open that first.
+    final moreDetails = find.byKey(const ValueKey('editor.moreDetails'));
+    final toReveal = editorScroll(tester);
+    while (moreDetails.evaluate().isEmpty && toReveal.pixels < toReveal.maxScrollExtent) {
+      toReveal.jumpTo((toReveal.pixels + 200).clamp(0, toReveal.maxScrollExtent));
+      await tester.pump();
+    }
+    await tester.ensureVisible(moreDetails);
+    await tester.tap(find.text('More details'));
+    await pumpWithKeyboard(tester);
+
     final repeatTile = find.byKey(const ValueKey('editor.repeat'));
     // Scroll the way the integration harness does: jumps, not a drag, so the
     // keyboard stays up (a drag would dismiss it).

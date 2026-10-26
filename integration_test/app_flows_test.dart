@@ -281,6 +281,7 @@ void main() {
     await enterText(tester, find.widgetWithText(TextField, 'Search categories'), 'milk');
     await tapText(tester, 'Milk & Dairy');
     expect(find.text('Milk & Dairy'), findsOneWidget);
+    await openMoreDetails(tester, reveals: find.text('Add item'));
     await _addItem(tester, name: 'Buffalo milk', qty: '2', price: '70');
     await _addItem(tester, name: 'Cow milk', qty: '1', price: '60');
     await shoot(tester, 'entry_items');
@@ -1174,6 +1175,7 @@ void main() {
     Future<String?> projectOf(int amountMinor) async => (await fresh.db.select(fresh.db.entries).get()).singleWhere((entry) => entry.amountMinor == amountMinor).projectId;
 
     await tapFinder(tester, find.byType(FloatingActionButton));
+    await openMoreDetails(tester, reveals: projectChip);
     expect(find.text('Add to project'), findsOneWidget, reason: 'nothing remembered yet');
     await shoot(tester, 'editor_project_chip');
     await tapFinder(tester, projectChip);
@@ -1194,6 +1196,7 @@ void main() {
     expect(await projectOf(250000), carId);
 
     await tapFinder(tester, find.byType(FloatingActionButton));
+    await openMoreDetails(tester, reveals: projectChip);
     expect(
       find.descendant(of: projectChip, matching: find.text('Swift car')),
       findsOneWidget,
@@ -1210,6 +1213,7 @@ void main() {
     expect(await projectOf(30000), kitchenId);
 
     await tapFinder(tester, find.byType(FloatingActionButton));
+    await openMoreDetails(tester, reveals: projectChip);
     expect(find.descendant(of: projectChip, matching: find.text('Kitchen')), findsOneWidget);
     await tapFinder(tester, find.descendant(of: projectChip, matching: find.byIcon(Icons.close)));
     expect(find.text('Add to project'), findsOneWidget, reason: 'the cross clears the project');
@@ -1235,6 +1239,7 @@ void main() {
     await settle(tester, 10);
     expect(find.descendant(of: filterChip, matching: find.text(hi.project)), findsOneWidget);
     await tapFinder(tester, find.byType(FloatingActionButton));
+    await openMoreDetails(tester, reveals: projectChip);
     expect(find.text(hi.addToProject), findsOneWidget);
     await shoot(tester, 'hi_editor_project_chip');
     await tapFinder(tester, projectChip);

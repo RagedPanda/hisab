@@ -10,6 +10,8 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../core/settings.dart';
+import '../../data/db/database.dart';
+import '../../domain/accounts/default_account.dart';
 import '../../domain/currency/currency_lookup.dart';
 import '../currency/currency_picker.dart';
 import '../../l10n/l10n.dart';
@@ -113,6 +115,17 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => context.push(kSalaryLocation),
               ),
               ListTile(leading: const Icon(Icons.account_balance_outlined), title: Text(l10n.accounts), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/accounts')),
+              ListTile(
+                leading: const Icon(Icons.account_balance_wallet_outlined),
+                title: Text(l10n.defaultAccount),
+                subtitle: Text(l10n.defaultAccountHelp, maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: SettingValue(_defaultAccountLabel(ref, settings.defaultAccountId)),
+                visualDensity: VisualDensity.compact,
+                onTap: () async {
+                  final id = await _pickDefaultAccount(context, ref, settings.defaultAccountId);
+                  if (id != null) await notifier.update((s) => s.copyWith(defaultAccountId: id));
+                },
+              ),
               ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.categories), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/categories')),
               ListTile(leading: const Icon(Icons.savings_outlined), title: Text(l10n.budgets), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/budgets')),
               ListTile(leading: const Icon(Icons.folder_outlined), title: Text(l10n.projects), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/projects')),
@@ -195,6 +208,43 @@ class SettingsScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 for (final code in options) RadioListTile<String>(value: code, title: Text(_languageLabel(l10n, code))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Name of the account new entries currently default to (the pinned one, or
+  /// the auto-resolved cash account), or a dash when there are no accounts.
+  String _defaultAccountLabel(WidgetRef ref, String configuredId) {
+    final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
+    final id = defaultEntryAccountId(accounts, configuredId: configuredId);
+    for (final account in accounts) {
+      if (account.id == id) return account.name;
+    }
+    return '—';
+  }
+
+  /// Lets the user pin which account new entries start on. Returns the chosen
+  /// account id, or null if dismissed.
+  Future<String?> _pickDefaultAccount(BuildContext context, WidgetRef ref, String configuredId) {
+    final l10n = context.l10n;
+    final accounts = ref.read(accountsProvider).value ?? const <Account>[];
+    final current = defaultEntryAccountId(accounts, configuredId: configuredId);
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(l10n.defaultAccount),
+        children: [
+          RadioGroup<String>(
+            groupValue: current,
+            onChanged: (value) => Navigator.pop(dialogContext, value),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final account in accounts) RadioListTile<String>(value: account.id, title: Text(account.name)),
               ],
             ),
           ),

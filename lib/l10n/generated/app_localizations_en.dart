@@ -145,6 +145,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accounts => 'Accounts';
 
   @override
+  String get defaultAccount => 'Default account';
+
+  @override
+  String get defaultAccountHelp => 'New entries start on this account';
+
+  @override
   String get account => 'Account';
 
   @override

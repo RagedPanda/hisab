@@ -32,6 +32,7 @@ class AppSettings {
     this.onboarded = false,
     this.localeCode = '',
     this.numberFormat = NumberFormatChoice.automatic,
+    this.defaultAccountId = '',
   });
 
   /// ISO 4217 code of the home currency; the symbol is derived from it.
@@ -65,6 +66,9 @@ class AppSettings {
   /// Digit grouping and separators: automatic (currency and region) or fixed.
   final NumberFormatChoice numberFormat;
 
+  /// Account a new entry starts on; empty means auto (a cash account).
+  final String defaultAccountId;
+
   AppSettings copyWith({
     String? currencyCode,
     bool? currencyConfirmed,
@@ -77,6 +81,7 @@ class AppSettings {
     bool? onboarded,
     String? localeCode,
     NumberFormatChoice? numberFormat,
+    String? defaultAccountId,
   }) =>
       AppSettings(
         currencyCode: currencyCode ?? this.currencyCode,
@@ -90,6 +95,7 @@ class AppSettings {
         onboarded: onboarded ?? this.onboarded,
         localeCode: localeCode ?? this.localeCode,
         numberFormat: numberFormat ?? this.numberFormat,
+        defaultAccountId: defaultAccountId ?? this.defaultAccountId,
       );
 
   static AppSettings fromPrefs(SharedPreferences prefs) => AppSettings(
@@ -104,6 +110,7 @@ class AppSettings {
         onboarded: prefs.getBool('onboarded') ?? false,
         localeCode: prefs.getString('localeCode') ?? '',
         numberFormat: NumberFormatChoice.fromStorageKey(prefs.getString(kNumberFormatKey)),
+        defaultAccountId: prefs.getString('defaultAccountId') ?? '',
       );
 
   Future<void> writeTo(SharedPreferences prefs) async {
@@ -121,6 +128,7 @@ class AppSettings {
     await prefs.setBool('onboarded', onboarded);
     await prefs.setString('localeCode', localeCode);
     await prefs.setString(kNumberFormatKey, numberFormat.storageKey);
+    await prefs.setString('defaultAccountId', defaultAccountId);
   }
 }
 

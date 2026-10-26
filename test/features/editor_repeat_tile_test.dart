@@ -34,7 +34,7 @@ void main() {
     final amountField = find.descendant(of: find.byType(ExpenseEditorScreen), matching: find.byType(TextField)).first;
     await tester.enterText(amountField, '15000');
     await pumpWithKeyboard(tester);
-    await tester.tap(find.text('Choose category'));
+    await tester.tap(find.text('Uncategorised'));
     await pumpWithKeyboard(tester);
     await tester.enterText(find.widgetWithText(TextField, 'Search categories'), 'rent');
     await pumpWithKeyboard(tester);

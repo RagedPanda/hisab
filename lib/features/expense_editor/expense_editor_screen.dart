@@ -536,8 +536,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: IconBadge(icon: _category?.icon ?? 'category', color: _category?.color ?? 0xFF9E9E9E),
-              title: Text(_category?.displayName(context) ?? l10n.chooseCategory),
-              subtitle: _category == null ? Text(l10n.required) : null,
+              title: Text(_category?.displayName(context) ?? l10n.uncategorised),
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
                 final picked = await showCategoryPicker(context, kind: _kind, selectedId: _category?.id);
@@ -849,10 +848,6 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     }
     if (amount <= 0) {
       messenger.showSnackBar(SnackBar(content: Text(l10n.errorAmountZero)));
-      return;
-    }
-    if (_kind != 'transfer' && _category == null) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.errorPickCategory)));
       return;
     }
     final accountProblem = entryAccountProblem(

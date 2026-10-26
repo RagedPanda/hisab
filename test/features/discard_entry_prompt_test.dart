@@ -23,7 +23,7 @@ void main() {
   }
 
   Future<void> pickMilkCategory(WidgetTester tester) async {
-    await tester.tap(find.text('Choose category'));
+    await tester.tap(find.text('Uncategorised'));
     await settle(tester);
     await enter(tester, find.widgetWithText(TextField, 'Search categories'), 'milk');
     await settle(tester);

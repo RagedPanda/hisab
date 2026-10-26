@@ -3965,6 +3965,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get smsReminderPaidViaSms => 'एसएमएस से भुगतान हुआ';
 
   @override
+  String heroToday(String amount) {
+    return 'आज $amount';
+  }
+
+  @override
+  String heroTodaySemantics(String amount) {
+    return 'आज का खर्च $amount। आज के लेन-देन देखें';
+  }
+
+  @override
   String get numberFormatTitle => 'संख्या फ़ॉर्मैट';
 
   @override

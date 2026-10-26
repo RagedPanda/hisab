@@ -1085,6 +1085,8 @@
   "settleReminderPrePromptTitle": "हिसाब बराबर करने की याद पाएँ",
   "settleReminderPrePromptBody": "हिसाब आपके चुने दिन पर सिर्फ़ इस ग्रुप का हिसाब बराबर करने की याद दिलाएगा। कोई विज्ञापन नहीं।",
   "smsReminderPaidViaSms": "एसएमएस से भुगतान हुआ",
+  "heroToday": "आज {amount}",
+  "heroTodaySemantics": "आज का खर्च {amount}। आज के लेन-देन देखें",
   "numberFormatTitle": "संख्या फ़ॉर्मैट",
   "numberFormatAutomatic": "अपने-आप",
   "numberFormatAutomaticHelp": "आपकी मुद्रा और क्षेत्र के हिसाब से"

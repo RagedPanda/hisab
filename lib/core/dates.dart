@@ -14,6 +14,11 @@ class DateRange {
 DateTime startOfDay(DateTime value) =>
     DateTime(value.year, value.month, value.day);
 
+/// The calendar day containing [anchor]: local midnight up to (not
+/// including) the next midnight, so DST days keep their true length.
+DateRange dayRange(DateTime anchor) =>
+    DateRange(startOfDay(anchor), DateTime(anchor.year, anchor.month, anchor.day + 1));
+
 /// Returns the "month" containing [anchor] when months start on [startDay]
 /// (1 = calendar month; 25 = salary month running 25th to 24th).
 DateRange monthRange(DateTime anchor, {int startDay = 1}) {
@@ -34,6 +39,19 @@ DateRange weekRange(DateTime anchor) {
 
 DateRange yearRange(DateTime anchor) =>
     DateRange(DateTime(anchor.year), DateTime(anchor.year + 1));
+
+/// `yyyy-MM-dd` for a calendar day, as routes and exports carry it.
+String isoDay(DateTime day) =>
+    '${day.year.toString().padLeft(4, '0')}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+
+/// A `yyyy-MM-dd` value back to local midnight; null when absent or malformed.
+DateTime? parseIsoDay(String? value) {
+  final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(value ?? '');
+  if (match == null) return null;
+  final day = DateTime(int.parse(match[1]!), int.parse(match[2]!), int.parse(match[3]!));
+  // Reject dates DateTime would roll over, such as 2026-02-30.
+  return isoDay(day) == value ? day : null;
+}
 
 bool isSameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;

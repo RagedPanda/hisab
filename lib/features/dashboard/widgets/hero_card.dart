@@ -10,6 +10,7 @@ import '../../../core/providers.dart';
 import '../../../core/theme.dart';
 import '../../../domain/stats/month_summary.dart';
 import '../../../l10n/l10n.dart';
+import '../../transactions/transactions_screen.dart';
 import '../dashboard_keys.dart';
 import '../dashboard_providers.dart';
 import 'dashboard_card.dart';
@@ -82,7 +83,21 @@ class _HeroContent extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  _AnimatedAmount(minor: summary.expense, moneyFormat: moneyFormat, style: theme.textTheme.displaySmall?.copyWith(color: foreground, fontWeight: FontWeight.w700).tabular),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: _AnimatedAmount(minor: summary.expense, moneyFormat: moneyFormat, style: theme.textTheme.displaySmall?.copyWith(color: foreground, fontWeight: FontWeight.w700).tabular),
+                        ),
+                      ),
+                      if (data.todayMinor != null) ...[
+                        const SizedBox(width: 8),
+                        _TodayPill(minor: data.todayMinor!, moneyFormat: moneyFormat, foreground: foreground),
+                      ],
+                    ],
+                  ),
                   const SizedBox(height: 12),
                   if (summary.isEmpty) _EmptyRow(foreground: foreground) else _StatsRow(summary: summary, moneyFormat: moneyFormat, foreground: foreground),
                 ],
@@ -117,6 +132,44 @@ class _AnimatedAmount extends StatelessWidget {
         curve: Curves.easeOutCubic,
         builder: (context, value, _) => Text(formatMinor(value, format: moneyFormat, showDecimals: false), key: kSummarySpentKey, maxLines: 1, style: style),
       );
+}
+
+/// "Today ₹X": what was spent since midnight. Tapping opens Entries narrowed
+/// to today.
+class _TodayPill extends StatelessWidget {
+  const _TodayPill({required this.minor, required this.moneyFormat, required this.foreground});
+  final int minor;
+  final MoneyFormat moneyFormat;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final amount = formatMinor(minor, format: moneyFormat, showDecimals: false);
+    final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(999));
+    return Semantics(
+      button: true,
+      excludeSemantics: true,
+      label: l10n.heroTodaySemantics(amount),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          key: kHeroTodayKey,
+          customBorder: shape,
+          onTap: () => context.go(entriesForDayLocation(DateTime.now())),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: ShapeDecoration(shape: shape, color: foreground.withValues(alpha: 0.16)),
+            child: Text(
+              l10n.heroToday(amount),
+              maxLines: 1,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(color: foreground, fontWeight: FontWeight.w600).tabular,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _ComparisonPill extends StatelessWidget {

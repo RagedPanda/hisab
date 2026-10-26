@@ -6356,6 +6356,18 @@ abstract class AppLocalizations {
   /// **'Paid via SMS'**
   String get smsReminderPaidViaSms;
 
+  /// No description provided for @heroToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today {amount}'**
+  String heroToday(String amount);
+
+  /// No description provided for @heroTodaySemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent today {amount}. Show today\'s entries'**
+  String heroTodaySemantics(String amount);
+
   /// No description provided for @numberFormatTitle.
   ///
   /// In en, this message translates to:

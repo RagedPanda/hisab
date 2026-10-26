@@ -3991,6 +3991,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsReminderPaidViaSms => 'Paid via SMS';
 
   @override
+  String heroToday(String amount) {
+    return 'Today $amount';
+  }
+
+  @override
+  String heroTodaySemantics(String amount) {
+    return 'Spent today $amount. Show today\'s entries';
+  }
+
+  @override
   String get numberFormatTitle => 'Number format';
 
   @override

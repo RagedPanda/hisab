@@ -1391,6 +1391,10 @@
   "settleReminderPrePromptBody": "Hisab sends a notification on the day you choose, only to remind you to settle up with this group. No marketing.",
   "smsReminderPaidViaSms": "Paid via SMS",
   "@smsReminderPaidViaSms": {"description": "Label on a reminder that a matching bank SMS marked done"},
+  "heroToday": "Today {amount}",
+  "@heroToday": {"placeholders": {"amount": {"type": "String"}}},
+  "heroTodaySemantics": "Spent today {amount}. Show today's entries",
+  "@heroTodaySemantics": {"placeholders": {"amount": {"type": "String"}}},
   "numberFormatTitle": "Number format",
   "numberFormatAutomatic": "Automatic",
   "numberFormatAutomaticHelp": "Follows your currency and region"

@@ -70,7 +70,7 @@ class ItemDraft {
 }
 
 class ItemRow extends StatefulWidget {
-  const ItemRow({super.key, required this.draft, required this.units, required this.moneyFormat, required this.onChanged, required this.onRemove, this.footer});
+  const ItemRow({super.key, required this.draft, required this.units, required this.moneyFormat, required this.onChanged, required this.onRemove, this.footer, this.showNameError = false});
   final ItemDraft draft;
 
   /// Shown under the quantity and price line, e.g. who shares the item.
@@ -79,6 +79,9 @@ class ItemRow extends StatefulWidget {
   final MoneyFormat moneyFormat;
   final ValueChanged<ItemDraft> onChanged;
   final VoidCallback onRemove;
+
+  /// Flags the name field in red once a save was blocked on a missing name.
+  final bool showNameError;
 
   @override
   State<ItemRow> createState() => _ItemRowState();
@@ -106,7 +109,11 @@ class _ItemRowState extends State<ItemRow> {
               Expanded(
                 child: TextField(
                   controller: _name,
-                  decoration: InputDecoration(hintText: l10n.itemName, isDense: true, filled: false, border: InputBorder.none),
+                  decoration: InputDecoration(
+                    labelText: l10n.itemName,
+                    isDense: true,
+                    errorText: widget.showNameError ? l10n.required : null,
+                  ),
                   textCapitalization: TextCapitalization.sentences,
                   onChanged: (v) => widget.onChanged(draft.copyWith(name: v)),
                 ),

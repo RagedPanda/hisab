@@ -70,8 +70,8 @@ String backspace(String expression) => expression.isEmpty ? expression : express
 
 /// Expression to open the keypad with, from the amount field's text: a valid
 /// amount without separators, or empty.
-String calcSeed(String amountText) {
-  final minor = parseAmountToMinor(amountText);
+String calcSeed(String amountText, {MoneyFormat format = MoneyFormat.inr}) {
+  final minor = parseAmountToMinor(amountText, format: format);
   return minor == null || minor == 0 ? '' : amountInputText(minor);
 }
 

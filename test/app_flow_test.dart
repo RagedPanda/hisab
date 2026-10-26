@@ -25,11 +25,16 @@ void main() {
     await settle(tester);
     expect(find.text('New entry'), findsOneWidget);
 
-    await tester.tap(find.text('Choose category'));
+    await tester.tap(find.text('Uncategorised'));
     await settle(tester);
     await enter(tester, find.widgetWithText(TextField, 'Search categories'), 'milk');
     await settle(tester);
     await tester.tap(find.textContaining('Milk').first);
+    await settle(tester);
+
+    // Line items live behind "More details" now; open it first.
+    await tester.ensureVisible(find.text('More details'));
+    await tester.tap(find.text('More details'));
     await settle(tester);
 
     await tester.tap(find.text('Add item'));
@@ -59,6 +64,33 @@ void main() {
         );
     expect(suggestions.map((s) => s.name), containsAll(['Buffalo milk', 'Cow milk']));
     expect(find.textContaining('₹100'), findsWidgets);
+  });
+
+  testWidgets('expense saves without a category and persists as uncategorised', (tester) async {
+    final container = await pumpApp(tester);
+    await tester.tap(find.byType(FloatingActionButton));
+    await settle(tester);
+    expect(find.text('New entry'), findsOneWidget);
+    // The category control reads as optional, not as a required field to fill.
+    expect(find.text('Uncategorised'), findsOneWidget);
+    expect(find.text('Required'), findsNothing);
+
+    // Enter an amount and save straight away, never opening the picker.
+    await enter(tester, find.byType(TextField).first, '40');
+    await settle(tester);
+    await tester.ensureVisible(find.textContaining('Save ₹'));
+    await tester.tap(find.textContaining('Save ₹'));
+    await settle(tester);
+
+    final db = container.read(databaseProvider);
+    await settle(tester, 2);
+    final entries = await db.select(db.entries).get();
+    expect(entries.single.categoryId, isNull, reason: 'a skipped category persists as null');
+    expect(entries.single.amountMinor, 4000);
+
+    // The saved entry shows as Uncategorised in the recent list.
+    await tester.scrollUntilVisible(find.text('Uncategorised'), 200, scrollable: find.byType(Scrollable).first);
+    expect(find.text('Uncategorised'), findsWidgets);
   });
 
   testWidgets('group with members is created and opened', (tester) async {
@@ -157,7 +189,7 @@ void main() {
       await tester.tap(find.byType(FloatingActionButton));
       await settle(tester);
 
-      await tester.tap(find.text('Choose category'));
+      await tester.tap(find.text('Uncategorised'));
       await settle(tester);
       await enter(tester, find.widgetWithText(TextField, 'Search categories'), 'milk');
       await settle(tester);

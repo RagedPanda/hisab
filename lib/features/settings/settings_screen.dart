@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/money.dart';
 import '../../core/providers.dart';
+import '../../core/settings.dart';
 import '../../domain/currency/currency_lookup.dart';
 import '../currency/currency_picker.dart';
 import '../../l10n/l10n.dart';
@@ -79,6 +80,16 @@ class SettingsScreen extends ConsumerWidget {
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.pin_outlined),
+                title: Text(l10n.numberFormatTitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: SettingValue(numberFormatSample(ref.watch(homeMoneyFormatProvider))),
+                visualDensity: VisualDensity.compact,
+                onTap: () async {
+                  final choice = await _pickNumberFormat(context, settings, ref.read(deviceLocaleProvider));
+                  if (choice != null) await notifier.update((s) => s.copyWith(numberFormat: choice));
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.calendar_month_outlined),
                 title: Text(l10n.monthStartsOn),
                 subtitle: Text(l10n.monthStartsOnHelp, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -95,7 +106,7 @@ class SettingsScreen extends ConsumerWidget {
                 leading: const Icon(Icons.payments_outlined),
                 title: Text(salary.isSetUp ? l10n.salaryTitle : l10n.salarySetUp),
                 subtitle: salary.isSetUp
-                    ? Text(l10n.salarySummary(formatMinor(salary.amountMinor, symbol: settings.currencySymbol), salary.salaryDay), maxLines: 1, overflow: TextOverflow.ellipsis)
+                    ? Text(l10n.salarySummary(formatMinor(salary.amountMinor, format: ref.watch(homeMoneyFormatProvider)), salary.salaryDay), maxLines: 1, overflow: TextOverflow.ellipsis)
                     : null,
                 trailing: const Icon(Icons.chevron_right),
                 visualDensity: VisualDensity.compact,
@@ -197,6 +208,38 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
+  /// Returns the chosen number format, or null if dismissed. Each option is
+  /// shown as a sample of how the home currency looks with it.
+  Future<NumberFormatChoice?> _pickNumberFormat(BuildContext context, AppSettings settings, Locale deviceLocale) {
+    final l10n = context.l10n;
+    String sampleFor(NumberFormatChoice choice) => numberFormatSample(homeMoneyFormatFor(settings.copyWith(numberFormat: choice), deviceLocale));
+    return showDialog<NumberFormatChoice>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(l10n.numberFormatTitle),
+        children: [
+          RadioGroup<NumberFormatChoice>(
+            groupValue: settings.numberFormat,
+            onChanged: (value) => Navigator.pop(dialogContext, value),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final choice in NumberFormatChoice.values)
+                  RadioListTile<NumberFormatChoice>(
+                    value: choice,
+                    title: Text(choice == NumberFormatChoice.automatic ? l10n.numberFormatAutomatic : sampleFor(choice)),
+                    subtitle: choice == NumberFormatChoice.automatic
+                        ? Text('${sampleFor(choice)} · ${l10n.numberFormatAutomaticHelp}', maxLines: 2, overflow: TextOverflow.ellipsis)
+                        : null,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _export(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
     final passphrase = await promptText(context, title: l10n.backupPassphrase, hint: l10n.backupPassphraseHelp);
@@ -205,7 +248,11 @@ class SettingsScreen extends ConsumerWidget {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.passphraseTooShort)));
       return;
     }
-    final bytes = await ref.read(backupServiceProvider).exportEncrypted(passphrase, currencyCode: ref.read(settingsProvider).currencyCode);
+    final bytes = await ref.read(backupServiceProvider).exportEncrypted(
+      passphrase,
+      currencyCode: ref.read(settingsProvider).currencyCode,
+      numberFormat: ref.read(settingsProvider).numberFormat,
+    );
     final dir = await getTemporaryDirectory();
     final stamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
     final file = File('${dir.path}/hisab-backup-$stamp.hisab');
@@ -229,6 +276,10 @@ class SettingsScreen extends ConsumerWidget {
       final backupCurrency = restored.currencyCode;
       if (backupCurrency != null) {
         await ref.read(settingsProvider.notifier).update((s) => s.copyWith(currencyCode: backupCurrency, currencyConfirmed: true));
+      }
+      final backupNumberFormat = restored.numberFormat;
+      if (backupNumberFormat != null) {
+        await ref.read(settingsProvider.notifier).update((s) => s.copyWith(numberFormat: backupNumberFormat));
       }
       await ref.read(reminderSchedulerProvider).rescheduleAll();
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(restored.written))));

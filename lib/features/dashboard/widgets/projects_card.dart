@@ -20,7 +20,7 @@ class ProjectsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final overview = ref.watch(projectsOverviewProvider);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final l10n = context.l10n;
     final theme = Theme.of(context);
     void openProjects() => context.push('/projects');
@@ -55,10 +55,10 @@ class ProjectsCard extends ConsumerWidget {
                                 ),
                                 Text(
                                   view.totals.budget == null
-                                      ? formatMinor(view.totals.spentMinor, symbol: symbol, showDecimals: false)
+                                      ? formatMinor(view.totals.spentMinor, format: moneyFormat, showDecimals: false)
                                       : l10n.spentOfBudget(
-                                          formatMinor(view.totals.spentMinor, symbol: symbol, showDecimals: false),
-                                          formatMinor(view.totals.budget!.limitMinor, symbol: symbol, showDecimals: false, compact: true),
+                                          formatMinor(view.totals.spentMinor, format: moneyFormat, showDecimals: false),
+                                          formatMinor(view.totals.budget!.limitMinor, format: moneyFormat, showDecimals: false, compact: true),
                                         ),
                                   style: theme.textTheme.labelLarge?.tabular,
                                 ),

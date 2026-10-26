@@ -7,14 +7,14 @@ import '../../l10n/l10n.dart';
 /// Calculator keypad for the amount field. Opens with [initialAmountText]
 /// (the field's current amount) and returns the result in minor units on
 /// "Use", or null when dismissed.
-Future<int?> showCalculatorSheet(BuildContext context, {required String initialAmountText, required String symbol}) =>
+Future<int?> showCalculatorSheet(BuildContext context, {required String initialAmountText, required MoneyFormat moneyFormat}) =>
     showModalBottomSheet<int>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
-      builder: (context) => _CalculatorSheet(initialExpression: calcSeed(initialAmountText), symbol: symbol),
+      builder: (context) => _CalculatorSheet(initialExpression: calcSeed(initialAmountText, format: moneyFormat), moneyFormat: moneyFormat),
     );
 
 /// Message for an expression that has no amount, or null when nothing needs
@@ -27,9 +27,9 @@ String? calcErrorText(AppLocalizations l10n, CalcError? error) => switch (error)
     };
 
 class _CalculatorSheet extends StatefulWidget {
-  const _CalculatorSheet({required this.initialExpression, required this.symbol});
+  const _CalculatorSheet({required this.initialExpression, required this.moneyFormat});
   final String initialExpression;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   @override
   State<_CalculatorSheet> createState() => _CalculatorSheetState();
@@ -66,7 +66,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
           ),
           const SizedBox(height: 4),
           Text(
-            error ?? (preview.isValue ? '= ${formatMinor(preview.minor!, symbol: widget.symbol)}' : ' '),
+            error ?? (preview.isValue ? '= ${formatMinor(preview.minor!, format: widget.moneyFormat)}' : ' '),
             key: const ValueKey('calc.result'),
             textAlign: TextAlign.end,
             style: theme.textTheme.titleMedium?.copyWith(color: error == null ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.error),
@@ -93,7 +93,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
               FilledButton(
                 key: const ValueKey('calc.use'),
                 onPressed: usable ? () => Navigator.of(context).pop(preview.minor) : null,
-                child: Text(l10n.useAmount(formatMinor(usable ? preview.minor! : 0, symbol: widget.symbol))),
+                child: Text(l10n.useAmount(formatMinor(usable ? preview.minor! : 0, format: widget.moneyFormat))),
               ),
             ],
           ),

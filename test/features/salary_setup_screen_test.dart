@@ -16,6 +16,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/fake_notification_gateway.dart';
+import 'package:hisab/core/money.dart';
 
 Future<ProviderContainer> _pumpSalary(WidgetTester tester, {String localeCode = 'en', FakeNotificationGateway? gateway, Map<String, Object> prefsValues = const {}}) async {
   SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR', if (localeCode != 'en') 'localeCode': localeCode, ...prefsValues});
@@ -191,19 +192,19 @@ void main() {
         );
 
     test('received shows the date and amount, then the next expected date', () {
-      final lines = salaryStatusLines(status(received: income(DateTime(2026, 11, 27), 8500000), state: SalaryReminderState.seen), english, locale: 'en', symbol: '₹');
+      final lines = salaryStatusLines(status(received: income(DateTime(2026, 11, 27), 8500000), state: SalaryReminderState.seen), english, locale: 'en', moneyFormat: MoneyFormat.inr);
       expect(lines.title, english.salaryReceivedAmount('27 Nov 2026', '₹85,000'));
       expect(lines.subtitle, english.salaryNextExpected('30 Dec 2026'));
     });
 
     test('a missed cycle reads late and shows the last salary received', () {
-      final lines = salaryStatusLines(status(last: income(DateTime(2026, 10, 30), 8500000), state: SalaryReminderState.due), english, locale: 'en', symbol: '₹');
+      final lines = salaryStatusLines(status(last: income(DateTime(2026, 10, 30), 8500000), state: SalaryReminderState.due), english, locale: 'en', moneyFormat: MoneyFormat.inr);
       expect(lines.title, english.salaryLateSince('30 Nov 2026'));
       expect(lines.subtitle, '${english.salaryLastReceived('30 Oct 2026', '₹85,000')}\n${english.salaryNextExpected('30 Dec 2026')}');
     });
 
     test('waiting reads expected, not late', () {
-      final lines = salaryStatusLines(status(), english, locale: 'en', symbol: '₹');
+      final lines = salaryStatusLines(status(), english, locale: 'en', moneyFormat: MoneyFormat.inr);
       expect(lines.title, english.salaryExpectedOn('30 Nov 2026'));
       expect(lines.subtitle, english.salaryNextExpected('30 Dec 2026'));
     });

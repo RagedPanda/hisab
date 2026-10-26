@@ -23,11 +23,18 @@ void main() {
   }
 
   Future<void> pickMilkCategory(WidgetTester tester) async {
-    await tester.tap(find.text('Choose category'));
+    await tester.tap(find.text('Uncategorised'));
     await settle(tester);
     await enter(tester, find.widgetWithText(TextField, 'Search categories'), 'milk');
     await settle(tester);
     await tester.tap(find.textContaining('Milk').first);
+    await settle(tester);
+  }
+
+  Future<void> openMoreDetails(WidgetTester tester) async {
+    final header = find.text('More details');
+    await tester.ensureVisible(header);
+    await tester.tap(header);
     await settle(tester);
   }
 
@@ -70,6 +77,7 @@ void main() {
   testWidgets('the close button asks too, here after only a note', (tester) async {
     await pumpApp(tester);
     await openNewEntry(tester);
+    await openMoreDetails(tester);
     await enter(tester, noteField, 'chai');
     await tester.tap(find.byType(BackButton));
     await settle(tester);

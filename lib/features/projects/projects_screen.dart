@@ -30,7 +30,7 @@ class ProjectsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final views = ref.watch(projectViewsProvider);
     final showArchived = ref.watch(_showArchivedProvider);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final all = views.value ?? const <ProjectView>[];
     final hasArchived = all.any((view) => view.status == ProjectStatus.archived);
     final visible = showArchived ? all : all.where((view) => view.status != ProjectStatus.archived).toList();
@@ -72,7 +72,7 @@ class ProjectsScreen extends ConsumerWidget {
                       for (final (index, view) in visible.indexed) ...[
                         if (index == 0 || visible[index - 1].status != view.status)
                           SectionHeader(projectStatusLabel(l10n, view.status), padding: const EdgeInsets.fromLTRB(4, 16, 4, 8)),
-                        ProjectCard(view: view, symbol: symbol),
+                        ProjectCard(view: view, moneyFormat: moneyFormat),
                       ],
                     ],
                   ),
@@ -82,9 +82,9 @@ class ProjectsScreen extends ConsumerWidget {
 }
 
 class ProjectCard extends StatelessWidget {
-  const ProjectCard({super.key, required this.view, required this.symbol});
+  const ProjectCard({super.key, required this.view, required this.moneyFormat});
   final ProjectView view;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +112,7 @@ class ProjectCard extends StatelessWidget {
                       children: [
                         Text(project.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                         Text(
-                          l10n.spentAmount(formatMinor(totals.spentMinor, symbol: symbol, showDecimals: false)),
+                          l10n.spentAmount(formatMinor(totals.spentMinor, format: moneyFormat, showDecimals: false)),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodyMedium?.tabular,
@@ -124,7 +124,7 @@ class ProjectCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              ProjectBudgetSummary(budget: totals.budget, symbol: symbol, trailing: l10n.entryCountLabel(totals.entryCount)),
+              ProjectBudgetSummary(budget: totals.budget, moneyFormat: moneyFormat, trailing: l10n.entryCountLabel(totals.entryCount)),
             ],
           ),
         ),

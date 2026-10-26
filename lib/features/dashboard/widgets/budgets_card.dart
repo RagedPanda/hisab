@@ -17,7 +17,7 @@ class BudgetsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final overview = ref.watch(budgetsOverviewProvider);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final l10n = context.l10n;
     void openBudgets() => context.push('/budgets');
     return AsyncCard(
@@ -43,7 +43,7 @@ class BudgetsCard extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Column(
                   children: [
-                    for (final view in data.shown) BudgetRow(view: view, symbol: symbol, onTap: openBudgets),
+                    for (final view in data.shown) BudgetRow(view: view, moneyFormat: moneyFormat, onTap: openBudgets),
                     if (data.more > 0)
                       Align(
                         alignment: Alignment.centerRight,

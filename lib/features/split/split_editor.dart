@@ -19,8 +19,8 @@ String splitMethodLabel(SplitMethod method, AppLocalizations l10n) => switch (me
 
 /// Translated one-line explanation of how a split method works.
 /// Translates a language-free [SplitError] into user-facing text.
-String splitErrorMessage(SplitError error, AppLocalizations l10n, String symbol) {
-  String money() => formatMinor(error.amountMinor, symbol: symbol);
+String splitErrorMessage(SplitError error, AppLocalizations l10n, MoneyFormat moneyFormat) {
+  String money() => formatMinor(error.amountMinor, format: moneyFormat);
   String percent() {
     final text = error.percent.toStringAsFixed(2);
     return text.endsWith('.00') ? text.substring(0, text.length - 3) : text;
@@ -71,7 +71,7 @@ class SplitEditor extends StatelessWidget {
     required this.members,
     required this.method,
     required this.inputs,
-    required this.symbol,
+    required this.moneyFormat,
     required this.onMethodChanged,
     required this.onInputsChanged,
     this.items = const [],
@@ -82,7 +82,7 @@ class SplitEditor extends StatelessWidget {
   final List<Member> members;
   final SplitMethod method;
   final List<SplitInput> inputs;
-  final String symbol;
+  final MoneyFormat moneyFormat;
   final ValueChanged<SplitMethod> onMethodChanged;
   final ValueChanged<List<SplitInput>> onInputsChanged;
 
@@ -130,18 +130,18 @@ class SplitEditor extends StatelessWidget {
           ),
         const SizedBox(height: 8),
         if (!outcome.isValid)
-          Text(outcome.error == null ? l10n.splitDoesNotAddUp : splitErrorMessage(outcome.error!, l10n, symbol), style: TextStyle(color: theme.colorScheme.error))
+          Text(outcome.error == null ? l10n.splitDoesNotAddUp : splitErrorMessage(outcome.error!, l10n, moneyFormat), style: TextStyle(color: theme.colorScheme.error))
         else
-          Text(l10n.splitsAcross(formatMinor(outcome.totalMinor, symbol: symbol), outcome.shares.length), style: theme.textTheme.bodySmall),
+          Text(l10n.splitsAcross(formatMinor(outcome.totalMinor, format: moneyFormat), outcome.shares.length), style: theme.textTheme.bodySmall),
       ],
     );
   }
 
-  String _shareText(int? share) => share == null ? '—' : formatMinor(share, symbol: symbol);
+  String _shareText(int? share) => share == null ? '—' : formatMinor(share, format: moneyFormat);
 
   /// "₹620 · 3 items · 31%" for a member of a by-item split.
   String _byItemLine(AppLocalizations l10n, ItemShareSummary? summary) =>
-      summary == null ? '—' : l10n.byItemSummary(formatMinor(summary.amountMinor, symbol: symbol), summary.itemCount, summary.percent);
+      summary == null ? '—' : l10n.byItemSummary(formatMinor(summary.amountMinor, format: moneyFormat), summary.itemCount, summary.percent);
 
   Widget _memberRow(BuildContext context, Member member, String shareText) {
     final input = inputs.firstWhere((i) => i.memberId == member.id, orElse: () => SplitInput(memberId: member.id));
@@ -152,8 +152,8 @@ class SplitEditor extends StatelessWidget {
       case SplitMethod.exact:
         trailing = _numberField(
           initial: input.amountMinor == 0 ? '' : minorToDouble(input.amountMinor).toStringAsFixed(2),
-          suffix: symbol,
-          onChanged: (text) => _update(input.copyWith(amountMinor: parseAmountToMinor(text) ?? 0)),
+          suffix: moneyFormat.symbol,
+          onChanged: (text) => _update(input.copyWith(amountMinor: parseAmountToMinor(text, format: moneyFormat) ?? 0)),
         );
       case SplitMethod.percent:
         trailing = _numberField(
@@ -172,8 +172,8 @@ class SplitEditor extends StatelessWidget {
           Checkbox(value: input.included, onChanged: (v) => _update(input.copyWith(included: v ?? false))),
           _numberField(
             initial: input.amountMinor == 0 ? '' : minorToDouble(input.amountMinor).toStringAsFixed(2),
-            suffix: '+$symbol',
-            onChanged: (text) => _update(input.copyWith(amountMinor: parseAmountToMinor(text) ?? 0)),
+            suffix: '+${moneyFormat.symbol}',
+            onChanged: (text) => _update(input.copyWith(amountMinor: parseAmountToMinor(text, format: moneyFormat) ?? 0)),
           ),
         ]);
       case SplitMethod.byItem:

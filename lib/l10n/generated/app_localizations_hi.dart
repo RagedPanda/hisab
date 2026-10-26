@@ -1125,9 +1125,6 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get budgetsEmptyBody => 'अपनी प्रगति देखने के लिए बजट तय करें';
-
-  @override
   String andMoreCount(int count) {
     return 'और $count और';
   }
@@ -3538,21 +3535,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get smsReviewAddManually => 'खुद जोड़ें';
-
-  @override
-  String upcomingEmptyWithin(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'अगले $days दिनों में कुछ देय नहीं',
-      one: 'कल कुछ देय नहीं',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get upcomingEmptyHint =>
-      'दोहराए जाने वाले बिल, रिमाइंडर और कार्ड की देय तारीख़ें यहाँ दिखेंगी।';
 
   @override
   String upcomingWindowDays(int days) {

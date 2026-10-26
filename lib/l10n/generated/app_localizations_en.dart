@@ -1125,9 +1125,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get budgetsEmptyBody => 'Set a budget to see how you\'re tracking';
-
-  @override
   String andMoreCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -3552,21 +3549,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smsReviewAddManually => 'Add manually';
-
-  @override
-  String upcomingEmptyWithin(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'Nothing due in the next $days days',
-      one: 'Nothing due tomorrow',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get upcomingEmptyHint =>
-      'Recurring bills, reminders and card dues show up here.';
 
   @override
   String upcomingWindowDays(int days) {

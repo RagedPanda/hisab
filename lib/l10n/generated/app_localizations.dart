@@ -2000,12 +2000,6 @@ abstract class AppLocalizations {
   /// **'{percent}%'**
   String percentOf(int percent);
 
-  /// No description provided for @budgetsEmptyBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Set a budget to see how you\'re tracking'**
-  String get budgetsEmptyBody;
-
   /// No description provided for @andMoreCount.
   ///
   /// In en, this message translates to:
@@ -5707,18 +5701,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add manually'**
   String get smsReviewAddManually;
-
-  /// No description provided for @upcomingEmptyWithin.
-  ///
-  /// In en, this message translates to:
-  /// **'{days, plural, =1{Nothing due tomorrow} other{Nothing due in the next {days} days}}'**
-  String upcomingEmptyWithin(int days);
-
-  /// No description provided for @upcomingEmptyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Recurring bills, reminders and card dues show up here.'**
-  String get upcomingEmptyHint;
 
   /// No description provided for @upcomingWindowDays.
   ///

@@ -23,39 +23,30 @@ class BudgetsCard extends ConsumerWidget {
     return AsyncCard(
       value: overview,
       skeletonHeight: 160,
-      builder: (data) => DashboardSection(
-        title: l10n.budgets,
-        trailing: SectionAction(label: l10n.manage, onPressed: openBudgets),
-        child: data.isEmpty
-            ? DashboardCard(
-                key: kBudgetsCardKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l10n.budgetsEmptyBody, style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 12),
-                    FilledButton.tonal(onPressed: openBudgets, child: Text(l10n.setBudget)),
-                  ],
-                ),
-              )
-            : DashboardCard(
-                key: kBudgetsCardKey,
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Column(
-                  children: [
-                    for (final view in data.shown) BudgetRow(view: view, moneyFormat: moneyFormat, onTap: openBudgets),
-                    if (data.more > 0)
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: SectionAction(label: l10n.andMoreCount(data.more), onPressed: openBudgets),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-      ),
+      builder: (data) {
+        if (data.isEmpty) return const SizedBox.shrink();
+        return DashboardSection(
+          title: l10n.budgets,
+          trailing: SectionAction(label: l10n.manage, onPressed: openBudgets),
+          child: DashboardCard(
+            key: kBudgetsCardKey,
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(
+              children: [
+                for (final view in data.shown) BudgetRow(view: view, moneyFormat: moneyFormat, onTap: openBudgets),
+                if (data.more > 0)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: SectionAction(label: l10n.andMoreCount(data.more), onPressed: openBudgets),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

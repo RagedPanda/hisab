@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
+import 'package:hisab/features/dashboard/dashboard_keys.dart';
 import 'package:hisab/features/shell/router.dart';
 
 import 'support/app_harness.dart';
@@ -88,9 +89,11 @@ void main() {
     expect(entries.single.categoryId, isNull, reason: 'a skipped category persists as null');
     expect(entries.single.amountMinor, 4000);
 
-    // The saved entry shows as Uncategorised in the recent list.
-    await tester.scrollUntilVisible(find.text('Uncategorised'), 200, scrollable: find.byType(Scrollable).first);
-    expect(find.text('Uncategorised'), findsWidgets);
+    // The saved entry shows as Uncategorised in the recent list (the category
+    // donut legend also labels the slice, so scope the check to the recent card).
+    final recentUncategorised = find.descendant(of: find.byKey(kRecentCardKey), matching: find.text('Uncategorised'));
+    await tester.scrollUntilVisible(recentUncategorised, 200, scrollable: find.byType(Scrollable).first);
+    expect(recentUncategorised, findsOneWidget);
   });
 
   testWidgets('group with members is created and opened', (tester) async {

@@ -92,6 +92,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   List<SplitInput> _splitInputs = const [];
   List<ItemDraft> _items = [];
 
+  /// Set once a save is blocked on an unnamed item, so the offending rows
+  /// flag their name field until it is filled in.
+  bool _showItemErrors = false;
+
   /// Entry-scope fields of the entry's project, and the values recorded for
   /// them (plus any for fields since removed, kept so a save does not drop them).
   List<ProjectField> _projectFields = const [];
@@ -794,6 +798,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             moneyFormat: moneyFormat,
             onChanged: (draft) => _updateItems(() => _items[i] = draft),
             onRemove: () => _updateItems(() => _items.removeAt(i)),
+            showNameError: _showItemErrors && _items[i].name.trim().isEmpty,
             footer: _isByItem
                 ? ItemAssignStrip(
                     itemId: _items[i].id,
@@ -910,6 +915,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       return;
     }
     if (_items.any((i) => i.name.trim().isEmpty)) {
+      setState(() => _showItemErrors = true);
       messenger.showSnackBar(SnackBar(content: Text(l10n.errorItemName)));
       return;
     }

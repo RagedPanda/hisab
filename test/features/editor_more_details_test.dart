@@ -48,6 +48,12 @@ void main() {
     expect(dateButton, findsOneWidget);
   });
 
+  testWidgets('More details shows the date while collapsed', (tester) async {
+    await pumpApp(tester);
+    await openNewEntry(tester);
+    expect(find.descendant(of: find.byKey(const ValueKey('editor.moreDetails')), matching: find.text('Today')), findsOneWidget);
+  });
+
   testWidgets('editing a plain entry keeps More details collapsed', (tester) async {
     final container = await pumpApp(tester);
     await tester.runAsync(() => container.read(entriesRepositoryProvider).saveEntry(

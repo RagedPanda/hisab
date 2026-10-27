@@ -683,6 +683,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         childrenPadding: EdgeInsets.zero,
         expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
         title: Text(l10n.moreDetails),
+        // The date is the detail most often changed, so it shows while collapsed.
+        subtitle: Text(formatDayLabel(_occurredAt, today: l10n.today, yesterday: l10n.yesterday, locale: Localizations.localeOf(context).toString())),
         children: _detailFields(context, l10n, moneyFormat, units),
       ),
     );

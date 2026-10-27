@@ -55,11 +55,10 @@ Future<void> pump(WidgetTester tester, Widget child, {UpcomingInputs? inputs, Lo
 
 void main() {
   group('Upcoming card', () {
-    testWidgets('shows an empty state for the chosen window', (tester) async {
+    testWidgets('hides the card when nothing is due in the window', (tester) async {
       await pump(tester, const UpcomingCard());
-      expect(find.byKey(kUpcomingCardKey), findsOneWidget);
-      expect(find.byKey(const ValueKey('upcoming.empty')), findsOneWidget);
-      expect(find.text('Nothing due in the next 7 days'), findsOneWidget);
+      expect(find.byKey(kUpcomingCardKey), findsNothing);
+      expect(find.text('Upcoming'), findsNothing);
     });
 
     testWidgets('lists overdue first with a red label and the 7 day items', (tester) async {

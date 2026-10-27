@@ -10,6 +10,7 @@ import 'package:hisab/domain/split/group_export.dart';
 import 'package:hisab/features/groups/group_export.dart';
 import 'package:hisab/l10n/generated/app_localizations_en.dart';
 import 'package:hisab/l10n/generated/app_localizations_hi.dart';
+import 'package:hisab/core/money.dart';
 
 void main() {
   final english = AppLocalizationsEn();
@@ -27,7 +28,7 @@ void main() {
         memberOrder: const ['me', 'rahul', 'asha'],
         myMemberId: 'me',
         nameOf: nameOf,
-        symbol: '₹',
+        moneyFormat: MoneyFormat.inr,
       );
       expect(
         text,
@@ -52,7 +53,7 @@ void main() {
     });
 
     test('says all settled up when nobody owes anything', () {
-      final text = groupSummaryText(english, groupName: 'Flat', transfers: const [], net: const {'me': 0}, totals: _noSpend, memberOrder: const ['me'], myMemberId: 'me', nameOf: nameOf, symbol: '₹');
+      final text = groupSummaryText(english, groupName: 'Flat', transfers: const [], net: const {'me': 0}, totals: _noSpend, memberOrder: const ['me'], myMemberId: 'me', nameOf: nameOf, moneyFormat: MoneyFormat.inr);
       expect(text, '*Flat — balances*\nAll settled up.\n\nShared from Hisab');
     });
 
@@ -66,7 +67,7 @@ void main() {
         memberOrder: const ['me', 'rahul'],
         myMemberId: 'me',
         nameOf: nameOf,
-        symbol: '₹',
+        moneyFormat: MoneyFormat.inr,
       );
       expect(text, '*Goa trip — balances*\nGroup total: ₹3,00,000\nYour share: ₹50,000\nRahul\'s share: ₹2,50,000\n\nAll settled up.\n\nShared from Hisab');
     });
@@ -81,7 +82,7 @@ void main() {
         memberOrder: const ['me', 'rahul'],
         myMemberId: 'me',
         nameOf: (id) => id == 'me' ? 'आप' : 'राहुल',
-        symbol: '₹',
+        moneyFormat: MoneyFormat.inr,
       );
       expect(text, contains('राहुल को आपको ₹100 देने हैं'));
       expect(text, contains('आपको ₹100 वापस मिलेंगे'));
@@ -132,7 +133,7 @@ void main() {
       // The payment is not spending: the total is the hotel bill alone.
       expect(lines[3], ',Total,,900.00,,300.00,600.00,0.00,300.00,300.00,300.00,0.00,0.00,0.00');
 
-      final summary = groupSummaryFor(english, detail, symbol: '₹');
+      final summary = groupSummaryFor(english, detail, moneyFormat: MoneyFormat.inr);
       expect(summary, contains('Group total: ₹900\nYour share: ₹300\nRahul\'s share: ₹300\nप्रिया\'s share: ₹300'));
     });
   });

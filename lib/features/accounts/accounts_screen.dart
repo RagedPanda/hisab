@@ -24,7 +24,7 @@ class AccountsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.accounts)),
@@ -46,10 +46,10 @@ class AccountsScreen extends ConsumerWidget {
                   ].join(' · ')),
                   trailing: Text(
                     account.type != 'card'
-                        ? formatMinor(account.balanceMinor, symbol: symbol)
+                        ? formatMinor(account.balanceMinor, format: moneyFormat)
                         : account.balanceMinor > 0
-                            ? l10n.cardInCredit(formatMinor(account.balanceMinor, symbol: symbol))
-                            : l10n.cardDue(formatMinor(account.balanceMinor.abs(), symbol: symbol)),
+                            ? l10n.cardInCredit(formatMinor(account.balanceMinor, format: moneyFormat))
+                            : l10n.cardDue(formatMinor(account.balanceMinor.abs(), format: moneyFormat)),
                     style: TextStyle(fontWeight: FontWeight.w700, color: account.balanceMinor < 0 && account.type != 'card' ? kExpenseColor : null),
                   ),
                   onTap: () => account.type == 'card' ? openCardAccount(context, account.id) : showAccountForm(context, ref, existing: account),
@@ -71,11 +71,12 @@ void openCardAccount(BuildContext context, String accountId) => context.push('/a
 /// Opens the create/edit account sheet. [focusBalance] lands the cursor in the
 /// balance field, used by the "Set opening balance" prompt.
 Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? existing, bool focusBalance = false}) {
+    final moneyFormat = ref.read(homeMoneyFormatProvider);
     final nameController = TextEditingController(text: existing?.name ?? '');
     // The field takes a plain amount (there is no sign to type on a number
     // pad); [balanceNegative] carries the direction, so a card's credit stays
     // credit (#98) and a type change keeps what the balance means.
-    final balanceController = TextEditingController(text: existing == null ? '' : amountInputText(balanceInputMinor(existing.balanceMinor)));
+    final balanceController = TextEditingController(text: existing == null ? '' : amountInputText(balanceInputMinor(existing.balanceMinor), format: moneyFormat));
     var type = existing?.type ?? 'bank';
     var balanceNegative = existing == null ? defaultBalanceNegative(type) : existing.balanceMinor < 0;
     var color = existing?.color ?? kPaletteColors.first;
@@ -83,8 +84,8 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
     var statementDay = existing?.statementDay;
     var dueDay = existing?.dueDay;
     String? statementError;
-    final limitController = TextEditingController(text: existing?.creditLimitMinor == null ? '' : amountInputText(existing!.creditLimitMinor!));
-    final lastStatementController = TextEditingController(text: existing?.lastStatementMinor == null ? '' : amountInputText(existing!.lastStatementMinor!));
+    final limitController = TextEditingController(text: existing?.creditLimitMinor == null ? '' : amountInputText(existing!.creditLimitMinor!, format: moneyFormat));
+    final lastStatementController = TextEditingController(text: existing?.lastStatementMinor == null ? '' : amountInputText(existing!.lastStatementMinor!, format: moneyFormat));
     final l10n = context.l10n;
     return showModalBottomSheet(
       context: context,
@@ -106,7 +107,7 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                 spacing: 8,
                 children: [
                   for (final option in kAccountTypeIcons.keys) ChoiceChip(label: Text(accountTypeLabel(l10n, option)), selected: type == option, onSelected: (_) => setSheetState(() {
-                            balanceNegative = balanceNegativeAfterTypeChange(negative: balanceNegative, enteredMinor: parseAmountToMinor(balanceController.text) ?? 0, toType: option);
+                            balanceNegative = balanceNegativeAfterTypeChange(negative: balanceNegative, enteredMinor: parseAmountToMinor(balanceController.text, format: moneyFormat) ?? 0, toType: option);
                             type = option;
                           })),
                 ],
@@ -178,7 +179,7 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                   onPressed: () async {
                     final name = nameController.text.trim();
                     if (name.isEmpty) return;
-                    final signed = signedBalanceFromInput(enteredMinor: parseAmountToMinor(balanceController.text) ?? 0, negative: balanceNegative);
+                    final signed = signedBalanceFromInput(enteredMinor: parseAmountToMinor(balanceController.text, format: moneyFormat) ?? 0, negative: balanceNegative);
                     final repo = ref.read(accountsRepositoryProvider);
                     final card = cardFieldsFromForm(
                       isCard: type == 'card',
@@ -187,6 +188,7 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                       limitText: limitController.text,
                       lastStatementText: lastStatementController.text,
                       existing: existing,
+                      moneyFormat: moneyFormat,
                     );
                     if (type == 'card') {
                       final amountDueMinor = outstandingMinor(signed);
@@ -196,8 +198,7 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                           : paymentsSinceMinor(await ref.read(entriesRepositoryProvider).getAccountMovements(existing.id, since: statementAt), cardId: existing.id, since: statementAt);
                       final previousStatement = existing?.type == 'card' ? existing?.lastStatementMinor : null;
                       if (lastStatementExceedsAmountDue(lastStatementMinor: card.lastStatementMinor, amountDueMinor: amountDueMinor, previousStatementMinor: previousStatement, paidSinceStatementMinor: paidSince)) {
-                        final symbol = ref.read(settingsProvider).currencySymbol;
-                        setSheetState(() => statementError = l10n.cardStatementOverAmountDue(formatMinor(amountDueMinor, symbol: symbol)));
+                        setSheetState(() => statementError = l10n.cardStatementOverAmountDue(formatMinor(amountDueMinor, format: moneyFormat)));
                         return;
                       }
                     }
@@ -263,13 +264,14 @@ CardFormFields cardFieldsFromForm({
   required String lastStatementText,
   Account? existing,
   DateTime? now,
+  MoneyFormat moneyFormat = MoneyFormat.inr,
 }) {
   if (!isCard) return (statementDay: null, dueDay: null, creditLimitMinor: null, lastStatementMinor: null, lastStatementAt: null);
-  final lastStatementMinor = parseAmountToMinor(lastStatementText);
+  final lastStatementMinor = parseAmountToMinor(lastStatementText, format: moneyFormat);
   return (
     statementDay: statementDay,
     dueDay: dueDay,
-    creditLimitMinor: parseAmountToMinor(limitText),
+    creditLimitMinor: parseAmountToMinor(limitText, format: moneyFormat),
     lastStatementMinor: lastStatementMinor,
     lastStatementAt: lastStatementDateAfterEdit(
       today: now ?? DateTime.now(),

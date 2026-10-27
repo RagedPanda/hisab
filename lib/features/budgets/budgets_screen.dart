@@ -18,7 +18,7 @@ class BudgetsScreen extends ConsumerWidget {
     final budgets = ref.watch(budgetsProvider).value ?? const <Budget>[];
     final views = ref.watch(budgetViewsProvider);
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final byId = {for (final c in categories) c.id: c};
     final repo = ref.read(budgetsRepositoryProvider);
     final l10n = context.l10n;
@@ -46,6 +46,7 @@ class BudgetsScreen extends ConsumerWidget {
       final amount = await promptAmount(
         context,
         title: overall ? l10n.overallMonthlyLimit : l10n.categoryMonthlyLimit(category!.displayName(context)),
+        format: moneyFormat,
         initialMinor: existing?.amountMinor,
       );
       if (amount == null || amount <= 0) return;
@@ -87,7 +88,7 @@ class BudgetsScreen extends ConsumerWidget {
                         onDismissed: (_) => remove(view.budget),
                         child: BudgetRow(
                           view: view,
-                          symbol: symbol,
+                          moneyFormat: moneyFormat,
                           onTap: () => edit(existing: view.budget),
                           trailing: PopupMenuButton<String>(
                             tooltip: l10n.edit,

@@ -43,7 +43,7 @@ class CardAccountScreen extends ConsumerWidget {
     final today = startOfDay(DateTime.now());
     final movements = ref.watch(cardMovementsProvider((cardId: account.id, since: cardMovementsSince(account, today)))).value ?? const <CardMovement>[];
     final overview = cardOverviewFor(account, movements, today);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final locale = Localizations.localeOf(context).toString();
     final permission = ref.watch(notificationPermissionProvider).value;
     String shortDate(DateTime date) => formatRowDate(date, now: today, locale: locale);
@@ -58,9 +58,9 @@ class CardAccountScreen extends ConsumerWidget {
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
           children: [
-            _OutstandingCard(overview: overview, symbol: symbol),
+            _OutstandingCard(overview: overview, moneyFormat: moneyFormat),
             const SizedBox(height: kDashboardCardGap),
-            _DueCard(overview: overview, symbol: symbol, locale: locale, onSetUp: () => _edit(context, ref, account)),
+            _DueCard(overview: overview, moneyFormat: moneyFormat, locale: locale, onSetUp: () => _edit(context, ref, account)),
             // A card with a due date has a due reminder with alerts.
             if (remindersMayArriveLate(permission, hasAlerts: overview.due != null)) const ReminderLateNote(),
             const SizedBox(height: kDashboardCardGap),
@@ -72,7 +72,7 @@ class CardAccountScreen extends ConsumerWidget {
                     child: _FigureCard(
                       key: kCardCycleKey,
                       label: l10n.cardThisCycle,
-                      value: overview.cycleSpendMinor == null ? '—' : formatMinor(overview.cycleSpendMinor!, symbol: symbol, showDecimals: false),
+                      value: overview.cycleSpendMinor == null ? '—' : formatMinor(overview.cycleSpendMinor!, format: moneyFormat, showDecimals: false),
                       caption: overview.cycle == null
                           ? l10n.cardDayNotSet
                           : l10n.cardCycleDates(shortDate(overview.cycle!.start), shortDate(overview.cycle!.end.subtract(const Duration(days: 1)))),
@@ -83,7 +83,7 @@ class CardAccountScreen extends ConsumerWidget {
                     child: _FigureCard(
                       key: kCardStatementKey,
                       label: l10n.cardLastStatement,
-                      value: account.lastStatementMinor == null ? '—' : formatMinor(account.lastStatementMinor!, symbol: symbol, showDecimals: false),
+                      value: account.lastStatementMinor == null ? '—' : formatMinor(account.lastStatementMinor!, format: moneyFormat, showDecimals: false),
                       caption: account.lastStatementAt == null ? l10n.cardNoStatement : l10n.cardStatementOn(shortDate(account.lastStatementAt!)),
                     ),
                   ),
@@ -119,9 +119,9 @@ Future<void> _edit(BuildContext context, WidgetRef ref, Account account) async {
 
 /// Outstanding amount, utilisation bar and available limit.
 class _OutstandingCard extends StatelessWidget {
-  const _OutstandingCard({required this.overview, required this.symbol});
+  const _OutstandingCard({required this.overview, required this.moneyFormat});
   final CardOverview overview;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +138,7 @@ class _OutstandingCard extends StatelessWidget {
           Text(l10n.cardOutstanding, style: theme.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant)),
           const SizedBox(height: 4),
           Text(
-            overview.creditMinor > 0 ? l10n.cardInCredit(formatMinor(overview.creditMinor, symbol: symbol)) : formatMinor(overview.outstandingMinor, symbol: symbol),
+            overview.creditMinor > 0 ? l10n.cardInCredit(formatMinor(overview.creditMinor, format: moneyFormat)) : formatMinor(overview.outstandingMinor, format: moneyFormat),
             style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700, color: overview.creditMinor > 0 ? kIncomeColor : null).tabular,
           ),
           if (overview.hasLimit) ...[
@@ -158,7 +158,7 @@ class _OutstandingCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              l10n.cardLimitUsed(overview.utilisationPercent, formatMinor(overview.creditLimitMinor!, symbol: symbol, showDecimals: false)),
+              l10n.cardLimitUsed(overview.utilisationPercent, formatMinor(overview.creditLimitMinor!, format: moneyFormat, showDecimals: false)),
               style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant).tabular,
             ),
             const SizedBox(height: 12),
@@ -166,7 +166,7 @@ class _OutstandingCard extends StatelessWidget {
               children: [
                 Expanded(child: Text(l10n.cardAvailableLimit, style: theme.textTheme.bodyMedium)),
                 Text(
-                  available! < 0 ? l10n.cardOverLimitBy(formatMinor(-available, symbol: symbol, showDecimals: false)) : formatMinor(available, symbol: symbol, showDecimals: false),
+                  available! < 0 ? l10n.cardOverLimitBy(formatMinor(-available, format: moneyFormat, showDecimals: false)) : formatMinor(available, format: moneyFormat, showDecimals: false),
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700, color: available < 0 ? kExpenseColor : null).tabular,
                 ),
               ],
@@ -181,9 +181,9 @@ class _OutstandingCard extends StatelessWidget {
 /// Due date with a days-left chip and the unpaid part of the statement; a
 /// prompt to fill in the card's days when they are missing.
 class _DueCard extends StatelessWidget {
-  const _DueCard({required this.overview, required this.symbol, required this.locale, required this.onSetUp});
+  const _DueCard({required this.overview, required this.moneyFormat, required this.locale, required this.onSetUp});
   final CardOverview overview;
-  final String symbol;
+  final MoneyFormat moneyFormat;
   final String locale;
   final VoidCallback onSetUp;
 
@@ -229,7 +229,7 @@ class _DueCard extends StatelessWidget {
           ],
           if (amountDue != null) ...[
             const SizedBox(height: 8),
-            Text(l10n.cardAmountLeftToPay(formatMinor(amountDue, symbol: symbol)), style: theme.textTheme.bodyMedium?.tabular),
+            Text(l10n.cardAmountLeftToPay(formatMinor(amountDue, format: moneyFormat)), style: theme.textTheme.bodyMedium?.tabular),
           ],
         ],
       ),

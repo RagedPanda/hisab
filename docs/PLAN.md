@@ -85,26 +85,18 @@ passphrase via PBKDF2, 200k iterations). Key is held in the platform keystore.
   Drive ↔ iCloud bridging is out of scope.
 
 ### Shared groups (the Splitwise part)
-Groups need a relay both members can reach regardless of platform:
-- Free tier of Firebase Firestore or Supabase. Each group has a random 256-bit group key,
-  exchanged out-of-band through the invite link (`hisab:///join?g=<id>&k=<key>`), so the relay
-  stores only ciphertext.
-- Every group entry / split / payer / item assignment / settlement is pushed as an encrypted
-  row keyed by UUID with `updatedAt`; clients merge with LWW. Conflicts are rare (one editor
-  per expense). An expense travels as one unit: the entry row plus its `entry_payers` rows
-  (several payers) and, for a by-item split, its item rows and their member assignments, so
-  a client never applies the payers or assignments of one version against the total of
-  another. Split rows are recomputed from the entry's method on the client.
-- Activity rows are append-only and never edited, so they merge by plain union; each names
-  its actor member, so a synced feed reads "Rahul edited Dinner" on the other phone.
-- Members without the app see a read-only web summary generated from the share text.
-- Identity: anonymous Firebase auth bound to the device; the member record holds a display
-  name. No phone number or contacts upload.
+**No backend at all (owner, 2026-10-24).** This supersedes the earlier Firebase/Supabase relay
+idea. A shared group lives in **one shared Google Drive file in the group owner's own
+Drive** (`drive.file` scope), holding an **append-only encrypted event log**; members merge by
+union of event ids with last-writer-wins on edits, and balances are replayed from the log. The
+group key travels in the invite link fragment (`hisab:///join?g=<fileId>#k=<key>`), never to any
+server. Full design, invite flow, trade-offs, and the mandatory Drive-permission consent copy
+are in **[SYNC_SHARING.md](SYNC_SHARING.md)** — the authoritative spec for sync and sharing.
 
 ### Order of work
-1. Settings → "Connect Google / iCloud" → upload encrypted backup nightly (one blob).
+1. Settings → "Back up to Google Drive" → consent screen → upload one encrypted blob.
 2. Incremental row sync for personal data.
-3. Group relay with invite links.
+3. Shared groups: per-group shared Drive file with an append-only log and invite links.
 
 ## Reference-app learnings applied
 Full study in [REFERENCE_APPS.md](REFERENCE_APPS.md). Already in the app:

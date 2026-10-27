@@ -163,18 +163,6 @@ class EntriesRepository {
           CardMovement(kind: row.kind, amountMinor: row.amountMinor, occurredAt: row.occurredAt, accountId: row.accountId, toAccountId: row.toAccountId),
       ];
 
-  /// Account ids, most recently used first (by the latest live entry that
-  /// paid from them), so a picker can default to the account used last.
-  Stream<List<String>> watchRecentAccountIds() {
-    final lastUsed = db.entries.updatedAt.max();
-    final query = db.selectOnly(db.entries)
-      ..addColumns([db.entries.accountId, lastUsed])
-      ..where(db.entries.deletedAt.isNull() & db.entries.accountId.isNotNull())
-      ..groupBy([db.entries.accountId])
-      ..orderBy([OrderingTerm.desc(lastUsed)]);
-    return query.watch().map((rows) => [for (final row in rows) row.read(db.entries.accountId)!]);
-  }
-
   Stream<List<LedgerLine>> watchLedgerLines(DateRange range) => _filteredQuery(range: range, myLedger: true).watch().map(_toLedgerLines);
 
   List<LedgerLine> _toLedgerLines(List<TypedResult> rows) => [

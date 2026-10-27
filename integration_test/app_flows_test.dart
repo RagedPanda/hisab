@@ -148,7 +148,7 @@ Future<void> _expectSpent(WidgetTester tester, String amount, {String? reason}) 
 }
 
 Future<void> _pickCategory(WidgetTester tester, String query, String name) async {
-  await tapText(tester, 'Choose category');
+  await tapText(tester, 'Uncategorised');
   await enterText(tester, find.widgetWithText(TextField, 'Search categories'), query);
   await tapText(tester, name);
 }
@@ -276,18 +276,19 @@ void main() {
     await tapFinder(tester, find.byType(FloatingActionButton));
     expect(find.text('New entry'), findsOneWidget);
     await shoot(tester, 'entry_new');
-    await tapText(tester, 'Choose category');
+    await tapText(tester, 'Uncategorised');
     await shoot(tester, 'category_picker');
     await enterText(tester, find.widgetWithText(TextField, 'Search categories'), 'milk');
     await tapText(tester, 'Milk & Dairy');
     expect(find.text('Milk & Dairy'), findsOneWidget);
+    await openMoreDetails(tester, reveals: find.text('Add item'));
     await _addItem(tester, name: 'Buffalo milk', qty: '2', price: '70');
     await _addItem(tester, name: 'Cow milk', qty: '1', price: '60');
     await shoot(tester, 'entry_items');
     await scrollTo(tester, find.text('Total of 2 items'), within: find.byType(ExpenseEditorScreen), up: true);
     expect(find.text('Total of 2 items'), findsOneWidget);
     expect(tester.widget<TextField>(_amountField()).readOnly, isTrue, reason: 'amount is derived from items');
-    await tapFinder(tester, _chip('Cash'));
+    await pickEditorAccount(tester, 'Cash');
     await tapFinder(tester, find.byIcon(Icons.calendar_today_outlined));
     await shoot(tester, 'date_picker');
     await tapText(tester, 'OK');
@@ -311,14 +312,14 @@ void main() {
     await tapFinder(tester, find.byType(FloatingActionButton));
     await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
     await enterText(tester, _amountField(), '1250');
-    await tapFinder(tester, _chip('HDFC Savings'));
+    await pickEditorAccount(tester, 'HDFC Savings');
     await _saveEntry(tester, formatMinor(_restaurantMinor));
 
     await tapFinder(tester, find.byType(FloatingActionButton));
     await tapText(tester, 'Income');
     await _pickCategory(tester, 'salary', 'Salary');
     await enterText(tester, _amountField(), '50000');
-    await tapFinder(tester, _chip('HDFC Savings'));
+    await pickEditorAccount(tester, 'HDFC Savings');
     await shoot(tester, 'entry_income');
     await _saveEntry(tester, formatMinor(_salaryMinor));
 
@@ -416,7 +417,7 @@ void main() {
     await tapFinder(tester, find.byType(FloatingActionButton));
     await _pickCategory(tester, 'groceries', 'Groceries');
     await enterText(tester, _amountField(), '10');
-    await tapFinder(tester, _chip('Cash'));
+    await pickEditorAccount(tester, 'Cash');
     await _saveEntry(tester, formatMinor(1000));
     await scrollTo(tester, find.text(_spentIn(DateTime.now())), up: true);
     await _expectSpent(tester, formatMinor(_spentMinor + 1000));
@@ -628,20 +629,26 @@ void main() {
     await shoot(tester, 'categories_income');
   });
 
-  // iOS only: Android offers SMS reading on this screen, so the flow is skipped there.
-  testWidgets('10 bank SMS screen on iOS: reading disabled, paste auto-adds with Undo, unclear SMS wait for review', (tester) async {
+  // The reading-disabled checks are iOS only (Android offers SMS reading on
+  // this screen); paste, auto-add, Undo and the review queue run on both.
+  testWidgets('10 bank SMS screen: reading disabled on iOS, paste auto-adds with Undo, unclear SMS wait for review', (tester) async {
     await pumpApp(tester, shared);
     await goTab(tester, 'Settings');
     await shoot(tester, 'settings');
     await scrollTo(tester, find.text('Bank SMS'));
     await tapText(tester, 'Bank SMS');
-    await waitFor(tester, find.text('Not available on iOS. Use the Shortcut or paste below.'));
-    expect(find.text('Not available on iOS. Use the Shortcut or paste below.'), findsOneWidget);
+    await waitFor(tester, find.text('Paste an SMS'));
     final readSwitch = tester.widget<SwitchListTile>(find.widgetWithText(SwitchListTile, 'Read bank SMS automatically'));
-    expect(readSwitch.onChanged, isNull, reason: 'SMS reading must be disabled on iOS');
-    expect(readSwitch.value, isFalse);
-    expect(find.text('Scan inbox now'), findsNothing);
-    await shoot(tester, 'sms_ios');
+    if (Platform.isIOS) {
+      expect(find.text('Not available on iOS. Use the Shortcut or paste below.'), findsOneWidget);
+      expect(readSwitch.onChanged, isNull, reason: 'SMS reading must be disabled on iOS');
+      expect(readSwitch.value, isFalse);
+      expect(find.text('Scan inbox now'), findsNothing);
+      await shoot(tester, 'sms_ios');
+    } else {
+      expect(readSwitch.onChanged, isNotNull, reason: 'Android offers SMS reading');
+      await shoot(tester, 'sms_android');
+    }
     await tapText(tester, 'Paste an SMS');
     await enterText(tester, _dialogField(), 'Rs.500.00 debited from A/c XX1234 on 20-Oct-25 to merchant@upi (UPI Ref No 123456789012)');
     await tapFinder(tester, _filled('Save'), frames: 12);
@@ -670,7 +677,7 @@ void main() {
     await tapText(tester, 'Ignore');
     expect(find.text('Nothing waiting'), findsOneWidget);
     await goBack(tester);
-  }, skip: !Platform.isIOS);
+  });
 
   testWidgets('11 settings: dark theme on every tab', (tester) async {
     addTearDown(() => shared.read(settingsProvider.notifier).update((s) => s.copyWith(themeMode: ThemeMode.light)));
@@ -690,12 +697,12 @@ void main() {
     await goBack(tester);
     await goTab(tester, 'Home');
     await tapFinder(tester, find.byType(FloatingActionButton));
-    await tapText(tester, 'Choose category');
+    await tapText(tester, 'Uncategorised');
     await shoot(tester, 'dark_category_picker');
     await enterText(tester, find.widgetWithText(TextField, 'Search categories'), 'groceries');
     await tapText(tester, 'Groceries');
     await shoot(tester, 'dark_entry');
-    await goBack(tester);
+    await discardEntry(tester);
     await goTab(tester, 'Settings');
     await tapText(tester, 'Light');
     expect(Theme.of(tester.element(find.byType(NavigationBar))).brightness, Brightness.light);
@@ -740,15 +747,16 @@ void main() {
     await goTab(tester, hi.tabHome);
     await tapFinder(tester, find.byType(FloatingActionButton));
     expect(find.text(hi.newEntry), findsOneWidget);
-    await tapText(tester, hi.chooseCategory);
+    await tapText(tester, hi.uncategorised);
     await shoot(tester, 'hi_category_picker');
     expect(find.text('Food & Dining'), findsNothing, reason: 'seeded category names are translated');
     expect(find.text(hindiCategoryNames['food']!), findsOneWidget);
     await enterText(tester, find.widgetWithText(TextField, hi.searchCategories), 'groceries');
     await tapText(tester, hindiCategoryNames['groceries']!);
+    await openMoreDetails(tester, reveals: find.text(hi.addItem));
     await tapText(tester, hi.addItem);
     await shoot(tester, 'hi_entry');
-    await goBack(tester);
+    await discardEntry(tester);
     await goTab(tester, hi.tabSettings);
     await scrollTo(tester, find.text(hi.language), up: true);
     await tapText(tester, hi.language);
@@ -774,8 +782,8 @@ void main() {
     final restoreDb = AppDatabase(NativeDatabase.memory());
     addTearDown(restoreDb.close);
     await expectLater(BackupService(restoreDb).importEncrypted(bytes, 'wrong passphrase'), throwsA(isA<BackupFormatException>()));
-    final written = await BackupService(restoreDb).importEncrypted(bytes, passphrase);
-    expect(written, greaterThan(0));
+    final restored = await BackupService(restoreDb).importEncrypted(bytes, passphrase);
+    expect(restored.written, greaterThan(0));
     final sourceEntries = await shared.db.select(shared.db.entries).get();
     final restoredEntries = await restoreDb.select(restoreDb.entries).get();
     expect(restoredEntries.map((e) => e.id).toSet(), sourceEntries.map((e) => e.id).toSet());
@@ -832,7 +840,7 @@ void main() {
     await scrollTo(tester, find.byKey(kBudgetsCardKey));
     expect(find.text('Overall'), findsOneWidget, reason: 'overall budget row comes first');
     await scrollTo(tester, find.byKey(kAccountsCardKey));
-    expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsOneWidget, reason: 'the Upcoming card is keyed even while it shows its empty state');
+    expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsNothing, reason: 'with nothing upcoming the Upcoming card is hidden (#148)');
     expect(find.text('HDFC Savings'), findsOneWidget);
     await scrollTo(tester, find.byKey(kGroupsCardKey));
     expect(find.text('Goa trip'), findsOneWidget);
@@ -1174,6 +1182,7 @@ void main() {
     Future<String?> projectOf(int amountMinor) async => (await fresh.db.select(fresh.db.entries).get()).singleWhere((entry) => entry.amountMinor == amountMinor).projectId;
 
     await tapFinder(tester, find.byType(FloatingActionButton));
+    await openMoreDetails(tester, reveals: projectChip);
     expect(find.text('Add to project'), findsOneWidget, reason: 'nothing remembered yet');
     await shoot(tester, 'editor_project_chip');
     await tapFinder(tester, projectChip);
@@ -1187,13 +1196,14 @@ void main() {
     await scrollTo(tester, find.text('Project details'));
     expect(find.text('Project details'), findsOneWidget, reason: 'the picked project brings its entry fields');
     await shoot(tester, 'editor_project_picked');
-    await scrollTo(tester, find.text('Choose category'), up: true);
+    await scrollTo(tester, find.text('Uncategorised'), up: true);
     await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
     await enterText(tester, _amountField(), '2500');
     await _saveEntry(tester, formatMinor(250000));
     expect(await projectOf(250000), carId);
 
     await tapFinder(tester, find.byType(FloatingActionButton));
+    await openMoreDetails(tester, reveals: projectChip);
     expect(
       find.descendant(of: projectChip, matching: find.text('Swift car')),
       findsOneWidget,
@@ -1210,10 +1220,11 @@ void main() {
     expect(await projectOf(30000), kitchenId);
 
     await tapFinder(tester, find.byType(FloatingActionButton));
+    await openMoreDetails(tester, reveals: projectChip);
     expect(find.descendant(of: projectChip, matching: find.text('Kitchen')), findsOneWidget);
     await tapFinder(tester, find.descendant(of: projectChip, matching: find.byIcon(Icons.close)));
     expect(find.text('Add to project'), findsOneWidget, reason: 'the cross clears the project');
-    await scrollTo(tester, find.text('Choose category'), up: true);
+    await scrollTo(tester, find.text('Uncategorised'), up: true);
     await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
     await enterText(tester, _amountField(), '100');
     await _saveEntry(tester, formatMinor(10000));
@@ -1235,6 +1246,7 @@ void main() {
     await settle(tester, 10);
     expect(find.descendant(of: filterChip, matching: find.text(hi.project)), findsOneWidget);
     await tapFinder(tester, find.byType(FloatingActionButton));
+    await openMoreDetails(tester, reveals: projectChip);
     expect(find.text(hi.addToProject), findsOneWidget);
     await shoot(tester, 'hi_editor_project_chip');
     await tapFinder(tester, projectChip);
@@ -1464,7 +1476,7 @@ void main() {
     expect(find.text('Saved. Add the next one.'), findsOneWidget);
     expect(find.byType(ExpenseEditorScreen), findsOneWidget, reason: 'the editor stays open for the next entry');
     expect(tester.widget<TextField>(_amountField()).controller!.text, isEmpty);
-    expect(find.text('Choose category'), findsOneWidget);
+    expect(find.text('Uncategorised'), findsOneWidget);
     expect(selectedKind(), {'expense'});
     await shoot(tester, 'editor_saved_add_another');
     final first = (await entries()).single;
@@ -1701,7 +1713,7 @@ void main() {
     await groups.addSettlement(groupId: clubId, fromMemberId: rahul, toMemberId: me, amountMinor: 10000);
     final balancesBefore = (await groups.getBalances(clubId)).net;
     await pumpApp(tester, fresh);
-    await tapText(tester, 'Groups', frames: 12);
+    await goTab(tester, 'Groups');
     await tapText(tester, 'Book club', frames: 12);
 
     await tapFinder(tester, find.byType(PopupMenuButton<String>));

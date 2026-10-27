@@ -20,9 +20,9 @@ import '../../shell/widgets/common.dart';
 /// and Ignore / Edit / Add. A message that could not be read at all has no
 /// Add button; Edit opens the editor with the SMS attached.
 class SmsReviewCard extends ConsumerWidget {
-  const SmsReviewCard({super.key, required this.row, required this.symbol});
+  const SmsReviewCard({super.key, required this.row, required this.moneyFormat});
   final SmsLogData row;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -92,7 +92,7 @@ class SmsReviewCard extends ConsumerWidget {
                     final id = await service.approvePending(row);
                     if (id == null && context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.couldNotAddUseEdit)));
                   },
-                  child: Text(l10n.addAmount(formatMinor(amount, symbol: symbol, showDecimals: false))),
+                  child: Text(l10n.addAmount(formatMinor(amount, format: moneyFormat, showDecimals: false))),
                 ),
               ],
             ]),

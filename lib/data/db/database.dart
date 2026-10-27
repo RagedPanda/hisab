@@ -746,12 +746,6 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// v18 step. Adds the payee category memory table unless a pre-release
-  /// build of this feature already created it, so it is idempotent.
-  Future<void> _upgradeToPayeeCategories(Migrator m) async {
-    if (!await _schemaObjectExists('table', 'payee_categories')) await m.createTable(payeeCategories);
-  }
-
   /// v17 step. Adds the credit card columns a table lacks; pre-release
   /// builds of card dues stored them under schema 7.
   Future<void> _upgradeToCardDetails(Migrator m) async {
@@ -759,6 +753,12 @@ class AppDatabase extends _$AppDatabase {
     for (final column in cardDetailColumns(accounts)) {
       if (!existing.contains(column.name)) await m.addColumn(accounts, column);
     }
+  }
+
+  /// v18 step. Adds the payee category memory table unless a pre-release
+  /// build of this feature already created it, so it is idempotent.
+  Future<void> _upgradeToPayeeCategories(Migrator m) async {
+    if (!await _schemaObjectExists('table', 'payee_categories')) await m.createTable(payeeCategories);
   }
 
   Future<Set<String>> _columnNames(String table) async {

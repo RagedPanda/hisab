@@ -9,21 +9,6 @@ import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/domain/sms/sms_transaction_key.dart';
 
-/// Undoes the v18 step (the payee category memory table) on a database
-/// created at the current schema, so older rewinds start from v17.
-Future<void> dropVersion18(AppDatabase db) async {
-  await db.customStatement('DROP TABLE payee_categories');
-}
-
-/// Rewinds a freshly created database to the schema shipped at version 17
-/// (credit card columns, but no payee category memory).
-Future<void> rewindToVersion17(File file) async {
-  final db = AppDatabase(NativeDatabase(file));
-  await dropVersion18(db);
-  await db.customStatement('PRAGMA user_version = 17');
-  await db.close();
-}
-
 /// Undoes the v17 step (credit card columns on accounts) on a database
 /// created at the current schema, so older rewinds start from v16.
 Future<void> dropVersion17(AppDatabase db) async {
@@ -54,6 +39,12 @@ Future<void> rewindToPreReleaseCardDetails(File file) async {
   await dropVersion12(db);
   await db.customStatement('PRAGMA user_version = 11');
   await db.close();
+}
+
+/// Undoes the v18 step (the payee category memory table) on a database
+/// created at the current schema, so older rewinds start from v17.
+Future<void> dropVersion18(AppDatabase db) async {
+  await db.customStatement('DROP TABLE payee_categories');
 }
 
 /// Undoes the v16 step (the SMS log's matched reminder and transaction key)
@@ -416,6 +407,15 @@ Future<void> rewindToRemindersQaVersion9(File file) async {
   await dropVersion11(db);
   await dropVersion10(db);
   await db.customStatement('PRAGMA user_version = 9');
+  await db.close();
+}
+
+/// Rewinds a freshly created database to the schema shipped at version 17
+/// (credit card columns, but no payee category memory).
+Future<void> rewindToVersion17(File file) async {
+  final db = AppDatabase(NativeDatabase(file));
+  await dropVersion18(db);
+  await db.customStatement('PRAGMA user_version = 17');
   await db.close();
 }
 

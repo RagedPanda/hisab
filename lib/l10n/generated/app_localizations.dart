@@ -206,6 +206,12 @@ abstract class AppLocalizations {
   /// **'Note'**
   String get note;
 
+  /// Header of the collapsible section that hides advanced fields in the entry editor
+  ///
+  /// In en, this message translates to:
+  /// **'More details'**
+  String get moreDetails;
+
   /// No description provided for @all.
   ///
   /// In en, this message translates to:
@@ -337,6 +343,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accounts'**
   String get accounts;
+
+  /// No description provided for @defaultAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Default account'**
+  String get defaultAccount;
+
+  /// No description provided for @defaultAccountHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'New entries start on this account'**
+  String get defaultAccountHelp;
 
   /// No description provided for @account.
   ///
@@ -1400,18 +1418,6 @@ abstract class AppLocalizations {
   /// **'Merges; newer local edits are kept'**
   String get restoreBackupHelp;
 
-  /// No description provided for @cloudSync.
-  ///
-  /// In en, this message translates to:
-  /// **'Cloud sync'**
-  String get cloudSync;
-
-  /// No description provided for @cloudSyncHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Coming next: Google Drive on Android, iCloud on iOS, end-to-end encrypted with the same format as backups.'**
-  String get cloudSyncHelp;
-
   /// No description provided for @about.
   ///
   /// In en, this message translates to:
@@ -1993,12 +1999,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{percent}%'**
   String percentOf(int percent);
-
-  /// No description provided for @budgetsEmptyBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Set a budget to see how you\'re tracking'**
-  String get budgetsEmptyBody;
 
   /// No description provided for @andMoreCount.
   ///
@@ -5702,18 +5702,6 @@ abstract class AppLocalizations {
   /// **'Add manually'**
   String get smsReviewAddManually;
 
-  /// No description provided for @upcomingEmptyWithin.
-  ///
-  /// In en, this message translates to:
-  /// **'{days, plural, =1{Nothing due tomorrow} other{Nothing due in the next {days} days}}'**
-  String upcomingEmptyWithin(int days);
-
-  /// No description provided for @upcomingEmptyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Recurring bills, reminders and card dues show up here.'**
-  String get upcomingEmptyHint;
-
   /// No description provided for @upcomingWindowDays.
   ///
   /// In en, this message translates to:
@@ -6349,6 +6337,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paid via SMS'**
   String get smsReminderPaidViaSms;
+
+  /// No description provided for @heroToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today {amount}'**
+  String heroToday(String amount);
+
+  /// No description provided for @heroTodaySemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent today {amount}. Show today\'s entries'**
+  String heroTodaySemantics(String amount);
+
+  /// No description provided for @numberFormatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Number format'**
+  String get numberFormatTitle;
+
+  /// No description provided for @numberFormatAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get numberFormatAutomatic;
+
+  /// No description provided for @numberFormatAutomaticHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows your currency and region'**
+  String get numberFormatAutomaticHelp;
 
   /// No description provided for @smsPayeesTitle.
   ///

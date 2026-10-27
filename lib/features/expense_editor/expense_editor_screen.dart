@@ -124,11 +124,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   /// Advanced fields collapse behind "More details" so a trivial spend shows
   /// only amount/category/account. The section opens itself on first build
-  /// whenever something inside it would otherwise be hidden — when editing an
-  /// existing entry, or when any tucked-away field already has a non-default
-  /// value — so nothing the user (or a prefill) entered is ever out of sight.
+  /// whenever a tucked-away field already has a non-default value, so nothing
+  /// the user (or a prefill) entered is ever out of sight; editing a plain
+  /// entry stays as short as adding one.
   bool get _startExpanded =>
-      _isEditing ||
       _recurringId != null ||
       _repeat != null ||
       _items.isNotEmpty ||

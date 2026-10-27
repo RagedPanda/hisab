@@ -35,6 +35,13 @@ class RemindersRepository {
         ..limit(limit))
       .watch();
 
+  /// Every live reminder, pending, paid or skipped, from one query, so a reminder
+  /// moving from pending to paid is never missing from both lists mid-update.
+  Stream<List<Reminder>> watchDue() => (db.select(db.reminders)
+        ..where(_isLiveDue)
+        ..orderBy([(t) => OrderingTerm.asc(t.dueAt), (t) => OrderingTerm.asc(t.title)]))
+      .watch();
+
   /// Pending reminders linked to [projectId], earliest due first.
   Stream<List<Reminder>> watchForProject(String projectId) => (_pending()..where((t) => t.projectId.equals(projectId))).watch();
   Future<List<Reminder>> getForProject(String projectId) => (_pending()..where((t) => t.projectId.equals(projectId))).get();

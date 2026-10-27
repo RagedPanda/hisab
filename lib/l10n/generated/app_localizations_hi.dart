@@ -64,6 +64,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get note => 'नोट';
 
   @override
+  String get moreDetails => 'अधिक विवरण';
+
+  @override
   String get all => 'सभी';
 
   @override
@@ -140,6 +143,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get accounts => 'खाते';
+
+  @override
+  String get defaultAccount => 'डिफ़ॉल्ट खाता';
+
+  @override
+  String get defaultAccountHelp => 'नई प्रविष्टियाँ इसी खाते से शुरू होती हैं';
 
   @override
   String get account => 'खाता';
@@ -759,13 +768,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'मिलाया जाता है; नए स्थानीय बदलाव बने रहते हैं';
 
   @override
-  String get cloudSync => 'क्लाउड सिंक';
-
-  @override
-  String get cloudSyncHelp =>
-      'आगे: Android पर Google Drive, iOS पर iCloud, बैकअप जैसे ही फ़ॉर्मैट में एंड-टू-एंड एन्क्रिप्टेड।';
-
-  @override
   String get about => 'ऐप के बारे में';
 
   @override
@@ -1120,9 +1122,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String percentOf(int percent) {
     return '$percent%';
   }
-
-  @override
-  String get budgetsEmptyBody => 'अपनी प्रगति देखने के लिए बजट तय करें';
 
   @override
   String andMoreCount(int count) {
@@ -2308,6 +2307,112 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get cardStatementDay => 'स्टेटमेंट की तारीख';
+
+  @override
+  String get cardDueDay => 'भुगतान की आखिरी तारीख';
+
+  @override
+  String get cardDayNotSet => 'सेट नहीं';
+
+  @override
+  String get cardCreditLimit => 'क्रेडिट लिमिट';
+
+  @override
+  String get cardLastStatementAmount => 'पिछले स्टेटमेंट की रकम';
+
+  @override
+  String get cardDetailsHint =>
+      'स्टेटमेंट और ड्यू की तारीख से हिसाब आपका बिलिंग साइकिल दिखाएगा और बिल की तारीख से पहले याद दिलाएगा।';
+
+  @override
+  String get cardOutstanding => 'बकाया';
+
+  @override
+  String get cardThisCycle => 'इस साइकिल में';
+
+  @override
+  String cardCycleDates(String start, String end) {
+    return '$start से $end';
+  }
+
+  @override
+  String get cardLastStatement => 'पिछला स्टेटमेंट';
+
+  @override
+  String cardStatementOn(String date) {
+    return '$date का स्टेटमेंट';
+  }
+
+  @override
+  String get cardNoStatement => 'दर्ज नहीं';
+
+  @override
+  String get cardAvailableLimit => 'बची हुई लिमिट';
+
+  @override
+  String cardOverLimitBy(String amount) {
+    return 'लिमिट से $amount ज़्यादा';
+  }
+
+  @override
+  String cardLimitUsed(int percent, String limit) {
+    return '$limit लिमिट का $percent% इस्तेमाल';
+  }
+
+  @override
+  String cardDueOn(String date) {
+    return 'ड्यू $date';
+  }
+
+  @override
+  String get cardPaid => 'चुका दिया';
+
+  @override
+  String cardAmountLeftToPay(String amount) {
+    return '$amount चुकाना बाकी';
+  }
+
+  @override
+  String get cardSetUpDays => 'स्टेटमेंट और ड्यू तारीख सेट करें';
+
+  @override
+  String get cardViewTransactions => 'लेन-देन देखें';
+
+  @override
+  String get cardNotFound => 'यह कार्ड हटा दिया गया है';
+
+  @override
+  String cardNextDue(String date) {
+    return 'अगला ड्यू $date';
+  }
+
+  @override
+  String cardInCredit(String amount) {
+    return '$amount क्रेडिट';
+  }
+
+  @override
+  String cardStatementOverAmountDue(String amount) {
+    return 'बकाया राशि ($amount) से ज़्यादा है। इसे उतना करें जितना अभी चुकाना बाकी है।';
+  }
+
+  @override
+  String get cardBalanceOwed => 'बकाया';
+
+  @override
+  String get cardBalanceCredit => 'क्रेडिट में';
+
+  @override
+  String get cardCreditOnCard => 'कार्ड पर क्रेडिट';
+
+  @override
+  String get balanceInAccount => 'खाते में';
+
+  @override
+  String get balanceOverdrawn => 'ओवरड्रॉन';
+
+  @override
   String get smsHistoryTitle => 'SMS इतिहास';
 
   @override
@@ -3431,21 +3536,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get smsReviewAddManually => 'खुद जोड़ें';
 
   @override
-  String upcomingEmptyWithin(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'अगले $days दिनों में कुछ देय नहीं',
-      one: 'कल कुछ देय नहीं',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get upcomingEmptyHint =>
-      'दोहराए जाने वाले बिल, रिमाइंडर और कार्ड की देय तारीख़ें यहाँ दिखेंगी।';
-
-  @override
   String upcomingWindowDays(int days) {
     return '$days दिन';
   }
@@ -3851,4 +3941,26 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get settleReminderPrePromptBody =>
       'हिसाब आपके चुने दिन पर सिर्फ़ इस ग्रुप का हिसाब बराबर करने की याद दिलाएगा। कोई विज्ञापन नहीं।';
+
+  @override
+  String get smsReminderPaidViaSms => 'एसएमएस से भुगतान हुआ';
+
+  @override
+  String heroToday(String amount) {
+    return 'आज $amount';
+  }
+
+  @override
+  String heroTodaySemantics(String amount) {
+    return 'आज का खर्च $amount। आज के लेन-देन देखें';
+  }
+
+  @override
+  String get numberFormatTitle => 'संख्या फ़ॉर्मैट';
+
+  @override
+  String get numberFormatAutomatic => 'अपने-आप';
+
+  @override
+  String get numberFormatAutomaticHelp => 'आपकी मुद्रा और क्षेत्र के हिसाब से';
 }

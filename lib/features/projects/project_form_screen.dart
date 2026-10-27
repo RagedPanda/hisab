@@ -33,6 +33,9 @@ class ProjectFormScreen extends ConsumerStatefulWidget {
 }
 
 class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
+  /// Number format the amount fields read and write (the app's own).
+  MoneyFormat get _moneyFormat => ref.read(homeMoneyFormatProvider);
+
   final _nameController = TextEditingController();
   final _budgetController = TextEditingController();
   final _notesController = TextEditingController();
@@ -59,7 +62,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
       final project = await ref.read(projectsRepositoryProvider).byId(id);
       if (project != null) {
         _nameController.text = project.name;
-        _budgetController.text = project.budgetMinor == null ? '' : amountInputText(project.budgetMinor!);
+        _budgetController.text = project.budgetMinor == null ? '' : amountInputText(project.budgetMinor!, format: _moneyFormat);
         _notesController.text = project.notes;
         _icon = project.icon;
         _color = project.color;
@@ -90,7 +93,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context).toString();
-    final budgetError = amountErrorText(context, _budgetController.text);
+    final budgetError = amountErrorText(context, _budgetController.text, format: _moneyFormat);
     return Scaffold(
       appBar: AppBar(title: Text(_isEditing ? l10n.editProject : l10n.newProject)),
       bottomNavigationBar: BottomActionBar(
@@ -116,7 +119,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                     inputFormatters: amountInputFormatters,
                     decoration: InputDecoration(
                       labelText: l10n.budgetOptional,
-                      prefixText: '${ref.watch(settingsProvider).currencySymbol} ',
+                      prefixText: amountPrefixText(ref.watch(homeMoneyFormatProvider)), suffixText: amountSuffixText(ref.watch(homeMoneyFormatProvider)),
                       errorText: budgetError,
                     ),
                     onChanged: (_) => setState(() {}),
@@ -211,7 +214,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
     final budgetText = _budgetController.text.trim();
-    final budgetMinor = budgetText.isEmpty ? null : parseAmountToMinor(budgetText);
+    final budgetMinor = budgetText.isEmpty ? null : parseAmountToMinor(budgetText, format: _moneyFormat);
     if (budgetText.isNotEmpty && (budgetMinor == null || budgetMinor <= 0)) return;
     final repo = ref.read(projectsRepositoryProvider);
     final notes = _notesController.text.trim();

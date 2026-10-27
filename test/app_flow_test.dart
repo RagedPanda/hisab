@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
+import 'package:hisab/features/dashboard/dashboard_keys.dart';
 import 'package:hisab/features/shell/router.dart';
 
 import 'support/app_harness.dart';
@@ -25,11 +26,16 @@ void main() {
     await settle(tester);
     expect(find.text('New entry'), findsOneWidget);
 
-    await tester.tap(find.text('Choose category'));
+    await tester.tap(find.text('Uncategorised'));
     await settle(tester);
     await enter(tester, find.widgetWithText(TextField, 'Search categories'), 'milk');
     await settle(tester);
     await tester.tap(find.textContaining('Milk').first);
+    await settle(tester);
+
+    // Line items live behind "More details" now; open it first.
+    await tester.ensureVisible(find.text('More details'));
+    await tester.tap(find.text('More details'));
     await settle(tester);
 
     await tester.tap(find.text('Add item'));
@@ -59,6 +65,35 @@ void main() {
         );
     expect(suggestions.map((s) => s.name), containsAll(['Buffalo milk', 'Cow milk']));
     expect(find.textContaining('₹100'), findsWidgets);
+  });
+
+  testWidgets('expense saves without a category and persists as uncategorised', (tester) async {
+    final container = await pumpApp(tester);
+    await tester.tap(find.byType(FloatingActionButton));
+    await settle(tester);
+    expect(find.text('New entry'), findsOneWidget);
+    // The category control reads as optional, not as a required field to fill.
+    expect(find.text('Uncategorised'), findsOneWidget);
+    expect(find.text('Required'), findsNothing);
+
+    // Enter an amount and save straight away, never opening the picker.
+    await enter(tester, find.byType(TextField).first, '40');
+    await settle(tester);
+    await tester.ensureVisible(find.textContaining('Save ₹'));
+    await tester.tap(find.textContaining('Save ₹'));
+    await settle(tester);
+
+    final db = container.read(databaseProvider);
+    await settle(tester, 2);
+    final entries = await db.select(db.entries).get();
+    expect(entries.single.categoryId, isNull, reason: 'a skipped category persists as null');
+    expect(entries.single.amountMinor, 4000);
+
+    // The saved entry shows as Uncategorised in the recent list (the category
+    // donut legend also labels the slice, so scope the check to the recent card).
+    final recentUncategorised = find.descendant(of: find.byKey(kRecentCardKey), matching: find.text('Uncategorised'));
+    await tester.scrollUntilVisible(recentUncategorised, 200, scrollable: find.byType(Scrollable).first);
+    expect(recentUncategorised, findsOneWidget);
   });
 
   testWidgets('group with members is created and opened', (tester) async {
@@ -139,10 +174,13 @@ void main() {
 
     Finder inPicker(String pickerKey, Finder target) => find.descendant(of: find.byKey(ValueKey(pickerKey)), matching: target);
 
-    Future<void> tapIn(WidgetTester tester, String pickerKey, Finder target) async {
-      final finder = inPicker(pickerKey, target);
-      await tester.ensureVisible(finder);
-      await tester.tap(finder);
+    /// Opens the account row [pickerKey] and picks [accountId] from its sheet.
+    Future<void> pickAccount(WidgetTester tester, String pickerKey, String accountId) async {
+      final tile = find.byKey(ValueKey(pickerKey));
+      await tester.ensureVisible(tile);
+      await tester.tap(tile);
+      await settle(tester, 4);
+      await tester.tap(find.byKey(ValueKey('account-option-$accountId')));
       await settle(tester, 4);
     }
 
@@ -151,25 +189,26 @@ void main() {
       return onTestClock(tester, db.select(db.entries).get());
     }
 
-    testWidgets('tapping a type with several accounts still saves with an account (#110)', (tester) async {
+    testWidgets('the account row saves the account picked from its sheet', (tester) async {
       final container = await pumpApp(tester);
       await addBanks(tester, container);
       await tester.tap(find.byType(FloatingActionButton));
       await settle(tester);
 
-      await tester.tap(find.text('Choose category'));
+      await tester.tap(find.text('Uncategorised'));
       await settle(tester);
       await enter(tester, find.widgetWithText(TextField, 'Search categories'), 'milk');
       await settle(tester);
       await tester.tap(find.textContaining('Milk').first);
       await settle(tester);
       await enter(tester, find.byType(TextField).first, '50');
-      await tapIn(tester, 'from-account', find.byKey(const ValueKey('account-type-bank')));
+      await pickAccount(tester, 'from-account', 'sbi');
+      expect(inPicker('from-account', find.text('SBI')), findsOneWidget, reason: 'the row shows the picked account');
 
       await tester.ensureVisible(find.textContaining('Save ₹'));
       await tester.tap(find.textContaining('Save ₹'));
       await settle(tester);
-      expect((await savedEntries(tester, container)).single.accountId, 'hdfc', reason: 'the bank type picks an account, never none');
+      expect((await savedEntries(tester, container)).single.accountId, 'sbi');
     });
 
     testWidgets('From becoming the To account clears To, and a same-account transfer never saves (#111)', (tester) async {
@@ -181,14 +220,12 @@ void main() {
       await settle(tester, 4);
       await enter(tester, find.byType(TextField).first, '500');
 
-      await tapIn(tester, 'from-account', find.byKey(const ValueKey('account-type-bank')));
-      await tapIn(tester, 'to-account', find.byKey(const ValueKey('account-type-bank')));
-      bool toBankSelected() => tester.widget<ChoiceChip>(inPicker('to-account', find.byKey(const ValueKey('account-type-bank')))).selected;
-      expect(toBankSelected(), isTrue, reason: 'To is SBI, the only bank left');
+      await pickAccount(tester, 'from-account', 'hdfc');
+      await pickAccount(tester, 'to-account', 'sbi');
+      expect(inPicker('to-account', find.text('SBI')), findsOneWidget);
 
-      await tapIn(tester, 'from-account', find.text('SBI'));
-      expect(inPicker('to-account', find.byKey(const ValueKey('account-type-bank'))), findsOneWidget);
-      expect(toBankSelected(), isFalse, reason: 'To no longer shows a bank once From took SBI');
+      await pickAccount(tester, 'from-account', 'sbi');
+      expect(inPicker('to-account', find.text('SBI')), findsNothing, reason: 'To is cleared once From took SBI');
 
       await tester.ensureVisible(find.textContaining('Save ₹'));
       await tester.tap(find.textContaining('Save ₹'));

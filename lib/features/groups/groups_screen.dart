@@ -6,7 +6,6 @@ import '../../core/money.dart';
 import '../../core/theme.dart';
 import '../../core/providers.dart';
 import '../../data/repositories/groups_repository.dart';
-import '../../domain/split/group_settings.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import 'group_form.dart';
@@ -19,9 +18,10 @@ class GroupsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final summaries = ref.watch(groupSummariesProvider);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final appSymbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final list = summaries.value ?? const <GroupSummary>[];
-    final totals = groupTotalsInAppCurrency(list, appSymbol: symbol);
+    final totals = groupTotalsInAppCurrency(list, appSymbol: appSymbol);
     final active = [for (final summary in list) if (summary.group.archivedAt == null) summary];
     final archived = [for (final summary in list) if (summary.group.archivedAt != null) summary];
 
@@ -51,13 +51,13 @@ class GroupsScreen extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Row(children: [
-                      Expanded(child: _Total(label: l10n.youAreOwed, value: formatMinor(totals.owedToMe, symbol: symbol), color: kIncomeColor)),
-                      Expanded(child: _Total(label: l10n.youOwe, value: formatMinor(totals.iOwe, symbol: symbol), color: kExpenseColor)),
+                      Expanded(child: _Total(label: l10n.youAreOwed, value: formatMinor(totals.owedToMe, format: moneyFormat), color: kIncomeColor)),
+                      Expanded(child: _Total(label: l10n.youOwe, value: formatMinor(totals.iOwe, format: moneyFormat), color: kExpenseColor)),
                     ]),
                   ),
                 ),
                 const SizedBox(height: 12),
-                for (final summary in active) _GroupTile(summary: summary, appSymbol: symbol),
+                for (final summary in active) _GroupTile(summary: summary),
                 if (archived.isNotEmpty)
                   Theme(
                     // No divider lines around the expansion tile, to match the cards.
@@ -68,7 +68,7 @@ class GroupsScreen extends ConsumerWidget {
                       childrenPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.archive_outlined),
                       title: Text(l10n.groupArchivedSection(archived.length)),
-                      children: [for (final summary in archived) _GroupTile(summary: summary, appSymbol: symbol)],
+                      children: [for (final summary in archived) _GroupTile(summary: summary)],
                     ),
                   ),
               ],
@@ -77,22 +77,21 @@ class GroupsScreen extends ConsumerWidget {
   }
 }
 
-class _GroupTile extends StatelessWidget {
-  const _GroupTile({required this.summary, required this.appSymbol});
+class _GroupTile extends ConsumerWidget {
+  const _GroupTile({required this.summary});
   final GroupSummary summary;
-  final String appSymbol;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final symbol = groupSymbol(currencyLabel: summary.group.currencyLabel, appSymbol: appSymbol);
+    final moneyFormat = ref.watch(groupMoneyFormatProvider(summary.group.currencyLabel));
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: IconBadge(icon: summary.group.icon, color: 0xFF0F6E6B),
         title: Text(summary.group.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(l10n.groupSubtitle(summary.members.length, formatMinor(summary.totalSpentMinor, symbol: symbol, showDecimals: false, compact: true)), maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: GroupNetBadge(net: summary.myNetMinor, symbol: symbol),
+        subtitle: Text(l10n.groupSubtitle(summary.members.length, formatMinor(summary.totalSpentMinor, format: moneyFormat, showDecimals: false, compact: true)), maxLines: 1, overflow: TextOverflow.ellipsis),
+        trailing: GroupNetBadge(net: summary.myNetMinor, moneyFormat: moneyFormat),
         onTap: () => context.push('/groups/${summary.group.id}'),
       ),
     );

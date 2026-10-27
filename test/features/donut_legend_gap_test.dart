@@ -5,6 +5,7 @@ import 'package:hisab/domain/stats/category_shares.dart';
 import 'package:hisab/features/dashboard/dashboard_providers.dart';
 import 'package:hisab/features/dashboard/widgets/category_donut.dart';
 import 'package:hisab/l10n/generated/app_localizations.dart';
+import 'package:hisab/core/money.dart';
 
 /// Global horizontal extent of the glyphs [finder]'s text actually paints,
 /// not of its (possibly wider, end-aligned) box.
@@ -36,7 +37,7 @@ void main() {
                 totalMinor: 25400000,
               ),
               selectedId: null,
-              symbol: 'CHF',
+              moneyFormat: MoneyFormat(grouping: DigitGrouping.indian, groupSeparator: ',', decimalSeparator: '.', fractionDigits: 2, symbol: 'CHF', symbolAfter: false),
               totalCaption: 'Spent',
             ),
           ),

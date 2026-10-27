@@ -118,9 +118,9 @@ String groupSummaryText(
   required List<String> memberOrder,
   required String? myMemberId,
   required String Function(String memberId) nameOf,
-  required String symbol,
+  required MoneyFormat moneyFormat,
 }) {
-  String money(int amountMinor) => formatMinor(amountMinor, symbol: symbol);
+  String money(int amountMinor) => formatMinor(amountMinor, format: moneyFormat);
   String transferLine(Transfer transfer) {
     if (transfer.from == myMemberId) return l10n.groupSummaryYouOwe(nameOf(transfer.to), money(transfer.amountMinor));
     if (transfer.to == myMemberId) return l10n.groupSummaryOwesYou(nameOf(transfer.from), money(transfer.amountMinor));
@@ -167,7 +167,7 @@ String groupSummaryText(
 
 /// [groupSummaryText] for the group on screen. Totals come from the same
 /// rows the CSV exports, so both always agree.
-String groupSummaryFor(AppLocalizations l10n, GroupDetail detail, {required String symbol}) {
+String groupSummaryFor(AppLocalizations l10n, GroupDetail detail, {required MoneyFormat moneyFormat}) {
   final rows = exportRows(l10n, detail, categoryById: const {}, locale: Locale(l10n.localeName));
   final nameById = {for (final member in detail.allMembers) member.id: memberShortName(l10n, member)};
   return groupSummaryText(
@@ -183,6 +183,6 @@ String groupSummaryFor(AppLocalizations l10n, GroupDetail detail, {required Stri
     ],
     myMemberId: detail.me?.id,
     nameOf: (id) => nameById[id] ?? l10n.unknown,
-    symbol: symbol,
+    moneyFormat: moneyFormat,
   );
 }

@@ -3,7 +3,9 @@
 /// data is never touched, and provides screenshot + interaction utilities.
 library;
 
+import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -44,8 +46,47 @@ Future<AppHandle> createApp({bool onboarded = true, String? currencyCode = 'INR'
 /// Mounts [HisabApp] for [app] and lands on the Home tab.
 Future<void> pumpApp(WidgetTester tester, AppHandle app) async {
   appRouter.go('/home');
-  await tester.pumpWidget(UncontrolledProviderScope(container: app.container, child: const HisabApp()));
+  await tester.pumpWidget(_SurfaceMediaQuery(child: UncontrolledProviderScope(container: app.container, child: const HisabApp())));
   await settle(tester);
+}
+
+/// The logical size set by [useLogicalWidth], or null for the device's own.
+final _logicalSurface = ValueNotifier<Size?>(null);
+
+/// Lays the app out [width] logical pixels wide (a 360dp phone) until the
+/// test ends.
+///
+/// Never set `tester.view.physicalSize` on a device for this. The engine
+/// only rasterizes frames whose size matches the real window
+/// (`Shell::ShouldDiscardLayerTree`), so every frame drawn at an overridden
+/// physical size is dropped: the next Android capture returns the last frame
+/// drawn before the resize and the one after that waits forever (#99).
+/// `setSurfaceSize` instead lays out at [width] and paints into the real
+/// window, centred, so frames keep reaching the screen. MediaQuery still
+/// reports the window, so [_SurfaceMediaQuery] narrows it to match.
+Future<void> useLogicalWidth(WidgetTester tester, double width) async {
+  final size = Size(width, tester.view.physicalSize.height / tester.view.devicePixelRatio);
+  addTearDown(() async {
+    _logicalSurface.value = null;
+    await binding.setSurfaceSize(null);
+  });
+  await binding.setSurfaceSize(size);
+  _logicalSurface.value = size;
+  await settle(tester, 4);
+}
+
+/// Reports the [useLogicalWidth] size through MediaQuery, so widgets that
+/// read `MediaQuery.sizeOf` see the same width as their constraints.
+class _SurfaceMediaQuery extends StatelessWidget {
+  const _SurfaceMediaQuery({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<Size?>(
+        valueListenable: _logicalSurface,
+        child: child,
+        builder: (context, size, child) => size == null ? child! : MediaQuery(data: MediaQuery.of(context).copyWith(size: size), child: child!),
+      );
 }
 
 /// Pumps a fixed number of real frames. `pumpAndSettle` never returns on
@@ -78,6 +119,32 @@ Future<void> enterText(WidgetTester tester, Finder field, String text) async {
   await tester.pump();
   await tester.enterText(field, text);
   await settle(tester, 3);
+}
+
+/// The entry editor tucks its advanced fields (date, note, payee, project,
+/// repeat, items) behind a "More details" tile that starts collapsed on a
+/// fresh entry. Opens it so those fields can be reached; a no-op when [reveals]
+/// (a field that appears once expanded) is already in the tree, e.g. when
+/// editing auto-expanded the section.
+Future<void> openMoreDetails(WidgetTester tester, {required Finder reveals}) async {
+  if (reveals.evaluate().isNotEmpty) return;
+  final tile = find.byKey(const ValueKey('editor.moreDetails'));
+  if (tile.evaluate().isEmpty) await scrollTo(tester, tile);
+  if (reveals.evaluate().isEmpty) await tapFinder(tester, tile);
+}
+
+/// Picks the account named [name] in the entry editor: opens the account row
+/// ([pickerKey] is `from-account` or `to-account`), then taps it in the sheet.
+Future<void> pickEditorAccount(WidgetTester tester, String name, {String pickerKey = 'from-account'}) async {
+  await tapFinder(tester, find.byKey(ValueKey(pickerKey)));
+  await tapFinder(tester, find.descendant(of: find.byType(BottomSheet), matching: find.widgetWithText(ListTile, name)));
+}
+
+/// Leaves the entry editor with unsaved input: Back raises the "Discard this
+/// entry?" prompt, which is confirmed.
+Future<void> discardEntry(WidgetTester tester) async {
+  await goBack(tester);
+  await tapFinder(tester, find.byKey(const Key('discard-entry')));
 }
 
 /// Switches bottom tabs by label.
@@ -181,16 +248,50 @@ Future<void> shoot(WidgetTester tester, String name) async {
   // On Android a real device capture (adb screencap through the watcher) is
   // the screenshot, so the in-process capture below is skipped.
   if (Platform.isAndroid && _watcherAlive == true) return;
+  if (Platform.isAndroid) _expectRealPhysicalSize(tester, numbered);
   if (Platform.isAndroid && !_surfaceConverted) {
     // Android renders to a SurfaceView that cannot be read back until it is
     // swapped for an image-backed surface; the binding reverts it after
     // every test, so convert once per test.
-    await binding.convertFlutterSurfaceToImage();
+    await _whilePumping(tester, binding.convertFlutterSurfaceToImage(), 'converting the surface for $numbered');
     _surfaceConverted = true;
     addTearDown(() => _surfaceConverted = false);
     await tester.pump();
   }
-  await binding.takeScreenshot(numbered);
+  await _whilePumping(tester, binding.takeScreenshot(numbered), 'capturing $numbered');
+}
+
+/// Fails [shot] at once when the test view's physical size differs from the
+/// real window: the engine drops such frames, so the capture would return a
+/// stale frame and then hang (#99). Use [useLogicalWidth] instead.
+void _expectRealPhysicalSize(WidgetTester tester, String shot) {
+  final window = ui.PlatformDispatcher.instance.implicitView?.physicalSize;
+  if (window == null || tester.view.physicalSize == window) return;
+  fail('Cannot capture $shot: tester.view.physicalSize ${tester.view.physicalSize} differs from the window $window, '
+      'so the engine discards every frame. Use useLogicalWidth() to test a narrow phone.');
+}
+
+/// How long one in-app capture may take before the flow fails.
+const kShotTimeout = Duration(seconds: 30);
+
+/// Awaits [work] while pumping frames, and fails with [what] after
+/// [kShotTimeout] instead of stalling the run.
+///
+/// Android's capture (FlutterDeviceScreenshot.takeScreenshot) retries until
+/// the Flutter view hands it a frame it has not read yet. It asks for one
+/// with `scheduleFrame`, but the test binding only draws frames it pumps
+/// itself, so on a screen with nothing animating no new frame ever comes
+/// and the capture waits forever with the isolate idle (#99, Hindi dark
+/// card screen). Pumping until the capture returns always gives it one.
+Future<T> _whilePumping<T>(WidgetTester tester, Future<T> work, String what) async {
+  var finished = false;
+  unawaited(work.then<void>((_) => finished = true, onError: (Object _) => finished = true));
+  final deadline = DateTime.now().add(kShotTimeout);
+  while (!finished) {
+    if (DateTime.now().isAfter(deadline)) fail('Timed out after ${kShotTimeout.inSeconds} s $what (texts on screen: ${onstageTexts().take(12).toList()})');
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+  return work;
 }
 
 bool _surfaceConverted = false;
@@ -208,5 +309,28 @@ Future<void> _requestDeviceShot(String name) async {
   final deadline = DateTime.now().add(const Duration(seconds: 8));
   while (request.existsSync() && DateTime.now().isBefore(deadline)) {
     await Future<void>.delayed(const Duration(milliseconds: 100));
+  }
+}
+
+/// Hides the soft keyboard, so it covers neither a shot nor the buttons at
+/// the foot of a sheet.
+Future<void> dropKeyboard(WidgetTester tester) async {
+  FocusManager.instance.primaryFocus?.unfocus();
+  await settle(tester, 6);
+}
+
+/// Pops the top bottom sheet without relying on where its scrim is: a tall
+/// sheet (Hindi, large text, a 360dp phone) leaves no scrim to tap.
+Future<void> popSheet(WidgetTester tester) async {
+  Navigator.of(tester.element(find.byType(BottomSheet).last)).pop();
+  await settle(tester, 10);
+}
+
+/// Answers "Not now" to the notification and "Alarms & reminders" sheets
+/// that saving a reminder can bring up, depending on what the device has
+/// already granted.
+Future<void> declineReminderPermissionSheets(WidgetTester tester) async {
+  for (final title in ["Get reminded before it's due", 'Get reminders on time']) {
+    if (hasText(title)) await tapText(tester, 'Not now', frames: 12);
   }
 }

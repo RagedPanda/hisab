@@ -9,7 +9,7 @@ import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/groups_repository.dart';
 import '../../domain/split/group_activity.dart';
-import '../../domain/split/group_settings.dart';
+import '../../core/settings.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
@@ -55,7 +55,8 @@ class _ActivityList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context);
-    final appSymbol = ref.watch(settingsProvider).currencySymbol;
+    final settings = ref.watch(settingsProvider);
+    final deviceLocale = ref.watch(deviceLocaleProvider);
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
     final categoryById = {for (final category in categories) category.id: category};
     final myMemberIds = {for (final member in feed.membersById.values) if (member.isMe) member.id};
@@ -63,7 +64,7 @@ class _ActivityList extends ConsumerWidget {
     ActivityFormatters formatFor(ActivityRecord activity) => ActivityFormatters(
           nameOf: (id) => switch (feed.membersById[id]) { final member? => memberShortName(l10n, member), null => l10n.unknown },
           categoryNameOf: (id) => switch (categoryById[id]) { final category? => categoryDisplayName(category, locale), null => l10n.kindExpense },
-          money: (minor) => formatMinor(minor, symbol: groupSymbol(currencyLabel: feed.groupsById[activity.groupId]?.currencyLabel, appSymbol: appSymbol)),
+          money: (minor) => formatMinor(minor, format: groupMoneyFormatFor(feed.groupsById[activity.groupId]?.currencyLabel, settings, deviceLocale)),
           date: (day) => formatRowDate(day, locale: locale.toString()),
           myMemberId: myMemberIds.where((id) => feed.membersById[id]?.groupId == activity.groupId).firstOrNull,
         );

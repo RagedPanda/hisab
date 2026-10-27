@@ -146,6 +146,59 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _statementDayMeta = const VerificationMeta(
+    'statementDay',
+  );
+  @override
+  late final GeneratedColumn<int> statementDay = GeneratedColumn<int>(
+    'statement_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dueDayMeta = const VerificationMeta('dueDay');
+  @override
+  late final GeneratedColumn<int> dueDay = GeneratedColumn<int>(
+    'due_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _creditLimitMinorMeta = const VerificationMeta(
+    'creditLimitMinor',
+  );
+  @override
+  late final GeneratedColumn<int> creditLimitMinor = GeneratedColumn<int>(
+    'credit_limit_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastStatementMinorMeta =
+      const VerificationMeta('lastStatementMinor');
+  @override
+  late final GeneratedColumn<int> lastStatementMinor = GeneratedColumn<int>(
+    'last_statement_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastStatementAtMeta = const VerificationMeta(
+    'lastStatementAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastStatementAt =
+      GeneratedColumn<DateTime>(
+        'last_statement_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -161,6 +214,11 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     includeInTotal,
     color,
     sortOrder,
+    statementDay,
+    dueDay,
+    creditLimitMinor,
+    lastStatementMinor,
+    lastStatementAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -266,6 +324,48 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
       );
     }
+    if (data.containsKey('statement_day')) {
+      context.handle(
+        _statementDayMeta,
+        statementDay.isAcceptableOrUnknown(
+          data['statement_day']!,
+          _statementDayMeta,
+        ),
+      );
+    }
+    if (data.containsKey('due_day')) {
+      context.handle(
+        _dueDayMeta,
+        dueDay.isAcceptableOrUnknown(data['due_day']!, _dueDayMeta),
+      );
+    }
+    if (data.containsKey('credit_limit_minor')) {
+      context.handle(
+        _creditLimitMinorMeta,
+        creditLimitMinor.isAcceptableOrUnknown(
+          data['credit_limit_minor']!,
+          _creditLimitMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_statement_minor')) {
+      context.handle(
+        _lastStatementMinorMeta,
+        lastStatementMinor.isAcceptableOrUnknown(
+          data['last_statement_minor']!,
+          _lastStatementMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_statement_at')) {
+      context.handle(
+        _lastStatementAtMeta,
+        lastStatementAt.isAcceptableOrUnknown(
+          data['last_statement_at']!,
+          _lastStatementAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -327,6 +427,26 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         DriftSqlType.int,
         data['${effectivePrefix}sort_order'],
       )!,
+      statementDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}statement_day'],
+      ),
+      dueDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}due_day'],
+      ),
+      creditLimitMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}credit_limit_minor'],
+      ),
+      lastStatementMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_statement_minor'],
+      ),
+      lastStatementAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_statement_at'],
+      ),
     );
   }
 
@@ -355,6 +475,16 @@ class Account extends DataClass implements Insertable<Account> {
   final bool includeInTotal;
   final int color;
   final int sortOrder;
+
+  /// Credit cards only: day of month the statement is generated (1-31; short
+  /// months clamp to their last day) and the day the bill is due.
+  final int? statementDay;
+  final int? dueDay;
+  final int? creditLimitMinor;
+
+  /// Amount billed on the most recent statement and that statement's date.
+  final int? lastStatementMinor;
+  final DateTime? lastStatementAt;
   const Account({
     required this.updatedAt,
     this.deletedAt,
@@ -369,6 +499,11 @@ class Account extends DataClass implements Insertable<Account> {
     required this.includeInTotal,
     required this.color,
     required this.sortOrder,
+    this.statementDay,
+    this.dueDay,
+    this.creditLimitMinor,
+    this.lastStatementMinor,
+    this.lastStatementAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -396,6 +531,21 @@ class Account extends DataClass implements Insertable<Account> {
     map['include_in_total'] = Variable<bool>(includeInTotal);
     map['color'] = Variable<int>(color);
     map['sort_order'] = Variable<int>(sortOrder);
+    if (!nullToAbsent || statementDay != null) {
+      map['statement_day'] = Variable<int>(statementDay);
+    }
+    if (!nullToAbsent || dueDay != null) {
+      map['due_day'] = Variable<int>(dueDay);
+    }
+    if (!nullToAbsent || creditLimitMinor != null) {
+      map['credit_limit_minor'] = Variable<int>(creditLimitMinor);
+    }
+    if (!nullToAbsent || lastStatementMinor != null) {
+      map['last_statement_minor'] = Variable<int>(lastStatementMinor);
+    }
+    if (!nullToAbsent || lastStatementAt != null) {
+      map['last_statement_at'] = Variable<DateTime>(lastStatementAt);
+    }
     return map;
   }
 
@@ -424,6 +574,21 @@ class Account extends DataClass implements Insertable<Account> {
       includeInTotal: Value(includeInTotal),
       color: Value(color),
       sortOrder: Value(sortOrder),
+      statementDay: statementDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(statementDay),
+      dueDay: dueDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueDay),
+      creditLimitMinor: creditLimitMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(creditLimitMinor),
+      lastStatementMinor: lastStatementMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastStatementMinor),
+      lastStatementAt: lastStatementAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastStatementAt),
     );
   }
 
@@ -446,6 +611,11 @@ class Account extends DataClass implements Insertable<Account> {
       includeInTotal: serializer.fromJson<bool>(json['includeInTotal']),
       color: serializer.fromJson<int>(json['color']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      statementDay: serializer.fromJson<int?>(json['statementDay']),
+      dueDay: serializer.fromJson<int?>(json['dueDay']),
+      creditLimitMinor: serializer.fromJson<int?>(json['creditLimitMinor']),
+      lastStatementMinor: serializer.fromJson<int?>(json['lastStatementMinor']),
+      lastStatementAt: serializer.fromJson<DateTime?>(json['lastStatementAt']),
     );
   }
   @override
@@ -465,6 +635,11 @@ class Account extends DataClass implements Insertable<Account> {
       'includeInTotal': serializer.toJson<bool>(includeInTotal),
       'color': serializer.toJson<int>(color),
       'sortOrder': serializer.toJson<int>(sortOrder),
+      'statementDay': serializer.toJson<int?>(statementDay),
+      'dueDay': serializer.toJson<int?>(dueDay),
+      'creditLimitMinor': serializer.toJson<int?>(creditLimitMinor),
+      'lastStatementMinor': serializer.toJson<int?>(lastStatementMinor),
+      'lastStatementAt': serializer.toJson<DateTime?>(lastStatementAt),
     };
   }
 
@@ -482,6 +657,11 @@ class Account extends DataClass implements Insertable<Account> {
     bool? includeInTotal,
     int? color,
     int? sortOrder,
+    Value<int?> statementDay = const Value.absent(),
+    Value<int?> dueDay = const Value.absent(),
+    Value<int?> creditLimitMinor = const Value.absent(),
+    Value<int?> lastStatementMinor = const Value.absent(),
+    Value<DateTime?> lastStatementAt = const Value.absent(),
   }) => Account(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -496,6 +676,17 @@ class Account extends DataClass implements Insertable<Account> {
     includeInTotal: includeInTotal ?? this.includeInTotal,
     color: color ?? this.color,
     sortOrder: sortOrder ?? this.sortOrder,
+    statementDay: statementDay.present ? statementDay.value : this.statementDay,
+    dueDay: dueDay.present ? dueDay.value : this.dueDay,
+    creditLimitMinor: creditLimitMinor.present
+        ? creditLimitMinor.value
+        : this.creditLimitMinor,
+    lastStatementMinor: lastStatementMinor.present
+        ? lastStatementMinor.value
+        : this.lastStatementMinor,
+    lastStatementAt: lastStatementAt.present
+        ? lastStatementAt.value
+        : this.lastStatementAt,
   );
   Account copyWithCompanion(AccountsCompanion data) {
     return Account(
@@ -518,6 +709,19 @@ class Account extends DataClass implements Insertable<Account> {
           : this.includeInTotal,
       color: data.color.present ? data.color.value : this.color,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      statementDay: data.statementDay.present
+          ? data.statementDay.value
+          : this.statementDay,
+      dueDay: data.dueDay.present ? data.dueDay.value : this.dueDay,
+      creditLimitMinor: data.creditLimitMinor.present
+          ? data.creditLimitMinor.value
+          : this.creditLimitMinor,
+      lastStatementMinor: data.lastStatementMinor.present
+          ? data.lastStatementMinor.value
+          : this.lastStatementMinor,
+      lastStatementAt: data.lastStatementAt.present
+          ? data.lastStatementAt.value
+          : this.lastStatementAt,
     );
   }
 
@@ -536,7 +740,12 @@ class Account extends DataClass implements Insertable<Account> {
           ..write('balanceAsOf: $balanceAsOf, ')
           ..write('includeInTotal: $includeInTotal, ')
           ..write('color: $color, ')
-          ..write('sortOrder: $sortOrder')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('statementDay: $statementDay, ')
+          ..write('dueDay: $dueDay, ')
+          ..write('creditLimitMinor: $creditLimitMinor, ')
+          ..write('lastStatementMinor: $lastStatementMinor, ')
+          ..write('lastStatementAt: $lastStatementAt')
           ..write(')'))
         .toString();
   }
@@ -556,6 +765,11 @@ class Account extends DataClass implements Insertable<Account> {
     includeInTotal,
     color,
     sortOrder,
+    statementDay,
+    dueDay,
+    creditLimitMinor,
+    lastStatementMinor,
+    lastStatementAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -573,7 +787,12 @@ class Account extends DataClass implements Insertable<Account> {
           other.balanceAsOf == this.balanceAsOf &&
           other.includeInTotal == this.includeInTotal &&
           other.color == this.color &&
-          other.sortOrder == this.sortOrder);
+          other.sortOrder == this.sortOrder &&
+          other.statementDay == this.statementDay &&
+          other.dueDay == this.dueDay &&
+          other.creditLimitMinor == this.creditLimitMinor &&
+          other.lastStatementMinor == this.lastStatementMinor &&
+          other.lastStatementAt == this.lastStatementAt);
 }
 
 class AccountsCompanion extends UpdateCompanion<Account> {
@@ -590,6 +809,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   final Value<bool> includeInTotal;
   final Value<int> color;
   final Value<int> sortOrder;
+  final Value<int?> statementDay;
+  final Value<int?> dueDay;
+  final Value<int?> creditLimitMinor;
+  final Value<int?> lastStatementMinor;
+  final Value<DateTime?> lastStatementAt;
   final Value<int> rowid;
   const AccountsCompanion({
     this.updatedAt = const Value.absent(),
@@ -605,6 +829,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.includeInTotal = const Value.absent(),
     this.color = const Value.absent(),
     this.sortOrder = const Value.absent(),
+    this.statementDay = const Value.absent(),
+    this.dueDay = const Value.absent(),
+    this.creditLimitMinor = const Value.absent(),
+    this.lastStatementMinor = const Value.absent(),
+    this.lastStatementAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AccountsCompanion.insert({
@@ -621,6 +850,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.includeInTotal = const Value.absent(),
     required int color,
     this.sortOrder = const Value.absent(),
+    this.statementDay = const Value.absent(),
+    this.dueDay = const Value.absent(),
+    this.creditLimitMinor = const Value.absent(),
+    this.lastStatementMinor = const Value.absent(),
+    this.lastStatementAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -640,6 +874,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Expression<bool>? includeInTotal,
     Expression<int>? color,
     Expression<int>? sortOrder,
+    Expression<int>? statementDay,
+    Expression<int>? dueDay,
+    Expression<int>? creditLimitMinor,
+    Expression<int>? lastStatementMinor,
+    Expression<DateTime>? lastStatementAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -656,6 +895,12 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       if (includeInTotal != null) 'include_in_total': includeInTotal,
       if (color != null) 'color': color,
       if (sortOrder != null) 'sort_order': sortOrder,
+      if (statementDay != null) 'statement_day': statementDay,
+      if (dueDay != null) 'due_day': dueDay,
+      if (creditLimitMinor != null) 'credit_limit_minor': creditLimitMinor,
+      if (lastStatementMinor != null)
+        'last_statement_minor': lastStatementMinor,
+      if (lastStatementAt != null) 'last_statement_at': lastStatementAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -674,6 +919,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Value<bool>? includeInTotal,
     Value<int>? color,
     Value<int>? sortOrder,
+    Value<int?>? statementDay,
+    Value<int?>? dueDay,
+    Value<int?>? creditLimitMinor,
+    Value<int?>? lastStatementMinor,
+    Value<DateTime?>? lastStatementAt,
     Value<int>? rowid,
   }) {
     return AccountsCompanion(
@@ -690,6 +940,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       includeInTotal: includeInTotal ?? this.includeInTotal,
       color: color ?? this.color,
       sortOrder: sortOrder ?? this.sortOrder,
+      statementDay: statementDay ?? this.statementDay,
+      dueDay: dueDay ?? this.dueDay,
+      creditLimitMinor: creditLimitMinor ?? this.creditLimitMinor,
+      lastStatementMinor: lastStatementMinor ?? this.lastStatementMinor,
+      lastStatementAt: lastStatementAt ?? this.lastStatementAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -736,6 +991,21 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     if (sortOrder.present) {
       map['sort_order'] = Variable<int>(sortOrder.value);
     }
+    if (statementDay.present) {
+      map['statement_day'] = Variable<int>(statementDay.value);
+    }
+    if (dueDay.present) {
+      map['due_day'] = Variable<int>(dueDay.value);
+    }
+    if (creditLimitMinor.present) {
+      map['credit_limit_minor'] = Variable<int>(creditLimitMinor.value);
+    }
+    if (lastStatementMinor.present) {
+      map['last_statement_minor'] = Variable<int>(lastStatementMinor.value);
+    }
+    if (lastStatementAt.present) {
+      map['last_statement_at'] = Variable<DateTime>(lastStatementAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -758,6 +1028,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
           ..write('includeInTotal: $includeInTotal, ')
           ..write('color: $color, ')
           ..write('sortOrder: $sortOrder, ')
+          ..write('statementDay: $statementDay, ')
+          ..write('dueDay: $dueDay, ')
+          ..write('creditLimitMinor: $creditLimitMinor, ')
+          ..write('lastStatementMinor: $lastStatementMinor, ')
+          ..write('lastStatementAt: $lastStatementAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6388,6 +6663,29 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _matchedReminderIdMeta = const VerificationMeta(
+    'matchedReminderId',
+  );
+  @override
+  late final GeneratedColumn<String> matchedReminderId =
+      GeneratedColumn<String>(
+        'matched_reminder_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _transactionKeyMeta = const VerificationMeta(
+    'transactionKey',
+  );
+  @override
+  late final GeneratedColumn<String> transactionKey = GeneratedColumn<String>(
+    'transaction_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -6420,6 +6718,8 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
     status,
     parsedJson,
     entryId,
+    matchedReminderId,
+    transactionKey,
     createdAt,
     clearedAt,
   ];
@@ -6484,6 +6784,24 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
         entryId.isAcceptableOrUnknown(data['entry_id']!, _entryIdMeta),
       );
     }
+    if (data.containsKey('matched_reminder_id')) {
+      context.handle(
+        _matchedReminderIdMeta,
+        matchedReminderId.isAcceptableOrUnknown(
+          data['matched_reminder_id']!,
+          _matchedReminderIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('transaction_key')) {
+      context.handle(
+        _transactionKeyMeta,
+        transactionKey.isAcceptableOrUnknown(
+          data['transaction_key']!,
+          _transactionKeyMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -6533,6 +6851,14 @@ class $SmsLogTable extends SmsLog with TableInfo<$SmsLogTable, SmsLogData> {
         DriftSqlType.string,
         data['${effectivePrefix}entry_id'],
       ),
+      matchedReminderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}matched_reminder_id'],
+      ),
+      transactionKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}transaction_key'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -6561,6 +6887,13 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
   final String status;
   final String? parsedJson;
   final String? entryId;
+
+  /// Reminder this message paid, when it matched one (R2 auto-done).
+  final String? matchedReminderId;
+
+  /// The bank transaction this message reports (see smsTransactionKey), so
+  /// the same payment pasted again or read from the inbox is not added twice.
+  final String? transactionKey;
   final DateTime createdAt;
 
   /// Set when the user clears the SMS history. The row stays (with its body
@@ -6574,6 +6907,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     required this.status,
     this.parsedJson,
     this.entryId,
+    this.matchedReminderId,
+    this.transactionKey,
     required this.createdAt,
     this.clearedAt,
   });
@@ -6590,6 +6925,12 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     }
     if (!nullToAbsent || entryId != null) {
       map['entry_id'] = Variable<String>(entryId);
+    }
+    if (!nullToAbsent || matchedReminderId != null) {
+      map['matched_reminder_id'] = Variable<String>(matchedReminderId);
+    }
+    if (!nullToAbsent || transactionKey != null) {
+      map['transaction_key'] = Variable<String>(transactionKey);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || clearedAt != null) {
@@ -6611,6 +6952,12 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       entryId: entryId == null && nullToAbsent
           ? const Value.absent()
           : Value(entryId),
+      matchedReminderId: matchedReminderId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(matchedReminderId),
+      transactionKey: transactionKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transactionKey),
       createdAt: Value(createdAt),
       clearedAt: clearedAt == null && nullToAbsent
           ? const Value.absent()
@@ -6631,6 +6978,10 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       status: serializer.fromJson<String>(json['status']),
       parsedJson: serializer.fromJson<String?>(json['parsedJson']),
       entryId: serializer.fromJson<String?>(json['entryId']),
+      matchedReminderId: serializer.fromJson<String?>(
+        json['matchedReminderId'],
+      ),
+      transactionKey: serializer.fromJson<String?>(json['transactionKey']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       clearedAt: serializer.fromJson<DateTime?>(json['clearedAt']),
     );
@@ -6646,6 +6997,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
       'status': serializer.toJson<String>(status),
       'parsedJson': serializer.toJson<String?>(parsedJson),
       'entryId': serializer.toJson<String?>(entryId),
+      'matchedReminderId': serializer.toJson<String?>(matchedReminderId),
+      'transactionKey': serializer.toJson<String?>(transactionKey),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'clearedAt': serializer.toJson<DateTime?>(clearedAt),
     };
@@ -6659,6 +7012,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     String? status,
     Value<String?> parsedJson = const Value.absent(),
     Value<String?> entryId = const Value.absent(),
+    Value<String?> matchedReminderId = const Value.absent(),
+    Value<String?> transactionKey = const Value.absent(),
     DateTime? createdAt,
     Value<DateTime?> clearedAt = const Value.absent(),
   }) => SmsLogData(
@@ -6669,6 +7024,12 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     status: status ?? this.status,
     parsedJson: parsedJson.present ? parsedJson.value : this.parsedJson,
     entryId: entryId.present ? entryId.value : this.entryId,
+    matchedReminderId: matchedReminderId.present
+        ? matchedReminderId.value
+        : this.matchedReminderId,
+    transactionKey: transactionKey.present
+        ? transactionKey.value
+        : this.transactionKey,
     createdAt: createdAt ?? this.createdAt,
     clearedAt: clearedAt.present ? clearedAt.value : this.clearedAt,
   );
@@ -6685,6 +7046,12 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           ? data.parsedJson.value
           : this.parsedJson,
       entryId: data.entryId.present ? data.entryId.value : this.entryId,
+      matchedReminderId: data.matchedReminderId.present
+          ? data.matchedReminderId.value
+          : this.matchedReminderId,
+      transactionKey: data.transactionKey.present
+          ? data.transactionKey.value
+          : this.transactionKey,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       clearedAt: data.clearedAt.present ? data.clearedAt.value : this.clearedAt,
     );
@@ -6700,6 +7067,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           ..write('status: $status, ')
           ..write('parsedJson: $parsedJson, ')
           ..write('entryId: $entryId, ')
+          ..write('matchedReminderId: $matchedReminderId, ')
+          ..write('transactionKey: $transactionKey, ')
           ..write('createdAt: $createdAt, ')
           ..write('clearedAt: $clearedAt')
           ..write(')'))
@@ -6715,6 +7084,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
     status,
     parsedJson,
     entryId,
+    matchedReminderId,
+    transactionKey,
     createdAt,
     clearedAt,
   );
@@ -6729,6 +7100,8 @@ class SmsLogData extends DataClass implements Insertable<SmsLogData> {
           other.status == this.status &&
           other.parsedJson == this.parsedJson &&
           other.entryId == this.entryId &&
+          other.matchedReminderId == this.matchedReminderId &&
+          other.transactionKey == this.transactionKey &&
           other.createdAt == this.createdAt &&
           other.clearedAt == this.clearedAt);
 }
@@ -6741,6 +7114,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
   final Value<String> status;
   final Value<String?> parsedJson;
   final Value<String?> entryId;
+  final Value<String?> matchedReminderId;
+  final Value<String?> transactionKey;
   final Value<DateTime> createdAt;
   final Value<DateTime?> clearedAt;
   final Value<int> rowid;
@@ -6752,6 +7127,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     this.status = const Value.absent(),
     this.parsedJson = const Value.absent(),
     this.entryId = const Value.absent(),
+    this.matchedReminderId = const Value.absent(),
+    this.transactionKey = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.clearedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -6764,6 +7141,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     required String status,
     this.parsedJson = const Value.absent(),
     this.entryId = const Value.absent(),
+    this.matchedReminderId = const Value.absent(),
+    this.transactionKey = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.clearedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -6780,6 +7159,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     Expression<String>? status,
     Expression<String>? parsedJson,
     Expression<String>? entryId,
+    Expression<String>? matchedReminderId,
+    Expression<String>? transactionKey,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? clearedAt,
     Expression<int>? rowid,
@@ -6792,6 +7173,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
       if (status != null) 'status': status,
       if (parsedJson != null) 'parsed_json': parsedJson,
       if (entryId != null) 'entry_id': entryId,
+      if (matchedReminderId != null) 'matched_reminder_id': matchedReminderId,
+      if (transactionKey != null) 'transaction_key': transactionKey,
       if (createdAt != null) 'created_at': createdAt,
       if (clearedAt != null) 'cleared_at': clearedAt,
       if (rowid != null) 'rowid': rowid,
@@ -6806,6 +7189,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     Value<String>? status,
     Value<String?>? parsedJson,
     Value<String?>? entryId,
+    Value<String?>? matchedReminderId,
+    Value<String?>? transactionKey,
     Value<DateTime>? createdAt,
     Value<DateTime?>? clearedAt,
     Value<int>? rowid,
@@ -6818,6 +7203,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
       status: status ?? this.status,
       parsedJson: parsedJson ?? this.parsedJson,
       entryId: entryId ?? this.entryId,
+      matchedReminderId: matchedReminderId ?? this.matchedReminderId,
+      transactionKey: transactionKey ?? this.transactionKey,
       createdAt: createdAt ?? this.createdAt,
       clearedAt: clearedAt ?? this.clearedAt,
       rowid: rowid ?? this.rowid,
@@ -6848,6 +7235,12 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
     if (entryId.present) {
       map['entry_id'] = Variable<String>(entryId.value);
     }
+    if (matchedReminderId.present) {
+      map['matched_reminder_id'] = Variable<String>(matchedReminderId.value);
+    }
+    if (transactionKey.present) {
+      map['transaction_key'] = Variable<String>(transactionKey.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -6870,6 +7263,8 @@ class SmsLogCompanion extends UpdateCompanion<SmsLogData> {
           ..write('status: $status, ')
           ..write('parsedJson: $parsedJson, ')
           ..write('entryId: $entryId, ')
+          ..write('matchedReminderId: $matchedReminderId, ')
+          ..write('transactionKey: $transactionKey, ')
           ..write('createdAt: $createdAt, ')
           ..write('clearedAt: $clearedAt, ')
           ..write('rowid: $rowid')
@@ -13742,6 +14137,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'entries_recurring_id',
     'CREATE INDEX entries_recurring_id ON entries (recurring_id)',
   );
+  late final Index smsLogTransactionKey = Index(
+    'sms_log_transaction_key',
+    'CREATE INDEX sms_log_transaction_key ON sms_log (transaction_key)',
+  );
   late final Index projectFieldsProjectId = Index(
     'project_fields_project_id',
     'CREATE INDEX project_fields_project_id ON project_fields (project_id)',
@@ -13799,6 +14198,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     itemAssignments,
     entriesProjectId,
     entriesRecurringId,
+    smsLogTransactionKey,
     projectFieldsProjectId,
     entryFieldValuesEntryId,
     remindersGroupId,
@@ -13824,6 +14224,11 @@ typedef $$AccountsTableCreateCompanionBuilder = AccountsCompanion Function({
   Value<bool> includeInTotal,
   required int color,
   Value<int> sortOrder,
+  Value<int?> statementDay,
+  Value<int?> dueDay,
+  Value<int?> creditLimitMinor,
+  Value<int?> lastStatementMinor,
+  Value<DateTime?> lastStatementAt,
   Value<int> rowid,
 });
 typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
@@ -13840,6 +14245,11 @@ typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
   Value<bool> includeInTotal,
   Value<int> color,
   Value<int> sortOrder,
+  Value<int?> statementDay,
+  Value<int?> dueDay,
+  Value<int?> creditLimitMinor,
+  Value<int?> lastStatementMinor,
+  Value<DateTime?> lastStatementAt,
   Value<int> rowid,
 });
 
@@ -13914,6 +14324,31 @@ class $$AccountsTableFilterComposer
 
   ColumnFilters<int> get sortOrder => $composableBuilder(
     column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get statementDay => $composableBuilder(
+    column: $table.statementDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dueDay => $composableBuilder(
+    column: $table.dueDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get creditLimitMinor => $composableBuilder(
+    column: $table.creditLimitMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastStatementMinor => $composableBuilder(
+    column: $table.lastStatementMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastStatementAt => $composableBuilder(
+    column: $table.lastStatementAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -13991,6 +14426,31 @@ class $$AccountsTableOrderingComposer
     column: $table.sortOrder,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get statementDay => $composableBuilder(
+    column: $table.statementDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dueDay => $composableBuilder(
+    column: $table.dueDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get creditLimitMinor => $composableBuilder(
+    column: $table.creditLimitMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastStatementMinor => $composableBuilder(
+    column: $table.lastStatementMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastStatementAt => $composableBuilder(
+    column: $table.lastStatementAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AccountsTableAnnotationComposer
@@ -14046,6 +14506,29 @@ class $$AccountsTableAnnotationComposer
 
   GeneratedColumn<int> get sortOrder =>
       $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<int> get statementDay => $composableBuilder(
+    column: $table.statementDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get dueDay =>
+      $composableBuilder(column: $table.dueDay, builder: (column) => column);
+
+  GeneratedColumn<int> get creditLimitMinor => $composableBuilder(
+    column: $table.creditLimitMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastStatementMinor => $composableBuilder(
+    column: $table.lastStatementMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastStatementAt => $composableBuilder(
+    column: $table.lastStatementAt,
+    builder: (column) => column,
+  );
 }
 
 class $$AccountsTableTableManager
@@ -14089,6 +14572,11 @@ class $$AccountsTableTableManager
                 Value<bool> includeInTotal = const Value.absent(),
                 Value<int> color = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
+                Value<int?> statementDay = const Value.absent(),
+                Value<int?> dueDay = const Value.absent(),
+                Value<int?> creditLimitMinor = const Value.absent(),
+                Value<int?> lastStatementMinor = const Value.absent(),
+                Value<DateTime?> lastStatementAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AccountsCompanion(
                 updatedAt: updatedAt,
@@ -14104,6 +14592,11 @@ class $$AccountsTableTableManager
                 includeInTotal: includeInTotal,
                 color: color,
                 sortOrder: sortOrder,
+                statementDay: statementDay,
+                dueDay: dueDay,
+                creditLimitMinor: creditLimitMinor,
+                lastStatementMinor: lastStatementMinor,
+                lastStatementAt: lastStatementAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -14121,6 +14614,11 @@ class $$AccountsTableTableManager
                 Value<bool> includeInTotal = const Value.absent(),
                 required int color,
                 Value<int> sortOrder = const Value.absent(),
+                Value<int?> statementDay = const Value.absent(),
+                Value<int?> dueDay = const Value.absent(),
+                Value<int?> creditLimitMinor = const Value.absent(),
+                Value<int?> lastStatementMinor = const Value.absent(),
+                Value<DateTime?> lastStatementAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AccountsCompanion.insert(
                 updatedAt: updatedAt,
@@ -14136,6 +14634,11 @@ class $$AccountsTableTableManager
                 includeInTotal: includeInTotal,
                 color: color,
                 sortOrder: sortOrder,
+                statementDay: statementDay,
+                dueDay: dueDay,
+                creditLimitMinor: creditLimitMinor,
+                lastStatementMinor: lastStatementMinor,
+                lastStatementAt: lastStatementAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -16849,6 +17352,8 @@ typedef $$SmsLogTableCreateCompanionBuilder = SmsLogCompanion Function({
   required String status,
   Value<String?> parsedJson,
   Value<String?> entryId,
+  Value<String?> matchedReminderId,
+  Value<String?> transactionKey,
   Value<DateTime> createdAt,
   Value<DateTime?> clearedAt,
   Value<int> rowid,
@@ -16861,6 +17366,8 @@ typedef $$SmsLogTableUpdateCompanionBuilder = SmsLogCompanion Function({
   Value<String> status,
   Value<String?> parsedJson,
   Value<String?> entryId,
+  Value<String?> matchedReminderId,
+  Value<String?> transactionKey,
   Value<DateTime> createdAt,
   Value<DateTime?> clearedAt,
   Value<int> rowid,
@@ -16907,6 +17414,16 @@ class $$SmsLogTableFilterComposer
 
   ColumnFilters<String> get entryId => $composableBuilder(
     column: $table.entryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get matchedReminderId => $composableBuilder(
+    column: $table.matchedReminderId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get transactionKey => $composableBuilder(
+    column: $table.transactionKey,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -16965,6 +17482,16 @@ class $$SmsLogTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get matchedReminderId => $composableBuilder(
+    column: $table.matchedReminderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get transactionKey => $composableBuilder(
+    column: $table.transactionKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -17010,6 +17537,16 @@ class $$SmsLogTableAnnotationComposer
   GeneratedColumn<String> get entryId =>
       $composableBuilder(column: $table.entryId, builder: (column) => column);
 
+  GeneratedColumn<String> get matchedReminderId => $composableBuilder(
+    column: $table.matchedReminderId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get transactionKey => $composableBuilder(
+    column: $table.transactionKey,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -17052,6 +17589,8 @@ class $$SmsLogTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String?> parsedJson = const Value.absent(),
                 Value<String?> entryId = const Value.absent(),
+                Value<String?> matchedReminderId = const Value.absent(),
+                Value<String?> transactionKey = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> clearedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -17063,6 +17602,8 @@ class $$SmsLogTableTableManager
                 status: status,
                 parsedJson: parsedJson,
                 entryId: entryId,
+                matchedReminderId: matchedReminderId,
+                transactionKey: transactionKey,
                 createdAt: createdAt,
                 clearedAt: clearedAt,
                 rowid: rowid,
@@ -17076,6 +17617,8 @@ class $$SmsLogTableTableManager
                 required String status,
                 Value<String?> parsedJson = const Value.absent(),
                 Value<String?> entryId = const Value.absent(),
+                Value<String?> matchedReminderId = const Value.absent(),
+                Value<String?> transactionKey = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> clearedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -17087,6 +17630,8 @@ class $$SmsLogTableTableManager
                 status: status,
                 parsedJson: parsedJson,
                 entryId: entryId,
+                matchedReminderId: matchedReminderId,
+                transactionKey: transactionKey,
                 createdAt: createdAt,
                 clearedAt: clearedAt,
                 rowid: rowid,

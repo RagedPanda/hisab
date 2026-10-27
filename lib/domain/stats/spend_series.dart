@@ -104,22 +104,20 @@ double niceCeiling(double value) {
   return step * magnitude;
 }
 
-/// Short axis label for a rupee amount: 1,00,000 -> "1L", 50,000 -> "50K",
-/// 2,500 -> "2.5K", 800 -> "800". Trailing ".0" is dropped so gridline labels
-/// stay narrow enough for a 40dp axis column.
-String axisAmountLabel(double rupees, {String symbol = ''}) {
+/// Short axis label for an amount in whole units: 1,00,000 -> "1L",
+/// 50,000 -> "50K", 2,500 -> "2.5K", 800 -> "800" (K / M / B and the
+/// format's decimal separator for Western formats). Trailing ".0" is dropped
+/// so gridline labels stay narrow enough for a 40dp axis column. [symbol],
+/// when given, replaces the format's symbol; with neither there is none.
+String axisAmountLabel(double amount, {MoneyFormat? format, String? symbol}) {
+  final style = format ?? MoneyFormat.inr;
   String trimmed(double value) {
     final text = value.toStringAsFixed(value == value.roundToDouble() ? 0 : 1);
-    return text.endsWith('.0') ? text.substring(0, text.length - 2) : text;
+    final short = text.endsWith('.0') ? text.substring(0, text.length - 2) : text;
+    return short.replaceAll('.', style.decimalSeparator);
   }
 
-  final abs = rupees.abs();
-  final body = abs >= 10000000
-      ? '${trimmed(abs / 10000000)}Cr'
-      : abs >= 100000
-          ? '${trimmed(abs / 100000)}L'
-          : abs >= 1000
-              ? '${trimmed(abs / 1000)}K'
-              : trimmed(abs);
-  return withCurrencySymbol(body, symbol: symbol, negative: rupees < 0);
+  final abs = amount.abs();
+  final (divisor, suffix) = compactUnit(abs, style.grouping);
+  return withCurrencySymbol('${trimmed(abs / divisor)}$suffix', symbol: symbol ?? format?.symbol ?? '', negative: amount < 0, after: style.symbolAfter);
 }

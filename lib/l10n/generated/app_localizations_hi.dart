@@ -658,6 +658,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get youOwe => 'आपको देने हैं';
 
   @override
+  String get groupsTotalsSeparator => ' · ';
+
+  @override
   String groupSubtitle(int count, String amount) {
     return '$count सदस्य · $amount खर्च';
   }
@@ -4000,4 +4003,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String smsPayeeRemembered(String category, String payee) {
     return 'अब से $payee के लिए $category लगेगी';
   }
+
+  @override
+  String safeToSpendPerDay(String amount) {
+    return 'सुरक्षित खर्च $amount/दिन';
+  }
+
+  @override
+  String get safeToSpendOverBudget => 'बजट से ऊपर';
 }

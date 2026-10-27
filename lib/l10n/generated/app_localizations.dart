@@ -1220,6 +1220,12 @@ abstract class AppLocalizations {
   /// **'You owe'**
   String get youOwe;
 
+  /// Joins the per-currency totals in the Groups list summary, e.g. ₹0 · AED 1,400.
+  ///
+  /// In en, this message translates to:
+  /// **' · '**
+  String get groupsTotalsSeparator;
+
   /// No description provided for @groupSubtitle.
   ///
   /// In en, this message translates to:
@@ -6421,6 +6427,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hisab will use {category} for {payee} from now on'**
   String smsPayeeRemembered(String category, String payee);
+
+  /// No description provided for @safeToSpendPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe to spend {amount}/day'**
+  String safeToSpendPerDay(String amount);
+
+  /// No description provided for @safeToSpendOverBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Over budget'**
+  String get safeToSpendOverBudget;
 }
 
 class _AppLocalizationsDelegate

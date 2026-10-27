@@ -225,6 +225,8 @@
   "noGroupsBody": "Create a group for a trip, flat or dinner. Add expenses, split them equally, by percentage, shares or exact amounts, and settle up.",
   "youAreOwed": "You are owed",
   "youOwe": "You owe",
+  "groupsTotalsSeparator": " · ",
+  "@groupsTotalsSeparator": {"description": "Joins the per-currency totals in the Groups list summary, e.g. ₹0 · AED 1,400."},
   "groupSubtitle": "{count} members · {amount} spent",
   "@groupSubtitle": {"placeholders": {"count": {"type": "int"}, "amount": {"type": "String"}}},
   "youGet": "you get",
@@ -1406,5 +1408,8 @@
   "@smsPayeeAskTitle": {"placeholders": {"payee": {"type": "String"}}},
   "smsPayeePickCategory": "Pick category",
   "smsPayeeRemembered": "Hisab will use {category} for {payee} from now on",
-  "@smsPayeeRemembered": {"placeholders": {"category": {"type": "String"}, "payee": {"type": "String"}}}
+  "@smsPayeeRemembered": {"placeholders": {"category": {"type": "String"}, "payee": {"type": "String"}}},
+  "safeToSpendPerDay": "Safe to spend {amount}/day",
+  "@safeToSpendPerDay": {"placeholders": {"amount": {"type": "String"}}},
+  "safeToSpendOverBudget": "Over budget"
 }

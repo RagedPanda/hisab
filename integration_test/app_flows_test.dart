@@ -833,7 +833,7 @@ void main() {
     await scrollTo(tester, find.byKey(kBudgetsCardKey));
     expect(find.text('Overall'), findsOneWidget, reason: 'overall budget row comes first');
     await scrollTo(tester, find.byKey(kAccountsCardKey));
-    expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsOneWidget, reason: 'the Upcoming card is keyed even while it shows its empty state');
+    expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsNothing, reason: 'with nothing upcoming the Upcoming card is hidden (#148)');
     expect(find.text('HDFC Savings'), findsOneWidget);
     await scrollTo(tester, find.byKey(kGroupsCardKey));
     expect(find.text('Goa trip'), findsOneWidget);

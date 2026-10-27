@@ -255,6 +255,9 @@ final smsPaidReminderIdsProvider = StreamProvider((ref) => ref.watch(smsLogRepos
 /// Paid and skipped reminders, latest first.
 final reminderHistoryProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchHistory());
 
+/// Pending and closed reminders together, for the Upcoming card and due calendar.
+final dueRemindersProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchDue());
+
 /// The amount each paid reminder's entry recorded, by reminder id.
 final reminderPaidAmountsProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchPaidAmounts());
 

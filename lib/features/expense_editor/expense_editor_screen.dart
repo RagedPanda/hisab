@@ -33,7 +33,7 @@ import '../../domain/split/payers.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
-import '../accounts/grouped_account_picker.dart';
+import '../accounts/account_picker_tile.dart';
 import '../groups/member_display.dart';
 import '../categories/category_picker.dart';
 import '../projects/project_field_inputs.dart';
@@ -477,7 +477,6 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     if (!_loaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final l10n = context.l10n;
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
-    final recentAccountIds = ref.watch(recentAccountIdsProvider).value ?? const <String>[];
     final moneyFormat = ref.watch(groupMoneyFormatProvider(_moneyFormatLabel));
     final units = _category?.units.split(',').where((u) => u.isNotEmpty).toList() ?? const <String>[];
 
@@ -570,31 +569,24 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           // Group expenses are a ledger between people, not an account
           // movement, so they never pick (or touch) a personal account.
           if (_groupId == null) ...[
-            const SizedBox(height: 8),
-            Text(_kind == 'transfer' ? l10n.fromAccount : l10n.account, style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 6),
-            GroupedAccountPicker(
+            AccountPickerTile(
               key: const ValueKey('from-account'),
+              label: _kind == 'transfer' ? l10n.fromAccount : l10n.account,
               accounts: accounts,
-              recentAccountIds: recentAccountIds,
               selectedId: _accountId,
               onPick: (id) => setState(() {
                 _accountId = id;
                 _toAccountId = toAccountAfterFromChange(fromId: id, toId: _toAccountId);
               }),
             ),
-            if (_kind == 'transfer') ...[
-              const SizedBox(height: 12),
-              Text(l10n.toAccount, style: Theme.of(context).textTheme.labelLarge),
-              const SizedBox(height: 6),
-              GroupedAccountPicker(
+            if (_kind == 'transfer')
+              AccountPickerTile(
                 key: const ValueKey('to-account'),
+                label: l10n.toAccount,
                 accounts: accounts.where((a) => a.id != _accountId).toList(),
-                recentAccountIds: recentAccountIds,
                 selectedId: _toAccountId,
                 onPick: (id) => setState(() => _toAccountId = id),
               ),
-            ],
           ],
           const SizedBox(height: 16),
           if (_groupId == null)

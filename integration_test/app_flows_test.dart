@@ -288,7 +288,7 @@ void main() {
     await scrollTo(tester, find.text('Total of 2 items'), within: find.byType(ExpenseEditorScreen), up: true);
     expect(find.text('Total of 2 items'), findsOneWidget);
     expect(tester.widget<TextField>(_amountField()).readOnly, isTrue, reason: 'amount is derived from items');
-    await tapFinder(tester, _chip('Cash'));
+    await pickEditorAccount(tester, 'Cash');
     await tapFinder(tester, find.byIcon(Icons.calendar_today_outlined));
     await shoot(tester, 'date_picker');
     await tapText(tester, 'OK');
@@ -312,14 +312,14 @@ void main() {
     await tapFinder(tester, find.byType(FloatingActionButton));
     await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
     await enterText(tester, _amountField(), '1250');
-    await tapFinder(tester, _chip('HDFC Savings'));
+    await pickEditorAccount(tester, 'HDFC Savings');
     await _saveEntry(tester, formatMinor(_restaurantMinor));
 
     await tapFinder(tester, find.byType(FloatingActionButton));
     await tapText(tester, 'Income');
     await _pickCategory(tester, 'salary', 'Salary');
     await enterText(tester, _amountField(), '50000');
-    await tapFinder(tester, _chip('HDFC Savings'));
+    await pickEditorAccount(tester, 'HDFC Savings');
     await shoot(tester, 'entry_income');
     await _saveEntry(tester, formatMinor(_salaryMinor));
 
@@ -417,7 +417,7 @@ void main() {
     await tapFinder(tester, find.byType(FloatingActionButton));
     await _pickCategory(tester, 'groceries', 'Groceries');
     await enterText(tester, _amountField(), '10');
-    await tapFinder(tester, _chip('Cash'));
+    await pickEditorAccount(tester, 'Cash');
     await _saveEntry(tester, formatMinor(1000));
     await scrollTo(tester, find.text(_spentIn(DateTime.now())), up: true);
     await _expectSpent(tester, formatMinor(_spentMinor + 1000));

@@ -91,6 +91,38 @@ void main() {
     await tester.pump();
   });
 
+  testWidgets('activity amounts use each group\'s currency label (#130)', (tester) async {
+    final container = await createContainer();
+    final groups = container.read(groupsRepositoryProvider);
+    Future<String> groupWithRent(String name, String entryId, {String? label}) async {
+      final groupId = await groups.createGroup(name: name, icon: 'home', myName: 'You', otherMembers: ['Amit']);
+      if (label != null) await groups.setCurrencyLabel((await groups.getGroup(groupId))!, label);
+      final members = await groups.getMembers(groupId);
+      final me = members.firstWhere((member) => member.isMe).id;
+      await groups.saveGroupExpense(
+        EntriesRepository.newExpense(id: entryId, amountMinor: 120000, occurredAt: DateTime.now(), note: 'Rent', groupId: groupId, paidByMemberId: me, splitMethod: 'equal'),
+        splits: [for (final member in members) SplitsCompanion.insert(id: newId(), entryId: entryId, memberId: member.id, amountMinor: 60000)],
+      );
+      return groupId;
+    }
+
+    final dubaiId = (await tester.runAsync(() => groupWithRent('Dubai flat', 'dubai-rent', label: 'AED')))!;
+    await tester.runAsync(() => groupWithRent('Pune flat', 'pune-rent'));
+
+    appRouter.go('/groups/$dubaiId/activity');
+    await tester.pumpWidget(UncontrolledProviderScope(container: container, child: const HisabApp()));
+    await settle(tester);
+    expect(find.textContaining('AED 1,200'), findsOneWidget);
+    expect(find.textContaining('₹1,200'), findsNothing, reason: 'the AED group must not show the app currency');
+
+    appRouter.go('/activity');
+    await settle(tester);
+    expect(find.textContaining('AED 1,200'), findsOneWidget);
+    expect(find.textContaining('₹1,200'), findsOneWidget, reason: 'a group without a label keeps the app currency');
+    appRouter.go('/home');
+    await tester.pump();
+  });
+
   for (final locale in ['en', 'hi']) {
     testWidgets('activity screens fit a 360dp phone in $locale', (tester) async {
       final container = await createContainer();

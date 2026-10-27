@@ -254,12 +254,17 @@ Future<bool> confirmDialog(BuildContext context, {required String title, String?
   return result ?? false;
 }
 
-/// Keeps amount fields to digits, a decimal point and thousands separators,
-/// and short enough that [parseAmountToMinor] can never overflow.
-final List<TextInputFormatter> amountInputFormatters = [
-  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-  LengthLimitingTextInputFormatter(kMaxAmountWholeDigits + 6),
-];
+/// Keeps an amount field in [format] to digits, thousands separators and a
+/// decimal separator when the currency has decimals, and short enough that
+/// [parseAmountToMinor] can never overflow.
+List<TextInputFormatter> amountInputFormatters(MoneyFormat format) => [
+      FilteringTextInputFormatter.allow(amountInputCharacters(format)),
+      LengthLimitingTextInputFormatter(kMaxAmountWholeDigits + 6),
+    ];
+
+/// Keyboard for an amount field in [format]: no decimal key for a currency
+/// written without decimals (JPY).
+TextInputType amountKeyboardType(MoneyFormat format) => TextInputType.numberWithOptions(decimal: format.fractionDigits != 0);
 
 /// Inline error for an amount field read with [format], or null while the
 /// text parses.
@@ -316,8 +321,8 @@ Future<int?> promptAmount(BuildContext context, {required String title, required
           content: TextField(
             controller: controller,
             autofocus: true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: amountInputFormatters,
+            keyboardType: amountKeyboardType(format),
+            inputFormatters: amountInputFormatters(format),
             decoration: InputDecoration(
               hintText: hint ?? '0',
               prefixText: amountPrefixText(format),

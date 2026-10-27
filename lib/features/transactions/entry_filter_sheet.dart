@@ -169,8 +169,8 @@ class _EntryFilterBodyState extends ConsumerState<_EntryFilterBody> {
                   child: TextField(
                     key: const ValueKey('filter.minAmount'),
                     controller: _minController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: amountInputFormatters,
+                    keyboardType: amountKeyboardType(_moneyFormat),
+                    inputFormatters: amountInputFormatters(_moneyFormat),
                     decoration: InputDecoration(labelText: l10n.minAmount, errorText: amountError == null ? null : l10n.minAboveMax, errorMaxLines: 2),
                     onChanged: (_) => _setAmounts(),
                   ),
@@ -180,8 +180,8 @@ class _EntryFilterBodyState extends ConsumerState<_EntryFilterBody> {
                   child: TextField(
                     key: const ValueKey('filter.maxAmount'),
                     controller: _maxController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: amountInputFormatters,
+                    keyboardType: amountKeyboardType(_moneyFormat),
+                    inputFormatters: amountInputFormatters(_moneyFormat),
                     decoration: InputDecoration(labelText: l10n.maxAmount),
                     onChanged: (_) => _setAmounts(),
                   ),

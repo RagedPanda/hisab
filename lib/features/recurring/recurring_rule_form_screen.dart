@@ -191,8 +191,8 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
             TextField(
               key: const ValueKey('recurring.amount'),
               controller: _amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: amountInputFormatters,
+              keyboardType: amountKeyboardType(_moneyFormat),
+              inputFormatters: amountInputFormatters(_moneyFormat),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
               decoration: InputDecoration(prefixText: amountPrefixText(moneyFormat), suffixText: amountSuffixText(moneyFormat), hintText: '0', errorText: amountErrorText(context, _amountController.text, format: _moneyFormat)),
               onChanged: (_) => setState(() {}),

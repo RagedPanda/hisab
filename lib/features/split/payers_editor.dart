@@ -5,6 +5,7 @@ import '../../data/db/database.dart';
 import '../../domain/split/payers.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
+import '../shell/widgets/common.dart';
 
 /// How much each member paid towards one expense, when more than one person
 /// paid. Shows a running "X of Y assigned" line that turns red until the
@@ -62,7 +63,8 @@ class PayersEditor extends StatelessWidget {
               key: Key('payer-amount-${member.id}'),
               initialValue: amount == 0 ? '' : amountInputText(amount, format: moneyFormat),
               textAlign: TextAlign.end,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: amountKeyboardType(moneyFormat),
+              inputFormatters: amountInputFormatters(moneyFormat),
               decoration: InputDecoration(prefixText: amountPrefixText(moneyFormat), suffixText: amountSuffixText(moneyFormat), isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
               onChanged: (text) => onChanged({...amounts, member.id: parseAmountToMinor(text, format: moneyFormat) ?? 0}),
             ),

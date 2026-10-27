@@ -174,8 +174,8 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
             TextField(
               key: const Key('salaryAmount'),
               controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: amountInputFormatters,
+              keyboardType: amountKeyboardType(_moneyFormat),
+              inputFormatters: amountInputFormatters(_moneyFormat),
               decoration: InputDecoration(
                 labelText: l10n.salaryAmount,
                 prefixText: amountPrefixText(ref.watch(homeMoneyFormatProvider)), suffixText: amountSuffixText(ref.watch(homeMoneyFormatProvider)),

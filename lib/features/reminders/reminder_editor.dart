@@ -214,8 +214,8 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
                       TextField(
                         key: const ValueKey('reminder-amount'),
                         controller: _amountController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: amountInputFormatters,
+                        keyboardType: amountKeyboardType(_moneyFormat),
+                        inputFormatters: amountInputFormatters(_moneyFormat),
                         onChanged: (_) => setState(() {}),
                         decoration: InputDecoration(
                           labelText: l10n.reminderAmountOptional,

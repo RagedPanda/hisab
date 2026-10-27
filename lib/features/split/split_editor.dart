@@ -6,6 +6,7 @@ import '../../domain/split/item_split.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
+import '../shell/widgets/common.dart';
 
 /// Translated chip label for a split method.
 String splitMethodLabel(SplitMethod method, AppLocalizations l10n) => switch (method) {
@@ -151,7 +152,8 @@ class SplitEditor extends StatelessWidget {
         trailing = Checkbox(value: input.included, onChanged: (v) => _update(input.copyWith(included: v ?? false)));
       case SplitMethod.exact:
         trailing = _numberField(
-          initial: input.amountMinor == 0 ? '' : minorToDouble(input.amountMinor).toStringAsFixed(2),
+          initial: input.amountMinor == 0 ? '' : amountInputText(input.amountMinor, format: moneyFormat),
+          money: true,
           suffix: moneyFormat.symbol,
           onChanged: (text) => _update(input.copyWith(amountMinor: parseAmountToMinor(text, format: moneyFormat) ?? 0)),
         );
@@ -171,7 +173,8 @@ class SplitEditor extends StatelessWidget {
         trailing = Row(mainAxisSize: MainAxisSize.min, children: [
           Checkbox(value: input.included, onChanged: (v) => _update(input.copyWith(included: v ?? false))),
           _numberField(
-            initial: input.amountMinor == 0 ? '' : minorToDouble(input.amountMinor).toStringAsFixed(2),
+            initial: input.amountMinor == 0 ? '' : amountInputText(input.amountMinor, format: moneyFormat),
+            money: true,
             suffix: '+${moneyFormat.symbol}',
             onChanged: (text) => _update(input.copyWith(amountMinor: parseAmountToMinor(text, format: moneyFormat) ?? 0)),
           ),
@@ -197,13 +200,15 @@ class SplitEditor extends StatelessWidget {
     );
   }
 
-  Widget _numberField({required String initial, required String suffix, required ValueChanged<String> onChanged}) {
+  /// A small number field; [money] fields follow [moneyFormat]'s decimals.
+  Widget _numberField({required String initial, required String suffix, required ValueChanged<String> onChanged, bool money = false}) {
     return SizedBox(
       width: 110,
       child: TextFormField(
         initialValue: initial,
         textAlign: TextAlign.end,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        keyboardType: money ? amountKeyboardType(moneyFormat) : const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: money ? amountInputFormatters(moneyFormat) : null,
         decoration: InputDecoration(suffixText: suffix, isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
         onChanged: onChanged,
       ),

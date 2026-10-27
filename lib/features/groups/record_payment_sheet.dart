@@ -190,8 +190,8 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
             TextField(
               controller: _amount,
               autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: amountInputFormatters,
+              keyboardType: amountKeyboardType(widget.moneyFormat),
+              inputFormatters: amountInputFormatters(widget.moneyFormat),
               decoration: InputDecoration(
                 labelText: l10n.amountLabel,
                 prefixText: amountPrefixText(widget.moneyFormat),

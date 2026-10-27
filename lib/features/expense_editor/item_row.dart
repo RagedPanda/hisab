@@ -6,6 +6,7 @@ import '../../core/money.dart';
 import '../../data/db/database.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/l10n.dart';
+import '../shell/widgets/common.dart';
 
 /// Mutable draft of one line item while editing.
 class ItemDraft {
@@ -90,7 +91,7 @@ class ItemRow extends StatefulWidget {
 class _ItemRowState extends State<ItemRow> {
   late final _name = TextEditingController(text: widget.draft.name);
   late final _qty = TextEditingController(text: _trim(widget.draft.quantity));
-  late final _price = TextEditingController(text: widget.draft.unitPriceMinor == 0 ? '' : minorToDouble(widget.draft.unitPriceMinor).toStringAsFixed(2));
+  late final _price = TextEditingController(text: widget.draft.unitPriceMinor == 0 ? '' : amountInputText(widget.draft.unitPriceMinor, format: widget.moneyFormat));
 
   static String _trim(double value) => value == value.roundToDouble() ? value.toInt().toString() : value.toString();
 
@@ -150,7 +151,8 @@ class _ItemRowState extends State<ItemRow> {
               Expanded(
                 child: TextField(
                   controller: _price,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: amountKeyboardType(widget.moneyFormat),
+                  inputFormatters: amountInputFormatters(widget.moneyFormat),
                   decoration: InputDecoration(labelText: l10n.pricePerUnit(draft.unit ?? l10n.genericUnit), prefixText: amountPrefixText(widget.moneyFormat), suffixText: amountSuffixText(widget.moneyFormat), isDense: true),
                   onChanged: (v) => widget.onChanged(draft.copyWith(unitPriceMinor: parseAmountToMinor(v, format: widget.moneyFormat) ?? 0)),
                 ),

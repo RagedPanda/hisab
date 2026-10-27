@@ -536,8 +536,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
             focusNode: _amountFocus,
             readOnly: _hasItems,
             autofocus: _autofocusAmount && !_isEditing && !_hasItems,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: amountInputFormatters,
+            keyboardType: amountKeyboardType(moneyFormat),
+            inputFormatters: amountInputFormatters(moneyFormat),
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
             decoration: InputDecoration(
               prefixText: amountPrefixText(moneyFormat),

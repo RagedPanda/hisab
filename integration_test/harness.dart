@@ -133,6 +133,20 @@ Future<void> openMoreDetails(WidgetTester tester, {required Finder reveals}) asy
   if (reveals.evaluate().isEmpty) await tapFinder(tester, tile);
 }
 
+/// Picks the account named [name] in the entry editor: opens the account row
+/// ([pickerKey] is `from-account` or `to-account`), then taps it in the sheet.
+Future<void> pickEditorAccount(WidgetTester tester, String name, {String pickerKey = 'from-account'}) async {
+  await tapFinder(tester, find.byKey(ValueKey(pickerKey)));
+  await tapFinder(tester, find.descendant(of: find.byType(BottomSheet), matching: find.widgetWithText(ListTile, name)));
+}
+
+/// Leaves the entry editor with unsaved input: Back raises the "Discard this
+/// entry?" prompt, which is confirmed.
+Future<void> discardEntry(WidgetTester tester) async {
+  await goBack(tester);
+  await tapFinder(tester, find.byKey(const Key('discard-entry')));
+}
+
 /// Switches bottom tabs by label.
 Future<void> goTab(WidgetTester tester, String label) async {
   await tapFinder(tester, find.descendant(of: find.byType(NavigationBar), matching: find.text(label)));

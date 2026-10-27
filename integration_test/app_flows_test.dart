@@ -148,7 +148,7 @@ Future<void> _expectSpent(WidgetTester tester, String amount, {String? reason}) 
 }
 
 Future<void> _pickCategory(WidgetTester tester, String query, String name) async {
-  await tapText(tester, 'Choose category');
+  await tapText(tester, 'Uncategorised');
   await enterText(tester, find.widgetWithText(TextField, 'Search categories'), query);
   await tapText(tester, name);
 }
@@ -276,7 +276,7 @@ void main() {
     await tapFinder(tester, find.byType(FloatingActionButton));
     expect(find.text('New entry'), findsOneWidget);
     await shoot(tester, 'entry_new');
-    await tapText(tester, 'Choose category');
+    await tapText(tester, 'Uncategorised');
     await shoot(tester, 'category_picker');
     await enterText(tester, find.widgetWithText(TextField, 'Search categories'), 'milk');
     await tapText(tester, 'Milk & Dairy');
@@ -288,7 +288,7 @@ void main() {
     await scrollTo(tester, find.text('Total of 2 items'), within: find.byType(ExpenseEditorScreen), up: true);
     expect(find.text('Total of 2 items'), findsOneWidget);
     expect(tester.widget<TextField>(_amountField()).readOnly, isTrue, reason: 'amount is derived from items');
-    await tapFinder(tester, _chip('Cash'));
+    await pickEditorAccount(tester, 'Cash');
     await tapFinder(tester, find.byIcon(Icons.calendar_today_outlined));
     await shoot(tester, 'date_picker');
     await tapText(tester, 'OK');
@@ -312,14 +312,14 @@ void main() {
     await tapFinder(tester, find.byType(FloatingActionButton));
     await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
     await enterText(tester, _amountField(), '1250');
-    await tapFinder(tester, _chip('HDFC Savings'));
+    await pickEditorAccount(tester, 'HDFC Savings');
     await _saveEntry(tester, formatMinor(_restaurantMinor));
 
     await tapFinder(tester, find.byType(FloatingActionButton));
     await tapText(tester, 'Income');
     await _pickCategory(tester, 'salary', 'Salary');
     await enterText(tester, _amountField(), '50000');
-    await tapFinder(tester, _chip('HDFC Savings'));
+    await pickEditorAccount(tester, 'HDFC Savings');
     await shoot(tester, 'entry_income');
     await _saveEntry(tester, formatMinor(_salaryMinor));
 
@@ -417,7 +417,7 @@ void main() {
     await tapFinder(tester, find.byType(FloatingActionButton));
     await _pickCategory(tester, 'groceries', 'Groceries');
     await enterText(tester, _amountField(), '10');
-    await tapFinder(tester, _chip('Cash'));
+    await pickEditorAccount(tester, 'Cash');
     await _saveEntry(tester, formatMinor(1000));
     await scrollTo(tester, find.text(_spentIn(DateTime.now())), up: true);
     await _expectSpent(tester, formatMinor(_spentMinor + 1000));
@@ -691,12 +691,12 @@ void main() {
     await goBack(tester);
     await goTab(tester, 'Home');
     await tapFinder(tester, find.byType(FloatingActionButton));
-    await tapText(tester, 'Choose category');
+    await tapText(tester, 'Uncategorised');
     await shoot(tester, 'dark_category_picker');
     await enterText(tester, find.widgetWithText(TextField, 'Search categories'), 'groceries');
     await tapText(tester, 'Groceries');
     await shoot(tester, 'dark_entry');
-    await goBack(tester);
+    await discardEntry(tester);
     await goTab(tester, 'Settings');
     await tapText(tester, 'Light');
     expect(Theme.of(tester.element(find.byType(NavigationBar))).brightness, Brightness.light);
@@ -741,15 +741,16 @@ void main() {
     await goTab(tester, hi.tabHome);
     await tapFinder(tester, find.byType(FloatingActionButton));
     expect(find.text(hi.newEntry), findsOneWidget);
-    await tapText(tester, hi.chooseCategory);
+    await tapText(tester, hi.uncategorised);
     await shoot(tester, 'hi_category_picker');
     expect(find.text('Food & Dining'), findsNothing, reason: 'seeded category names are translated');
     expect(find.text(hindiCategoryNames['food']!), findsOneWidget);
     await enterText(tester, find.widgetWithText(TextField, hi.searchCategories), 'groceries');
     await tapText(tester, hindiCategoryNames['groceries']!);
+    await openMoreDetails(tester, reveals: find.text(hi.addItem));
     await tapText(tester, hi.addItem);
     await shoot(tester, 'hi_entry');
-    await goBack(tester);
+    await discardEntry(tester);
     await goTab(tester, hi.tabSettings);
     await scrollTo(tester, find.text(hi.language), up: true);
     await tapText(tester, hi.language);
@@ -1189,7 +1190,7 @@ void main() {
     await scrollTo(tester, find.text('Project details'));
     expect(find.text('Project details'), findsOneWidget, reason: 'the picked project brings its entry fields');
     await shoot(tester, 'editor_project_picked');
-    await scrollTo(tester, find.text('Choose category'), up: true);
+    await scrollTo(tester, find.text('Uncategorised'), up: true);
     await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
     await enterText(tester, _amountField(), '2500');
     await _saveEntry(tester, formatMinor(250000));
@@ -1217,7 +1218,7 @@ void main() {
     expect(find.descendant(of: projectChip, matching: find.text('Kitchen')), findsOneWidget);
     await tapFinder(tester, find.descendant(of: projectChip, matching: find.byIcon(Icons.close)));
     expect(find.text('Add to project'), findsOneWidget, reason: 'the cross clears the project');
-    await scrollTo(tester, find.text('Choose category'), up: true);
+    await scrollTo(tester, find.text('Uncategorised'), up: true);
     await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
     await enterText(tester, _amountField(), '100');
     await _saveEntry(tester, formatMinor(10000));
@@ -1469,7 +1470,7 @@ void main() {
     expect(find.text('Saved. Add the next one.'), findsOneWidget);
     expect(find.byType(ExpenseEditorScreen), findsOneWidget, reason: 'the editor stays open for the next entry');
     expect(tester.widget<TextField>(_amountField()).controller!.text, isEmpty);
-    expect(find.text('Choose category'), findsOneWidget);
+    expect(find.text('Uncategorised'), findsOneWidget);
     expect(selectedKind(), {'expense'});
     await shoot(tester, 'editor_saved_add_another');
     final first = (await entries()).single;

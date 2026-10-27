@@ -100,7 +100,7 @@ void main() {
     await tapFinder(tester, find.byType(FloatingActionButton));
     final amountField = find.descendant(of: find.byType(ExpenseEditorScreen), matching: find.byType(TextField)).first;
     await enterText(tester, amountField, '15000');
-    await tapText(tester, 'Choose category');
+    await tapText(tester, 'Uncategorised');
     await enterText(tester, find.widgetWithText(TextField, 'Search categories'), 'rent');
     await tapText(tester, 'Rent');
     await openMoreDetails(tester, reveals: _key('editor.repeat'));

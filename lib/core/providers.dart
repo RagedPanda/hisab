@@ -105,7 +105,6 @@ final selectedRangeProvider = Provider<DateRange>((ref) {
 final categoriesProvider = StreamProvider((ref) => ref.watch(categoriesRepositoryProvider).watchAll());
 final allCategoriesProvider = StreamProvider((ref) => ref.watch(categoriesRepositoryProvider).watchAll(includeArchived: true));
 final accountsProvider = StreamProvider((ref) => ref.watch(accountsRepositoryProvider).watchAll());
-final recentAccountIdsProvider = StreamProvider((ref) => ref.watch(entriesRepositoryProvider).watchRecentAccountIds());
 final budgetsProvider = StreamProvider((ref) => ref.watch(budgetsRepositoryProvider).watchAll());
 final groupSummariesProvider = StreamProvider((ref) => ref.watch(groupsRepositoryProvider).watchSummaries());
 

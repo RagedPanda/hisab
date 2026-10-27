@@ -9,7 +9,7 @@ import '../support/app_harness.dart';
 
 /// Progressive disclosure (#collapse-entry-form): a fresh entry shows only
 /// amount/category/account; everything else hides behind "More details", which
-/// opens itself when editing or when a tucked-away field already has a value.
+/// opens itself only when a tucked-away field already has a value.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -46,6 +46,25 @@ void main() {
     expect(noteField, findsOneWidget);
     expect(payeeField, findsOneWidget);
     expect(dateButton, findsOneWidget);
+  });
+
+  testWidgets('More details shows the date while collapsed', (tester) async {
+    await pumpApp(tester);
+    await openNewEntry(tester);
+    expect(find.descendant(of: find.byKey(const ValueKey('editor.moreDetails')), matching: find.text('Today')), findsOneWidget);
+  });
+
+  testWidgets('editing a plain entry keeps More details collapsed', (tester) async {
+    final container = await pumpApp(tester);
+    await tester.runAsync(() => container.read(entriesRepositoryProvider).saveEntry(
+          EntriesRepository.newExpense(id: 'coffee', amountMinor: 5000, occurredAt: DateTime.now()),
+        ));
+    appRouter.push('/entry?id=coffee');
+    await settle(tester);
+
+    expect(find.text('Edit entry'), findsOneWidget);
+    expect(noteField, findsNothing);
+    expect(dateButton, findsNothing);
   });
 
   testWidgets('editing an entry that has a note starts with More details open', (tester) async {

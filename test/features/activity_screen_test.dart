@@ -91,6 +91,41 @@ void main() {
     await tester.pump();
   });
 
+  testWidgets('a group expense deleted in the editor offers an Undo that times out, and Restore shows at once (#49)', (tester) async {
+    final container = await createContainer();
+    final groups = container.read(groupsRepositoryProvider);
+    final groupId = (await tester.runAsync(() async {
+      final groupId = await groups.createGroup(name: 'QA Dinner', icon: 'home', myName: 'You', otherMembers: ['Rahul']);
+      final members = await groups.getMembers(groupId);
+      await groups.saveGroupExpense(
+        EntriesRepository.newExpense(id: 'dinner', amountMinor: 120000, occurredAt: DateTime.now(), note: 'Dinner', groupId: groupId, paidByMemberId: members.first.id, splitMethod: 'equal'),
+        splits: [for (final member in members) SplitsCompanion.insert(id: newId(), entryId: 'dinner', memberId: member.id, amountMinor: 60000)],
+      );
+      return groupId;
+    }))!;
+    appRouter.go('/groups/$groupId');
+    await tester.pumpWidget(UncontrolledProviderScope(container: container, child: const HisabApp()));
+    await settle(tester);
+    appRouter.push('/entry?id=dinner');
+    await settle(tester);
+
+    await tester.tap(find.byTooltip('Delete'));
+    await settle(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete').hitTestable().first);
+    await settle(tester);
+    expect(find.text('Expense deleted'), findsOneWidget);
+    expect(tester.widget<SnackBar>(find.byType(SnackBar)).persist, isFalse, reason: 'the Undo must time out');
+
+    appRouter.push('/groups/$groupId/activity');
+    await settle(tester);
+    await tester.tap(find.text('Restore').first);
+    await settle(tester);
+    expect(find.text('Expense restored'), findsOneWidget, reason: 'the restore message replaces the stale Undo instead of queueing behind it');
+    expect(find.text('Expense deleted'), findsNothing);
+    appRouter.go('/home');
+    await tester.pump();
+  });
+
   testWidgets('activity amounts use each group\'s currency label (#130)', (tester) async {
     final container = await createContainer();
     final groups = container.read(groupsRepositoryProvider);

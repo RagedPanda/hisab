@@ -17,6 +17,7 @@ import '../../domain/budget/safe_to_spend.dart';
 import '../../domain/categories/category_filter.dart';
 import '../../domain/ledger/personal_totals.dart';
 import '../../domain/projects/project_math.dart';
+import '../../domain/split/group_net.dart';
 import '../../domain/stats/category_shares.dart';
 import '../../domain/stats/month_summary.dart';
 import '../../domain/stats/spend_series.dart';
@@ -200,10 +201,12 @@ final accountsOverviewProvider = Provider<AsyncValue<AccountsOverview>>((ref) =>
 // Groups ---------------------------------------------------------------------
 
 class GroupsOverview {
-  const GroupsOverview({required this.shown, required this.owedToMe, required this.iOwe});
+  const GroupsOverview({required this.shown, required this.totals});
   final List<GroupSummary> shown;
-  final int owedToMe;
-  final int iOwe;
+
+  /// What is owed either way, one entry per currency shown (app currency
+  /// first); amounts in different currencies are never added.
+  final List<CurrencyTotals> totals;
 
   bool get isEmpty => shown.isEmpty;
 }
@@ -211,9 +214,9 @@ class GroupsOverview {
 final groupsOverviewProvider = Provider<AsyncValue<GroupsOverview>>((ref) {
   final appSymbol = ref.watch(settingsProvider).currencySymbol;
   return mapAsync(ref.watch(groupSummariesProvider), (summaries) {
-    final totals = groupTotalsInAppCurrency(summaries, appSymbol: appSymbol);
+    final totals = shownCurrencyTotals(groupTotalsByCurrency(summaries, appSymbol: appSymbol));
     final active = summaries.where((summary) => summary.group.archivedAt == null);
-    return GroupsOverview(shown: active.take(kGroupsCardRows).toList(), owedToMe: totals.owedToMe, iOwe: totals.iOwe);
+    return GroupsOverview(shown: active.take(kGroupsCardRows).toList(), totals: totals);
   });
 });
 

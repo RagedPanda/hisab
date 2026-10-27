@@ -394,20 +394,6 @@ void main() {
       expect((group.currencyLabel, group.currency), (null, 'EUR'));
     });
 
-    test('app totals skip groups labelled in another currency', () async {
-      final home = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'Me', otherMembers: ['Rahul']);
-      final trip = await groups.createGroup(name: 'Paris', icon: 'flight', myName: 'Me', otherMembers: ['Rahul']);
-      for (final groupId in [home, trip]) {
-        final members = await groups.getMembers(groupId);
-        final me = members.firstWhere((member) => member.isMe);
-        final rahul = members.firstWhere((member) => !member.isMe);
-        await addGroupExpense(groupId, me.id, {me.id: 300, rahul.id: 300});
-      }
-      await groups.setCurrencyLabel((await groups.getGroup(trip))!, '€');
-      final totals = groupTotalsInAppCurrency(await groups.getSummaries(), appSymbol: '₹');
-      expect((totals.owedToMe, totals.iOwe), (300, 0));
-    });
-
     test('per-currency totals keep each label apart and skip archived groups', () async {
       final home = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'Me', otherMembers: ['Rahul']);
       final dubai = await groups.createGroup(name: 'Dubai', icon: 'flight', myName: 'Me', otherMembers: ['Rahul']);
@@ -437,11 +423,9 @@ void main() {
         await addGroupExpense(groupId, me.id, {me.id: 300, rahul.id: 300});
       }
       await groups.archiveGroup(trip);
-      final archived = groupTotalsInAppCurrency(await groups.getSummaries(), appSymbol: '₹');
-      expect((archived.owedToMe, archived.iOwe), (300, 0));
+      expect(groupTotalsByCurrency(await groups.getSummaries(), appSymbol: '₹'), [(symbol: '₹', owedToMe: 300, iOwe: 0)]);
       await groups.unarchiveGroup(trip);
-      final restored = groupTotalsInAppCurrency(await groups.getSummaries(), appSymbol: '₹');
-      expect((restored.owedToMe, restored.iOwe), (600, 0));
+      expect(groupTotalsByCurrency(await groups.getSummaries(), appSymbol: '₹'), [(symbol: '₹', owedToMe: 600, iOwe: 0)]);
     });
 
     test('backup carries group settings and fills them in for older backups', () async {

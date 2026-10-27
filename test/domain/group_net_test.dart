@@ -50,4 +50,17 @@ void main() {
       expect(summarySideAmounts(single, owedToMe: false), [(symbol: '₹', minor: 0)]);
     });
   });
+
+  group('shownCurrencyTotals', () {
+    test('keeps the app currency and only other currencies with a balance (#139)', () {
+      const totals = [
+        (symbol: '₹', owedToMe: 0, iOwe: 0),
+        (symbol: 'AED', owedToMe: 140000, iOwe: 0),
+        (symbol: r'$', owedToMe: 0, iOwe: 0),
+        (symbol: '€', owedToMe: 0, iOwe: 2000),
+      ];
+      expect(shownCurrencyTotals(totals), [totals[0], totals[1], totals[3]]);
+      expect(shownCurrencyTotals(const [(symbol: '₹', owedToMe: 0, iOwe: 0)]), [(symbol: '₹', owedToMe: 0, iOwe: 0)]);
+    });
+  });
 }

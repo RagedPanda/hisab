@@ -70,10 +70,6 @@ String groupSymbol({required String? currencyLabel, required String appSymbol}) 
   return label.isEmpty ? appSymbol : label;
 }
 
-/// Whether a group's amounts can be added to totals kept in the app currency.
-bool sharesAppCurrency({required String? currencyLabel, required String appSymbol}) =>
-    groupSymbol(currencyLabel: currencyLabel, appSymbol: appSymbol) == appSymbol;
-
 /// The ISO code stored with a label, so a later multi-currency feature knows
 /// what was meant; a typed label keeps [fallbackCode].
 String currencyCodeFor(String? label, {required String fallbackCode}) =>

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme.dart';
+import '../../../domain/split/group_net.dart';
 import '../../../l10n/l10n.dart';
 import '../../groups/net_badge.dart';
 import '../../shell/widgets/common.dart';
@@ -19,7 +20,6 @@ class GroupsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final overview = ref.watch(groupsOverviewProvider);
-    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final l10n = context.l10n;
     final theme = Theme.of(context);
     return AsyncCard(
@@ -27,15 +27,20 @@ class GroupsCard extends ConsumerWidget {
       skeletonHeight: 120,
       builder: (data) {
         if (data.isEmpty) return const SizedBox.shrink();
-        final net = data.owedToMe - data.iOwe;
-        final totalText = net >= 0
-            ? l10n.youGetAmount(formatMinor(data.owedToMe, format: moneyFormat, showDecimals: false))
-            : l10n.youOweAmount(formatMinor(data.iOwe, format: moneyFormat, showDecimals: false));
+        Widget totalText(CurrencyTotals total) {
+          final net = total.owedToMe - total.iOwe;
+          final moneyFormat = ref.watch(groupMoneyFormatProvider(total.symbol));
+          final text = net >= 0
+              ? l10n.youGetAmount(formatMinor(total.owedToMe, format: moneyFormat, showDecimals: false))
+              : l10n.youOweAmount(formatMinor(total.iOwe, format: moneyFormat, showDecimals: false));
+          return Text(text, style: theme.textTheme.labelLarge?.copyWith(color: net >= 0 ? kIncomeColor : kExpenseColor).tabular);
+        }
+
         return DashboardSection(
           title: l10n.groups,
           trailing: Padding(
             padding: const EdgeInsets.only(right: 4),
-            child: Text(totalText, style: theme.textTheme.labelLarge?.copyWith(color: net >= 0 ? kIncomeColor : kExpenseColor).tabular),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [for (final total in data.totals) totalText(total)]),
           ),
           child: DashboardCard(
             key: kGroupsCardKey,

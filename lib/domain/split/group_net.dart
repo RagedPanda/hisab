@@ -40,3 +40,10 @@ List<({String symbol, int minor})> summarySideAmounts(List<CurrencyTotals> total
       for (final (index, total) in totals.indexed)
         if (index == 0 || (owedToMe ? total.owedToMe : total.iOwe) != 0) (symbol: total.symbol, minor: owedToMe ? total.owedToMe : total.iOwe),
     ];
+
+/// The currencies a one-line summary lists: the first (app currency) always,
+/// others only when something is owed either way. Pure.
+List<CurrencyTotals> shownCurrencyTotals(List<CurrencyTotals> totals) => [
+      for (final (index, total) in totals.indexed)
+        if (index == 0 || total.owedToMe != 0 || total.iOwe != 0) total,
+    ];

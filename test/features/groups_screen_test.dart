@@ -8,6 +8,7 @@ import 'package:hisab/core/ids.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
+import 'package:hisab/features/dashboard/dashboard_keys.dart';
 import 'package:hisab/features/shell/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -92,5 +93,21 @@ void main() {
     expect(find.text('₹1,400'), findsNothing);
     appRouter.go('/home');
     await tester.pump();
+  });
+
+  testWidgets('dashboard groups card lists a group in another currency (#139)', (tester) async {
+    final container = await createContainer();
+    await tester.runAsync(() => seedGroupOwingMe(container, 'Dubai flat', 280000, label: 'AED'));
+    await tester.binding.setSurfaceSize(const Size(360, 740));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    appRouter.go('/home');
+    await tester.pumpWidget(UncontrolledProviderScope(container: container, child: const HisabApp()));
+    await settle(tester);
+    await tester.scrollUntilVisible(find.byKey(kGroupsCardKey), 300, scrollable: find.byType(Scrollable).first);
+    await settle(tester);
+
+    expect(find.text('You get AED 1,400'), findsOneWidget, reason: 'the AED balance is shown in AED, not dropped from the card');
+    expect(find.text('You get ₹0'), findsOneWidget, reason: 'the app currency total stays first');
+    expect(tester.takeException(), isNull);
   });
 }

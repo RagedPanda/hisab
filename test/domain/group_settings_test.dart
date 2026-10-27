@@ -50,12 +50,6 @@ void main() {
       expect(groupSymbol(currencyLabel: '€', appSymbol: '₹'), '€');
     });
 
-    test('only groups shown in the app symbol count toward app totals', () {
-      expect(sharesAppCurrency(currencyLabel: null, appSymbol: '₹'), isTrue);
-      expect(sharesAppCurrency(currencyLabel: '₹', appSymbol: '₹'), isTrue);
-      expect(sharesAppCurrency(currencyLabel: r'$', appSymbol: '₹'), isFalse);
-    });
-
     test('known symbols store their ISO code, typed ones keep the old code', () {
       expect(currencyCodeFor('€', fallbackCode: 'INR'), 'EUR');
       expect(currencyCodeFor('Rs', fallbackCode: 'INR'), 'INR');

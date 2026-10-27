@@ -527,6 +527,19 @@ class PayeeCategories extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
+/// The user's own People list: everyone they added to a group with an email,
+/// so a new group can suggest them (see `domain/people/people.dart`). [id] is
+/// the lowercased email, so the same friend added on two devices is one row.
+@DataClassName('Person')
+class People extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get email => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Who added, edited, deleted or restored which group expense or payment,
 /// and when, with the state before and after as JSON snapshots (see
 /// `domain/split/group_activity.dart`).
@@ -574,12 +587,13 @@ class GroupActivities extends Table with SyncColumns {
   GroupActivities,
   ItemAssignments,
   PayeeCategories,
+  People,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -657,6 +671,8 @@ class AppDatabase extends _$AppDatabase {
           if (from < 17) await _upgradeToCardDetails(m);
           // v18: categories remembered per SMS payee (daily-use, payee memory).
           if (from < 18) await _upgradeToPayeeCategories(m);
+          // v19: the personal People list, seeded from members that have an email.
+          if (from < 19) await _upgradeToPeople(m);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -759,6 +775,18 @@ class AppDatabase extends _$AppDatabase {
   /// build of this feature already created it, so it is idempotent.
   Future<void> _upgradeToPayeeCategories(Migrator m) async {
     if (!await _schemaObjectExists('table', 'payee_categories')) await m.createTable(payeeCategories);
+  }
+
+  /// v19 step. Adds the People list and fills it from group members that
+  /// already carry an email, the most recently edited name winning.
+  Future<void> _upgradeToPeople(Migrator m) async {
+    await m.createTable(people);
+    await customStatement('''
+      INSERT OR IGNORE INTO people (id, name, email, updated_at)
+      SELECT LOWER(TRIM(email)), name, LOWER(TRIM(email)), updated_at FROM members
+      WHERE deleted_at IS NULL AND email IS NOT NULL AND TRIM(email) LIKE '%_@_%._%'
+      ORDER BY updated_at DESC
+    ''');
   }
 
   Future<Set<String>> _columnNames(String table) async {

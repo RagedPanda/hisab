@@ -5,7 +5,7 @@ running any server of our own**. Hisab has no backend, holds no user accounts, a
 user data. Everything below uses the *user's own* cloud storage; Hisab (Sarv) operates nothing
 and can see nothing.
 
-Last reviewed: 2026-10-26.
+Last reviewed: 2026-10-27.
 
 ## Principles
 
@@ -25,7 +25,8 @@ Last reviewed: 2026-10-26.
 
 ## Personal sync (your data, your Drive)
 
-Scope: entries, accounts, budgets, categories, projects, recurring rules, settings.
+Scope: entries, accounts, budgets, categories, projects, recurring rules, settings, and the
+[People list](#people-list-whom-you-have-invited).
 
 - **Storage:** Google Drive **`appDataFolder`** (`drive.appdata` scope). This is a hidden,
   per-app folder in the user's own Drive — invisible in their Drive UI, not shareable, removed
@@ -88,6 +89,26 @@ file**, not a relay we host.
 - The **append-only log is load-bearing** — a naive "overwrite the whole file" design would
   lose data under concurrent edits. The log + union merge is what makes zero-backend safe.
 
+## People list (whom you have invited)
+
+Everyone you add to a group with an email goes on **your own People list**, so the next group
+can suggest them instead of making you type them again. It is deliberately simple:
+
+- **A person is a name + an email.** The email, trimmed and lowercased, is the row id
+  (`people` table, schema v19). Adding `Amit · amit@gmail.com` to a second group, or on a
+  second device, updates the same row (latest name wins) instead of creating a duplicate.
+- **Filled automatically.** Adding or editing a member with an email saves them; there is no
+  separate "contacts" screen to maintain. Members without an email stay group-only.
+- **Suggested while typing.** In the add-member sheet, typing a name or an email lists up to
+  three matching people (a match at the start ranks first); people already in the group are
+  skipped. Tapping one fills the name and email.
+- **Yours, not the group's.** The list syncs with your personal data (backup today, your Drive
+  `appDataFolder` once personal sync ships), never into a shared group file, so other members
+  never see whom else you know. Restoring on a new device brings it back.
+- **Feeds invites.** The email is what step 2 of the [invite flow](#invite-flow-no-server-no-pending-member)
+  shares the group file with.
+- **Not in scope:** phone-contact import, phone-number matching, Google account ids.
+
 ## Consent screen (mandatory)
 
 Shown **only** when the user taps "Set up sync / backup" themselves — never unprompted at first
@@ -122,6 +143,8 @@ translation ships with it.
 
 ## Order of work
 
+0. **People list:** email on group members, the `people` table and add-member suggestions.
+   Works offline and in today's backups; no Google setup needed. *(Shipped.)*
 1. **Personal backup:** Settings → "Back up to Google Drive" → consent screen → upload one
    encrypted blob to `appDataFolder`; restore on a new device.
 2. **Personal incremental sync:** row-level change log with LWW merge.

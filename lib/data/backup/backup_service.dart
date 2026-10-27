@@ -56,6 +56,7 @@ class BackupService {
       'groupActivities': await dump(db.groupActivities),
       'recurringRules': await dump(db.recurringRules),
       'payeeCategories': await dump(db.payeeCategories),
+      'people': await dump(db.people),
       for (final section in sections) section.key: ?section.export(),
     };
   }
@@ -126,6 +127,7 @@ class BackupService {
       await restore(db.groupActivities, 'groupActivities', GroupActivity.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.recurringRules, 'recurringRules', RecurringRule.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.payeeCategories, 'payeeCategories', PayeeCategory.fromJson, (r) => r.id, (r) => r.updatedAt);
+      await restore(db.people, 'people', Person.fromJson, (r) => r.id, (r) => r.updatedAt);
       // A backup from an older build may carry the text of not-bank SMS.
       await db.wipeUnkeptSmsText();
       // A reinstall seeds fresh categories and a Cash account with new ids, so

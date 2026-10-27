@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +9,7 @@ import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/groups_repository.dart';
+import '../../domain/people/people.dart';
 import '../../domain/split/debt_simplifier.dart';
 import '../../domain/split/group_settings.dart';
 import '../../domain/split/group_totals.dart';
@@ -493,15 +493,16 @@ class _MembersTab extends ConsumerWidget {
                 onTap: () async {
                   final details = await showMemberSheet(context, existing: member);
                   if (details == null) return;
-                  await repo.updateMember(MembersCompanion(id: Value(member.id), name: Value(details.name), phone: Value(details.phone), upiId: Value(details.upiId)));
+                  await repo.editMember(member.id, name: details.name, phone: details.phone, upiId: details.upiId, email: details.email);
                 },
               ),
             ListTile(
               leading: const Icon(Icons.person_add_outlined),
               title: Text(l10n.addMember),
               onTap: () async {
-                final details = await showMemberSheet(context);
-                if (details != null) await repo.addMember(groupId, details.name, phone: details.phone, upiId: details.upiId);
+                final groupEmails = {for (final member in members) ?normaliseEmail(member.email)};
+                final details = await showMemberSheet(context, groupEmails: groupEmails);
+                if (details != null) await repo.addMember(groupId, details.name, phone: details.phone, upiId: details.upiId, email: details.email);
               },
             ),
           ]),

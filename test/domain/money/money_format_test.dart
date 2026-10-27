@@ -225,6 +225,45 @@ void main() {
       expect(reformatAmountInput('12.50', from: MoneyFormat.inr, to: usd), '12.50');
       expect(reformatAmountInput('', from: MoneyFormat.inr, to: eurDe), '');
     });
+
+    test('zero-decimal currencies take whole amounts only (#90)', () {
+      expect(parseAmountToMinor('1,000', format: jpy), 100000);
+      expect(parseAmountToMinor('¥1,000', format: jpy), 100000);
+      expect(parseAmountToMinor('1000.', format: jpy), 100000);
+      expect(parseAmountToMinor('1000.5', format: jpy), isNull);
+      expect(parseAmountToMinor('1000.50', format: jpy), isNull);
+      final dottedYen = jpy.copyWith(groupSeparator: '.', decimalSeparator: ',');
+      expect(parseAmountToMinor('1.000', format: dottedYen), 100000);
+      expect(parseAmountToMinor('1000,5', format: dottedYen), isNull);
+      expect(parseAmountToMinor('1000.5', format: dottedYen), isNull);
+    });
+
+    test('zero-decimal amountInputText shows the rounded whole amount', () {
+      expect(amountInputText(100000, format: jpy), '1000');
+      expect(amountInputText(100050, format: jpy), '1001');
+      expect(amountInputText(100049, format: jpy), '1000');
+      expect(amountInputText(-100050, format: jpy), '-1001');
+      for (final minor in [0, 100, 25000, 123456700]) {
+        expect(parseAmountToMinor(amountInputText(minor, format: jpy), format: jpy), minor, reason: '$minor');
+      }
+    });
+
+    test('reformatAmountInput rounds into and out of zero-decimal currencies', () {
+      expect(reformatAmountInput('12.50', from: MoneyFormat.inr, to: jpy), '13');
+      expect(reformatAmountInput('1000', from: jpy, to: MoneyFormat.inr), '1000');
+      expect(reformatAmountInput('1000', from: jpy, to: jpy), '1000');
+    });
+
+    test('amountInputCharacters drops the decimal separator for zero-decimal currencies', () {
+      bool accepts(MoneyFormat format, String character) => amountInputCharacters(format).hasMatch(character);
+      expect([accepts(usd, '.'), accepts(usd, ','), accepts(eurDe, ','), accepts(eurDe, '.')], everyElement(isTrue));
+      expect(accepts(jpy, '7'), isTrue);
+      expect(accepts(jpy, ','), isTrue);
+      expect(accepts(jpy, '.'), isFalse);
+      final dottedYen = jpy.copyWith(groupSeparator: '.', decimalSeparator: ',');
+      expect(accepts(dottedYen, '.'), isTrue);
+      expect(accepts(dottedYen, ','), isFalse);
+    });
   });
 
   group('amount field affixes', () {

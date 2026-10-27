@@ -1944,8 +1944,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidUpiId => 'Enter a UPI ID like name@bank';
 
   @override
+  String get emailOptional => 'Email (optional)';
+
+  @override
+  String get invalidEmail => 'Enter an email like name@example.com';
+
+  @override
   String get memberContactLocal =>
-      'Phone and UPI ID stay on this device. Hisab uses them only to fill in reminders and UPI payments.';
+      'Email, phone and UPI ID stay on this device. Hisab uses them only to suggest people you added before, and to fill in reminders and UPI payments.';
 
   @override
   String get editMember => 'Edit member';

@@ -13,6 +13,7 @@ import '../../domain/split/split_calculator.dart';
 import '../db/database.dart';
 import '../db/watch_tables.dart';
 import 'entries_repository.dart';
+import 'people_repository.dart';
 
 /// [Reminders.kind] for "please settle up" nudges sent from the balances tab.
 const settleUpReminderKind = 'settle_up';
@@ -415,11 +416,21 @@ class GroupsRepository {
         ActivitySubject.group => restoreGroup(deletion.subjectId),
       };
 
-  Future<String> addMember(String groupId, String name, {String? phone, String? upiId}) async {
+  /// Adds a member; one with an email also goes on the People list.
+  Future<String> addMember(String groupId, String name, {String? phone, String? upiId, String? email}) async {
     final id = newId();
-    await db.into(db.members).insert(MembersCompanion.insert(id: id, groupId: groupId, name: name.trim(), phone: Value(phone), upiId: Value(upiId)));
+    await db.transaction(() async {
+      await db.into(db.members).insert(MembersCompanion.insert(id: id, groupId: groupId, name: name.trim(), phone: Value(phone), upiId: Value(upiId), email: Value(email)));
+      await rememberPerson(db, name: name, email: email);
+    });
     return id;
   }
+
+  /// Saves a member's edited details; one with an email also goes on the People list.
+  Future<void> editMember(String id, {required String name, String? phone, String? upiId, String? email}) => db.transaction(() async {
+        await updateMember(MembersCompanion(id: Value(id), name: Value(name.trim()), phone: Value(phone), upiId: Value(upiId), email: Value(email)));
+        await rememberPerson(db, name: name, email: email);
+      });
 
   Future<void> updateMember(MembersCompanion member) =>
       (db.update(db.members)..where((t) => t.id.equals(member.id.value))).write(member.copyWith(updatedAt: Value(DateTime.now())));

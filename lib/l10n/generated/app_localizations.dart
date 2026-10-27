@@ -3332,10 +3332,22 @@ abstract class AppLocalizations {
   /// **'Enter a UPI ID like name@bank'**
   String get invalidUpiId;
 
+  /// No description provided for @emailOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Email (optional)'**
+  String get emailOptional;
+
+  /// No description provided for @invalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an email like name@example.com'**
+  String get invalidEmail;
+
   /// No description provided for @memberContactLocal.
   ///
   /// In en, this message translates to:
-  /// **'Phone and UPI ID stay on this device. Hisab uses them only to fill in reminders and UPI payments.'**
+  /// **'Email, phone and UPI ID stay on this device. Hisab uses them only to suggest people you added before, and to fill in reminders and UPI payments.'**
   String get memberContactLocal;
 
   /// No description provided for @editMember.

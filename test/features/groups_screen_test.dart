@@ -78,4 +78,19 @@ void main() {
     appRouter.go('/home');
     await tester.pump();
   });
+
+  testWidgets('archived groups are left out of the groups summary (#50)', (tester) async {
+    final container = await createContainer();
+    await tester.runAsync(() async {
+      await seedGroupOwingMe(container, 'Flat', 280000);
+      final groups = container.read(groupsRepositoryProvider);
+      await groups.archiveGroup((await groups.getSummaries()).single.group.id);
+    });
+    await openGroups(tester, container, 'en');
+
+    expect(find.text('₹0'), findsNWidgets(2), reason: 'the only group is archived, so nothing is owed either way');
+    expect(find.text('₹1,400'), findsNothing);
+    appRouter.go('/home');
+    await tester.pump();
+  });
 }

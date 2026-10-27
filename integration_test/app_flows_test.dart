@@ -696,7 +696,7 @@ void main() {
     await enterText(tester, find.widgetWithText(TextField, 'Search categories'), 'groceries');
     await tapText(tester, 'Groceries');
     await shoot(tester, 'dark_entry');
-    await goBack(tester);
+    await discardEntry(tester);
     await goTab(tester, 'Settings');
     await tapText(tester, 'Light');
     expect(Theme.of(tester.element(find.byType(NavigationBar))).brightness, Brightness.light);
@@ -747,9 +747,10 @@ void main() {
     expect(find.text(hindiCategoryNames['food']!), findsOneWidget);
     await enterText(tester, find.widgetWithText(TextField, hi.searchCategories), 'groceries');
     await tapText(tester, hindiCategoryNames['groceries']!);
+    await openMoreDetails(tester, reveals: find.text(hi.addItem));
     await tapText(tester, hi.addItem);
     await shoot(tester, 'hi_entry');
-    await goBack(tester);
+    await discardEntry(tester);
     await goTab(tester, hi.tabSettings);
     await scrollTo(tester, find.text(hi.language), up: true);
     await tapText(tester, hi.language);

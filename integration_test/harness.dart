@@ -140,6 +140,13 @@ Future<void> pickEditorAccount(WidgetTester tester, String name, {String pickerK
   await tapFinder(tester, find.descendant(of: find.byType(BottomSheet), matching: find.widgetWithText(ListTile, name)));
 }
 
+/// Leaves the entry editor with unsaved input: Back raises the "Discard this
+/// entry?" prompt, which is confirmed.
+Future<void> discardEntry(WidgetTester tester) async {
+  await goBack(tester);
+  await tapFinder(tester, find.byKey(const Key('discard-entry')));
+}
+
 /// Switches bottom tabs by label.
 Future<void> goTab(WidgetTester tester, String label) async {
   await tapFinder(tester, find.descendant(of: find.byType(NavigationBar), matching: find.text(label)));

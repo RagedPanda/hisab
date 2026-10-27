@@ -15,6 +15,7 @@ import '../data/repositories/project_fields_repository.dart';
 import '../data/repositories/projects_repository.dart';
 import '../data/repositories/recurring_repository.dart';
 import '../data/repositories/payee_category_repository.dart';
+import '../data/repositories/people_repository.dart';
 import '../data/repositories/reminders_repository.dart';
 import '../data/repositories/settle_schedule_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
@@ -59,6 +60,7 @@ final projectsRepositoryProvider = Provider((ref) => ProjectsRepository(ref.watc
 final projectFieldsRepositoryProvider = Provider((ref) => ProjectFieldsRepository(ref.watch(databaseProvider)));
 final smsLogRepositoryProvider = Provider((ref) => SmsLogRepository(ref.watch(databaseProvider)));
 final payeeCategoryRepositoryProvider = Provider((ref) => PayeeCategoryRepository(ref.watch(databaseProvider)));
+final peopleRepositoryProvider = Provider((ref) => PeopleRepository(ref.watch(databaseProvider)));
 final remindersRepositoryProvider = Provider((ref) => RemindersRepository(ref.watch(databaseProvider)));
 final recurringRepositoryProvider = Provider((ref) => RecurringRepository(ref.watch(databaseProvider)));
 final settleScheduleRepositoryProvider = Provider((ref) => SettleScheduleRepository(ref.watch(databaseProvider)));
@@ -130,6 +132,9 @@ final payeeMemoryProvider = StreamProvider((ref) => ref.watch(payeeCategoryRepos
 
 /// Remembered SMS payees for the Settings list.
 final payeeCategoriesProvider = StreamProvider((ref) => ref.watch(payeeCategoryRepositoryProvider).watchAll());
+
+/// The user's People list, for suggestions when adding a group member.
+final peopleProvider = StreamProvider((ref) => ref.watch(peopleRepositoryProvider).watchAll());
 
 final smsHistoryProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryProvider).watchHistory());
 

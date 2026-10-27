@@ -1220,6 +1220,12 @@ abstract class AppLocalizations {
   /// **'You owe'**
   String get youOwe;
 
+  /// Joins the per-currency totals in the Groups list summary, e.g. ₹0 · AED 1,400.
+  ///
+  /// In en, this message translates to:
+  /// **' · '**
+  String get groupsTotalsSeparator;
+
   /// No description provided for @groupSubtitle.
   ///
   /// In en, this message translates to:

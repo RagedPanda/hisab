@@ -658,6 +658,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get youOwe => 'You owe';
 
   @override
+  String get groupsTotalsSeparator => ' · ';
+
+  @override
   String groupSubtitle(int count, String amount) {
     return '$count members · $amount spent';
   }

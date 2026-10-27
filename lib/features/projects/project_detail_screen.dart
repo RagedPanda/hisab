@@ -45,7 +45,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     final settings = ref.watch(settingsProvider);
     final fields = ref.watch(projectFieldsProvider(widget.projectId)).value ?? const <ProjectField>[];
     final metrics = ref.watch(projectMetricsProvider(widget.projectId)).value ?? const ProjectMetrics();
-    final symbol = settings.currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     if (!viewValue.hasValue) return Scaffold(appBar: AppBar());
     final view = viewValue.value;
     if (view == null) {
@@ -79,8 +79,8 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
           children: [
-            _ProjectHero(view: view, symbol: symbol),
-            if (fields.isNotEmpty) ProjectMetricsSection(metrics: metrics, fields: fields, symbol: symbol),
+            _ProjectHero(view: view, moneyFormat: moneyFormat),
+            if (fields.isNotEmpty) ProjectMetricsSection(metrics: metrics, fields: fields, moneyFormat: moneyFormat),
             if (totals.spentMinor > 0) ...[
               SectionHeader(l10n.spendingByCategory, padding: const EdgeInsets.fromLTRB(4, 20, 4, 8)),
               Card(
@@ -89,7 +89,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   child: CategoryDonut(
                     data: breakdown,
                     selectedId: selected,
-                    symbol: symbol,
+                    moneyFormat: moneyFormat,
                     totalCaption: l10n.allTime,
                     onSliceTap: (share) => setState(() => _selectedCategoryId = selected == share.categoryId ? null : share.categoryId),
                   ),
@@ -100,7 +100,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: SizedBox(height: kTrendChartHeight, child: MonthlyBars(months: bars, symbol: symbol)),
+                    child: SizedBox(height: kTrendChartHeight, child: MonthlyBars(months: bars, moneyFormat: moneyFormat)),
                   ),
                 ),
               ],
@@ -149,9 +149,9 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 }
 
 class _ProjectHero extends StatelessWidget {
-  const _ProjectHero({required this.view, required this.symbol});
+  const _ProjectHero({required this.view, required this.moneyFormat});
   final ProjectView view;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -184,14 +184,14 @@ class _ProjectHero extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              formatMinor(totals.spentMinor, symbol: symbol, showDecimals: false),
+              formatMinor(totals.spentMinor, format: moneyFormat, showDecimals: false),
               style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700).tabular,
             ),
             const SizedBox(height: 12),
-            ProjectBudgetSummary(budget: totals.budget, symbol: symbol, trailing: l10n.entryCountLabel(totals.entryCount)),
+            ProjectBudgetSummary(budget: totals.budget, moneyFormat: moneyFormat, trailing: l10n.entryCountLabel(totals.entryCount)),
             if (totals.incomeMinor > 0) ...[
               const SizedBox(height: 6),
-              Text(l10n.receivedAmount(formatMinor(totals.incomeMinor, symbol: symbol, showDecimals: false)), style: theme.textTheme.bodySmall?.copyWith(color: kIncomeColor).tabular),
+              Text(l10n.receivedAmount(formatMinor(totals.incomeMinor, format: moneyFormat, showDecimals: false)), style: theme.textTheme.bodySmall?.copyWith(color: kIncomeColor).tabular),
             ],
             if (project.notes.isNotEmpty) ...[
               const SizedBox(height: 12),

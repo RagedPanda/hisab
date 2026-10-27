@@ -4,9 +4,9 @@ import '../../core/money.dart';
 import '../../core/notifications/reminder_alert_text.dart';
 import '../../core/notifications/reminder_scheduler.dart';
 import '../../core/providers.dart';
+import '../../core/settings.dart';
 import '../../data/repositories/groups_repository.dart';
 import '../../data/repositories/settle_schedule_repository.dart';
-import '../../domain/split/group_settings.dart';
 import '../../domain/split/settle_reminder.dart';
 import '../../l10n/l10n.dart';
 import 'member_display.dart';
@@ -14,16 +14,21 @@ import 'settle_up_messages.dart';
 
 /// What a group's settle-up notification says right now, about [memberId]
 /// (or everyone); null when that is all settled. Amounts use the group's own
-/// currency label when it has one, else [currencySymbol].
-SettleReminderText? settleReminderTextFor(AppLocalizations l10n, GroupDetail detail, {String? memberId, required String currencySymbol}) {
-  final symbol = groupSymbol(currencyLabel: detail.group.currencyLabel, appSymbol: currencySymbol);
+/// currency label when it has one, written as [moneyFormatFor] says.
+SettleReminderText? settleReminderTextFor(
+  AppLocalizations l10n,
+  GroupDetail detail, {
+  String? memberId,
+  required MoneyFormat Function(String? currencyLabel) moneyFormatFor,
+}) {
+  final moneyFormat = moneyFormatFor(detail.group.currencyLabel);
   final memberById = {for (final member in detail.allMembers) member.id: member};
   return settleReminderNotification(
     l10n,
     facts: settleReminderFacts(detail.balances.suggested, myMemberId: detail.me?.id, withMemberId: memberId),
     groupName: detail.group.name,
     nameOf: (id) => memberById[id] == null ? l10n.unknown : memberShortName(l10n, memberById[id]!),
-    formatAmount: (amountMinor) => formatMinor(amountMinor, symbol: symbol),
+    formatAmount: (amountMinor) => formatMinor(amountMinor, format: moneyFormat),
     withMemberId: memberId,
   );
 }
@@ -37,7 +42,7 @@ class SettleReminderService {
     required this.schedules,
     required this.scheduler,
     required this.l10n,
-    required this.currencySymbol,
+    required this.moneyFormatFor,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 
@@ -45,12 +50,13 @@ class SettleReminderService {
   final SettleScheduleRepository schedules;
   final ReminderScheduler scheduler;
   final AppLocalizations l10n;
-  final String currencySymbol;
+  /// Number format for a group's amounts, from its currency label.
+  final MoneyFormat Function(String? currencyLabel) moneyFormatFor;
   final DateTime Function() _clock;
 
   Future<SettleReminderText?> _textFor(String groupId, String? memberId) async {
     final detail = await groups.getGroupDetail(groupId);
-    return detail == null ? null : settleReminderTextFor(l10n, detail, memberId: memberId, currencySymbol: currencySymbol);
+    return detail == null ? null : settleReminderTextFor(l10n, detail, memberId: memberId, moneyFormatFor: moneyFormatFor);
   }
 
   /// Saves [schedule] for the group, or turns it off when null.
@@ -84,12 +90,13 @@ class SettleReminderService {
 
 final settleReminderServiceProvider = Provider((ref) {
   final settings = ref.watch(settingsProvider);
+  final deviceLocale = ref.watch(deviceLocaleProvider);
   return SettleReminderService(
     groups: ref.watch(groupsRepositoryProvider),
     schedules: ref.watch(settleScheduleRepositoryProvider),
     scheduler: ref.watch(reminderSchedulerProvider),
     l10n: notificationLocalizations(settings.localeCode),
-    currencySymbol: settings.currencySymbol,
+    moneyFormatFor: (currencyLabel) => groupMoneyFormatFor(currencyLabel, settings, deviceLocale),
   );
 });
 

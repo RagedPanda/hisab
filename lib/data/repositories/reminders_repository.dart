@@ -39,8 +39,24 @@ class RemindersRepository {
   Stream<List<Reminder>> watchForProject(String projectId) => (_pending()..where((t) => t.projectId.equals(projectId))).watch();
   Future<List<Reminder>> getForProject(String projectId) => (_pending()..where((t) => t.projectId.equals(projectId))).get();
 
+  /// What each paid reminder's linked entry actually paid, by reminder id. A
+  /// bank SMS within tolerance (₹2,150 on a ₹2,100 bill) or an edited entry
+  /// differs from the reminder's amount; History shows the paid one.
+  Stream<Map<String, int>> watchPaidAmounts() {
+    final query = db.select(db.reminders).join([innerJoin(db.entries, db.entries.id.equalsExp(db.reminders.entryId))])
+      ..where(db.reminders.status.equals(ReminderStatus.done) & db.reminders.deletedAt.isNull() & db.entries.deletedAt.isNull());
+    return query.watch().map((rows) => {for (final row in rows) row.readTable(db.reminders).id: row.readTable(db.entries).amountMinor});
+  }
+
   Future<Reminder?> getById(String id) => (db.select(db.reminders)..where((t) => t.id.equals(id) & _isLiveDue(t))).getSingleOrNull();
   Stream<Reminder?> watchById(String id) => (db.select(db.reminders)..where((t) => t.id.equals(id) & _isLiveDue(t))).watchSingleOrNull();
+
+  /// Every live reminder of [kind] tied to [accountId] (any status), latest
+  /// due first. Card dues use it to keep one automatic reminder per card.
+  Future<List<Reminder>> forAccount(String accountId, {required ReminderKind kind}) => (db.select(db.reminders)
+        ..where((t) => _isLiveDue(t) & t.kind.equals(kind.key) & t.accountId.equals(accountId))
+        ..orderBy([(t) => OrderingTerm.desc(t.dueAt), (t) => OrderingTerm.desc(t.updatedAt)]))
+      .get();
 
   /// Creates or updates a reminder from [draft]; returns its id. Editing keeps
   /// status and history fields but clears a snooze, since the timing changed.

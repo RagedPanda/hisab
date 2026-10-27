@@ -54,7 +54,7 @@ class _ActivityList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
     final categoryById = {for (final category in categories) category.id: category};
     final myMemberIds = {for (final member in feed.membersById.values) if (member.isMe) member.id};
@@ -62,7 +62,7 @@ class _ActivityList extends ConsumerWidget {
     ActivityFormatters formatFor(ActivityRecord activity) => ActivityFormatters(
           nameOf: (id) => switch (feed.membersById[id]) { final member? => memberShortName(l10n, member), null => l10n.unknown },
           categoryNameOf: (id) => switch (categoryById[id]) { final category? => categoryDisplayName(category, locale), null => l10n.kindExpense },
-          money: (minor) => formatMinor(minor, symbol: symbol),
+          money: (minor) => formatMinor(minor, format: moneyFormat),
           date: (day) => formatRowDate(day, locale: locale.toString()),
           myMemberId: myMemberIds.where((id) => feed.membersById[id]?.groupId == activity.groupId).firstOrNull,
         );

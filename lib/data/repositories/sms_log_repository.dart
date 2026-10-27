@@ -29,6 +29,14 @@ class SmsLogRepository {
   Future<bool> exists(String id) async =>
       (await (db.select(db.smsLog)..where((t) => t.id.equals(id))).getSingleOrNull()) != null;
 
+  /// Whether a message reporting the same bank transaction is already logged.
+  Future<bool> hasTransaction(String transactionKey) async =>
+      (await (db.select(db.smsLog)
+                ..where((t) => t.transactionKey.equals(transactionKey))
+                ..limit(1))
+              .getSingleOrNull()) !=
+      null;
+
   Future<void> record({
     required String id,
     required String sender,
@@ -37,6 +45,7 @@ class SmsLogRepository {
     required String status,
     Map<String, dynamic>? parsed,
     String? entryId,
+    String? transactionKey,
   }) =>
       db.into(db.smsLog).insertOnConflictUpdate(SmsLogCompanion.insert(
             id: id,
@@ -46,6 +55,7 @@ class SmsLogRepository {
             status: status,
             parsedJson: Value(parsed == null ? null : jsonEncode(parsed)),
             entryId: Value(entryId),
+            transactionKey: Value(transactionKey),
           ));
 
   Stream<List<SmsLogData>> watchPending() => (db.select(db.smsLog)
@@ -83,6 +93,26 @@ class SmsLogRepository {
   Future<void> setStatus(String id, String status, {String? entryId}) =>
       (db.update(db.smsLog)..where((t) => t.id.equals(id)))
           .write(SmsLogCompanion(status: Value(status), entryId: Value(entryId)));
+
+  /// Links a logged SMS to the reminder it paid; null unlinks it.
+  Future<void> setMatchedReminder(String smsId, String? reminderId) =>
+      (db.update(db.smsLog)..where((t) => t.id.equals(smsId))).write(SmsLogCompanion(matchedReminderId: Value(reminderId)));
+
+  /// Forgets every SMS link to [reminderId] once it is no longer paid.
+  Future<void> clearMatchedReminder(String reminderId) =>
+      (db.update(db.smsLog)..where((t) => t.matchedReminderId.equals(reminderId))).write(const SmsLogCompanion(matchedReminderId: Value(null)));
+
+  JoinedSelectStatement<$SmsLogTable, SmsLogData> _matchedReminderIdsQuery() => db.selectOnly(db.smsLog)
+    ..addColumns([db.smsLog.matchedReminderId])
+    ..where(db.smsLog.matchedReminderId.isNotNull());
+
+  Set<String> _readMatchedReminderIds(List<TypedResult> rows) => rows.map((row) => row.read(db.smsLog.matchedReminderId)!).toSet();
+
+  /// Reminders some SMS has already paid, so the matcher never pays one twice.
+  Future<Set<String>> matchedReminderIds() async => _readMatchedReminderIds(await _matchedReminderIdsQuery().get());
+
+  /// The same set, live, for the "Paid via SMS" label.
+  Stream<Set<String>> watchMatchedReminderIds() => _matchedReminderIdsQuery().watch().map(_readMatchedReminderIds);
 
   /// Newest receive time in the log, optionally ignoring one sender's rows.
   Future<DateTime?> latestReceivedAt({String? excludingSender}) async {

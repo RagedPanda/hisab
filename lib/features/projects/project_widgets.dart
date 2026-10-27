@@ -36,9 +36,9 @@ class ProjectStatusChip extends StatelessWidget {
 
 /// Budget bar with "left" or "over" caption, or a plain "no budget" line.
 class ProjectBudgetSummary extends StatelessWidget {
-  const ProjectBudgetSummary({super.key, required this.budget, required this.symbol, this.trailing});
+  const ProjectBudgetSummary({super.key, required this.budget, required this.moneyFormat, this.trailing});
   final BudgetProgress? budget;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   /// Extra text after the caption, such as the entry count.
   final String? trailing;
@@ -52,10 +52,10 @@ class ProjectBudgetSummary extends StatelessWidget {
     if (progress == null) {
       return Text([l10n.noBudgetSet, ?trailing].join(' · '), style: captionStyle, maxLines: 1, overflow: TextOverflow.ellipsis);
     }
-    final limit = formatMinor(progress.limitMinor, symbol: symbol, showDecimals: false);
+    final limit = formatMinor(progress.limitMinor, format: moneyFormat, showDecimals: false);
     final caption = progress.isOver
-        ? l10n.budgetOverBy(formatMinor(-progress.remainingMinor, symbol: symbol, showDecimals: false), limit)
-        : l10n.leftOfBudget(formatMinor(progress.remainingMinor, symbol: symbol, showDecimals: false), limit);
+        ? l10n.budgetOverBy(formatMinor(-progress.remainingMinor, format: moneyFormat, showDecimals: false), limit)
+        : l10n.leftOfBudget(formatMinor(progress.remainingMinor, format: moneyFormat, showDecimals: false), limit);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

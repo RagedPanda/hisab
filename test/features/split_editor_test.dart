@@ -4,6 +4,7 @@ import 'package:hisab/data/db/database.dart';
 import 'package:hisab/domain/split/split_calculator.dart';
 import 'package:hisab/features/split/split_editor.dart';
 import 'package:hisab/l10n/generated/app_localizations.dart';
+import 'package:hisab/core/money.dart';
 
 void main() {
   Member member(String id, String name, {bool isMe = false}) =>
@@ -25,7 +26,7 @@ void main() {
             members: members,
             method: SplitMethod.byItem,
             inputs: const [],
-            symbol: '₹',
+            moneyFormat: MoneyFormat.inr,
             items: const [
               ItemSplitInput(amountMinor: 30000, memberIds: ['me', 'rahul'], label: 'Pizza'),
               ItemSplitInput(amountMinor: 15000, memberIds: ['rahul'], label: 'Coke'),

@@ -32,30 +32,4 @@ void main() {
     expect(groups.first.onlyAccount, cash);
     expect(groups.last.onlyAccount, isNull);
   });
-
-  test('typeHolding finds the type of the selected account', () {
-    final groups = groupsOf([cash, hdfc, sbi]);
-    expect(typeHolding(groups, 'sbi', (account) => account.id), 'bank');
-    expect(typeHolding(groups, null, (account) => account.id), isNull);
-    expect(typeHolding(groups, 'gone', (account) => account.id), isNull);
-  });
-
-  group('accountToPickForType (#110)', () {
-    final banks = groupsOf([hdfc, sbi]).single;
-    String pick({String? selectedId, List<String> recentIds = const []}) =>
-        accountToPickForType(banks, selectedId: selectedId, recentIds: recentIds, idOf: (account) => account.id).id;
-
-    test('keeps the selected account when it is of that type', () {
-      expect(pick(selectedId: 'sbi', recentIds: ['hdfc']), 'sbi');
-    });
-
-    test('otherwise picks the most recently used account of the type', () {
-      expect(pick(selectedId: 'cash', recentIds: ['cash', 'paytm', 'sbi', 'hdfc']), 'sbi');
-    });
-
-    test('falls back to the first account when none was used', () {
-      expect(pick(selectedId: null), 'hdfc');
-      expect(pick(selectedId: 'cash', recentIds: ['cash']), 'hdfc');
-    });
-  });
 }

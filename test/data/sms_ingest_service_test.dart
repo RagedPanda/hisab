@@ -7,9 +7,13 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/data/repositories/sms_log_repository.dart';
 import 'package:hisab/data/sms/sms_channel.dart';
 import 'package:hisab/data/sms/sms_ingest_service.dart';
+import 'package:hisab/data/sms/sms_reminder_linker.dart';
 import 'package:hisab/data/sms/sms_sync_cursor.dart';
+import 'package:hisab/domain/reminders/sms_reminder_match.dart';
 import 'package:hisab/domain/sms/sms_outcome.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'fake_reminder_payment_port.dart';
 
 const _upiDebit = 'Rs.459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl (UPI Ref No 123456789012). Avl bal Rs.15,541.00';
 const _atmDebit = 'Rs.4,000.00 withdrawn from A/c XX1234 at ATM on 21-10-26. Avl bal Rs.11,541.00';
@@ -439,6 +443,128 @@ void main() {
       expect(entries, hasLength(1), reason: 'the cleared message is not added a second time');
       final wiped = await smsLog.getById(SmsLogRepository.idFor('HDFCBK', _upiDebit, received));
       expect(wiped!.body, isEmpty);
+    });
+  });
+
+  group('paying reminders (R2)', () {
+    late FakeReminders reminders;
+    late SmsIngestService matchingService;
+    final received = DateTime(2026, 10, 21, 10, 0);
+
+    setUp(() {
+      reminders = FakeReminders([
+        ReminderMatchCandidate(id: 'swiggy-one', kind: 'subscription', title: 'Swiggy One', dueAt: DateTime(2026, 10, 21), amountMinor: 45900, matchKeywords: const ['swiggy']),
+      ]);
+      matchingService = SmsIngestService(
+        smsLog: smsLog,
+        accounts: accounts,
+        categories: CategoriesRepository(db),
+        entries: EntriesRepository(db),
+        cursor: cursor,
+        source: source,
+        homeCurrencyCode: () => 'INR',
+        reminderLinker: SmsReminderLinker(smsLog: smsLog, reminders: reminders),
+      );
+    });
+
+    test('an auto-added SMS pays the reminder it matches with the new entry', () async {
+      await matchingService.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: true);
+      final row = (await smsLog.watchRecent().first).single;
+      expect(reminders.paid.single, (reminderId: 'swiggy-one', entryId: row.entryId!));
+      expect(row.matchedReminderId, 'swiggy-one');
+    });
+
+    test('a pending SMS pays nothing until it is approved', () async {
+      await matchingService.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: false);
+      expect(reminders.paid, isEmpty);
+      final entryId = await matchingService.approvePending((await smsLog.watchPending().first).single);
+      expect(reminders.paid.single, (reminderId: 'swiggy-one', entryId: entryId!));
+    });
+
+    test('an SMS saved from the editor pays the reminder on linkSavedEntry', () async {
+      await matchingService.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: false);
+      final row = (await smsLog.watchPending().first).single;
+      expect(await matchingService.linkSavedEntry(row.id, 'edited-entry'), 'swiggy-one');
+      expect(reminders.paid.single, (reminderId: 'swiggy-one', entryId: 'edited-entry'));
+    });
+
+    test('an SMS that matches nothing leaves reminders alone', () async {
+      await matchingService.ingest(RawSms(sender: 'HDFCBK', body: _atmDebit, receivedAt: received), autoAdd: true);
+      expect(reminders.paid, isEmpty);
+    });
+  });
+
+  group('the same payment arriving twice (#46)', () {
+    const broadband = 'Rs.799.00 debited from A/c XX1234 on 23-10-26 to ACTFIBERNET. UPI Ref 629400000799';
+    late FakeReminders reminders;
+    late SmsIngestService matchingService;
+
+    setUp(() {
+      reminders = FakeReminders([
+        ReminderMatchCandidate(id: 'broadband-early', kind: 'bill', title: 'Broadband early', dueAt: DateTime(2026, 10, 24), amountMinor: 79900, matchKeywords: const ['actfibernet']),
+        ReminderMatchCandidate(id: 'broadband-late', kind: 'bill', title: 'Broadband late', dueAt: DateTime(2026, 10, 30), amountMinor: 79900, matchKeywords: const ['actfibernet']),
+      ]);
+      matchingService = SmsIngestService(
+        smsLog: smsLog,
+        accounts: accounts,
+        categories: CategoriesRepository(db),
+        entries: EntriesRepository(db),
+        cursor: cursor,
+        source: source,
+        homeCurrencyCode: () => 'INR',
+        reminderLinker: SmsReminderLinker(smsLog: smsLog, reminders: reminders),
+      );
+    });
+
+    Future<int> entryCount() async => (await db.select(db.entries).get()).length;
+
+    test('pasting an approved SMS again on a later day adds nothing and pays no second reminder', () async {
+      await matchingService.ingest(RawSms(sender: 'PASTED', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: false, force: true);
+      await matchingService.approvePending((await smsLog.watchPending().first).single);
+      expect(reminders.paid.map((payment) => payment.reminderId), ['broadband-early']);
+
+      final again = await matchingService.ingest(RawSms(sender: 'PASTED', body: broadband, receivedAt: DateTime(2026, 10, 25, 20)), autoAdd: false, force: true);
+      expect(again, IngestStatus.duplicate);
+      expect(await smsLog.watchPending().first, isEmpty, reason: 'no second row to approve');
+      expect(reminders.paid.map((payment) => payment.reminderId), ['broadband-early'], reason: 'Broadband late stays pending');
+      expect(await entryCount(), 1);
+    });
+
+    test('pasting an SMS the inbox already auto-added is a duplicate', () async {
+      await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: true);
+      final pasted = await matchingService.ingest(RawSms(sender: 'PASTED', body: '  $broadband\n', receivedAt: DateTime(2026, 10, 23, 18)), autoAdd: true, force: true);
+      expect(pasted, IngestStatus.duplicate);
+      expect(reminders.paid, hasLength(1));
+      expect(await entryCount(), 1);
+    });
+
+    test('Undo of an auto-added SMS reopens the reminder it paid (decision 19)', () async {
+      final announced = <SmsAutoAdded>[];
+      final subscription = matchingService.autoAdded.listen(announced.add);
+      await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: true);
+      await Future<void>.delayed(Duration.zero);
+      await subscription.cancel();
+      expect(reminders.paid.single.reminderId, 'broadband-early');
+
+      await matchingService.undoAutoAdd(announced.single);
+
+      expect(reminders.reopened.single, (reminderId: 'broadband-early', entryId: announced.single.entryId));
+      final row = (await smsLog.getById(announced.single.smsId))!;
+      expect(row.status, SmsLogStatus.ignored, reason: 'decision 1: the SMS stays ignored');
+      expect(row.matchedReminderId, isNull);
+      expect((await EntriesRepository(db).getEntry(announced.single.entryId))?.entry.deletedAt, isNotNull);
+      expect(await matchingService.ingest(RawSms(sender: 'PASTED', body: broadband, receivedAt: DateTime(2026, 10, 23, 18)), autoAdd: true, force: true),
+          IngestStatus.duplicate, reason: 'pasting the undone SMS does not pay it again');
+      expect(reminders.paid, hasLength(1));
+    });
+
+    test('a different payment to the same payee still pays the next reminder', () async {
+      await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: broadband, receivedAt: DateTime(2026, 10, 23, 9)), autoAdd: true);
+      const nextMonth = 'Rs.799.00 debited from A/c XX1234 on 29-10-26 to ACTFIBERNET. UPI Ref 630200000123';
+      final status = await matchingService.ingest(RawSms(sender: 'VM-HDFCBK', body: nextMonth, receivedAt: DateTime(2026, 10, 29, 9)), autoAdd: true);
+      expect(status, IngestStatus.added);
+      expect(reminders.paid.map((payment) => payment.reminderId), ['broadband-early', 'broadband-late']);
+      expect(await entryCount(), 2);
     });
   });
 }

@@ -13,6 +13,7 @@ import 'package:hisab/domain/reminders/reminder_kind.dart';
 import 'package:hisab/domain/reminders/reminder_schedule.dart';
 
 import 'fake_notification_gateway.dart';
+import 'package:hisab/core/money.dart';
 
 void main() {
   late AppDatabase db;
@@ -29,7 +30,7 @@ void main() {
     repository = RemindersRepository(db, clock: () => now);
     scheduler = ReminderScheduler(
       reminders: repository,
-      notifications: NotificationService(gateway, buildAlert: (r, a) => alertRequestFor(r, a, english, currencySymbol: '₹'), clock: () => now),
+      notifications: NotificationService(gateway, buildAlert: (r, a) => alertRequestFor(r, a, english, moneyFormat: MoneyFormat.inr), clock: () => now),
       clock: () => now,
     );
   });
@@ -61,12 +62,12 @@ void main() {
 
   test('a 0 amount (as in an old row) shows no amount in the notification text', () {
     final due = DateTime(2026, 11, 5);
-    expect(reminderDueCaption(english, dueAt: due, at: DateTime(2026, 11, 5, 9), amountMinor: 0, currencySymbol: '₹'), 'Due today');
-    expect(reminderDueCaption(english, dueAt: due, at: DateTime(2026, 11, 5, 9), amountMinor: 210000, currencySymbol: '₹'), 'Due today · ₹2,100');
+    expect(reminderDueCaption(english, dueAt: due, at: DateTime(2026, 11, 5, 9), amountMinor: 0, moneyFormat: MoneyFormat.inr), 'Due today');
+    expect(reminderDueCaption(english, dueAt: due, at: DateTime(2026, 11, 5, 9), amountMinor: 210000, moneyFormat: MoneyFormat.inr), 'Due today · ₹2,100');
   });
 
   test('documents say Done; Hindi texts come from the hi dictionary', () async {
-    final hindi = NotificationService(gateway, buildAlert: (r, a) => alertRequestFor(r, a, notificationLocalizations('hi'), currencySymbol: '₹'), clock: () => now);
+    final hindi = NotificationService(gateway, buildAlert: (r, a) => alertRequestFor(r, a, notificationLocalizations('hi'), moneyFormat: MoneyFormat.inr), clock: () => now);
     final id = await repository.save(electricity(kind: ReminderKind.document));
     await hindi.schedule((await repository.getById(id))!);
     final alert = gateway.alertsFor(reminderPayload(id)).first;
@@ -140,7 +141,7 @@ void main() {
 
   test('permission state and request pass through', () async {
     gateway.notificationsAllowed = false;
-    final service = NotificationService(gateway, buildAlert: (r, a) => alertRequestFor(r, a, english, currencySymbol: '₹'));
+    final service = NotificationService(gateway, buildAlert: (r, a) => alertRequestFor(r, a, english, moneyFormat: MoneyFormat.inr));
     expect((await service.checkPermission()).notificationsAllowed, isFalse);
     expect(await service.requestPermission(), isTrue);
     expect(gateway.permissionRequests, 1);

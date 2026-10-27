@@ -22,7 +22,7 @@ ReminderScheduler buildReminderScheduler(AppDatabase db, AppSettings settings) {
     settleSchedules: SettleScheduleRepository(db),
     notifications: NotificationService(
       PluginNotificationGateway(notificationSetupTexts(l10n)),
-      buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, l10n, currencySymbol: settings.currencySymbol),
+      buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, l10n, moneyFormat: homeMoneyFormatFor(settings, PlatformDispatcher.instance.locale)),
     ),
   );
 }

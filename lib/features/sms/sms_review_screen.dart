@@ -16,7 +16,7 @@ class SmsReviewScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final pending = ref.watch(pendingSmsProvider).value ?? const <SmsLogData>[];
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.smsReviewTitle)),
       body: pending.isEmpty
@@ -28,7 +28,7 @@ class SmsReviewScreen extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(l10n.smsReviewHelp, style: Theme.of(context).textTheme.bodyMedium),
                 ),
-                for (final row in pending) SmsReviewCard(key: ValueKey(row.id), row: row, symbol: symbol),
+                for (final row in pending) SmsReviewCard(key: ValueKey(row.id), row: row, moneyFormat: moneyFormat),
               ],
             ),
     );

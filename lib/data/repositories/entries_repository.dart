@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../core/dates.dart';
 import '../../core/ids.dart';
+import '../../domain/cards/card_summary.dart';
 import '../../domain/ledger/personal_totals.dart';
 import '../db/database.dart';
 
@@ -146,17 +147,21 @@ class EntriesRepository {
     return query.watch().map((rows) => rows.isNotEmpty);
   }
 
-  /// Account ids, most recently used first (by the latest live entry that
-  /// paid from them), so a picker can default to the account used last.
-  Stream<List<String>> watchRecentAccountIds() {
-    final lastUsed = db.entries.updatedAt.max();
-    final query = db.selectOnly(db.entries)
-      ..addColumns([db.entries.accountId, lastUsed])
-      ..where(db.entries.deletedAt.isNull() & db.entries.accountId.isNotNull())
-      ..groupBy([db.entries.accountId])
-      ..orderBy([OrderingTerm.desc(lastUsed)]);
-    return query.watch().map((rows) => [for (final row in rows) row.read(db.entries.accountId)!]);
-  }
+  /// Every live entry charged to or paid into [accountId] from [since] on,
+  /// whole amounts (a group bill on a card is charged in full).
+  Stream<List<CardMovement>> watchAccountMovements(String accountId, {required DateTime since}) =>
+      _accountMovementsQuery(accountId, since).watch().map(_toCardMovements);
+
+  Future<List<CardMovement>> getAccountMovements(String accountId, {required DateTime since}) =>
+      _accountMovementsQuery(accountId, since).get().then(_toCardMovements);
+
+  SimpleSelectStatement<$EntriesTable, Entry> _accountMovementsQuery(String accountId, DateTime since) => db.select(db.entries)
+    ..where((t) => t.deletedAt.isNull() & t.occurredAt.isBiggerOrEqualValue(since) & (t.accountId.equals(accountId) | t.toAccountId.equals(accountId)));
+
+  List<CardMovement> _toCardMovements(List<Entry> rows) => [
+        for (final row in rows)
+          CardMovement(kind: row.kind, amountMinor: row.amountMinor, occurredAt: row.occurredAt, accountId: row.accountId, toAccountId: row.toAccountId),
+      ];
 
   Stream<List<LedgerLine>> watchLedgerLines(DateRange range) => _filteredQuery(range: range, myLedger: true).watch().map(_toLedgerLines);
 

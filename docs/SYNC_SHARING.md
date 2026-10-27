@@ -151,4 +151,6 @@ translation ships with it.
 3. **Shared groups:** the per-group shared Drive file, append-only log, invite links, and
    near-real-time poll/push.
 
+Steps 1–3 need the one-time Google Cloud setup in [GOOGLE_CLOUD_SETUP.md](GOOGLE_CLOUD_SETUP.md).
+
 Each step ships as its own PR, smallest first, and only after the current simplicity pass.

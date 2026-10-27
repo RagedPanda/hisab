@@ -1087,5 +1087,7 @@
   "heroTodaySemantics": "आज का खर्च {amount}। आज के लेन-देन देखें",
   "numberFormatTitle": "संख्या फ़ॉर्मैट",
   "numberFormatAutomatic": "अपने-आप",
-  "numberFormatAutomaticHelp": "आपकी मुद्रा और क्षेत्र के हिसाब से"
+  "numberFormatAutomaticHelp": "आपकी मुद्रा और क्षेत्र के हिसाब से",
+  "safeToSpendPerDay": "सुरक्षित खर्च {amount}/दिन",
+  "safeToSpendOverBudget": "बजट से ऊपर"
 }

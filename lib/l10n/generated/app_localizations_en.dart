@@ -3992,4 +3992,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get numberFormatAutomaticHelp => 'Follows your currency and region';
+
+  @override
+  String safeToSpendPerDay(String amount) {
+    return 'Safe to spend $amount/day';
+  }
+
+  @override
+  String get safeToSpendOverBudget => 'Over budget';
 }

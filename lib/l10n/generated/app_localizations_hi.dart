@@ -3966,4 +3966,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get numberFormatAutomaticHelp => 'आपकी मुद्रा और क्षेत्र के हिसाब से';
+
+  @override
+  String safeToSpendPerDay(String amount) {
+    return 'सुरक्षित खर्च $amount/दिन';
+  }
+
+  @override
+  String get safeToSpendOverBudget => 'बजट से ऊपर';
 }

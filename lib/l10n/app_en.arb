@@ -1395,5 +1395,8 @@
   "@heroTodaySemantics": {"placeholders": {"amount": {"type": "String"}}},
   "numberFormatTitle": "Number format",
   "numberFormatAutomatic": "Automatic",
-  "numberFormatAutomaticHelp": "Follows your currency and region"
+  "numberFormatAutomaticHelp": "Follows your currency and region",
+  "safeToSpendPerDay": "Safe to spend {amount}/day",
+  "@safeToSpendPerDay": {"placeholders": {"amount": {"type": "String"}}},
+  "safeToSpendOverBudget": "Over budget"
 }

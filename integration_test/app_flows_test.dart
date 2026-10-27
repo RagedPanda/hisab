@@ -1706,7 +1706,7 @@ void main() {
     await groups.addSettlement(groupId: clubId, fromMemberId: rahul, toMemberId: me, amountMinor: 10000);
     final balancesBefore = (await groups.getBalances(clubId)).net;
     await pumpApp(tester, fresh);
-    await tapText(tester, 'Groups', frames: 12);
+    await goTab(tester, 'Groups');
     await tapText(tester, 'Book club', frames: 12);
 
     await tapFinder(tester, find.byType(PopupMenuButton<String>));

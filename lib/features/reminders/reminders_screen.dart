@@ -172,13 +172,13 @@ class _UpcomingTile extends ConsumerWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final locale = Localizations.localeOf(context).toString();
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final kind = ReminderKind.of(reminder.kind);
     final repeat = ReminderRepeat.fromKey(reminder.repeat);
     final snoozed = reminder.snoozedUntil != null && reminder.snoozedUntil!.isAfter(now);
     final overdue = reminder.dueAt!.isBefore(DateTime(now.year, now.month, now.day));
     final caption = [
-      reminderDueCaption(l10n, dueAt: reminder.dueAt!, at: now, amountMinor: reminder.amountMinor, currencySymbol: symbol),
+      reminderDueCaption(l10n, dueAt: reminder.dueAt!, at: now, amountMinor: reminder.amountMinor, moneyFormat: moneyFormat),
       if (snoozed) l10n.reminderSnoozedUntil(formatRowDate(reminder.snoozedUntil!, locale: locale)) else formatRowDate(reminder.dueAt!, locale: locale),
       if (repeat.repeats) reminderRepeatLabel(l10n, repeat),
       if (reminder.documentNumber.isNotEmpty) reminder.documentNumber,
@@ -230,7 +230,7 @@ class _HistoryList extends ConsumerWidget {
     final history = ref.watch(reminderHistoryProvider).value ?? const <Reminder>[];
     if (history.isEmpty) return EmptyState(icon: Icons.history, title: l10n.reminderHistoryEmpty);
     final locale = Localizations.localeOf(context).toString();
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final paidBySms = ref.watch(smsPaidReminderIdsProvider).value ?? const <String>{};
     final paidAmounts = ref.watch(reminderPaidAmountsProvider).value ?? const <String, int>{};
     final now = DateTime.now();
@@ -240,7 +240,7 @@ class _HistoryList extends ConsumerWidget {
         Card(
           clipBehavior: Clip.antiAlias,
           child: Column(children: [
-            for (final reminder in history) _historyTile(context, ref, reminder, now: now, locale: locale, symbol: symbol, l10n: l10n, paidBySms: paidBySms.contains(reminder.id), paidAmountMinor: paidAmounts[reminder.id]),
+            for (final reminder in history) _historyTile(context, ref, reminder, now: now, locale: locale, moneyFormat: moneyFormat, l10n: l10n, paidBySms: paidBySms.contains(reminder.id), paidAmountMinor: paidAmounts[reminder.id]),
           ]),
         ),
       ],
@@ -248,7 +248,7 @@ class _HistoryList extends ConsumerWidget {
   }
 
   Widget _historyTile(BuildContext context, WidgetRef ref, Reminder reminder,
-      {required DateTime now, required String locale, required String symbol, required AppLocalizations l10n, required bool paidBySms, int? paidAmountMinor}) {
+      {required DateTime now, required String locale, required MoneyFormat moneyFormat, required AppLocalizations l10n, required bool paidBySms, int? paidAmountMinor}) {
     final kind = ReminderKind.of(reminder.kind);
     final closedAt = reminder.doneAt ?? reminder.updatedAt;
     final date = formatRowDate(closedAt, locale: locale);
@@ -259,7 +259,7 @@ class _HistoryList extends ConsumerWidget {
             : l10n.reminderDoneOn(date);
     // What the linked entry paid wins over the reminder's expected amount.
     final amount = paidAmountMinor ?? reminderAmountOrNone(reminder.amountMinor);
-    final caption = amount == null ? status : '$status · ${formatMinor(amount, symbol: symbol)}';
+    final caption = amount == null ? status : '$status · ${formatMinor(amount, format: moneyFormat)}';
     final canUndo = now.difference(closedAt) <= kReminderUndoWindow;
     return ListTile(
       leading: CircleAvatar(child: Icon(reminderKindIcon(kind), size: 20)),

@@ -20,6 +20,7 @@ import '../../domain/projects/project_math.dart';
 import '../../domain/stats/category_shares.dart';
 import '../../domain/stats/month_summary.dart';
 import '../../domain/stats/spend_series.dart';
+import '../../domain/stats/today_spend.dart';
 import '../../domain/stats/trend.dart';
 import '../budgets/budget_views.dart';
 
@@ -49,20 +50,30 @@ AsyncValue<R> combineAsync<A, B, R>(AsyncValue<A> first, AsyncValue<B> second, R
 // Hero -----------------------------------------------------------------------
 
 class HeroData {
-  const HeroData({required this.summary, required this.range, required this.previousRange});
+  const HeroData({required this.summary, required this.range, required this.previousRange, this.todayMinor});
   final MonthSummary summary;
   final DateRange range;
   final DateRange previousRange;
+
+  /// Today's spend; null when the card shows a month that is not this one.
+  final int? todayMinor;
 }
 
 final heroDataProvider = Provider<AsyncValue<HeroData>>((ref) => mapAsync(ref.watch(dashboardLedgerProvider), (ledger) {
+      final now = DateTime.now();
+      final currentLines = linesWithin(ledger.lines, ledger.range);
       final summary = summariseMonth(
-        current: linesWithin(ledger.lines, ledger.range),
+        current: currentLines,
         previous: linesWithin(ledger.lines, ledger.previousRange),
         range: ledger.range,
-        now: DateTime.now(),
+        now: now,
       );
-      return HeroData(summary: summary, range: ledger.range, previousRange: ledger.previousRange);
+      return HeroData(
+        summary: summary,
+        range: ledger.range,
+        previousRange: ledger.previousRange,
+        todayMinor: todaySpendMinor(lines: currentLines, shownRange: ledger.range, now: now),
+      );
     }));
 
 // Trend ----------------------------------------------------------------------

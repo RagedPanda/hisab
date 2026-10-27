@@ -39,6 +39,8 @@ import 'notifications/reminder_alert_text.dart';
 import 'notifications/reminder_scheduler.dart';
 import 'settings.dart';
 
+export 'home_currency.dart' show deviceLocaleProvider, groupMoneyFormatProvider, homeMoneyFormatProvider;
+
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
   ref.onDispose(db.close);
@@ -103,7 +105,6 @@ final selectedRangeProvider = Provider<DateRange>((ref) {
 final categoriesProvider = StreamProvider((ref) => ref.watch(categoriesRepositoryProvider).watchAll());
 final allCategoriesProvider = StreamProvider((ref) => ref.watch(categoriesRepositoryProvider).watchAll(includeArchived: true));
 final accountsProvider = StreamProvider((ref) => ref.watch(accountsRepositoryProvider).watchAll());
-final recentAccountIdsProvider = StreamProvider((ref) => ref.watch(entriesRepositoryProvider).watchRecentAccountIds());
 final budgetsProvider = StreamProvider((ref) => ref.watch(budgetsRepositoryProvider).watchAll());
 final groupSummariesProvider = StreamProvider((ref) => ref.watch(groupsRepositoryProvider).watchSummaries());
 
@@ -215,11 +216,11 @@ final notificationGatewayProvider = Provider<NotificationGateway>((ref) {
 /// The single notification layer: schedule, cancel, rescheduleAll, permissions.
 final notificationServiceProvider = Provider((ref) {
   final localeCode = ref.watch(settingsProvider.select((settings) => settings.localeCode));
-  final currencySymbol = ref.watch(settingsProvider.select((settings) => settings.currencySymbol));
+  final moneyFormat = ref.watch(homeMoneyFormatProvider);
   final l10n = notificationLocalizations(localeCode);
   return NotificationService(
     ref.watch(notificationGatewayProvider),
-    buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, l10n, currencySymbol: currencySymbol),
+    buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, l10n, moneyFormat: moneyFormat),
   );
 });
 

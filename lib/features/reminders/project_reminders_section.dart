@@ -24,7 +24,7 @@ class ProjectRemindersSection extends ConsumerWidget {
     final reminders = ref.watch(projectRemindersProvider(projectId)).value ?? const [];
     if (reminders.isEmpty) return const SizedBox.shrink();
     final l10n = context.l10n;
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final now = DateTime.now();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       SectionHeader(l10n.documentRemindersOnProject, padding: const EdgeInsets.fromLTRB(4, 20, 4, 8)),
@@ -38,7 +38,7 @@ class ProjectRemindersSection extends ConsumerWidget {
               title: Text(reminder.title, maxLines: 1, overflow: TextOverflow.ellipsis),
               subtitle: Text(
                 [
-                  reminderDueCaption(l10n, dueAt: reminder.dueAt!, at: now, amountMinor: reminder.amountMinor, currencySymbol: symbol),
+                  reminderDueCaption(l10n, dueAt: reminder.dueAt!, at: now, amountMinor: reminder.amountMinor, moneyFormat: moneyFormat),
                   if (reminder.documentNumber.isNotEmpty) reminder.documentNumber,
                 ].join(' · '),
                 maxLines: 1,

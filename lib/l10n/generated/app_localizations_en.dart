@@ -64,6 +64,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get note => 'Note';
 
   @override
+  String get moreDetails => 'More details';
+
+  @override
   String get all => 'All';
 
   @override
@@ -140,6 +143,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accounts => 'Accounts';
+
+  @override
+  String get defaultAccount => 'Default account';
+
+  @override
+  String get defaultAccountHelp => 'New entries start on this account';
 
   @override
   String get account => 'Account';
@@ -759,13 +768,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreBackupHelp => 'Merges; newer local edits are kept';
 
   @override
-  String get cloudSync => 'Cloud sync';
-
-  @override
-  String get cloudSyncHelp =>
-      'Coming next: Google Drive on Android, iCloud on iOS, end-to-end encrypted with the same format as backups.';
-
-  @override
   String get about => 'About';
 
   @override
@@ -1120,9 +1122,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String percentOf(int percent) {
     return '$percent%';
   }
-
-  @override
-  String get budgetsEmptyBody => 'Set a budget to see how you\'re tracking';
 
   @override
   String andMoreCount(int count) {
@@ -2316,6 +2315,112 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get cardStatementDay => 'Statement day';
+
+  @override
+  String get cardDueDay => 'Payment due day';
+
+  @override
+  String get cardDayNotSet => 'Not set';
+
+  @override
+  String get cardCreditLimit => 'Credit limit';
+
+  @override
+  String get cardLastStatementAmount => 'Last statement amount';
+
+  @override
+  String get cardDetailsHint =>
+      'Statement and due days let Hisab show your billing cycle and remind you before the bill is due.';
+
+  @override
+  String get cardOutstanding => 'Outstanding';
+
+  @override
+  String get cardThisCycle => 'This cycle';
+
+  @override
+  String cardCycleDates(String start, String end) {
+    return '$start to $end';
+  }
+
+  @override
+  String get cardLastStatement => 'Last statement';
+
+  @override
+  String cardStatementOn(String date) {
+    return 'Statement of $date';
+  }
+
+  @override
+  String get cardNoStatement => 'Not recorded';
+
+  @override
+  String get cardAvailableLimit => 'Available limit';
+
+  @override
+  String cardOverLimitBy(String amount) {
+    return 'Over limit by $amount';
+  }
+
+  @override
+  String cardLimitUsed(int percent, String limit) {
+    return '$percent% of $limit limit used';
+  }
+
+  @override
+  String cardDueOn(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String get cardPaid => 'Paid';
+
+  @override
+  String cardAmountLeftToPay(String amount) {
+    return '$amount left to pay';
+  }
+
+  @override
+  String get cardSetUpDays => 'Set statement and due days';
+
+  @override
+  String get cardViewTransactions => 'View transactions';
+
+  @override
+  String get cardNotFound => 'This card was deleted';
+
+  @override
+  String cardNextDue(String date) {
+    return 'Next due $date';
+  }
+
+  @override
+  String cardInCredit(String amount) {
+    return '$amount credit';
+  }
+
+  @override
+  String cardStatementOverAmountDue(String amount) {
+    return 'More than the amount due ($amount). Lower it to what is still unpaid.';
+  }
+
+  @override
+  String get cardBalanceOwed => 'Amount due';
+
+  @override
+  String get cardBalanceCredit => 'In credit';
+
+  @override
+  String get cardCreditOnCard => 'Credit on the card';
+
+  @override
+  String get balanceInAccount => 'In account';
+
+  @override
+  String get balanceOverdrawn => 'Overdrawn';
+
+  @override
   String get smsHistoryTitle => 'SMS history';
 
   @override
@@ -3445,21 +3550,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsReviewAddManually => 'Add manually';
 
   @override
-  String upcomingEmptyWithin(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'Nothing due in the next $days days',
-      one: 'Nothing due tomorrow',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get upcomingEmptyHint =>
-      'Recurring bills, reminders and card dues show up here.';
-
-  @override
   String upcomingWindowDays(int days) {
     return '$days days';
   }
@@ -3880,6 +3970,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smsReminderPaidViaSms => 'Paid via SMS';
+
+  @override
+  String heroToday(String amount) {
+    return 'Today $amount';
+  }
+
+  @override
+  String heroTodaySemantics(String amount) {
+    return 'Spent today $amount. Show today\'s entries';
+  }
+
+  @override
+  String get numberFormatTitle => 'Number format';
+
+  @override
+  String get numberFormatAutomatic => 'Automatic';
+
+  @override
+  String get numberFormatAutomaticHelp => 'Follows your currency and region';
 
   @override
   String safeToSpendPerDay(String amount) {

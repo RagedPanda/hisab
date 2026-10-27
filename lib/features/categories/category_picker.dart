@@ -11,8 +11,25 @@ import 'subcategory_preview.dart';
 
 final _recentCategoryIdsProvider = FutureProvider.family<List<String>, String>((ref, kind) => ref.watch(entriesRepositoryProvider).recentCategoryIds(kind: kind));
 
-/// Bottom sheet that lets the user pick a parent or child category.
-Future<Category?> showCategoryPicker(BuildContext context, {required String kind, String? selectedId}) {
+/// Sentinel returned by [showCategoryPicker] when the user clears the
+/// selection. Compared by identity, so callers tell "clear to Uncategorised"
+/// (this value) from "dismissed without choosing" (null).
+final Category clearedCategory = Category(
+  updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  id: '',
+  name: '',
+  icon: 'category',
+  color: 0,
+  kind: '',
+  sortOrder: 0,
+  isArchived: false,
+  units: '',
+);
+
+/// Bottom sheet that lets the user pick a parent or child category. When
+/// [allowClear] is set, an "Uncategorised" row returns [clearedCategory] so a
+/// previously assigned category can be removed.
+Future<Category?> showCategoryPicker(BuildContext context, {required String kind, String? selectedId, bool allowClear = false}) {
   return showModalBottomSheet<Category>(
     context: context,
     isScrollControlled: true,
@@ -22,15 +39,16 @@ Future<Category?> showCategoryPicker(BuildContext context, {required String kind
       expand: false,
       initialChildSize: 0.85,
       maxChildSize: 0.95,
-      builder: (context, controller) => _CategoryPickerBody(kind: kind, selectedId: selectedId, controller: controller),
+      builder: (context, controller) => _CategoryPickerBody(kind: kind, selectedId: selectedId, allowClear: allowClear, controller: controller),
     ),
   );
 }
 
 class _CategoryPickerBody extends ConsumerStatefulWidget {
-  const _CategoryPickerBody({required this.kind, required this.selectedId, required this.controller});
+  const _CategoryPickerBody({required this.kind, required this.selectedId, required this.allowClear, required this.controller});
   final String kind;
   final String? selectedId;
+  final bool allowClear;
   final ScrollController controller;
 
   @override
@@ -90,6 +108,14 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
                   controller: widget.controller,
                   padding: const EdgeInsets.only(bottom: 24),
                   children: [
+                    if (widget.allowClear)
+                      ListTile(
+                        key: const Key('category.clear'),
+                        leading: const Icon(Icons.not_interested),
+                        title: Text(context.l10n.uncategorised),
+                        selected: widget.selectedId == null,
+                        onTap: () => Navigator.pop(context, clearedCategory),
+                      ),
                     if (recent.isNotEmpty) _RecentRow(categories: recent, selected: selected, onPick: (category) => Navigator.pop(context, category)),
                     for (final node in tree)
                       _ParentTile(

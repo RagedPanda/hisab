@@ -17,6 +17,8 @@ import 'package:hisab/features/groups/settle_reminder_service.dart';
 import 'package:hisab/features/groups/settle_schedule_tile.dart';
 
 import '../core/fake_notification_gateway.dart';
+import 'package:hisab/core/money.dart';
+import 'package:hisab/domain/money/money_format_resolver.dart';
 
 void main() {
   late AppDatabase db;
@@ -37,11 +39,11 @@ void main() {
     gateway = FakeNotificationGateway();
     scheduler = ReminderScheduler(
       reminders: RemindersRepository(db, clock: () => now),
-      notifications: NotificationService(gateway, buildAlert: (r, a) => alertRequestFor(r, a, english, currencySymbol: '₹'), clock: () => now),
+      notifications: NotificationService(gateway, buildAlert: (r, a) => alertRequestFor(r, a, english, moneyFormat: MoneyFormat.inr), clock: () => now),
       settleSchedules: schedules,
       clock: () => now,
     );
-    service = SettleReminderService(groups: groups, schedules: schedules, scheduler: scheduler, l10n: english, currencySymbol: '₹', clock: () => now);
+    service = SettleReminderService(groups: groups, schedules: schedules, scheduler: scheduler, l10n: english, moneyFormatFor: _moneyFormatFor, clock: () => now);
   });
 
   tearDown(() => db.close());
@@ -131,10 +133,10 @@ void main() {
     test('settleReminderTextFor words the balance about one member or everyone, and is null when settled', () async {
       final (groupId, ravi, _) = await flat();
       final detail = (await groups.getGroupDetail(groupId))!;
-      expect(settleReminderTextFor(english, detail, memberId: ravi, currencySymbol: '₹'), (title: 'Settle up: Flat 302', body: 'Ravi owes you ₹500'));
-      expect(settleReminderTextFor(english, detail, currencySymbol: '₹')?.body, 'Ravi owes you ₹500');
+      expect(settleReminderTextFor(english, detail, memberId: ravi, moneyFormatFor: _moneyFormatFor), (title: 'Settle up: Flat 302', body: 'Ravi owes you ₹500'));
+      expect(settleReminderTextFor(english, detail, moneyFormatFor: _moneyFormatFor)?.body, 'Ravi owes you ₹500');
       final (settledId, _, _) = await flat(raviOwesMinor: 0);
-      expect(settleReminderTextFor(english, (await groups.getGroupDetail(settledId))!, currencySymbol: '₹'), isNull);
+      expect(settleReminderTextFor(english, (await groups.getGroupDetail(settledId))!, moneyFormatFor: _moneyFormatFor), isNull);
     });
 
     test('setSchedule posts alerts at 9:00 on the next dates and opens the group\'s Balances on tap', () async {
@@ -212,11 +214,14 @@ void main() {
     test('settleScheduleNudgeFor names people by their own names and is null when settled', () async {
       final (groupId, ravi, _) = await flat();
       final detail = (await groups.getGroupDetail(groupId))!;
-      final nudge = settleScheduleNudgeFor(english, detail, SettleReminderSchedule(frequency: RecurrenceFrequency.monthly, dayOfMonth: 1, memberId: ravi), currencySymbol: '₹');
+      final nudge = settleScheduleNudgeFor(english, detail, SettleReminderSchedule(frequency: RecurrenceFrequency.monthly, dayOfMonth: 1, memberId: ravi), moneyFormat: MoneyFormat.inr);
       expect(nudge, contains('Ravi'));
       expect(nudge, contains('₹500'));
       final (settledId, _, _) = await flat(raviOwesMinor: 0);
-      expect(settleScheduleNudgeFor(english, (await groups.getGroupDetail(settledId))!, monthlyOnFirst, currencySymbol: '₹'), isNull);
+      expect(settleScheduleNudgeFor(english, (await groups.getGroupDetail(settledId))!, monthlyOnFirst, moneyFormat: MoneyFormat.inr), isNull);
     });
   });
 }
+
+/// Group amounts in their own label, else rupees, as the app resolves them.
+MoneyFormat _moneyFormatFor(String? currencyLabel) => moneyFormatForLabel(currencyLabel, home: MoneyFormat.inr);

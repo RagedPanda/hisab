@@ -31,10 +31,7 @@ void main() {
       expect(parseAmountToMinor('9' * 13), isNull);
       expect(parseAmountToMinor('99999999999999999999'), isNull);
     });
-    test('card balances are stored as money owed', () {
-      expect(signedBalanceForType('card', 124000), -124000);
-      expect(signedBalanceForType('card', -124000), -124000);
-      expect(signedBalanceForType('bank', 124000), 124000);
+    test('amount fields are seeded without a trailing .00', () {
       expect(amountInputText(124000), '1240');
       expect(amountInputText(124050), '1240.50');
     });

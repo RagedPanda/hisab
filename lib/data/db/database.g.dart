@@ -146,6 +146,59 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _statementDayMeta = const VerificationMeta(
+    'statementDay',
+  );
+  @override
+  late final GeneratedColumn<int> statementDay = GeneratedColumn<int>(
+    'statement_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dueDayMeta = const VerificationMeta('dueDay');
+  @override
+  late final GeneratedColumn<int> dueDay = GeneratedColumn<int>(
+    'due_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _creditLimitMinorMeta = const VerificationMeta(
+    'creditLimitMinor',
+  );
+  @override
+  late final GeneratedColumn<int> creditLimitMinor = GeneratedColumn<int>(
+    'credit_limit_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastStatementMinorMeta =
+      const VerificationMeta('lastStatementMinor');
+  @override
+  late final GeneratedColumn<int> lastStatementMinor = GeneratedColumn<int>(
+    'last_statement_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastStatementAtMeta = const VerificationMeta(
+    'lastStatementAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastStatementAt =
+      GeneratedColumn<DateTime>(
+        'last_statement_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -161,6 +214,11 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     includeInTotal,
     color,
     sortOrder,
+    statementDay,
+    dueDay,
+    creditLimitMinor,
+    lastStatementMinor,
+    lastStatementAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -266,6 +324,48 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
       );
     }
+    if (data.containsKey('statement_day')) {
+      context.handle(
+        _statementDayMeta,
+        statementDay.isAcceptableOrUnknown(
+          data['statement_day']!,
+          _statementDayMeta,
+        ),
+      );
+    }
+    if (data.containsKey('due_day')) {
+      context.handle(
+        _dueDayMeta,
+        dueDay.isAcceptableOrUnknown(data['due_day']!, _dueDayMeta),
+      );
+    }
+    if (data.containsKey('credit_limit_minor')) {
+      context.handle(
+        _creditLimitMinorMeta,
+        creditLimitMinor.isAcceptableOrUnknown(
+          data['credit_limit_minor']!,
+          _creditLimitMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_statement_minor')) {
+      context.handle(
+        _lastStatementMinorMeta,
+        lastStatementMinor.isAcceptableOrUnknown(
+          data['last_statement_minor']!,
+          _lastStatementMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_statement_at')) {
+      context.handle(
+        _lastStatementAtMeta,
+        lastStatementAt.isAcceptableOrUnknown(
+          data['last_statement_at']!,
+          _lastStatementAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -327,6 +427,26 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         DriftSqlType.int,
         data['${effectivePrefix}sort_order'],
       )!,
+      statementDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}statement_day'],
+      ),
+      dueDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}due_day'],
+      ),
+      creditLimitMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}credit_limit_minor'],
+      ),
+      lastStatementMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_statement_minor'],
+      ),
+      lastStatementAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_statement_at'],
+      ),
     );
   }
 
@@ -355,6 +475,16 @@ class Account extends DataClass implements Insertable<Account> {
   final bool includeInTotal;
   final int color;
   final int sortOrder;
+
+  /// Credit cards only: day of month the statement is generated (1-31; short
+  /// months clamp to their last day) and the day the bill is due.
+  final int? statementDay;
+  final int? dueDay;
+  final int? creditLimitMinor;
+
+  /// Amount billed on the most recent statement and that statement's date.
+  final int? lastStatementMinor;
+  final DateTime? lastStatementAt;
   const Account({
     required this.updatedAt,
     this.deletedAt,
@@ -369,6 +499,11 @@ class Account extends DataClass implements Insertable<Account> {
     required this.includeInTotal,
     required this.color,
     required this.sortOrder,
+    this.statementDay,
+    this.dueDay,
+    this.creditLimitMinor,
+    this.lastStatementMinor,
+    this.lastStatementAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -396,6 +531,21 @@ class Account extends DataClass implements Insertable<Account> {
     map['include_in_total'] = Variable<bool>(includeInTotal);
     map['color'] = Variable<int>(color);
     map['sort_order'] = Variable<int>(sortOrder);
+    if (!nullToAbsent || statementDay != null) {
+      map['statement_day'] = Variable<int>(statementDay);
+    }
+    if (!nullToAbsent || dueDay != null) {
+      map['due_day'] = Variable<int>(dueDay);
+    }
+    if (!nullToAbsent || creditLimitMinor != null) {
+      map['credit_limit_minor'] = Variable<int>(creditLimitMinor);
+    }
+    if (!nullToAbsent || lastStatementMinor != null) {
+      map['last_statement_minor'] = Variable<int>(lastStatementMinor);
+    }
+    if (!nullToAbsent || lastStatementAt != null) {
+      map['last_statement_at'] = Variable<DateTime>(lastStatementAt);
+    }
     return map;
   }
 
@@ -424,6 +574,21 @@ class Account extends DataClass implements Insertable<Account> {
       includeInTotal: Value(includeInTotal),
       color: Value(color),
       sortOrder: Value(sortOrder),
+      statementDay: statementDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(statementDay),
+      dueDay: dueDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueDay),
+      creditLimitMinor: creditLimitMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(creditLimitMinor),
+      lastStatementMinor: lastStatementMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastStatementMinor),
+      lastStatementAt: lastStatementAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastStatementAt),
     );
   }
 
@@ -446,6 +611,11 @@ class Account extends DataClass implements Insertable<Account> {
       includeInTotal: serializer.fromJson<bool>(json['includeInTotal']),
       color: serializer.fromJson<int>(json['color']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      statementDay: serializer.fromJson<int?>(json['statementDay']),
+      dueDay: serializer.fromJson<int?>(json['dueDay']),
+      creditLimitMinor: serializer.fromJson<int?>(json['creditLimitMinor']),
+      lastStatementMinor: serializer.fromJson<int?>(json['lastStatementMinor']),
+      lastStatementAt: serializer.fromJson<DateTime?>(json['lastStatementAt']),
     );
   }
   @override
@@ -465,6 +635,11 @@ class Account extends DataClass implements Insertable<Account> {
       'includeInTotal': serializer.toJson<bool>(includeInTotal),
       'color': serializer.toJson<int>(color),
       'sortOrder': serializer.toJson<int>(sortOrder),
+      'statementDay': serializer.toJson<int?>(statementDay),
+      'dueDay': serializer.toJson<int?>(dueDay),
+      'creditLimitMinor': serializer.toJson<int?>(creditLimitMinor),
+      'lastStatementMinor': serializer.toJson<int?>(lastStatementMinor),
+      'lastStatementAt': serializer.toJson<DateTime?>(lastStatementAt),
     };
   }
 
@@ -482,6 +657,11 @@ class Account extends DataClass implements Insertable<Account> {
     bool? includeInTotal,
     int? color,
     int? sortOrder,
+    Value<int?> statementDay = const Value.absent(),
+    Value<int?> dueDay = const Value.absent(),
+    Value<int?> creditLimitMinor = const Value.absent(),
+    Value<int?> lastStatementMinor = const Value.absent(),
+    Value<DateTime?> lastStatementAt = const Value.absent(),
   }) => Account(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -496,6 +676,17 @@ class Account extends DataClass implements Insertable<Account> {
     includeInTotal: includeInTotal ?? this.includeInTotal,
     color: color ?? this.color,
     sortOrder: sortOrder ?? this.sortOrder,
+    statementDay: statementDay.present ? statementDay.value : this.statementDay,
+    dueDay: dueDay.present ? dueDay.value : this.dueDay,
+    creditLimitMinor: creditLimitMinor.present
+        ? creditLimitMinor.value
+        : this.creditLimitMinor,
+    lastStatementMinor: lastStatementMinor.present
+        ? lastStatementMinor.value
+        : this.lastStatementMinor,
+    lastStatementAt: lastStatementAt.present
+        ? lastStatementAt.value
+        : this.lastStatementAt,
   );
   Account copyWithCompanion(AccountsCompanion data) {
     return Account(
@@ -518,6 +709,19 @@ class Account extends DataClass implements Insertable<Account> {
           : this.includeInTotal,
       color: data.color.present ? data.color.value : this.color,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      statementDay: data.statementDay.present
+          ? data.statementDay.value
+          : this.statementDay,
+      dueDay: data.dueDay.present ? data.dueDay.value : this.dueDay,
+      creditLimitMinor: data.creditLimitMinor.present
+          ? data.creditLimitMinor.value
+          : this.creditLimitMinor,
+      lastStatementMinor: data.lastStatementMinor.present
+          ? data.lastStatementMinor.value
+          : this.lastStatementMinor,
+      lastStatementAt: data.lastStatementAt.present
+          ? data.lastStatementAt.value
+          : this.lastStatementAt,
     );
   }
 
@@ -536,7 +740,12 @@ class Account extends DataClass implements Insertable<Account> {
           ..write('balanceAsOf: $balanceAsOf, ')
           ..write('includeInTotal: $includeInTotal, ')
           ..write('color: $color, ')
-          ..write('sortOrder: $sortOrder')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('statementDay: $statementDay, ')
+          ..write('dueDay: $dueDay, ')
+          ..write('creditLimitMinor: $creditLimitMinor, ')
+          ..write('lastStatementMinor: $lastStatementMinor, ')
+          ..write('lastStatementAt: $lastStatementAt')
           ..write(')'))
         .toString();
   }
@@ -556,6 +765,11 @@ class Account extends DataClass implements Insertable<Account> {
     includeInTotal,
     color,
     sortOrder,
+    statementDay,
+    dueDay,
+    creditLimitMinor,
+    lastStatementMinor,
+    lastStatementAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -573,7 +787,12 @@ class Account extends DataClass implements Insertable<Account> {
           other.balanceAsOf == this.balanceAsOf &&
           other.includeInTotal == this.includeInTotal &&
           other.color == this.color &&
-          other.sortOrder == this.sortOrder);
+          other.sortOrder == this.sortOrder &&
+          other.statementDay == this.statementDay &&
+          other.dueDay == this.dueDay &&
+          other.creditLimitMinor == this.creditLimitMinor &&
+          other.lastStatementMinor == this.lastStatementMinor &&
+          other.lastStatementAt == this.lastStatementAt);
 }
 
 class AccountsCompanion extends UpdateCompanion<Account> {
@@ -590,6 +809,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   final Value<bool> includeInTotal;
   final Value<int> color;
   final Value<int> sortOrder;
+  final Value<int?> statementDay;
+  final Value<int?> dueDay;
+  final Value<int?> creditLimitMinor;
+  final Value<int?> lastStatementMinor;
+  final Value<DateTime?> lastStatementAt;
   final Value<int> rowid;
   const AccountsCompanion({
     this.updatedAt = const Value.absent(),
@@ -605,6 +829,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.includeInTotal = const Value.absent(),
     this.color = const Value.absent(),
     this.sortOrder = const Value.absent(),
+    this.statementDay = const Value.absent(),
+    this.dueDay = const Value.absent(),
+    this.creditLimitMinor = const Value.absent(),
+    this.lastStatementMinor = const Value.absent(),
+    this.lastStatementAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AccountsCompanion.insert({
@@ -621,6 +850,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.includeInTotal = const Value.absent(),
     required int color,
     this.sortOrder = const Value.absent(),
+    this.statementDay = const Value.absent(),
+    this.dueDay = const Value.absent(),
+    this.creditLimitMinor = const Value.absent(),
+    this.lastStatementMinor = const Value.absent(),
+    this.lastStatementAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -640,6 +874,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Expression<bool>? includeInTotal,
     Expression<int>? color,
     Expression<int>? sortOrder,
+    Expression<int>? statementDay,
+    Expression<int>? dueDay,
+    Expression<int>? creditLimitMinor,
+    Expression<int>? lastStatementMinor,
+    Expression<DateTime>? lastStatementAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -656,6 +895,12 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       if (includeInTotal != null) 'include_in_total': includeInTotal,
       if (color != null) 'color': color,
       if (sortOrder != null) 'sort_order': sortOrder,
+      if (statementDay != null) 'statement_day': statementDay,
+      if (dueDay != null) 'due_day': dueDay,
+      if (creditLimitMinor != null) 'credit_limit_minor': creditLimitMinor,
+      if (lastStatementMinor != null)
+        'last_statement_minor': lastStatementMinor,
+      if (lastStatementAt != null) 'last_statement_at': lastStatementAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -674,6 +919,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Value<bool>? includeInTotal,
     Value<int>? color,
     Value<int>? sortOrder,
+    Value<int?>? statementDay,
+    Value<int?>? dueDay,
+    Value<int?>? creditLimitMinor,
+    Value<int?>? lastStatementMinor,
+    Value<DateTime?>? lastStatementAt,
     Value<int>? rowid,
   }) {
     return AccountsCompanion(
@@ -690,6 +940,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       includeInTotal: includeInTotal ?? this.includeInTotal,
       color: color ?? this.color,
       sortOrder: sortOrder ?? this.sortOrder,
+      statementDay: statementDay ?? this.statementDay,
+      dueDay: dueDay ?? this.dueDay,
+      creditLimitMinor: creditLimitMinor ?? this.creditLimitMinor,
+      lastStatementMinor: lastStatementMinor ?? this.lastStatementMinor,
+      lastStatementAt: lastStatementAt ?? this.lastStatementAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -736,6 +991,21 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     if (sortOrder.present) {
       map['sort_order'] = Variable<int>(sortOrder.value);
     }
+    if (statementDay.present) {
+      map['statement_day'] = Variable<int>(statementDay.value);
+    }
+    if (dueDay.present) {
+      map['due_day'] = Variable<int>(dueDay.value);
+    }
+    if (creditLimitMinor.present) {
+      map['credit_limit_minor'] = Variable<int>(creditLimitMinor.value);
+    }
+    if (lastStatementMinor.present) {
+      map['last_statement_minor'] = Variable<int>(lastStatementMinor.value);
+    }
+    if (lastStatementAt.present) {
+      map['last_statement_at'] = Variable<DateTime>(lastStatementAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -758,6 +1028,11 @@ class AccountsCompanion extends UpdateCompanion<Account> {
           ..write('includeInTotal: $includeInTotal, ')
           ..write('color: $color, ')
           ..write('sortOrder: $sortOrder, ')
+          ..write('statementDay: $statementDay, ')
+          ..write('dueDay: $dueDay, ')
+          ..write('creditLimitMinor: $creditLimitMinor, ')
+          ..write('lastStatementMinor: $lastStatementMinor, ')
+          ..write('lastStatementAt: $lastStatementAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -13949,6 +14224,11 @@ typedef $$AccountsTableCreateCompanionBuilder = AccountsCompanion Function({
   Value<bool> includeInTotal,
   required int color,
   Value<int> sortOrder,
+  Value<int?> statementDay,
+  Value<int?> dueDay,
+  Value<int?> creditLimitMinor,
+  Value<int?> lastStatementMinor,
+  Value<DateTime?> lastStatementAt,
   Value<int> rowid,
 });
 typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
@@ -13965,6 +14245,11 @@ typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
   Value<bool> includeInTotal,
   Value<int> color,
   Value<int> sortOrder,
+  Value<int?> statementDay,
+  Value<int?> dueDay,
+  Value<int?> creditLimitMinor,
+  Value<int?> lastStatementMinor,
+  Value<DateTime?> lastStatementAt,
   Value<int> rowid,
 });
 
@@ -14039,6 +14324,31 @@ class $$AccountsTableFilterComposer
 
   ColumnFilters<int> get sortOrder => $composableBuilder(
     column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get statementDay => $composableBuilder(
+    column: $table.statementDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dueDay => $composableBuilder(
+    column: $table.dueDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get creditLimitMinor => $composableBuilder(
+    column: $table.creditLimitMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastStatementMinor => $composableBuilder(
+    column: $table.lastStatementMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastStatementAt => $composableBuilder(
+    column: $table.lastStatementAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -14116,6 +14426,31 @@ class $$AccountsTableOrderingComposer
     column: $table.sortOrder,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get statementDay => $composableBuilder(
+    column: $table.statementDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dueDay => $composableBuilder(
+    column: $table.dueDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get creditLimitMinor => $composableBuilder(
+    column: $table.creditLimitMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastStatementMinor => $composableBuilder(
+    column: $table.lastStatementMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastStatementAt => $composableBuilder(
+    column: $table.lastStatementAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AccountsTableAnnotationComposer
@@ -14171,6 +14506,29 @@ class $$AccountsTableAnnotationComposer
 
   GeneratedColumn<int> get sortOrder =>
       $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<int> get statementDay => $composableBuilder(
+    column: $table.statementDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get dueDay =>
+      $composableBuilder(column: $table.dueDay, builder: (column) => column);
+
+  GeneratedColumn<int> get creditLimitMinor => $composableBuilder(
+    column: $table.creditLimitMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastStatementMinor => $composableBuilder(
+    column: $table.lastStatementMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastStatementAt => $composableBuilder(
+    column: $table.lastStatementAt,
+    builder: (column) => column,
+  );
 }
 
 class $$AccountsTableTableManager
@@ -14214,6 +14572,11 @@ class $$AccountsTableTableManager
                 Value<bool> includeInTotal = const Value.absent(),
                 Value<int> color = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
+                Value<int?> statementDay = const Value.absent(),
+                Value<int?> dueDay = const Value.absent(),
+                Value<int?> creditLimitMinor = const Value.absent(),
+                Value<int?> lastStatementMinor = const Value.absent(),
+                Value<DateTime?> lastStatementAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AccountsCompanion(
                 updatedAt: updatedAt,
@@ -14229,6 +14592,11 @@ class $$AccountsTableTableManager
                 includeInTotal: includeInTotal,
                 color: color,
                 sortOrder: sortOrder,
+                statementDay: statementDay,
+                dueDay: dueDay,
+                creditLimitMinor: creditLimitMinor,
+                lastStatementMinor: lastStatementMinor,
+                lastStatementAt: lastStatementAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -14246,6 +14614,11 @@ class $$AccountsTableTableManager
                 Value<bool> includeInTotal = const Value.absent(),
                 required int color,
                 Value<int> sortOrder = const Value.absent(),
+                Value<int?> statementDay = const Value.absent(),
+                Value<int?> dueDay = const Value.absent(),
+                Value<int?> creditLimitMinor = const Value.absent(),
+                Value<int?> lastStatementMinor = const Value.absent(),
+                Value<DateTime?> lastStatementAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AccountsCompanion.insert(
                 updatedAt: updatedAt,
@@ -14261,6 +14634,11 @@ class $$AccountsTableTableManager
                 includeInTotal: includeInTotal,
                 color: color,
                 sortOrder: sortOrder,
+                statementDay: statementDay,
+                dueDay: dueDay,
+                creditLimitMinor: creditLimitMinor,
+                lastStatementMinor: lastStatementMinor,
+                lastStatementAt: lastStatementAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

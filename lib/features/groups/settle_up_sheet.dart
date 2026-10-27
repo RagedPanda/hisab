@@ -40,7 +40,7 @@ Future<void> showSettleUpSheet(
   required SettleRole role,
   required Member counterpart,
   required String message,
-  required String symbol,
+  required MoneyFormat moneyFormat,
   required DateTime? lastRemindedAt,
   required VoidCallback onRecordPayment,
 }) {
@@ -56,7 +56,7 @@ Future<void> showSettleUpSheet(
       role: role,
       counterpart: counterpart,
       message: message,
-      symbol: symbol,
+      moneyFormat: moneyFormat,
       lastRemindedAt: lastRemindedAt,
       onRecordPayment: onRecordPayment,
     ),
@@ -70,7 +70,7 @@ class _SettleUpSheet extends ConsumerStatefulWidget {
     required this.role,
     required this.counterpart,
     required this.message,
-    required this.symbol,
+    required this.moneyFormat,
     required this.lastRemindedAt,
     required this.onRecordPayment,
   });
@@ -79,7 +79,7 @@ class _SettleUpSheet extends ConsumerStatefulWidget {
   final SettleRole role;
   final Member counterpart;
   final String message;
-  final String symbol;
+  final MoneyFormat moneyFormat;
   final DateTime? lastRemindedAt;
   final VoidCallback onRecordPayment;
 
@@ -149,7 +149,7 @@ class _SettleUpSheetState extends ConsumerState<_SettleUpSheet> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.didPaymentGoThrough),
-        content: Text(l10n.didPaymentGoThroughBody(formatMinor(widget.transfer.amountMinor, symbol: widget.symbol), widget.counterpart.name)),
+        content: Text(l10n.didPaymentGoThroughBody(formatMinor(widget.transfer.amountMinor, format: widget.moneyFormat), widget.counterpart.name)),
         actions: [
           TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.notYet)),
           FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.yesRecordIt)),
@@ -165,7 +165,7 @@ class _SettleUpSheetState extends ConsumerState<_SettleUpSheet> {
           method: 'upi',
         );
     if (!mounted) return;
-    _snack(l10n.paymentRecorded(l10n.transferArrow(l10n.you, widget.counterpart.name), formatMinor(widget.transfer.amountMinor, symbol: widget.symbol)));
+    _snack(l10n.paymentRecorded(l10n.transferArrow(l10n.you, widget.counterpart.name), formatMinor(widget.transfer.amountMinor, format: widget.moneyFormat)));
     Navigator.of(context).pop();
   }
 
@@ -187,7 +187,7 @@ class _SettleUpSheetState extends ConsumerState<_SettleUpSheet> {
           children: [
             Text(_isReminder ? l10n.remindName(name) : l10n.payName(name), style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
-            Text(formatMinor(widget.transfer.amountMinor, symbol: widget.symbol), style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600)),
+            Text(formatMinor(widget.transfer.amountMinor, format: widget.moneyFormat), style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600)),
             if (_isReminder && lastReminded != null) ...[
               const SizedBox(height: 4),
               Text(l10n.remindedDaysAgo(daysBetween(lastReminded, DateTime.now())), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),

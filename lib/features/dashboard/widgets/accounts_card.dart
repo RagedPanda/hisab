@@ -24,7 +24,7 @@ class AccountsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final overview = ref.watch(accountsOverviewProvider);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final l10n = context.l10n;
     void openAccounts() => context.push('/accounts');
     return AsyncCard(
@@ -32,7 +32,7 @@ class AccountsCard extends ConsumerWidget {
       skeletonHeight: kAccountStripHeight,
       builder: (data) => DashboardSection(
         title: l10n.accounts,
-        trailing: SectionAction(label: formatMinor(data.totalMinor, symbol: symbol, showDecimals: false), onPressed: openAccounts),
+        trailing: SectionAction(label: formatMinor(data.totalMinor, format: moneyFormat, showDecimals: false), onPressed: openAccounts),
         child: SizedBox(
           key: kAccountsCardKey,
           height: kAccountStripHeight,
@@ -43,7 +43,7 @@ class AccountsCard extends ConsumerWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) => index == data.accounts.length
                 ? _AddAccountCard(onTap: openAccounts)
-                : _AccountCard(account: data.accounts[index], symbol: symbol),
+                : _AccountCard(account: data.accounts[index], moneyFormat: moneyFormat),
           ),
         ),
       ),
@@ -54,9 +54,9 @@ class AccountsCard extends ConsumerWidget {
 /// One balance card: name, the ••mask on its own line, credit cards as
 /// "Due", and a prompt to set an opening balance when cash goes negative.
 class _AccountCard extends ConsumerWidget {
-  const _AccountCard({required this.account, required this.symbol});
+  const _AccountCard({required this.account, required this.moneyFormat});
   final Account account;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -66,8 +66,8 @@ class _AccountCard extends ConsumerWidget {
     final isCard = account.type == 'card';
     final needsOpeningBalance = account.type == 'cash' && account.balanceMinor < 0;
     final balanceText = isCard
-        ? l10n.cardDue(formatMinor(account.balanceMinor.abs(), symbol: symbol, showDecimals: false))
-        : formatMinor(account.balanceMinor, symbol: symbol, showDecimals: false);
+        ? l10n.cardDue(formatMinor(account.balanceMinor.abs(), format: moneyFormat, showDecimals: false))
+        : formatMinor(account.balanceMinor, format: moneyFormat, showDecimals: false);
     final balanceColor = isCard || needsOpeningBalance ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.onSurface;
     return SizedBox(
       width: kAccountCardWidth,
@@ -75,7 +75,9 @@ class _AccountCard extends ConsumerWidget {
         padding: const EdgeInsets.all(12),
         onTap: () => needsOpeningBalance
             ? showAccountForm(context, ref, existing: account, focusBalance: true)
-            : context.go(Uri(path: '/transactions', queryParameters: {'account': account.id}).toString()),
+            : isCard
+                ? openCardAccount(context, account.id)
+                : context.go(Uri(path: '/transactions', queryParameters: {'account': account.id}).toString()),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -206,6 +206,12 @@ abstract class AppLocalizations {
   /// **'Note'**
   String get note;
 
+  /// Header of the collapsible section that hides advanced fields in the entry editor
+  ///
+  /// In en, this message translates to:
+  /// **'More details'**
+  String get moreDetails;
+
   /// No description provided for @all.
   ///
   /// In en, this message translates to:
@@ -337,6 +343,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accounts'**
   String get accounts;
+
+  /// No description provided for @defaultAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Default account'**
+  String get defaultAccount;
+
+  /// No description provided for @defaultAccountHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'New entries start on this account'**
+  String get defaultAccountHelp;
 
   /// No description provided for @account.
   ///
@@ -1400,18 +1418,6 @@ abstract class AppLocalizations {
   /// **'Merges; newer local edits are kept'**
   String get restoreBackupHelp;
 
-  /// No description provided for @cloudSync.
-  ///
-  /// In en, this message translates to:
-  /// **'Cloud sync'**
-  String get cloudSync;
-
-  /// No description provided for @cloudSyncHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Coming next: Google Drive on Android, iCloud on iOS, end-to-end encrypted with the same format as backups.'**
-  String get cloudSyncHelp;
-
   /// No description provided for @about.
   ///
   /// In en, this message translates to:
@@ -1993,12 +1999,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{percent}%'**
   String percentOf(int percent);
-
-  /// No description provided for @budgetsEmptyBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Set a budget to see how you\'re tracking'**
-  String get budgetsEmptyBody;
 
   /// No description provided for @andMoreCount.
   ///
@@ -3920,6 +3920,180 @@ abstract class AppLocalizations {
   /// **'{days, plural, =1{Overdue by 1 day} other{Overdue by {days} days}}'**
   String reminderOverdueDays(int days);
 
+  /// No description provided for @cardStatementDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement day'**
+  String get cardStatementDay;
+
+  /// No description provided for @cardDueDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment due day'**
+  String get cardDueDay;
+
+  /// No description provided for @cardDayNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get cardDayNotSet;
+
+  /// No description provided for @cardCreditLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit limit'**
+  String get cardCreditLimit;
+
+  /// No description provided for @cardLastStatementAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Last statement amount'**
+  String get cardLastStatementAmount;
+
+  /// No description provided for @cardDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement and due days let Hisab show your billing cycle and remind you before the bill is due.'**
+  String get cardDetailsHint;
+
+  /// No description provided for @cardOutstanding.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding'**
+  String get cardOutstanding;
+
+  /// No description provided for @cardThisCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'This cycle'**
+  String get cardThisCycle;
+
+  /// No description provided for @cardCycleDates.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} to {end}'**
+  String cardCycleDates(String start, String end);
+
+  /// No description provided for @cardLastStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Last statement'**
+  String get cardLastStatement;
+
+  /// No description provided for @cardStatementOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement of {date}'**
+  String cardStatementOn(String date);
+
+  /// No description provided for @cardNoStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recorded'**
+  String get cardNoStatement;
+
+  /// No description provided for @cardAvailableLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Available limit'**
+  String get cardAvailableLimit;
+
+  /// No description provided for @cardOverLimitBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Over limit by {amount}'**
+  String cardOverLimitBy(String amount);
+
+  /// No description provided for @cardLimitUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of {limit} limit used'**
+  String cardLimitUsed(int percent, String limit);
+
+  /// No description provided for @cardDueOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date}'**
+  String cardDueOn(String date);
+
+  /// No description provided for @cardPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get cardPaid;
+
+  /// No description provided for @cardAmountLeftToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} left to pay'**
+  String cardAmountLeftToPay(String amount);
+
+  /// No description provided for @cardSetUpDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Set statement and due days'**
+  String get cardSetUpDays;
+
+  /// No description provided for @cardViewTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'View transactions'**
+  String get cardViewTransactions;
+
+  /// No description provided for @cardNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This card was deleted'**
+  String get cardNotFound;
+
+  /// No description provided for @cardNextDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Next due {date}'**
+  String cardNextDue(String date);
+
+  /// No description provided for @cardInCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} credit'**
+  String cardInCredit(String amount);
+
+  /// No description provided for @cardStatementOverAmountDue.
+  ///
+  /// In en, this message translates to:
+  /// **'More than the amount due ({amount}). Lower it to what is still unpaid.'**
+  String cardStatementOverAmountDue(String amount);
+
+  /// No description provided for @cardBalanceOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount due'**
+  String get cardBalanceOwed;
+
+  /// No description provided for @cardBalanceCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'In credit'**
+  String get cardBalanceCredit;
+
+  /// No description provided for @cardCreditOnCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit on the card'**
+  String get cardCreditOnCard;
+
+  /// No description provided for @balanceInAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'In account'**
+  String get balanceInAccount;
+
+  /// No description provided for @balanceOverdrawn.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdrawn'**
+  String get balanceOverdrawn;
+
   /// No description provided for @smsHistoryTitle.
   ///
   /// In en, this message translates to:
@@ -5528,18 +5702,6 @@ abstract class AppLocalizations {
   /// **'Add manually'**
   String get smsReviewAddManually;
 
-  /// No description provided for @upcomingEmptyWithin.
-  ///
-  /// In en, this message translates to:
-  /// **'{days, plural, =1{Nothing due tomorrow} other{Nothing due in the next {days} days}}'**
-  String upcomingEmptyWithin(int days);
-
-  /// No description provided for @upcomingEmptyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Recurring bills, reminders and card dues show up here.'**
-  String get upcomingEmptyHint;
-
   /// No description provided for @upcomingWindowDays.
   ///
   /// In en, this message translates to:
@@ -6175,6 +6337,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paid via SMS'**
   String get smsReminderPaidViaSms;
+
+  /// No description provided for @heroToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today {amount}'**
+  String heroToday(String amount);
+
+  /// No description provided for @heroTodaySemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent today {amount}. Show today\'s entries'**
+  String heroTodaySemantics(String amount);
+
+  /// No description provided for @numberFormatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Number format'**
+  String get numberFormatTitle;
+
+  /// No description provided for @numberFormatAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get numberFormatAutomatic;
+
+  /// No description provided for @numberFormatAutomaticHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows your currency and region'**
+  String get numberFormatAutomaticHelp;
 
   /// No description provided for @safeToSpendPerDay.
   ///

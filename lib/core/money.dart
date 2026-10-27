@@ -11,6 +11,7 @@ export '../domain/money/money_format.dart';
 const int kMaxAmountWholeDigits = 12;
 
 final RegExp _amountPattern = RegExp(r'^(\d+)(?:\.(\d{0,2}))?$');
+final RegExp _wholeAmountPattern = RegExp(r'^(\d+)\.?$');
 final RegExp _ignoredInAmount = RegExp('[\\s  ’\']');
 
 /// Converts a user-typed amount such as "1,234.5" (or "1.234,5" when
@@ -20,18 +21,20 @@ final RegExp _ignoredInAmount = RegExp('[\\s  ’\']');
 /// The format's decimal separator is the decimal. With a decimal comma a
 /// lone '.' followed by up to two digits is read as the decimal too, since
 /// many number keyboards only offer '.'. Pasted group separators are
-/// dropped when they cannot be mistaken for the decimal.
+/// dropped when they cannot be mistaken for the decimal. A currency written
+/// without decimals (JPY) takes whole amounts only: "1000.5" is invalid.
+/// Minor units are hundredths for every currency, so ¥1,000 is 100000.
 int? parseAmountToMinor(String text, {MoneyFormat format = MoneyFormat.inr}) {
   var cleaned = text.replaceAll('₹', '');
   if (format.symbol.isNotEmpty) cleaned = cleaned.replaceAll(format.symbol, '');
   cleaned = cleaned.replaceAll(_ignoredInAmount, '');
   final normalised = format.decimalSeparator == ',' ? _normaliseDecimalComma(cleaned) : cleaned.replaceAll(',', '');
   if (normalised == null || normalised.isEmpty) return null;
-  final match = _amountPattern.firstMatch(normalised);
+  final match = (format.fractionDigits == 0 ? _wholeAmountPattern : _amountPattern).firstMatch(normalised);
   if (match == null) return null;
   if (match.group(1)!.length > kMaxAmountWholeDigits) return null;
   final whole = int.parse(match.group(1)!);
-  final fraction = (match.group(2) ?? '').padRight(2, '0');
+  final fraction = (match.groupCount > 1 ? match.group(2) ?? '' : '').padRight(2, '0');
   return whole * 100 + int.parse(fraction);
 }
 
@@ -52,9 +55,19 @@ String? _normaliseDecimalComma(String text) {
 }
 
 /// Text to seed an amount field with: whole amounts drop the decimals, and
-/// the decimal is [format]'s ("1240,50" with a decimal comma).
-String amountInputText(int minor, {MoneyFormat format = MoneyFormat.inr}) =>
-    minor % 100 == 0 ? '${minor ~/ 100}' : minorToDouble(minor).toStringAsFixed(2).replaceAll('.', format.decimalSeparator);
+/// the decimal is [format]'s ("1240,50" with a decimal comma). A currency
+/// written without decimals rounds to the whole amount it displays ("1001").
+String amountInputText(int minor, {MoneyFormat format = MoneyFormat.inr}) {
+  if (format.fractionDigits == 0) return '${roundMinorToWhole(minor)}';
+  return minor % 100 == 0 ? '${minor ~/ 100}' : minorToDouble(minor).toStringAsFixed(2).replaceAll('.', format.decimalSeparator);
+}
+
+/// Characters an amount field in [format] accepts: digits and both
+/// separators, minus the decimal separator when the currency has no decimals.
+RegExp amountInputCharacters(MoneyFormat format) {
+  if (format.fractionDigits != 0) return RegExp('[0-9.,]');
+  return format.decimalSeparator == ',' ? RegExp('[0-9.]') : RegExp('[0-9,]');
+}
 
 /// Prefix for an amount field: [format]'s symbol, unless it goes after.
 String? amountPrefixText(MoneyFormat format) => format.symbolAfter || format.symbol.isEmpty ? null : '${format.symbol} ';
@@ -63,10 +76,11 @@ String? amountPrefixText(MoneyFormat format) => format.symbolAfter || format.sym
 String? amountSuffixText(MoneyFormat format) => format.symbolAfter && format.symbol.isNotEmpty ? format.symbol : null;
 
 /// Amount field [text] typed in [from], rewritten for [to] (e.g. "12,50" ->
-/// "12.50" once a group's own currency is known). Text that doesn't parse,
-/// or formats sharing a decimal separator, are returned unchanged.
+/// "12.50" once a group's own currency is known; "12.50" -> "13" for JPY).
+/// Text that doesn't parse, or formats sharing a decimal separator and
+/// decimals, are returned unchanged.
 String reformatAmountInput(String text, {required MoneyFormat from, required MoneyFormat to}) {
-  if (from.decimalSeparator == to.decimalSeparator) return text;
+  if (from.decimalSeparator == to.decimalSeparator && from.fractionDigits == to.fractionDigits) return text;
   final minor = parseAmountToMinor(text, format: from);
   return minor == null ? text : amountInputText(minor, format: to);
 }

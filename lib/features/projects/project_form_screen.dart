@@ -115,8 +115,8 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _budgetController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: amountInputFormatters,
+                    keyboardType: amountKeyboardType(_moneyFormat),
+                    inputFormatters: amountInputFormatters(_moneyFormat),
                     decoration: InputDecoration(
                       labelText: l10n.budgetOptional,
                       prefixText: amountPrefixText(ref.watch(homeMoneyFormatProvider)), suffixText: amountSuffixText(ref.watch(homeMoneyFormatProvider)),

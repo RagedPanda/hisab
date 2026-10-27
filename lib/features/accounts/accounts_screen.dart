@@ -116,8 +116,8 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
               TextField(
                 controller: balanceController,
                 autofocus: focusBalance,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: amountInputFormatters,
+                keyboardType: amountKeyboardType(moneyFormat),
+                inputFormatters: amountInputFormatters(moneyFormat),
                 decoration: InputDecoration(labelText: type != 'card' ? l10n.currentBalance : balanceNegative ? l10n.outstandingBalance : l10n.cardCreditOnCard),
               ),
               const SizedBox(height: 8),
@@ -134,6 +134,7 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
               if (type == 'card') ...[
                 const SizedBox(height: 12),
                 _CardFields(
+                  moneyFormat: moneyFormat,
                   statementDay: statementDay,
                   dueDay: dueDay,
                   limitController: limitController,
@@ -286,6 +287,7 @@ CardFormFields cardFieldsFromForm({
 /// Statement and due day pickers, credit limit and last statement amount.
 class _CardFields extends StatelessWidget {
   const _CardFields({
+    required this.moneyFormat,
     required this.statementDay,
     required this.dueDay,
     required this.limitController,
@@ -295,6 +297,7 @@ class _CardFields extends StatelessWidget {
     required this.onStatementDay,
     required this.onDueDay,
   });
+  final MoneyFormat moneyFormat;
   final int? statementDay;
   final int? dueDay;
   final TextEditingController limitController;
@@ -334,16 +337,16 @@ class _CardFields extends StatelessWidget {
         TextField(
           key: const ValueKey('account.creditLimit'),
           controller: limitController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: amountInputFormatters,
+          keyboardType: amountKeyboardType(moneyFormat),
+          inputFormatters: amountInputFormatters(moneyFormat),
           decoration: InputDecoration(labelText: l10n.cardCreditLimit),
         ),
         const SizedBox(height: 12),
         TextField(
           key: const ValueKey('account.lastStatement'),
           controller: lastStatementController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: amountInputFormatters,
+          keyboardType: amountKeyboardType(moneyFormat),
+          inputFormatters: amountInputFormatters(moneyFormat),
           onChanged: (_) => onStatementChanged(),
           decoration: InputDecoration(labelText: l10n.cardLastStatementAmount, errorText: statementError, errorMaxLines: 3),
         ),

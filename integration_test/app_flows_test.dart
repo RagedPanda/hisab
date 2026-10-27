@@ -775,8 +775,8 @@ void main() {
     final restoreDb = AppDatabase(NativeDatabase.memory());
     addTearDown(restoreDb.close);
     await expectLater(BackupService(restoreDb).importEncrypted(bytes, 'wrong passphrase'), throwsA(isA<BackupFormatException>()));
-    final written = await BackupService(restoreDb).importEncrypted(bytes, passphrase);
-    expect(written, greaterThan(0));
+    final restored = await BackupService(restoreDb).importEncrypted(bytes, passphrase);
+    expect(restored.written, greaterThan(0));
     final sourceEntries = await shared.db.select(shared.db.entries).get();
     final restoredEntries = await restoreDb.select(restoreDb.entries).get();
     expect(restoredEntries.map((e) => e.id).toSet(), sourceEntries.map((e) => e.id).toSet());

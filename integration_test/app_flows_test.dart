@@ -776,8 +776,8 @@ void main() {
     final restoreDb = AppDatabase(NativeDatabase.memory());
     addTearDown(restoreDb.close);
     await expectLater(BackupService(restoreDb).importEncrypted(bytes, 'wrong passphrase'), throwsA(isA<BackupFormatException>()));
-    final written = await BackupService(restoreDb).importEncrypted(bytes, passphrase);
-    expect(written, greaterThan(0));
+    final restored = await BackupService(restoreDb).importEncrypted(bytes, passphrase);
+    expect(restored.written, greaterThan(0));
     final sourceEntries = await shared.db.select(shared.db.entries).get();
     final restoredEntries = await restoreDb.select(restoreDb.entries).get();
     expect(restoredEntries.map((e) => e.id).toSet(), sourceEntries.map((e) => e.id).toSet());
@@ -834,7 +834,7 @@ void main() {
     await scrollTo(tester, find.byKey(kBudgetsCardKey));
     expect(find.text('Overall'), findsOneWidget, reason: 'overall budget row comes first');
     await scrollTo(tester, find.byKey(kAccountsCardKey));
-    expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsOneWidget, reason: 'the Upcoming card is keyed even while it shows its empty state');
+    expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsNothing, reason: 'with nothing upcoming the Upcoming card is hidden (#148)');
     expect(find.text('HDFC Savings'), findsOneWidget);
     await scrollTo(tester, find.byKey(kGroupsCardKey));
     expect(find.text('Goa trip'), findsOneWidget);
@@ -1707,7 +1707,7 @@ void main() {
     await groups.addSettlement(groupId: clubId, fromMemberId: rahul, toMemberId: me, amountMinor: 10000);
     final balancesBefore = (await groups.getBalances(clubId)).net;
     await pumpApp(tester, fresh);
-    await tapText(tester, 'Groups', frames: 12);
+    await goTab(tester, 'Groups');
     await tapText(tester, 'Book club', frames: 12);
 
     await tapFinder(tester, find.byType(PopupMenuButton<String>));

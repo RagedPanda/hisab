@@ -133,9 +133,7 @@ class _ActivityTile extends ConsumerWidget {
       ActivitySubject.payment => l10n.activityPaymentRestoredSnack,
       ActivitySubject.group => l10n.activityGroupRestoredSnack,
     };
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(restored)));
+    showTimedSnackBar(messenger, restored);
   }
 
   static IconData _iconFor(ActivityRecord activity) => switch (activity.action) {

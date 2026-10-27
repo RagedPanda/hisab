@@ -155,4 +155,23 @@ void main() {
     await reopened.close();
     await dir.delete(recursive: true);
   });
+  test('startup repoints remembered SMS payees into the kept category copy', () async {
+    final dir = await Directory.systemTemp.createTemp('hisab_dedupe_payees');
+    final file = File('${dir.path}/hisab.sqlite');
+    final first = AppDatabase(NativeDatabase(file));
+    await liveCategories(first);
+    await insertDuplicateSeed(first);
+    await addEntry(first, categoryId: 'dup-food', accountId: 'dup-cash');
+    await first.into(first.budgets).insert(BudgetsCompanion.insert(id: 'budget-1', categoryId: const Value('dup-food'), amountMinor: 500000));
+    final seededFood = (await liveCategories(first)).firstWhere((c) => c.seedKey == 'food' && c.id != 'dup-food');
+    await first.into(first.payeeCategories).insert(PayeeCategoriesCompanion.insert(id: 'expense|name:swiggy', payee: 'Swiggy', categoryId: seededFood.id));
+    await first.close();
+
+    final reopened = AppDatabase(NativeDatabase(file));
+    final payee = await reopened.select(reopened.payeeCategories).getSingle();
+    expect((await CategoriesRepository(reopened).findBySeedKey('food'))!.id, 'dup-food');
+    expect(payee.categoryId, 'dup-food', reason: 'the remembered payee follows its category into the kept copy');
+    await reopened.close();
+    await dir.delete(recursive: true);
+  });
 }

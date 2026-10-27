@@ -511,6 +511,22 @@ class SmsLog extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// The category the user chose for a bank SMS payee, so later messages from
+/// the same payee get it ahead of the keyword rules. [id] is
+/// `payeeMemoryRowId(kind, key)` from `domain/sms/payee_category_memory.dart`:
+/// the entry kind plus the UPI ID, or the normalised name when there is none.
+/// Deleting one in Settings soft-deletes it so a restore does not bring it back.
+class PayeeCategories extends Table with SyncColumns {
+  TextColumn get id => text()();
+
+  /// Readable payee for the Settings list ("Rahul Sharma", "Swiggy").
+  TextColumn get payee => text()();
+  TextColumn get categoryId => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Who added, edited, deleted or restored which group expense or payment,
 /// and when, with the state before and after as JSON snapshots (see
 /// `domain/split/group_activity.dart`).
@@ -557,12 +573,13 @@ class GroupActivities extends Table with SyncColumns {
   RecurringRules,
   GroupActivities,
   ItemAssignments,
+  PayeeCategories,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -638,6 +655,8 @@ class AppDatabase extends _$AppDatabase {
           if (from < 16) await _upgradeToSmsReminderMatch(m);
           // v17: credit card statement and due days, limit and last statement.
           if (from < 17) await _upgradeToCardDetails(m);
+          // v18: categories remembered per SMS payee (daily-use, payee memory).
+          if (from < 18) await _upgradeToPayeeCategories(m);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -736,6 +755,12 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
+  /// v18 step. Adds the payee category memory table unless a pre-release
+  /// build of this feature already created it, so it is idempotent.
+  Future<void> _upgradeToPayeeCategories(Migrator m) async {
+    if (!await _schemaObjectExists('table', 'payee_categories')) await m.createTable(payeeCategories);
+  }
+
   Future<Set<String>> _columnNames(String table) async {
     final rows = await customSelect('PRAGMA table_info($table)').get();
     return {for (final row in rows) row.read<String>('name')};
@@ -822,6 +847,8 @@ class AppDatabase extends _$AppDatabase {
               .write(BudgetsCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
           await (update(recurringRules)..where((t) => t.categoryId.equals(droppedId)))
               .write(RecurringRulesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
+          await (update(payeeCategories)..where((t) => t.categoryId.equals(droppedId)))
+              .write(PayeeCategoriesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
           await (update(categories)..where((t) => t.parentId.equals(droppedId)))
               .write(CategoriesCompanion(parentId: Value(keptId), updatedAt: Value(now)));
           await (update(categories)..where((t) => t.id.equals(droppedId)))
@@ -839,12 +866,13 @@ class AppDatabase extends _$AppDatabase {
     final entryRefs = await _countBy(entries, entries.categoryId);
     final budgetRefs = await _countBy(budgets, budgets.categoryId);
     final ruleRefs = await _countBy(recurringRules, recurringRules.categoryId);
+    final payeeRefs = await _countBy(payeeCategories, payeeCategories.categoryId);
     return [
       for (final category in live)
         SeedCandidate(
           id: category.id,
           key: category.seedKey!,
-          references: (entryRefs[category.id] ?? 0) + (budgetRefs[category.id] ?? 0) + (ruleRefs[category.id] ?? 0),
+          references: (entryRefs[category.id] ?? 0) + (budgetRefs[category.id] ?? 0) + (ruleRefs[category.id] ?? 0) + (payeeRefs[category.id] ?? 0),
         ),
     ];
   }

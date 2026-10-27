@@ -3994,6 +3994,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get numberFormatAutomaticHelp => 'Follows your currency and region';
 
   @override
+  String get smsPayeesTitle => 'Remembered payees';
+
+  @override
+  String get smsPayeesHelp =>
+      'Categories you chose for a payee, used for their next SMS';
+
+  @override
+  String get smsPayeesEmptyTitle => 'No payees remembered yet';
+
+  @override
+  String get smsPayeesEmptyBody =>
+      'Change the category of an entry added from an SMS and Hisab uses it for that payee\'s next messages.';
+
+  @override
+  String smsPayeeForget(String payee) {
+    return 'Forget $payee';
+  }
+
+  @override
+  String smsPayeeForgotten(String payee) {
+    return '$payee forgotten';
+  }
+
+  @override
+  String smsPayeeAskTitle(String payee) {
+    return 'New person. Pick a category once for $payee';
+  }
+
+  @override
+  String get smsPayeePickCategory => 'Pick category';
+
+  @override
+  String smsPayeeRemembered(String category, String payee) {
+    return 'Hisab will use $category for $payee from now on';
+  }
+
+  @override
   String safeToSpendPerDay(String amount) {
     return 'Safe to spend $amount/day';
   }

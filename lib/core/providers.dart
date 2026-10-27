@@ -14,6 +14,7 @@ import '../data/repositories/groups_repository.dart';
 import '../data/repositories/project_fields_repository.dart';
 import '../data/repositories/projects_repository.dart';
 import '../data/repositories/recurring_repository.dart';
+import '../data/repositories/payee_category_repository.dart';
 import '../data/repositories/reminders_repository.dart';
 import '../data/repositories/settle_schedule_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
@@ -57,6 +58,7 @@ final budgetsRepositoryProvider = Provider((ref) => BudgetsRepository(ref.watch(
 final projectsRepositoryProvider = Provider((ref) => ProjectsRepository(ref.watch(databaseProvider)));
 final projectFieldsRepositoryProvider = Provider((ref) => ProjectFieldsRepository(ref.watch(databaseProvider)));
 final smsLogRepositoryProvider = Provider((ref) => SmsLogRepository(ref.watch(databaseProvider)));
+final payeeCategoryRepositoryProvider = Provider((ref) => PayeeCategoryRepository(ref.watch(databaseProvider)));
 final remindersRepositoryProvider = Provider((ref) => RemindersRepository(ref.watch(databaseProvider)));
 final recurringRepositoryProvider = Provider((ref) => RecurringRepository(ref.watch(databaseProvider)));
 final settleScheduleRepositoryProvider = Provider((ref) => SettleScheduleRepository(ref.watch(databaseProvider)));
@@ -123,6 +125,12 @@ final pendingSmsProvider = StreamProvider((ref) {
       .watchPending()
       .map((rows) => rows.where((row) => !isForeignCurrency(smsCurrencyCode(row.body), homeCurrency)).toList());
 });
+/// Categories remembered per SMS payee, as row id -> category id.
+final payeeMemoryProvider = StreamProvider((ref) => ref.watch(payeeCategoryRepositoryProvider).watchMemory());
+
+/// Remembered SMS payees for the Settings list.
+final payeeCategoriesProvider = StreamProvider((ref) => ref.watch(payeeCategoryRepositoryProvider).watchAll());
+
 final smsHistoryProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryProvider).watchHistory());
 
 final monthEntriesProvider = StreamProvider((ref) {
@@ -178,6 +186,7 @@ final smsIngestServiceProvider = Provider((ref) => SmsIngestService(
       cursor: SmsSyncCursor(ref.watch(sharedPreferencesProvider)),
       homeCurrencyCode: () => ref.read(homeCurrencyCodeProvider),
       reminderLinker: ref.watch(smsReminderLinkerProvider),
+      payeeCategories: ref.watch(payeeCategoryRepositoryProvider),
     ));
 
 /// Marks a pending reminder paid when an SMS entry matches it (R2).

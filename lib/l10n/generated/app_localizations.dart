@@ -6374,6 +6374,60 @@ abstract class AppLocalizations {
   /// **'Follows your currency and region'**
   String get numberFormatAutomaticHelp;
 
+  /// No description provided for @smsPayeesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remembered payees'**
+  String get smsPayeesTitle;
+
+  /// No description provided for @smsPayeesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories you chose for a payee, used for their next SMS'**
+  String get smsPayeesHelp;
+
+  /// No description provided for @smsPayeesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No payees remembered yet'**
+  String get smsPayeesEmptyTitle;
+
+  /// No description provided for @smsPayeesEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the category of an entry added from an SMS and Hisab uses it for that payee\'s next messages.'**
+  String get smsPayeesEmptyBody;
+
+  /// No description provided for @smsPayeeForget.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget {payee}'**
+  String smsPayeeForget(String payee);
+
+  /// No description provided for @smsPayeeForgotten.
+  ///
+  /// In en, this message translates to:
+  /// **'{payee} forgotten'**
+  String smsPayeeForgotten(String payee);
+
+  /// No description provided for @smsPayeeAskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New person. Pick a category once for {payee}'**
+  String smsPayeeAskTitle(String payee);
+
+  /// No description provided for @smsPayeePickCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick category'**
+  String get smsPayeePickCategory;
+
+  /// No description provided for @smsPayeeRemembered.
+  ///
+  /// In en, this message translates to:
+  /// **'Hisab will use {category} for {payee} from now on'**
+  String smsPayeeRemembered(String category, String payee);
+
   /// No description provided for @safeToSpendPerDay.
   ///
   /// In en, this message translates to:

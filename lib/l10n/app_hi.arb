@@ -1088,6 +1088,15 @@
   "numberFormatTitle": "संख्या फ़ॉर्मैट",
   "numberFormatAutomatic": "अपने-आप",
   "numberFormatAutomaticHelp": "आपकी मुद्रा और क्षेत्र के हिसाब से",
+  "smsPayeesTitle": "याद रखे गए नाम",
+  "smsPayeesHelp": "किसी नाम के लिए आपकी चुनी श्रेणी, उसके अगले एसएमएस में लगेगी",
+  "smsPayeesEmptyTitle": "अभी कोई नाम याद नहीं",
+  "smsPayeesEmptyBody": "एसएमएस से जुड़ी एंट्री की श्रेणी बदलें, Hisab उस नाम के अगले मैसेज में वही श्रेणी लगाएगा।",
+  "smsPayeeForget": "{payee} को भूल जाएँ",
+  "smsPayeeForgotten": "{payee} भुला दिया गया",
+  "smsPayeeAskTitle": "नया व्यक्ति। {payee} के लिए एक बार श्रेणी चुनें",
+  "smsPayeePickCategory": "श्रेणी चुनें",
+  "smsPayeeRemembered": "अब से {payee} के लिए {category} लगेगी",
   "safeToSpendPerDay": "सुरक्षित खर्च {amount}/दिन",
   "safeToSpendOverBudget": "बजट से ऊपर"
 }

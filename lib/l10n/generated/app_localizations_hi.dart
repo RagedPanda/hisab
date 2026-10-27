@@ -3968,6 +3968,43 @@ class AppLocalizationsHi extends AppLocalizations {
   String get numberFormatAutomaticHelp => 'आपकी मुद्रा और क्षेत्र के हिसाब से';
 
   @override
+  String get smsPayeesTitle => 'याद रखे गए नाम';
+
+  @override
+  String get smsPayeesHelp =>
+      'किसी नाम के लिए आपकी चुनी श्रेणी, उसके अगले एसएमएस में लगेगी';
+
+  @override
+  String get smsPayeesEmptyTitle => 'अभी कोई नाम याद नहीं';
+
+  @override
+  String get smsPayeesEmptyBody =>
+      'एसएमएस से जुड़ी एंट्री की श्रेणी बदलें, Hisab उस नाम के अगले मैसेज में वही श्रेणी लगाएगा।';
+
+  @override
+  String smsPayeeForget(String payee) {
+    return '$payee को भूल जाएँ';
+  }
+
+  @override
+  String smsPayeeForgotten(String payee) {
+    return '$payee भुला दिया गया';
+  }
+
+  @override
+  String smsPayeeAskTitle(String payee) {
+    return 'नया व्यक्ति। $payee के लिए एक बार श्रेणी चुनें';
+  }
+
+  @override
+  String get smsPayeePickCategory => 'श्रेणी चुनें';
+
+  @override
+  String smsPayeeRemembered(String category, String payee) {
+    return 'अब से $payee के लिए $category लगेगी';
+  }
+
+  @override
   String safeToSpendPerDay(String amount) {
     return 'सुरक्षित खर्च $amount/दिन';
   }

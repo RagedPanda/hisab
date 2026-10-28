@@ -1490,6 +1490,216 @@ abstract class AppLocalizations {
   /// **'Restore failed: {error}'**
   String restoreFailed(String error);
 
+  /// No description provided for @driveBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up to Google Drive'**
+  String get driveBackupTitle;
+
+  /// No description provided for @driveBackupWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. An encrypted copy in your own Drive; Hisab can only see its own files.'**
+  String get driveBackupWhy;
+
+  /// No description provided for @driveConsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up & sync with Google Drive'**
+  String get driveConsentTitle;
+
+  /// No description provided for @driveConsentOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'optional'**
+  String get driveConsentOptional;
+
+  /// No description provided for @driveConsentOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Hisab works fully offline. Your data stays on this phone and nothing is ever sent anywhere — unless you turn this on.'**
+  String get driveConsentOffline;
+
+  /// No description provided for @driveConsentWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Drive sync and Hisab keeps an encrypted copy of your data in your own Google Drive, so you can restore everything if you lose or change your phone, and share a group with friends and family.'**
+  String get driveConsentWhat;
+
+  /// No description provided for @driveConsentWhyLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Why Hisab asks for Drive access:'**
+  String get driveConsentWhyLead;
+
+  /// No description provided for @driveConsentWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'only to read and write its own files in your Drive.'**
+  String get driveConsentWhy;
+
+  /// No description provided for @driveConsentCannotSee.
+  ///
+  /// In en, this message translates to:
+  /// **'It cannot see your photos, documents, or anything else in your Drive.'**
+  String get driveConsentCannotSee;
+
+  /// No description provided for @driveConsentEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'The data is encrypted — Google can\'t read it, and neither can we. There is no Hisab server.'**
+  String get driveConsentEncrypted;
+
+  /// No description provided for @driveConsentTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'You can turn this off and disconnect any time, and delete the Drive copy with one tap.'**
+  String get driveConsentTurnOff;
+
+  /// No description provided for @driveConsentSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t want it? Just skip this — Hisab works exactly the same without it.'**
+  String get driveConsentSkip;
+
+  /// No description provided for @driveSkipForNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get driveSkipForNow;
+
+  /// No description provided for @driveConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Google Drive'**
+  String get driveConnect;
+
+  /// No description provided for @driveConnectedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected as {email}'**
+  String driveConnectedAs(String email);
+
+  /// No description provided for @driveLastBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup: {time}'**
+  String driveLastBackup(String time);
+
+  /// No description provided for @driveNoBackupYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup in Drive yet'**
+  String get driveNoBackupYet;
+
+  /// No description provided for @driveCheckingBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking Google Drive…'**
+  String get driveCheckingBackup;
+
+  /// No description provided for @driveBackupStatusUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check Google Drive'**
+  String get driveBackupStatusUnknown;
+
+  /// No description provided for @driveBackUpNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up now'**
+  String get driveBackUpNow;
+
+  /// No description provided for @driveBackUpNowHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypts everything with your passphrase and replaces the Drive copy'**
+  String get driveBackUpNowHelp;
+
+  /// No description provided for @driveRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from Drive'**
+  String get driveRestore;
+
+  /// No description provided for @driveDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get driveDisconnect;
+
+  /// No description provided for @driveDisconnectHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops using this Google account; the Drive copy stays until you delete it'**
+  String get driveDisconnectHelp;
+
+  /// No description provided for @driveDeleteCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Drive copy'**
+  String get driveDeleteCopy;
+
+  /// No description provided for @driveDeleteCopyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes Hisab\'s backup from your Google Drive'**
+  String get driveDeleteCopyHelp;
+
+  /// No description provided for @driveDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the backup in your Google Drive? Data on this phone is not affected.'**
+  String get driveDeleteConfirm;
+
+  /// No description provided for @driveBackedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Backed up to Google Drive'**
+  String get driveBackedUp;
+
+  /// No description provided for @driveCopyDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive copy deleted'**
+  String get driveCopyDeleted;
+
+  /// No description provided for @driveDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected from Google Drive'**
+  String get driveDisconnected;
+
+  /// No description provided for @driveErrorCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in was cancelled'**
+  String get driveErrorCancelled;
+
+  /// No description provided for @driveErrorOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach Google Drive. Check your connection and try again.'**
+  String get driveErrorOffline;
+
+  /// No description provided for @driveErrorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No Hisab backup found in this Google Drive'**
+  String get driveErrorNotFound;
+
+  /// No description provided for @driveErrorWrongPassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong passphrase, or the backup is damaged'**
+  String get driveErrorWrongPassphrase;
+
+  /// No description provided for @driveErrorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive failed: {error}'**
+  String driveErrorUnknown(String error);
+
   /// No description provided for @pasted.
   ///
   /// In en, this message translates to:

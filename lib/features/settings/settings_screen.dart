@@ -21,6 +21,8 @@ import '../salary/salary_providers.dart';
 import '../salary/salary_reminder.dart';
 import '../shell/widgets/common.dart';
 import 'backup_actions.dart';
+import 'drive_backup_providers.dart';
+import 'drive_backup_screen.dart';
 import 'made_with_love.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -175,6 +177,15 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: Text(l10n.restoreBackupHelp),
                 onTap: () => _import(context, ref),
               ),
+              if (isDriveBackupSupported)
+                ListTile(
+                  key: const Key('driveBackupTile'),
+                  leading: const Icon(Icons.cloud_upload_outlined),
+                  title: Text(l10n.driveBackupTitle),
+                  subtitle: Text(_driveBackupSubtitle(l10n, ref.watch(driveBackupEmailProvider))),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(kDriveBackupLocation),
+                ),
             ]),
           ),
           SectionHeader(l10n.about),
@@ -190,6 +201,9 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
+
+  /// The account when connected; otherwise the short "why" line from the consent screen.
+  static String _driveBackupSubtitle(AppLocalizations l10n, String? email) => email == null ? l10n.driveBackupWhy : l10n.driveConnectedAs(email);
 
   static String _languageLabel(AppLocalizations l10n, String code) => code.isEmpty ? l10n.languageSystem : localeDisplayName(Locale(code));
 

@@ -810,6 +810,131 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get driveBackupTitle => 'Google Drive पर बैकअप लें';
+
+  @override
+  String get driveBackupWhy =>
+      'वैकल्पिक। आपकी अपनी Drive में एन्क्रिप्टेड कॉपी; हिसाब सिर्फ़ अपनी फ़ाइलें देख सकता है।';
+
+  @override
+  String get driveConsentTitle => 'Google Drive के साथ बैकअप और सिंक';
+
+  @override
+  String get driveConsentOptional => 'वैकल्पिक';
+
+  @override
+  String get driveConsentOffline =>
+      'हिसाब पूरी तरह ऑफ़लाइन काम करता है। आपका डेटा इसी फ़ोन पर रहता है और कभी कहीं नहीं भेजा जाता — जब तक आप इसे चालू न करें।';
+
+  @override
+  String get driveConsentWhat =>
+      'Drive सिंक चालू करें तो हिसाब आपके डेटा की एक एन्क्रिप्टेड कॉपी आपकी अपनी Google Drive में रखता है, ताकि फ़ोन खोने या बदलने पर आप सब कुछ वापस ला सकें, और दोस्तों व परिवार के साथ ग्रुप शेयर कर सकें।';
+
+  @override
+  String get driveConsentWhyLead => 'हिसाब Drive की अनुमति क्यों माँगता है:';
+
+  @override
+  String get driveConsentWhy =>
+      'सिर्फ़ आपकी Drive में अपनी ही फ़ाइलें पढ़ने और लिखने के लिए।';
+
+  @override
+  String get driveConsentCannotSee =>
+      'यह आपकी फ़ोटो, दस्तावेज़ या Drive में और कुछ भी नहीं देख सकता।';
+
+  @override
+  String get driveConsentEncrypted =>
+      'डेटा एन्क्रिप्टेड है — न Google इसे पढ़ सकता है, न हम। कोई हिसाब सर्वर नहीं है।';
+
+  @override
+  String get driveConsentTurnOff =>
+      'आप इसे कभी भी बंद करके डिस्कनेक्ट कर सकते हैं, और एक टैप में Drive कॉपी हटा सकते हैं।';
+
+  @override
+  String get driveConsentSkip =>
+      'नहीं चाहिए? बस इसे छोड़ दें — इसके बिना भी हिसाब बिल्कुल वैसे ही चलता है।';
+
+  @override
+  String get driveSkipForNow => 'अभी छोड़ें';
+
+  @override
+  String get driveConnect => 'Google Drive जोड़ें';
+
+  @override
+  String driveConnectedAs(String email) {
+    return '$email से जुड़ा है';
+  }
+
+  @override
+  String driveLastBackup(String time) {
+    return 'पिछला बैकअप: $time';
+  }
+
+  @override
+  String get driveNoBackupYet => 'Drive में अभी कोई बैकअप नहीं';
+
+  @override
+  String get driveCheckingBackup => 'Google Drive जाँच रहे हैं…';
+
+  @override
+  String get driveBackupStatusUnknown => 'Google Drive जाँच नहीं पाए';
+
+  @override
+  String get driveBackUpNow => 'अभी बैकअप लें';
+
+  @override
+  String get driveBackUpNowHelp =>
+      'सब कुछ आपके पासफ़्रेज़ से एन्क्रिप्ट करके Drive कॉपी बदल देता है';
+
+  @override
+  String get driveRestore => 'Drive से वापस लाएँ';
+
+  @override
+  String get driveDisconnect => 'डिस्कनेक्ट करें';
+
+  @override
+  String get driveDisconnectHelp =>
+      'यह Google खाता इस्तेमाल करना बंद करता है; Drive कॉपी हटाने तक बनी रहती है';
+
+  @override
+  String get driveDeleteCopy => 'Drive कॉपी हटाएँ';
+
+  @override
+  String get driveDeleteCopyHelp =>
+      'आपकी Google Drive से हिसाब का बैकअप हटाता है';
+
+  @override
+  String get driveDeleteConfirm =>
+      'आपकी Google Drive का बैकअप हटाएँ? इस फ़ोन का डेटा नहीं बदलेगा।';
+
+  @override
+  String get driveBackedUp => 'Google Drive पर बैकअप हो गया';
+
+  @override
+  String get driveCopyDeleted => 'Drive कॉपी हटा दी गई';
+
+  @override
+  String get driveDisconnected => 'Google Drive से डिस्कनेक्ट हो गया';
+
+  @override
+  String get driveErrorCancelled => 'Google साइन-इन रद्द किया गया';
+
+  @override
+  String get driveErrorOffline =>
+      'Google Drive तक नहीं पहुँच पाए। कनेक्शन जाँचें और फिर कोशिश करें।';
+
+  @override
+  String get driveErrorNotFound =>
+      'इस Google Drive में हिसाब का कोई बैकअप नहीं मिला';
+
+  @override
+  String get driveErrorWrongPassphrase => 'गलत पासफ़्रेज़, या बैकअप खराब है';
+
+  @override
+  String driveErrorUnknown(String error) {
+    return 'Google Drive विफल: $error';
+  }
+
+  @override
   String get pasted => 'पेस्ट किया गया';
 
   @override

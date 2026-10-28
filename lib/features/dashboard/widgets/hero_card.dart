@@ -41,15 +41,14 @@ class _HeroContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context).toString();
     final summary = data.summary;
     final isDark = theme.brightness == Brightness.dark;
-    final foreground = isDark ? scheme.onPrimaryContainer : scheme.onPrimary;
-    final gradient = isDark
-        ? [scheme.primaryContainer, scheme.surfaceContainerHigh]
-        : [scheme.primary, Color.lerp(scheme.primary, scheme.primaryContainer, 0.45)!];
+    const foreground = Colors.white;
+    // The brand gradient in light mode; a deeper teal in dark so the card
+    // does not glare against the dark scaffold.
+    final gradient = isDark ? const [Color(0xFF115E59), Color(0xFF0F3D3A)] : kBrandGradient.colors;
     final amountText = formatMinor(summary.expense, format: moneyFormat, showDecimals: false);
     return Semantics(
       button: true,
@@ -57,6 +56,7 @@ class _HeroContent extends StatelessWidget {
       child: Card(
         key: kHeroCardKey,
         clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Ink(
           decoration: BoxDecoration(
             gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
@@ -64,45 +64,51 @@ class _HeroContent extends StatelessWidget {
           child: InkWell(
             onTap: () => context.go('/transactions'),
             onLongPress: () => _copyAmount(context, summary.expense),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            child: Stack(
+              children: [
+                const Positioned(right: -40, top: -50, child: _Halo(size: 160)),
+                const Positioned(right: 40, bottom: -70, child: _Halo(size: 120)),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          l10n.spentInMonth(formatMonthName(data.range, locale: locale)),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelLarge?.copyWith(color: foreground.withValues(alpha: 0.85)),
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              l10n.spentInMonth(formatMonthName(data.range, locale: locale)),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelLarge?.copyWith(color: foreground.withValues(alpha: 0.85)),
+                            ),
+                          ),
+                          if (summary.percentVsPrevious != null) _ComparisonPill(percent: summary.percentVsPrevious!, previousRange: data.previousRange, foreground: foreground),
+                        ],
                       ),
-                      if (summary.percentVsPrevious != null) _ComparisonPill(percent: summary.percentVsPrevious!, previousRange: data.previousRange, foreground: foreground),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: _AnimatedAmount(minor: summary.expense, moneyFormat: moneyFormat, style: theme.textTheme.displaySmall?.copyWith(color: foreground, fontWeight: FontWeight.w700).tabular),
+                            ),
+                          ),
+                          if (data.todayMinor != null) ...[
+                            const SizedBox(width: 8),
+                            _TodayPill(minor: data.todayMinor!, moneyFormat: moneyFormat, foreground: foreground),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (summary.isEmpty) const _EmptyRow(foreground: foreground) else _StatsRow(summary: summary, moneyFormat: moneyFormat, foreground: foreground),
+                      _SafeToSpendLine(moneyFormat: moneyFormat, foreground: foreground),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: _AnimatedAmount(minor: summary.expense, moneyFormat: moneyFormat, style: theme.textTheme.displaySmall?.copyWith(color: foreground, fontWeight: FontWeight.w700).tabular),
-                        ),
-                      ),
-                      if (data.todayMinor != null) ...[
-                        const SizedBox(width: 8),
-                        _TodayPill(minor: data.todayMinor!, moneyFormat: moneyFormat, foreground: foreground),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  if (summary.isEmpty) _EmptyRow(foreground: foreground) else _StatsRow(summary: summary, moneyFormat: moneyFormat, foreground: foreground),
-                  _SafeToSpendLine(moneyFormat: moneyFormat, foreground: foreground),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -207,17 +213,66 @@ class _StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
     final overspent = summary.net < 0;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(child: _Stat(label: l10n.income, value: formatMinor(summary.income, format: moneyFormat, showDecimals: false), foreground: foreground, dot: kIncomeColor)),
-        Expanded(child: _Stat(label: overspent ? l10n.overspent : l10n.saved, value: formatMinor(summary.net.abs(), format: moneyFormat, showDecimals: false), foreground: foreground, dot: overspent ? kExpenseColor : null)),
-        Expanded(child: _Stat(label: l10n.dailyAverage, value: l10n.perDay(formatMinor(summary.dailyAverageMinor, format: moneyFormat, showDecimals: false)), foreground: foreground)),
-        _MonthProgressRing(fraction: summary.elapsedFraction, elapsed: summary.daysElapsed, total: summary.daysInMonth, foreground: foreground),
+        Row(
+          children: [
+            Expanded(
+              child: _StatTile(
+                label: l10n.income,
+                value: formatMinor(summary.income, format: moneyFormat, showDecimals: false),
+                icon: Icons.south_west,
+                accent: kIncomeColor,
+                foreground: foreground,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _StatTile(
+                label: overspent ? l10n.overspent : l10n.saved,
+                value: formatMinor(summary.net.abs(), format: moneyFormat, showDecimals: false),
+                icon: overspent ? Icons.trending_down : Icons.savings_outlined,
+                accent: overspent ? kExpenseColor : kAccentColor,
+                foreground: foreground,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${l10n.dailyAverage} · ${l10n.perDay(formatMinor(summary.dailyAverageMinor, format: moneyFormat, showDecimals: false))}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelLarge?.copyWith(color: foreground.withValues(alpha: 0.85)).tabular,
+              ),
+            ),
+            _MonthProgressRing(fraction: summary.elapsedFraction, elapsed: summary.daysElapsed, total: summary.daysInMonth, foreground: foreground),
+          ],
+        ),
       ],
     );
   }
+}
+
+/// A faint circle that gives the gradient some depth.
+class _Halo extends StatelessWidget {
+  const _Halo({required this.size});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    child: Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.07)),
+    ),
+  );
 }
 
 /// "Safe to spend ₹Y/day" under the month's figures, only with an overall
@@ -268,32 +323,53 @@ class _SafeToSpendLine extends ConsumerWidget {
   }
 }
 
-class _Stat extends StatelessWidget {
-  const _Stat({required this.label, required this.value, required this.foreground, this.dot});
+class _StatTile extends StatelessWidget {
+  const _StatTile({required this.label, required this.value, required this.icon, required this.accent, required this.foreground});
   final String label;
   final String value;
+  final IconData icon;
+  final Color accent;
   final Color foreground;
-  final Color? dot;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(children: [
-          if (dot != null) ...[
-            Container(width: 6, height: 6, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
-            const SizedBox(width: 4),
-          ],
-          Flexible(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.labelMedium?.copyWith(color: foreground.withValues(alpha: 0.8)))),
-        ]),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(value, maxLines: 1, style: theme.textTheme.titleMedium?.copyWith(color: foreground, fontWeight: FontWeight.w600).tabular),
-        ),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(color: foreground.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(16)),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, size: 20, color: Colors.white),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(color: foreground.withValues(alpha: 0.85)),
+                ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    style: theme.textTheme.titleMedium?.copyWith(color: foreground, fontWeight: FontWeight.w700).tabular,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

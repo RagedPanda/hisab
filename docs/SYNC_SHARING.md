@@ -5,7 +5,7 @@ running any server of our own**. Hisab has no backend, holds no user accounts, a
 user data. Everything below uses the *user's own* cloud storage; Hisab (Sarv) operates nothing
 and can see nothing.
 
-Last reviewed: 2026-10-27.
+Last reviewed: 2026-10-28.
 
 ## Principles
 
@@ -146,7 +146,9 @@ translation ships with it.
 0. **People list:** email on group members, the `people` table and add-member suggestions.
    Works offline and in today's backups; no Google setup needed. *(Shipped.)*
 1. **Personal backup:** Settings → "Back up to Google Drive" → consent screen → upload one
-   encrypted blob to `appDataFolder`; restore on a new device.
+   encrypted blob to `appDataFolder`; restore on a new device. Manual "Back up now" and
+   "Restore from Drive" (merging last-writer-wins), plus "Disconnect" and "Delete Drive
+   copy". *(Shipped.)*
 2. **Personal incremental sync:** row-level change log with LWW merge.
 3. **Shared groups:** the per-group shared Drive file, append-only log, invite links, and
    near-real-time poll/push.

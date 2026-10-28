@@ -41,8 +41,10 @@ extension MoneyText on TextStyle {
 ThemeData buildTheme(Brightness brightness) {
   final scheme = ColorScheme.fromSeed(
     seedColor: kSeedColor,
-    // Keep the primary close to the vivid seed instead of a muted tonal match.
     dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
+    // Pin the primary to the vivid brand teal; the tonal scheme alone mutes it.
+    primary: brightness == Brightness.dark ? kSeedColorLight : kSeedColor,
+    onPrimary: Colors.white,
     secondary: kAccentColor,
     brightness: brightness,
   );
@@ -92,7 +94,11 @@ ThemeData buildTheme(Brightness brightness) {
       TargetPlatform.iOS: ZoomPageTransitionsBuilder(),
     }),
     navigationBarTheme: NavigationBarThemeData(
-      indicatorColor: scheme.primaryContainer,
+      // A soft tint keeps the selected icon readable on the vivid primary.
+      indicatorColor: scheme.primary.withValues(alpha: 0.16),
+      iconTheme: WidgetStateProperty.resolveWith(
+        (states) => IconThemeData(color: states.contains(WidgetState.selected) ? scheme.primary : scheme.onSurfaceVariant),
+      ),
       labelTextStyle: WidgetStatePropertyAll(base.textTheme.labelMedium),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(

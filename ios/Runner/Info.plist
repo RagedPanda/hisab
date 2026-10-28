@@ -14,7 +14,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.sarv.hisab</string>
+			<string>com.ragedpanda.hisab</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>hisab</string>

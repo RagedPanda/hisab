@@ -1,4 +1,4 @@
-package com.sarv.hisab.sms
+package com.ragedpanda.hisab.sms
 
 import android.content.Context
 import android.content.SharedPreferences

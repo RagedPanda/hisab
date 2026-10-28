@@ -23,8 +23,8 @@ class RawSms {
 /// Thin wrapper over the Android platform channel. Every method is a no-op on
 /// iOS, where apps cannot read SMS; iOS users paste or share messages instead.
 class SmsChannel {
-  static const _methods = MethodChannel('com.sarv.hisab/sms');
-  static const _events = EventChannel('com.sarv.hisab/sms_events');
+  static const _methods = MethodChannel('com.ragedpanda.hisab/sms');
+  static const _events = EventChannel('com.ragedpanda.hisab/sms_events');
 
   static bool get isSupported => Platform.isAndroid;
 

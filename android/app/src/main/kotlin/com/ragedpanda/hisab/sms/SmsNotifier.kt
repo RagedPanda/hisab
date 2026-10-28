@@ -1,4 +1,4 @@
-package com.sarv.hisab.sms
+package com.ragedpanda.hisab.sms
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -9,8 +9,8 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.sarv.hisab.MainActivity
-import com.sarv.hisab.R
+import com.ragedpanda.hisab.MainActivity
+import com.ragedpanda.hisab.R
 
 /**
  * Posts "New bank transaction" when a bank SMS arrives while Hisab is in
@@ -19,7 +19,7 @@ import com.sarv.hisab.R
  */
 object SmsNotifier {
     private const val CHANNEL_ID = "bank_sms"
-    private const val GROUP_KEY = "com.sarv.hisab.BANK_SMS"
+    private const val GROUP_KEY = "com.ragedpanda.hisab.BANK_SMS"
     private const val SUMMARY_ID = 0x5D5
 
     fun post(context: Context, settings: SmsCaptureSettings, sms: QueuedSms) {

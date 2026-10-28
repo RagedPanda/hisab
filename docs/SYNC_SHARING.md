@@ -2,7 +2,7 @@
 
 How Hisab backs up and syncs data, and how Splitwise-style shared groups work, **without
 running any server of our own**. Hisab has no backend, holds no user accounts, and stores no
-user data. Everything below uses the *user's own* cloud storage; Hisab (Sarv) operates nothing
+user data. Everything below uses the *user's own* cloud storage; Hisab's developer operates nothing
 and can see nothing.
 
 Last reviewed: 2026-10-27.
@@ -12,7 +12,7 @@ Last reviewed: 2026-10-27.
 1. **Offline first, always optional.** The app is fully usable with no account and no network.
    Sync and sharing are opt-in features the user turns on deliberately, never a gate at launch.
 2. **No Hisab backend, ever.** Personal data lives in the user's own Google Drive; a shared
-   group lives in a file the group owner shares from *their* Drive. Sarv runs no server and
+   group lives in a file the group owner shares from *their* Drive. Hisab runs no server and
    pays for no hosting.
 3. **End-to-end encrypted.** Everything written to Drive is ciphertext (reuse `backup_codec`:
    AES-256-GCM, key via PBKDF2). Google cannot read it, and neither can we — there is nothing

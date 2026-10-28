@@ -12,7 +12,7 @@
 set -u
 UDID="${1:?simulator udid}"
 OUT="${2:?output directory}"
-BUNDLE="${3:-com.sarv.hisab}"
+BUNDLE="${3:-com.ragedpanda.hisab}"
 mkdir -p "$OUT"
 
 resolve_dir() {

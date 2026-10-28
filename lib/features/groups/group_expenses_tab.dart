@@ -238,7 +238,7 @@ class GroupExpensesTab extends ConsumerWidget {
             : l10n.settlementLine(nameOf(settlement.fromMemberId), nameOf(settlement.toMemberId));
     final (label, color) = fromMe ? (l10n.youPaid, null) : (toMe ? (l10n.youReceived, kIncomeColor) : (l10n.notInvolved, muted));
     return ListTile(
-      leading: const IconBadge(icon: 'handshake', color: 0xFF2E9E6B),
+      leading: const IconBadge(icon: 'handshake', color: 0xFF10B981),
       title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         [formatRowDate(settlement.occurredAt, locale: locale), paymentMethodLabel(settlement.method, l10n), if (settlement.note.isNotEmpty) settlement.note].join(' · '),

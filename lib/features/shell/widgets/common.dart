@@ -45,11 +45,7 @@ class AmountText extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final MoneyFormat shownFormat = moneyFormat ?? ref.watch(homeMoneyFormatProvider);
-    final color = switch (kind) {
-      'income' => const Color(0xFF2E9E6B),
-      'expense' => const Color(0xFFD9534F),
-      _ => Theme.of(context).colorScheme.onSurfaceVariant,
-    };
+    final color = kindColor(kind, fallback: Theme.of(context).colorScheme.onSurfaceVariant);
     final prefix = !signed ? '' : switch (kind) { 'income' => '+', 'expense' => '-', _ => '' };
     return Text(
       '$prefix${formatMinor(minor, format: shownFormat)}',

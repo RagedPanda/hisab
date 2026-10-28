@@ -34,7 +34,7 @@ Future<void> seedDemoData(AppDatabase db, {required int entryCount, DateTime? no
 
   final accountIds = [
     for (final account in await accounts.getAll()) account.id,
-    (await accounts.create(name: 'HDFC Savings', type: 'bank', color: 0xFF0F6E6B, bankName: 'HDFC', last4: '4421', balanceMinor: 12450000)).id,
+    (await accounts.create(name: 'HDFC Savings', type: 'bank', color: 0xFF0D9488, bankName: 'HDFC', last4: '4421', balanceMinor: 12450000)).id,
     (await accounts.create(name: 'Axis Credit Card', type: 'card', color: 0xFF9C27B0, bankName: 'Axis', last4: '8812', balanceMinor: -1830000)).id,
   ];
   final categoryIdByKey = {for (final category in await categories.getAll(includeArchived: true)) if (category.seedKey != null) category.seedKey!: category.id};

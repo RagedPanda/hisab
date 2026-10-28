@@ -380,7 +380,7 @@ class _BalancesTab extends ConsumerWidget {
                   (net[member.id] ?? 0) == 0
                       ? l10n.settled
                       : '${(net[member.id] ?? 0) > 0 ? l10n.getsBack : l10n.owes} ${formatMinor((net[member.id] ?? 0).abs(), format: moneyFormat)}',
-                  style: TextStyle(fontWeight: FontWeight.w600, color: (net[member.id] ?? 0) >= 0 ? const Color(0xFF2E9E6B) : const Color(0xFFD9534F)),
+                  style: TextStyle(fontWeight: FontWeight.w600, color: (net[member.id] ?? 0) >= 0 ? kIncomeColor : kExpenseColor),
                 ),
               ),
           ]),

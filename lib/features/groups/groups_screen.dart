@@ -99,7 +99,7 @@ class _GroupTile extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: IconBadge(icon: summary.group.icon, color: 0xFF0F6E6B),
+        leading: IconBadge(icon: summary.group.icon, color: 0xFF0D9488),
         title: Text(summary.group.name, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(l10n.groupSubtitle(summary.members.length, formatMinor(summary.totalSpentMinor, format: moneyFormat, showDecimals: false, compact: true)), maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: GroupNetBadge(net: summary.myNetMinor, moneyFormat: moneyFormat),

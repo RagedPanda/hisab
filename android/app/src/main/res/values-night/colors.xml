@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Matches the Flutter dark scheme.surface. -->
-    <color name="splash_background">#0F1413</color>
+    <color name="splash_background">#0B1416</color>
 </resources>

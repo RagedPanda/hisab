@@ -8,8 +8,8 @@ import 'package:hisab/features/shell/router.dart';
 import '../support/app_harness.dart';
 
 /// Progressive disclosure (#collapse-entry-form): a fresh entry shows only
-/// amount/category/account; everything else hides behind "More details", which
-/// opens itself only when a tucked-away field already has a value.
+/// amount/category/account/date; everything else hides behind "More details",
+/// which opens itself only when a tucked-away field already has a value.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -24,7 +24,7 @@ void main() {
     expect(find.text('New entry'), findsOneWidget);
   }
 
-  testWidgets('a fresh entry shows amount/category/account but hides note, payee and date', (tester) async {
+  testWidgets('a fresh entry shows amount/category/account/date but hides note and payee', (tester) async {
     await pumpApp(tester);
     await openNewEntry(tester);
 
@@ -32,12 +32,12 @@ void main() {
     expect(find.byType(TextField), findsOneWidget, reason: 'only the amount field is a text field while collapsed');
     expect(find.text('Uncategorised'), findsOneWidget, reason: 'category tile');
     expect(find.text('Account'), findsOneWidget, reason: 'account label');
+    expect(dateButton, findsOneWidget, reason: 'the date is always on the main form');
 
     // Tucked away until "More details" opens.
     expect(moreDetails, findsOneWidget);
     expect(noteField, findsNothing);
     expect(payeeField, findsNothing);
-    expect(dateButton, findsNothing);
 
     await tester.ensureVisible(moreDetails);
     await tester.tap(moreDetails);
@@ -45,13 +45,12 @@ void main() {
 
     expect(noteField, findsOneWidget);
     expect(payeeField, findsOneWidget);
-    expect(dateButton, findsOneWidget);
   });
 
-  testWidgets('More details shows the date while collapsed', (tester) async {
+  testWidgets('a new entry defaults to today on the main form', (tester) async {
     await pumpApp(tester);
     await openNewEntry(tester);
-    expect(find.descendant(of: find.byKey(const ValueKey('editor.moreDetails')), matching: find.text('Today')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const ValueKey('editor.date')), matching: find.text('Today')), findsOneWidget);
   });
 
   testWidgets('editing a plain entry keeps More details collapsed', (tester) async {
@@ -64,7 +63,7 @@ void main() {
 
     expect(find.text('Edit entry'), findsOneWidget);
     expect(noteField, findsNothing);
-    expect(dateButton, findsNothing);
+    expect(dateButton, findsOneWidget, reason: 'the date stays visible while More details is collapsed');
   });
 
   testWidgets('editing an entry that has a note starts with More details open', (tester) async {

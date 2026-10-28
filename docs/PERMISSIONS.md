@@ -39,7 +39,7 @@ screen. Never asked at launch.
 
 | Scope | When requested | Why | Can the user refuse? |
 |---|---|---|---|
-| `https://www.googleapis.com/auth/drive.appdata` | On *Connect Google Drive*, and again by Google only if the grant has lapsed | Store and read **one encrypted backup file** in the hidden, per-app `appDataFolder` of the user's own Drive (`hisab-backup.hisab`). The file is AES-256-GCM ciphertext from the same codec as the export file; Google and Sarv cannot read it. Hisab cannot see any other Drive file. | Yes. *Skip for now* is as prominent as *Connect*; the app works the same without it. *Disconnect* revokes access, *Delete Drive copy* removes the file. |
+| `https://www.googleapis.com/auth/drive.appdata` | On *Connect Google Drive*, and again by Google only if the grant has lapsed | Store and read **one encrypted backup file** in the hidden, per-app `appDataFolder` of the user's own Drive (`hisab-backup.hisab`). The file is AES-256-GCM ciphertext from the same codec as the export file; neither Google nor the developer can read it. Hisab cannot see any other Drive file. | Yes. *Skip for now* is as prominent as *Connect*; the app works the same without it. *Disconnect* revokes access, *Delete Drive copy* removes the file. |
 
 Hisab never requests `https://www.googleapis.com/auth/drive` (full Drive access). Shared groups
 (not shipped yet) will add `drive.file`, which only reaches files Hisab created. No Firebase, no

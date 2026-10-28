@@ -102,6 +102,7 @@
   "noEntriesThisMonthTitle": "इस महीने कोई लेन-देन नहीं",
   "noEntriesThisMonthBody": "पहला खर्च जोड़ने के लिए + दबाएँ, या सेटिंग्स में बैंक एसएमएस पढ़ना चालू करें।",
   "newEntry": "नया लेन-देन",
+  "howMuch": "कितना?",
   "editEntry": "लेन-देन बदलें",
   "discardEntryTitle": "यह लेन-देन छोड़ दें?",
   "discardEntryBody": "आपने जो भरा है वह खो जाएगा।",

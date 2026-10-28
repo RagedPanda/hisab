@@ -127,6 +127,7 @@
   "noEntriesThisMonthBody": "Tap + to add your first expense, or turn on SMS reading in Settings.",
 
   "newEntry": "New entry",
+  "howMuch": "How much?",
   "editEntry": "Edit entry",
   "discardEntryTitle": "Discard this entry?",
   "discardEntryBody": "What you entered will be lost.",

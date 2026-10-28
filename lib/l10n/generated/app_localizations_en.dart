@@ -366,6 +366,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newEntry => 'New entry';
 
   @override
+  String get howMuch => 'How much?';
+
+  @override
   String get editEntry => 'Edit entry';
 
   @override

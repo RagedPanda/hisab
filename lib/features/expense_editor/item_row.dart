@@ -122,13 +122,16 @@ class _ItemRowState extends State<ItemRow> {
               Text(formatMinor(draft.amountMinor, format: widget.moneyFormat), style: Theme.of(context).textTheme.labelLarge),
               IconButton(tooltip: l10n.remove, icon: const Icon(Icons.close, size: 18), onPressed: widget.onRemove),
             ]),
+            // Room for the floating labels of the quantity line, which
+            // otherwise collide with the name field above.
+            const SizedBox(height: 12),
             Row(children: [
               SizedBox(
                 width: 70,
                 child: TextField(
                   controller: _qty,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(labelText: l10n.qty, isDense: true),
+                  decoration: InputDecoration(labelText: l10n.qty, isDense: true, floatingLabelBehavior: FloatingLabelBehavior.always),
                   onChanged: (v) => widget.onChanged(draft.copyWith(quantity: double.tryParse(v) ?? 0)),
                 ),
               ),
@@ -139,7 +142,7 @@ class _ItemRowState extends State<ItemRow> {
                   initialValue: draft.unit ?? '',
                   isDense: true,
                   isExpanded: true,
-                  decoration: InputDecoration(labelText: l10n.unit, isDense: true),
+                  decoration: InputDecoration(labelText: l10n.unit, isDense: true, floatingLabelBehavior: FloatingLabelBehavior.always),
                   items: [
                     const DropdownMenuItem(value: '', child: Text('—')),
                     for (final unit in unitOptions) DropdownMenuItem(value: unit, child: Text(unit, overflow: TextOverflow.ellipsis)),
@@ -153,7 +156,7 @@ class _ItemRowState extends State<ItemRow> {
                   controller: _price,
                   keyboardType: amountKeyboardType(widget.moneyFormat),
                   inputFormatters: amountInputFormatters(widget.moneyFormat),
-                  decoration: InputDecoration(labelText: l10n.pricePerUnit(draft.unit ?? l10n.genericUnit), prefixText: amountPrefixText(widget.moneyFormat), suffixText: amountSuffixText(widget.moneyFormat), isDense: true),
+                  decoration: InputDecoration(labelText: l10n.pricePerUnit(draft.unit ?? l10n.genericUnit), prefixText: amountPrefixText(widget.moneyFormat), suffixText: amountSuffixText(widget.moneyFormat), hintText: '0', isDense: true, floatingLabelBehavior: FloatingLabelBehavior.always),
                   onChanged: (v) => widget.onChanged(draft.copyWith(unitPriceMinor: parseAmountToMinor(v, format: widget.moneyFormat) ?? 0)),
                 ),
               ),

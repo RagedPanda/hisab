@@ -20,6 +20,7 @@ import '../reminders/reminders_settings_tile.dart';
 import '../salary/salary_providers.dart';
 import '../salary/salary_reminder.dart';
 import '../shell/widgets/common.dart';
+import 'backup_actions.dart';
 import 'made_with_love.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -287,12 +288,8 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _export(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
-    final passphrase = await promptText(context, title: l10n.backupPassphrase, hint: l10n.backupPassphraseHelp);
+    final passphrase = await promptNewBackupPassphrase(context);
     if (passphrase == null) return;
-    if (passphrase.length < 8) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.passphraseTooShort)));
-      return;
-    }
     final bytes = await ref.read(backupServiceProvider).exportEncrypted(
       passphrase,
       currencyCode: ref.read(settingsProvider).currencyCode,
@@ -311,22 +308,11 @@ class SettingsScreen extends ConsumerWidget {
     if (picked.isEmpty) return;
     final data = await picked.first.readAsBytes();
     if (!context.mounted) return;
-    final passphrase = await promptText(context, title: l10n.backupPassphrase);
+    final passphrase = await promptRestorePassphrase(context);
     if (passphrase == null || !context.mounted) return;
     try {
       final restored = await ref.read(backupServiceProvider).importEncrypted(data, passphrase);
-      // Settings sections (month start, salary) were written to prefs directly.
-      ref.invalidate(settingsProvider);
-      ref.invalidate(salarySettingsProvider);
-      final backupCurrency = restored.currencyCode;
-      if (backupCurrency != null) {
-        await ref.read(settingsProvider.notifier).update((s) => s.copyWith(currencyCode: backupCurrency, currencyConfirmed: true));
-      }
-      final backupNumberFormat = restored.numberFormat;
-      if (backupNumberFormat != null) {
-        await ref.read(settingsProvider.notifier).update((s) => s.copyWith(numberFormat: backupNumberFormat));
-      }
-      await ref.read(reminderSchedulerProvider).rescheduleAll();
+      await applyRestoredSettings(ref, restored);
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(restored.written))));
     } catch (error) {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoreFailed('$error'))));

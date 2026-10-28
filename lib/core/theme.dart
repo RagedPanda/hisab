@@ -1,15 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Hisab uses a deep teal with a warm amber accent: calm for daily use,
-/// clearly different from the indigo/purple of most finance apps.
-const Color kSeedColor = Color(0xFF0F6E6B);
-const Color kAccentColor = Color(0xFFF2A33A);
-const Color kExpenseColor = Color(0xFFD9534F);
-const Color kIncomeColor = Color(0xFF2E9E6B);
+/// Hisab uses a vivid teal with a warm amber accent: calm for daily use,
+/// clearly different from the indigo/purple of most finance apps. Each kind
+/// of money has its own colour so a screen says at a glance what it shows.
+const Color kSeedColor = Color(0xFF0D9488);
+const Color kSeedColorLight = Color(0xFF14B8A6);
+const Color kAccentColor = Color(0xFFF59E0B);
+const Color kExpenseColor = Color(0xFFF43F5E);
+const Color kIncomeColor = Color(0xFF10B981);
+const Color kTransferColor = Color(0xFF3B82F6);
 
-/// Light scaffold / splash background, mirrored in android res (splash_background).
-const Color kLightBackground = Color(0xFFF6F8F7);
+/// The brand gradient behind hero surfaces (dashboard balance, entry header).
+const LinearGradient kBrandGradient = LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [kSeedColor, kSeedColorLight],
+);
+
+/// Scaffold / splash backgrounds, mirrored in android res (splash_background).
+const Color kLightBackground = Color(0xFFF8FAFC);
+const Color kDarkBackground = Color(0xFF0B1416);
+
+/// The colour of a kind of money ('expense', 'income', 'transfer');
+/// [fallback] for anything else.
+Color kindColor(String kind, {required Color fallback}) => switch (kind) {
+      'expense' => kExpenseColor,
+      'income' => kIncomeColor,
+      'transfer' => kTransferColor,
+      _ => fallback,
+    };
 
 /// Fixed-width digits so amounts line up in rows and legends (P3-14).
 const List<FontFeature> kTabularFigures = [FontFeature.tabularFigures()];
@@ -21,12 +41,14 @@ extension MoneyText on TextStyle {
 ThemeData buildTheme(Brightness brightness) {
   final scheme = ColorScheme.fromSeed(
     seedColor: kSeedColor,
+    // Keep the primary close to the vivid seed instead of a muted tonal match.
+    dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
     secondary: kAccentColor,
     brightness: brightness,
   );
   final base = ThemeData(colorScheme: scheme, useMaterial3: true);
   final isDark = brightness == Brightness.dark;
-  final scaffoldColor = isDark ? scheme.surface : kLightBackground;
+  final scaffoldColor = isDark ? kDarkBackground : kLightBackground;
   return base.copyWith(
     scaffoldBackgroundColor: scaffoldColor,
     cardTheme: CardThemeData(
@@ -84,7 +106,7 @@ ThemeData buildTheme(Brightness brightness) {
 
 /// Palette offered for categories, accounts and groups.
 const List<int> kPaletteColors = [
-  0xFF0F6E6B, 0xFF2E9E6B, 0xFF4CAF50, 0xFF8BC34A, 0xFFCDDC39, 0xFFF2A33A,
-  0xFFFF7043, 0xFFD9534F, 0xFFE91E63, 0xFF9C27B0, 0xFF673AB7, 0xFF3F51B5,
+  0xFF0D9488, 0xFF10B981, 0xFF4CAF50, 0xFF8BC34A, 0xFFCDDC39, 0xFFF59E0B,
+  0xFFFF7043, 0xFFF43F5E, 0xFFE91E63, 0xFF9C27B0, 0xFF673AB7, 0xFF3F51B5,
   0xFF2196F3, 0xFF03A9F4, 0xFF00BCD4, 0xFF795548, 0xFF607D8B, 0xFF9E9E9E,
 ];

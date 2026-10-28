@@ -20,6 +20,9 @@ import '../reminders/reminders_settings_tile.dart';
 import '../salary/salary_providers.dart';
 import '../salary/salary_reminder.dart';
 import '../shell/widgets/common.dart';
+import 'backup_actions.dart';
+import 'drive_backup_providers.dart';
+import 'drive_backup_screen.dart';
 import 'made_with_love.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -174,6 +177,15 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: Text(l10n.restoreBackupHelp),
                 onTap: () => _import(context, ref),
               ),
+              if (isDriveBackupSupported)
+                ListTile(
+                  key: const Key('driveBackupTile'),
+                  leading: const Icon(Icons.cloud_upload_outlined),
+                  title: Text(l10n.driveBackupTitle),
+                  subtitle: Text(_driveBackupSubtitle(l10n, ref.watch(driveBackupEmailProvider))),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(kDriveBackupLocation),
+                ),
             ]),
           ),
           SectionHeader(l10n.about),
@@ -189,6 +201,9 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
+
+  /// The account when connected; otherwise the short "why" line from the consent screen.
+  static String _driveBackupSubtitle(AppLocalizations l10n, String? email) => email == null ? l10n.driveBackupWhy : l10n.driveConnectedAs(email);
 
   static String _languageLabel(AppLocalizations l10n, String code) => code.isEmpty ? l10n.languageSystem : localeDisplayName(Locale(code));
 
@@ -287,12 +302,8 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _export(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
-    final passphrase = await promptText(context, title: l10n.backupPassphrase, hint: l10n.backupPassphraseHelp);
+    final passphrase = await promptNewBackupPassphrase(context);
     if (passphrase == null) return;
-    if (passphrase.length < 8) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.passphraseTooShort)));
-      return;
-    }
     final bytes = await ref.read(backupServiceProvider).exportEncrypted(
       passphrase,
       currencyCode: ref.read(settingsProvider).currencyCode,
@@ -311,22 +322,11 @@ class SettingsScreen extends ConsumerWidget {
     if (picked.isEmpty) return;
     final data = await picked.first.readAsBytes();
     if (!context.mounted) return;
-    final passphrase = await promptText(context, title: l10n.backupPassphrase);
+    final passphrase = await promptRestorePassphrase(context);
     if (passphrase == null || !context.mounted) return;
     try {
       final restored = await ref.read(backupServiceProvider).importEncrypted(data, passphrase);
-      // Settings sections (month start, salary) were written to prefs directly.
-      ref.invalidate(settingsProvider);
-      ref.invalidate(salarySettingsProvider);
-      final backupCurrency = restored.currencyCode;
-      if (backupCurrency != null) {
-        await ref.read(settingsProvider.notifier).update((s) => s.copyWith(currencyCode: backupCurrency, currencyConfirmed: true));
-      }
-      final backupNumberFormat = restored.numberFormat;
-      if (backupNumberFormat != null) {
-        await ref.read(settingsProvider.notifier).update((s) => s.copyWith(numberFormat: backupNumberFormat));
-      }
-      await ref.read(reminderSchedulerProvider).rescheduleAll();
+      await applyRestoredSettings(ref, restored);
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(restored.written))));
     } catch (error) {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoreFailed('$error'))));

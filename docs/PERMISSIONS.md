@@ -5,7 +5,7 @@ the exact user-facing wording, and what the stores require for approval. It also
 lists the permissions used by comparable apps so reviewers can see Hisab asks for
 the same or less.
 
-Last reviewed: 2026-10-21.
+Last reviewed: 2026-10-28.
 
 ## 1. Permissions Hisab uses
 
@@ -15,7 +15,7 @@ Last reviewed: 2026-10-21.
 |---|---|---|---|---|
 | `android.permission.READ_SMS` | Runtime, **restricted by Play policy** | Only after the user turns on *Settings → Bank SMS* and accepts the in-app disclosure dialog | Scan the inbox for bank / UPI / card alerts to log transactions and show account balances. Processing is fully on-device; no SMS text ever leaves the phone. OTPs, promotions and personal messages are ignored by the parser and never stored. | Yes. The app works fully with manual entry, paste, or CSV. The toggle is off by default. |
 | `android.permission.RECEIVE_SMS` | Runtime, **restricted by Play policy** | Same opt-in as above (granted together under the SMS group) | Catch new bank alerts in real time while the app is open so the review inbox stays current. | Yes, same as above. |
-| `android.permission.INTERNET` | Normal (added automatically by Flutter for debug builds only) | Never prompts | Debug hot-reload. Release builds do not use the network today. Cloud sync (planned) will use it only for the user's own Drive/iCloud container. | N/A |
+| `android.permission.INTERNET` | Normal (no prompt) | Never prompts | Only for the opt-in *Settings → Back up to Google Drive*: reaching Google sign-in and the user's own Drive `appDataFolder`. Nothing else uses the network, and the app never contacts a Hisab server (there is none). Also used by debug hot-reload. | N/A. Hisab works fully offline; without connecting Drive nothing is sent. |
 
 No other permissions are declared. Hisab does **not** request contacts, location, camera,
 microphone, phone state, call log, accessibility, notification access, or storage.
@@ -30,6 +30,46 @@ permissions on iOS. There are no `NS*UsageDescription` keys.
 |---|---|
 | Custom URL scheme `hisab://` | Lets a Shortcuts automation ("When I get a message containing 'debited' → Open URL `hisab:///sms?text=[Message]`") hand a bank SMS to Hisab. The user builds the automation themselves; Hisab never reads Messages. |
 | Document picker / share sheet | Encrypted backup export and restore. No permission prompt. |
+
+### Google account access (Drive backup)
+
+Not an OS permission: an OAuth scope the user grants on Google's own screen, only after
+tapping *Settings → Back up to Google Drive* and then *Connect Google Drive* on Hisab's consent
+screen. Never asked at launch.
+
+| Scope | When requested | Why | Can the user refuse? |
+|---|---|---|---|
+| `https://www.googleapis.com/auth/drive.appdata` | On *Connect Google Drive*, and again by Google only if the grant has lapsed | Store and read **one encrypted backup file** in the hidden, per-app `appDataFolder` of the user's own Drive (`hisab-backup.hisab`). The file is AES-256-GCM ciphertext from the same codec as the export file; neither Google nor the developer can read it. Hisab cannot see any other Drive file. | Yes. *Skip for now* is as prominent as *Connect*; the app works the same without it. *Disconnect* revokes access, *Delete Drive copy* removes the file. |
+
+Hisab never requests `https://www.googleapis.com/auth/drive` (full Drive access). Shared groups
+(not shipped yet) will add `drive.file`, which only reaches files Hisab created. No Firebase, no
+`google-services.json`, no client secret: the app holds only the Web OAuth client ID, which is
+not a secret (`lib/data/backup/drive_account.dart`). Setup is in
+[GOOGLE_CLOUD_SETUP.md](GOOGLE_CLOUD_SETUP.md).
+
+**Consent screen wording** (shown before Google's own screen; English below, Hindi ships with it
+in `lib/l10n/app_hi.arb`, keys `driveConsent*`):
+
+> **Back up & sync with Google Drive** — *optional*
+>
+> Hisab works fully offline. Your data stays on this phone and nothing is ever sent anywhere —
+> unless you turn this on.
+>
+> Turn on Drive sync and Hisab keeps an encrypted copy of your data in your own Google Drive, so
+> you can restore everything if you lose or change your phone, and share a group with friends
+> and family.
+>
+> **Why Hisab asks for Drive access:** only to read and write its own files in your Drive.
+> - It cannot see your photos, documents, or anything else in your Drive.
+> - The data is encrypted — Google can't read it, and neither can we. There is no Hisab server.
+> - You can turn this off and disconnect any time, and delete the Drive copy with one tap.
+>
+> Don't want it? Just skip this — Hisab works exactly the same without it.
+>
+> `Skip for now` · `Connect Google Drive`
+
+The Settings row repeats the short why line: *"Optional. An encrypted copy in your own Drive;
+Hisab can only see its own files."*
 
 Planned (not yet shipped): iCloud key-value / CloudKit container for sync. This will add the
 iCloud entitlement, which Apple approves as part of the normal review.
@@ -109,3 +149,6 @@ footprint in this comparison set.
 - Parser and discard rules: `lib/domain/sms/sms_parser.dart` (OTP / promo rejection list at the top)
 - What is stored: `SmsLog` table in `lib/data/db/database.dart` (sender, body, parsed JSON, status)
 - URL scheme: `ios/Runner/Info.plist` and the `hisab` intent filter in `AndroidManifest.xml`
+- Drive backup: consent and connected screens in `lib/features/settings/drive_backup_screen.dart`;
+  scope and sign-in in `lib/data/backup/drive_account.dart`; Drive REST calls in
+  `lib/data/backup/drive_rest_backup_store.dart`

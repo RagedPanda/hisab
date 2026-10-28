@@ -84,6 +84,7 @@
 
 ### 🔐 Backup & restore
 - 🔒 **Encrypted backup** with AES-256-GCM, protected by a passphrase you choose (PBKDF2 key). Restore it on any phone, Android or iPhone.
+- ☁️ **Optional Google Drive backup** (Android): one encrypted copy in your own Drive's hidden app folder, restored on a new phone. Hisab can only see its own file, and there is no Hisab server.
 
 ### 🎨 Look & language
 - 🌗 **Light and dark theme**, or follow the system.

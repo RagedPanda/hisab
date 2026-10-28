@@ -810,6 +810,131 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get driveBackupTitle => 'Back up to Google Drive';
+
+  @override
+  String get driveBackupWhy =>
+      'Optional. An encrypted copy in your own Drive; Hisab can only see its own files.';
+
+  @override
+  String get driveConsentTitle => 'Back up & sync with Google Drive';
+
+  @override
+  String get driveConsentOptional => 'optional';
+
+  @override
+  String get driveConsentOffline =>
+      'Hisab works fully offline. Your data stays on this phone and nothing is ever sent anywhere — unless you turn this on.';
+
+  @override
+  String get driveConsentWhat =>
+      'Turn on Drive sync and Hisab keeps an encrypted copy of your data in your own Google Drive, so you can restore everything if you lose or change your phone, and share a group with friends and family.';
+
+  @override
+  String get driveConsentWhyLead => 'Why Hisab asks for Drive access:';
+
+  @override
+  String get driveConsentWhy =>
+      'only to read and write its own files in your Drive.';
+
+  @override
+  String get driveConsentCannotSee =>
+      'It cannot see your photos, documents, or anything else in your Drive.';
+
+  @override
+  String get driveConsentEncrypted =>
+      'The data is encrypted — Google can\'t read it, and neither can we. There is no Hisab server.';
+
+  @override
+  String get driveConsentTurnOff =>
+      'You can turn this off and disconnect any time, and delete the Drive copy with one tap.';
+
+  @override
+  String get driveConsentSkip =>
+      'Don\'t want it? Just skip this — Hisab works exactly the same without it.';
+
+  @override
+  String get driveSkipForNow => 'Skip for now';
+
+  @override
+  String get driveConnect => 'Connect Google Drive';
+
+  @override
+  String driveConnectedAs(String email) {
+    return 'Connected as $email';
+  }
+
+  @override
+  String driveLastBackup(String time) {
+    return 'Last backup: $time';
+  }
+
+  @override
+  String get driveNoBackupYet => 'No backup in Drive yet';
+
+  @override
+  String get driveCheckingBackup => 'Checking Google Drive…';
+
+  @override
+  String get driveBackupStatusUnknown => 'Couldn\'t check Google Drive';
+
+  @override
+  String get driveBackUpNow => 'Back up now';
+
+  @override
+  String get driveBackUpNowHelp =>
+      'Encrypts everything with your passphrase and replaces the Drive copy';
+
+  @override
+  String get driveRestore => 'Restore from Drive';
+
+  @override
+  String get driveDisconnect => 'Disconnect';
+
+  @override
+  String get driveDisconnectHelp =>
+      'Stops using this Google account; the Drive copy stays until you delete it';
+
+  @override
+  String get driveDeleteCopy => 'Delete Drive copy';
+
+  @override
+  String get driveDeleteCopyHelp =>
+      'Removes Hisab\'s backup from your Google Drive';
+
+  @override
+  String get driveDeleteConfirm =>
+      'Delete the backup in your Google Drive? Data on this phone is not affected.';
+
+  @override
+  String get driveBackedUp => 'Backed up to Google Drive';
+
+  @override
+  String get driveCopyDeleted => 'Drive copy deleted';
+
+  @override
+  String get driveDisconnected => 'Disconnected from Google Drive';
+
+  @override
+  String get driveErrorCancelled => 'Google sign-in was cancelled';
+
+  @override
+  String get driveErrorOffline =>
+      'Couldn\'t reach Google Drive. Check your connection and try again.';
+
+  @override
+  String get driveErrorNotFound => 'No Hisab backup found in this Google Drive';
+
+  @override
+  String get driveErrorWrongPassphrase =>
+      'Wrong passphrase, or the backup is damaged';
+
+  @override
+  String driveErrorUnknown(String error) {
+    return 'Google Drive failed: $error';
+  }
+
+  @override
   String get pasted => 'PASTED';
 
   @override

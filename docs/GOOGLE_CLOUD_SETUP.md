@@ -64,7 +64,7 @@ that SHA-1 from **Play Console → Test and release → App integrity → App si
    - User support email and developer contact email: your address
    - App logo, home page, privacy policy and terms URLs: optional while testing, **required to
      publish**. The privacy policy should say what SYNC_SHARING.md promises: data is encrypted,
-     lives only in the user's own Drive, and Sarv runs no server.
+     lives only in the user's own Drive, and there is no Hisab server.
    - Authorized domain: the domain hosting those pages
 2. **Audience**:
    - User type **External**.
@@ -85,9 +85,9 @@ that SHA-1 from **Play Console → Test and release → App integrity → App si
 
 | Application type | Name | Package name | SHA-1 |
 |---|---|---|---|
-| Android | `Hisab debug (<machine>)` | `com.sarv.hisab` | debug key, step 1 |
-| Android | `Hisab release` | `com.sarv.hisab` | upload key, step 1 |
-| Android | `Hisab Play` | `com.sarv.hisab` | Play app signing key, step 1 (only once on Play) |
+| Android | `Hisab debug (<machine>)` | `com.ragedpanda.hisab` | debug key, step 1 |
+| Android | `Hisab release` | `com.ragedpanda.hisab` | upload key, step 1 |
+| Android | `Hisab Play` | `com.ragedpanda.hisab` | Play app signing key, step 1 (only once on Play) |
 | Web application | `Hisab server client` | — | — (no redirect URIs, no origins) |
 
 Copy the **Web client ID** (`…apps.googleusercontent.com`). It is the only value the app

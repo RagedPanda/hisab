@@ -149,10 +149,14 @@ translation ships with it.
    encrypted blob to `appDataFolder`; restore on a new device. Manual "Back up now" and
    "Restore from Drive" (merging last-writer-wins), plus "Disconnect" and "Delete Drive
    copy". *(Shipped.)*
-2. **Personal incremental sync:** row-level change log with LWW merge.
-3. **Shared groups:** the per-group shared Drive file, append-only log, invite links, and
+2. **Sync status indicator:** a small cloud icon (app bar or dashboard header) that shows the
+   Drive state at a glance — off (not connected), on and up to date (with "last backed up"
+   time), syncing in progress, and needs attention (signed out, no network, Drive error).
+   Tapping it opens the Drive backup settings with the reason and a retry/reconnect action.
+3. **Personal incremental sync:** row-level change log with LWW merge.
+4. **Shared groups:** the per-group shared Drive file, append-only log, invite links, and
    near-real-time poll/push.
 
-Steps 1–3 need the one-time Google Cloud setup in [GOOGLE_CLOUD_SETUP.md](GOOGLE_CLOUD_SETUP.md).
+Steps 1–4 need the one-time Google Cloud setup in [GOOGLE_CLOUD_SETUP.md](GOOGLE_CLOUD_SETUP.md).
 
 Each step ships as its own PR, smallest first, and only after the current simplicity pass.

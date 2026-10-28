@@ -105,7 +105,7 @@ footprint in this comparison set.
 ## 5. Where this lives in the code
 
 - Opt-in dialog and OS prompt: `lib/features/sms/sms_screen.dart` (`_toggleSms`)
-- Inbox read + live receiver (Android): `android/app/src/main/kotlin/com/sarv/hisab/MainActivity.kt`
+- Inbox read + live receiver (Android): `android/app/src/main/kotlin/com/ragedpanda/hisab/MainActivity.kt`
 - Parser and discard rules: `lib/domain/sms/sms_parser.dart` (OTP / promo rejection list at the top)
 - What is stored: `SmsLog` table in `lib/data/db/database.dart` (sender, body, parsed JSON, status)
 - URL scheme: `ios/Runner/Info.plist` and the `hisab` intent filter in `AndroidManifest.xml`

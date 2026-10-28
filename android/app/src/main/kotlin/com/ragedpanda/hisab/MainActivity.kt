@@ -1,4 +1,4 @@
-package com.sarv.hisab
+package com.ragedpanda.hisab
 
 import android.content.Intent
 import android.net.Uri
@@ -8,10 +8,10 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
-import com.sarv.hisab.sms.SmsCaptureBridge
-import com.sarv.hisab.sms.SmsCaptureSettings
-import com.sarv.hisab.sms.SmsNotifier
-import com.sarv.hisab.sms.SmsQueue
+import com.ragedpanda.hisab.sms.SmsCaptureBridge
+import com.ragedpanda.hisab.sms.SmsCaptureSettings
+import com.ragedpanda.hisab.sms.SmsNotifier
+import com.ragedpanda.hisab.sms.SmsQueue
 
 /**
  * Exposes the device SMS inbox and the background capture queue
@@ -122,8 +122,8 @@ class MainActivity : FlutterActivity() {
     }
 
     companion object {
-        const val METHOD_CHANNEL = "com.sarv.hisab/sms"
-        const val EVENT_CHANNEL = "com.sarv.hisab/sms_events"
+        const val METHOD_CHANNEL = "com.ragedpanda.hisab/sms"
+        const val EVENT_CHANNEL = "com.ragedpanda.hisab/sms_events"
     }
 }
 

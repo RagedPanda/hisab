@@ -1,4 +1,4 @@
-package com.sarv.hisab.sms
+package com.ragedpanda.hisab.sms
 
 /**
  * Pure rules the background receiver applies before anything is stored.

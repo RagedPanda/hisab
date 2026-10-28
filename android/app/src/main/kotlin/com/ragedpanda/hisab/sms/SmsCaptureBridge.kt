@@ -1,4 +1,4 @@
-package com.sarv.hisab.sms
+package com.ragedpanda.hisab.sms
 
 import io.flutter.plugin.common.EventChannel
 

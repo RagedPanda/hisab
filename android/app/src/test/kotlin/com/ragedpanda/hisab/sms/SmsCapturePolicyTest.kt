@@ -1,4 +1,4 @@
-package com.sarv.hisab.sms
+package com.ragedpanda.hisab.sms
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

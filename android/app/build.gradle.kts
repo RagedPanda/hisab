@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.sarv.hisab"
+    namespace = "com.ragedpanda.hisab"
     compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
@@ -18,7 +18,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.sarv.hisab"
+        applicationId = "com.ragedpanda.hisab"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

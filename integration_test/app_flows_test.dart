@@ -10,12 +10,12 @@
 /// grants provisional notification authorization itself, which iOS does
 /// silently on a simulator that has never been asked (`xcrun simctl privacy` cannot grant notifications). Manual step:
 /// if Hisab's notifications were denied on the simulator before, uninstall the
-/// app (`xcrun simctl uninstall <udid> com.sarv.hisab`) or erase the simulator
+/// app (`xcrun simctl uninstall <udid> com.ragedpanda.hisab`) or erase the simulator
 /// first, otherwise iOS keeps the denial and flow 31 fails its first expect.
 /// Android, flow 32 (salary day, numbered 25 and 29 before): the notification permission must be granted
 /// before the flow, or the Android 13+ system prompt covers the align dialog
 /// (#86). The driver does this with
-/// `adb shell pm grant com.sarv.hisab android.permission.POST_NOTIFICATIONS`;
+/// `adb shell pm grant com.ragedpanda.hisab android.permission.POST_NOTIFICATIONS`;
 /// with several devices attached, set `ANDROID_SERIAL` to the `-d` device.
 /// Run another way, grant it by hand first. The flow checks it up front.
 library;

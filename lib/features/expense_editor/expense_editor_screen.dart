@@ -593,6 +593,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                 onPick: (id) => setState(() => _toAccountId = id),
               ),
           ],
+          const SizedBox(height: 8),
+          _dateTimeRow(context),
           const SizedBox(height: 16),
           if (_groupId == null)
             _moreDetailsTile(context, l10n, moneyFormat, units)
@@ -675,8 +677,38 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _amountFocus.requestFocus();
   }
 
+  /// When the money moved: today and now by default; either button picks a
+  /// past day (backdating) or another time.
+  Widget _dateTimeRow(BuildContext context) {
+    final l10n = context.l10n;
+    return Row(children: [
+      Expanded(
+        child: OutlinedButton.icon(
+          key: const ValueKey('editor.date'),
+          icon: const Icon(Icons.calendar_today_outlined, size: 18),
+          label: Text(formatDayLabel(_occurredAt, today: l10n.today, yesterday: l10n.yesterday, locale: Localizations.localeOf(context).toString())),
+          onPressed: () async {
+            final picked = await showDatePicker(context: context, initialDate: _occurredAt, firstDate: DateTime(2000), lastDate: DateTime.now().add(const Duration(days: 365)));
+            if (picked != null) setState(() => _occurredAt = DateTime(picked.year, picked.month, picked.day, _occurredAt.hour, _occurredAt.minute));
+          },
+        ),
+      ),
+      const SizedBox(width: 8),
+      Expanded(
+        child: OutlinedButton.icon(
+          icon: const Icon(Icons.schedule, size: 18),
+          label: Text(formatTime(_occurredAt, locale: Localizations.localeOf(context).toString())),
+          onPressed: () async {
+            final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_occurredAt));
+            if (picked != null) setState(() => _occurredAt = DateTime(_occurredAt.year, _occurredAt.month, _occurredAt.day, picked.hour, picked.minute));
+          },
+        ),
+      ),
+    ]);
+  }
+
   /// The "More details" section for a personal entry: everything beyond
-  /// amount/category/account, collapsed unless [_startExpanded].
+  /// amount/category/account/date, collapsed unless [_startExpanded].
   Widget _moreDetailsTile(BuildContext context, AppLocalizations l10n, MoneyFormat moneyFormat, List<String> units) {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -689,15 +721,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         childrenPadding: EdgeInsets.zero,
         expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
         title: Text(l10n.moreDetails),
-        // The date is the detail most often changed, so it shows while collapsed.
-        subtitle: Text(formatDayLabel(_occurredAt, today: l10n.today, yesterday: l10n.yesterday, locale: Localizations.localeOf(context).toString())),
         children: _detailFields(context, l10n, moneyFormat, units),
       ),
     );
   }
 
   /// The advanced fields tucked behind "More details" (personal) or shown
-  /// inline above the split (group): project, items, date/time, repeat, note.
+  /// inline above the split (group): project, items, repeat, payee, note.
   List<Widget> _detailFields(BuildContext context, AppLocalizations l10n, MoneyFormat moneyFormat, List<String> units) {
     return [
       if (_kind != 'transfer' && _groupId == null) ...[
@@ -709,30 +739,6 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         SectionHeader(l10n.projectDetails, padding: const EdgeInsets.fromLTRB(0, 16, 0, 8)),
         ProjectFieldInputs(key: ValueKey('fields.$_projectId'), fields: _projectFields, values: _fieldValues, onChanged: (values) => setState(() => _fieldValues = values)),
       ],
-      const SizedBox(height: 16),
-      Row(children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.calendar_today_outlined, size: 18),
-            label: Text(formatShortDate(_occurredAt, locale: Localizations.localeOf(context).toString())),
-            onPressed: () async {
-              final picked = await showDatePicker(context: context, initialDate: _occurredAt, firstDate: DateTime(2000), lastDate: DateTime.now().add(const Duration(days: 365)));
-              if (picked != null) setState(() => _occurredAt = DateTime(picked.year, picked.month, picked.day, _occurredAt.hour, _occurredAt.minute));
-            },
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.schedule, size: 18),
-            label: Text(formatTime(_occurredAt, locale: Localizations.localeOf(context).toString())),
-            onPressed: () async {
-              final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_occurredAt));
-              if (picked != null) setState(() => _occurredAt = DateTime(_occurredAt.year, _occurredAt.month, _occurredAt.day, picked.hour, picked.minute));
-            },
-          ),
-        ),
-      ]),
       if (_canRepeat) ...[
         const SizedBox(height: 8),
         RepeatTile(draft: _repeat, start: _occurredAt, onChanged: (draft) => setState(() => _repeat = draft)),

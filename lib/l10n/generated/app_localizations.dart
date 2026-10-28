@@ -710,6 +710,12 @@ abstract class AppLocalizations {
   /// **'New entry'**
   String get newEntry;
 
+  /// No description provided for @howMuch.
+  ///
+  /// In en, this message translates to:
+  /// **'How much?'**
+  String get howMuch;
+
   /// No description provided for @editEntry.
   ///
   /// In en, this message translates to:

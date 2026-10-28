@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart' hide Split;
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,6 +11,7 @@ import '../../core/format.dart';
 import '../../core/ids.dart';
 import '../../core/money.dart';
 import '../../core/providers.dart';
+import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
 import '../../data/repositories/entry_removal.dart';
@@ -485,8 +487,15 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     final moneyFormat = ref.watch(groupMoneyFormatProvider(_moneyFormatLabel));
     final units = _category?.units.split(',').where((u) => u.isNotEmpty).toList() ?? const <String>[];
 
+    final headerColor = _headerColor(context);
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: headerColor,
+        foregroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent),
+        titleTextStyle: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(color: Colors.white),
         title: Text(_isEditing ? l10n.editEntry : _groupId != null ? l10n.groupExpense : l10n.newEntry),
         actions: [
           if (_isEditing)
@@ -513,50 +522,14 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       body: DismissKeyboardOnTap(
         child: ListView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+          padding: const EdgeInsets.only(bottom: 120),
           children: [
-          if (_groupId == null)
-            SegmentedButton<String>(
-              segments: [
-                compactSegment(context, value: 'expense', label: l10n.kindExpense, icon: Icons.arrow_upward),
-                compactSegment(context, value: 'income', label: l10n.kindIncome, icon: Icons.arrow_downward),
-                compactSegment(context, value: 'transfer', label: l10n.kindTransfer, icon: Icons.swap_horiz),
-              ],
-              selected: {_kind},
-              onSelectionChanged: (set) => setState(() {
-                _kind = set.first;
-                _category = null;
-                _items = [];
-                _amountController.text = '';
-              }),
-            ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _amountController,
-            focusNode: _amountFocus,
-            readOnly: _hasItems,
-            autofocus: _autofocusAmount && !_isEditing && !_hasItems,
-            keyboardType: amountKeyboardType(moneyFormat),
-            inputFormatters: amountInputFormatters(moneyFormat),
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
-            decoration: InputDecoration(
-              prefixText: amountPrefixText(moneyFormat),
-              suffixText: amountSuffixText(moneyFormat),
-              hintText: '0',
-              helperText: _hasItems ? l10n.totalOfItems(_items.length) : null,
-              errorText: _hasItems ? null : amountErrorText(context, _amountController.text, format: moneyFormat),
-              suffixIcon: _hasItems
-                  ? null
-                  : IconButton(
-                      key: const ValueKey('editor.calculator'),
-                      tooltip: l10n.calculator,
-                      icon: const Icon(Icons.calculate_outlined),
-                      onPressed: () => _openCalculator(moneyFormat),
-                    ),
-            ),
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 16),
+          _amountHeader(context, l10n, moneyFormat, headerColor),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
           if (_kind != 'transfer')
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -611,11 +584,106 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                 Expanded(child: Text(l10n.smsEntryNotice, style: Theme.of(context).textTheme.bodySmall)),
               ]),
             ),
+              ],
+            ),
+          ),
           ],
         ),
       ),
       bottomNavigationBar: BottomActionBar(
         child: _saveButtons(l10n, moneyFormat),
+      ),
+    );
+  }
+
+  /// The kind's colour behind the app bar and amount: coral expense, mint
+  /// income, blue transfer (a group expense is always an expense).
+  Color _headerColor(BuildContext context) =>
+      kindColor(_kind, fallback: Theme.of(context).colorScheme.primary);
+
+  /// The top of the form: the kind switch and a large "How much?" amount on
+  /// the kind's colour, ending in a rounded edge the rest of the form sits on.
+  Widget _amountHeader(BuildContext context, AppLocalizations l10n, MoneyFormat moneyFormat, Color headerColor) {
+    final theme = Theme.of(context);
+    final onHeader = SegmentedButton.styleFrom(
+      foregroundColor: Colors.white,
+      selectedForegroundColor: headerColor,
+      selectedBackgroundColor: Colors.white,
+      side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
+    );
+    return ColoredBox(
+      color: headerColor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                  SegmentedButton<String>(
+                    style: onHeader,
+                    segments: [
+                      compactSegment(context, value: 'expense', label: l10n.kindExpense, icon: Icons.arrow_upward),
+                      compactSegment(context, value: 'income', label: l10n.kindIncome, icon: Icons.arrow_downward),
+                      compactSegment(context, value: 'transfer', label: l10n.kindTransfer, icon: Icons.swap_horiz),
+                    ],
+                    selected: {_kind},
+                    onSelectionChanged: (set) => setState(() {
+                      _kind = set.first;
+                      _category = null;
+                      _items = [];
+                      _amountController.text = '';
+                    }),
+                  ),
+                if (_groupId == null) const SizedBox(height: 20),
+                Text(l10n.howMuch, style: theme.textTheme.titleMedium?.copyWith(color: Colors.white.withValues(alpha: 0.8))),
+                const SizedBox(height: 4),
+                TextField(
+                  controller: _amountController,
+                  focusNode: _amountFocus,
+                  readOnly: _hasItems,
+                  autofocus: _autofocusAmount && !_isEditing && !_hasItems,
+                  keyboardType: amountKeyboardType(moneyFormat),
+                  inputFormatters: amountInputFormatters(moneyFormat),
+                  style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700, color: Colors.white).tabular,
+                  cursorColor: Colors.white,
+                  decoration: InputDecoration(
+                    filled: false,
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    prefixStyle: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
+                    suffixStyle: theme.textTheme.titleLarge?.copyWith(color: Colors.white),
+                    hintStyle: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.6)),
+                    helperStyle: TextStyle(color: Colors.white.withValues(alpha: 0.85)),
+                    errorStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    prefixText: amountPrefixText(moneyFormat),
+                    suffixText: amountSuffixText(moneyFormat),
+                    hintText: '0',
+                    helperText: _hasItems ? l10n.totalOfItems(_items.length) : null,
+                    errorText: _hasItems ? null : amountErrorText(context, _amountController.text, format: moneyFormat),
+                    suffixIcon: _hasItems
+                        ? null
+                        : IconButton(
+                            key: const ValueKey('editor.calculator'),
+                            tooltip: l10n.calculator,
+                            icon: const Icon(Icons.calculate_outlined, color: Colors.white),
+                            onPressed: () => _openCalculator(moneyFormat),
+                          ),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height: 24,
+            decoration: BoxDecoration(
+              color: theme.scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+          ),
+        ],
       ),
     );
   }

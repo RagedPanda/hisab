@@ -366,6 +366,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get newEntry => 'नया लेन-देन';
 
   @override
+  String get howMuch => 'कितना?';
+
+  @override
   String get editEntry => 'लेन-देन बदलें';
 
   @override

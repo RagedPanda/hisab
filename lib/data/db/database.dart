@@ -573,6 +573,26 @@ class GroupActivities extends Table with SyncColumns {
 
 // coverage:ignore-end
 
+/// A saved spend the user adds again and again (milk, auto fare, metro
+/// recharge), shown as a one-tap chip on Home. [amountMinor] null means the
+/// chip opens the editor prefilled instead of saving at once. [sortOrder]
+/// is the user's order; the first few are shown, the rest sit behind "+N more".
+class QuickEntries extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get label => text()();
+  TextColumn get kind => text().withDefault(const Constant('expense'))();
+  IntColumn get amountMinor => integer().nullable()();
+  TextColumn get categoryId => text().nullable()();
+  TextColumn get accountId => text().nullable()();
+  TextColumn get payee => text().nullable()();
+  TextColumn get note => text().withDefault(const Constant(''))();
+  TextColumn get tags => text().withDefault(const Constant(''))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   Accounts,
   Categories,
@@ -594,12 +614,13 @@ class GroupActivities extends Table with SyncColumns {
   ItemAssignments,
   PayeeCategories,
   People,
+  QuickEntries,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -679,6 +700,8 @@ class AppDatabase extends _$AppDatabase {
           if (from < 18) await _upgradeToPayeeCategories(m);
           // v19: the personal People list, seeded from members that have an email.
           if (from < 19) await _upgradeToPeople(m);
+          // v20: one-tap quick entries on Home.
+          if (from < 20) await m.createTable(quickEntries);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -894,6 +917,8 @@ class AppDatabase extends _$AppDatabase {
               .write(RecurringRulesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
           await (update(payeeCategories)..where((t) => t.categoryId.equals(droppedId)))
               .write(PayeeCategoriesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
+          await (update(quickEntries)..where((t) => t.categoryId.equals(droppedId)))
+              .write(QuickEntriesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
           await (update(categories)..where((t) => t.parentId.equals(droppedId)))
               .write(CategoriesCompanion(parentId: Value(keptId), updatedAt: Value(now)));
           await (update(categories)..where((t) => t.id.equals(droppedId)))

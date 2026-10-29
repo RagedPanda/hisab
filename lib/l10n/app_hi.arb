@@ -197,6 +197,7 @@
   "language": "भाषा",
   "languageSystem": "डिवाइस की भाषा",
   "money": "पैसा",
+  "advancedSettings": "उन्नत",
   "currency": "मुद्रा",
   "currencyChooseTitle": "अपनी मुद्रा चुनें",
   "currencyChooseBody": "Hisab में रकम इसी मुद्रा में दिखेगी। आप इसे बाद में सेटिंग्स में बदल सकते हैं।",

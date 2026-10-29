@@ -688,6 +688,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get money => 'Money';
 
   @override
+  String get advancedSettings => 'Advanced';
+
+  @override
   String get currency => 'Currency';
 
   @override

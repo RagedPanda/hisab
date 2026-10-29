@@ -85,15 +85,39 @@ class SettingsScreen extends ConsumerWidget {
                   if (code != null) await notifier.update((s) => s.copyWith(currencyCode: code, currencyConfirmed: true));
                 },
               ),
+              ListTile(leading: const Icon(Icons.account_balance_outlined), title: Text(l10n.accounts), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/accounts')),
               ListTile(
-                leading: const Icon(Icons.pin_outlined),
-                title: Text(l10n.numberFormatTitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-                trailing: SettingValue(numberFormatSample(ref.watch(homeMoneyFormatProvider))),
+                leading: const Icon(Icons.account_balance_wallet_outlined),
+                title: Text(l10n.defaultAccount),
+                subtitle: Text(l10n.defaultAccountHelp, maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: SettingValue(_defaultAccountLabel(ref, settings.defaultAccountId)),
                 visualDensity: VisualDensity.compact,
                 onTap: () async {
-                  final choice = await _pickNumberFormat(context, settings, ref.read(deviceLocaleProvider));
-                  if (choice != null) await notifier.update((s) => s.copyWith(numberFormat: choice));
+                  final id = await _pickDefaultAccount(context, ref, settings.defaultAccountId);
+                  if (id != null) await notifier.update((s) => s.copyWith(defaultAccountId: id));
                 },
+              ),
+              ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.categories), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/categories')),
+            ]),
+          ),
+          SectionHeader(l10n.advancedSettings),
+          Card(
+            key: const Key('settingsAdvanced'),
+            child: Column(children: [
+              ListTile(leading: const Icon(Icons.savings_outlined), title: Text(l10n.budgets), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/budgets')),
+              ListTile(leading: const Icon(Icons.folder_outlined), title: Text(l10n.projects), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/projects')),
+              ListTile(leading: const Icon(Icons.repeat), title: Text(l10n.recurringTitle), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/recurring')),
+              ListTile(leading: const Icon(Icons.autorenew), title: Text(l10n.subscriptions), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/subscriptions')),
+              ListTile(
+                key: const Key('settingsSalary'),
+                leading: const Icon(Icons.payments_outlined),
+                title: Text(salary.isSetUp ? l10n.salaryTitle : l10n.salarySetUp),
+                subtitle: salary.isSetUp
+                    ? Text(l10n.salarySummary(formatMinor(salary.amountMinor, format: ref.watch(homeMoneyFormatProvider)), salary.salaryDay), maxLines: 1, overflow: TextOverflow.ellipsis)
+                    : null,
+                trailing: const Icon(Icons.chevron_right),
+                visualDensity: VisualDensity.compact,
+                onTap: () => context.push(kSalaryLocation),
               ),
               ListTile(
                 leading: const Icon(Icons.calendar_month_outlined),
@@ -108,33 +132,15 @@ class SettingsScreen extends ConsumerWidget {
                 },
               ),
               ListTile(
-                key: const Key('settingsSalary'),
-                leading: const Icon(Icons.payments_outlined),
-                title: Text(salary.isSetUp ? l10n.salaryTitle : l10n.salarySetUp),
-                subtitle: salary.isSetUp
-                    ? Text(l10n.salarySummary(formatMinor(salary.amountMinor, format: ref.watch(homeMoneyFormatProvider)), salary.salaryDay), maxLines: 1, overflow: TextOverflow.ellipsis)
-                    : null,
-                trailing: const Icon(Icons.chevron_right),
-                visualDensity: VisualDensity.compact,
-                onTap: () => context.push(kSalaryLocation),
-              ),
-              ListTile(leading: const Icon(Icons.account_balance_outlined), title: Text(l10n.accounts), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/accounts')),
-              ListTile(
-                leading: const Icon(Icons.account_balance_wallet_outlined),
-                title: Text(l10n.defaultAccount),
-                subtitle: Text(l10n.defaultAccountHelp, maxLines: 1, overflow: TextOverflow.ellipsis),
-                trailing: SettingValue(_defaultAccountLabel(ref, settings.defaultAccountId)),
+                leading: const Icon(Icons.pin_outlined),
+                title: Text(l10n.numberFormatTitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: SettingValue(numberFormatSample(ref.watch(homeMoneyFormatProvider))),
                 visualDensity: VisualDensity.compact,
                 onTap: () async {
-                  final id = await _pickDefaultAccount(context, ref, settings.defaultAccountId);
-                  if (id != null) await notifier.update((s) => s.copyWith(defaultAccountId: id));
+                  final choice = await _pickNumberFormat(context, settings, ref.read(deviceLocaleProvider));
+                  if (choice != null) await notifier.update((s) => s.copyWith(numberFormat: choice));
                 },
               ),
-              ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.categories), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/categories')),
-              ListTile(leading: const Icon(Icons.savings_outlined), title: Text(l10n.budgets), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/budgets')),
-              ListTile(leading: const Icon(Icons.folder_outlined), title: Text(l10n.projects), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/projects')),
-              ListTile(leading: const Icon(Icons.repeat), title: Text(l10n.recurringTitle), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/recurring')),
-              ListTile(leading: const Icon(Icons.autorenew), title: Text(l10n.subscriptions), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/subscriptions')),
             ]),
           ),
           SectionHeader(l10n.automation),

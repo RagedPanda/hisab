@@ -108,6 +108,11 @@ void main() {
     await db.into(db.accounts).insert(AccountsCompanion.insert(id: 'hdfc', name: 'HDFC Savings', type: 'bank', color: 0xFF1E88E5, balanceMinor: const Value(0)));
     await settle(tester);
 
+    await _tapVisible(tester, find.text('Default account'));
+    await tester.tap(find.widgetWithText(RadioListTile<String>, 'HDFC Savings'));
+    await settle(tester);
+    expect(_settings(container).defaultAccountId, 'hdfc');
+
     await _tapVisible(tester, find.text('Number format'));
     await tester.tap(find.byType(RadioListTile<NumberFormatChoice>).at(1));
     await settle(tester);
@@ -119,11 +124,6 @@ void main() {
     await _tapVisible(tester, find.text('Month starts on'));
     await _answerPrompt(tester, '5');
     expect(_settings(container).monthStartDay, 5);
-
-    await _tapVisible(tester, find.text('Default account'));
-    await tester.tap(find.widgetWithText(RadioListTile<String>, 'HDFC Savings'));
-    await settle(tester);
-    expect(_settings(container).defaultAccountId, 'hdfc');
 
     await _tapVisible(tester, find.text('Your name in groups'));
     await _answerPrompt(tester, '   ');

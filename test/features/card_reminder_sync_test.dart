@@ -1,10 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/money.dart';
 import 'package:hisab/core/notifications/notification_service.dart';
 import 'package:hisab/core/notifications/reminder_alert_text.dart';
 import 'package:hisab/core/notifications/reminder_scheduler.dart';
+import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/accounts_repository.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
@@ -15,6 +17,7 @@ import 'package:hisab/domain/cards/card_reminder.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
 import 'package:hisab/domain/reminders/reminder_schedule.dart';
 import 'package:hisab/features/accounts/card_reminder_sync.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/fake_notification_gateway.dart';
 
@@ -253,5 +256,27 @@ void main() {
     await accounts.update(AccountsCompanion(id: Value(card.id), name: const Value('HDFC')));
     await eventually(() async => (await pendingCardReminders()).single.title == 'HDFC');
     expect(await cardReminders(), hasLength(1));
+  });
+
+  test('the app-wide live sync gives a new card its reminder until the container goes', () async {
+    SharedPreferences.setMockInitialValues({'currencyCode': 'INR'});
+    final container = ProviderContainer(overrides: [
+      databaseProvider.overrideWithValue(db),
+      sharedPreferencesProvider.overrideWithValue(await SharedPreferences.getInstance()),
+      notificationGatewayProvider.overrideWithValue(gateway),
+    ]);
+    container.read(cardReminderLiveSyncProvider);
+
+    await addCard();
+    await eventually(() async => (await pendingCardReminders()).length == 1);
+
+    container.dispose();
+    await addCard();
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(await pendingCardReminders(), hasLength(1), reason: 'the subscription ended with the container');
+  });
+
+  test('a failing reminder sync is logged, never thrown at the account write', () async {
+    await syncCardReminderSafely(() async => throw StateError('notifications unavailable'));
   });
 }

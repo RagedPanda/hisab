@@ -23,4 +23,18 @@ void main() {
     expect(parseIsoDay('2026-02-30'), isNull);
     expect(parseIsoDay('2026-10-24T10:00'), isNull);
   });
+
+  test('weekRange runs Monday to the next Monday', () {
+    final week = weekRange(DateTime(2026, 10, 29, 18));
+    expect(week.start, DateTime(2026, 10, 26));
+    expect(week.end, DateTime(2026, 11, 2));
+  });
+
+  test('yearRange spans the calendar year', () {
+    final year = yearRange(DateTime(2026, 6, 15));
+    expect(year.start, DateTime(2026));
+    expect(year.end, DateTime(2027));
+    expect(year.contains(DateTime(2026, 12, 31, 23)), isTrue);
+    expect(year.contains(DateTime(2027)), isFalse);
+  });
 }

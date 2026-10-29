@@ -11,7 +11,10 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/domain/split/group_activity.dart';
 import 'package:hisab/features/groups/activity_screen.dart';
 import 'package:hisab/features/shell/router.dart';
+import 'package:hisab/features/shell/widgets/common.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../support/group_harness.dart' show addEqualExpense, leaveApp, memberIdsByName, openAppAt, tapVisible;
 
 /// Builds a group whose log has every kind of row, with long names so the
 /// narrowest phone width is exercised.
@@ -181,4 +184,53 @@ void main() {
       await tester.pump();
     });
   }
+
+  testWidgets('with no groups the activity screen says nothing has happened yet', (tester) async {
+    final container = await createContainer();
+    await openAppAt(tester, container, '/activity');
+    expect(find.byType(EmptyState), findsOneWidget);
+    expect(find.text('No activity yet'), findsOneWidget);
+    await leaveApp(tester);
+  });
+
+  testWidgets('a deleted payment and a deleted group can each be restored from the log', (tester) async {
+    final container = await createContainer();
+    await tester.runAsync(() => seedActivity(container));
+    await openAppAt(tester, container, '/activity');
+    final groups = container.read(groupsRepositoryProvider);
+
+    final restoreButtons = find.widgetWithText(TextButton, 'Restore');
+    final snacks = <String>[];
+    while (restoreButtons.evaluate().isNotEmpty) {
+      await tapVisible(tester, restoreButtons.first);
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await settle(tester);
+      snacks.add(tester.widget<Text>(find.descendant(of: find.byType(SnackBar), matching: find.byType(Text)).first).data!);
+    }
+    expect(snacks, unorderedEquals(['Expense restored', 'Payment restored', 'Group restored']));
+    expect((await tester.runAsync(() => groups.watchGroups().first))!.map((group) => group.name), contains('Flat share in Indiranagar'));
+    await leaveApp(tester);
+  });
+
+  testWidgets('an edit that moves the date or category says from what to what', (tester) async {
+    final container = await createContainer();
+    final groupId = (await tester.runAsync(() async {
+      final groups = container.read(groupsRepositoryProvider);
+      final groupId = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'You', otherMembers: ['Amit']);
+      final members = await memberIdsByName(container, groupId);
+      await addEqualExpense(container, groupId, paidBy: members['You']!, totalMinor: 10000, note: '', occurredAt: DateTime(2026, 10, 1));
+      final entry = (await groups.getGroupDetail(groupId))!.entries.single.$1;
+      final category = (await container.read(databaseProvider).select(container.read(databaseProvider).categories).get()).first;
+      await groups.saveGroupExpense(
+        EntriesRepository.newExpense(id: entry.id, amountMinor: 10000, occurredAt: DateTime(2026, 10, 3), note: '', groupId: groupId, paidByMemberId: members['You']!, splitMethod: 'equal', categoryId: category.id),
+        splits: [for (final memberId in members.values) SplitsCompanion.insert(id: newId(), entryId: entry.id, memberId: memberId, amountMinor: 5000)],
+      );
+      return groupId;
+    }))!;
+    await openAppAt(tester, container, '/groups/$groupId/activity');
+
+    expect(find.textContaining('Date: 1 Oct'), findsOneWidget);
+    expect(find.textContaining(RegExp(r'^Category: Expense → \S')), findsOneWidget, reason: 'an expense with no category is called Expense');
+    await leaveApp(tester);
+  });
 }

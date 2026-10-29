@@ -7,15 +7,16 @@ import 'package:intl/date_symbol_data_local.dart';
 
 /// An editor-like screen: a focused amount field above the Repeat tile.
 class _Host extends StatefulWidget {
-  const _Host({required this.amountFocus});
+  const _Host({required this.amountFocus, this.initial});
   final FocusNode amountFocus;
+  final RepeatDraft? initial;
 
   @override
   State<_Host> createState() => _HostState();
 }
 
 class _HostState extends State<_Host> {
-  RepeatDraft? draft;
+  late RepeatDraft? draft = widget.initial;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -26,12 +27,12 @@ class _HostState extends State<_Host> {
       );
 }
 
-Future<void> _pumpHost(WidgetTester tester, FocusNode amountFocus, {Locale locale = const Locale('en')}) async {
+Future<void> _pumpHost(WidgetTester tester, FocusNode amountFocus, {Locale locale = const Locale('en'), RepeatDraft? initial}) async {
   await tester.pumpWidget(MaterialApp(
     locale: locale,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    home: _Host(amountFocus: amountFocus),
+    home: _Host(amountFocus: amountFocus, initial: initial),
   ));
   await tester.pumpAndSettle();
 }
@@ -93,4 +94,68 @@ void main() {
       semantics.dispose();
     });
   }
+
+  testWidgets('the sheet builds every schedule shape and Don\'t repeat clears it', (tester) async {
+    final amountFocus = FocusNode();
+    addTearDown(amountFocus.dispose);
+    await tester.binding.setSurfaceSize(const Size(430, 932));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await _pumpHost(tester, amountFocus);
+    await tester.tap(find.byKey(const ValueKey('editor.repeat')));
+    await tester.pumpAndSettle();
+    String summary() => tester.widget<Text>(find.byKey(const ValueKey('repeat.summary'))).data!;
+    Future<void> tapAndSettle(Finder target) async {
+      await tester.tap(target);
+      await tester.pumpAndSettle();
+    }
+
+    await tapAndSettle(find.text('Weekly'));
+    expect(summary(), startsWith('Every week on '));
+    await tapAndSettle(find.text('Yearly'));
+    expect(summary(), startsWith('Every year on '));
+    await tapAndSettle(find.text('Daily'));
+    await tapAndSettle(find.byKey(const ValueKey('repeat.interval.plus')));
+    expect(summary(), 'Every 2 days');
+    await tapAndSettle(find.byKey(const ValueKey('repeat.interval.minus')));
+    expect(summary(), 'Every day');
+
+    await tapAndSettle(find.text('Monthly'));
+    await tapAndSettle(find.text('On the last day of the month'));
+    expect(summary(), 'Every month on the last day');
+
+    await tapAndSettle(find.text('After'));
+    expect(summary(), 'Every month on the last day, 12 times');
+    await tapAndSettle(find.byKey(const ValueKey('repeat.count.plus')));
+    await tapAndSettle(find.byKey(const ValueKey('repeat.count.minus')));
+    await tapAndSettle(find.byKey(const ValueKey('repeat.count.minus')));
+    expect(summary(), 'Every month on the last day, 11 times');
+
+    await tapAndSettle(find.text('On a date'));
+    await tapAndSettle(find.text('OK'));
+    expect(summary(), contains(', until '), reason: 'the picker opens a year after the start');
+    await tapAndSettle(find.text('Never'));
+    expect(summary(), 'Every month on the last day');
+
+    await tapAndSettle(find.byKey(const ValueKey('repeat.done')));
+    expect(find.text('Every month on the last day'), findsOneWidget);
+
+    await tapAndSettle(find.byKey(const ValueKey('editor.repeat')));
+    await tapAndSettle(find.byKey(const ValueKey('repeat.none')));
+    expect(find.text('Does not repeat'), findsOneWidget);
+  });
+
+  testWidgets('an end date before the start is refused until it is changed', (tester) async {
+    final amountFocus = FocusNode();
+    addTearDown(amountFocus.dispose);
+    await _pumpHost(tester, amountFocus, initial: RepeatDraft(end: RepeatEnd.onDate, endDate: DateTime(2026, 7, 1)));
+    await tester.tap(find.byKey(const ValueKey('editor.repeat')));
+    await tester.pumpAndSettle();
+    expect(find.text('Pick an end date on or after the start'), findsOneWidget);
+    expect(tester.widget<FilledButton>(find.byKey(const ValueKey('repeat.done'))).onPressed, isNull);
+
+    await tester.tap(find.text('Never'));
+    await tester.pumpAndSettle();
+    expect(find.text('Pick an end date on or after the start'), findsNothing);
+    expect(tester.widget<FilledButton>(find.byKey(const ValueKey('repeat.done'))).onPressed, isNotNull);
+  });
 }

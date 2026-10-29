@@ -12,6 +12,10 @@ import '../../domain/sms/sms_transaction_key.dart';
 
 part 'database.g.dart';
 
+// Table definitions below are read by drift's code generator and never run,
+// so they are left out of line coverage.
+// coverage:ignore-start
+
 /// Every table carries [updatedAt] and a soft [deletedAt] so rows can be
 /// merged last-writer-wins across devices during sync.
 mixin SyncColumns on Table {
@@ -566,6 +570,8 @@ class GroupActivities extends Table with SyncColumns {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+// coverage:ignore-end
 
 @DriftDatabase(tables: [
   Accounts,

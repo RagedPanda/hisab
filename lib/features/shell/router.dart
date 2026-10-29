@@ -13,6 +13,7 @@ import '../groups/group_detail_screen.dart';
 import '../groups/group_settings_screen.dart';
 import '../groups/group_totals_screen.dart';
 import '../groups/groups_screen.dart';
+import '../notifications/notification_settings_screen.dart';
 import '../projects/project_detail_screen.dart';
 import '../projects/project_form_screen.dart';
 import '../projects/project_templates_screen.dart';
@@ -139,6 +140,7 @@ final appRouter = GoRouter(
       ],
     ),
     GoRoute(path: '/reminders', parentNavigatorKey: _rootKey, builder: (_, _) => const RemindersScreen()),
+    GoRoute(path: kNotificationSettingsLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const NotificationSettingsScreen()),
     GoRoute(path: '/reminders/:id', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: RemindersScreen(highlightId: state.pathParameters['id']))),
     GoRoute(path: kUpcomingCalendarRoute, parentNavigatorKey: _rootKey, builder: (_, _) => const UpcomingCalendarScreen()),
     GoRoute(path: '/sms', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: SmsScreen(sharedText: state.uri.queryParameters['text']))),

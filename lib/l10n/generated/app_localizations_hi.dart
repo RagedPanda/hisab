@@ -769,6 +769,32 @@ class AppLocalizationsHi extends AppLocalizations {
       'मिलाया जाता है; नए स्थानीय बदलाव बने रहते हैं';
 
   @override
+  String get eraseAllData => 'सारा डेटा मिटाएँ';
+
+  @override
+  String get eraseAllDataHelp =>
+      'इस फ़ोन से हर एंट्री, खाता, ग्रुप और सेटिंग हटा देता है';
+
+  @override
+  String get eraseAllDataTitle => 'सब कुछ मिटाएँ?';
+
+  @override
+  String eraseAllDataBody(String word) {
+    return 'इससे इस फ़ोन की सारी एंट्री, खाते, ग्रुप, बजट, रिमाइंडर और सेटिंग हट जाएँगी। इसे वापस नहीं लाया जा सकता। Google Drive पर पहले से रखे बैकअप बने रहेंगे।\n\nपुष्टि के लिए $word लिखें।';
+  }
+
+  @override
+  String eraseConfirmLabel(String word) {
+    return '$word लिखें';
+  }
+
+  @override
+  String get eraseAction => 'मिटाएँ';
+
+  @override
+  String get dataErased => 'सारा डेटा मिट गया। Hisab फिर से नई शुरुआत पर है।';
+
+  @override
   String get about => 'ऐप के बारे में';
 
   @override

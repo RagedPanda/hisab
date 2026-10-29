@@ -769,6 +769,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreBackupHelp => 'Merges; newer local edits are kept';
 
   @override
+  String get eraseAllData => 'Erase all data';
+
+  @override
+  String get eraseAllDataHelp =>
+      'Deletes every entry, account, group and setting on this phone';
+
+  @override
+  String get eraseAllDataTitle => 'Erase everything?';
+
+  @override
+  String eraseAllDataBody(String word) {
+    return 'This removes all entries, accounts, groups, budgets, reminders and settings from this phone. It can\'t be undone. Backups already on Google Drive are kept.\n\nType $word to confirm.';
+  }
+
+  @override
+  String eraseConfirmLabel(String word) {
+    return 'Type $word';
+  }
+
+  @override
+  String get eraseAction => 'Erase';
+
+  @override
+  String get dataErased => 'All data erased. Hisab is back to a fresh start.';
+
+  @override
   String get about => 'About';
 
   @override

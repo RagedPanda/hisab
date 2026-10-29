@@ -23,6 +23,7 @@ import '../shell/widgets/common.dart';
 import 'backup_actions.dart';
 import 'drive_backup_providers.dart';
 import 'drive_backup_screen.dart';
+import 'erase_data.dart';
 import 'made_with_love.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -188,6 +189,18 @@ class SettingsScreen extends ConsumerWidget {
                 ),
             ]),
           ),
+          const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              key: const Key('eraseAllDataTile'),
+              iconColor: Theme.of(context).colorScheme.error,
+              textColor: Theme.of(context).colorScheme.error,
+              leading: const Icon(Icons.delete_forever_outlined),
+              title: Text(l10n.eraseAllData),
+              subtitle: Text(l10n.eraseAllDataHelp),
+              onTap: () => _erase(context, ref),
+            ),
+          ),
           SectionHeader(l10n.about),
           Card(
             child: ListTile(
@@ -314,6 +327,14 @@ class SettingsScreen extends ConsumerWidget {
     final file = File('${dir.path}/hisab-backup-$stamp.hisab');
     await file.writeAsBytes(bytes, flush: true);
     await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], text: l10n.backupShareSubject));
+  }
+
+  Future<void> _erase(BuildContext context, WidgetRef ref) async {
+    if (!await confirmEraseAllData(context)) return;
+    await eraseEverything(ref);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.dataErased)));
+    context.go('/home');
   }
 
   Future<void> _import(BuildContext context, WidgetRef ref) async {

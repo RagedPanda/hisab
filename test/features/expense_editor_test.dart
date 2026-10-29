@@ -474,4 +474,44 @@ void main() {
       expect(noteField, findsNothing);
     });
   });
+
+  group('Again', () {
+    Future<ProviderContainer> openFuel(WidgetTester tester) => openEditor(
+          tester,
+          location: () => '/entry?id=fuel',
+          seed: (container) async {
+            final cash = (await container.read(accountsRepositoryProvider).getAll()).single;
+            await seedEntry(container, id: 'fuel', payee: 'Indian Oil', amountMinor: 50000, accountId: cash.id, occurredAt: DateTime.now().subtract(const Duration(days: 3)));
+          },
+        );
+
+    testWidgets('copies a saved entry to a new one dated today', (tester) async {
+      final container = await openFuel(tester);
+      final balanceBefore = await readDb(tester, () async => (await container.read(accountsRepositoryProvider).getAll()).single.balanceMinor);
+      await tester.tap(find.byKey(const Key('editor.again')));
+      await settle(tester);
+      expect(find.text('A copy dated today. Change anything, then save.'), findsOneWidget);
+      expect(find.byKey(const Key('editor.again')), findsNothing, reason: 'the copy is a new entry');
+      await saveEditor(tester);
+
+      final entries = await savedEntries(tester, container);
+      expect(entries, hasLength(2));
+      final copy = entries.firstWhere((entry) => entry.id != 'fuel');
+      expect((copy.payee, copy.amountMinor, copy.accountId), ('Indian Oil', 50000, entries.firstWhere((entry) => entry.id == 'fuel').accountId));
+      expect(DateUtils.isSameDay(copy.occurredAt, DateTime.now()), isTrue);
+      final balanceAfter = await readDb(tester, () async => (await container.read(accountsRepositoryProvider).getAll()).single.balanceMinor);
+      expect(balanceAfter, balanceBefore - 50000, reason: 'the copy moves the account like any new expense');
+    });
+
+    testWidgets('asks before dropping unsaved edits', (tester) async {
+      final container = await openFuel(tester);
+      await enter(tester, editorAmountField, '600');
+      await tester.tap(find.byKey(const Key('editor.again')));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('keep-editing')));
+      await settle(tester);
+      expect(find.byKey(const Key('editor.again')), findsOneWidget, reason: 'still editing the saved entry');
+      expect(await savedEntries(tester, container), hasLength(1));
+    });
+  });
 }

@@ -181,6 +181,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   /// Back, the back gesture or the close button with unsaved input lands
   /// here instead of leaving: Keep editing stays, Discard leaves.
   Future<void> _confirmDiscard() async {
+    if (!await _askDiscard() || !mounted) return;
+    setState(() => _openedWith = null);
+    popOrGoHome(context);
+  }
+
+  /// Asks whether to drop the unsaved input; true means Discard.
+  Future<bool> _askDiscard() async {
     final l10n = context.l10n;
     final discard = await showDialog<bool>(
       context: context,
@@ -193,9 +200,16 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         ],
       ),
     );
-    if (discard != true || !mounted) return;
+    return discard == true;
+  }
+
+  /// "Again": swaps this saved entry for a new copy of it dated now. Unsaved
+  /// edits here are asked about first, since the copy starts from the saved one.
+  Future<void> _again() async {
+    if (_hasUnsavedInput && !await _askDiscard()) return;
+    if (!mounted) return;
     setState(() => _openedWith = null);
-    popOrGoHome(context);
+    context.pushReplacement('/entry?copy=$_existingId');
   }
 
   /// "Save & add another" is offered for new entries typed by hand; SMS
@@ -506,6 +520,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         title: Text(_isEditing ? l10n.editEntry : _groupId != null ? l10n.groupExpense : l10n.newEntry),
         actions: [
           if (_isEditing)
+            IconButton(key: const Key('editor.again'), tooltip: l10n.entryAgain, icon: const Icon(Icons.replay_rounded), onPressed: _again),
+          if (_isEditing)
             IconButton(
               tooltip: l10n.delete,
               icon: const Icon(Icons.delete_outline),
@@ -532,8 +548,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           padding: const EdgeInsets.only(bottom: 120),
           children: [
           _amountHeader(context, l10n, moneyFormat, headerColor),
-          if (widget.copyFromId != null && _groupId != null)
-            _CopiedFromLastBanner(onStartBlank: () => context.pushReplacement('/entry?group=$_groupId')),
+          if (widget.copyFromId != null)
+            _CopiedFromLastBanner(
+              label: widget.groupId != null ? l10n.copiedFromLastEntry : l10n.copiedFromEntry,
+              onStartBlank: () => context.pushReplacement(_groupId == null ? '/entry' : '/entry?group=$_groupId'),
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
@@ -1186,10 +1205,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   }
 }
 
-/// Tells the user a new group expense starts as a copy of the group's last
-/// one, with a way back to an empty form.
+/// Tells the user a new entry starts as a copy of a saved one (a group's last
+/// expense, or "Again" on any entry), with a way back to an empty form.
 class _CopiedFromLastBanner extends StatelessWidget {
-  const _CopiedFromLastBanner({required this.onStartBlank});
+  const _CopiedFromLastBanner({required this.label, required this.onStartBlank});
+  final String label;
   final VoidCallback onStartBlank;
 
   @override
@@ -1202,7 +1222,7 @@ class _CopiedFromLastBanner extends StatelessWidget {
       child: Row(children: [
         Icon(Icons.content_copy_rounded, size: 18, color: scheme.onSurfaceVariant),
         const SizedBox(width: 8),
-        Expanded(child: Text(l10n.copiedFromLastEntry, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant))),
+        Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant))),
         TextButton(key: const Key('editor.startBlank'), onPressed: onStartBlank, child: Text(l10n.startBlank)),
       ]),
     );

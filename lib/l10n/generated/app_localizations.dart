@@ -746,6 +746,18 @@ abstract class AppLocalizations {
   /// **'Start blank'**
   String get startBlank;
 
+  /// Entry editor action: copy this saved entry to a new one dated today
+  ///
+  /// In en, this message translates to:
+  /// **'Again'**
+  String get entryAgain;
+
+  /// No description provided for @copiedFromEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'A copy dated today. Change anything, then save.'**
+  String get copiedFromEntry;
+
   /// No description provided for @deleteEntryQuestion.
   ///
   /// In en, this message translates to:

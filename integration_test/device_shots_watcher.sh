@@ -8,8 +8,33 @@
 # polls that folder, runs `simctl io screenshot`, and deletes the request.
 #
 # Usage: integration_test/device_shots_watcher.sh <simulator-udid> <output-dir> [bundle-id]
+#        integration_test/device_shots_watcher.sh android <adb-serial> <output-dir> [package]
 # Run it in the background BEFORE `flutter drive`, and stop it afterwards.
+# On Android the app must be a debug build (`run-as` reads its files) and
+# the capture is `adb screencap`.
 set -u
+
+if [ "${1:-}" = "android" ]; then
+  SERIAL="${2:?adb serial}"
+  OUT="${3:?output directory}"
+  PACKAGE="${4:-com.ragedpanda.hisab}"
+  DIR=app_flutter/device_shots
+  mkdir -p "$OUT"
+  trap 'adb -s "$SERIAL" shell run-as "$PACKAGE" rm -f "$DIR/watcher_alive" >/dev/null 2>&1; exit 0' INT TERM
+  while true; do
+    # A fresh install wipes the folder, so mark it alive on every pass.
+    reqs=$(adb -s "$SERIAL" shell "run-as $PACKAGE sh -c 'mkdir -p $DIR && touch $DIR/watcher_alive && ls $DIR'" 2>/dev/null | tr -d '\r' | grep '^req_')
+    for req in $reqs; do
+      name=${req#req_}
+      sleep 0.2
+      adb -s "$SERIAL" exec-out screencap -p > "$OUT/${name}_device.png"
+      adb -s "$SERIAL" shell run-as "$PACKAGE" rm -f "$DIR/$req"
+      echo "captured $name"
+    done
+    sleep 0.3
+  done
+fi
+
 UDID="${1:?simulator udid}"
 OUT="${2:?output directory}"
 BUNDLE="${3:-com.ragedpanda.hisab}"

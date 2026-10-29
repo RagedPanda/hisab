@@ -3842,6 +3842,20 @@ class AppLocalizationsHi extends AppLocalizations {
   String get upcomingCalendarNextMonth => 'अगला महीना';
 
   @override
+  String get spendingCalendar => 'खर्च कैलेंडर';
+
+  @override
+  String get spendingCalendarOpen => 'खर्च कैलेंडर खोलें';
+
+  @override
+  String get spendingCalendarDayEmpty => 'इस दिन कोई खर्च नहीं';
+
+  @override
+  String spendingCalendarSpent(String amount) {
+    return '$amount खर्च';
+  }
+
+  @override
   String get upcomingConfirm => 'पुष्टि करें';
 
   @override

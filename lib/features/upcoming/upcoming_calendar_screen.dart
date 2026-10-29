@@ -5,10 +5,9 @@ import 'package:intl/intl.dart';
 import '../../core/dates.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
-import '../../domain/upcoming/calendar_grid.dart';
 import '../../domain/upcoming/upcoming_items.dart';
 import '../../l10n/l10n.dart';
-import '../dashboard/widgets/dashboard_card.dart' show captionStyle;
+import '../shell/widgets/calendar_month.dart';
 import '../shell/widgets/common.dart';
 import 'upcoming_actions.dart';
 import 'upcoming_providers.dart';
@@ -56,26 +55,19 @@ class _UpcomingCalendarScreenState extends ConsumerState<UpcomingCalendarScreen>
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              children: [
-                IconButton(tooltip: l10n.upcomingCalendarPreviousMonth, onPressed: () => _shiftMonth(-1), icon: const Icon(Icons.chevron_left)),
-                Expanded(
-                  child: Text(
-                    formatMonthYear(_month, locale: locale),
-                    key: const ValueKey('upcoming.calendar.month'),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                IconButton(tooltip: l10n.upcomingCalendarNextMonth, onPressed: () => _shiftMonth(1), icon: const Icon(Icons.chevron_right)),
-              ],
-            ),
-          ),
+          CalendarMonthHeader(month: _month, onShift: _shiftMonth, titleKey: const ValueKey('upcoming.calendar.month')),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _MonthGrid(month: _month, today: today, selectedDay: _selectedDay, byDay: byDay, onSelect: (day) => setState(() => _selectedDay = day)),
+            child: CalendarMonthGrid(
+              month: _month,
+              dayCell: (day) => _DayCell(
+                day: day,
+                items: byDay[day] ?? const [],
+                isToday: isSameDay(day, today),
+                isSelected: isSameDay(day, _selectedDay),
+                onTap: () => setState(() => _selectedDay = day),
+              ),
+            ),
           ),
           SectionHeader(formatDayLabel(_selectedDay, now: today, locale: locale, today: l10n.today, yesterday: l10n.yesterday)),
           if (items.isLoading && !items.hasValue)
@@ -97,61 +89,6 @@ class _UpcomingCalendarScreenState extends ConsumerState<UpcomingCalendarScreen>
   }
 }
 
-class _MonthGrid extends StatelessWidget {
-  const _MonthGrid({required this.month, required this.today, required this.selectedDay, required this.byDay, required this.onSelect});
-  final DateTime month;
-  final DateTime today;
-  final DateTime selectedDay;
-  final Map<DateTime, List<UpcomingItem>> byDay;
-  final ValueChanged<DateTime> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final appLocale = Localizations.localeOf(context);
-    final firstWeekday = calendarFirstWeekday(
-      appLanguage: appLocale.languageCode,
-      deviceLocaleTags: [appLocale.toLanguageTag(), for (final deviceLocale in View.of(context).platformDispatcher.locales) deviceLocale.toLanguageTag()],
-    );
-    final locale = appLocale.toString();
-    final weekdayFormat = DateFormat.E(locale);
-    // 2024-01-01 was a Monday, so day N of that week has ISO weekday N.
-    String weekdayName(int isoWeekday) => weekdayFormat.format(DateTime(2024, 1, isoWeekday));
-    final cells = calendarMonthCells(month, firstWeekday: firstWeekday);
-    return Column(
-      children: [
-        Row(
-          children: [
-            for (final weekday in calendarWeekdays(firstWeekday: firstWeekday))
-              Expanded(
-                child: ExcludeSemantics(
-                  child: Text(weekdayName(weekday), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.clip, style: captionStyle(context)),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        for (var row = 0; row < cells.length ~/ 7; row++)
-          Row(
-            children: [
-              for (final day in cells.sublist(row * 7, row * 7 + 7))
-                Expanded(
-                  child: day == null
-                      ? const SizedBox(height: 52)
-                      : _DayCell(
-                          day: day,
-                          items: byDay[day] ?? const [],
-                          isToday: isSameDay(day, today),
-                          isSelected: isSameDay(day, selectedDay),
-                          onTap: () => onSelect(day),
-                        ),
-                ),
-            ],
-          ),
-      ],
-    );
-  }
-}
-
 class _DayCell extends StatelessWidget {
   const _DayCell({required this.day, required this.items, required this.isToday, required this.isSelected, required this.onTap});
   final DateTime day;
@@ -164,51 +101,27 @@ class _DayCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    final locale = Localizations.localeOf(context).toString();
-    final dayLabel = DateFormat.MMMMd(locale).format(day);
-    return Semantics(
+    final dayLabel = DateFormat.MMMMd(Localizations.localeOf(context).toString()).format(day);
+    return CalendarDayCell(
       key: ValueKey('upcoming.calendar.day.${day.day}'),
-      button: true,
-      selected: isSelected,
-      label: items.isEmpty ? dayLabel : '$dayLabel, ${l10n.upcomingCalendarDueCount(items.length)}',
-      excludeSemantics: true,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          height: 52,
-          margin: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            color: isSelected ? scheme.primaryContainer : null,
-            borderRadius: BorderRadius.circular(12),
-            border: isToday && !isSelected ? Border.all(color: scheme.primary) : null,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '${day.day}',
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: isSelected ? scheme.onPrimaryContainer : null, fontWeight: isToday ? FontWeight.w700 : null),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
+      day: day,
+      isToday: isToday,
+      isSelected: isSelected,
+      semanticLabel: items.isEmpty ? dayLabel : '$dayLabel, ${l10n.upcomingCalendarDueCount(items.length)}',
+      onTap: onTap,
+      below: SizedBox(
+        height: 6,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (final item in items.take(kMaxCalendarDots))
+              Container(
+                width: 6,
                 height: 6,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (final item in items.take(kMaxCalendarDots))
-                      Container(
-                        width: 6,
-                        height: 6,
-                        margin: const EdgeInsets.symmetric(horizontal: 1),
-                        decoration: BoxDecoration(shape: BoxShape.circle, color: _dotColor(scheme, item)),
-                      ),
-                  ],
-                ),
+                margin: const EdgeInsets.symmetric(horizontal: 1),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: _dotColor(scheme, item)),
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );

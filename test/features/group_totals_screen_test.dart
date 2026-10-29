@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +15,13 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/features/groups/group_totals_screen.dart';
 import 'package:hisab/features/shell/router.dart';
 
+import 'package:hisab/features/dashboard/widgets/category_donut.dart';
+import 'package:hisab/features/shell/widgets/common.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:hisab/core/theme.dart' show kExpenseColor;
+
 import '../support/app_harness.dart' show settle;
+import '../support/group_harness.dart' show addEqualExpense, createContainer, leaveApp, memberIdsByName, openAppAt, tapVisible;
 
 /// Goa trip: Rahul and I paid a 1,000 hotel together (600 + 400) split
 /// 500 / 300 / 200, and Priya paid a 300 dinner split equally among three.
@@ -49,6 +56,7 @@ Finder _memberRow(String label) => find.byWidgetPredicate((widget) => widget is 
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
 
   testWidgets('balances tab shows group totals and opens the breakdown page', (tester) async {
     SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR'});
@@ -100,5 +108,58 @@ void main() {
     await settle(tester);
     expect(tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'All time')).selected, isFalse);
     expect(find.text('2 expenses'), findsOneWidget);
+  });
+
+  testWidgets('the totals page waits for the group, then says when there is nothing to total', (tester) async {
+    final container = await createContainer();
+    final groupId = (await tester.runAsync(() => container.read(groupsRepositoryProvider).createGroup(name: 'Flat', icon: 'home', myName: 'You', otherMembers: ['Amit'])))!;
+    await tester.binding.setSurfaceSize(const Size(430, 932));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    appRouter.go('/groups/$groupId/totals');
+    await tester.pumpWidget(UncontrolledProviderScope(container: container, child: const HisabApp()));
+    expect(find.byType(CircularProgressIndicator), findsOneWidget, reason: 'the group is still loading');
+
+    await settle(tester);
+    expect(find.text('No expenses in this period'), findsOneWidget);
+    expect(find.byType(EmptyState), findsOneWidget);
+    expect(find.text('Spending by category'), findsNothing);
+    await leaveApp(tester);
+  });
+
+  testWidgets('a category can be picked from the legend, and a bar shows what that member paid', (tester) async {
+    final container = await createContainer();
+    final groupId = (await tester.runAsync(() async {
+      final groupId = await container.read(groupsRepositoryProvider).createGroup(name: 'Flat', icon: 'home', myName: 'You', otherMembers: ['Priya']);
+      final members = await memberIdsByName(container, groupId);
+      final database = container.read(databaseProvider);
+      final category = (await database.select(database.categories).get()).first;
+      await addEqualExpense(container, groupId, paidBy: members['Priya']!, totalMinor: 20000, categoryId: category.id);
+      return groupId;
+    }))!;
+    await openAppAt(tester, container, '/groups/$groupId/totals');
+
+    final net = tester.widget<Text>(find.text('-₹100'));
+    expect(net.style?.color, kExpenseColor, reason: 'Priya paid for my half, so I owe more');
+
+    CategoryDonut donut() => tester.widget<CategoryDonut>(find.byType(CategoryDonut));
+    final categoryId = (await tester.runAsync(() async {
+      final database = container.read(databaseProvider);
+      return (await database.select(database.categories).get()).first.id;
+    }))!;
+    final legendRow = find.descendant(of: find.byType(CategoryDonut), matching: find.byType(InkWell)).last;
+    await tapVisible(tester, legendRow);
+    expect(donut().selectedId, categoryId);
+    await tapVisible(tester, legendRow);
+    expect(donut().selectedId, isNull, reason: 'tapping the picked category again clears it');
+
+    final chart = tester.widget<BarChart>(find.byType(BarChart)).data;
+    final tooltip = chart.barTouchData.touchTooltipData;
+    final tooltips = {
+      for (final group in chart.barGroups)
+        for (final (rodIndex, rod) in group.barRods.indexed) tooltip.getTooltipItem(group, group.x, rod, rodIndex)!.text,
+    };
+    expect(tooltips, {'Paid ₹0', 'Share ₹100', 'Paid ₹200'}, reason: 'touching a bar says what it is: I paid nothing, Priya paid 200, each share is 100');
+    expect(tooltip.getTooltipColor(chart.barGroups.first), Theme.of(tester.element(find.byType(BarChart))).colorScheme.surfaceContainerHighest);
+    await leaveApp(tester);
   });
 }

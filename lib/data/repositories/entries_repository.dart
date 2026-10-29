@@ -4,7 +4,21 @@ import '../../core/dates.dart';
 import '../../core/ids.dart';
 import '../../domain/cards/card_summary.dart';
 import '../../domain/ledger/personal_totals.dart';
+import '../../domain/split/debt_simplifier.dart';
+import '../../domain/split/group_timeline.dart';
+import '../../domain/split/split_calculator.dart';
 import '../db/database.dart';
+
+/// The ledger form of a group expense, or null when it has no payer. Payer
+/// rows win over [Entry.paidByMemberId] when several members paid.
+LedgerExpense? groupLedgerExpense(Entry entry, List<Split> splits, [List<EntryPayer> payers = const []]) {
+  final shares = [for (final split in splits) SplitShare(split.memberId, split.amountMinor)];
+  if (payers.isNotEmpty) {
+    return LedgerExpense.multi(payers: [for (final payer in payers) SplitShare(payer.memberId, payer.amountMinor)], shares: shares);
+  }
+  final payerId = entry.paidByMemberId;
+  return payerId == null ? null : LedgerExpense(paidByMemberId: payerId, shares: shares);
+}
 
 /// An entry with the rows the UI needs alongside it.
 class EntryDetails {
@@ -16,7 +30,9 @@ class EntryDetails {
     this.toAccount,
     this.group,
     this.myShareMinor,
+    this.myMemberId,
     this.splits = const [],
+    this.payers = const [],
   });
   final Entry entry;
   final List<EntryItem> items;
@@ -27,12 +43,27 @@ class EntryDetails {
 
   /// My split of a group entry; null for personal entries or when I have no share.
   final int? myShareMinor;
+
+  /// My member id in the entry's group, known when I have a share in it.
+  final String? myMemberId;
   final List<Split> splits;
+
+  /// Who paid what, when several members paid a group expense.
+  final List<EntryPayer> payers;
 
   bool get isGroupEntry => entry.groupId != null;
 
   /// What this entry costs me: the full amount, or my share of a group entry.
   int get myAmountMinor => myAmountMinorOf(amountMinor: entry.amountMinor, isGroupEntry: isGroupEntry, myShareMinor: myShareMinor);
+
+  /// What a group entry did to my balance (lent, borrowed, paid my share);
+  /// null for personal entries or when I am not in the split.
+  ExpenseEffect? get myEffect {
+    final memberId = myMemberId;
+    if (!isGroupEntry || memberId == null) return null;
+    final expense = groupLedgerExpense(entry, splits, payers);
+    return expense == null ? null : expenseEffectFor(memberId, timelineExpenseOf(entry.occurredAt, expense));
+  }
 
   LedgerLine get ledgerLine => LedgerLine(kind: entry.kind, amountMinor: myAmountMinor, occurredAt: entry.occurredAt, categoryId: category?.id);
 }
@@ -192,6 +223,10 @@ class EntriesRepository {
     final splits = ids.isEmpty
         ? <Split>[]
         : await (db.select(db.splits)..where((t) => t.entryId.isIn(ids) & t.deletedAt.isNull())).get();
+    final groupEntryIds = [for (final entry in entries) if (entry.groupId != null) entry.id];
+    final payers = groupEntryIds.isEmpty
+        ? <EntryPayer>[]
+        : await (db.select(db.entryPayers)..where((t) => t.entryId.isIn(groupEntryIds) & t.deletedAt.isNull())).get();
     return [
       for (final row in rows)
         EntryDetails(
@@ -201,8 +236,10 @@ class EntriesRepository {
           toAccount: row.readTableOrNull(_toAccounts),
           group: row.readTableOrNull(db.groups),
           myShareMinor: row.readTableOrNull(_mySplits)?.amountMinor,
+          myMemberId: row.readTableOrNull(_mySplits)?.memberId,
           items: items.where((i) => i.entryId == row.readTable(db.entries).id).toList(),
           splits: splits.where((s) => s.entryId == row.readTable(db.entries).id).toList(),
+          payers: payers.where((payer) => payer.entryId == row.readTable(db.entries).id).toList(),
         ),
     ];
   }

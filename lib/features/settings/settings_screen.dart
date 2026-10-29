@@ -16,6 +16,7 @@ import '../../domain/currency/currency_lookup.dart';
 import '../currency/currency_picker.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
+import '../quick_entries/quick_entries_screen.dart';
 import '../reminders/reminders_settings_tile.dart';
 import '../salary/salary_providers.dart';
 import '../salary/salary_reminder.dart';
@@ -98,6 +99,15 @@ class SettingsScreen extends ConsumerWidget {
                 },
               ),
               ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.categories), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/categories')),
+              ListTile(
+                key: const Key('settingsQuickEntries'),
+                leading: const Icon(Icons.bolt_outlined),
+                title: Text(l10n.quickEntries),
+                subtitle: Text(l10n.quickEntriesHint, maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: const Icon(Icons.chevron_right),
+                visualDensity: VisualDensity.compact,
+                onTap: () => context.push(kQuickEntriesLocation),
+              ),
             ]),
           ),
           SectionHeader(l10n.advancedSettings),

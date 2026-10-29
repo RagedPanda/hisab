@@ -32,6 +32,7 @@ import '../subscriptions/subscription_form_screen.dart';
 import '../subscriptions/subscriptions_screen.dart';
 import '../transactions/transactions_screen.dart';
 import '../recurring/recurring_rule_form_screen.dart';
+import '../quick_entries/quick_entries_screen.dart';
 import '../recurring/recurring_screen.dart';
 import 'app_shell.dart';
 import 'deep_link.dart';
@@ -71,6 +72,8 @@ final appRouter = GoRouter(
         projectId: state.uri.queryParameters['project'],
         reminderId: state.uri.queryParameters['reminder'],
         copyFromId: state.uri.queryParameters['copy'],
+        quickEntryId: state.uri.queryParameters['quick'],
+        newQuickEntry: state.uri.queryParameters['saveAs'] == 'quick',
       ),
     ),
     GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(
@@ -93,6 +96,7 @@ final appRouter = GoRouter(
       ],
     ),
     GoRoute(path: kSalaryLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const SalarySetupScreen()),
+    GoRoute(path: kQuickEntriesLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const QuickEntriesScreen()),
     GoRoute(path: kDriveBackupLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const DriveBackupScreen()),
     GoRoute(path: '/budgets', parentNavigatorKey: _rootKey, builder: (_, _) => const BudgetsScreen()),
     GoRoute(

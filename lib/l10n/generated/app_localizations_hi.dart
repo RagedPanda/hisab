@@ -336,12 +336,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get income => 'आय';
 
   @override
-  String get saved => 'बचत';
-
-  @override
-  String get overspent => 'ज़्यादा खर्च';
-
-  @override
   String get balances => 'बैलेंस';
 
   @override

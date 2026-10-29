@@ -116,8 +116,6 @@
   "@smsToReview": {"placeholders": {"count": {"type": "int"}}},
   "spentThisMonth": "Spent this month",
   "income": "Income",
-  "saved": "Saved",
-  "overspent": "Overspent",
   "balances": "Balances",
   "spendingByCategory": "Spending by category",
   "recent": "Recent",

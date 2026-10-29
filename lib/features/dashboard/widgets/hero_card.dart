@@ -104,7 +104,6 @@ class _HeroContent extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       if (summary.isEmpty) const _EmptyRow(foreground: foreground) else _StatsRow(summary: summary, moneyFormat: moneyFormat, foreground: foreground),
-                      _SafeToSpendLine(moneyFormat: moneyFormat, foreground: foreground),
                     ],
                   ),
                 ),
@@ -194,11 +193,10 @@ class _ComparisonPill extends StatelessWidget {
         : percent < 0
             ? l10n.vsLastMonthDown(-percent, month)
             : l10n.vsLastMonthSame(month);
-    // Tint the pill, not the text: coloured text on the gradient would not reach contrast.
-    final tint = percent > 0 ? kExpenseColor : percent < 0 ? kIncomeColor : foreground;
+    // A plain fact, not a verdict: the pill is never tinted good or bad.
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: tint.withValues(alpha: percent == 0 ? 0.12 : 0.3), borderRadius: BorderRadius.circular(999)),
+      decoration: BoxDecoration(color: foreground.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)),
       child: Text(text, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: foreground, fontWeight: FontWeight.w600).tabular),
     );
   }
@@ -214,32 +212,15 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final overspent = summary.net < 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _StatTile(
-                label: l10n.income,
-                value: formatMinor(summary.income, format: moneyFormat, showDecimals: false),
-                icon: Icons.south_west,
-                accent: kIncomeColor,
-                foreground: foreground,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _StatTile(
-                label: overspent ? l10n.overspent : l10n.saved,
-                value: formatMinor(summary.net.abs(), format: moneyFormat, showDecimals: false),
-                icon: overspent ? Icons.trending_down : Icons.savings_outlined,
-                accent: overspent ? kExpenseColor : kAccentColor,
-                foreground: foreground,
-              ),
-            ),
-          ],
+        _StatTile(
+          label: l10n.income,
+          value: formatMinor(summary.income, format: moneyFormat, showDecimals: false),
+          icon: Icons.south_west,
+          accent: kIncomeColor,
+          foreground: foreground,
         ),
         const SizedBox(height: 12),
         Row(
@@ -273,54 +254,6 @@ class _Halo extends StatelessWidget {
       decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.07)),
     ),
   );
-}
-
-/// "Safe to spend ₹Y/day" under the month's figures, only with an overall
-/// monthly budget; at ₹0 it adds a short over-budget hint.
-class _SafeToSpendLine extends ConsumerWidget {
-  const _SafeToSpendLine({required this.moneyFormat, required this.foreground});
-  final MoneyFormat moneyFormat;
-  final Color foreground;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final safe = ref.watch(safeToSpendProvider).value;
-    if (safe == null) return const SizedBox.shrink();
-    final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final style = theme.textTheme.labelLarge?.copyWith(color: foreground);
-    return Padding(
-      key: kSafeToSpendKey,
-      padding: const EdgeInsets.only(top: 12),
-      child: Row(
-        children: [
-          Icon(Icons.savings_outlined, size: 16, color: foreground.withValues(alpha: 0.85)),
-          const SizedBox(width: 6),
-          // Shrinks rather than ellipsises, so the amount is never cut off.
-          Expanded(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                l10n.safeToSpendPerDay(formatMinor(safe.perDayMinor, format: moneyFormat, showDecimals: false)),
-                maxLines: 1,
-                style: style?.tabular,
-              ),
-            ),
-          ),
-          if (safe.isOver) ...[
-            const SizedBox(width: 8),
-            // Tint the pill, not the text, as the comparison pill does.
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(color: kExpenseColor.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(999)),
-              child: Text(l10n.safeToSpendOverBudget, maxLines: 1, style: theme.textTheme.labelMedium?.copyWith(color: foreground, fontWeight: FontWeight.w600)),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
 }
 
 class _StatTile extends StatelessWidget {

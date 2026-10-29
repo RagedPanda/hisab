@@ -65,7 +65,7 @@
 - 🗂️ **Grouped account picker** so the right account is one tap away.
 
 ### 🎯 Budgets, categories & projects
-- 📉 **Budgets** overall or per category, with a pace marker and what's left for the days remaining.
+- 📉 **Budgets** overall or per category, with a pace marker, what's left for the days remaining and, for the overall budget, a safe-to-spend amount per day.
 - 📅 **Salary-month cycle**: start your month on payday.
 - 🏷️ **18 expense groups and 100+ subcategories**, plus income and transfer categories, all editable, and **category packs** you can add in a tap.
 - 🏗️ **Projects** for a car, construction, renovation, trip or wedding, with templates and custom fields to track their total cost.
@@ -75,7 +75,7 @@
 - 📺 **Subscriptions** with monthly and yearly totals and renewal dates.
 
 ### 📈 Dashboard & reports
-- 💰 **This month at a glance**: spent, income, saved, daily average and the change against last month.
+- 💰 **This month at a glance**: what you spent and earned, the daily average and the change against last month. No verdicts: budgets live in their own card.
 - 📈 **Spending trend** (daily or monthly) and a **category donut** with shares.
 - 🧩 Cards for budgets, accounts, groups, projects and recent entries.
 

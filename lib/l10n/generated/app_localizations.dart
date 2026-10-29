@@ -656,18 +656,6 @@ abstract class AppLocalizations {
   /// **'Income'**
   String get income;
 
-  /// No description provided for @saved.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved'**
-  String get saved;
-
-  /// No description provided for @overspent.
-  ///
-  /// In en, this message translates to:
-  /// **'Overspent'**
-  String get overspent;
-
   /// No description provided for @balances.
   ///
   /// In en, this message translates to:

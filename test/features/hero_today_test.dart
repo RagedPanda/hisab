@@ -76,4 +76,12 @@ void main() {
     await _pumpHero(tester, hero: _hero());
     expect(find.byKey(kHeroTodayKey), findsNothing);
   });
+
+  testWidgets('the hero shows income and spend only, never saved or overspent', (tester) async {
+    await _pumpHero(tester, hero: _hero());
+    expect(find.text('Income'), findsOneWidget);
+    expect(find.text('Saved'), findsNothing);
+    expect(find.text('Overspent'), findsNothing);
+    expect(find.byKey(kSafeToSpendKey), findsNothing, reason: 'safe to spend lives with the budgets');
+  });
 }

@@ -208,9 +208,9 @@ void main() {
       await settle(tester);
       await tester.tap(find.text('Groceries').last);
       await settle(tester);
-      await openMoreDetails(tester);
 
       final suggestion = find.widgetWithText(ActionChip, 'Rice · 2 kg @ ₹30');
+      expect(suggestion, findsOneWidget, reason: 'picking a category bought by the item opens More details on its items');
       await tapInEditor(tester, suggestion);
       expect(suggestion, findsNothing, reason: 'an item already on the bill is not offered again');
       expect(await editorAmountText(tester), '60');
@@ -227,6 +227,51 @@ void main() {
       final details = await readDb(tester, () => container.read(entriesRepositoryProvider).getEntry(saved.id));
       expect(details!.items.single.name, 'Rice');
       expect(details.items.single.unit, 'g');
+    });
+
+    testWidgets('Same as last time adds every item of the last bill in the category', (tester) async {
+      late final String groceriesId;
+      final container = await openEditor(tester, seed: (container) async {
+        groceriesId = await seededCategoryId(container, 'groceries');
+        final repository = container.read(entriesRepositoryProvider);
+        await repository.saveEntry(
+          EntriesRepository.newExpense(id: 'older', amountMinor: 5000, occurredAt: DateTime.now().subtract(const Duration(days: 9)), categoryId: groceriesId),
+          items: [ItemDraft(name: 'Sugar', quantity: 1, unit: 'kg', unitPriceMinor: 5000).toCompanion('older')],
+        );
+        await repository.saveEntry(
+          EntriesRepository.newExpense(id: 'last', amountMinor: 18000, occurredAt: DateTime.now().subtract(const Duration(days: 2)), categoryId: groceriesId),
+          items: [
+            ItemDraft(name: 'Buffalo milk', quantity: 2, unit: 'L', unitPriceMinor: 7500).toCompanion('last'),
+            ItemDraft(name: 'Paneer', quantity: 1, unit: 'pc', unitPriceMinor: 3000).toCompanion('last'),
+          ],
+        );
+      });
+      await tapInEditor(tester, find.text('Uncategorised'));
+      await tester.enterText(find.widgetWithText(TextField, 'Search categories'), 'groceries');
+      await settle(tester);
+      await tester.tap(find.text('Groceries').last);
+      await settle(tester);
+
+      final sameAsLastTime = find.byKey(const ValueKey('editor.sameAsLastTime'));
+      expect(find.text('Same as last time · 2 items'), findsOneWidget);
+      await tapInEditor(tester, sameAsLastTime);
+      expect(sameAsLastTime, findsNothing, reason: 'offered only while the bill is empty');
+      expect(await editorAmountText(tester), '180');
+
+      await saveEditor(tester);
+      final saved = (await savedEntries(tester, container)).singleWhere((entry) => entry.id != 'older' && entry.id != 'last');
+      final details = await readDb(tester, () => container.read(entriesRepositoryProvider).getEntry(saved.id));
+      expect([for (final item in details!.items) item.name], ['Buffalo milk', 'Paneer'], reason: 'the last bill only, in its order, not Sugar from before');
+      final lastBill = await readDb(tester, () => container.read(entriesRepositoryProvider).getEntry('last'));
+      expect(details.items.map((item) => item.id).toSet().intersection(lastBill!.items.map((item) => item.id).toSet()), isEmpty, reason: 'new rows, the old bill keeps its own');
+    });
+
+    testWidgets('Next on the amount of a new entry opens the category picker', (tester) async {
+      await openEditor(tester);
+      await enterEditorAmount(tester, '250');
+      await tester.testTextInput.receiveAction(TextInputAction.next);
+      await settle(tester);
+      expect(find.widgetWithText(TextField, 'Search categories'), findsOneWidget);
     });
 
     testWidgets('editing an entry with items loads them read-only into the amount', (tester) async {

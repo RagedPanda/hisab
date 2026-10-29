@@ -102,6 +102,7 @@ void main() {
     test('sorts errors into the messages the screen shows', () {
       expect(driveBackupFailureOf(const DriveSignInCancelledException()), DriveBackupFailure.cancelled);
       expect(driveBackupFailureOf(const DriveBackupNotFoundException()), DriveBackupFailure.notFound);
+      expect(const DriveBackupNotFoundException().toString(), 'No Hisab backup in Google Drive');
       expect(driveBackupFailureOf(const BackupFormatException('Wrong passphrase')), DriveBackupFailure.wrongPassphrase);
       expect(driveBackupFailureOf(const SocketException('Failed host lookup')), DriveBackupFailure.offline);
       expect(driveBackupFailureOf(http.ClientException('Connection closed')), DriveBackupFailure.offline);

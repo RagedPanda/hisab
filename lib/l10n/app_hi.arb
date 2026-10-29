@@ -622,6 +622,7 @@
   "maxAmount": "ज़्यादा से ज़्यादा",
   "dates": "तारीख़ें",
   "tags": "टैग",
+  "tagsHint": "कॉमा से अलग करें, जैसे home, trip",
   "showResults": "नतीजे दिखाएँ",
   "clearAll": "सब हटाएँ",
   "resultsCount": "{count, plural, =1{1 नतीजा} other{{count} नतीजे}}",

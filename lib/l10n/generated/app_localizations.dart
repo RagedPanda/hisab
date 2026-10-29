@@ -3686,6 +3686,12 @@ abstract class AppLocalizations {
   /// **'Tags'**
   String get tags;
 
+  /// No description provided for @tagsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma separated, e.g. home, trip'**
+  String get tagsHint;
+
   /// No description provided for @showResults.
   ///
   /// In en, this message translates to:

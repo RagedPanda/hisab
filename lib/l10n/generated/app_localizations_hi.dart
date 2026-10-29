@@ -2140,6 +2140,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get tags => 'टैग';
 
   @override
+  String get tagsHint => 'कॉमा से अलग करें, जैसे home, trip';
+
+  @override
   String get showResults => 'नतीजे दिखाएँ';
 
   @override

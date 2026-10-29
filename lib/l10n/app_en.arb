@@ -728,6 +728,7 @@
   "maxAmount": "Max",
   "dates": "Dates",
   "tags": "Tags",
+  "tagsHint": "Comma separated, e.g. home, trip",
   "showResults": "Show results",
   "clearAll": "Clear all",
   "resultsCount": "{count, plural, =1{1 result} other{{count} results}}",

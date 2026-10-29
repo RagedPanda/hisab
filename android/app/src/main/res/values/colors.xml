@@ -2,5 +2,5 @@
 <resources>
     <color name="ic_launcher_background">#0D9488</color>
     <!-- Matches the Flutter light scaffold (kLightBackground). -->
-    <color name="splash_background">#F8FAFC</color>
+    <color name="splash_background">#F0F3F2</color>
 </resources>

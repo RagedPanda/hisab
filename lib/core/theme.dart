@@ -12,14 +12,22 @@ const Color kIncomeColor = Color(0xFF10B981);
 const Color kTransferColor = Color(0xFF3B82F6);
 
 /// The brand gradient behind hero surfaces (dashboard balance, entry header).
+/// Deeper than the brand teal: a large vivid area was too harsh on the eyes.
 const LinearGradient kBrandGradient = LinearGradient(
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
-  colors: [kSeedColor, kSeedColorLight],
+  colors: [Color(0xFF0F766E), Color(0xFF0E8F84)],
 );
 
+/// Calmer versions of the kind colours for large surfaces such as the entry
+/// editor's header, where the vivid ones glared; text and dots keep those.
+const Color kExpenseSurfaceColor = Color(0xFFC2536A);
+const Color kIncomeSurfaceColor = Color(0xFF1F8A6A);
+const Color kTransferSurfaceColor = Color(0xFF3D6DB5);
+
 /// Scaffold / splash backgrounds, mirrored in android res (splash_background).
-const Color kLightBackground = Color(0xFFF8FAFC);
+/// A soft grey-teal rather than near white, which was glaring in daylight.
+const Color kLightBackground = Color(0xFFF0F3F2);
 const Color kDarkBackground = Color(0xFF0B1416);
 
 /// The colour of a kind of money ('expense', 'income', 'transfer');
@@ -28,6 +36,14 @@ Color kindColor(String kind, {required Color fallback}) => switch (kind) {
       'expense' => kExpenseColor,
       'income' => kIncomeColor,
       'transfer' => kTransferColor,
+      _ => fallback,
+    };
+
+/// [kindColor] for a large surface behind white text.
+Color kindSurfaceColor(String kind, {required Color fallback}) => switch (kind) {
+      'expense' => kExpenseSurfaceColor,
+      'income' => kIncomeSurfaceColor,
+      'transfer' => kTransferSurfaceColor,
       _ => fallback,
     };
 

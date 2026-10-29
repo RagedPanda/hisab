@@ -562,10 +562,9 @@ void main() {
     testWidgets('copies a saved entry to a new one dated today', (tester) async {
       final container = await openFuel(tester);
       final balanceBefore = await readDb(tester, () async => (await container.read(accountsRepositoryProvider).getAll()).single.balanceMinor);
-      await tester.tap(find.byKey(const Key('editor.again')));
-      await settle(tester);
+      await tapEditorMenu(tester, 'editor.again');
       expect(find.text('A copy dated today. Change anything, then save.'), findsOneWidget);
-      expect(find.byKey(const Key('editor.again')), findsNothing, reason: 'the copy is a new entry');
+      expect(find.text('Edit entry'), findsNothing, reason: 'the copy is a new entry');
       await saveEditor(tester);
 
       final entries = await savedEntries(tester, container);
@@ -580,11 +579,10 @@ void main() {
     testWidgets('asks before dropping unsaved edits', (tester) async {
       final container = await openFuel(tester);
       await enter(tester, editorAmountField, '600');
-      await tester.tap(find.byKey(const Key('editor.again')));
-      await settle(tester);
+      await tapEditorMenu(tester, 'editor.again');
       await tester.tap(find.byKey(const Key('keep-editing')));
       await settle(tester);
-      expect(find.byKey(const Key('editor.again')), findsOneWidget, reason: 'still editing the saved entry');
+      expect(find.text('Edit entry'), findsOneWidget, reason: 'still editing the saved entry');
       expect(await savedEntries(tester, container), hasLength(1));
     });
   });

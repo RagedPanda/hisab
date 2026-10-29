@@ -133,7 +133,7 @@
   "copiedFromLastEntry": "Filled in from the last expense",
   "@copiedFromLastEntry": {"description": "Group expense editor: the form starts as a copy of the group's latest expense"},
   "startBlank": "Start blank",
-  "entryAgain": "Again",
+  "entryAgain": "Add again for today",
   "@entryAgain": {"description": "Entry editor action: copy this saved entry to a new one dated today"},
   "copiedFromEntry": "A copy dated today. Change anything, then save.",
   "deleteEntryQuestion": "Delete this entry?",

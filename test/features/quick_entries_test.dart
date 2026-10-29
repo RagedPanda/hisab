@@ -81,8 +81,7 @@ void main() {
     testWidgets('the bolt saves the form as a quick entry named after the payee', (tester) async {
       final container = await openEditor(tester);
       await enterEditorAmount(tester, '32');
-      await tester.tap(find.byKey(const ValueKey('editor.saveAsQuick')));
-      await settle(tester);
+      await tapEditorMenu(tester, 'editor.saveAsQuick');
       await _nameQuickEntry(tester, 'Milk');
 
       final saved = (await _quickEntries(tester, container)).single;

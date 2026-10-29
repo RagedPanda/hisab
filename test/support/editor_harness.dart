@@ -56,3 +56,11 @@ Future<void> saveEditor(WidgetTester tester) async {
 
 /// Runs a real database [query] outside the fake-async test zone.
 Future<T> readDb<T>(WidgetTester tester, Future<T> Function() query) async => (await tester.runAsync(query)) as T;
+
+/// Opens the editor's ⋮ menu and picks the item keyed [itemKey].
+Future<void> tapEditorMenu(WidgetTester tester, String itemKey) async {
+  await tester.tap(find.byKey(const Key('editor.more')));
+  await settle(tester);
+  await tester.tap(find.byKey(Key(itemKey)));
+  await settle(tester);
+}

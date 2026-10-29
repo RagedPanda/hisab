@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hisab/core/money.dart';
 import 'package:hisab/core/notifications/background_actions.dart';
 import 'package:hisab/core/notifications/reminder_alert_text.dart';
 import 'package:hisab/core/notifications/reminder_payload.dart';
@@ -58,7 +59,7 @@ void main() {
           accountName: accountName,
           asksForCategory: asks,
           l10n: notificationLocalizations(localeCode),
-          currencySymbol: '₹',
+          moneyFormat: MoneyFormat.inr,
         );
 
     test('amount in the title; payee, category and account in the body', () {

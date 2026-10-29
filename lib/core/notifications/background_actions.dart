@@ -38,7 +38,7 @@ ReminderScheduler buildReminderScheduler(AppDatabase db, AppSettings settings) {
     smsLog: smsLog,
     notifications: NotificationService(
       PluginNotificationGateway(notificationSetupTexts(l10n)),
-      buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, l10n, currencySymbol: settings.currencySymbol),
+      buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, l10n, moneyFormat: homeMoneyFormatFor(settings, PlatformDispatcher.instance.locale)),
     ),
     removeEntry: (entryId) => deleteEntryReversingBalances(entries: EntriesRepository(db), accounts: AccountsRepository(db), entryId: entryId),
   );

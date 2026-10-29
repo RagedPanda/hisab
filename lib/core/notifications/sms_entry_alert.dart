@@ -15,12 +15,12 @@ SmsEntryAlert smsEntryAlertFor({
   required String? accountName,
   required bool asksForCategory,
   required AppLocalizations l10n,
-  required String currencySymbol,
+  required MoneyFormat moneyFormat,
 }) {
   final summary = [payee, categoryName, accountName].where((part) => part != null && part.trim().isNotEmpty).join(' · ');
   return SmsEntryAlert(
     id: smsEntryNotificationId(ref.smsId),
-    title: l10n.smsAutoAddedOne(formatMinor(amountMinor, symbol: currencySymbol, showDecimals: false)),
+    title: l10n.smsAutoAddedOne(formatMinor(amountMinor, format: moneyFormat, showDecimals: false)),
     body: [if (summary.isNotEmpty) summary, if (asksForCategory) l10n.smsEntryNewPayeeHint].join('\n'),
     payload: smsEntryPayload(smsId: ref.smsId, entryId: ref.entryId),
     changeCategoryLabel: l10n.smsEntryChangeCategory,

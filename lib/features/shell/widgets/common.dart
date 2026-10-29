@@ -9,6 +9,7 @@ import '../../../core/format.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../data/repositories/entries_repository.dart';
+import '../../../domain/split/group_timeline.dart';
 import '../../../l10n/category_names.dart';
 import '../../../l10n/l10n.dart';
 
@@ -32,27 +33,23 @@ class IconBadge extends StatelessWidget {
 }
 
 /// Amount text coloured by direction.
-class AmountText extends StatelessWidget {
-  const AmountText(this.minor, {super.key, required this.kind, this.style, this.signed = true, this.symbol});
+class AmountText extends ConsumerWidget {
+  const AmountText(this.minor, {super.key, required this.kind, this.style, this.signed = true, this.moneyFormat});
   final int minor;
   final String kind;
   final TextStyle? style;
   final bool signed;
 
-  /// Currency symbol to show; the app's own when null (a group passes its label).
-  final String? symbol;
+  /// How to write the amount; the app's own when null (a group passes its own).
+  final MoneyFormat? moneyFormat;
 
   @override
-  Widget build(BuildContext context) {
-    final shownSymbol = symbol ?? ProviderScope.containerOf(context).read(settingsProvider).currencySymbol;
-    final color = switch (kind) {
-      'income' => const Color(0xFF2E9E6B),
-      'expense' => const Color(0xFFD9534F),
-      _ => Theme.of(context).colorScheme.onSurfaceVariant,
-    };
+  Widget build(BuildContext context, WidgetRef ref) {
+    final MoneyFormat shownFormat = moneyFormat ?? ref.watch(homeMoneyFormatProvider);
+    final color = kindColor(kind, fallback: Theme.of(context).colorScheme.onSurfaceVariant);
     final prefix = !signed ? '' : switch (kind) { 'income' => '+', 'expense' => '-', _ => '' };
     return Text(
-      '$prefix${formatMinor(minor, symbol: shownSymbol)}',
+      '$prefix${formatMinor(minor, format: shownFormat)}',
       style: (style ?? Theme.of(context).textTheme.bodyLarge)?.copyWith(color: color, fontWeight: FontWeight.w600).tabular,
     );
   }
@@ -84,26 +81,34 @@ class EntryTile extends StatelessWidget {
     final subtitleParts = <String>[
       if (categoryName != null && title != categoryName) categoryName,
       if (details.items.isNotEmpty) l10n.itemCount(details.items.length),
-      if (details.group != null) l10n.yourShareOf(details.group!.name),
       ?accountLabel,
     ];
     final theme = Theme.of(context);
     final mutedSmall = theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    final group = details.group;
+    final contextLine = subtitleParts.isEmpty && entry.source != 'sms'
+        ? null
+        : Row(children: [
+            if (entry.source == 'sms') ...[
+              Icon(Icons.sms_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant, semanticLabel: l10n.smsAddedMarker),
+              const SizedBox(width: 4),
+            ],
+            Expanded(child: Text(subtitleParts.join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis)),
+          ]);
+    final badge = IconBadge(
+      icon: entry.kind == 'transfer' ? 'swap_horiz' : category?.icon,
+      color: category?.color ?? 0xFF607D8B,
+    );
     return ListTile(
       onTap: onTap,
-      leading: IconBadge(
-        icon: entry.kind == 'transfer' ? 'swap_horiz' : category?.icon,
-        color: category?.color ?? 0xFF607D8B,
-      ),
+      isThreeLine: group != null && contextLine != null,
+      leading: group == null ? badge : GroupMarkedBadge(child: badge),
       title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: subtitleParts.isEmpty && entry.source != 'sms'
-          ? null
-          : Row(children: [
-              if (entry.source == 'sms') ...[
-                Icon(Icons.sms_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant, semanticLabel: l10n.smsAddedMarker),
-                const SizedBox(width: 4),
-              ],
-              Expanded(child: Text(subtitleParts.join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis)),
+      subtitle: group == null
+          ? contextLine
+          : Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              GroupShareLine(groupName: group.name, currencyLabel: group.currencyLabel, effect: details.myEffect),
+              ?contextLine,
             ]),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -116,6 +121,90 @@ class EntryTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A row's icon with a small group mark in the corner, so shared expenses
+/// stand out in a list of personal ones.
+class GroupMarkedBadge extends StatelessWidget {
+  const GroupMarkedBadge({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Stack(clipBehavior: Clip.none, children: [
+      child,
+      Positioned(
+        right: -4,
+        bottom: -4,
+        child: Container(
+          key: const Key('group-mark'),
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(color: scheme.primary, shape: BoxShape.circle, border: Border.all(color: scheme.surface, width: 1.5)),
+          child: Icon(Icons.group, size: 11, color: scheme.onPrimary),
+        ),
+      ),
+    ]);
+  }
+}
+
+/// The colour and words for my side of a shared expense: green when others
+/// owe me, red when I owe, neutral when I only paid my own share.
+(String, Color?) groupEffectLabel(AppLocalizations l10n, ExpenseEffectKind kind) => switch (kind) {
+      ExpenseEffectKind.lent => (l10n.youLent, kIncomeColor),
+      ExpenseEffectKind.borrowed => (l10n.youBorrowed, kExpenseColor),
+      ExpenseEffectKind.paidOwnShare => (l10n.youPaid, null),
+      ExpenseEffectKind.notInvolved => (l10n.notInvolved, null),
+    };
+
+/// The group tag and what the expense did to my balance, e.g.
+/// [Trip] you lent ₹7,500.
+class GroupShareLine extends ConsumerWidget {
+  const GroupShareLine({super.key, required this.groupName, this.currencyLabel, this.effect});
+  final String groupName;
+  final String? currencyLabel;
+  final ExpenseEffect? effect;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final moneyFormat = ref.watch(groupMoneyFormatProvider(currencyLabel));
+    final shown = effect;
+    final (label, color) = shown == null ? (null, null) : groupEffectLabel(context.l10n, shown.kind);
+    final showAmount = shown != null && shown.kind != ExpenseEffectKind.notInvolved;
+    return Padding(
+      padding: const EdgeInsets.only(top: 2, bottom: 2),
+      child: Row(children: [
+        Flexible(
+          child: Container(
+            key: const Key('group-tag'),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(6)),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.group_outlined, size: 12, color: scheme.primary),
+              const SizedBox(width: 3),
+              Flexible(
+                child: Text(groupName, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.labelSmall?.copyWith(color: scheme.primary, fontWeight: FontWeight.w600)),
+              ),
+            ]),
+          ),
+        ),
+        if (label != null) ...[
+          const SizedBox(width: 6),
+          Flexible(
+            flex: 2,
+            child: Text(
+              showAmount ? '$label ${formatMinor(shown.amountMinor, format: moneyFormat)}' : label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelMedium?.copyWith(color: color ?? scheme.onSurfaceVariant, fontWeight: FontWeight.w600).tabular,
+            ),
+          ),
+        ],
+      ]),
     );
   }
 }
@@ -254,16 +343,23 @@ Future<bool> confirmDialog(BuildContext context, {required String title, String?
   return result ?? false;
 }
 
-/// Keeps amount fields to digits, a decimal point and thousands separators,
-/// and short enough that [parseAmountToMinor] can never overflow.
-final List<TextInputFormatter> amountInputFormatters = [
-  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-  LengthLimitingTextInputFormatter(kMaxAmountWholeDigits + 6),
-];
+/// Keeps an amount field in [format] to digits, thousands separators and a
+/// decimal separator when the currency has decimals, and short enough that
+/// [parseAmountToMinor] can never overflow.
+List<TextInputFormatter> amountInputFormatters(MoneyFormat format) => [
+      FilteringTextInputFormatter.allow(amountInputCharacters(format)),
+      LengthLimitingTextInputFormatter(kMaxAmountWholeDigits + 6),
+    ];
 
-/// Inline error for an amount field, or null while the text parses.
-String? amountErrorText(BuildContext context, String text) =>
-    text.trim().isNotEmpty && parseAmountToMinor(text) == null ? context.l10n.invalidAmount : null;
+/// Keyboard for an amount field in [format]: no decimal key for a currency
+/// written without decimals (JPY).
+TextInputType amountKeyboardType(MoneyFormat format) => TextInputType.numberWithOptions(decimal: format.fractionDigits != 0);
+
+/// Inline error for an amount field read with [format], or null while the
+/// text parses.
+String? amountErrorText(BuildContext context, String text, {required MoneyFormat format}) =>
+    text.trim().isNotEmpty && parseAmountToMinor(text, format: format) == null ? context.l10n.invalidAmount : null;
+
 
 Future<String?> promptText(
   BuildContext context, {
@@ -300,23 +396,28 @@ Future<String?> promptText(
 
 /// Asks for a money amount; returns minor units, or null when cancelled.
 /// Save stays disabled until the text is a valid amount above zero.
-Future<int?> promptAmount(BuildContext context, {required String title, int? initialMinor, String? hint}) {
-  final controller = TextEditingController(text: initialMinor == null ? '' : amountInputText(initialMinor));
+Future<int?> promptAmount(BuildContext context, {required String title, required MoneyFormat format, int? initialMinor, String? hint}) {
+  final controller = TextEditingController(text: initialMinor == null ? '' : amountInputText(initialMinor, format: format));
   controller.selection = TextSelection(baseOffset: 0, extentOffset: controller.text.length);
   return showDialog<int>(
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setState) {
-        final parsed = parseAmountToMinor(controller.text);
+        final parsed = parseAmountToMinor(controller.text, format: format);
         final valid = parsed != null && parsed > 0;
         return AlertDialog(
           title: Text(title),
           content: TextField(
             controller: controller,
             autofocus: true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: amountInputFormatters,
-            decoration: InputDecoration(hintText: hint ?? '0', errorText: amountErrorText(context, controller.text)),
+            keyboardType: amountKeyboardType(format),
+            inputFormatters: amountInputFormatters(format),
+            decoration: InputDecoration(
+              hintText: hint ?? '0',
+              prefixText: amountPrefixText(format),
+              suffixText: amountSuffixText(format),
+              errorText: amountErrorText(context, controller.text, format: format),
+            ),
             onChanged: (_) => setState(() {}),
             onSubmitted: (_) => valid ? Navigator.pop(context, parsed) : null,
           ),

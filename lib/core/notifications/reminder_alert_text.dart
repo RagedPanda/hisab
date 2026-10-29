@@ -29,7 +29,7 @@ NotificationSetupTexts notificationSetupTexts(AppLocalizations l10n) => Notifica
     );
 
 /// "Due in 3 days · ₹2,100", "Due today", "Overdue by 2 days · ₹999".
-String reminderDueCaption(AppLocalizations l10n, {required DateTime dueAt, required DateTime at, int? amountMinor, required String currencySymbol}) {
+String reminderDueCaption(AppLocalizations l10n, {required DateTime dueAt, required DateTime at, int? amountMinor, required MoneyFormat moneyFormat}) {
   final days = daysUntilDue(dueAt, at);
   final due = days < 0
       ? l10n.reminderOverdueDays(-days)
@@ -37,11 +37,11 @@ String reminderDueCaption(AppLocalizations l10n, {required DateTime dueAt, requi
           ? l10n.reminderDueToday
           : l10n.reminderDueInDays(days);
   final amount = reminderAmountOrNone(amountMinor);
-  return amount == null ? due : '$due · ${formatMinor(amount, symbol: currencySymbol)}';
+  return amount == null ? due : '$due · ${formatMinor(amount, format: moneyFormat)}';
 }
 
 /// The notification for [alert] of [reminder].
-AlertRequest alertRequestFor(Reminder reminder, PlannedAlert alert, AppLocalizations l10n, {required String currencySymbol}) {
+AlertRequest alertRequestFor(Reminder reminder, PlannedAlert alert, AppLocalizations l10n, {required MoneyFormat moneyFormat}) {
   // A group's settle-up schedule stores its worked-out texts on the row.
   if (reminder.kind == kSettleScheduleKind) {
     return AlertRequest(
@@ -59,7 +59,7 @@ AlertRequest alertRequestFor(Reminder reminder, PlannedAlert alert, AppLocalizat
   return AlertRequest(
     id: alert.notificationId,
     title: reminder.title.isEmpty ? l10n.remindersTitle : reminder.title,
-    body: reminderDueCaption(l10n, dueAt: reminder.dueAt!, at: alert.fireAt, amountMinor: reminder.amountMinor, currencySymbol: currencySymbol),
+    body: reminderDueCaption(l10n, dueAt: reminder.dueAt!, at: alert.fireAt, amountMinor: reminder.amountMinor, moneyFormat: moneyFormat),
     fireAt: alert.fireAt,
     payload: reminderPayload(reminder.id),
     markPaidLabel: isMoney ? l10n.reminderMarkPaid : l10n.reminderMarkDone,

@@ -48,7 +48,7 @@ Future<void> showRecordPaymentSheet(
   required Group group,
   required List<Member> members,
   required GroupBalances balances,
-  required String symbol,
+  required MoneyFormat moneyFormat,
   String? fromMemberId,
   String? toMemberId,
   int? amountMinor,
@@ -65,7 +65,7 @@ Future<void> showRecordPaymentSheet(
       group: group,
       members: members,
       balances: balances,
-      symbol: symbol,
+      moneyFormat: moneyFormat,
       initialFrom: existing?.fromMemberId ?? fromMemberId,
       initialTo: existing?.toMemberId ?? toMemberId,
       initialAmountMinor: existing?.amountMinor ?? amountMinor,
@@ -81,7 +81,7 @@ class _RecordPaymentSheet extends StatefulWidget {
     required this.group,
     required this.members,
     required this.balances,
-    required this.symbol,
+    required this.moneyFormat,
     required this.initialFrom,
     required this.initialTo,
     required this.initialAmountMinor,
@@ -93,7 +93,7 @@ class _RecordPaymentSheet extends StatefulWidget {
   final Group group;
   final List<Member> members;
   final GroupBalances balances;
-  final String symbol;
+  final MoneyFormat moneyFormat;
   final String? initialFrom;
   final String? initialTo;
   final int? initialAmountMinor;
@@ -122,7 +122,7 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
     final other = members.where((member) => member.id != me.id).firstOrNull ?? me;
     _from = widget.initialFrom ?? me.id;
     _to = widget.initialTo ?? (other.id == _from ? me.id : other.id);
-    _amount = TextEditingController(text: widget.initialAmountMinor == null ? '' : amountInputText(widget.initialAmountMinor!));
+    _amount = TextEditingController(text: widget.initialAmountMinor == null ? '' : amountInputText(widget.initialAmountMinor!, format: widget.moneyFormat));
     _amount.selection = TextSelection(baseOffset: 0, extentOffset: _amount.text.length);
     _note = TextEditingController(text: widget.existing?.note ?? '');
     _occurredAt = widget.existing?.occurredAt ?? DateTime.now();
@@ -136,7 +136,7 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
     super.dispose();
   }
 
-  int? get _amountMinor => parseAmountToMinor(_amount.text);
+  int? get _amountMinor => parseAmountToMinor(_amount.text, format: widget.moneyFormat);
 
   /// Owed before this payment; when editing, the edited row is excluded.
   int get _owedMinor {
@@ -160,7 +160,7 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
     final String? hint = samePerson
         ? l10n.samePersonError
         : (amount != null && amount > owed)
-            ? (owed == 0 ? l10n.paymentNoDebt(_name(_from), _name(_to)) : l10n.paymentOverOwed(formatMinor(owed, symbol: widget.symbol)))
+            ? (owed == 0 ? l10n.paymentNoDebt(_name(_from), _name(_to)) : l10n.paymentOverOwed(formatMinor(owed, format: widget.moneyFormat)))
             : null;
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.viewInsetsOf(context).bottom + 16),
@@ -190,9 +190,14 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
             TextField(
               controller: _amount,
               autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: amountInputFormatters,
-              decoration: InputDecoration(labelText: l10n.amountLabel, prefixText: '${widget.symbol} ', errorText: amountErrorText(context, _amount.text)),
+              keyboardType: amountKeyboardType(widget.moneyFormat),
+              inputFormatters: amountInputFormatters(widget.moneyFormat),
+              decoration: InputDecoration(
+                labelText: l10n.amountLabel,
+                prefixText: amountPrefixText(widget.moneyFormat),
+                suffixText: amountSuffixText(widget.moneyFormat),
+                errorText: amountErrorText(context, _amount.text, format: widget.moneyFormat),
+              ),
               onChanged: (_) => setState(() {}),
             ),
             if (hint != null) ...[
@@ -281,7 +286,7 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
     if (!host.mounted) return;
     showUndoSnackBar(
       ScaffoldMessenger.of(host),
-      message: l10n.paymentRecorded(transferLine, formatMinor(amount, symbol: widget.symbol)),
+      message: l10n.paymentRecorded(transferLine, formatMinor(amount, format: widget.moneyFormat)),
       undoLabel: l10n.undo,
       onUndo: () => repo.deleteSettlement(id),
     );

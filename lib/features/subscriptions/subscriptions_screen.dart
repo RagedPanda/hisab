@@ -138,7 +138,7 @@ class _TotalsCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     Widget column(String label, int minor) => Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(label, style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
@@ -146,7 +146,7 @@ class _TotalsCard extends ConsumerWidget {
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
-              child: Text(formatMinor(minor, symbol: symbol, showDecimals: false), style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700).tabular),
+              child: Text(formatMinor(minor, format: moneyFormat, showDecimals: false), style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700).tabular),
             ),
           ]),
         );
@@ -170,9 +170,9 @@ class _SubscriptionTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final locale = Localizations.localeOf(context).toString();
-    final price = '${formatMinor(item.amountMinor, symbol: symbol)} · ${subscriptionCycleLabel(l10n, item.frequency, item.interval)}';
+    final price = '${formatMinor(item.amountMinor, format: moneyFormat)} · ${subscriptionCycleLabel(l10n, item.frequency, item.interval)}';
     final renewal = nextRenewal(item);
     final category = view.category;
     final String? statusText = switch (item.status) {
@@ -195,7 +195,7 @@ class _SubscriptionTile extends ConsumerWidget {
         ]),
         trailing: statusText != null
             ? _StatusMarker(statusText)
-            : Text(l10n.subscriptionPerMonth(formatMinor(itemMonthlyMinor(item), symbol: symbol, showDecimals: false)),
+            : Text(l10n.subscriptionPerMonth(formatMinor(itemMonthlyMinor(item), format: moneyFormat, showDecimals: false)),
                 style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600).tabular),
       ),
     );

@@ -4,15 +4,18 @@ import 'package:drift/drift.dart';
 
 import '../../domain/backup/backup_codec.dart';
 import '../../domain/backup/backup_settings.dart';
+import '../../domain/money/money_format.dart';
 import '../db/database.dart';
 import '../repositories/reminders_repository.dart';
 import 'backup_section.dart';
 
-/// What a restore wrote, plus the backup's currency (null for older backups).
+/// What a restore wrote, plus the backup's currency and number format (null
+/// for older backups without them).
 class BackupRestoreResult {
-  const BackupRestoreResult({required this.written, required this.currencyCode});
+  const BackupRestoreResult({required this.written, required this.currencyCode, this.numberFormat});
   final int written;
   final String? currencyCode;
+  final NumberFormatChoice? numberFormat;
 }
 
 /// Exports and imports every table, plus any settings [sections], as JSON
@@ -22,8 +25,8 @@ class BackupService {
   final AppDatabase db;
   final List<BackupSection> sections;
 
-  /// [currencyCode] is stored so a restore keeps the backup's currency.
-  Future<Map<String, dynamic>> snapshot({String? currencyCode}) async {
+  /// [currencyCode] and [numberFormat] are stored so a restore keeps them.
+  Future<Map<String, dynamic>> snapshot({String? currencyCode, NumberFormatChoice? numberFormat}) async {
     Future<List<Map<String, dynamic>>> dump<D extends DataClass>(TableInfo<Table, D> table) async {
       final rows = await db.select(table).get();
       return [for (final row in rows) row.toJson()];
@@ -33,7 +36,7 @@ class BackupService {
       'version': 1,
       'app': 'hisab',
       'exportedAt': DateTime.now().toIso8601String(),
-      if (currencyCode != null) kBackupSettingsKey: backupSettingsSection(currencyCode: currencyCode),
+      if (currencyCode != null) kBackupSettingsKey: backupSettingsSection(currencyCode: currencyCode, numberFormat: numberFormat),
       'accounts': await dump(db.accounts),
       'categories': await dump(db.categories),
       'entries': await dump(db.entries),
@@ -53,19 +56,21 @@ class BackupService {
       'groupActivities': await dump(db.groupActivities),
       'recurringRules': await dump(db.recurringRules),
       'payeeCategories': await dump(db.payeeCategories),
+      'people': await dump(db.people),
+      'quickEntries': await dump(db.quickEntries),
       for (final section in sections) section.key: ?section.export(),
     };
   }
 
-  Future<Uint8List> exportEncrypted(String passphrase, {String? currencyCode}) async =>
-      encryptBackup(payload: await snapshot(currencyCode: currencyCode), passphrase: passphrase);
+  Future<Uint8List> exportEncrypted(String passphrase, {String? currencyCode, NumberFormatChoice? numberFormat}) async =>
+      encryptBackup(payload: await snapshot(currencyCode: currencyCode, numberFormat: numberFormat), passphrase: passphrase);
 
   Future<String> exportPlainJson() async => const JsonEncoder.withIndent('  ').convert(await snapshot());
 
   Future<BackupRestoreResult> importEncrypted(List<int> bytes, String passphrase) async {
     final payload = await decryptBackup(bytes: bytes, passphrase: passphrase);
     final written = await importSnapshot(payload);
-    return BackupRestoreResult(written: written, currencyCode: backupCurrencyCode(payload));
+    return BackupRestoreResult(written: written, currencyCode: backupCurrencyCode(payload), numberFormat: backupNumberFormat(payload));
   }
 
   /// Values for group columns added in schema v7, for backups made before it.
@@ -123,6 +128,8 @@ class BackupService {
       await restore(db.groupActivities, 'groupActivities', GroupActivity.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.recurringRules, 'recurringRules', RecurringRule.fromJson, (r) => r.id, (r) => r.updatedAt);
       await restore(db.payeeCategories, 'payeeCategories', PayeeCategory.fromJson, (r) => r.id, (r) => r.updatedAt);
+      await restore(db.people, 'people', Person.fromJson, (r) => r.id, (r) => r.updatedAt);
+      await restore(db.quickEntries, 'quickEntries', QuickEntry.fromJson, (r) => r.id, (r) => r.updatedAt);
       // A backup from an older build may carry the text of not-bank SMS.
       await db.wipeUnkeptSmsText();
       // A reinstall seeds fresh categories and a Cash account with new ids, so

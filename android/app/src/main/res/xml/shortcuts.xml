@@ -11,8 +11,8 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:data="hisab://entry?kind=expense"
-            android:targetPackage="com.sarv.hisab"
-            android:targetClass="com.sarv.hisab.MainActivity" />
+            android:targetPackage="com.ragedpanda.hisab"
+            android:targetClass="com.ragedpanda.hisab.MainActivity" />
     </shortcut>
     <shortcut
         android:shortcutId="add_income"
@@ -23,7 +23,7 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:data="hisab://entry?kind=income"
-            android:targetPackage="com.sarv.hisab"
-            android:targetClass="com.sarv.hisab.MainActivity" />
+            android:targetPackage="com.ragedpanda.hisab"
+            android:targetClass="com.ragedpanda.hisab.MainActivity" />
     </shortcut>
 </shortcuts>

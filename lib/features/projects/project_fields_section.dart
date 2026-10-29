@@ -19,23 +19,23 @@ const _sectionPadding = EdgeInsets.fromLTRB(4, 20, 4, 8);
 /// Cost per km, fuel, cost per sq ft and per traveller, then spend per
 /// stage / room / event. A hint stands in until entries record any values.
 class ProjectMetricsSection extends StatelessWidget {
-  const ProjectMetricsSection({super.key, required this.metrics, required this.fields, required this.symbol});
+  const ProjectMetricsSection({super.key, required this.metrics, required this.fields, required this.moneyFormat});
   final ProjectMetrics metrics;
   final List<ProjectField> fields;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    String money(double minor) => formatMinor(minor.round(), symbol: symbol);
+    String money(double minor) => formatMinor(minor.round(), format: moneyFormat);
     final distance = metrics.distance;
     final fuel = metrics.fuel;
     final rows = <Widget>[
       if (distance != null)
         _MetricTile(key: const ValueKey('metric.costPerKm'), title: l10n.costPerKm, value: money(distance.perKmMinor), subtitle: l10n.kmDriven(formatQuantity(distance.distance, null))),
       if (fuel != null) ...[
-        _MetricTile(title: l10n.fuelBought, value: formatQuantity(fuel.litres, 'L'), subtitle: l10n.litresAmount(formatQuantity(fuel.litres, null), formatMinor(fuel.costMinor, symbol: symbol))),
+        _MetricTile(title: l10n.fuelBought, value: formatQuantity(fuel.litres, 'L'), subtitle: l10n.litresAmount(formatQuantity(fuel.litres, null), formatMinor(fuel.costMinor, format: moneyFormat))),
         _MetricTile(key: const ValueKey('metric.perLitre'), title: l10n.pricePerLitre, value: money(fuel.perLitreMinor)),
       ],
       if (metrics.perAreaMinor != null)
@@ -64,7 +64,7 @@ class ProjectMetricsSection extends StatelessWidget {
         for (final breakdown in metrics.breakdowns)
           if (fieldsByKey[breakdown.fieldKey] case final field?) ...[
             SectionHeader(l10n.spendingByField(projectFieldLabel(l10n, field)), padding: _sectionPadding),
-            Card(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: _Breakdown(breakdown: breakdown, symbol: symbol))),
+            Card(child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: _Breakdown(breakdown: breakdown, moneyFormat: moneyFormat))),
           ],
       ],
     );
@@ -92,9 +92,9 @@ class _MetricTile extends StatelessWidget {
 
 /// One row per option with its share of the field's spend.
 class _Breakdown extends StatelessWidget {
-  const _Breakdown({required this.breakdown, required this.symbol});
+  const _Breakdown({required this.breakdown, required this.moneyFormat});
   final ChoiceBreakdown breakdown;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +117,7 @@ class _Breakdown extends StatelessWidget {
                   children: [
                     Expanded(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis)),
                     const SizedBox(width: 8),
-                    Text(formatMinor(amount, symbol: symbol, showDecimals: false), style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600).tabular),
+                    Text(formatMinor(amount, format: moneyFormat, showDecimals: false), style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600).tabular),
                   ],
                 ),
                 const SizedBox(height: 4),

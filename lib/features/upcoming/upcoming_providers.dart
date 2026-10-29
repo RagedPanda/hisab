@@ -52,15 +52,11 @@ final upcomingInputsProvider = Provider.family<AsyncValue<UpcomingInputs>, Upcom
   final today = ref.watch(upcomingTodayProvider);
   final monthStartDay = ref.watch(settingsProvider).monthStartDay;
   // Paid and skipped reminders come along so a closed reminder still hides
-  // its rule's occurrence for that day; the aggregator never lists them.
-  final reminders = combineAsync(
-    ref.watch(upcomingRemindersProvider),
-    ref.watch(reminderHistoryProvider),
-    (pending, closed) => [...pending, ...closed],
-  );
+  // its rule's occurrence for that day; the aggregator never lists them. One
+  // stream, not pending plus history, so marking paid never shows the rule.
   return combineAsync(
     ref.watch(recurringViewsProvider),
-    reminders,
+    ref.watch(dueRemindersProvider),
     (views, reminders) => UpcomingInputs(
       recurring: recurringOccurrenceInputs(views, today: today, start: range.start, end: range.end, monthStartDay: monthStartDay),
       reminders: reminderInputs(reminders, end: range.end),

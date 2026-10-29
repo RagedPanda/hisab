@@ -3,6 +3,7 @@
 /// Pure functions; the caller supplies names, labels and wording.
 library;
 
+import '../../core/dates.dart';
 import 'expense_totals.dart';
 
 export 'expense_totals.dart' show ExpenseTotals;
@@ -169,8 +170,7 @@ String decimalAmount(int amountMinor) {
 }
 
 /// yyyy-MM-dd, which every spreadsheet reads as a date.
-String isoDate(DateTime when) =>
-    '${when.year.toString().padLeft(4, '0')}-${when.month.toString().padLeft(2, '0')}-${when.day.toString().padLeft(2, '0')}';
+String isoDate(DateTime when) => isoDay(when);
 
 const _formulaStarts = {'=', '+', '-', '@', '\t', '\r'};
 

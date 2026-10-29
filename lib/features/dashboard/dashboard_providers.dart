@@ -13,12 +13,15 @@ import '../../data/repositories/groups_repository.dart';
 import '../../data/repositories/projects_repository.dart';
 import '../../domain/accounts/account_label.dart';
 import '../../domain/budget/budget_math.dart';
+import '../../domain/budget/safe_to_spend.dart';
 import '../../domain/categories/category_filter.dart';
 import '../../domain/ledger/personal_totals.dart';
 import '../../domain/projects/project_math.dart';
+import '../../domain/split/group_net.dart';
 import '../../domain/stats/category_shares.dart';
 import '../../domain/stats/month_summary.dart';
 import '../../domain/stats/spend_series.dart';
+import '../../domain/stats/today_spend.dart';
 import '../../domain/stats/trend.dart';
 import '../budgets/budget_views.dart';
 
@@ -48,20 +51,30 @@ AsyncValue<R> combineAsync<A, B, R>(AsyncValue<A> first, AsyncValue<B> second, R
 // Hero -----------------------------------------------------------------------
 
 class HeroData {
-  const HeroData({required this.summary, required this.range, required this.previousRange});
+  const HeroData({required this.summary, required this.range, required this.previousRange, this.todayMinor});
   final MonthSummary summary;
   final DateRange range;
   final DateRange previousRange;
+
+  /// Today's spend; null when the card shows a month that is not this one.
+  final int? todayMinor;
 }
 
 final heroDataProvider = Provider<AsyncValue<HeroData>>((ref) => mapAsync(ref.watch(dashboardLedgerProvider), (ledger) {
+      final now = DateTime.now();
+      final currentLines = linesWithin(ledger.lines, ledger.range);
       final summary = summariseMonth(
-        current: linesWithin(ledger.lines, ledger.range),
+        current: currentLines,
         previous: linesWithin(ledger.lines, ledger.previousRange),
         range: ledger.range,
-        now: DateTime.now(),
+        now: now,
       );
-      return HeroData(summary: summary, range: ledger.range, previousRange: ledger.previousRange);
+      return HeroData(
+        summary: summary,
+        range: ledger.range,
+        previousRange: ledger.previousRange,
+        todayMinor: todaySpendMinor(lines: currentLines, shownRange: ledger.range, now: now),
+      );
     }));
 
 // Trend ----------------------------------------------------------------------
@@ -152,6 +165,23 @@ final budgetsOverviewProvider = Provider<AsyncValue<BudgetsOverview>>((ref) {
   });
 });
 
+/// "Safe to spend per day" for the hero card: the overall monthly budget's
+/// remainder over the days left in the cycle; null without such a budget or
+/// on a month other than the current one.
+final safeToSpendProvider = Provider<AsyncValue<SafeToSpend?>>((ref) => combineAsync(
+      ref.watch(budgetsOverviewProvider),
+      ref.watch(dashboardLedgerProvider),
+      (overview, ledger) {
+        final overall = overview.shown.where((view) => view.isOverall).firstOrNull;
+        return safeToSpend(
+          limitMinor: overall?.budget.amountMinor,
+          spentMinor: overall?.progress.spentMinor ?? 0,
+          cycle: ledger.range,
+          now: DateTime.now(),
+        );
+      },
+    ));
+
 // Accounts -------------------------------------------------------------------
 
 class AccountsOverview {
@@ -171,10 +201,12 @@ final accountsOverviewProvider = Provider<AsyncValue<AccountsOverview>>((ref) =>
 // Groups ---------------------------------------------------------------------
 
 class GroupsOverview {
-  const GroupsOverview({required this.shown, required this.owedToMe, required this.iOwe});
+  const GroupsOverview({required this.shown, required this.totals});
   final List<GroupSummary> shown;
-  final int owedToMe;
-  final int iOwe;
+
+  /// What is owed either way, one entry per currency shown (app currency
+  /// first); amounts in different currencies are never added.
+  final List<CurrencyTotals> totals;
 
   bool get isEmpty => shown.isEmpty;
 }
@@ -182,9 +214,9 @@ class GroupsOverview {
 final groupsOverviewProvider = Provider<AsyncValue<GroupsOverview>>((ref) {
   final appSymbol = ref.watch(settingsProvider).currencySymbol;
   return mapAsync(ref.watch(groupSummariesProvider), (summaries) {
-    final totals = groupTotalsInAppCurrency(summaries, appSymbol: appSymbol);
+    final totals = shownCurrencyTotals(groupTotalsByCurrency(summaries, appSymbol: appSymbol));
     final active = summaries.where((summary) => summary.group.archivedAt == null);
-    return GroupsOverview(shown: active.take(kGroupsCardRows).toList(), owedToMe: totals.owedToMe, iOwe: totals.iOwe);
+    return GroupsOverview(shown: active.take(kGroupsCardRows).toList(), totals: totals);
   });
 });
 

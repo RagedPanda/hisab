@@ -23,7 +23,7 @@ Future<void> markReminderPaid(BuildContext context, WidgetRef ref, Reminder remi
   final isMoney = ReminderKind.of(reminder.kind).isMoney;
   final amount = reminderAmountOrNone(reminder.amountMinor);
   if (isMoney && amount != null) {
-    final symbol = ref.read(settingsProvider).currencySymbol;
+    final moneyFormat = ref.read(homeMoneyFormatProvider);
     final choice = await showModalBottomSheet<_PaidChoice>(
       context: context,
       showDragHandle: true,
@@ -36,7 +36,7 @@ Future<void> markReminderPaid(BuildContext context, WidgetRef ref, Reminder remi
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-            child: Text(l10n.reminderPaidSheetBody(formatMinor(amount, symbol: symbol))),
+            child: Text(l10n.reminderPaidSheetBody(formatMinor(amount, format: moneyFormat))),
           ),
           ListTile(
             leading: const Icon(Icons.add_card_outlined),

@@ -83,13 +83,13 @@ class _EntrySummary extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final symbol = ref.watch(settingsProvider.select((settings) => settings.currencySymbol));
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final category = details.category;
     final payee = details.entry.payee;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
-        Text(formatMinor(details.entry.amountMinor, symbol: symbol), style: theme.textTheme.headlineSmall),
+        Text(formatMinor(details.entry.amountMinor, format: moneyFormat), style: theme.textTheme.headlineSmall),
         if (payee != null && payee.isNotEmpty) Text(payee, style: theme.textTheme.titleMedium),
         if (details.account != null) Text(details.account!.name, style: theme.textTheme.bodyMedium),
         const SizedBox(height: 16),

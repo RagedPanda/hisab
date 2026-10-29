@@ -38,8 +38,8 @@ String dateRangeLabel(DateTime? from, DateTime? to, {String? locale}) =>
     [if (from != null) formatShortDate(from, locale: locale), if (to != null) formatShortDate(to, locale: locale)].join(' – ');
 
 /// Short label of an amount range in the user's currency.
-String amountRangeLabel(AppLocalizations l10n, int? minMinor, int? maxMinor, String symbol) {
-  String money(int minor) => formatMinor(minor, symbol: symbol, showDecimals: minor % 100 != 0);
+String amountRangeLabel(AppLocalizations l10n, int? minMinor, int? maxMinor, MoneyFormat moneyFormat) {
+  String money(int minor) => formatMinor(minor, format: moneyFormat, showDecimals: minor % 100 != 0);
   if (minMinor != null && maxMinor != null) return l10n.amountBetween(money(minMinor), money(maxMinor));
   if (minMinor != null) return l10n.amountFrom(money(minMinor));
   return l10n.amountUpTo(money(maxMinor ?? 0));
@@ -56,11 +56,14 @@ class _EntryFilterBody extends ConsumerStatefulWidget {
 }
 
 class _EntryFilterBodyState extends ConsumerState<_EntryFilterBody> {
+  /// Number format the amount fields read and write (the app's own).
+  MoneyFormat get _moneyFormat => ref.read(homeMoneyFormatProvider);
+
   late EntryFilter _draft = widget.initial;
   late final _minController = TextEditingController(text: _amountText(widget.initial.minAmountMinor));
   late final _maxController = TextEditingController(text: _amountText(widget.initial.maxAmountMinor));
 
-  static String _amountText(int? minor) => minor == null ? '' : amountInputText(minor);
+  String _amountText(int? minor) => minor == null ? '' : amountInputText(minor, format: _moneyFormat);
 
   @override
   void dispose() {
@@ -70,8 +73,8 @@ class _EntryFilterBodyState extends ConsumerState<_EntryFilterBody> {
   }
 
   void _setAmounts() => setState(() => _draft = _draft.copyWith(
-        minAmountMinor: parseAmountToMinor(_minController.text),
-        maxAmountMinor: parseAmountToMinor(_maxController.text),
+        minAmountMinor: parseAmountToMinor(_minController.text, format: _moneyFormat),
+        maxAmountMinor: parseAmountToMinor(_maxController.text, format: _moneyFormat),
       ));
 
   void _clearAll() {
@@ -166,8 +169,8 @@ class _EntryFilterBodyState extends ConsumerState<_EntryFilterBody> {
                   child: TextField(
                     key: const ValueKey('filter.minAmount'),
                     controller: _minController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: amountInputFormatters,
+                    keyboardType: amountKeyboardType(_moneyFormat),
+                    inputFormatters: amountInputFormatters(_moneyFormat),
                     decoration: InputDecoration(labelText: l10n.minAmount, errorText: amountError == null ? null : l10n.minAboveMax, errorMaxLines: 2),
                     onChanged: (_) => _setAmounts(),
                   ),
@@ -177,8 +180,8 @@ class _EntryFilterBodyState extends ConsumerState<_EntryFilterBody> {
                   child: TextField(
                     key: const ValueKey('filter.maxAmount'),
                     controller: _maxController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: amountInputFormatters,
+                    keyboardType: amountKeyboardType(_moneyFormat),
+                    inputFormatters: amountInputFormatters(_moneyFormat),
                     decoration: InputDecoration(labelText: l10n.maxAmount),
                     onChanged: (_) => _setAmounts(),
                   ),

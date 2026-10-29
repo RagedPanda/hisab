@@ -30,6 +30,9 @@ class RecurringRuleFormScreen extends ConsumerStatefulWidget {
 }
 
 class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScreen> {
+  /// Number format the amount fields read and write (the app's own).
+  MoneyFormat get _moneyFormat => ref.read(homeMoneyFormatProvider);
+
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
   final _payeeController = TextEditingController();
@@ -61,7 +64,7 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
         _existing = rule;
         _kind = rule.kind;
         _nameController.text = rule.name;
-        _amountController.text = amountInputText(rule.amountMinor);
+        _amountController.text = amountInputText(rule.amountMinor, format: _moneyFormat);
         _payeeController.text = rule.payee ?? '';
         _noteController.text = rule.note;
         _accountId = rule.accountId;
@@ -87,12 +90,11 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
     super.dispose();
   }
 
-  int get _amountMinor => parseAmountToMinor(_amountController.text) ?? 0;
+  int get _amountMinor => parseAmountToMinor(_amountController.text, format: _moneyFormat) ?? 0;
 
   String? _validationError(AppLocalizations l10n) {
-    if (amountErrorText(context, _amountController.text) != null) return l10n.invalidAmount;
+    if (amountErrorText(context, _amountController.text, format: _moneyFormat) != null) return l10n.invalidAmount;
     if (_amountMinor <= 0) return l10n.errorAmountZero;
-    if (_kind != 'transfer' && _category == null) return l10n.errorPickCategory;
     if (_kind == 'transfer' && (_accountId == null || _toAccountId == null)) return l10n.errorPickBothAccounts;
     if (_existing?.groupId != null && !isGroupRuleKind(_kind)) return l10n.groupRecurringExpenseOnly;
     final groupTemplate = GroupExpenseTemplate.decode(_existing?.groupSplit);
@@ -158,7 +160,7 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context).toString();
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final title = Text(widget.ruleId == null ? l10n.recurringNew : l10n.recurringEdit);
     if (_missing) {
       return Scaffold(appBar: AppBar(title: title), body: EmptyState(icon: Icons.repeat, title: l10n.recurringRuleMissing));
@@ -189,10 +191,10 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
             TextField(
               key: const ValueKey('recurring.amount'),
               controller: _amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: amountInputFormatters,
+              keyboardType: amountKeyboardType(_moneyFormat),
+              inputFormatters: amountInputFormatters(_moneyFormat),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
-              decoration: InputDecoration(prefixText: '$symbol ', hintText: '0', errorText: amountErrorText(context, _amountController.text)),
+              decoration: InputDecoration(prefixText: amountPrefixText(moneyFormat), suffixText: amountSuffixText(moneyFormat), hintText: '0', errorText: amountErrorText(context, _amountController.text, format: _moneyFormat)),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
@@ -207,8 +209,7 @@ class _RecurringRuleFormScreenState extends ConsumerState<RecurringRuleFormScree
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: IconBadge(icon: _category?.icon ?? 'category', color: _category?.color ?? 0xFF9E9E9E),
-                title: Text(_category?.displayName(context) ?? l10n.chooseCategory),
-                subtitle: _category == null ? Text(l10n.required) : null,
+                title: Text(_category?.displayName(context) ?? l10n.uncategorised),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () async {
                   final picked = await showCategoryPicker(context, kind: _kind, selectedId: _category?.id);

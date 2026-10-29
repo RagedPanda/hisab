@@ -10,12 +10,12 @@
 /// grants provisional notification authorization itself, which iOS does
 /// silently on a simulator that has never been asked (`xcrun simctl privacy` cannot grant notifications). Manual step:
 /// if Hisab's notifications were denied on the simulator before, uninstall the
-/// app (`xcrun simctl uninstall <udid> com.sarv.hisab`) or erase the simulator
+/// app (`xcrun simctl uninstall <udid> com.ragedpanda.hisab`) or erase the simulator
 /// first, otherwise iOS keeps the denial and flow 31 fails its first expect.
 /// Android, flow 32 (salary day, numbered 25 and 29 before): the notification permission must be granted
 /// before the flow, or the Android 13+ system prompt covers the align dialog
 /// (#86). The driver does this with
-/// `adb shell pm grant com.sarv.hisab android.permission.POST_NOTIFICATIONS`;
+/// `adb shell pm grant com.ragedpanda.hisab android.permission.POST_NOTIFICATIONS`;
 /// with several devices attached, set `ANDROID_SERIAL` to the `-d` device.
 /// Run another way, grant it by hand first. The flow checks it up front.
 library;
@@ -34,6 +34,7 @@ import 'package:hisab/core/money.dart';
 import 'package:hisab/core/notifications/reminder_payload.dart';
 import 'package:hisab/core/dates.dart';
 import 'package:hisab/core/providers.dart';
+import 'package:hisab/core/theme.dart';
 import 'package:hisab/data/backup/backup_service.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
@@ -41,6 +42,7 @@ import 'package:hisab/data/repositories/recurring_repository.dart';
 import 'package:hisab/domain/recurring/recurrence.dart';
 import 'package:hisab/data/debug/demo_plan.dart';
 import 'package:hisab/data/debug/demo_seed.dart';
+import 'package:hisab/data/debug/demo_story.dart';
 import 'package:hisab/domain/backup/backup_codec.dart';
 import 'package:hisab/domain/categories/category_packs.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
@@ -71,6 +73,7 @@ import 'package:intl/intl.dart';
 
 import 'harness.dart';
 import 'recording_notification_gateway.dart';
+import 'card_dues_flow.dart';
 import 'sms_history_flow.dart';
 
 const _milkTotalMinor = 20000; // 2 L @ 70 + 1 L @ 60
@@ -91,10 +94,19 @@ const _myGroupShareMinor = 10000 + 30000;
 int get _hdfcBalanceMinor => _hdfcOpeningMinor - _restaurantMinor + _salaryMinor;
 int get _totalBalanceMinor => _hdfcBalanceMinor + _axisOpeningMinor - _milkTotalMinor;
 
-Finder _amountField() => find.descendant(of: find.byType(ExpenseEditorScreen), matching: find.byType(TextField)).first;
+Finder _amountField() => find.byKey(const ValueKey('editor.amount'));
 Finder _dialogField() => find.descendant(of: find.byType(AlertDialog), matching: find.byType(TextField));
 Finder _chip(String label) => find.widgetWithText(ChoiceChip, label, skipOffstage: false);
 Finder _filled(String label) => find.widgetWithText(FilledButton, label);
+Finder _splitPicker() => find.byKey(const Key('split-method-picker'), skipOffstage: false);
+bool _splitIs(String label) => find.descendant(of: _splitPicker(), matching: find.text(label), skipOffstage: false).evaluate().isNotEmpty;
+
+/// Opens the split method row in the editor and picks [label] from its sheet.
+Future<void> _pickSplit(WidgetTester tester, String label) async {
+  await scrollTo(tester, _splitPicker(), within: find.byType(ExpenseEditorScreen));
+  await tapFinder(tester, _splitPicker());
+  await tapFinder(tester, find.descendant(of: find.byType(BottomSheet), matching: find.text(label)));
+}
 Finder _accountCardAmount(String name, String amount) => find.descendant(
   of: find.ancestor(of: find.text(name), matching: find.byType(InkWell)).first,
   matching: find.text(amount),
@@ -110,8 +122,17 @@ int _expectedSeededSpend(DateTime now, {required int entryCount}) {
   final range = monthRange(now);
   final hotelDate = now.subtract(const Duration(days: 3));
   final planned = planDemoEntries(count: entryCount, now: now).where((item) => item.kind == 'expense' && range.contains(item.occurredAt)).fold(0, (sum, item) => sum + item.amountMinor);
-  return planned + (range.contains(hotelDate) ? 300000 : 0) + _sliceTopUpKeys.length * _sliceTopUpMinor;
+  final dairyBill = range.contains(now.subtract(const Duration(minutes: 30))) ? _demoDairyBillMinor : 0;
+  final tripShares = kDemoTripExpenses
+      .where((expense) => range.contains(now.subtract(Duration(days: expense.daysAgo, hours: 2))))
+      .fold(0, (sum, expense) => sum + equalShares(expense.amountMinor, _demoTripMembers).last);
+  return planned + (range.contains(hotelDate) ? 300000 : 0) + dairyBill + tripShares + _sliceTopUpKeys.length * _sliceTopUpMinor;
 }
+
+/// The README story's Gwala Ji bill (2 L buffalo milk at 72 + 200 g paneer at 210)
+/// and the Goa trip's member count (me, Rahul, Priya), from `demo_story.dart`.
+const _demoDairyBillMinor = 18600;
+const _demoTripMembers = 3;
 
 /// One child in each of six parent categories. The demo plan spreads entries
 /// by date, so on many days (2026-10-24 among them) this month touches five
@@ -146,8 +167,16 @@ Future<void> _expectSpent(WidgetTester tester, String amount, {String? reason}) 
   expect(shown(), amount, reason: reason);
 }
 
+/// Taps + in a group and, when it opened a copy of the last expense, swaps
+/// it for an empty form so the flow enters every field itself.
+Future<void> _newGroupExpense(WidgetTester tester, {int frames = 8}) async {
+  await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'), frames: frames);
+  final startBlank = find.byKey(const Key('editor.startBlank'));
+  if (startBlank.evaluate().isNotEmpty) await tapFinder(tester, startBlank, frames: frames);
+}
+
 Future<void> _pickCategory(WidgetTester tester, String query, String name) async {
-  await tapText(tester, 'Choose category');
+  await tapText(tester, 'Uncategorised');
   await enterText(tester, find.widgetWithText(TextField, 'Search categories'), query);
   await tapText(tester, name);
 }
@@ -275,18 +304,19 @@ void main() {
     await tapFinder(tester, find.byType(FloatingActionButton));
     expect(find.text('New entry'), findsOneWidget);
     await shoot(tester, 'entry_new');
-    await tapText(tester, 'Choose category');
+    await tapText(tester, 'Uncategorised');
     await shoot(tester, 'category_picker');
     await enterText(tester, find.widgetWithText(TextField, 'Search categories'), 'milk');
     await tapText(tester, 'Milk & Dairy');
     expect(find.text('Milk & Dairy'), findsOneWidget);
+    await openMoreDetails(tester, reveals: find.text('Add item'));
     await _addItem(tester, name: 'Buffalo milk', qty: '2', price: '70');
     await _addItem(tester, name: 'Cow milk', qty: '1', price: '60');
     await shoot(tester, 'entry_items');
     await scrollTo(tester, find.text('Total of 2 items'), within: find.byType(ExpenseEditorScreen), up: true);
     expect(find.text('Total of 2 items'), findsOneWidget);
     expect(tester.widget<TextField>(_amountField()).readOnly, isTrue, reason: 'amount is derived from items');
-    await tapFinder(tester, _chip('Cash'));
+    await pickEditorAccount(tester, 'Cash');
     await tapFinder(tester, find.byIcon(Icons.calendar_today_outlined));
     await shoot(tester, 'date_picker');
     await tapText(tester, 'OK');
@@ -310,21 +340,20 @@ void main() {
     await tapFinder(tester, find.byType(FloatingActionButton));
     await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
     await enterText(tester, _amountField(), '1250');
-    await tapFinder(tester, _chip('HDFC Savings'));
+    await pickEditorAccount(tester, 'HDFC Savings');
     await _saveEntry(tester, formatMinor(_restaurantMinor));
 
     await tapFinder(tester, find.byType(FloatingActionButton));
     await tapText(tester, 'Income');
     await _pickCategory(tester, 'salary', 'Salary');
     await enterText(tester, _amountField(), '50000');
-    await tapFinder(tester, _chip('HDFC Savings'));
+    await pickEditorAccount(tester, 'HDFC Savings');
     await shoot(tester, 'entry_income');
     await _saveEntry(tester, formatMinor(_salaryMinor));
 
     await _expectSpent(tester, formatMinor(_spentMinor), reason: 'Spent this month');
     expect(find.text(formatMinor(_salaryMinor, showDecimals: false)), findsOneWidget, reason: 'Income stat');
-    expect(find.text('Saved'), findsOneWidget);
-    expect(find.text(formatMinor(_salaryMinor - _spentMinor, showDecimals: false)), findsOneWidget, reason: 'Saved stat');
+    expect(find.text('Saved'), findsNothing, reason: 'the hero shows spend and income only, no verdict');
     expect(find.text('Spending by category'), findsOneWidget);
     await shoot(tester, 'home_totals');
     await scrollTo(tester, find.text('Accounts'));
@@ -415,7 +444,7 @@ void main() {
     await tapFinder(tester, find.byType(FloatingActionButton));
     await _pickCategory(tester, 'groceries', 'Groceries');
     await enterText(tester, _amountField(), '10');
-    await tapFinder(tester, _chip('Cash'));
+    await pickEditorAccount(tester, 'Cash');
     await _saveEntry(tester, formatMinor(1000));
     await scrollTo(tester, find.text(_spentIn(DateTime.now())), up: true);
     await _expectSpent(tester, formatMinor(_spentMinor + 1000));
@@ -447,7 +476,7 @@ void main() {
     expect(members.map((m) => m.name), containsAll(['You', 'Rahul', 'Priya']));
 
     // Expense 1: 300 paid by me, equal split.
-    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _newGroupExpense(tester);
     expect(find.text('Group expense'), findsOneWidget);
     await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
     await enterText(tester, _amountField(), '300');
@@ -459,15 +488,18 @@ void main() {
     expect(find.text(formatMinor(20000)), findsOneWidget, reason: 'I lent the other two their shares');
 
     // Expense 2: 500 paid by Rahul, exact amounts Me 300 / Rahul 100 / Priya 100.
+    // + starts from a copy of expense 1; Start blank gives an empty form.
     await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    expect(find.byKey(const Key('editor.copiedFromLast')), findsOneWidget);
+    expect(find.text('Restaurants & Cafes'), findsOneWidget, reason: 'the copy keeps the last category');
+    await tapFinder(tester, find.byKey(const Key('editor.startBlank')));
     await _pickCategory(tester, 'hotels', 'Hotels & Stays');
     await enterText(tester, _amountField(), '500');
     await scrollTo(tester, find.text('Paid by'), within: find.byType(ExpenseEditorScreen));
     await tapFinder(tester, _chip('Rahul'));
     expect(tester.widget<ChoiceChip>(_chip('Rahul')).selected, isTrue, reason: 'Rahul selected as payer');
     await shoot(tester, 'group_paid_by');
-    await scrollTo(tester, find.text('Split'), within: find.byType(ExpenseEditorScreen));
-    await tapFinder(tester, _chip('Exact amounts'));
+    await _pickSplit(tester, 'Exact amounts');
     await enterText(tester, _splitField('You'), '300');
     await enterText(tester, _splitField('Rahul'), '100');
     await enterText(tester, _splitField('Priya'), '100');
@@ -627,20 +659,26 @@ void main() {
     await shoot(tester, 'categories_income');
   });
 
-  // iOS only: Android offers SMS reading on this screen, so the flow is skipped there.
-  testWidgets('10 bank SMS screen on iOS: reading disabled, paste auto-adds with Undo, unclear SMS wait for review', (tester) async {
+  // The reading-disabled checks are iOS only (Android offers SMS reading on
+  // this screen); paste, auto-add, Undo and the review queue run on both.
+  testWidgets('10 bank SMS screen: reading disabled on iOS, paste auto-adds with Undo, unclear SMS wait for review', (tester) async {
     await pumpApp(tester, shared);
     await goTab(tester, 'Settings');
     await shoot(tester, 'settings');
     await scrollTo(tester, find.text('Bank SMS'));
     await tapText(tester, 'Bank SMS');
-    await waitFor(tester, find.text('Not available on iOS. Use the Shortcut or paste below.'));
-    expect(find.text('Not available on iOS. Use the Shortcut or paste below.'), findsOneWidget);
+    await waitFor(tester, find.text('Paste an SMS'));
     final readSwitch = tester.widget<SwitchListTile>(find.widgetWithText(SwitchListTile, 'Read bank SMS automatically'));
-    expect(readSwitch.onChanged, isNull, reason: 'SMS reading must be disabled on iOS');
-    expect(readSwitch.value, isFalse);
-    expect(find.text('Scan inbox now'), findsNothing);
-    await shoot(tester, 'sms_ios');
+    if (Platform.isIOS) {
+      expect(find.text('Not available on iOS. Use the Shortcut or paste below.'), findsOneWidget);
+      expect(readSwitch.onChanged, isNull, reason: 'SMS reading must be disabled on iOS');
+      expect(readSwitch.value, isFalse);
+      expect(find.text('Scan inbox now'), findsNothing);
+      await shoot(tester, 'sms_ios');
+    } else {
+      expect(readSwitch.onChanged, isNotNull, reason: 'Android offers SMS reading');
+      await shoot(tester, 'sms_android');
+    }
     await tapText(tester, 'Paste an SMS');
     await enterText(tester, _dialogField(), 'Rs.500.00 debited from A/c XX1234 on 20-Oct-25 to merchant@upi (UPI Ref No 123456789012)');
     await tapFinder(tester, _filled('Save'), frames: 12);
@@ -669,7 +707,7 @@ void main() {
     await tapText(tester, 'Ignore');
     expect(find.text('Nothing waiting'), findsOneWidget);
     await goBack(tester);
-  }, skip: !Platform.isIOS);
+  });
 
   testWidgets('11 settings: dark theme on every tab', (tester) async {
     addTearDown(() => shared.read(settingsProvider.notifier).update((s) => s.copyWith(themeMode: ThemeMode.light)));
@@ -689,12 +727,12 @@ void main() {
     await goBack(tester);
     await goTab(tester, 'Home');
     await tapFinder(tester, find.byType(FloatingActionButton));
-    await tapText(tester, 'Choose category');
+    await tapText(tester, 'Uncategorised');
     await shoot(tester, 'dark_category_picker');
     await enterText(tester, find.widgetWithText(TextField, 'Search categories'), 'groceries');
     await tapText(tester, 'Groceries');
     await shoot(tester, 'dark_entry');
-    await goBack(tester);
+    await discardEntry(tester);
     await goTab(tester, 'Settings');
     await tapText(tester, 'Light');
     expect(Theme.of(tester.element(find.byType(NavigationBar))).brightness, Brightness.light);
@@ -739,15 +777,16 @@ void main() {
     await goTab(tester, hi.tabHome);
     await tapFinder(tester, find.byType(FloatingActionButton));
     expect(find.text(hi.newEntry), findsOneWidget);
-    await tapText(tester, hi.chooseCategory);
+    await tapText(tester, hi.uncategorised);
     await shoot(tester, 'hi_category_picker');
     expect(find.text('Food & Dining'), findsNothing, reason: 'seeded category names are translated');
     expect(find.text(hindiCategoryNames['food']!), findsOneWidget);
     await enterText(tester, find.widgetWithText(TextField, hi.searchCategories), 'groceries');
     await tapText(tester, hindiCategoryNames['groceries']!);
+    await openMoreDetails(tester, reveals: find.text(hi.addItem));
     await tapText(tester, hi.addItem);
     await shoot(tester, 'hi_entry');
-    await goBack(tester);
+    await discardEntry(tester);
     await goTab(tester, hi.tabSettings);
     await scrollTo(tester, find.text(hi.language), up: true);
     await tapText(tester, hi.language);
@@ -773,8 +812,8 @@ void main() {
     final restoreDb = AppDatabase(NativeDatabase.memory());
     addTearDown(restoreDb.close);
     await expectLater(BackupService(restoreDb).importEncrypted(bytes, 'wrong passphrase'), throwsA(isA<BackupFormatException>()));
-    final written = await BackupService(restoreDb).importEncrypted(bytes, passphrase);
-    expect(written, greaterThan(0));
+    final restored = await BackupService(restoreDb).importEncrypted(bytes, passphrase);
+    expect(restored.written, greaterThan(0));
     final sourceEntries = await shared.db.select(shared.db.entries).get();
     final restoredEntries = await restoreDb.select(restoreDb.entries).get();
     expect(restoredEntries.map((e) => e.id).toSet(), sourceEntries.map((e) => e.id).toSet());
@@ -818,7 +857,7 @@ void main() {
     await _expectSpent(tester, formatMinor(_expectedSeededSpend(now, entryCount: kDashboardSeedEntries), showDecimals: false), reason: 'hero spend = planned expenses this month + my hotel share + slice top-up');
     expect(find.byKey(kHeroCardKey), findsOneWidget);
     expect(find.text('Income'), findsOneWidget);
-    expect(find.text('Daily avg'), findsOneWidget);
+    expect(find.textContaining('Daily avg'), findsOneWidget);
     await shoot(tester, 'dashboard_seeded_hero');
     await scrollTo(tester, find.byKey(kTrendCardKey));
     expect(find.text('Spending trend'), findsOneWidget);
@@ -831,11 +870,10 @@ void main() {
     await scrollTo(tester, find.byKey(kBudgetsCardKey));
     expect(find.text('Overall'), findsOneWidget, reason: 'overall budget row comes first');
     await scrollTo(tester, find.byKey(kAccountsCardKey));
-    expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsOneWidget, reason: 'the Upcoming card is keyed even while it shows its empty state');
     expect(find.text('HDFC Savings'), findsOneWidget);
     await scrollTo(tester, find.byKey(kGroupsCardKey));
-    expect(find.text('Goa trip'), findsOneWidget);
-    expect(find.text('You get ${formatMinor(600000, showDecimals: false)}'), findsOneWidget, reason: 'two friends owe 3,000 each');
+    expect(find.descendant(of: find.byKey(kGroupsCardKey), matching: find.text('Goa trip')), findsOneWidget);
+    expect(find.text('You get ${formatMinor(356000, showDecimals: false)}'), findsOneWidget, reason: 'hotel 6,000 owed to me, less my trip shares of the scooter (700) and Wharf (1,620), plus 880 owed on the drinks, less Rahul\'s 1,000 settle-up');
     await scrollTo(tester, find.byKey(kRecentCardKey));
     expect(find.text('Recent'), findsOneWidget);
     expect(find.byType(EntryTile), findsWidgets);
@@ -868,6 +906,7 @@ void main() {
 
     await tapText(tester, 'Add entry');
     await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
+    await scrollTo(tester, _amountField(), up: true);
     await enterText(tester, _amountField(), '2500');
     await _saveEntry(tester, formatMinor(fuelMinor));
     await waitFor(tester, find.byType(EntryTile));
@@ -1173,6 +1212,7 @@ void main() {
     Future<String?> projectOf(int amountMinor) async => (await fresh.db.select(fresh.db.entries).get()).singleWhere((entry) => entry.amountMinor == amountMinor).projectId;
 
     await tapFinder(tester, find.byType(FloatingActionButton));
+    await openMoreDetails(tester, reveals: projectChip);
     expect(find.text('Add to project'), findsOneWidget, reason: 'nothing remembered yet');
     await shoot(tester, 'editor_project_chip');
     await tapFinder(tester, projectChip);
@@ -1186,13 +1226,15 @@ void main() {
     await scrollTo(tester, find.text('Project details'));
     expect(find.text('Project details'), findsOneWidget, reason: 'the picked project brings its entry fields');
     await shoot(tester, 'editor_project_picked');
-    await scrollTo(tester, find.text('Choose category'), up: true);
+    await scrollTo(tester, find.text('Uncategorised'), up: true);
     await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
+    await scrollTo(tester, _amountField(), up: true);
     await enterText(tester, _amountField(), '2500');
     await _saveEntry(tester, formatMinor(250000));
     expect(await projectOf(250000), carId);
 
     await tapFinder(tester, find.byType(FloatingActionButton));
+    await openMoreDetails(tester, reveals: projectChip);
     expect(
       find.descendant(of: projectChip, matching: find.text('Swift car')),
       findsOneWidget,
@@ -1203,16 +1245,19 @@ void main() {
     await tapFinder(tester, option(kitchenId));
     expect(find.descendant(of: projectChip, matching: find.text('Kitchen')), findsOneWidget);
     expect(find.text('Project details'), findsNothing, reason: 'Kitchen has no entry fields');
+    await scrollTo(tester, find.text('Uncategorised'), up: true);
     await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
+    await scrollTo(tester, _amountField(), up: true);
     await enterText(tester, _amountField(), '300');
     await _saveEntry(tester, formatMinor(30000));
     expect(await projectOf(30000), kitchenId);
 
     await tapFinder(tester, find.byType(FloatingActionButton));
+    await openMoreDetails(tester, reveals: projectChip);
     expect(find.descendant(of: projectChip, matching: find.text('Kitchen')), findsOneWidget);
     await tapFinder(tester, find.descendant(of: projectChip, matching: find.byIcon(Icons.close)));
     expect(find.text('Add to project'), findsOneWidget, reason: 'the cross clears the project');
-    await scrollTo(tester, find.text('Choose category'), up: true);
+    await scrollTo(tester, find.text('Uncategorised'), up: true);
     await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
     await enterText(tester, _amountField(), '100');
     await _saveEntry(tester, formatMinor(10000));
@@ -1234,6 +1279,7 @@ void main() {
     await settle(tester, 10);
     expect(find.descendant(of: filterChip, matching: find.text(hi.project)), findsOneWidget);
     await tapFinder(tester, find.byType(FloatingActionButton));
+    await openMoreDetails(tester, reveals: projectChip);
     expect(find.text(hi.addToProject), findsOneWidget);
     await shoot(tester, 'hi_editor_project_chip');
     await tapFinder(tester, projectChip);
@@ -1463,7 +1509,7 @@ void main() {
     expect(find.text('Saved. Add the next one.'), findsOneWidget);
     expect(find.byType(ExpenseEditorScreen), findsOneWidget, reason: 'the editor stays open for the next entry');
     expect(tester.widget<TextField>(_amountField()).controller!.text, isEmpty);
-    expect(find.text('Choose category'), findsOneWidget);
+    expect(find.text('Uncategorised'), findsOneWidget);
     expect(selectedKind(), {'expense'});
     await shoot(tester, 'editor_saved_add_another');
     final first = (await entries()).single;
@@ -1520,7 +1566,7 @@ void main() {
     await pumpApp(tester, fresh);
     await goTab(tester, 'Groups');
     await tapText(tester, 'Dinner club');
-    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _newGroupExpense(tester);
     await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
     await enterText(tester, _amountField(), '900');
     await scrollTo(tester, _chip('2+ people'), within: find.byType(ExpenseEditorScreen));
@@ -1603,9 +1649,9 @@ void main() {
 
     await goBack(tester);
     expect(find.text('Rent is due on the 1st'), findsOneWidget, reason: 'notes show on the Expenses tab');
-    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'), frames: 12);
-    await scrollTo(tester, _chip('Shares / ratio'), within: find.byType(ExpenseEditorScreen));
-    expect(tester.widget<ChoiceChip>(_chip('Shares / ratio')).selected, isTrue, reason: 'new expenses start from the default split');
+    await _newGroupExpense(tester, frames: 12);
+    await scrollTo(tester, _splitPicker(), within: find.byType(ExpenseEditorScreen));
+    expect(_splitIs('Shares / ratio'), isTrue, reason: 'new expenses start from the default split');
     expect(find.textContaining('€'), findsWidgets, reason: 'the editor shows the group currency label');
     await goBack(tester);
 
@@ -1638,7 +1684,7 @@ void main() {
     await pumpApp(tester, fresh);
     await goTab(tester, 'Groups');
     await tapText(tester, 'Movie night');
-    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _newGroupExpense(tester);
     await _pickCategory(tester, 'restaurants', title);
     await enterText(tester, _amountField(), '600');
     await _saveEntry(tester, formatMinor(60000));
@@ -1700,7 +1746,7 @@ void main() {
     await groups.addSettlement(groupId: clubId, fromMemberId: rahul, toMemberId: me, amountMinor: 10000);
     final balancesBefore = (await groups.getBalances(clubId)).net;
     await pumpApp(tester, fresh);
-    await tapText(tester, 'Groups', frames: 12);
+    await goTab(tester, 'Groups');
     await tapText(tester, 'Book club', frames: 12);
 
     await tapFinder(tester, find.byType(PopupMenuButton<String>));
@@ -1793,15 +1839,15 @@ void main() {
     await pumpApp(tester, fresh);
     await goTab(tester, 'Groups');
     await tapText(tester, 'Pizza night');
-    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _newGroupExpense(tester);
     await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
     await scrollTo(tester, find.text('Add items to split by item'), within: editor);
-    expect(_chip('By item'), findsNothing, reason: 'no items, no by-item split');
+    expect(_splitIs('By item'), isFalse, reason: 'no items, no by-item split');
 
     await scrollTo(tester, find.text('Add item'), within: editor, up: true);
     await _addItem(tester, name: 'Pizza', qty: '1', price: '600');
     await _addItem(tester, name: 'Coke', qty: '1', price: '150');
-    expect(tester.widget<ChoiceChip>(_chip('By item')).selected, isTrue, reason: 'the first item switches the split to by item');
+    expect(_splitIs('By item'), isTrue, reason: 'the first item switches the split to by item');
     expect(chipOn(assignChip(me).last) && chipOn(assignChip(rahul).last) && chipOn(assignChip(priya).last), isTrue, reason: 'everyone shares a new item');
 
     await scrollTo(tester, assignChip(priya).last, within: editor);
@@ -1833,17 +1879,16 @@ void main() {
 
     await tapText(tester, 'Restaurants & Cafes');
     await settle(tester, 8);
-    // The reopened editor starts at the top; the split chips are further down (#109).
-    await scrollTo(tester, _chip('By item'), within: editor);
-    expect(tester.widget<ChoiceChip>(_chip('By item')).selected, isTrue, reason: 'editing keeps the by-item split');
+    // The reopened editor starts at the top; the split row is further down (#109).
+    await scrollTo(tester, _splitPicker(), within: editor);
+    expect(_splitIs('By item'), isTrue, reason: 'editing keeps the by-item split');
     await scrollTo(tester, assignChip(priya).at(1), within: editor);
     expect([chipOn(assignChip(me).at(1)), chipOn(assignChip(rahul).at(1)), chipOn(assignChip(priya).at(1))], [false, true, false]);
 
-    await scrollTo(tester, _chip('Equally'), within: editor);
-    await tapFinder(tester, _chip('Equally'));
+    await _pickSplit(tester, 'Equally');
     expect(find.text('Item assignments will be cleared'), findsOneWidget);
     await tapFinder(tester, find.byKey(const Key('byItem.clearConfirm')));
-    expect(tester.widget<ChoiceChip>(_chip('Equally')).selected, isTrue);
+    expect(_splitIs('Equally'), isTrue);
     expect(assignChip(rahul), findsNothing, reason: 'the assign strips go with the by-item split');
     await _saveEntry(tester, formatMinor(84000));
     expect(await entries.getItemAssignments(entryId), isEmpty);
@@ -1955,6 +2000,7 @@ void main() {
   });
 
   testWidgets('27 SMS history: outcomes, filter chips, re-process, entry link, Hindi dark, clear', smsHistoryFlow);
+  testWidgets(kCardDuesFlowName, cardDuesFlow, timeout: const Timeout(Duration(minutes: 15)));
 
   testWidgets('31 reminders: create, real OS scheduling, mark paid with a prefilled entry, history, dark, Hindi', (tester) async {
     final gatewayLog = GatewayCallLog();
@@ -2242,6 +2288,73 @@ void main() {
     await shoot(tester, 'hi_upcoming_card');
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
     await settle(tester, 6);
+  });
+
+  testWidgets('38 entries: shared expenses carry the group tag and say who lent and who borrowed', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    await fresh.read(groupsRepositoryProvider).createGroup(name: 'Goa trip', icon: 'flight', myName: 'You', otherMembers: ['Rahul', 'Priya']);
+    final groupTag = find.byKey(const Key('group-tag'));
+    Color? colorOf(Finder text) => tester.widget<Text>(text).style?.color;
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Goa trip');
+    await _newGroupExpense(tester);
+    await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
+    await enterText(tester, _amountField(), '900');
+    await _saveEntry(tester, formatMinor(90000));
+
+    await _newGroupExpense(tester);
+    await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
+    await enterText(tester, _amountField(), '300');
+    await scrollTo(tester, find.text('Paid by'), within: find.byType(ExpenseEditorScreen));
+    await tapFinder(tester, _chip('Rahul'));
+    await scrollTo(tester, _amountField(), within: find.byType(ExpenseEditorScreen), up: true);
+    await _saveEntry(tester, formatMinor(30000));
+    await goBack(tester);
+
+    await goTab(tester, 'Entries');
+    expect(find.descendant(of: groupTag, matching: find.text('Goa trip')), findsNWidgets(2), reason: 'both shared rows carry the group tag');
+    expect(find.byKey(const Key('group-mark')), findsNWidgets(2));
+    final lent = find.text('you lent ${formatMinor(60000)}');
+    final borrowed = find.text('you borrowed ${formatMinor(10000)}');
+    expect(lent, findsOneWidget, reason: 'I paid 900 split three ways, so the other two owe me 600');
+    expect(borrowed, findsOneWidget, reason: 'Rahul paid 300, so I owe my 100 share');
+    expect(colorOf(lent), kIncomeColor);
+    expect(colorOf(borrowed), kExpenseColor);
+    expect(find.textContaining(formatMinor(30000)), findsOneWidget, reason: 'the dinner row shows my 300 share, not the 900 bill');
+    await shoot(tester, 'entries_shared_rows');
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(themeMode: ThemeMode.dark));
+    await settle(tester, 8);
+    await shoot(tester, 'dark_entries_shared_rows');
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(themeMode: ThemeMode.light));
+    await settle(tester, 6);
+  });
+
+  testWidgets('39 budgets: swipe a budget away, undo brings it back', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final budgets = fresh.read(budgetsRepositoryProvider);
+    await budgets.save(period: 'month', amountMinor: 500000);
+    Future<int> liveBudgets() async => (await fresh.db.select(fresh.db.budgets).get()).where((budget) => budget.deletedAt == null).length;
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Budgets'));
+    await tapText(tester, 'Budgets');
+    final row = find.ancestor(of: find.text('Overall'), matching: find.byType(Dismissible));
+    expect(row, findsOneWidget);
+    await tester.fling(row, const Offset(-600, 0), 1500);
+    await settle(tester, 12);
+    expect(find.text('Overall'), findsNothing);
+    expect(await liveBudgets(), 0, reason: 'the swipe deletes the budget');
+    await shoot(tester, 'budget_swiped');
+
+    await tapText(tester, 'Undo');
+    await waitFor(tester, find.text('Overall'));
+    expect(await liveBudgets(), 1, reason: 'undo restores the same budget');
   });
 }
 

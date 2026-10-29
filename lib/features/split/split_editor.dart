@@ -6,6 +6,7 @@ import '../../domain/split/item_split.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
+import '../shell/widgets/common.dart';
 
 /// Translated chip label for a split method.
 String splitMethodLabel(SplitMethod method, AppLocalizations l10n) => switch (method) {
@@ -19,8 +20,8 @@ String splitMethodLabel(SplitMethod method, AppLocalizations l10n) => switch (me
 
 /// Translated one-line explanation of how a split method works.
 /// Translates a language-free [SplitError] into user-facing text.
-String splitErrorMessage(SplitError error, AppLocalizations l10n, String symbol) {
-  String money() => formatMinor(error.amountMinor, symbol: symbol);
+String splitErrorMessage(SplitError error, AppLocalizations l10n, MoneyFormat moneyFormat) {
+  String money() => formatMinor(error.amountMinor, format: moneyFormat);
   String percent() {
     final text = error.percent.toStringAsFixed(2);
     return text.endsWith('.00') ? text.substring(0, text.length - 3) : text;
@@ -53,6 +54,16 @@ List<SplitMethod> splitMethodOptions({required bool hasItems}) => [
         if (method != SplitMethod.byItem) method,
     ];
 
+/// Icon for a split method in the picker row and its sheet.
+IconData splitMethodIcon(SplitMethod method) => switch (method) {
+      SplitMethod.equal => Icons.drag_handle,
+      SplitMethod.exact => Icons.edit_note,
+      SplitMethod.percent => Icons.percent,
+      SplitMethod.shares => Icons.pie_chart_outline,
+      SplitMethod.adjustment => Icons.tune,
+      SplitMethod.byItem => Icons.receipt_long,
+    };
+
 String splitMethodHelp(SplitMethod method, AppLocalizations l10n) => switch (method) {
       SplitMethod.equal => l10n.splitHelpEqual,
       SplitMethod.exact => l10n.splitHelpExact,
@@ -71,7 +82,7 @@ class SplitEditor extends StatelessWidget {
     required this.members,
     required this.method,
     required this.inputs,
-    required this.symbol,
+    required this.moneyFormat,
     required this.onMethodChanged,
     required this.onInputsChanged,
     this.items = const [],
@@ -82,7 +93,7 @@ class SplitEditor extends StatelessWidget {
   final List<Member> members;
   final SplitMethod method;
   final List<SplitInput> inputs;
-  final String symbol;
+  final MoneyFormat moneyFormat;
   final ValueChanged<SplitMethod> onMethodChanged;
   final ValueChanged<List<SplitInput>> onInputsChanged;
 
@@ -102,23 +113,7 @@ class SplitEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Wrapped, not a scrolling ChipRow: the selected method must always be
-        // visible, also when an edit opens on the last chip (#58).
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          children: [
-            for (final option in splitMethodOptions(hasItems: items.isNotEmpty))
-              ChoiceChip(
-                key: Key('split-method-${option.name}'),
-                label: Text(splitMethodLabel(option, l10n)),
-                selected: method == option,
-                onSelected: (_) => onMethodChanged(option),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(splitMethodHelp(method, l10n), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        SplitMethodTile(method: method, options: splitMethodOptions(hasItems: items.isNotEmpty), onPick: onMethodChanged),
         if (items.isEmpty)
           Text(l10n.byItemHint, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 8),
@@ -130,18 +125,18 @@ class SplitEditor extends StatelessWidget {
           ),
         const SizedBox(height: 8),
         if (!outcome.isValid)
-          Text(outcome.error == null ? l10n.splitDoesNotAddUp : splitErrorMessage(outcome.error!, l10n, symbol), style: TextStyle(color: theme.colorScheme.error))
+          Text(outcome.error == null ? l10n.splitDoesNotAddUp : splitErrorMessage(outcome.error!, l10n, moneyFormat), style: TextStyle(color: theme.colorScheme.error))
         else
-          Text(l10n.splitsAcross(formatMinor(outcome.totalMinor, symbol: symbol), outcome.shares.length), style: theme.textTheme.bodySmall),
+          Text(l10n.splitsAcross(formatMinor(outcome.totalMinor, format: moneyFormat), outcome.shares.length), style: theme.textTheme.bodySmall),
       ],
     );
   }
 
-  String _shareText(int? share) => share == null ? '—' : formatMinor(share, symbol: symbol);
+  String _shareText(int? share) => share == null ? '—' : formatMinor(share, format: moneyFormat);
 
   /// "₹620 · 3 items · 31%" for a member of a by-item split.
   String _byItemLine(AppLocalizations l10n, ItemShareSummary? summary) =>
-      summary == null ? '—' : l10n.byItemSummary(formatMinor(summary.amountMinor, symbol: symbol), summary.itemCount, summary.percent);
+      summary == null ? '—' : l10n.byItemSummary(formatMinor(summary.amountMinor, format: moneyFormat), summary.itemCount, summary.percent);
 
   Widget _memberRow(BuildContext context, Member member, String shareText) {
     final input = inputs.firstWhere((i) => i.memberId == member.id, orElse: () => SplitInput(memberId: member.id));
@@ -151,9 +146,10 @@ class SplitEditor extends StatelessWidget {
         trailing = Checkbox(value: input.included, onChanged: (v) => _update(input.copyWith(included: v ?? false)));
       case SplitMethod.exact:
         trailing = _numberField(
-          initial: input.amountMinor == 0 ? '' : minorToDouble(input.amountMinor).toStringAsFixed(2),
-          suffix: symbol,
-          onChanged: (text) => _update(input.copyWith(amountMinor: parseAmountToMinor(text) ?? 0)),
+          initial: input.amountMinor == 0 ? '' : amountInputText(input.amountMinor, format: moneyFormat),
+          money: true,
+          suffix: moneyFormat.symbol,
+          onChanged: (text) => _update(input.copyWith(amountMinor: parseAmountToMinor(text, format: moneyFormat) ?? 0)),
         );
       case SplitMethod.percent:
         trailing = _numberField(
@@ -171,9 +167,10 @@ class SplitEditor extends StatelessWidget {
         trailing = Row(mainAxisSize: MainAxisSize.min, children: [
           Checkbox(value: input.included, onChanged: (v) => _update(input.copyWith(included: v ?? false))),
           _numberField(
-            initial: input.amountMinor == 0 ? '' : minorToDouble(input.amountMinor).toStringAsFixed(2),
-            suffix: '+$symbol',
-            onChanged: (text) => _update(input.copyWith(amountMinor: parseAmountToMinor(text) ?? 0)),
+            initial: input.amountMinor == 0 ? '' : amountInputText(input.amountMinor, format: moneyFormat),
+            money: true,
+            suffix: '+${moneyFormat.symbol}',
+            onChanged: (text) => _update(input.copyWith(amountMinor: parseAmountToMinor(text, format: moneyFormat) ?? 0)),
           ),
         ]);
       case SplitMethod.byItem:
@@ -197,13 +194,15 @@ class SplitEditor extends StatelessWidget {
     );
   }
 
-  Widget _numberField({required String initial, required String suffix, required ValueChanged<String> onChanged}) {
+  /// A small number field; [money] fields follow [moneyFormat]'s decimals.
+  Widget _numberField({required String initial, required String suffix, required ValueChanged<String> onChanged, bool money = false}) {
     return SizedBox(
       width: 110,
       child: TextFormField(
         initialValue: initial,
         textAlign: TextAlign.end,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        keyboardType: money ? amountKeyboardType(moneyFormat) : const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: money ? amountInputFormatters(moneyFormat) : null,
         decoration: InputDecoration(suffixText: suffix, isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
         onChanged: onChanged,
       ),
@@ -234,3 +233,57 @@ List<SplitInput> defaultSplitInputs(List<Member> members, SplitMethod method) =>
           },
         ),
     ];
+
+/// One row showing the chosen split method and how it works, like the
+/// account row; tapping it opens a sheet of every method.
+class SplitMethodTile extends StatelessWidget {
+  const SplitMethodTile({super.key, required this.method, required this.options, required this.onPick});
+  final SplitMethod method;
+  final List<SplitMethod> options;
+  final ValueChanged<SplitMethod> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ListTile(
+      key: const Key('split-method-picker'),
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(splitMethodIcon(method), color: Theme.of(context).colorScheme.primary),
+      title: Text(splitMethodLabel(method, l10n)),
+      subtitle: Text(splitMethodHelp(method, l10n)),
+      trailing: const Icon(Icons.expand_more),
+      onTap: () async {
+        final picked = await showSplitMethodPicker(context, options: options, selected: method);
+        if (picked != null && picked != method) onPick(picked);
+      },
+    );
+  }
+}
+
+/// Bottom sheet listing [options] with a line on each; returns the picked
+/// method, or null when dismissed.
+Future<SplitMethod?> showSplitMethodPicker(BuildContext context, {required List<SplitMethod> options, required SplitMethod selected}) {
+  final l10n = context.l10n;
+  return showModalBottomSheet<SplitMethod>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    builder: (context) => ListView(
+      shrinkWrap: true,
+      padding: const EdgeInsets.only(bottom: 16),
+      children: [
+        for (final option in options)
+          ListTile(
+            key: Key('split-method-${option.name}'),
+            leading: Icon(splitMethodIcon(option)),
+            title: Text(splitMethodLabel(option, l10n)),
+            subtitle: Text(splitMethodHelp(option, l10n)),
+            trailing: option == selected ? const Icon(Icons.check) : null,
+            selected: option == selected,
+            onTap: () => Navigator.of(context).pop(option),
+          ),
+      ],
+    ),
+  );
+}

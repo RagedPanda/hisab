@@ -84,6 +84,20 @@ void main() {
     expect(await entries.watchTotals(range).first, (expense: 0, income: 0));
   });
 
+  test('watchAccountMovements lists entries charged to or paid into one account since a date', () async {
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 1000, occurredAt: DateTime(2026, 10, 5), accountId: 'card'));
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 2000, occurredAt: DateTime(2026, 9, 30), accountId: 'card'));
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 3000, occurredAt: DateTime(2026, 10, 6), accountId: 'bank'));
+    await entries.saveEntry(EntriesRepository.newExpense(kind: 'transfer', amountMinor: 4000, occurredAt: DateTime(2026, 10, 7), accountId: 'bank').copyWith(toAccountId: const Value('card')));
+    final deletedId = newId();
+    await entries.saveEntry(EntriesRepository.newExpense(id: deletedId, amountMinor: 5000, occurredAt: DateTime(2026, 10, 8), accountId: 'card'));
+    await entries.deleteEntry(deletedId);
+
+    final movements = await entries.watchAccountMovements('card', since: DateTime(2026, 10, 1)).first;
+    expect(movements.map((movement) => (movement.kind, movement.amountMinor)).toSet(), {('expense', 1000), ('transfer', 4000)});
+    expect(movements.firstWhere((movement) => movement.kind == 'transfer').toAccountId, 'card');
+  });
+
   test('transfer rows carry both accounts', () async {
     await db.into(db.accounts).insert(AccountsCompanion.insert(id: 'bank', name: 'HDFC', type: 'bank', color: 1));
     await db.into(db.accounts).insert(AccountsCompanion.insert(id: 'cash', name: 'Cash', type: 'cash', color: 2));
@@ -124,5 +138,61 @@ void main() {
     await entries.saveEntry(EntriesRepository.newExpense(id: deletedId, amountMinor: 4000, occurredAt: DateTime(2026, 10, 8)).copyWith(tags: const Value('old')));
     await entries.deleteEntry(deletedId);
     expect(await entries.watchTagTexts().first, ['#home']);
+  });
+
+  group('watchEntries filters', () {
+    late String travelId;
+
+    setUp(() async {
+      travelId = await CategoriesRepository(db).create(name: 'Road Trips', icon: 'flight', color: 0xFF000000, kind: 'expense');
+      await entries.saveEntry(EntriesRepository.newExpense(id: 'fuel', amountMinor: 3000, occurredAt: DateTime(2026, 10, 4), accountId: 'hdfc', categoryId: travelId, note: 'Fuel for Goa'));
+      await entries.saveEntry(EntriesRepository.newExpense(id: 'dinner', amountMinor: 9000, occurredAt: DateTime(2026, 10, 5), groupId: 'flatmates', payee: 'Toit'));
+      await entries.saveEntry(EntriesRepository.newExpense(id: 'snacks', amountMinor: 500, occurredAt: DateTime(2026, 10, 6)).copyWith(tags: const Value('goa')));
+    });
+
+    Future<List<String>> idsOf(Stream<List<EntryDetails>> stream) async => [for (final details in await stream.first) details.entry.id];
+
+    test('narrow by group, account and category', () async {
+      expect(await idsOf(entries.watchEntries(groupId: 'flatmates')), ['dinner']);
+      expect(await idsOf(entries.watchEntries(accountId: 'hdfc')), ['fuel']);
+      expect(await idsOf(entries.watchEntries(categoryId: travelId)), ['fuel']);
+    });
+
+    test('search matches note, payee, category name or tags, ignoring case', () async {
+      expect(await idsOf(entries.watchEntries(search: ' GOA ')), unorderedEquals(['fuel', 'snacks']));
+      expect(await idsOf(entries.watchEntries(search: 'toit')), ['dinner']);
+      expect(await idsOf(entries.watchEntries(search: 'road')), ['fuel']);
+      expect(await idsOf(entries.watchEntries(search: '   ')), hasLength(3), reason: 'a blank search does not filter');
+    });
+
+    test('limit keeps the newest entries', () async {
+      expect(await idsOf(entries.watchEntries(limit: 2)), ['snacks', 'dinner']);
+    });
+
+    test('watching one entry by id follows it', () async {
+      final line = (await entries.watchEntriesById('fuel').first).single.ledgerLine;
+      expect((line.amountMinor, line.categoryId), (3000, travelId));
+      expect(await entries.watchEntriesById('missing').first, isEmpty);
+    });
+  });
+
+  test('recent payees and categories list the newest distinct values', () async {
+    final categories = await CategoriesRepository(db).getAll();
+    final food = categories.firstWhere((category) => category.kind == 'expense').id;
+    final salary = categories.firstWhere((category) => category.kind == 'income').id;
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 100, occurredAt: DateTime(2026, 10, 1), payee: 'Swiggy', categoryId: food));
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 200, occurredAt: DateTime(2026, 10, 3), payee: 'Zomato', categoryId: food));
+    await entries.saveEntry(EntriesRepository.newExpense(kind: 'income', amountMinor: 900, occurredAt: DateTime(2026, 10, 2), categoryId: salary));
+
+    expect(await entries.recentPayees(), ['Zomato', 'Swiggy']);
+    expect(await entries.recentPayees(limit: 1), ['Zomato']);
+    expect(await entries.recentCategoryIds(kind: 'expense'), [food]);
+    expect(await entries.recentCategoryIds(kind: 'income'), [salary]);
+  });
+
+  test('an SMS is known once an entry records it', () async {
+    expect(await entries.existsForSms('sms-42'), isFalse);
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 100, occurredAt: DateTime(2026, 10, 1), source: 'sms', smsId: 'sms-42'));
+    expect(await entries.existsForSms('sms-42'), isTrue);
   });
 }

@@ -35,7 +35,7 @@ class CategoryDonutCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final breakdown = ref.watch(categoryBreakdownProvider);
     final selected = ref.watch(selectedDashboardCategoryProvider);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final l10n = context.l10n;
     return AsyncCard(
       value: breakdown,
@@ -45,11 +45,11 @@ class CategoryDonutCard extends ConsumerWidget {
         child: DashboardCard(
           key: kCategoryCardKey,
           child: data.shares.isEmpty
-              ? EmptyDonut(symbol: symbol, message: l10n.categoriesEmpty)
+              ? EmptyDonut(moneyFormat: moneyFormat, message: l10n.categoriesEmpty)
               : CategoryDonut(
                   data: data,
                   selectedId: selected,
-                  symbol: symbol,
+                  moneyFormat: moneyFormat,
                   totalCaption: l10n.thisMonth,
                   onSliceTap: (share) => _toggle(context, ref, selected, share),
                 ),
@@ -109,10 +109,10 @@ List<_Slice> _slices(BuildContext context, CategoryBreakdown data) {
 /// project, or anything else that rolls up to categories. Selection is owned
 /// by the caller; tapping a slice reports its share through [onSliceTap].
 class CategoryDonut extends StatelessWidget {
-  const CategoryDonut({super.key, required this.data, required this.selectedId, required this.symbol, required this.totalCaption, this.onSliceTap});
+  const CategoryDonut({super.key, required this.data, required this.selectedId, required this.moneyFormat, required this.totalCaption, this.onSliceTap});
   final CategoryBreakdown data;
   final String? selectedId;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   /// Caption under the total when nothing is selected, e.g. "this month".
   final String totalCaption;
@@ -135,14 +135,14 @@ class CategoryDonut extends StatelessWidget {
       selectedIndex: selected == null ? null : selectedIndex,
       size: sideBySide ? kDonutSideDiameter : kDonutStackedDiameter,
       centre: selected == null
-          ? _Centre(amount: formatMinor(data.totalMinor, symbol: symbol, showDecimals: false), caption: totalCaption)
-          : _Centre(amount: formatMinor(selected.share.minor, symbol: symbol, showDecimals: false), caption: selected.name),
+          ? _Centre(amount: formatMinor(data.totalMinor, format: moneyFormat, showDecimals: false), caption: totalCaption)
+          : _Centre(amount: formatMinor(selected.share.minor, format: moneyFormat, showDecimals: false), caption: selected.name),
       onTap: onTap,
     );
     final legend = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        for (final slice in slices) _LegendRow(slice: slice, selected: slice == selected, symbol: symbol, onTap: () => onTap(slice)),
+        for (final slice in slices) _LegendRow(slice: slice, selected: slice == selected, moneyFormat: moneyFormat, onTap: () => onTap(slice)),
       ],
     );
     final semantics = '${l10n.spendingByCategory}: ${slices.map((slice) => '${slice.name} ${l10n.percentOf(slice.percent)}').join(', ')}';
@@ -230,10 +230,10 @@ class _Centre extends StatelessWidget {
 const double kLegendValueGap = 12;
 
 class _LegendRow extends StatelessWidget {
-  const _LegendRow({required this.slice, required this.selected, required this.symbol, required this.onTap});
+  const _LegendRow({required this.slice, required this.selected, required this.moneyFormat, required this.onTap});
   final _Slice slice;
   final bool selected;
-  final String symbol;
+  final MoneyFormat moneyFormat;
   final VoidCallback onTap;
 
   @override
@@ -262,7 +262,7 @@ class _LegendRow extends StatelessWidget {
             const SizedBox(width: kLegendValueGap),
             ConstrainedBox(
               constraints: const BoxConstraints(minWidth: 72),
-              child: Text(formatMinor(slice.share.minor, symbol: symbol, showDecimals: false), textAlign: TextAlign.end, style: theme.textTheme.bodyMedium?.tabular),
+              child: Text(formatMinor(slice.share.minor, format: moneyFormat, showDecimals: false), textAlign: TextAlign.end, style: theme.textTheme.bodyMedium?.tabular),
             ),
           ],
         ),
@@ -273,8 +273,8 @@ class _LegendRow extends StatelessWidget {
 
 /// Hollow ring with a zero total, for a breakdown with nothing in it yet.
 class EmptyDonut extends StatelessWidget {
-  const EmptyDonut({super.key, required this.symbol, required this.message});
-  final String symbol;
+  const EmptyDonut({super.key, required this.moneyFormat, required this.message});
+  final MoneyFormat moneyFormat;
   final String message;
 
   @override
@@ -287,7 +287,7 @@ class EmptyDonut extends StatelessWidget {
           height: 140,
           alignment: Alignment.center,
           decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: theme.colorScheme.surfaceContainerHigh, width: 24)),
-          child: Text(formatMinor(0, symbol: symbol, showDecimals: false), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700).tabular),
+          child: Text(formatMinor(0, format: moneyFormat, showDecimals: false), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700).tabular),
         ),
         const SizedBox(height: 12),
         Text(message, style: captionStyle(context), textAlign: TextAlign.center),

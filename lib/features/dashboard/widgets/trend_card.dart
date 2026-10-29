@@ -36,7 +36,7 @@ class _TrendCardState extends ConsumerState<TrendCard> {
   @override
   Widget build(BuildContext context) {
     final trend = ref.watch(trendDataProvider);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final l10n = context.l10n;
     return AsyncCard(
       value: trend,
@@ -51,8 +51,8 @@ class _TrendCardState extends ConsumerState<TrendCard> {
             child: SizedBox(
               height: kTrendChartHeight,
               child: _mode == TrendMode.daily
-                  ? _DailyChart(data: data, symbol: symbol)
-                  : MonthlyBars(months: data.months, symbol: symbol, onSelectMonth: (range) => ref.read(selectedMonthProvider.notifier).select(range.start)),
+                  ? _DailyChart(data: data, moneyFormat: moneyFormat)
+                  : MonthlyBars(months: data.months, moneyFormat: moneyFormat, onSelectMonth: (range) => ref.read(selectedMonthProvider.notifier).select(range.start)),
             ),
           ),
         );
@@ -90,9 +90,9 @@ class _ModeSwitch extends StatelessWidget {
 List<FlSpot> _cumulativeSpots(List<int> series) => [for (var day = 0; day < series.length; day++) FlSpot(day + 1.0, series[day] / 100)];
 
 class _DailyChart extends StatelessWidget {
-  const _DailyChart({required this.data, required this.symbol});
+  const _DailyChart({required this.data, required this.moneyFormat});
   final TrendData data;
-  final String symbol;
+  final MoneyFormat moneyFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +107,7 @@ class _DailyChart extends StatelessWidget {
     final previousMonth = DateFormat('MMM', locale).format(data.months[data.months.length - 2].range.start);
     final monthStart = data.months.last.range.start;
     return Semantics(
-      label: l10n.trendSemantics(formatMinor(data.currentTotal, symbol: symbol, showDecimals: false)),
+      label: l10n.trendSemantics(formatMinor(data.currentTotal, format: moneyFormat, showDecimals: false)),
       child: LineChart(
         duration: chartAnimation(context),
         curve: kChartCurve,
@@ -131,7 +131,7 @@ class _DailyChart extends StatelessWidget {
                 showTitles: true,
                 reservedSize: 40,
                 interval: maxY / 2,
-                getTitlesWidget: (value, meta) => Text(axisAmountLabel(value, symbol: symbol), style: labelStyle, textAlign: TextAlign.left),
+                getTitlesWidget: (value, meta) => Text(axisAmountLabel(value, format: moneyFormat), style: labelStyle, textAlign: TextAlign.left),
               ),
             ),
             bottomTitles: AxisTitles(
@@ -185,8 +185,8 @@ class _DailyChart extends StatelessWidget {
                 for (final spot in spots)
                   LineTooltipItem(
                     spot.bar.color == scheme.primary
-                        ? '${formatRowDate(monthStart.add(Duration(days: spot.x.round() - 1)), locale: locale)} · ${formatMinor((spot.y * 100).round(), symbol: symbol, showDecimals: false)}'
-                        : '$previousMonth ${formatMinor((spot.y * 100).round(), symbol: symbol, showDecimals: false)}',
+                        ? '${formatRowDate(monthStart.add(Duration(days: spot.x.round() - 1)), locale: locale)} · ${formatMinor((spot.y * 100).round(), format: moneyFormat, showDecimals: false)}'
+                        : '$previousMonth ${formatMinor((spot.y * 100).round(), format: moneyFormat, showDecimals: false)}',
                     theme.textTheme.labelMedium!.copyWith(color: scheme.onSurface).tabular,
                   ),
               ],
@@ -202,9 +202,9 @@ class _DailyChart extends StatelessWidget {
 /// period. Shared by the dashboard trend and project detail; a tap reports
 /// the month's range through [onSelectMonth].
 class MonthlyBars extends StatelessWidget {
-  const MonthlyBars({super.key, required this.months, required this.symbol, this.onSelectMonth});
+  const MonthlyBars({super.key, required this.months, required this.moneyFormat, this.onSelectMonth});
   final List<PeriodTotal> months;
-  final String symbol;
+  final MoneyFormat moneyFormat;
   final ValueChanged<DateRange>? onSelectMonth;
 
   @override
@@ -219,7 +219,7 @@ class MonthlyBars extends StatelessWidget {
     final yearSpan = months.isNotEmpty && months.first.range.start.year != months.last.range.start.year;
     String monthLabel(DateTime start) => DateFormat(yearSpan ? 'MMM yy' : 'MMM', locale).format(start);
     return Semantics(
-      label: [for (final month in months) '${monthLabel(month.range.start)} ${formatMinor(month.expense, symbol: symbol, showDecimals: false)}'].join(', '),
+      label: [for (final month in months) '${monthLabel(month.range.start)} ${formatMinor(month.expense, format: moneyFormat, showDecimals: false)}'].join(', '),
       child: BarChart(
         duration: chartAnimation(context),
         curve: kChartCurve,
@@ -241,7 +241,7 @@ class MonthlyBars extends StatelessWidget {
                 showTitles: true,
                 reservedSize: 40,
                 interval: maxY / 2,
-                getTitlesWidget: (value, meta) => Text(axisAmountLabel(value, symbol: symbol), style: labelStyle, textAlign: TextAlign.left),
+                getTitlesWidget: (value, meta) => Text(axisAmountLabel(value, format: moneyFormat), style: labelStyle, textAlign: TextAlign.left),
               ),
             ),
             bottomTitles: AxisTitles(
@@ -279,7 +279,7 @@ class MonthlyBars extends StatelessWidget {
               getTooltipColor: (_) => scheme.surfaceContainerHighest,
               tooltipBorderRadius: BorderRadius.circular(8),
               getTooltipItem: (group, _, rod, _) => BarTooltipItem(
-                formatMinor(months[group.x].expense, symbol: symbol, showDecimals: false),
+                formatMinor(months[group.x].expense, format: moneyFormat, showDecimals: false),
                 theme.textTheme.labelMedium!.copyWith(color: scheme.onSurface).tabular,
               ),
             ),

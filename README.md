@@ -14,13 +14,13 @@
   <img alt="Android 7.0+ (API 24)" src="https://img.shields.io/badge/Android-7.0%2B%20(API%2024)-3DDC84?logo=android&logoColor=white">
   <img alt="iOS 15+" src="https://img.shields.io/badge/iOS-15%2B-000000?logo=apple&logoColor=white">
   <br>
-  <img alt="940 tests passing" src="https://img.shields.io/badge/tests-940%20passing-brightgreen">
-  <img alt="Line coverage 62.5%" src="https://img.shields.io/badge/coverage-62.5%25-yellow">
+  <img alt="2003 tests passing" src="https://img.shields.io/badge/tests-2003%20passing-brightgreen">
+  <img alt="Line coverage 99.0%" src="https://img.shields.io/badge/coverage-99.0%25-brightgreen">
   <img alt="Languages: English and Hindi" src="https://img.shields.io/badge/languages-English%20%7C%20Hindi-orange">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
 </p>
 
-<p align="center"><sub>Tests and coverage measured on 2026-10-24 with <code>flutter test --coverage</code> (line coverage of <code>lib/</code>, generated <code>*.g.dart</code> and <code>lib/l10n/generated</code> excluded).</sub></p>
+<p align="center"><sub>Tests and coverage measured on 2026-10-29 with <code>flutter test --coverage</code> (line coverage of <code>lib/</code>, generated <code>*.g.dart</code> and <code>lib/l10n/generated</code> excluded).</sub></p>
 
 ## Screenshots
 
@@ -65,7 +65,7 @@
 - 🗂️ **Grouped account picker** so the right account is one tap away.
 
 ### 🎯 Budgets, categories & projects
-- 📉 **Budgets** overall or per category, with a pace marker and what's left for the days remaining.
+- 📉 **Budgets** overall or per category, with a pace marker, what's left for the days remaining and, for the overall budget, a safe-to-spend amount per day.
 - 📅 **Salary-month cycle**: start your month on payday.
 - 🏷️ **18 expense groups and 100+ subcategories**, plus income and transfer categories, all editable, and **category packs** you can add in a tap.
 - 🏗️ **Projects** for a car, construction, renovation, trip or wedding, with templates and custom fields to track their total cost.
@@ -75,7 +75,7 @@
 - 📺 **Subscriptions** with monthly and yearly totals and renewal dates.
 
 ### 📈 Dashboard & reports
-- 💰 **This month at a glance**: spent, income, saved, daily average and the change against last month.
+- 💰 **This month at a glance**: what you spent and earned, the daily average and the change against last month. No verdicts: budgets live in their own card.
 - 📈 **Spending trend** (daily or monthly) and a **category donut** with shares.
 - 🧩 Cards for budgets, accounts, groups, projects and recent entries.
 
@@ -84,6 +84,7 @@
 
 ### 🔐 Backup & restore
 - 🔒 **Encrypted backup** with AES-256-GCM, protected by a passphrase you choose (PBKDF2 key). Restore it on any phone, Android or iPhone.
+- ☁️ **Optional Google Drive backup** (Android): one encrypted copy in your own Drive's hidden app folder, restored on a new phone. Hisab can only see its own file, and there is no Hisab server.
 
 ### 🎨 Look & language
 - 🌗 **Light and dark theme**, or follow the system.

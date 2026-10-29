@@ -206,6 +206,12 @@ abstract class AppLocalizations {
   /// **'Note'**
   String get note;
 
+  /// Header of the collapsible section that hides advanced fields in the entry editor
+  ///
+  /// In en, this message translates to:
+  /// **'More details'**
+  String get moreDetails;
+
   /// No description provided for @all.
   ///
   /// In en, this message translates to:
@@ -290,12 +296,6 @@ abstract class AppLocalizations {
   /// **'Uncategorised'**
   String get uncategorised;
 
-  /// No description provided for @yourShareOf.
-  ///
-  /// In en, this message translates to:
-  /// **'{group} · your share'**
-  String yourShareOf(String group);
-
   /// No description provided for @sourceSms.
   ///
   /// In en, this message translates to:
@@ -337,6 +337,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accounts'**
   String get accounts;
+
+  /// No description provided for @defaultAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Default account'**
+  String get defaultAccount;
+
+  /// No description provided for @defaultAccountHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'New entries start on this account'**
+  String get defaultAccountHelp;
 
   /// No description provided for @account.
   ///
@@ -644,18 +656,6 @@ abstract class AppLocalizations {
   /// **'Income'**
   String get income;
 
-  /// No description provided for @saved.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved'**
-  String get saved;
-
-  /// No description provided for @overspent.
-  ///
-  /// In en, this message translates to:
-  /// **'Overspent'**
-  String get overspent;
-
   /// No description provided for @balances.
   ///
   /// In en, this message translates to:
@@ -692,6 +692,12 @@ abstract class AppLocalizations {
   /// **'New entry'**
   String get newEntry;
 
+  /// No description provided for @howMuch.
+  ///
+  /// In en, this message translates to:
+  /// **'How much?'**
+  String get howMuch;
+
   /// No description provided for @editEntry.
   ///
   /// In en, this message translates to:
@@ -727,6 +733,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Group expense'**
   String get groupExpense;
+
+  /// Group expense editor: the form starts as a copy of the group's latest expense
+  ///
+  /// In en, this message translates to:
+  /// **'Filled in from the last expense'**
+  String get copiedFromLastEntry;
+
+  /// No description provided for @startBlank.
+  ///
+  /// In en, this message translates to:
+  /// **'Start blank'**
+  String get startBlank;
+
+  /// Entry editor action: copy this saved entry to a new one dated today
+  ///
+  /// In en, this message translates to:
+  /// **'Add again for today'**
+  String get entryAgain;
+
+  /// No description provided for @copiedFromEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'A copy dated today. Change anything, then save.'**
+  String get copiedFromEntry;
 
   /// No description provided for @deleteEntryQuestion.
   ///
@@ -805,6 +835,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} · {quantity} @ {price}'**
   String itemSuggestion(String name, String quantity, String price);
+
+  /// Saved spends shown as one-tap chips on Home
+  ///
+  /// In en, this message translates to:
+  /// **'Quick entries'**
+  String get quickEntries;
+
+  /// No description provided for @quickEntriesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One-tap spends on Home'**
+  String get quickEntriesHint;
+
+  /// No description provided for @saveAsQuickEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as quick entry'**
+  String get saveAsQuickEntry;
+
+  /// No description provided for @saveQuickEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Save quick entry'**
+  String get saveQuickEntry;
+
+  /// No description provided for @newQuickEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'New quick entry'**
+  String get newQuickEntry;
+
+  /// No description provided for @editQuickEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit quick entry'**
+  String get editQuickEntry;
+
+  /// No description provided for @quickEntryName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name on the chip'**
+  String get quickEntryName;
+
+  /// No description provided for @quickEntrySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as a quick entry. Tap it on Home to add it.'**
+  String get quickEntrySaved;
+
+  /// No description provided for @quickEntryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {label}?'**
+  String quickEntryConfirm(String label);
+
+  /// No description provided for @quickEntryAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {label} · {amount}'**
+  String quickEntryAdded(String label, String amount);
+
+  /// No description provided for @quickEntriesMore.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String quickEntriesMore(int count);
+
+  /// No description provided for @quickEntriesShown.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown on Home'**
+  String get quickEntriesShown;
+
+  /// No description provided for @quickEntriesShownHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} chips; the rest go behind +more'**
+  String quickEntriesShownHint(int count);
+
+  /// No description provided for @quickEntriesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No quick entries yet. Add one here, or open any entry and tap the bolt to save it as one.'**
+  String get quickEntriesEmpty;
+
+  /// No description provided for @quickEntryNoAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the editor'**
+  String get quickEntryNoAmount;
+
+  /// Chip in the entry editor that adds every item of the latest bill in the chosen category
+  ///
+  /// In en, this message translates to:
+  /// **'Same as last time · {count} items'**
+  String sameAsLastTime(int count);
 
   /// No description provided for @itemsHelp.
   ///
@@ -1202,6 +1328,12 @@ abstract class AppLocalizations {
   /// **'You owe'**
   String get youOwe;
 
+  /// Joins the per-currency totals in the Groups list summary, e.g. ₹0 · AED 1,400.
+  ///
+  /// In en, this message translates to:
+  /// **' · '**
+  String get groupsTotalsSeparator;
+
   /// No description provided for @groupSubtitle.
   ///
   /// In en, this message translates to:
@@ -1267,6 +1399,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Money'**
   String get money;
+
+  /// No description provided for @advancedSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get advancedSettings;
 
   /// No description provided for @currency.
   ///
@@ -1400,17 +1538,47 @@ abstract class AppLocalizations {
   /// **'Merges; newer local edits are kept'**
   String get restoreBackupHelp;
 
-  /// No description provided for @cloudSync.
+  /// No description provided for @eraseAllData.
   ///
   /// In en, this message translates to:
-  /// **'Cloud sync'**
-  String get cloudSync;
+  /// **'Erase all data'**
+  String get eraseAllData;
 
-  /// No description provided for @cloudSyncHelp.
+  /// No description provided for @eraseAllDataHelp.
   ///
   /// In en, this message translates to:
-  /// **'Coming next: Google Drive on Android, iCloud on iOS, end-to-end encrypted with the same format as backups.'**
-  String get cloudSyncHelp;
+  /// **'Deletes every entry, account, group and setting on this phone'**
+  String get eraseAllDataHelp;
+
+  /// No description provided for @eraseAllDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase everything?'**
+  String get eraseAllDataTitle;
+
+  /// No description provided for @eraseAllDataBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes all entries, accounts, groups, budgets, reminders and settings from this phone. It can\'t be undone. Backups already on Google Drive are kept.\n\nType {word} to confirm.'**
+  String eraseAllDataBody(String word);
+
+  /// No description provided for @eraseConfirmLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type {word}'**
+  String eraseConfirmLabel(String word);
+
+  /// No description provided for @eraseAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase'**
+  String get eraseAction;
+
+  /// No description provided for @dataErased.
+  ///
+  /// In en, this message translates to:
+  /// **'All data erased. Hisab is back to a fresh start.'**
+  String get dataErased;
 
   /// No description provided for @about.
   ///
@@ -1477,6 +1645,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore failed: {error}'**
   String restoreFailed(String error);
+
+  /// No description provided for @driveBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up to Google Drive'**
+  String get driveBackupTitle;
+
+  /// No description provided for @driveBackupWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. An encrypted copy in your own Drive; Hisab can only see its own files.'**
+  String get driveBackupWhy;
+
+  /// No description provided for @driveConsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up & sync with Google Drive'**
+  String get driveConsentTitle;
+
+  /// No description provided for @driveConsentOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'optional'**
+  String get driveConsentOptional;
+
+  /// No description provided for @driveConsentOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Hisab works fully offline. Your data stays on this phone and nothing is ever sent anywhere — unless you turn this on.'**
+  String get driveConsentOffline;
+
+  /// No description provided for @driveConsentWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Drive sync and Hisab keeps an encrypted copy of your data in your own Google Drive, so you can restore everything if you lose or change your phone, and share a group with friends and family.'**
+  String get driveConsentWhat;
+
+  /// No description provided for @driveConsentWhyLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Why Hisab asks for Drive access:'**
+  String get driveConsentWhyLead;
+
+  /// No description provided for @driveConsentWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'only to read and write its own files in your Drive.'**
+  String get driveConsentWhy;
+
+  /// No description provided for @driveConsentCannotSee.
+  ///
+  /// In en, this message translates to:
+  /// **'It cannot see your photos, documents, or anything else in your Drive.'**
+  String get driveConsentCannotSee;
+
+  /// No description provided for @driveConsentEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'The data is encrypted — Google can\'t read it, and neither can we. There is no Hisab server.'**
+  String get driveConsentEncrypted;
+
+  /// No description provided for @driveConsentTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'You can turn this off and disconnect any time, and delete the Drive copy with one tap.'**
+  String get driveConsentTurnOff;
+
+  /// No description provided for @driveConsentSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t want it? Just skip this — Hisab works exactly the same without it.'**
+  String get driveConsentSkip;
+
+  /// No description provided for @driveSkipForNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get driveSkipForNow;
+
+  /// No description provided for @driveConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Google Drive'**
+  String get driveConnect;
+
+  /// No description provided for @driveConnectedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected as {email}'**
+  String driveConnectedAs(String email);
+
+  /// No description provided for @driveLastBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup: {time}'**
+  String driveLastBackup(String time);
+
+  /// No description provided for @driveNoBackupYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup in Drive yet'**
+  String get driveNoBackupYet;
+
+  /// No description provided for @driveCheckingBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking Google Drive…'**
+  String get driveCheckingBackup;
+
+  /// No description provided for @driveBackupStatusUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check Google Drive'**
+  String get driveBackupStatusUnknown;
+
+  /// No description provided for @driveBackUpNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up now'**
+  String get driveBackUpNow;
+
+  /// No description provided for @driveBackUpNowHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypts everything with your passphrase and replaces the Drive copy'**
+  String get driveBackUpNowHelp;
+
+  /// No description provided for @driveRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from Drive'**
+  String get driveRestore;
+
+  /// No description provided for @driveDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get driveDisconnect;
+
+  /// No description provided for @driveDisconnectHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops using this Google account; the Drive copy stays until you delete it'**
+  String get driveDisconnectHelp;
+
+  /// No description provided for @driveDeleteCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Drive copy'**
+  String get driveDeleteCopy;
+
+  /// No description provided for @driveDeleteCopyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes Hisab\'s backup from your Google Drive'**
+  String get driveDeleteCopyHelp;
+
+  /// No description provided for @driveDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the backup in your Google Drive? Data on this phone is not affected.'**
+  String get driveDeleteConfirm;
+
+  /// No description provided for @driveBackedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Backed up to Google Drive'**
+  String get driveBackedUp;
+
+  /// No description provided for @driveCopyDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive copy deleted'**
+  String get driveCopyDeleted;
+
+  /// No description provided for @driveDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected from Google Drive'**
+  String get driveDisconnected;
+
+  /// No description provided for @driveErrorCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in was cancelled'**
+  String get driveErrorCancelled;
+
+  /// No description provided for @driveErrorOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach Google Drive. Check your connection and try again.'**
+  String get driveErrorOffline;
+
+  /// No description provided for @driveErrorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No Hisab backup found in this Google Drive'**
+  String get driveErrorNotFound;
+
+  /// No description provided for @driveErrorWrongPassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong passphrase, or the backup is damaged'**
+  String get driveErrorWrongPassphrase;
+
+  /// No description provided for @driveErrorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive failed: {error}'**
+  String driveErrorUnknown(String error);
 
   /// No description provided for @pasted.
   ///
@@ -1993,12 +2371,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{percent}%'**
   String percentOf(int percent);
-
-  /// No description provided for @budgetsEmptyBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Set a budget to see how you\'re tracking'**
-  String get budgetsEmptyBody;
 
   /// No description provided for @andMoreCount.
   ///
@@ -3326,10 +3698,22 @@ abstract class AppLocalizations {
   /// **'Enter a UPI ID like name@bank'**
   String get invalidUpiId;
 
+  /// No description provided for @emailOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Email (optional)'**
+  String get emailOptional;
+
+  /// No description provided for @invalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an email like name@example.com'**
+  String get invalidEmail;
+
   /// No description provided for @memberContactLocal.
   ///
   /// In en, this message translates to:
-  /// **'Phone and UPI ID stay on this device. Hisab uses them only to fill in reminders and UPI payments.'**
+  /// **'Email, phone and UPI ID stay on this device. Hisab uses them only to suggest people you added before, and to fill in reminders and UPI payments.'**
   String get memberContactLocal;
 
   /// No description provided for @editMember.
@@ -3392,6 +3776,12 @@ abstract class AppLocalizations {
   /// **'Tags'**
   String get tags;
 
+  /// No description provided for @tagsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma separated, e.g. home, trip'**
+  String get tagsHint;
+
   /// No description provided for @showResults.
   ///
   /// In en, this message translates to:
@@ -3409,6 +3799,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 result} other{{count} results}}'**
   String resultsCount(int count);
+
+  /// No description provided for @filteredTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total spent'**
+  String get filteredTotal;
+
+  /// No description provided for @itemBoughtTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} · {count, plural, =1{1 time} other{{count} times}}'**
+  String itemBoughtTimes(String quantity, int count);
+
+  /// No description provided for @moreItems.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more items'**
+  String moreItems(int count);
 
   /// No description provided for @amountFrom.
   ///
@@ -3919,6 +4327,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{days, plural, =1{Overdue by 1 day} other{Overdue by {days} days}}'**
   String reminderOverdueDays(int days);
+
+  /// No description provided for @cardStatementDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement day'**
+  String get cardStatementDay;
+
+  /// No description provided for @cardDueDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment due day'**
+  String get cardDueDay;
+
+  /// No description provided for @cardDayNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get cardDayNotSet;
+
+  /// No description provided for @cardCreditLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit limit'**
+  String get cardCreditLimit;
+
+  /// No description provided for @cardLastStatementAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Last statement amount'**
+  String get cardLastStatementAmount;
+
+  /// No description provided for @cardDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement and due days let Hisab show your billing cycle and remind you before the bill is due.'**
+  String get cardDetailsHint;
+
+  /// No description provided for @cardOutstanding.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding'**
+  String get cardOutstanding;
+
+  /// No description provided for @cardThisCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'This cycle'**
+  String get cardThisCycle;
+
+  /// No description provided for @cardCycleDates.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} to {end}'**
+  String cardCycleDates(String start, String end);
+
+  /// No description provided for @cardLastStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Last statement'**
+  String get cardLastStatement;
+
+  /// No description provided for @cardStatementOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement of {date}'**
+  String cardStatementOn(String date);
+
+  /// No description provided for @cardNoStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recorded'**
+  String get cardNoStatement;
+
+  /// No description provided for @cardAvailableLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Available limit'**
+  String get cardAvailableLimit;
+
+  /// No description provided for @cardOverLimitBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Over limit by {amount}'**
+  String cardOverLimitBy(String amount);
+
+  /// No description provided for @cardLimitUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of {limit} limit used'**
+  String cardLimitUsed(int percent, String limit);
+
+  /// No description provided for @cardDueOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date}'**
+  String cardDueOn(String date);
+
+  /// No description provided for @cardPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get cardPaid;
+
+  /// No description provided for @cardAmountLeftToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} left to pay'**
+  String cardAmountLeftToPay(String amount);
+
+  /// No description provided for @cardSetUpDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Set statement and due days'**
+  String get cardSetUpDays;
+
+  /// No description provided for @cardViewTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'View transactions'**
+  String get cardViewTransactions;
+
+  /// No description provided for @cardNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This card was deleted'**
+  String get cardNotFound;
+
+  /// No description provided for @cardNextDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Next due {date}'**
+  String cardNextDue(String date);
+
+  /// No description provided for @cardInCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} credit'**
+  String cardInCredit(String amount);
+
+  /// No description provided for @cardStatementOverAmountDue.
+  ///
+  /// In en, this message translates to:
+  /// **'More than the amount due ({amount}). Lower it to what is still unpaid.'**
+  String cardStatementOverAmountDue(String amount);
+
+  /// No description provided for @cardBalanceOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount due'**
+  String get cardBalanceOwed;
+
+  /// No description provided for @cardBalanceCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'In credit'**
+  String get cardBalanceCredit;
+
+  /// No description provided for @cardCreditOnCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit on the card'**
+  String get cardCreditOnCard;
+
+  /// No description provided for @balanceInAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'In account'**
+  String get balanceInAccount;
+
+  /// No description provided for @balanceOverdrawn.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdrawn'**
+  String get balanceOverdrawn;
 
   /// No description provided for @smsHistoryTitle.
   ///
@@ -5528,18 +6110,6 @@ abstract class AppLocalizations {
   /// **'Add manually'**
   String get smsReviewAddManually;
 
-  /// No description provided for @upcomingEmptyWithin.
-  ///
-  /// In en, this message translates to:
-  /// **'{days, plural, =1{Nothing due tomorrow} other{Nothing due in the next {days} days}}'**
-  String upcomingEmptyWithin(int days);
-
-  /// No description provided for @upcomingEmptyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Recurring bills, reminders and card dues show up here.'**
-  String get upcomingEmptyHint;
-
   /// No description provided for @upcomingWindowDays.
   ///
   /// In en, this message translates to:
@@ -6176,6 +6746,36 @@ abstract class AppLocalizations {
   /// **'Paid via SMS'**
   String get smsReminderPaidViaSms;
 
+  /// No description provided for @heroToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today {amount}'**
+  String heroToday(String amount);
+
+  /// No description provided for @heroTodaySemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent today {amount}. Show today\'s entries'**
+  String heroTodaySemantics(String amount);
+
+  /// No description provided for @numberFormatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Number format'**
+  String get numberFormatTitle;
+
+  /// No description provided for @numberFormatAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get numberFormatAutomatic;
+
+  /// No description provided for @numberFormatAutomaticHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows your currency and region'**
+  String get numberFormatAutomaticHelp;
+
   /// No description provided for @smsPayeesTitle.
   ///
   /// In en, this message translates to:
@@ -6229,6 +6829,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hisab will use {category} for {payee} from now on'**
   String smsPayeeRemembered(String category, String payee);
+
+  /// No description provided for @safeToSpendPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe to spend {amount}/day'**
+  String safeToSpendPerDay(String amount);
+
+  /// No description provided for @safeToSpendOverBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Over budget'**
+  String get safeToSpendOverBudget;
 
   /// No description provided for @smsEntryChannelName.
   ///

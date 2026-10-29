@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:integration_test/integration_test_driver_extended.dart';
 
 /// Android package the flows run in.
-const String kHisabPackage = 'com.sarv.hisab';
+const String kHisabPackage = 'com.ragedpanda.hisab';
 
 /// `adb` arguments that grant the notification permission before the flows
 /// run, so no system prompt covers a dialog mid-flow (flow 32, #86). The

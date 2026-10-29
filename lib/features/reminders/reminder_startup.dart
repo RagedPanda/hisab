@@ -7,6 +7,7 @@ import '../../core/notifications/reminder_payload.dart';
 import '../../core/notifications/reminder_tap_gate.dart';
 import '../../core/notifications/sms_entry_payload.dart';
 import '../../core/providers.dart';
+import '../accounts/card_reminder_sync.dart';
 import '../groups/settle_reminder_service.dart';
 import '../salary/salary_reminder.dart';
 import '../shell/router.dart';
@@ -48,7 +49,9 @@ Future<void> handleReminderTap(ProviderContainer container, NotificationTap tap)
 /// Sets up notifications after the first frame: listens for taps, follows
 /// the tap that launched the app, and re-posts every pending reminder (this
 /// is what restores alerts after a reboot, an app update, a force stop or a
-/// time-zone change). Never throws: reminders still work in-app without it.
+/// time-zone change). Card due reminders are brought up to date first, so a
+/// card's next bill gets its reminder, and then kept live as accounts and
+/// entries change. Never throws: reminders still work in-app without it.
 Future<void> startReminderNotifications(ProviderContainer container) async {
   try {
     final service = container.read(notificationServiceProvider);
@@ -57,6 +60,8 @@ Future<void> startReminderNotifications(ProviderContainer container) async {
     if (launch != null) await handleReminderTap(container, launch);
     await container.read(settleReminderServiceProvider).refreshAll();
     NotificationPermissionState? known = await service.checkPermission();
+    await syncCardReminderSafely(() => container.read(cardReminderSyncProvider).syncAll());
+    container.read(cardReminderLiveSyncProvider);
     await container.read(reminderSchedulerProvider).rescheduleAll();
     // Re-post the salary alert now the plugin is ready (the first sync can beat it).
     await syncSalaryReminder(container.read, now: DateTime.now());

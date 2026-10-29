@@ -14,6 +14,10 @@
     <!-- Re-post reminder alerts after a reboot or an app update. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Only for the opt-in Settings > Back up to Google Drive: talks to the user's own
+         Drive appDataFolder, never a Hisab server. Nothing uses the network otherwise.
+         (google_sign_in declares it too; listed here so it is visible.) -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="Hisab"
         android:name="${applicationName}"

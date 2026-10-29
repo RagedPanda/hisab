@@ -1,49 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/providers.dart';
 import '../../data/db/database.dart';
+import '../../domain/people/people.dart';
 import '../../domain/split/settle_up_links.dart';
 import '../../l10n/l10n.dart';
 
-/// What the member sheet returns: a trimmed name, and phone / UPI ID or null.
-typedef MemberDetails = ({String name, String? phone, String? upiId});
+/// What the member sheet returns: a trimmed name, and phone / UPI ID /
+/// lowercased email or null.
+typedef MemberDetails = ({String name, String? phone, String? upiId, String? email});
 
-/// Add (no [existing]) or edit a member: name, optional phone and UPI ID.
-/// Returns null when cancelled.
-Future<MemberDetails?> showMemberSheet(BuildContext context, {Member? existing}) => showModalBottomSheet<MemberDetails>(
+/// Add (no [existing]) or edit a member: name, optional email, phone and UPI
+/// ID. While adding, typing a name or email suggests people from the People
+/// list, except [groupEmails] (already in the group). Returns null when cancelled.
+Future<MemberDetails?> showMemberSheet(BuildContext context, {Member? existing, Set<String> groupEmails = const {}}) => showModalBottomSheet<MemberDetails>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
-      builder: (_) => _MemberSheet(existing: existing),
+      builder: (_) => _MemberSheet(existing: existing, groupEmails: groupEmails),
     );
 
 /// Null when [raw] is blank; otherwise the trimmed text.
 String? _blankToNull(String raw) => raw.trim().isEmpty ? null : raw.trim();
 
-class _MemberSheet extends StatefulWidget {
-  const _MemberSheet({this.existing});
+class _MemberSheet extends ConsumerStatefulWidget {
+  const _MemberSheet({this.existing, required this.groupEmails});
   final Member? existing;
+  final Set<String> groupEmails;
 
   @override
-  State<_MemberSheet> createState() => _MemberSheetState();
+  ConsumerState<_MemberSheet> createState() => _MemberSheetState();
 }
 
-class _MemberSheetState extends State<_MemberSheet> {
+class _MemberSheetState extends ConsumerState<_MemberSheet> {
   late final _name = TextEditingController(text: widget.existing?.name ?? '');
   late final _phone = TextEditingController(text: widget.existing?.phone ?? '');
   late final _upiId = TextEditingController(text: widget.existing?.upiId ?? '');
+  late final _email = TextEditingController(text: widget.existing?.email ?? '');
 
   @override
   void dispose() {
     _name.dispose();
     _phone.dispose();
     _upiId.dispose();
+    _email.dispose();
     super.dispose();
   }
 
   bool get _upiInvalid => _upiId.text.trim().isNotEmpty && normaliseUpiId(_upiId.text) == null;
-  bool get _canSave => _name.text.trim().isNotEmpty && !_upiInvalid;
+  bool get _emailInvalid => isInvalidEmail(_email.text);
+  bool get _canSave => _name.text.trim().isNotEmpty && !_upiInvalid && !_emailInvalid;
+
+  /// Fills the sheet from a suggested person.
+  void _pick(PersonContact person) => setState(() {
+        _name.text = person.name;
+        _email.text = person.email;
+      });
+
+  /// People matching what was typed in the name or email field, while adding;
+  /// none once the typed email is already someone's.
+  List<PersonContact> _suggestions(List<Person> people) {
+    if (widget.existing != null) return const [];
+    final contacts = [for (final person in people) (name: person.name, email: person.email)];
+    final typedEmail = normaliseEmail(_email.text);
+    if (typedEmail != null && contacts.any((person) => person.email == typedEmail)) return const [];
+    final query = _email.text.trim().isNotEmpty ? _email.text : _name.text;
+    return matchingPeople(contacts, query, excludeEmails: widget.groupEmails);
+  }
 
   void _save() {
     if (!_canSave) return;
@@ -51,6 +77,7 @@ class _MemberSheetState extends State<_MemberSheet> {
       name: _name.text.trim(),
       phone: _blankToNull(_phone.text),
       upiId: _blankToNull(_upiId.text) == null ? null : normaliseUpiId(_upiId.text),
+      email: normaliseEmail(_email.text),
     ));
   }
 
@@ -59,6 +86,7 @@ class _MemberSheetState extends State<_MemberSheet> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     void refresh(String _) => setState(() {});
+    final suggestions = _suggestions(ref.watch(peopleProvider).value ?? const []);
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.viewInsetsOf(context).bottom + 16),
       child: SingleChildScrollView(
@@ -73,6 +101,27 @@ class _MemberSheetState extends State<_MemberSheet> {
               autofocus: widget.existing == null,
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(labelText: l10n.memberName),
+              onChanged: refresh,
+            ),
+            for (final person in suggestions)
+              ListTile(
+                key: ValueKey('member.suggestion.${person.email}'),
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.person_outline),
+                title: Text(person.name),
+                subtitle: Text(person.email),
+                onTap: () => _pick(person),
+              ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _email,
+              keyboardType: TextInputType.emailAddress,
+              autocorrect: false,
+              decoration: InputDecoration(
+                labelText: l10n.emailOptional,
+                prefixIcon: const Icon(Icons.mail_outline),
+                errorText: _emailInvalid ? l10n.invalidEmail : null,
+              ),
               onChanged: refresh,
             ),
             const SizedBox(height: 12),

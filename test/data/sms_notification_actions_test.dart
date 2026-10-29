@@ -1,5 +1,6 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hisab/core/money.dart';
 import 'package:hisab/core/notifications/background_actions.dart';
 import 'package:hisab/core/notifications/notification_service.dart';
 import 'package:hisab/core/notifications/reminder_alert_text.dart';
@@ -51,7 +52,7 @@ void main() {
       reminders: RemindersRepository(db, clock: () => now),
       smsLog: SmsLogRepository(db),
       notifications: NotificationService(gateway,
-          buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, notificationLocalizations('en'), currencySymbol: '₹'), clock: () => now),
+          buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, notificationLocalizations('en'), moneyFormat: MoneyFormat.inr), clock: () => now),
       clock: () => now,
     );
     // Wired exactly as the background isolate wires it.
@@ -155,7 +156,7 @@ void main() {
           payeeCategories: PayeeCategoryRepository(db),
           notifications: NotificationService(gateway, buildAlert: (_, _) => throw UnimplementedError()),
           l10n: notificationLocalizations('en'),
-          currencySymbol: '₹',
+          moneyFormat: MoneyFormat.inr,
         );
 
     test('shows payee, category and account with Change category and Undo', () async {

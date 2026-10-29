@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'dart:ui' show Locale;
 
 import 'package:drift/native.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
@@ -10,8 +13,11 @@ import 'package:hisab/domain/split/group_export.dart';
 import 'package:hisab/features/groups/group_export.dart';
 import 'package:hisab/l10n/generated/app_localizations_en.dart';
 import 'package:hisab/l10n/generated/app_localizations_hi.dart';
+import 'package:hisab/core/money.dart';
 
 void main() {
+  _csvSharerTests();
+
   final english = AppLocalizationsEn();
   const names = {'me': 'You', 'rahul': 'Rahul', 'asha': 'आशा'};
   String nameOf(String id) => names[id]!;
@@ -27,7 +33,7 @@ void main() {
         memberOrder: const ['me', 'rahul', 'asha'],
         myMemberId: 'me',
         nameOf: nameOf,
-        symbol: '₹',
+        moneyFormat: MoneyFormat.inr,
       );
       expect(
         text,
@@ -52,7 +58,7 @@ void main() {
     });
 
     test('says all settled up when nobody owes anything', () {
-      final text = groupSummaryText(english, groupName: 'Flat', transfers: const [], net: const {'me': 0}, totals: _noSpend, memberOrder: const ['me'], myMemberId: 'me', nameOf: nameOf, symbol: '₹');
+      final text = groupSummaryText(english, groupName: 'Flat', transfers: const [], net: const {'me': 0}, totals: _noSpend, memberOrder: const ['me'], myMemberId: 'me', nameOf: nameOf, moneyFormat: MoneyFormat.inr);
       expect(text, '*Flat — balances*\nAll settled up.\n\nShared from Hisab');
     });
 
@@ -66,7 +72,7 @@ void main() {
         memberOrder: const ['me', 'rahul'],
         myMemberId: 'me',
         nameOf: nameOf,
-        symbol: '₹',
+        moneyFormat: MoneyFormat.inr,
       );
       expect(text, '*Goa trip — balances*\nGroup total: ₹3,00,000\nYour share: ₹50,000\nRahul\'s share: ₹2,50,000\n\nAll settled up.\n\nShared from Hisab');
     });
@@ -81,7 +87,7 @@ void main() {
         memberOrder: const ['me', 'rahul'],
         myMemberId: 'me',
         nameOf: (id) => id == 'me' ? 'आप' : 'राहुल',
-        symbol: '₹',
+        moneyFormat: MoneyFormat.inr,
       );
       expect(text, contains('राहुल को आपको ₹100 देने हैं'));
       expect(text, contains('आपको ₹100 वापस मिलेंगे'));
@@ -132,10 +138,73 @@ void main() {
       // The payment is not spending: the total is the hotel bill alone.
       expect(lines[3], ',Total,,900.00,,300.00,600.00,0.00,300.00,300.00,300.00,0.00,0.00,0.00');
 
-      final summary = groupSummaryFor(english, detail, symbol: '₹');
+      final summary = groupSummaryFor(english, detail, moneyFormat: MoneyFormat.inr);
       expect(summary, contains('Group total: ₹900\nYour share: ₹300\nRahul\'s share: ₹300\nप्रिया\'s share: ₹300'));
+    });
+
+    test('describes an expense without a note by its category, or as an expense without one', () async {
+      final groupId = await groups.createGroup(name: 'Flat', icon: 'home', myName: 'Ankur', otherMembers: ['Rahul']);
+      final members = await groups.getMembers(groupId);
+      final category = (await db.select(db.categories).get()).first;
+      for (final (id, categoryId) in [('groceries', category.id), ('unfiled', null)]) {
+        await entries.saveEntry(
+          EntriesRepository.newExpense(id: id, amountMinor: 10000, occurredAt: DateTime(2026, 10, id == 'groceries' ? 1 : 2), groupId: groupId, paidByMemberId: members.first.id, splitMethod: 'equal', categoryId: categoryId),
+          splits: [for (final member in members) SplitsCompanion.insert(id: '$id-${member.id}', entryId: id, memberId: member.id, amountMinor: 5000)],
+        );
+      }
+
+      final detail = (await groups.getGroupDetail(groupId))!;
+      final lines = groupCsv(english, detail, categoryById: {category.id: category}, locale: const Locale('en')).split('\r\n');
+      expect(lines[1], startsWith('2026-10-01,${category.name},${category.name},100.00,'));
+      expect(lines[2], startsWith('2026-10-02,Expense,,100.00,'));
     });
   });
 }
 
 const ExpenseTotals _noSpend = (totalMinor: 0, paidByMember: {}, shareByMember: {});
+
+/// The real CSV sharer on a test machine: the temp folder and share sheet are
+/// answered over their platform channels, the file is written for real.
+void _csvSharerTests() {
+  const pathChannel = MethodChannel('plugins.flutter.io/path_provider');
+  const shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
+
+  group('csvFileSharer', () {
+    late Directory temp;
+    late List<MethodCall> shareCalls;
+    var shareAnswer = 'dev.fluttercommunity.plus/share/success';
+
+    setUp(() async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      temp = await Directory.systemTemp.createTemp('hisab_csv');
+      shareCalls = [];
+      final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(pathChannel, (call) async => call.method == 'getTemporaryDirectory' ? temp.path : null);
+      messenger.setMockMethodCallHandler(shareChannel, (call) async {
+        shareCalls.add(call);
+        return shareAnswer;
+      });
+    });
+    tearDown(() async {
+      final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(pathChannel, null);
+      messenger.setMockMethodCallHandler(shareChannel, null);
+      await temp.delete(recursive: true);
+    });
+
+    test('writes the CSV with a byte-order mark and shares it, false only when dismissed', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final share = container.read(csvFileSharerProvider);
+
+      expect(await share(fileName: 'goa.csv', csv: 'Date,Cost', subject: 'Goa'), isTrue);
+      final bytes = await File('${temp.path}/goa.csv').readAsBytes();
+      expect(bytes.take(3), [0xEF, 0xBB, 0xBF], reason: 'the UTF-8 byte-order mark makes Excel read Hindi names');
+      expect(String.fromCharCodes(bytes.skip(3)), 'Date,Cost');
+      expect((shareCalls.single.arguments as Map)['subject'], 'Goa');
+
+      shareAnswer = '';
+      expect(await share(fileName: 'goa.csv', csv: 'Date,Cost', subject: 'Goa'), isFalse);
+    });
+  });
+}

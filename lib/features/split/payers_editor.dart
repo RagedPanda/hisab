@@ -5,6 +5,7 @@ import '../../data/db/database.dart';
 import '../../domain/split/payers.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
+import '../shell/widgets/common.dart';
 
 /// How much each member paid towards one expense, when more than one person
 /// paid. Shows a running "X of Y assigned" line that turns red until the
@@ -15,14 +16,14 @@ class PayersEditor extends StatelessWidget {
     required this.totalMinor,
     required this.members,
     required this.amounts,
-    required this.symbol,
+    required this.moneyFormat,
     required this.onChanged,
   });
 
   final int totalMinor;
   final List<Member> members;
   final Map<String, int> amounts;
-  final String symbol;
+  final MoneyFormat moneyFormat;
   final ValueChanged<Map<String, int>> onChanged;
 
   @override
@@ -39,7 +40,7 @@ class PayersEditor extends StatelessWidget {
         for (final member in members) _payerRow(context, member),
         const SizedBox(height: 8),
         Text(
-          l10n.payersAssigned(formatMinor(assigned, symbol: symbol), formatMinor(totalMinor, symbol: symbol)),
+          l10n.payersAssigned(formatMinor(assigned, format: moneyFormat), formatMinor(totalMinor, format: moneyFormat)),
           key: const Key('payers-assigned'),
           style: balanced ? theme.textTheme.bodySmall : TextStyle(color: theme.colorScheme.error),
         ),
@@ -60,11 +61,12 @@ class PayersEditor extends StatelessWidget {
             width: 120,
             child: TextFormField(
               key: Key('payer-amount-${member.id}'),
-              initialValue: amount == 0 ? '' : amountInputText(amount),
+              initialValue: amount == 0 ? '' : amountInputText(amount, format: moneyFormat),
               textAlign: TextAlign.end,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(prefixText: '$symbol ', isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
-              onChanged: (text) => onChanged({...amounts, member.id: parseAmountToMinor(text) ?? 0}),
+              keyboardType: amountKeyboardType(moneyFormat),
+              inputFormatters: amountInputFormatters(moneyFormat),
+              decoration: InputDecoration(prefixText: amountPrefixText(moneyFormat), suffixText: amountSuffixText(moneyFormat), isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+              onChanged: (text) => onChanged({...amounts, member.id: parseAmountToMinor(text, format: moneyFormat) ?? 0}),
             ),
           ),
         ],

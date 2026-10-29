@@ -34,6 +34,9 @@ String formatMonthName(DateRange range, {String? locale, bool short = false}) {
 
 String formatShortDate(DateTime value, {String? locale}) => DateFormat('d MMM yyyy', locale).format(value);
 
+/// Date and local time: "28 Oct 2026 9:05 PM".
+String formatShortDateTime(DateTime value, {String? locale}) => DateFormat('d MMM yyyy', locale).add_jm().format(value.toLocal());
+
 /// Compact date for list rows: "21 Oct" (this year) or "21 Oct 2025".
 String formatRowDate(DateTime value, {DateTime? now, String? locale}) {
   final sameYear = value.year == (now ?? DateTime.now()).year;

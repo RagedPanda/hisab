@@ -35,6 +35,9 @@ class SubscriptionFormScreen extends ConsumerStatefulWidget {
 }
 
 class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen> {
+  /// Number format the amount fields read and write (the app's own).
+  MoneyFormat get _moneyFormat => ref.read(homeMoneyFormatProvider);
+
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
   SubscriptionCycle _cycle = subscriptionCycles.first;
@@ -66,7 +69,7 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
       if (rule != null) {
         _existing = rule;
         _nameController.text = rule.name;
-        _priceController.text = amountInputText(rule.amountMinor);
+        _priceController.text = amountInputText(rule.amountMinor, format: _moneyFormat);
         _cycle = SubscriptionCycle(RecurrenceFrequency.parse(rule.frequency), rule.interval);
         _nextRenewal = startOfDay(rule.nextDue ?? DateTime.now());
         _category = rule.categoryId == null ? null : await categories.byId(rule.categoryId!);
@@ -96,11 +99,11 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
-    final priceMinor = parseAmountToMinor(_priceController.text);
+    final priceMinor = parseAmountToMinor(_priceController.text, format: _moneyFormat);
     final nameError = _submitted && _nameController.text.trim().isEmpty ? l10n.subscriptionNameRequired : null;
-    final priceError = amountErrorText(context, _priceController.text) ??
+    final priceError = amountErrorText(context, _priceController.text, format: _moneyFormat) ??
         (_submitted && (priceMinor == null || priceMinor <= 0) ? l10n.subscriptionPriceRequired : null);
     return Scaffold(
       appBar: AppBar(title: Text(_isEditing ? l10n.subscriptionEdit : l10n.subscriptionAdd)),
@@ -123,9 +126,9 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
                     key: const Key('subscriptionPrice'),
                     controller: _priceController,
                     autofocus: !_isEditing,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: amountInputFormatters,
-                    decoration: InputDecoration(labelText: l10n.subscriptionPrice, prefixText: '$symbol ', errorText: priceError),
+                    keyboardType: amountKeyboardType(_moneyFormat),
+                    inputFormatters: amountInputFormatters(_moneyFormat),
+                    decoration: InputDecoration(labelText: l10n.subscriptionPrice, prefixText: amountPrefixText(moneyFormat), suffixText: amountSuffixText(moneyFormat), errorText: priceError),
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: 12),
@@ -218,7 +221,7 @@ class _SubscriptionFormScreenState extends ConsumerState<SubscriptionFormScreen>
   Future<void> _save() async {
     setState(() => _submitted = true);
     final name = _nameController.text.trim();
-    final priceMinor = parseAmountToMinor(_priceController.text);
+    final priceMinor = parseAmountToMinor(_priceController.text, format: _moneyFormat);
     if (name.isEmpty || priceMinor == null || priceMinor <= 0) return;
     final existing = _existing;
     final schedule = _schedule();

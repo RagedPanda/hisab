@@ -64,6 +64,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get note => 'Note';
 
   @override
+  String get moreDetails => 'More details';
+
+  @override
   String get all => 'All';
 
   @override
@@ -108,11 +111,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uncategorised => 'Uncategorised';
 
   @override
-  String yourShareOf(String group) {
-    return '$group · your share';
-  }
-
-  @override
   String get sourceSms => 'SMS';
 
   @override
@@ -140,6 +138,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accounts => 'Accounts';
+
+  @override
+  String get defaultAccount => 'Default account';
+
+  @override
+  String get defaultAccountHelp => 'New entries start on this account';
 
   @override
   String get account => 'Account';
@@ -332,12 +336,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get income => 'Income';
 
   @override
-  String get saved => 'Saved';
-
-  @override
-  String get overspent => 'Overspent';
-
-  @override
   String get balances => 'Balances';
 
   @override
@@ -357,6 +355,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newEntry => 'New entry';
 
   @override
+  String get howMuch => 'How much?';
+
+  @override
   String get editEntry => 'Edit entry';
 
   @override
@@ -373,6 +374,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupExpense => 'Group expense';
+
+  @override
+  String get copiedFromLastEntry => 'Filled in from the last expense';
+
+  @override
+  String get startBlank => 'Start blank';
+
+  @override
+  String get entryAgain => 'Add again for today';
+
+  @override
+  String get copiedFromEntry =>
+      'A copy dated today. Change anything, then save.';
 
   @override
   String get deleteEntryQuestion => 'Delete this entry?';
@@ -418,6 +432,66 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String itemSuggestion(String name, String quantity, String price) {
     return '$name · $quantity @ $price';
+  }
+
+  @override
+  String get quickEntries => 'Quick entries';
+
+  @override
+  String get quickEntriesHint => 'One-tap spends on Home';
+
+  @override
+  String get saveAsQuickEntry => 'Save as quick entry';
+
+  @override
+  String get saveQuickEntry => 'Save quick entry';
+
+  @override
+  String get newQuickEntry => 'New quick entry';
+
+  @override
+  String get editQuickEntry => 'Edit quick entry';
+
+  @override
+  String get quickEntryName => 'Name on the chip';
+
+  @override
+  String get quickEntrySaved =>
+      'Saved as a quick entry. Tap it on Home to add it.';
+
+  @override
+  String quickEntryConfirm(String label) {
+    return 'Add $label?';
+  }
+
+  @override
+  String quickEntryAdded(String label, String amount) {
+    return 'Added $label · $amount';
+  }
+
+  @override
+  String quickEntriesMore(int count) {
+    return '+$count more';
+  }
+
+  @override
+  String get quickEntriesShown => 'Shown on Home';
+
+  @override
+  String quickEntriesShownHint(int count) {
+    return '$count chips; the rest go behind +more';
+  }
+
+  @override
+  String get quickEntriesEmpty =>
+      'No quick entries yet. Add one here, or open any entry and tap the bolt to save it as one.';
+
+  @override
+  String get quickEntryNoAmount => 'Opens the editor';
+
+  @override
+  String sameAsLastTime(int count) {
+    return 'Same as last time · $count items';
   }
 
   @override
@@ -649,6 +723,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get youOwe => 'You owe';
 
   @override
+  String get groupsTotalsSeparator => ' · ';
+
+  @override
   String groupSubtitle(int count, String amount) {
     return '$count members · $amount spent';
   }
@@ -682,6 +759,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get money => 'Money';
+
+  @override
+  String get advancedSettings => 'Advanced';
 
   @override
   String get currency => 'Currency';
@@ -759,11 +839,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreBackupHelp => 'Merges; newer local edits are kept';
 
   @override
-  String get cloudSync => 'Cloud sync';
+  String get eraseAllData => 'Erase all data';
 
   @override
-  String get cloudSyncHelp =>
-      'Coming next: Google Drive on Android, iCloud on iOS, end-to-end encrypted with the same format as backups.';
+  String get eraseAllDataHelp =>
+      'Deletes every entry, account, group and setting on this phone';
+
+  @override
+  String get eraseAllDataTitle => 'Erase everything?';
+
+  @override
+  String eraseAllDataBody(String word) {
+    return 'This removes all entries, accounts, groups, budgets, reminders and settings from this phone. It can\'t be undone. Backups already on Google Drive are kept.\n\nType $word to confirm.';
+  }
+
+  @override
+  String eraseConfirmLabel(String word) {
+    return 'Type $word';
+  }
+
+  @override
+  String get eraseAction => 'Erase';
+
+  @override
+  String get dataErased => 'All data erased. Hisab is back to a fresh start.';
 
   @override
   String get about => 'About';
@@ -802,6 +901,131 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String restoreFailed(String error) {
     return 'Restore failed: $error';
+  }
+
+  @override
+  String get driveBackupTitle => 'Back up to Google Drive';
+
+  @override
+  String get driveBackupWhy =>
+      'Optional. An encrypted copy in your own Drive; Hisab can only see its own files.';
+
+  @override
+  String get driveConsentTitle => 'Back up & sync with Google Drive';
+
+  @override
+  String get driveConsentOptional => 'optional';
+
+  @override
+  String get driveConsentOffline =>
+      'Hisab works fully offline. Your data stays on this phone and nothing is ever sent anywhere — unless you turn this on.';
+
+  @override
+  String get driveConsentWhat =>
+      'Turn on Drive sync and Hisab keeps an encrypted copy of your data in your own Google Drive, so you can restore everything if you lose or change your phone, and share a group with friends and family.';
+
+  @override
+  String get driveConsentWhyLead => 'Why Hisab asks for Drive access:';
+
+  @override
+  String get driveConsentWhy =>
+      'only to read and write its own files in your Drive.';
+
+  @override
+  String get driveConsentCannotSee =>
+      'It cannot see your photos, documents, or anything else in your Drive.';
+
+  @override
+  String get driveConsentEncrypted =>
+      'The data is encrypted — Google can\'t read it, and neither can we. There is no Hisab server.';
+
+  @override
+  String get driveConsentTurnOff =>
+      'You can turn this off and disconnect any time, and delete the Drive copy with one tap.';
+
+  @override
+  String get driveConsentSkip =>
+      'Don\'t want it? Just skip this — Hisab works exactly the same without it.';
+
+  @override
+  String get driveSkipForNow => 'Skip for now';
+
+  @override
+  String get driveConnect => 'Connect Google Drive';
+
+  @override
+  String driveConnectedAs(String email) {
+    return 'Connected as $email';
+  }
+
+  @override
+  String driveLastBackup(String time) {
+    return 'Last backup: $time';
+  }
+
+  @override
+  String get driveNoBackupYet => 'No backup in Drive yet';
+
+  @override
+  String get driveCheckingBackup => 'Checking Google Drive…';
+
+  @override
+  String get driveBackupStatusUnknown => 'Couldn\'t check Google Drive';
+
+  @override
+  String get driveBackUpNow => 'Back up now';
+
+  @override
+  String get driveBackUpNowHelp =>
+      'Encrypts everything with your passphrase and replaces the Drive copy';
+
+  @override
+  String get driveRestore => 'Restore from Drive';
+
+  @override
+  String get driveDisconnect => 'Disconnect';
+
+  @override
+  String get driveDisconnectHelp =>
+      'Stops using this Google account; the Drive copy stays until you delete it';
+
+  @override
+  String get driveDeleteCopy => 'Delete Drive copy';
+
+  @override
+  String get driveDeleteCopyHelp =>
+      'Removes Hisab\'s backup from your Google Drive';
+
+  @override
+  String get driveDeleteConfirm =>
+      'Delete the backup in your Google Drive? Data on this phone is not affected.';
+
+  @override
+  String get driveBackedUp => 'Backed up to Google Drive';
+
+  @override
+  String get driveCopyDeleted => 'Drive copy deleted';
+
+  @override
+  String get driveDisconnected => 'Disconnected from Google Drive';
+
+  @override
+  String get driveErrorCancelled => 'Google sign-in was cancelled';
+
+  @override
+  String get driveErrorOffline =>
+      'Couldn\'t reach Google Drive. Check your connection and try again.';
+
+  @override
+  String get driveErrorNotFound => 'No Hisab backup found in this Google Drive';
+
+  @override
+  String get driveErrorWrongPassphrase =>
+      'Wrong passphrase, or the backup is damaged';
+
+  @override
+  String driveErrorUnknown(String error) {
+    return 'Google Drive failed: $error';
   }
 
   @override
@@ -1120,9 +1344,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String percentOf(int percent) {
     return '$percent%';
   }
-
-  @override
-  String get budgetsEmptyBody => 'Set a budget to see how you\'re tracking';
 
   @override
   String andMoreCount(int count) {
@@ -1942,8 +2163,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidUpiId => 'Enter a UPI ID like name@bank';
 
   @override
+  String get emailOptional => 'Email (optional)';
+
+  @override
+  String get invalidEmail => 'Enter an email like name@example.com';
+
+  @override
   String get memberContactLocal =>
-      'Phone and UPI ID stay on this device. Hisab uses them only to fill in reminders and UPI payments.';
+      'Email, phone and UPI ID stay on this device. Hisab uses them only to suggest people you added before, and to fill in reminders and UPI payments.';
 
   @override
   String get editMember => 'Edit member';
@@ -1976,6 +2203,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tags => 'Tags';
 
   @override
+  String get tagsHint => 'Comma separated, e.g. home, trip';
+
+  @override
   String get showResults => 'Show results';
 
   @override
@@ -1990,6 +2220,25 @@ class AppLocalizationsEn extends AppLocalizations {
       one: '1 result',
     );
     return '$_temp0';
+  }
+
+  @override
+  String get filteredTotal => 'Total spent';
+
+  @override
+  String itemBoughtTimes(String quantity, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: '1 time',
+    );
+    return '$quantity · $_temp0';
+  }
+
+  @override
+  String moreItems(int count) {
+    return '+$count more items';
   }
 
   @override
@@ -2314,6 +2563,112 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get cardStatementDay => 'Statement day';
+
+  @override
+  String get cardDueDay => 'Payment due day';
+
+  @override
+  String get cardDayNotSet => 'Not set';
+
+  @override
+  String get cardCreditLimit => 'Credit limit';
+
+  @override
+  String get cardLastStatementAmount => 'Last statement amount';
+
+  @override
+  String get cardDetailsHint =>
+      'Statement and due days let Hisab show your billing cycle and remind you before the bill is due.';
+
+  @override
+  String get cardOutstanding => 'Outstanding';
+
+  @override
+  String get cardThisCycle => 'This cycle';
+
+  @override
+  String cardCycleDates(String start, String end) {
+    return '$start to $end';
+  }
+
+  @override
+  String get cardLastStatement => 'Last statement';
+
+  @override
+  String cardStatementOn(String date) {
+    return 'Statement of $date';
+  }
+
+  @override
+  String get cardNoStatement => 'Not recorded';
+
+  @override
+  String get cardAvailableLimit => 'Available limit';
+
+  @override
+  String cardOverLimitBy(String amount) {
+    return 'Over limit by $amount';
+  }
+
+  @override
+  String cardLimitUsed(int percent, String limit) {
+    return '$percent% of $limit limit used';
+  }
+
+  @override
+  String cardDueOn(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String get cardPaid => 'Paid';
+
+  @override
+  String cardAmountLeftToPay(String amount) {
+    return '$amount left to pay';
+  }
+
+  @override
+  String get cardSetUpDays => 'Set statement and due days';
+
+  @override
+  String get cardViewTransactions => 'View transactions';
+
+  @override
+  String get cardNotFound => 'This card was deleted';
+
+  @override
+  String cardNextDue(String date) {
+    return 'Next due $date';
+  }
+
+  @override
+  String cardInCredit(String amount) {
+    return '$amount credit';
+  }
+
+  @override
+  String cardStatementOverAmountDue(String amount) {
+    return 'More than the amount due ($amount). Lower it to what is still unpaid.';
+  }
+
+  @override
+  String get cardBalanceOwed => 'Amount due';
+
+  @override
+  String get cardBalanceCredit => 'In credit';
+
+  @override
+  String get cardCreditOnCard => 'Credit on the card';
+
+  @override
+  String get balanceInAccount => 'In account';
+
+  @override
+  String get balanceOverdrawn => 'Overdrawn';
 
   @override
   String get smsHistoryTitle => 'SMS history';
@@ -3445,21 +3800,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsReviewAddManually => 'Add manually';
 
   @override
-  String upcomingEmptyWithin(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'Nothing due in the next $days days',
-      one: 'Nothing due tomorrow',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get upcomingEmptyHint =>
-      'Recurring bills, reminders and card dues show up here.';
-
-  @override
   String upcomingWindowDays(int days) {
     return '$days days';
   }
@@ -3882,6 +4222,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smsReminderPaidViaSms => 'Paid via SMS';
 
   @override
+  String heroToday(String amount) {
+    return 'Today $amount';
+  }
+
+  @override
+  String heroTodaySemantics(String amount) {
+    return 'Spent today $amount. Show today\'s entries';
+  }
+
+  @override
+  String get numberFormatTitle => 'Number format';
+
+  @override
+  String get numberFormatAutomatic => 'Automatic';
+
+  @override
+  String get numberFormatAutomaticHelp => 'Follows your currency and region';
+
+  @override
   String get smsPayeesTitle => 'Remembered payees';
 
   @override
@@ -3917,6 +4276,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String smsPayeeRemembered(String category, String payee) {
     return 'Hisab will use $category for $payee from now on';
   }
+
+  @override
+  String safeToSpendPerDay(String amount) {
+    return 'Safe to spend $amount/day';
+  }
+
+  @override
+  String get safeToSpendOverBudget => 'Over budget';
 
   @override
   String get smsEntryChannelName => 'Added from SMS';

@@ -64,6 +64,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get note => 'नोट';
 
   @override
+  String get moreDetails => 'अधिक विवरण';
+
+  @override
   String get all => 'सभी';
 
   @override
@@ -108,11 +111,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get uncategorised => 'बिना श्रेणी';
 
   @override
-  String yourShareOf(String group) {
-    return '$group · आपका हिस्सा';
-  }
-
-  @override
   String get sourceSms => 'एसएमएस';
 
   @override
@@ -140,6 +138,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get accounts => 'खाते';
+
+  @override
+  String get defaultAccount => 'डिफ़ॉल्ट खाता';
+
+  @override
+  String get defaultAccountHelp => 'नई प्रविष्टियाँ इसी खाते से शुरू होती हैं';
 
   @override
   String get account => 'खाता';
@@ -332,12 +336,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get income => 'आय';
 
   @override
-  String get saved => 'बचत';
-
-  @override
-  String get overspent => 'ज़्यादा खर्च';
-
-  @override
   String get balances => 'बैलेंस';
 
   @override
@@ -357,6 +355,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get newEntry => 'नया लेन-देन';
 
   @override
+  String get howMuch => 'कितना?';
+
+  @override
   String get editEntry => 'लेन-देन बदलें';
 
   @override
@@ -373,6 +374,19 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupExpense => 'ग्रुप खर्च';
+
+  @override
+  String get copiedFromLastEntry => 'पिछले खर्च से भरा गया';
+
+  @override
+  String get startBlank => 'खाली से शुरू करें';
+
+  @override
+  String get entryAgain => 'आज के लिए फिर से जोड़ें';
+
+  @override
+  String get copiedFromEntry =>
+      'आज की तारीख़ वाली कॉपी। जो बदलना हो बदलें, फिर सेव करें।';
 
   @override
   String get deleteEntryQuestion => 'यह लेन-देन हटाएँ?';
@@ -418,6 +432,65 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String itemSuggestion(String name, String quantity, String price) {
     return '$name · $quantity @ $price';
+  }
+
+  @override
+  String get quickEntries => 'क्विक एंट्री';
+
+  @override
+  String get quickEntriesHint => 'होम पर एक टैप वाले खर्च';
+
+  @override
+  String get saveAsQuickEntry => 'क्विक एंट्री के रूप में सेव करें';
+
+  @override
+  String get saveQuickEntry => 'क्विक एंट्री सेव करें';
+
+  @override
+  String get newQuickEntry => 'नई क्विक एंट्री';
+
+  @override
+  String get editQuickEntry => 'क्विक एंट्री बदलें';
+
+  @override
+  String get quickEntryName => 'चिप पर नाम';
+
+  @override
+  String get quickEntrySaved => 'क्विक एंट्री सेव हुई। होम पर टैप करके जोड़ें।';
+
+  @override
+  String quickEntryConfirm(String label) {
+    return '$label जोड़ें?';
+  }
+
+  @override
+  String quickEntryAdded(String label, String amount) {
+    return '$label जोड़ा · $amount';
+  }
+
+  @override
+  String quickEntriesMore(int count) {
+    return '+$count और';
+  }
+
+  @override
+  String get quickEntriesShown => 'होम पर दिखें';
+
+  @override
+  String quickEntriesShownHint(int count) {
+    return '$count चिप; बाकी +और में';
+  }
+
+  @override
+  String get quickEntriesEmpty =>
+      'अभी कोई क्विक एंट्री नहीं। यहाँ जोड़ें, या कोई भी एंट्री खोलकर बिजली वाले बटन से सेव करें।';
+
+  @override
+  String get quickEntryNoAmount => 'एडिटर खुलेगा';
+
+  @override
+  String sameAsLastTime(int count) {
+    return 'पिछली बार जैसा · $count आइटम';
   }
 
   @override
@@ -649,6 +722,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get youOwe => 'आपको देने हैं';
 
   @override
+  String get groupsTotalsSeparator => ' · ';
+
+  @override
   String groupSubtitle(int count, String amount) {
     return '$count सदस्य · $amount खर्च';
   }
@@ -682,6 +758,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get money => 'पैसा';
+
+  @override
+  String get advancedSettings => 'उन्नत';
 
   @override
   String get currency => 'मुद्रा';
@@ -759,11 +838,30 @@ class AppLocalizationsHi extends AppLocalizations {
       'मिलाया जाता है; नए स्थानीय बदलाव बने रहते हैं';
 
   @override
-  String get cloudSync => 'क्लाउड सिंक';
+  String get eraseAllData => 'सारा डेटा मिटाएँ';
 
   @override
-  String get cloudSyncHelp =>
-      'आगे: Android पर Google Drive, iOS पर iCloud, बैकअप जैसे ही फ़ॉर्मैट में एंड-टू-एंड एन्क्रिप्टेड।';
+  String get eraseAllDataHelp =>
+      'इस फ़ोन से हर एंट्री, खाता, ग्रुप और सेटिंग हटा देता है';
+
+  @override
+  String get eraseAllDataTitle => 'सब कुछ मिटाएँ?';
+
+  @override
+  String eraseAllDataBody(String word) {
+    return 'इससे इस फ़ोन की सारी एंट्री, खाते, ग्रुप, बजट, रिमाइंडर और सेटिंग हट जाएँगी। इसे वापस नहीं लाया जा सकता। Google Drive पर पहले से रखे बैकअप बने रहेंगे।\n\nपुष्टि के लिए $word लिखें।';
+  }
+
+  @override
+  String eraseConfirmLabel(String word) {
+    return '$word लिखें';
+  }
+
+  @override
+  String get eraseAction => 'मिटाएँ';
+
+  @override
+  String get dataErased => 'सारा डेटा मिट गया। Hisab फिर से नई शुरुआत पर है।';
 
   @override
   String get about => 'ऐप के बारे में';
@@ -802,6 +900,131 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String restoreFailed(String error) {
     return 'वापस लाना विफल: $error';
+  }
+
+  @override
+  String get driveBackupTitle => 'Google Drive पर बैकअप लें';
+
+  @override
+  String get driveBackupWhy =>
+      'वैकल्पिक। आपकी अपनी Drive में एन्क्रिप्टेड कॉपी; हिसाब सिर्फ़ अपनी फ़ाइलें देख सकता है।';
+
+  @override
+  String get driveConsentTitle => 'Google Drive के साथ बैकअप और सिंक';
+
+  @override
+  String get driveConsentOptional => 'वैकल्पिक';
+
+  @override
+  String get driveConsentOffline =>
+      'हिसाब पूरी तरह ऑफ़लाइन काम करता है। आपका डेटा इसी फ़ोन पर रहता है और कभी कहीं नहीं भेजा जाता — जब तक आप इसे चालू न करें।';
+
+  @override
+  String get driveConsentWhat =>
+      'Drive सिंक चालू करें तो हिसाब आपके डेटा की एक एन्क्रिप्टेड कॉपी आपकी अपनी Google Drive में रखता है, ताकि फ़ोन खोने या बदलने पर आप सब कुछ वापस ला सकें, और दोस्तों व परिवार के साथ ग्रुप शेयर कर सकें।';
+
+  @override
+  String get driveConsentWhyLead => 'हिसाब Drive की अनुमति क्यों माँगता है:';
+
+  @override
+  String get driveConsentWhy =>
+      'सिर्फ़ आपकी Drive में अपनी ही फ़ाइलें पढ़ने और लिखने के लिए।';
+
+  @override
+  String get driveConsentCannotSee =>
+      'यह आपकी फ़ोटो, दस्तावेज़ या Drive में और कुछ भी नहीं देख सकता।';
+
+  @override
+  String get driveConsentEncrypted =>
+      'डेटा एन्क्रिप्टेड है — न Google इसे पढ़ सकता है, न हम। कोई हिसाब सर्वर नहीं है।';
+
+  @override
+  String get driveConsentTurnOff =>
+      'आप इसे कभी भी बंद करके डिस्कनेक्ट कर सकते हैं, और एक टैप में Drive कॉपी हटा सकते हैं।';
+
+  @override
+  String get driveConsentSkip =>
+      'नहीं चाहिए? बस इसे छोड़ दें — इसके बिना भी हिसाब बिल्कुल वैसे ही चलता है।';
+
+  @override
+  String get driveSkipForNow => 'अभी छोड़ें';
+
+  @override
+  String get driveConnect => 'Google Drive जोड़ें';
+
+  @override
+  String driveConnectedAs(String email) {
+    return '$email से जुड़ा है';
+  }
+
+  @override
+  String driveLastBackup(String time) {
+    return 'पिछला बैकअप: $time';
+  }
+
+  @override
+  String get driveNoBackupYet => 'Drive में अभी कोई बैकअप नहीं';
+
+  @override
+  String get driveCheckingBackup => 'Google Drive जाँच रहे हैं…';
+
+  @override
+  String get driveBackupStatusUnknown => 'Google Drive जाँच नहीं पाए';
+
+  @override
+  String get driveBackUpNow => 'अभी बैकअप लें';
+
+  @override
+  String get driveBackUpNowHelp =>
+      'सब कुछ आपके पासफ़्रेज़ से एन्क्रिप्ट करके Drive कॉपी बदल देता है';
+
+  @override
+  String get driveRestore => 'Drive से वापस लाएँ';
+
+  @override
+  String get driveDisconnect => 'डिस्कनेक्ट करें';
+
+  @override
+  String get driveDisconnectHelp =>
+      'यह Google खाता इस्तेमाल करना बंद करता है; Drive कॉपी हटाने तक बनी रहती है';
+
+  @override
+  String get driveDeleteCopy => 'Drive कॉपी हटाएँ';
+
+  @override
+  String get driveDeleteCopyHelp =>
+      'आपकी Google Drive से हिसाब का बैकअप हटाता है';
+
+  @override
+  String get driveDeleteConfirm =>
+      'आपकी Google Drive का बैकअप हटाएँ? इस फ़ोन का डेटा नहीं बदलेगा।';
+
+  @override
+  String get driveBackedUp => 'Google Drive पर बैकअप हो गया';
+
+  @override
+  String get driveCopyDeleted => 'Drive कॉपी हटा दी गई';
+
+  @override
+  String get driveDisconnected => 'Google Drive से डिस्कनेक्ट हो गया';
+
+  @override
+  String get driveErrorCancelled => 'Google साइन-इन रद्द किया गया';
+
+  @override
+  String get driveErrorOffline =>
+      'Google Drive तक नहीं पहुँच पाए। कनेक्शन जाँचें और फिर कोशिश करें।';
+
+  @override
+  String get driveErrorNotFound =>
+      'इस Google Drive में हिसाब का कोई बैकअप नहीं मिला';
+
+  @override
+  String get driveErrorWrongPassphrase => 'गलत पासफ़्रेज़, या बैकअप खराब है';
+
+  @override
+  String driveErrorUnknown(String error) {
+    return 'Google Drive विफल: $error';
   }
 
   @override
@@ -1120,9 +1343,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String percentOf(int percent) {
     return '$percent%';
   }
-
-  @override
-  String get budgetsEmptyBody => 'अपनी प्रगति देखने के लिए बजट तय करें';
 
   @override
   String andMoreCount(int count) {
@@ -1934,8 +2154,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get invalidUpiId => 'name@bank जैसा UPI ID डालें';
 
   @override
+  String get emailOptional => 'ईमेल (वैकल्पिक)';
+
+  @override
+  String get invalidEmail => 'name@example.com जैसा ईमेल डालें';
+
+  @override
   String get memberContactLocal =>
-      'फ़ोन और UPI ID इसी डिवाइस पर रहते हैं। Hisab इनका इस्तेमाल सिर्फ़ रिमाइंडर और UPI भुगतान भरने के लिए करता है।';
+      'ईमेल, फ़ोन और UPI ID इसी डिवाइस पर रहते हैं। Hisab इनका इस्तेमाल सिर्फ़ पहले जोड़े गए लोगों को सुझाने और रिमाइंडर व UPI भुगतान भरने के लिए करता है।';
 
   @override
   String get editMember => 'सदस्य बदलें';
@@ -1968,6 +2194,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get tags => 'टैग';
 
   @override
+  String get tagsHint => 'कॉमा से अलग करें, जैसे home, trip';
+
+  @override
   String get showResults => 'नतीजे दिखाएँ';
 
   @override
@@ -1982,6 +2211,25 @@ class AppLocalizationsHi extends AppLocalizations {
       one: '1 नतीजा',
     );
     return '$_temp0';
+  }
+
+  @override
+  String get filteredTotal => 'कुल खर्च';
+
+  @override
+  String itemBoughtTimes(String quantity, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count बार',
+      one: '1 बार',
+    );
+    return '$quantity · $_temp0';
+  }
+
+  @override
+  String moreItems(int count) {
+    return '+$count और आइटम';
   }
 
   @override
@@ -2306,6 +2554,112 @@ class AppLocalizationsHi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get cardStatementDay => 'स्टेटमेंट की तारीख';
+
+  @override
+  String get cardDueDay => 'भुगतान की आखिरी तारीख';
+
+  @override
+  String get cardDayNotSet => 'सेट नहीं';
+
+  @override
+  String get cardCreditLimit => 'क्रेडिट लिमिट';
+
+  @override
+  String get cardLastStatementAmount => 'पिछले स्टेटमेंट की रकम';
+
+  @override
+  String get cardDetailsHint =>
+      'स्टेटमेंट और ड्यू की तारीख से हिसाब आपका बिलिंग साइकिल दिखाएगा और बिल की तारीख से पहले याद दिलाएगा।';
+
+  @override
+  String get cardOutstanding => 'बकाया';
+
+  @override
+  String get cardThisCycle => 'इस साइकिल में';
+
+  @override
+  String cardCycleDates(String start, String end) {
+    return '$start से $end';
+  }
+
+  @override
+  String get cardLastStatement => 'पिछला स्टेटमेंट';
+
+  @override
+  String cardStatementOn(String date) {
+    return '$date का स्टेटमेंट';
+  }
+
+  @override
+  String get cardNoStatement => 'दर्ज नहीं';
+
+  @override
+  String get cardAvailableLimit => 'बची हुई लिमिट';
+
+  @override
+  String cardOverLimitBy(String amount) {
+    return 'लिमिट से $amount ज़्यादा';
+  }
+
+  @override
+  String cardLimitUsed(int percent, String limit) {
+    return '$limit लिमिट का $percent% इस्तेमाल';
+  }
+
+  @override
+  String cardDueOn(String date) {
+    return 'ड्यू $date';
+  }
+
+  @override
+  String get cardPaid => 'चुका दिया';
+
+  @override
+  String cardAmountLeftToPay(String amount) {
+    return '$amount चुकाना बाकी';
+  }
+
+  @override
+  String get cardSetUpDays => 'स्टेटमेंट और ड्यू तारीख सेट करें';
+
+  @override
+  String get cardViewTransactions => 'लेन-देन देखें';
+
+  @override
+  String get cardNotFound => 'यह कार्ड हटा दिया गया है';
+
+  @override
+  String cardNextDue(String date) {
+    return 'अगला ड्यू $date';
+  }
+
+  @override
+  String cardInCredit(String amount) {
+    return '$amount क्रेडिट';
+  }
+
+  @override
+  String cardStatementOverAmountDue(String amount) {
+    return 'बकाया राशि ($amount) से ज़्यादा है। इसे उतना करें जितना अभी चुकाना बाकी है।';
+  }
+
+  @override
+  String get cardBalanceOwed => 'बकाया';
+
+  @override
+  String get cardBalanceCredit => 'क्रेडिट में';
+
+  @override
+  String get cardCreditOnCard => 'कार्ड पर क्रेडिट';
+
+  @override
+  String get balanceInAccount => 'खाते में';
+
+  @override
+  String get balanceOverdrawn => 'ओवरड्रॉन';
 
   @override
   String get smsHistoryTitle => 'SMS इतिहास';
@@ -3431,21 +3785,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get smsReviewAddManually => 'खुद जोड़ें';
 
   @override
-  String upcomingEmptyWithin(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'अगले $days दिनों में कुछ देय नहीं',
-      one: 'कल कुछ देय नहीं',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get upcomingEmptyHint =>
-      'दोहराए जाने वाले बिल, रिमाइंडर और कार्ड की देय तारीख़ें यहाँ दिखेंगी।';
-
-  @override
   String upcomingWindowDays(int days) {
     return '$days दिन';
   }
@@ -3856,6 +4195,25 @@ class AppLocalizationsHi extends AppLocalizations {
   String get smsReminderPaidViaSms => 'एसएमएस से भुगतान हुआ';
 
   @override
+  String heroToday(String amount) {
+    return 'आज $amount';
+  }
+
+  @override
+  String heroTodaySemantics(String amount) {
+    return 'आज का खर्च $amount। आज के लेन-देन देखें';
+  }
+
+  @override
+  String get numberFormatTitle => 'संख्या फ़ॉर्मैट';
+
+  @override
+  String get numberFormatAutomatic => 'अपने-आप';
+
+  @override
+  String get numberFormatAutomaticHelp => 'आपकी मुद्रा और क्षेत्र के हिसाब से';
+
+  @override
   String get smsPayeesTitle => 'याद रखे गए नाम';
 
   @override
@@ -3891,6 +4249,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String smsPayeeRemembered(String category, String payee) {
     return 'अब से $payee के लिए $category लगेगी';
   }
+
+  @override
+  String safeToSpendPerDay(String amount) {
+    return 'सुरक्षित खर्च $amount/दिन';
+  }
+
+  @override
+  String get safeToSpendOverBudget => 'बजट से ऊपर';
 
   @override
   String get smsEntryChannelName => 'एसएमएस से जोड़ी गई एंट्री';

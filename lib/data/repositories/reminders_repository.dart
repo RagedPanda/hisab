@@ -35,6 +35,13 @@ class RemindersRepository {
         ..limit(limit))
       .watch();
 
+  /// Every live reminder, pending, paid or skipped, from one query, so a reminder
+  /// moving from pending to paid is never missing from both lists mid-update.
+  Stream<List<Reminder>> watchDue() => (db.select(db.reminders)
+        ..where(_isLiveDue)
+        ..orderBy([(t) => OrderingTerm.asc(t.dueAt), (t) => OrderingTerm.asc(t.title)]))
+      .watch();
+
   /// Pending reminders linked to [projectId], earliest due first.
   Stream<List<Reminder>> watchForProject(String projectId) => (_pending()..where((t) => t.projectId.equals(projectId))).watch();
   Future<List<Reminder>> getForProject(String projectId) => (_pending()..where((t) => t.projectId.equals(projectId))).get();
@@ -50,6 +57,13 @@ class RemindersRepository {
 
   Future<Reminder?> getById(String id) => (db.select(db.reminders)..where((t) => t.id.equals(id) & _isLiveDue(t))).getSingleOrNull();
   Stream<Reminder?> watchById(String id) => (db.select(db.reminders)..where((t) => t.id.equals(id) & _isLiveDue(t))).watchSingleOrNull();
+
+  /// Every live reminder of [kind] tied to [accountId] (any status), latest
+  /// due first. Card dues use it to keep one automatic reminder per card.
+  Future<List<Reminder>> forAccount(String accountId, {required ReminderKind kind}) => (db.select(db.reminders)
+        ..where((t) => _isLiveDue(t) & t.kind.equals(kind.key) & t.accountId.equals(accountId))
+        ..orderBy([(t) => OrderingTerm.desc(t.dueAt), (t) => OrderingTerm.desc(t.updatedAt)]))
+      .get();
 
   /// Creates or updates a reminder from [draft]; returns its id. Editing keeps
   /// status and history fields but clears a snooze, since the timing changed.

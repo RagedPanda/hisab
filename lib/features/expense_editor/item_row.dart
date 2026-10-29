@@ -6,6 +6,7 @@ import '../../core/money.dart';
 import '../../data/db/database.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/l10n.dart';
+import '../shell/widgets/common.dart';
 
 /// Mutable draft of one line item while editing.
 class ItemDraft {
@@ -45,8 +46,9 @@ class ItemDraft {
         memberIds: memberIds ?? this.memberIds,
       );
 
-  static ItemDraft fromRow(EntryItem row, {List<String>? memberIds}) => ItemDraft(
-        id: row.id,
+  /// A draft of a saved item row; [keepId] false makes a fresh row (a copy).
+  static ItemDraft fromRow(EntryItem row, {List<String>? memberIds, bool keepId = true}) => ItemDraft(
+        id: keepId ? row.id : null,
         name: row.name,
         quantity: row.quantity,
         unit: row.unit,
@@ -70,15 +72,18 @@ class ItemDraft {
 }
 
 class ItemRow extends StatefulWidget {
-  const ItemRow({super.key, required this.draft, required this.units, required this.symbol, required this.onChanged, required this.onRemove, this.footer});
+  const ItemRow({super.key, required this.draft, required this.units, required this.moneyFormat, required this.onChanged, required this.onRemove, this.footer, this.showNameError = false});
   final ItemDraft draft;
 
   /// Shown under the quantity and price line, e.g. who shares the item.
   final Widget? footer;
   final List<String> units;
-  final String symbol;
+  final MoneyFormat moneyFormat;
   final ValueChanged<ItemDraft> onChanged;
   final VoidCallback onRemove;
+
+  /// Flags the name field in red once a save was blocked on a missing name.
+  final bool showNameError;
 
   @override
   State<ItemRow> createState() => _ItemRowState();
@@ -87,7 +92,7 @@ class ItemRow extends StatefulWidget {
 class _ItemRowState extends State<ItemRow> {
   late final _name = TextEditingController(text: widget.draft.name);
   late final _qty = TextEditingController(text: _trim(widget.draft.quantity));
-  late final _price = TextEditingController(text: widget.draft.unitPriceMinor == 0 ? '' : minorToDouble(widget.draft.unitPriceMinor).toStringAsFixed(2));
+  late final _price = TextEditingController(text: widget.draft.unitPriceMinor == 0 ? '' : amountInputText(widget.draft.unitPriceMinor, format: widget.moneyFormat));
 
   static String _trim(double value) => value == value.roundToDouble() ? value.toInt().toString() : value.toString();
 
@@ -106,21 +111,28 @@ class _ItemRowState extends State<ItemRow> {
               Expanded(
                 child: TextField(
                   controller: _name,
-                  decoration: InputDecoration(hintText: l10n.itemName, isDense: true, filled: false, border: InputBorder.none),
+                  decoration: InputDecoration(
+                    labelText: l10n.itemName,
+                    isDense: true,
+                    errorText: widget.showNameError ? l10n.required : null,
+                  ),
                   textCapitalization: TextCapitalization.sentences,
                   onChanged: (v) => widget.onChanged(draft.copyWith(name: v)),
                 ),
               ),
-              Text(formatMinor(draft.amountMinor, symbol: widget.symbol), style: Theme.of(context).textTheme.labelLarge),
+              Text(formatMinor(draft.amountMinor, format: widget.moneyFormat), style: Theme.of(context).textTheme.labelLarge),
               IconButton(tooltip: l10n.remove, icon: const Icon(Icons.close, size: 18), onPressed: widget.onRemove),
             ]),
+            // Room for the floating labels of the quantity line, which
+            // otherwise collide with the name field above.
+            const SizedBox(height: 12),
             Row(children: [
               SizedBox(
                 width: 70,
                 child: TextField(
                   controller: _qty,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(labelText: l10n.qty, isDense: true),
+                  decoration: InputDecoration(labelText: l10n.qty, isDense: true, floatingLabelBehavior: FloatingLabelBehavior.always),
                   onChanged: (v) => widget.onChanged(draft.copyWith(quantity: double.tryParse(v) ?? 0)),
                 ),
               ),
@@ -131,7 +143,7 @@ class _ItemRowState extends State<ItemRow> {
                   initialValue: draft.unit ?? '',
                   isDense: true,
                   isExpanded: true,
-                  decoration: InputDecoration(labelText: l10n.unit, isDense: true),
+                  decoration: InputDecoration(labelText: l10n.unit, isDense: true, floatingLabelBehavior: FloatingLabelBehavior.always),
                   items: [
                     const DropdownMenuItem(value: '', child: Text('—')),
                     for (final unit in unitOptions) DropdownMenuItem(value: unit, child: Text(unit, overflow: TextOverflow.ellipsis)),
@@ -143,9 +155,10 @@ class _ItemRowState extends State<ItemRow> {
               Expanded(
                 child: TextField(
                   controller: _price,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(labelText: l10n.pricePerUnit(draft.unit ?? l10n.genericUnit), prefixText: '${widget.symbol} ', isDense: true),
-                  onChanged: (v) => widget.onChanged(draft.copyWith(unitPriceMinor: parseAmountToMinor(v) ?? 0)),
+                  keyboardType: amountKeyboardType(widget.moneyFormat),
+                  inputFormatters: amountInputFormatters(widget.moneyFormat),
+                  decoration: InputDecoration(labelText: l10n.pricePerUnit(draft.unit ?? l10n.genericUnit), prefixText: amountPrefixText(widget.moneyFormat), suffixText: amountSuffixText(widget.moneyFormat), hintText: '0', isDense: true, floatingLabelBehavior: FloatingLabelBehavior.always),
+                  onChanged: (v) => widget.onChanged(draft.copyWith(unitPriceMinor: parseAmountToMinor(v, format: widget.moneyFormat) ?? 0)),
                 ),
               ),
               const SizedBox(width: 8),

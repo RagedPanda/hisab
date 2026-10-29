@@ -62,11 +62,11 @@ class _SmsAutoAddSnackbarState extends ConsumerState<SmsAutoAddSnackbar> {
     _batch.clear();
     final l10n = context.l10n;
     final service = ref.read(smsIngestServiceProvider);
-    final symbol = ref.read(settingsProvider).currencySymbol;
+    final moneyFormat = ref.read(homeMoneyFormatProvider);
     final single = added.length == 1 ? added.single : null;
     final message = single == null
         ? l10n.smsAutoAddedMany(added.length)
-        : [l10n.smsAutoAddedOne(formatMinor(single.amountMinor, symbol: symbol, showDecimals: false)), ?single.payee].join(' · ');
+        : [l10n.smsAutoAddedOne(formatMinor(single.amountMinor, format: moneyFormat, showDecimals: false)), ?single.payee].join(' · ');
     showUndoSnackBar(
       ScaffoldMessenger.of(context),
       message: message,

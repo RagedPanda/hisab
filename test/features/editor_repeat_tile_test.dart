@@ -34,11 +34,22 @@ void main() {
     final amountField = find.descendant(of: find.byType(ExpenseEditorScreen), matching: find.byType(TextField)).first;
     await tester.enterText(amountField, '15000');
     await pumpWithKeyboard(tester);
-    await tester.tap(find.text('Choose category'));
+    await tester.tap(find.text('Uncategorised'));
     await pumpWithKeyboard(tester);
     await tester.enterText(find.widgetWithText(TextField, 'Search categories'), 'rent');
     await pumpWithKeyboard(tester);
     await tester.tap(find.text('Rent'));
+    await pumpWithKeyboard(tester);
+
+    // The Repeat control now lives behind "More details"; open that first.
+    final moreDetails = find.byKey(const ValueKey('editor.moreDetails'));
+    final toReveal = editorScroll(tester);
+    while (moreDetails.evaluate().isEmpty && toReveal.pixels < toReveal.maxScrollExtent) {
+      toReveal.jumpTo((toReveal.pixels + 200).clamp(0, toReveal.maxScrollExtent));
+      await tester.pump();
+    }
+    await tester.ensureVisible(moreDetails);
+    await tester.tap(find.text('More details'));
     await pumpWithKeyboard(tester);
 
     final repeatTile = find.byKey(const ValueKey('editor.repeat'));

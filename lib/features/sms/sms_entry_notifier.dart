@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/home_currency.dart';
 import '../../core/notifications/notification_service.dart';
 import '../../core/notifications/reminder_alert_text.dart';
 import '../../core/notifications/sms_entry_alert.dart';
@@ -27,7 +28,7 @@ class SmsEntryNotifier {
     required this.payeeCategories,
     required this.notifications,
     required this.l10n,
-    required this.currencySymbol,
+    required this.moneyFormat,
   });
 
   final EntriesRepository entries;
@@ -35,7 +36,7 @@ class SmsEntryNotifier {
   final PayeeCategoryRepository payeeCategories;
   final NotificationService notifications;
   final AppLocalizations l10n;
-  final String currencySymbol;
+  final MoneyFormat moneyFormat;
 
   Future<void> notify(SmsAutoAdded added) async {
     final details = await entries.getEntry(added.entryId);
@@ -51,7 +52,7 @@ class SmsEntryNotifier {
       accountName: details.account?.name,
       asksForCategory: payee != null && asksForPayeeCategory(payee, memory),
       l10n: l10n,
-      currencySymbol: currencySymbol,
+      moneyFormat: moneyFormat,
     ));
   }
 }
@@ -64,6 +65,6 @@ final smsEntryNotifierProvider = Provider((ref) {
     payeeCategories: ref.watch(payeeCategoryRepositoryProvider),
     notifications: ref.watch(notificationServiceProvider),
     l10n: notificationLocalizations(settings.localeCode),
-    currencySymbol: settings.currencySymbol,
+    moneyFormat: ref.watch(homeMoneyFormatProvider),
   );
 });

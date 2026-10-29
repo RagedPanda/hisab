@@ -7,10 +7,15 @@ import '../../core/ids.dart';
 import '../../domain/backup/seed_dedupe.dart';
 import '../../domain/categories/category_catalog.dart';
 import '../../domain/categories/category_packs.dart';
+import '../../domain/quick_entries/starter_quick_entries.dart';
 import '../../domain/sms/sms_outcome.dart';
 import '../../domain/sms/sms_transaction_key.dart';
 
 part 'database.g.dart';
+
+// Table definitions below are read by drift's code generator and never run,
+// so they are left out of line coverage.
+// coverage:ignore-start
 
 /// Every table carries [updatedAt] and a soft [deletedAt] so rows can be
 /// merged last-writer-wins across devices during sync.
@@ -36,6 +41,16 @@ class Accounts extends Table with SyncColumns {
   BoolColumn get includeInTotal => boolean().withDefault(const Constant(true))();
   IntColumn get color => integer()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
+  /// Credit cards only: day of month the statement is generated (1-31; short
+  /// months clamp to their last day) and the day the bill is due.
+  IntColumn get statementDay => integer().nullable()();
+  IntColumn get dueDay => integer().nullable()();
+  IntColumn get creditLimitMinor => integer().nullable()();
+
+  /// Amount billed on the most recent statement and that statement's date.
+  IntColumn get lastStatementMinor => integer().nullable()();
+  DateTimeColumn get lastStatementAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -348,7 +363,7 @@ class Reminders extends Table with SyncColumns {
   TextColumn get channel => text().withDefault(const Constant('share'))();
   TextColumn get message => text().withDefault(const Constant(''))();
 
-  // Due reminders (v9): bills, EMIs, card dues, subscriptions, insurance,
+  // Due reminders (v11): bills, EMIs, card dues, subscriptions, insurance,
   // documents and custom nudges. Kinds and values live in
   // lib/domain/reminders/reminder_kind.dart.
 
@@ -517,6 +532,19 @@ class PayeeCategories extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
+/// The user's own People list: everyone they added to a group with an email,
+/// so a new group can suggest them (see `domain/people/people.dart`). [id] is
+/// the lowercased email, so the same friend added on two devices is one row.
+@DataClassName('Person')
+class People extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get email => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Who added, edited, deleted or restored which group expense or payment,
 /// and when, with the state before and after as JSON snapshots (see
 /// `domain/split/group_activity.dart`).
@@ -544,6 +572,28 @@ class GroupActivities extends Table with SyncColumns {
   Set<Column> get primaryKey => {id};
 }
 
+// coverage:ignore-end
+
+/// A saved spend the user adds again and again (milk, auto fare, metro
+/// recharge), shown as a one-tap chip on Home. [amountMinor] null means the
+/// chip opens the editor prefilled instead of saving at once. [sortOrder]
+/// is the user's order; the first few are shown, the rest sit behind "+N more".
+class QuickEntries extends Table with SyncColumns {
+  TextColumn get id => text()();
+  TextColumn get label => text()();
+  TextColumn get kind => text().withDefault(const Constant('expense'))();
+  IntColumn get amountMinor => integer().nullable()();
+  TextColumn get categoryId => text().nullable()();
+  TextColumn get accountId => text().nullable()();
+  TextColumn get payee => text().nullable()();
+  TextColumn get note => text().withDefault(const Constant(''))();
+  TextColumn get tags => text().withDefault(const Constant(''))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   Accounts,
   Categories,
@@ -564,18 +614,21 @@ class GroupActivities extends Table with SyncColumns {
   GroupActivities,
   ItemAssignments,
   PayeeCategories,
+  People,
+  QuickEntries,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
           await seedDefaults();
+          await seedQuickEntries();
         },
         onUpgrade: (m, from, to) async {
           if (from < 2) {
@@ -643,8 +696,16 @@ class AppDatabase extends _$AppDatabase {
           // v16: the reminder a bank SMS paid and the transaction each message
           // reports (R2, auto-done on an SMS match).
           if (from < 16) await _upgradeToSmsReminderMatch(m);
-          // v17: categories remembered per SMS payee (daily-use, payee memory).
-          if (from < 17) await _upgradeToPayeeCategories(m);
+          // v17: credit card statement and due days, limit and last statement.
+          if (from < 17) await _upgradeToCardDetails(m);
+          // v18: categories remembered per SMS payee (daily-use, payee memory).
+          if (from < 18) await _upgradeToPayeeCategories(m);
+          // v19: the personal People list, seeded from members that have an email.
+          if (from < 19) await _upgradeToPeople(m);
+          // v20: one-tap quick entries on Home.
+          if (from < 20) await m.createTable(quickEntries);
+          // v21: starter quick entries, unless the user already made some.
+          if (from < 21) await seedQuickEntries();
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -734,10 +795,31 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// v17 step. Adds the payee category memory table unless a pre-release
+  /// v17 step. Adds the credit card columns a table lacks; pre-release
+  /// builds of card dues stored them under schema 7.
+  Future<void> _upgradeToCardDetails(Migrator m) async {
+    final existing = await _columnNames('accounts');
+    for (final column in cardDetailColumns(accounts)) {
+      if (!existing.contains(column.name)) await m.addColumn(accounts, column);
+    }
+  }
+
+  /// v18 step. Adds the payee category memory table unless a pre-release
   /// build of this feature already created it, so it is idempotent.
   Future<void> _upgradeToPayeeCategories(Migrator m) async {
     if (!await _schemaObjectExists('table', 'payee_categories')) await m.createTable(payeeCategories);
+  }
+
+  /// v19 step. Adds the People list and fills it from group members that
+  /// already carry an email, the most recently edited name winning.
+  Future<void> _upgradeToPeople(Migrator m) async {
+    await m.createTable(people);
+    await customStatement('''
+      INSERT OR IGNORE INTO people (id, name, email, updated_at)
+      SELECT LOWER(TRIM(email)), name, LOWER(TRIM(email)), updated_at FROM members
+      WHERE deleted_at IS NULL AND email IS NOT NULL AND TRIM(email) LIKE '%_@_%._%'
+      ORDER BY updated_at DESC
+    ''');
   }
 
   Future<Set<String>> _columnNames(String table) async {
@@ -765,6 +847,18 @@ class AppDatabase extends _$AppDatabase {
     await (update(smsLog)..where((row) => row.id.isIn(wipeIds))).write(const SmsLogCompanion(body: Value('')));
   }
 
+  /// Deletes every row in every table, then seeds the defaults again, leaving
+  /// the database as a fresh install has it. Foreign keys are checked at
+  /// commit, so the delete order does not matter.
+  Future<void> eraseAllData() => transaction(() async {
+        await customStatement('PRAGMA defer_foreign_keys = ON');
+        for (final table in allTables) {
+          await delete(table).go();
+        }
+        await seedDefaults();
+        await seedQuickEntries();
+      });
+
   /// Inserts the category catalog and a Cash account. Idempotent by seedKey.
   Future<void> seedDefaults() async {
     final existing = (await select(categories).get()).map((c) => c.seedKey).toSet();
@@ -791,6 +885,27 @@ class AppDatabase extends _$AppDatabase {
         color: 0xFF43A047,
       ));
     }
+  }
+
+  /// Inserts the starter quick entries when the install never had any
+  /// (deleted ones count, so removing them sticks).
+  Future<void> seedQuickEntries() async {
+    final anyQuickEntry = await (select(quickEntries)..limit(1)).get();
+    final seeded = await (select(categories)..where((t) => t.seedKey.isNotNull() & t.deletedAt.isNull())).get();
+    final rows = starterQuickEntryRows(
+      hasAnyQuickEntry: anyQuickEntry.isNotEmpty,
+      categoryIdBySeedKey: {for (final category in seeded) category.seedKey!: category.id},
+    );
+    await batch((b) {
+      for (final row in rows) {
+        b.insert(quickEntries, QuickEntriesCompanion.insert(
+          id: row.starter.id,
+          label: row.starter.label,
+          categoryId: Value(row.categoryId),
+          sortOrder: Value(row.sortOrder),
+        ));
+      }
+    });
   }
 
   /// Moves seeded categories still on a retired default colour to the
@@ -828,6 +943,8 @@ class AppDatabase extends _$AppDatabase {
               .write(RecurringRulesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
           await (update(payeeCategories)..where((t) => t.categoryId.equals(droppedId)))
               .write(PayeeCategoriesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
+          await (update(quickEntries)..where((t) => t.categoryId.equals(droppedId)))
+              .write(QuickEntriesCompanion(categoryId: Value(keptId), updatedAt: Value(now)));
           await (update(categories)..where((t) => t.parentId.equals(droppedId)))
               .write(CategoriesCompanion(parentId: Value(keptId), updatedAt: Value(now)));
           await (update(categories)..where((t) => t.id.equals(droppedId)))
@@ -910,7 +1027,16 @@ CategoriesCompanion seedCategoryRow(CategorySeed seed, {required String id, Stri
       units: Value(seed.units.join(',')),
     );
 
-/// Columns v9 added to [Reminders]; a v5..v8 database gains exactly these.
+/// The credit card columns added to accounts at schema v12.
+List<GeneratedColumn> cardDetailColumns($AccountsTable table) => [
+      table.statementDay,
+      table.dueDay,
+      table.creditLimitMinor,
+      table.lastStatementMinor,
+      table.lastStatementAt,
+    ];
+
+/// Columns v11 added to [Reminders]; a v5..v10 database gains exactly these.
 List<GeneratedColumn> dueReminderColumns($RemindersTable table) => [
       table.title,
       table.notes,

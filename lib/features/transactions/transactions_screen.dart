@@ -9,6 +9,7 @@ import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
 import '../../domain/entries/entry_filter.dart';
+import '../../domain/entries/entry_summary.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../projects/project_picker_sheet.dart';
@@ -38,30 +39,38 @@ final _searchProvider = NotifierProvider<_SearchNotifier, String>(_SearchNotifie
 final _kindFilterProvider = NotifierProvider<_KindFilterNotifier, String?>(_KindFilterNotifier.new);
 
 /// Filters carried in the route, e.g. `/transactions?category=<id>` from the
-/// dashboard donut or `?account=<id>` from an account card. Dismissing a chip
-/// navigates to the same route without that parameter.
+/// dashboard donut, `?account=<id>` from an account card or `?day=2026-10-24`
+/// from the Home "Today" figure. Dismissing a chip navigates to the same
+/// route without that parameter.
 class RouteFilters {
-  const RouteFilters({this.categoryId, this.accountId});
+  const RouteFilters({this.categoryId, this.accountId, this.day});
   final String? categoryId;
   final String? accountId;
 
+  /// One calendar day, local midnight.
+  final DateTime? day;
+
   static RouteFilters of(BuildContext context) {
     final params = GoRouterState.of(context).uri.queryParameters;
-    return RouteFilters(categoryId: params['category'], accountId: params['account']);
+    return RouteFilters(categoryId: params['category'], accountId: params['account'], day: parseIsoDay(params['day']));
   }
 
-  bool get isEmpty => categoryId == null && accountId == null;
+  bool get isEmpty => categoryId == null && accountId == null && day == null;
 
-  String locationWithout({bool category = false, bool account = false}) => Uri(
+  String locationWithout({bool category = false, bool account = false, bool day = false}) => Uri(
         path: '/transactions',
         queryParameters: {
           if (!category && categoryId != null) 'category': categoryId!,
           if (!account && accountId != null) 'account': accountId!,
+          if (!day && this.day != null) 'day': isoDay(this.day!),
         },
       ).toString().replaceFirst(RegExp(r'\?$'), '');
 
-  EntryFilter get asFilter => EntryFilter(categoryId: categoryId, accountId: accountId);
+  EntryFilter get asFilter => EntryFilter(categoryId: categoryId, accountId: accountId, from: day, to: day);
 }
+
+/// The Entries list narrowed to the single day [day].
+String entriesForDayLocation(DateTime day) => '/transactions?day=${isoDay(day)}';
 
 /// What search and filters see of one listed entry.
 EntryFacts entryFacts(BuildContext context, EntryDetails details) => EntryFacts(
@@ -79,6 +88,14 @@ EntryFacts entryFacts(BuildContext context, EntryDetails details) => EntryFacts(
       tags: details.entry.tags,
     );
 
+/// What the filtered-list summary sees of one listed entry: the user's share
+/// of a shared expense, and its item lines as entered.
+SummaryEntry summaryEntry(EntryDetails details) => (
+      kind: details.entry.kind,
+      amountMinor: details.myAmountMinor,
+      items: [for (final item in details.items) (name: item.name, quantity: item.quantity, unit: item.unit, amountMinor: item.amountMinor)],
+    );
+
 class TransactionsScreen extends ConsumerWidget {
   const TransactionsScreen({super.key});
 
@@ -88,11 +105,12 @@ class TransactionsScreen extends ConsumerWidget {
     final search = ref.watch(_searchProvider);
     final kindFilter = ref.watch(_kindFilterProvider);
     final filter = ref.watch(_entryFilterProvider);
-    final symbol = ref.watch(settingsProvider).currencySymbol;
-    final window = filter.dateWindow;
-    final async = window == null ? ref.watch(monthEntriesProvider) : ref.watch(windowEntriesProvider(window));
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final routeFilters = RouteFilters.of(context);
     final routeFilter = routeFilters.asFilter;
+    // The sheet's dates win when both are set; both filters still apply below.
+    final window = filter.dateWindow ?? routeFilter.dateWindow;
+    final async = window == null ? ref.watch(monthEntriesProvider) : ref.watch(windowEntriesProvider(window));
     final entries = (async.value ?? const <EntryDetails>[]).where((d) {
       if (kindFilter != null && d.entry.kind != kindFilter) return false;
       final facts = entryFacts(context, d);
@@ -144,8 +162,15 @@ class TransactionsScreen extends ConsumerWidget {
                   label: _accountFilterLabel(ref, routeFilters.accountId!),
                   onDeleted: () => context.go(routeFilters.locationWithout(account: true)),
                 ),
+              if (routeFilters.day != null)
+                _RouteFilterChip(
+                  label: isSameDay(routeFilters.day!, DateTime.now())
+                      ? l10n.today
+                      : dateRangeLabel(routeFilters.day, routeFilters.day, locale: Localizations.localeOf(context).toString()),
+                  onDeleted: () => context.go(routeFilters.locationWithout(day: true)),
+                ),
               _ProjectFilterChip(selectedId: filter.projectId),
-              ..._activeFilterChips(context, ref, filter, symbol),
+              ..._activeFilterChips(context, ref, filter, moneyFormat),
               for (final (label, value) in [(l10n.all, null), (l10n.kindExpenses, 'expense'), (l10n.income, 'income'), (l10n.kindTransfers, 'transfer')])
                 ChoiceChip(label: Text(label), selected: kindFilter == value, onSelected: (_) => ref.read(_kindFilterProvider.notifier).set(value)),
             ],
@@ -172,9 +197,10 @@ class TransactionsScreen extends ConsumerWidget {
                     : ListView.builder(
                         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-                        itemCount: groups.length,
+                        itemCount: groups.length + (narrowed ? 1 : 0),
                         itemBuilder: (context, index) {
-                          final group = groups[index];
+                          if (narrowed && index == 0) return _FilteredSummaryCard(summary: summarizeEntries(entries.map(summaryEntry)), moneyFormat: moneyFormat);
+                          final group = groups[index - (narrowed ? 1 : 0)];
                           final dayTotal = group.items.where((d) => d.entry.kind == 'expense').fold(0, (sum, d) => sum + d.myAmountMinor);
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,7 +209,7 @@ class TransactionsScreen extends ConsumerWidget {
                                 padding: const EdgeInsets.fromLTRB(4, 14, 4, 6),
                                 child: Row(children: [
                                   Expanded(child: Text(formatDayLabel(group.day, today: l10n.today, yesterday: l10n.yesterday, locale: Localizations.localeOf(context).toString()), style: Theme.of(context).textTheme.labelLarge)),
-                                  if (dayTotal > 0) Text(formatMinor(dayTotal, symbol: symbol), style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                                  if (dayTotal > 0) Text(formatMinor(dayTotal, format: moneyFormat), style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                                 ]),
                               ),
                               Card(
@@ -199,6 +225,63 @@ class TransactionsScreen extends ConsumerWidget {
           ),
         ],
         ),
+      ),
+    );
+  }
+}
+
+/// Total spent across the filtered entries, and how much of each item was
+/// bought: "Buffalo milk · 62 L · 58 times · ₹4,650".
+class _FilteredSummaryCard extends StatelessWidget {
+  const _FilteredSummaryCard({required this.summary, required this.moneyFormat});
+
+  final EntrySummary summary;
+  final MoneyFormat moneyFormat;
+
+  static const _maxItems = 6;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    final shown = summary.items.take(_maxItems).toList();
+    return Card(
+      key: const ValueKey('entries.summary'),
+      margin: const EdgeInsets.only(top: 8),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Expanded(child: Text(l10n.filteredTotal, style: theme.textTheme.titleSmall)),
+            Text(formatMinor(summary.spentMinor, format: moneyFormat), key: const ValueKey('entries.summary.spent'), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+          ]),
+          if (summary.incomeMinor > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Row(children: [
+                Expanded(child: Text(l10n.income, style: muted)),
+                Text(formatMinor(summary.incomeMinor, format: moneyFormat), style: muted),
+              ]),
+            ),
+          if (shown.isNotEmpty) ...[
+            const Divider(height: 20),
+            for (final item in shown)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(children: [
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(item.name, style: theme.textTheme.bodyMedium),
+                      Text(l10n.itemBoughtTimes(formatQuantity(item.quantity, item.unit), item.entryCount), style: muted),
+                    ]),
+                  ),
+                  Text(formatMinor(item.amountMinor, format: moneyFormat), style: theme.textTheme.bodyMedium),
+                ]),
+              ),
+            if (summary.items.length > shown.length) Text(l10n.moreItems(summary.items.length - shown.length), style: muted),
+          ],
+        ]),
       ),
     );
   }
@@ -295,7 +378,7 @@ class _SearchFieldState extends ConsumerState<_SearchField> {
 }
 
 /// One removable chip per filter set in the sheet (project has its own chip).
-List<Widget> _activeFilterChips(BuildContext context, WidgetRef ref, EntryFilter filter, String symbol) {
+List<Widget> _activeFilterChips(BuildContext context, WidgetRef ref, EntryFilter filter, MoneyFormat moneyFormat) {
   final l10n = context.l10n;
   final notifier = ref.read(_entryFilterProvider.notifier);
   Widget chip(String name, String label, EntryFilter Function(EntryFilter) clear) => InputChip(
@@ -309,7 +392,7 @@ List<Widget> _activeFilterChips(BuildContext context, WidgetRef ref, EntryFilter
     if (filter.categoryId != null) chip('category', _categoryFilterLabel(context, ref, filter.categoryId!), (current) => current.copyWith(categoryId: null)),
     if (filter.accountId != null) chip('account', _accountFilterLabel(ref, filter.accountId!), (current) => current.copyWith(accountId: null)),
     if (filter.hasAmount)
-      chip('amount', amountRangeLabel(l10n, filter.minAmountMinor, filter.maxAmountMinor, symbol), (current) => current.copyWith(minAmountMinor: null, maxAmountMinor: null)),
+      chip('amount', amountRangeLabel(l10n, filter.minAmountMinor, filter.maxAmountMinor, moneyFormat), (current) => current.copyWith(minAmountMinor: null, maxAmountMinor: null)),
     if (filter.hasDates)
       chip('dates', dateRangeLabel(filter.from, filter.to, locale: Localizations.localeOf(context).toString()), (current) => current.copyWith(from: null, to: null)),
     if (filter.tag != null) chip('tag', '#${filter.tag}', (current) => current.copyWith(tag: null)),

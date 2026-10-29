@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/notifications/sms_entry_payload.dart';
 import '../accounts/accounts_screen.dart';
+import '../accounts/card_account_screen.dart';
 import '../budgets/budgets_screen.dart';
 import '../categories/categories_screen.dart';
 import '../categories/category_packs_screen.dart';
@@ -19,6 +20,7 @@ import '../projects/project_templates_screen.dart';
 import '../projects/projects_screen.dart';
 import '../salary/salary_setup_screen.dart';
 import '../salary/salary_reminder.dart';
+import '../settings/drive_backup_screen.dart';
 import '../settings/settings_screen.dart';
 import '../reminders/reminders_screen.dart';
 import '../sms/sms_history_screen.dart';
@@ -32,6 +34,7 @@ import '../subscriptions/subscription_form_screen.dart';
 import '../subscriptions/subscriptions_screen.dart';
 import '../transactions/transactions_screen.dart';
 import '../recurring/recurring_rule_form_screen.dart';
+import '../quick_entries/quick_entries_screen.dart';
 import '../recurring/recurring_screen.dart';
 import 'app_shell.dart';
 import 'deep_link.dart';
@@ -70,6 +73,9 @@ final appRouter = GoRouter(
         smsId: state.uri.queryParameters['sms'],
         projectId: state.uri.queryParameters['project'],
         reminderId: state.uri.queryParameters['reminder'],
+        copyFromId: state.uri.queryParameters['copy'],
+        quickEntryId: state.uri.queryParameters['quick'],
+        newQuickEntry: state.uri.queryParameters['saveAs'] == 'quick',
       ),
     ),
     GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(
@@ -83,8 +89,17 @@ final appRouter = GoRouter(
     GoRoute(path: '/activity', parentNavigatorKey: _rootKey, builder: (_, _) => const ActivityScreen()),
     GoRoute(path: '/categories', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoriesScreen()),
     GoRoute(path: '/categories/packs', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoryPacksScreen()),
-    GoRoute(path: '/accounts', parentNavigatorKey: _rootKey, builder: (_, _) => const AccountsScreen()),
+    GoRoute(
+      path: '/accounts',
+      parentNavigatorKey: _rootKey,
+      builder: (_, _) => const AccountsScreen(),
+      routes: [
+        GoRoute(path: 'card/:id', parentNavigatorKey: _rootKey, builder: (_, state) => CardAccountScreen(accountId: state.pathParameters['id']!)),
+      ],
+    ),
     GoRoute(path: kSalaryLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const SalarySetupScreen()),
+    GoRoute(path: kQuickEntriesLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const QuickEntriesScreen()),
+    GoRoute(path: kDriveBackupLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const DriveBackupScreen()),
     GoRoute(path: '/budgets', parentNavigatorKey: _rootKey, builder: (_, _) => const BudgetsScreen()),
     GoRoute(
       path: '/recurring',

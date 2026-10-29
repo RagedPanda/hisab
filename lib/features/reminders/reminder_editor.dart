@@ -46,6 +46,9 @@ class ReminderEditor extends ConsumerStatefulWidget {
 }
 
 class _ReminderEditorState extends ConsumerState<ReminderEditor> {
+  /// Number format the amount fields read and write (the app's own).
+  MoneyFormat get _moneyFormat => ref.read(homeMoneyFormatProvider);
+
   late final _titleController = TextEditingController(text: widget.initial.title);
   late final _amountController = TextEditingController(text: _initialAmountText(widget.initial.amountMinor));
   late final _notesController = TextEditingController(text: widget.initial.notes);
@@ -80,7 +83,7 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
         title: _titleController.text,
         dueAt: DateTime(_dueAt.year, _dueAt.month, _dueAt.day),
         notes: _notesController.text.trim(),
-        amountMinor: _kind.isMoney ? reminderAmountOrNone(parseAmountToMinor(_amountController.text)) : null,
+        amountMinor: _kind.isMoney ? reminderAmountOrNone(parseAmountToMinor(_amountController.text, format: _moneyFormat)) : null,
         categoryId: _kind.isMoney ? _categoryId : null,
         accountId: _kind.isMoney ? _accountId : null,
         recurringId: widget.initial.recurringId,
@@ -125,15 +128,15 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
   }
 
   /// The amount field starts empty for no amount, including a stored 0.
-  static String _initialAmountText(int? amountMinor) {
+  String _initialAmountText(int? amountMinor) {
     final amount = reminderAmountOrNone(amountMinor);
-    return amount == null ? '' : amountInputText(amount);
+    return amount == null ? '' : amountInputText(amount, format: _moneyFormat);
   }
 
   Future<void> _save() async {
     setState(() => _submitted = true);
     final draft = _draft;
-    final amountInvalid = _kind.isMoney && amountErrorText(context, _amountController.text) != null;
+    final amountInvalid = _kind.isMoney && amountErrorText(context, _amountController.text, format: _moneyFormat) != null;
     if (draft.error != null || amountInvalid || (_notify && _daysBefore.isEmpty) || _saving) return;
     setState(() => _saving = true);
     // The reminder is saved whatever the answers.
@@ -147,7 +150,7 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context).toString();
-    final symbol = ref.watch(settingsProvider).currencySymbol;
+    final moneyFormat = ref.watch(homeMoneyFormatProvider);
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
     final categories = ref.watch(allCategoriesProvider).value ?? const <Category>[];
     final category = categories.where((c) => c.id == _categoryId).firstOrNull;
@@ -211,13 +214,13 @@ class _ReminderEditorState extends ConsumerState<ReminderEditor> {
                       TextField(
                         key: const ValueKey('reminder-amount'),
                         controller: _amountController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: amountInputFormatters,
+                        keyboardType: amountKeyboardType(_moneyFormat),
+                        inputFormatters: amountInputFormatters(_moneyFormat),
                         onChanged: (_) => setState(() {}),
                         decoration: InputDecoration(
                           labelText: l10n.reminderAmountOptional,
-                          prefixText: '$symbol ',
-                          errorText: amountErrorText(context, _amountController.text),
+                          prefixText: amountPrefixText(moneyFormat), suffixText: amountSuffixText(moneyFormat),
+                          errorText: amountErrorText(context, _amountController.text, format: _moneyFormat),
                         ),
                       ),
                     ],

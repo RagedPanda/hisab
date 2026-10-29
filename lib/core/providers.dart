@@ -15,6 +15,8 @@ import '../data/repositories/project_fields_repository.dart';
 import '../data/repositories/projects_repository.dart';
 import '../data/repositories/recurring_repository.dart';
 import '../data/repositories/payee_category_repository.dart';
+import '../data/repositories/quick_entries_repository.dart';
+import '../data/repositories/people_repository.dart';
 import '../data/repositories/reminders_repository.dart';
 import '../data/repositories/settle_schedule_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
@@ -40,6 +42,8 @@ import 'notifications/reminder_alert_text.dart';
 import 'notifications/reminder_scheduler.dart';
 import 'settings.dart';
 
+export 'home_currency.dart' show deviceLocaleProvider, groupMoneyFormatProvider, homeMoneyFormatProvider;
+
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
   ref.onDispose(db.close);
@@ -57,6 +61,9 @@ final projectsRepositoryProvider = Provider((ref) => ProjectsRepository(ref.watc
 final projectFieldsRepositoryProvider = Provider((ref) => ProjectFieldsRepository(ref.watch(databaseProvider)));
 final smsLogRepositoryProvider = Provider((ref) => SmsLogRepository(ref.watch(databaseProvider)));
 final payeeCategoryRepositoryProvider = Provider((ref) => PayeeCategoryRepository(ref.watch(databaseProvider)));
+final quickEntriesRepositoryProvider = Provider((ref) => QuickEntriesRepository(ref.watch(databaseProvider)));
+final quickEntriesProvider = StreamProvider((ref) => ref.watch(quickEntriesRepositoryProvider).watchAll());
+final peopleRepositoryProvider = Provider((ref) => PeopleRepository(ref.watch(databaseProvider)));
 final remindersRepositoryProvider = Provider((ref) => RemindersRepository(ref.watch(databaseProvider)));
 final recurringRepositoryProvider = Provider((ref) => RecurringRepository(ref.watch(databaseProvider)));
 final settleScheduleRepositoryProvider = Provider((ref) => SettleScheduleRepository(ref.watch(databaseProvider)));
@@ -105,7 +112,6 @@ final selectedRangeProvider = Provider<DateRange>((ref) {
 final categoriesProvider = StreamProvider((ref) => ref.watch(categoriesRepositoryProvider).watchAll());
 final allCategoriesProvider = StreamProvider((ref) => ref.watch(categoriesRepositoryProvider).watchAll(includeArchived: true));
 final accountsProvider = StreamProvider((ref) => ref.watch(accountsRepositoryProvider).watchAll());
-final recentAccountIdsProvider = StreamProvider((ref) => ref.watch(entriesRepositoryProvider).watchRecentAccountIds());
 final budgetsProvider = StreamProvider((ref) => ref.watch(budgetsRepositoryProvider).watchAll());
 final groupSummariesProvider = StreamProvider((ref) => ref.watch(groupsRepositoryProvider).watchSummaries());
 
@@ -129,6 +135,9 @@ final payeeMemoryProvider = StreamProvider((ref) => ref.watch(payeeCategoryRepos
 
 /// Remembered SMS payees for the Settings list.
 final payeeCategoriesProvider = StreamProvider((ref) => ref.watch(payeeCategoryRepositoryProvider).watchAll());
+
+/// The user's People list, for suggestions when adding a group member.
+final peopleProvider = StreamProvider((ref) => ref.watch(peopleRepositoryProvider).watchAll());
 
 final smsHistoryProvider = StreamProvider((ref) => ref.watch(smsLogRepositoryProvider).watchHistory());
 
@@ -224,11 +233,11 @@ final notificationGatewayProvider = Provider<NotificationGateway>((ref) {
 /// The single notification layer: schedule, cancel, rescheduleAll, permissions.
 final notificationServiceProvider = Provider((ref) {
   final localeCode = ref.watch(settingsProvider.select((settings) => settings.localeCode));
-  final currencySymbol = ref.watch(settingsProvider.select((settings) => settings.currencySymbol));
+  final moneyFormat = ref.watch(homeMoneyFormatProvider);
   final l10n = notificationLocalizations(localeCode);
   return NotificationService(
     ref.watch(notificationGatewayProvider),
-    buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, l10n, currencySymbol: currencySymbol),
+    buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, l10n, moneyFormat: moneyFormat),
   );
 });
 
@@ -253,6 +262,9 @@ final smsPaidReminderIdsProvider = StreamProvider((ref) => ref.watch(smsLogRepos
 
 /// Paid and skipped reminders, latest first.
 final reminderHistoryProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchHistory());
+
+/// Pending and closed reminders together, for the Upcoming card and due calendar.
+final dueRemindersProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchDue());
 
 /// The amount each paid reminder's entry recorded, by reminder id.
 final reminderPaidAmountsProvider = StreamProvider((ref) => ref.watch(remindersRepositoryProvider).watchPaidAmounts());

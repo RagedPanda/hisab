@@ -2,7 +2,9 @@ import 'package:drift/drift.dart' show OrderingTerm, driftRuntimeOptions;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
 import 'package:hisab/core/providers.dart';
+import 'package:hisab/features/groups/settle_up_sheet.dart';
 
 import '../support/group_harness.dart';
 
@@ -124,5 +126,48 @@ void main() {
     expect(find.text('Save payment'), findsOneWidget);
     expect(find.text('100'), findsOneWidget, reason: 'the payment sheet is prefilled with what I owe');
     await leaveApp(tester);
+  });
+
+  group('the real link and text providers, answered over their platform channels', () {
+    const launcherChannel = MethodChannel('plugins.flutter.io/url_launcher');
+    const shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
+
+    void answer(WidgetTester tester, MethodChannel channel, Future<Object?> Function(MethodCall call) handler) {
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, handler);
+      addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null));
+    }
+
+    testWidgets('a link opens in another app, and a platform error counts as no app', (tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final launched = <String>[];
+      var fails = false;
+      answer(tester, launcherChannel, (call) async {
+        if (fails) throw PlatformException(code: 'ACTIVITY_NOT_FOUND');
+        launched.add((call.arguments as Map)['url'] as String);
+        return true;
+      });
+
+      expect(await container.read(linkLauncherProvider)(Uri.parse('upi://pay?pa=priya@upi')), isTrue);
+      expect(launched, ['upi://pay?pa=priya@upi']);
+      fails = true;
+      expect(await container.read(linkLauncherProvider)(Uri.parse('upi://pay?pa=priya@upi')), isFalse);
+    });
+
+    testWidgets('a shared text counts unless the sheet was dismissed', (tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      var result = 'dev.fluttercommunity.plus/share/success';
+      final shared = <String>[];
+      answer(tester, shareChannel, (call) async {
+        shared.add((call.arguments as Map)['text'] as String);
+        return result;
+      });
+
+      expect(await container.read(textSharerProvider)('Amit, villa money please'), isTrue);
+      result = '';
+      expect(await container.read(textSharerProvider)('Amit, villa money please'), isFalse);
+      expect(shared, hasLength(2));
+    });
   });
 }

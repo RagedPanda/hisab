@@ -12,8 +12,10 @@ import '../support/app_harness.dart';
 import '../support/editor_harness.dart';
 import '../support/seed.dart';
 
-/// Adds quick entries named [labels], ₹32 each unless [amountMinor] says otherwise.
+/// Replaces the starters with quick entries named [labels], ₹32 each unless
+/// [amountMinor] says otherwise.
 Future<void> _seedQuickEntries(ProviderContainer container, List<String> labels, {int? amountMinor = 3200}) async {
+  await clearQuickEntries(container);
   for (final label in labels) {
     await container.read(quickEntriesRepositoryProvider).add(label: label, amountMinor: amountMinor, accountId: await cashAccountId(container));
   }
@@ -34,8 +36,15 @@ void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
 
   group('Home', () {
-    testWidgets('there is no quick entries card until one is saved', (tester) async {
+    testWidgets('a fresh install shows the starter quick entries', (tester) async {
       await pumpApp(tester);
+      for (final label in ['Milk', 'Tea & snacks', 'Petrol', 'Auto / cab']) {
+        expect(_chip(label), findsOneWidget);
+      }
+    });
+
+    testWidgets('there is no quick entries card once they are all gone', (tester) async {
+      await pumpApp(tester, seed: clearQuickEntries);
       expect(find.byKey(kQuickEntriesCardKey), findsNothing);
     });
 
@@ -85,7 +94,7 @@ void main() {
       await settle(tester);
       await _nameQuickEntry(tester, 'Milk');
 
-      final saved = (await _quickEntries(tester, container)).single;
+      final saved = (await _quickEntries(tester, container)).last;
       expect((saved.label, saved.amountMinor), ('Milk', 3200));
       expect(await readDb(tester, () => liveEntries(container)), isEmpty, reason: 'saving a quick entry does not add an entry');
     });
@@ -111,7 +120,7 @@ void main() {
       await settle(tester);
       await _nameQuickEntry(tester, 'Tea');
 
-      expect((await _quickEntries(tester, container)).single.label, 'Tea');
+      expect((await _quickEntries(tester, container)).last.label, 'Tea');
       expect(await readDb(tester, () => liveEntries(container)), isEmpty);
       expect(editorScreen, findsNothing);
     });
@@ -119,7 +128,7 @@ void main() {
 
   group('Settings → Quick entries', () {
     testWidgets('shows the empty state, and the stepper sets how many chips Home shows', (tester) async {
-      final container = await pumpApp(tester);
+      final container = await pumpApp(tester, seed: clearQuickEntries);
       appRouter.push(kQuickEntriesLocation);
       await settle(tester);
       expect(find.textContaining('No quick entries yet'), findsOneWidget);
@@ -132,6 +141,27 @@ void main() {
       await tester.tap(find.byKey(const Key('quickEntries.fewer')));
       await settle(tester);
       expect(container.read(settingsProvider).quickEntriesShown, 3);
+    });
+
+    testWidgets('Edit from a row menu changes what the quick entry adds, in place', (tester) async {
+      final container = await pumpApp(tester, seed: (container) => _seedQuickEntries(container, ['Milk', 'Tea'], amountMinor: null));
+      appRouter.push(kQuickEntriesLocation);
+      await settle(tester);
+      final milk = (await _quickEntries(tester, container)).first;
+
+      await tester.tap(find.byKey(Key('quickEntries.menu.${milk.id}')));
+      await settle(tester);
+      await tester.tap(find.text('Edit'));
+      await settle(tester);
+      expect(find.text('Edit quick entry'), findsOneWidget);
+      await enterEditorAmount(tester, '60');
+      await tester.tap(find.byKey(const ValueKey('editor.saveQuick')));
+      await settle(tester);
+      await _nameQuickEntry(tester, 'Buffalo milk');
+
+      final quickEntries = await _quickEntries(tester, container);
+      expect([for (final quick in quickEntries) (quick.id, quick.label, quick.amountMinor)], [(milk.id, 'Buffalo milk', 6000), (quickEntries.last.id, 'Tea', null)]);
+      expect(await readDb(tester, () => liveEntries(container)), isEmpty, reason: 'editing a quick entry adds no entry');
     });
 
     testWidgets('rename and delete from a row menu', (tester) async {

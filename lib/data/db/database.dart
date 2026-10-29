@@ -7,6 +7,7 @@ import '../../core/ids.dart';
 import '../../domain/backup/seed_dedupe.dart';
 import '../../domain/categories/category_catalog.dart';
 import '../../domain/categories/category_packs.dart';
+import '../../domain/quick_entries/starter_quick_entries.dart';
 import '../../domain/sms/sms_outcome.dart';
 import '../../domain/sms/sms_transaction_key.dart';
 
@@ -620,13 +621,14 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
           await seedDefaults();
+          await seedQuickEntries();
         },
         onUpgrade: (m, from, to) async {
           if (from < 2) {
@@ -702,6 +704,8 @@ class AppDatabase extends _$AppDatabase {
           if (from < 19) await _upgradeToPeople(m);
           // v20: one-tap quick entries on Home.
           if (from < 20) await m.createTable(quickEntries);
+          // v21: starter quick entries, unless the user already made some.
+          if (from < 21) await seedQuickEntries();
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -852,6 +856,7 @@ class AppDatabase extends _$AppDatabase {
           await delete(table).go();
         }
         await seedDefaults();
+        await seedQuickEntries();
       });
 
   /// Inserts the category catalog and a Cash account. Idempotent by seedKey.
@@ -880,6 +885,27 @@ class AppDatabase extends _$AppDatabase {
         color: 0xFF43A047,
       ));
     }
+  }
+
+  /// Inserts the starter quick entries when the install never had any
+  /// (deleted ones count, so removing them sticks).
+  Future<void> seedQuickEntries() async {
+    final anyQuickEntry = await (select(quickEntries)..limit(1)).get();
+    final seeded = await (select(categories)..where((t) => t.seedKey.isNotNull() & t.deletedAt.isNull())).get();
+    final rows = starterQuickEntryRows(
+      hasAnyQuickEntry: anyQuickEntry.isNotEmpty,
+      categoryIdBySeedKey: {for (final category in seeded) category.seedKey!: category.id},
+    );
+    await batch((b) {
+      for (final row in rows) {
+        b.insert(quickEntries, QuickEntriesCompanion.insert(
+          id: row.starter.id,
+          label: row.starter.label,
+          categoryId: Value(row.categoryId),
+          sortOrder: Value(row.sortOrder),
+        ));
+      }
+    });
   }
 
   /// Moves seeded categories still on a retired default colour to the

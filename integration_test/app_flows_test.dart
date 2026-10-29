@@ -96,6 +96,15 @@ Finder _amountField() => find.descendant(of: find.byType(ExpenseEditorScreen), m
 Finder _dialogField() => find.descendant(of: find.byType(AlertDialog), matching: find.byType(TextField));
 Finder _chip(String label) => find.widgetWithText(ChoiceChip, label, skipOffstage: false);
 Finder _filled(String label) => find.widgetWithText(FilledButton, label);
+Finder _splitPicker() => find.byKey(const Key('split-method-picker'), skipOffstage: false);
+bool _splitIs(String label) => find.descendant(of: _splitPicker(), matching: find.text(label), skipOffstage: false).evaluate().isNotEmpty;
+
+/// Opens the split method row in the editor and picks [label] from its sheet.
+Future<void> _pickSplit(WidgetTester tester, String label) async {
+  await scrollTo(tester, _splitPicker(), within: find.byType(ExpenseEditorScreen));
+  await tapFinder(tester, _splitPicker());
+  await tapFinder(tester, find.descendant(of: find.byType(BottomSheet), matching: find.text(label)));
+}
 Finder _accountCardAmount(String name, String amount) => find.descendant(
   of: find.ancestor(of: find.text(name), matching: find.byType(InkWell)).first,
   matching: find.text(amount),
@@ -468,8 +477,7 @@ void main() {
     await tapFinder(tester, _chip('Rahul'));
     expect(tester.widget<ChoiceChip>(_chip('Rahul')).selected, isTrue, reason: 'Rahul selected as payer');
     await shoot(tester, 'group_paid_by');
-    await scrollTo(tester, find.text('Split'), within: find.byType(ExpenseEditorScreen));
-    await tapFinder(tester, _chip('Exact amounts'));
+    await _pickSplit(tester, 'Exact amounts');
     await enterText(tester, _splitField('You'), '300');
     await enterText(tester, _splitField('Rahul'), '100');
     await enterText(tester, _splitField('Priya'), '100');
@@ -1617,8 +1625,8 @@ void main() {
     await goBack(tester);
     expect(find.text('Rent is due on the 1st'), findsOneWidget, reason: 'notes show on the Expenses tab');
     await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'), frames: 12);
-    await scrollTo(tester, _chip('Shares / ratio'), within: find.byType(ExpenseEditorScreen));
-    expect(tester.widget<ChoiceChip>(_chip('Shares / ratio')).selected, isTrue, reason: 'new expenses start from the default split');
+    await scrollTo(tester, _splitPicker(), within: find.byType(ExpenseEditorScreen));
+    expect(_splitIs('Shares / ratio'), isTrue, reason: 'new expenses start from the default split');
     expect(find.textContaining('€'), findsWidgets, reason: 'the editor shows the group currency label');
     await goBack(tester);
 
@@ -1809,12 +1817,12 @@ void main() {
     await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
     await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
     await scrollTo(tester, find.text('Add items to split by item'), within: editor);
-    expect(_chip('By item'), findsNothing, reason: 'no items, no by-item split');
+    expect(_splitIs('By item'), isFalse, reason: 'no items, no by-item split');
 
     await scrollTo(tester, find.text('Add item'), within: editor, up: true);
     await _addItem(tester, name: 'Pizza', qty: '1', price: '600');
     await _addItem(tester, name: 'Coke', qty: '1', price: '150');
-    expect(tester.widget<ChoiceChip>(_chip('By item')).selected, isTrue, reason: 'the first item switches the split to by item');
+    expect(_splitIs('By item'), isTrue, reason: 'the first item switches the split to by item');
     expect(chipOn(assignChip(me).last) && chipOn(assignChip(rahul).last) && chipOn(assignChip(priya).last), isTrue, reason: 'everyone shares a new item');
 
     await scrollTo(tester, assignChip(priya).last, within: editor);
@@ -1846,17 +1854,16 @@ void main() {
 
     await tapText(tester, 'Restaurants & Cafes');
     await settle(tester, 8);
-    // The reopened editor starts at the top; the split chips are further down (#109).
-    await scrollTo(tester, _chip('By item'), within: editor);
-    expect(tester.widget<ChoiceChip>(_chip('By item')).selected, isTrue, reason: 'editing keeps the by-item split');
+    // The reopened editor starts at the top; the split row is further down (#109).
+    await scrollTo(tester, _splitPicker(), within: editor);
+    expect(_splitIs('By item'), isTrue, reason: 'editing keeps the by-item split');
     await scrollTo(tester, assignChip(priya).at(1), within: editor);
     expect([chipOn(assignChip(me).at(1)), chipOn(assignChip(rahul).at(1)), chipOn(assignChip(priya).at(1))], [false, true, false]);
 
-    await scrollTo(tester, _chip('Equally'), within: editor);
-    await tapFinder(tester, _chip('Equally'));
+    await _pickSplit(tester, 'Equally');
     expect(find.text('Item assignments will be cleared'), findsOneWidget);
     await tapFinder(tester, find.byKey(const Key('byItem.clearConfirm')));
-    expect(tester.widget<ChoiceChip>(_chip('Equally')).selected, isTrue);
+    expect(_splitIs('Equally'), isTrue);
     expect(assignChip(rahul), findsNothing, reason: 'the assign strips go with the by-item split');
     await _saveEntry(tester, formatMinor(84000));
     expect(await entries.getItemAssignments(entryId), isEmpty);

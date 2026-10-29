@@ -4323,4 +4323,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get quickSettingsTileManual =>
       'Swipe down twice from the top of the screen, tap the pencil to edit, then drag Hisab\'s Add expense tile into place.';
+
+  @override
+  String get homeScreenWidget => 'Home screen widget';
+
+  @override
+  String get homeScreenWidgetHint =>
+      'This month\'s spend vs last month, with + to add';
+
+  @override
+  String get homeScreenWidgetManual =>
+      'Long-press an empty spot on your Home screen, tap Widgets and pick Hisab.';
+
+  @override
+  String get widgetBackground => 'Widget background';
+
+  @override
+  String widgetBackgroundValue(int percent) {
+    return '$percent% opaque';
+  }
+
+  @override
+  String widgetLastMonth(String month, String amount) {
+    return '$month: $amount';
+  }
 }

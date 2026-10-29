@@ -2,4 +2,10 @@
 <resources>
     <!-- Matches the Flutter dark scheme.surface. -->
     <color name="splash_background">#0B1416</color>
+    <!-- Home-screen spend widget, matching the app's dark theme. -->
+    <color name="widget_surface">#FF132124</color>
+    <color name="widget_on_surface">#FFE3ECEB</color>
+    <color name="widget_on_surface_variant">#FF9DB0B1</color>
+    <color name="widget_accent">#FF14B8A6</color>
+    <color name="widget_on_accent">#FF04201D</color>
 </resources>

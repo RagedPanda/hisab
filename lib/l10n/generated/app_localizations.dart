@@ -6907,6 +6907,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Swipe down twice from the top of the screen, tap the pencil to edit, then drag Hisab\'s Add expense tile into place.'**
   String get quickSettingsTileManual;
+
+  /// No description provided for @homeScreenWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Home screen widget'**
+  String get homeScreenWidget;
+
+  /// No description provided for @homeScreenWidgetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This month\'s spend vs last month, with + to add'**
+  String get homeScreenWidgetHint;
+
+  /// No description provided for @homeScreenWidgetManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press an empty spot on your Home screen, tap Widgets and pick Hisab.'**
+  String get homeScreenWidgetManual;
+
+  /// No description provided for @widgetBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget background'**
+  String get widgetBackground;
+
+  /// No description provided for @widgetBackgroundValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% opaque'**
+  String widgetBackgroundValue(int percent);
+
+  /// No description provided for @widgetLastMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'{month}: {amount}'**
+  String widgetLastMonth(String month, String amount);
 }
 
 class _AppLocalizationsDelegate

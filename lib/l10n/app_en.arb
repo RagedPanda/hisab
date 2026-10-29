@@ -1504,5 +1504,13 @@
   "addExpenseNotificationBlocked": "Allow notifications for Hisab to show the shortcut",
   "quickSettingsTile": "Quick Settings tile",
   "quickSettingsTileHint": "Add expense from the panel you swipe down",
-  "quickSettingsTileManual": "Swipe down twice from the top of the screen, tap the pencil to edit, then drag Hisab's Add expense tile into place."
+  "quickSettingsTileManual": "Swipe down twice from the top of the screen, tap the pencil to edit, then drag Hisab's Add expense tile into place.",
+  "homeScreenWidget": "Home screen widget",
+  "homeScreenWidgetHint": "This month's spend vs last month, with + to add",
+  "homeScreenWidgetManual": "Long-press an empty spot on your Home screen, tap Widgets and pick Hisab.",
+  "widgetBackground": "Widget background",
+  "widgetBackgroundValue": "{percent}% opaque",
+  "@widgetBackgroundValue": {"placeholders": {"percent": {"type": "int"}}},
+  "widgetLastMonth": "{month}: {amount}",
+  "@widgetLastMonth": {"placeholders": {"month": {"type": "String"}, "amount": {"type": "String"}}}
 }

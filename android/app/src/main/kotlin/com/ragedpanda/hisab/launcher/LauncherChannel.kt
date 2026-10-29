@@ -26,6 +26,11 @@ object LauncherChannel {
                     result.success(null)
                 }
                 "requestAddTile" -> result.success(AddExpenseTileRequest.request(context))
+                "updateSpendWidget" -> {
+                    SpendWidgetProvider.save(appContext, call.arguments as? Map<*, *> ?: emptyMap<Any, Any>())
+                    result.success(null)
+                }
+                "requestPinWidget" -> result.success(SpendWidgetProvider.requestPin(context))
                 else -> result.notImplemented()
             }
         }

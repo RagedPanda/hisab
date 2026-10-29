@@ -4296,4 +4296,28 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get quickSettingsTileManual =>
       'स्क्रीन के ऊपर से दो बार नीचे खींचें, बदलने के लिए पेंसिल पर टैप करें, फिर हिसाब की खर्च जोड़ें टाइल को जगह पर खींचें।';
+
+  @override
+  String get homeScreenWidget => 'होम स्क्रीन विजेट';
+
+  @override
+  String get homeScreenWidgetHint =>
+      'इस महीने का खर्च बनाम पिछला महीना, जोड़ने के लिए + के साथ';
+
+  @override
+  String get homeScreenWidgetManual =>
+      'होम स्क्रीन पर किसी खाली जगह को दबाकर रखें, विजेट पर टैप करें और हिसाब चुनें।';
+
+  @override
+  String get widgetBackground => 'विजेट बैकग्राउंड';
+
+  @override
+  String widgetBackgroundValue(int percent) {
+    return '$percent% अपारदर्शी';
+  }
+
+  @override
+  String widgetLastMonth(String month, String amount) {
+    return '$month: $amount';
+  }
 }

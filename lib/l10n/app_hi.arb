@@ -1177,5 +1177,11 @@
   "addExpenseNotificationBlocked": "शॉर्टकट दिखाने के लिए हिसाब को नोटिफ़िकेशन की अनुमति दें",
   "quickSettingsTile": "क्विक सेटिंग्स टाइल",
   "quickSettingsTileHint": "ऊपर से नीचे खींचने वाले पैनल से खर्च जोड़ें",
-  "quickSettingsTileManual": "स्क्रीन के ऊपर से दो बार नीचे खींचें, बदलने के लिए पेंसिल पर टैप करें, फिर हिसाब की खर्च जोड़ें टाइल को जगह पर खींचें।"
+  "quickSettingsTileManual": "स्क्रीन के ऊपर से दो बार नीचे खींचें, बदलने के लिए पेंसिल पर टैप करें, फिर हिसाब की खर्च जोड़ें टाइल को जगह पर खींचें।",
+  "homeScreenWidget": "होम स्क्रीन विजेट",
+  "homeScreenWidgetHint": "इस महीने का खर्च बनाम पिछला महीना, जोड़ने के लिए + के साथ",
+  "homeScreenWidgetManual": "होम स्क्रीन पर किसी खाली जगह को दबाकर रखें, विजेट पर टैप करें और हिसाब चुनें।",
+  "widgetBackground": "विजेट बैकग्राउंड",
+  "widgetBackgroundValue": "{percent}% अपारदर्शी",
+  "widgetLastMonth": "{month}: {amount}"
 }

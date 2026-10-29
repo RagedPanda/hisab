@@ -99,6 +99,13 @@
             </intent-filter>
             <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE" android:value="false" />
         </service>
+        <!-- Home-screen widget: this month's spend vs last month, + to add an expense. -->
+        <receiver android:exported="false" android:name=".launcher.SpendWidgetProvider" android:label="@string/widget_spend_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/spend_widget_info" />
+        </receiver>
         <!-- Re-posts the opt-in "Add expense" notification after a reboot or update. -->
         <receiver android:exported="false" android:name=".launcher.AddExpenseBootReceiver">
             <intent-filter>

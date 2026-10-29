@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import '../../domain/launcher/quick_entry_shortcuts.dart';
 
 /// Thin wrapper over the Android channel for what Hisab shows outside the
-/// app: launcher shortcuts, the Quick Settings tile and the persistent
-/// "Add expense" notification. Every method is a no-op off Android.
+/// app: launcher shortcuts, the Quick Settings tile, the persistent
+/// "Add expense" notification and the Home-screen spend widget. Every method is a no-op off Android.
 class LauncherChannel {
   const LauncherChannel();
 
@@ -32,6 +32,19 @@ class LauncherChannel {
   Future<bool> requestAddTile() async {
     if (!isSupported) return false;
     return await _methods.invokeMethod<bool>('requestAddTile') ?? false;
+  }
+
+  /// Stores the spend widget's text and redraws every placed widget.
+  Future<void> updateSpendWidget(Map<String, Object> data) async {
+    if (!isSupported) return;
+    await _methods.invokeMethod<void>('updateSpendWidget', data);
+  }
+
+  /// Asks the launcher to place the spend widget (Android 8+, launcher
+  /// permitting). False where it cannot ask.
+  Future<bool> requestPinWidget() async {
+    if (!isSupported) return false;
+    return await _methods.invokeMethod<bool>('requestPinWidget') ?? false;
   }
 }
 

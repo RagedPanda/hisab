@@ -10,6 +10,7 @@ import '../../data/launcher/launcher_channel.dart';
 import '../../domain/launcher/quick_entry_shortcuts.dart';
 import '../../l10n/l10n.dart';
 import 'shortcut_settings.dart';
+import 'spend_widget_data.dart';
 
 /// Platform access for [LauncherSync]; tests override it with a fake.
 final launcherChannelProvider = Provider<LauncherChannel>((ref) => const LauncherChannel());
@@ -40,8 +41,8 @@ AddExpenseNotificationConfig addExpenseNotificationConfig(AppLocalizations l10n,
     );
 
 /// Keeps what Hisab shows outside the app in step with its data: the
-/// quick-entry launcher shortcuts and the "Add expense" notification. Sends
-/// only when something changed.
+/// quick-entry launcher shortcuts, the "Add expense" notification and the
+/// Home-screen spend widget. Sends only when something changed.
 class LauncherSync extends ConsumerStatefulWidget {
   const LauncherSync({super.key, required this.child});
   final Widget child;
@@ -50,9 +51,10 @@ class LauncherSync extends ConsumerStatefulWidget {
   ConsumerState<LauncherSync> createState() => _LauncherSyncState();
 }
 
-class _LauncherSyncState extends ConsumerState<LauncherSync> {
+class _LauncherSyncState extends ConsumerState<LauncherSync> with WidgetsBindingObserver {
   List<LauncherShortcut>? _sentShortcuts;
   Map<String, Object>? _sentNotification;
+  Map<String, Object>? _sentWidget;
 
   @override
   void initState() {
@@ -60,6 +62,10 @@ class _LauncherSyncState extends ConsumerState<LauncherSync> {
     if (!ref.read(launcherChannelProvider).isSupported) return;
     ref.listenManual(quickEntryShortcutsProvider, (_, shortcuts) => _sendShortcuts(shortcuts), fireImmediately: true);
     ref.listenManual(shortcutSettingsProvider.select((settings) => settings.addExpenseNotification), (_, _) => _sendNotification());
+    ref.listenManual(spendWidgetFiguresProvider, (_, _) => _sendWidget());
+    ref.listenManual(shortcutSettingsProvider.select((settings) => settings.widgetOpacity), (_, _) => _sendWidget());
+    ref.listenManual(homeMoneyFormatProvider, (_, _) => _sendWidget());
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
@@ -67,6 +73,35 @@ class _LauncherSyncState extends ConsumerState<LauncherSync> {
     super.didChangeDependencies();
     // Runs first on start and again when the language changes.
     _sendNotification();
+    _sendWidget();
+  }
+
+  // Back in the app, possibly in a new month: query the months again.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) ref.invalidate(spendWidgetFiguresProvider);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void _sendWidget() {
+    final channel = ref.read(launcherChannelProvider);
+    final figures = ref.read(spendWidgetFiguresProvider).value;
+    if (!channel.isSupported || figures == null || !mounted) return;
+    final data = spendWidgetData(
+      figures,
+      l10n: context.l10n,
+      moneyFormat: ref.read(homeMoneyFormatProvider),
+      locale: Localizations.localeOf(context).toString(),
+      opacity: ref.read(shortcutSettingsProvider).widgetOpacity,
+    ).toMap();
+    if (mapEquals(data, _sentWidget)) return;
+    _sentWidget = data;
+    unawaited(channel.updateSpendWidget(data));
   }
 
   void _sendNotification() {

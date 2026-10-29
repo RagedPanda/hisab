@@ -43,6 +43,30 @@ class ShortcutsScreen extends ConsumerWidget {
               onTap: () => _addTile(context, ref),
             ),
           ),
+          Card(
+            child: Column(children: [
+              ListTile(
+                key: const Key('shortcuts.widget'),
+                leading: const Icon(Icons.widgets_outlined),
+                title: Text(l10n.homeScreenWidget),
+                subtitle: Text(l10n.homeScreenWidgetHint),
+                trailing: const Icon(Icons.add),
+                onTap: () => _addWidget(context, ref),
+              ),
+              ListTile(
+                title: Text(l10n.widgetBackground),
+                subtitle: Slider(
+                  key: const Key('shortcuts.widgetOpacity'),
+                  value: settings.widgetOpacity.toDouble(),
+                  max: kMaxSpendWidgetOpacity.toDouble(),
+                  divisions: 10,
+                  label: l10n.widgetBackgroundValue(settings.widgetOpacity),
+                  onChanged: (value) => ref.read(shortcutSettingsProvider.notifier).setWidgetOpacity(value.round()),
+                ),
+                trailing: Text(l10n.widgetBackgroundValue(settings.widgetOpacity)),
+              ),
+            ]),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Text(l10n.launcherShortcutsHelp, style: Theme.of(context).textTheme.bodySmall),
@@ -69,13 +93,22 @@ class ShortcutsScreen extends ConsumerWidget {
   Future<void> _addTile(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
     if (await ref.read(launcherChannelProvider).requestAddTile() || !context.mounted) return;
-    await showDialog<void>(
+    await _showHowTo(context, title: l10n.quickSettingsTile, body: l10n.quickSettingsTileManual);
+  }
+
+  Future<void> _addWidget(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    if (await ref.read(launcherChannelProvider).requestPinWidget() || !context.mounted) return;
+    await _showHowTo(context, title: l10n.homeScreenWidget, body: l10n.homeScreenWidgetManual);
+  }
+
+  /// The manual steps, where the system cannot add it for the user.
+  Future<void> _showHowTo(BuildContext context, {required String title, required String body}) => showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.quickSettingsTile),
-        content: Text(l10n.quickSettingsTileManual),
+        title: Text(title),
+        content: Text(body),
         actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(MaterialLocalizations.of(dialogContext).okButtonLabel))],
       ),
     );
-  }
 }

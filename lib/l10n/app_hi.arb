@@ -106,6 +106,8 @@
   "keepEditing": "भरना जारी रखें",
   "discard": "छोड़ दें",
   "groupExpense": "ग्रुप खर्च",
+  "copiedFromLastEntry": "पिछले खर्च से भरा गया",
+  "startBlank": "खाली से शुरू करें",
   "deleteEntryQuestion": "यह लेन-देन हटाएँ?",
   "totalOfItems": "{count} आइटम का कुल",
   "chooseCategory": "श्रेणी चुनें",

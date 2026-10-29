@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -246,6 +247,69 @@ void main() {
       final rule = await readDb(tester, () => container.read(recurringRepositoryProvider).getRule(saved.recurringId!));
       expect(rule!.groupId, groupId);
       expect(rule.amountMinor, 30000);
+    });
+  });
+
+  group('copy of the last expense', () {
+    late String lastId;
+
+    /// A milk bill Asha paid three days ago, split between You and Asha.
+    Future<void> seedMilk(ProviderContainer container) async {
+      lastId = newId();
+      final items = [
+        EntryItemsCompanion.insert(id: newId(), entryId: lastId, name: 'Buffalo milk', quantity: const Value(1), unit: const Value('L'), unitPriceMinor: 7200, amountMinor: 7200),
+        EntryItemsCompanion.insert(id: newId(), entryId: lastId, name: 'Cow milk', quantity: const Value(0.5), unit: const Value('L'), unitPriceMinor: 6000, amountMinor: 3000, sortOrder: const Value(1)),
+      ];
+      await container.read(groupsRepositoryProvider).saveGroupExpense(
+            EntriesRepository.newExpense(
+              id: lastId,
+              amountMinor: 10200,
+              occurredAt: DateTime.now().subtract(const Duration(days: 3)),
+              payee: 'Gwala',
+              groupId: groupId,
+              paidByMemberId: memberIds['Asha'],
+              splitMethod: 'exact',
+            ),
+            items: items,
+            splits: [
+              for (final name in ['You', 'Asha']) SplitsCompanion.insert(id: newId(), entryId: lastId, memberId: memberIds[name]!, amountMinor: 5100),
+            ],
+          );
+    }
+
+    Future<ProviderContainer> openCopy(WidgetTester tester) => openEditor(
+          tester,
+          location: () => '/entry?group=$groupId&copy=$lastId',
+          seed: (container) async {
+            await seedTrip(container);
+            await seedMilk(container);
+          },
+        );
+
+    testWidgets('saves a new expense dated today with the same items, payer and split', (tester) async {
+      final container = await openCopy(tester);
+      expect(find.byKey(const Key('editor.copiedFromLast')), findsOneWidget);
+      await saveEditor(tester);
+
+      final entries = await readDb(tester, () => liveEntries(container));
+      expect(entries, hasLength(2), reason: 'the last expense is copied, not edited');
+      final copy = entries.firstWhere((entry) => entry.id != lastId);
+      expect(DateUtils.isSameDay(copy.occurredAt, DateTime.now()), isTrue);
+      expect((copy.groupId, copy.payee, copy.amountMinor, copy.paidByMemberId, copy.splitMethod), (groupId, 'Gwala', 10200, memberIds['Asha'], 'exact'));
+      final original = await detailsOf(tester, container, lastId);
+      final details = await detailsOf(tester, container, copy.id);
+      expect([for (final item in details.items) (item.name, item.quantity, item.unitPriceMinor)], [('Buffalo milk', 1.0, 7200), ('Cow milk', 0.5, 6000)]);
+      expect(details.items.map((item) => item.id).toSet().intersection(original.items.map((item) => item.id).toSet()), isEmpty, reason: 'fresh item rows');
+      expect({for (final split in details.splits) split.memberId: split.amountMinor}, {memberIds['You']: 5100, memberIds['Asha']: 5100});
+      expect(original.items, hasLength(2), reason: 'the original keeps its items');
+    });
+
+    testWidgets('Start blank swaps the copy for an empty group expense', (tester) async {
+      await openCopy(tester);
+      await tester.tap(find.byKey(const Key('editor.startBlank')));
+      await settle(tester);
+      expect(find.byKey(const Key('editor.copiedFromLast')), findsNothing);
+      expect(find.text('Buffalo milk'), findsNothing);
     });
   });
 }

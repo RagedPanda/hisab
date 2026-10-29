@@ -435,6 +435,53 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get quickEntries => 'Quick entries';
+
+  @override
+  String get quickEntriesHint => 'One-tap spends on Home';
+
+  @override
+  String get saveAsQuickEntry => 'Save as quick entry';
+
+  @override
+  String get saveQuickEntry => 'Save quick entry';
+
+  @override
+  String get newQuickEntry => 'New quick entry';
+
+  @override
+  String get quickEntryName => 'Name on the chip';
+
+  @override
+  String get quickEntrySaved =>
+      'Saved as a quick entry. Tap it on Home to add it.';
+
+  @override
+  String quickEntryAdded(String label, String amount) {
+    return 'Added $label · $amount';
+  }
+
+  @override
+  String quickEntriesMore(int count) {
+    return '+$count more';
+  }
+
+  @override
+  String get quickEntriesShown => 'Shown on Home';
+
+  @override
+  String quickEntriesShownHint(int count) {
+    return '$count chips; the rest go behind +more';
+  }
+
+  @override
+  String get quickEntriesEmpty =>
+      'No quick entries yet. Add one here, or open any entry and tap the bolt to save it as one.';
+
+  @override
+  String get quickEntryNoAmount => 'Opens the editor';
+
+  @override
   String sameAsLastTime(int count) {
     return 'Same as last time · $count items';
   }

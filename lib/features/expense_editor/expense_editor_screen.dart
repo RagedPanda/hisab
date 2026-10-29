@@ -15,6 +15,7 @@ import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
 import '../../data/repositories/entry_removal.dart';
+import '../../data/repositories/payee_category_repository.dart';
 import '../../data/repositories/project_fields_repository.dart';
 import '../../data/repositories/projects_repository.dart';
 import '../../data/repositories/group_recurring_repository.dart';
@@ -51,7 +52,7 @@ import 'editor_draft.dart';
 import 'item_row.dart';
 
 class ExpenseEditorScreen extends ConsumerStatefulWidget {
-  const ExpenseEditorScreen({super.key, this.entryId, this.groupId, this.initialKind, this.smsId, this.projectId, this.reminderId, this.copyFromId});
+  const ExpenseEditorScreen({super.key, this.entryId, this.groupId, this.initialKind, this.smsId, this.projectId, this.reminderId, this.copyFromId, this.quickEntryId, this.newQuickEntry = false});
   final String? entryId;
   final String? groupId;
 
@@ -66,6 +67,13 @@ class ExpenseEditorScreen extends ConsumerStatefulWidget {
 
   /// Saved entry a new one starts as a copy of (a group's last expense), dated now.
   final String? copyFromId;
+
+  /// A quick entry to start from (a Home chip without an amount, or a long press).
+  final String? quickEntryId;
+
+  /// Opened from the quick entries list to make one: Save stores the form as
+  /// a quick entry instead of adding an entry, and the amount may be empty.
+  final bool newQuickEntry;
 
   @override
   ConsumerState<ExpenseEditorScreen> createState() => _ExpenseEditorScreenState();
@@ -293,7 +301,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       await _prefillFromSms(widget.smsId!);
     } else {
       if (widget.reminderId != null) await _prefillFromReminder(widget.reminderId!);
+      if (widget.quickEntryId != null) await _prefillFromQuickEntry(widget.quickEntryId!);
       final accounts = await ref.read(accountsRepositoryProvider).getAll();
+      if (!accounts.any((account) => account.id == _accountId)) _accountId = null;
       _accountId ??= defaultEntryAccountId(accounts, configuredId: ref.read(settingsProvider).defaultAccountId);
       final projects = await ref.read(projectsRepositoryProvider).getAll(includeArchived: false);
       _projectId = initialEntryProjectId(
@@ -315,6 +325,53 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _openedWith = _draft;
     _loadedCategoryId = _category?.id;
     if (mounted) setState(() => _loaded = true);
+  }
+
+  Future<void> _prefillFromQuickEntry(String id) async {
+    final quick = await ref.read(quickEntriesRepositoryProvider).find(id);
+    if (quick == null) return;
+    _kind = quick.kind;
+    if (quick.amountMinor case final amount?) _amountController.text = amountInputText(amount, format: _moneyFormat);
+    if (quick.categoryId case final categoryId?) {
+      final category = await ref.read(categoriesRepositoryProvider).byId(categoryId);
+      if (isUsablePayeeCategory(category, quick.kind)) _category = category;
+    }
+    _accountId = quick.accountId;
+    _payeeController.text = quick.payee ?? '';
+    _noteController.text = quick.note;
+    _tagsController.text = quick.tags;
+  }
+
+  bool get _canSaveAsQuickEntry => _groupId == null && _kind != 'transfer';
+
+  /// What the chip is called unless the user types a name: the payee, else
+  /// the category.
+  String get _quickEntryLabel {
+    final payee = _payeeController.text.trim();
+    if (payee.isNotEmpty) return payee;
+    return _category?.displayName(context) ?? '';
+  }
+
+  /// Stores the form as a quick entry under a name the user confirms; true
+  /// once saved.
+  Future<bool> _saveAsQuickEntry() async {
+    final l10n = context.l10n;
+    final label = await promptText(context, title: l10n.quickEntryName, initial: _quickEntryLabel);
+    if (label == null || label.isEmpty || !mounted) return false;
+    final payee = _payeeController.text.trim();
+    await ref.read(quickEntriesRepositoryProvider).add(
+          label: label,
+          kind: _kind,
+          amountMinor: _amountMinor > 0 ? _amountMinor : null,
+          categoryId: _category?.id,
+          accountId: _accountId,
+          payee: payee.isEmpty ? null : payee,
+          note: _noteController.text.trim(),
+          tags: formatTags(parseTags(_tagsController.text)),
+        );
+    if (!mounted) return true;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.quickEntrySaved)));
+    return true;
   }
 
   Future<void> _loadProjectFields() async {
@@ -568,8 +625,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         scrolledUnderElevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent),
         titleTextStyle: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(color: Colors.white),
-        title: Text(_isEditing ? l10n.editEntry : _groupId != null ? l10n.groupExpense : l10n.newEntry),
+        title: Text(_isEditing ? l10n.editEntry : _groupId != null ? l10n.groupExpense : widget.newQuickEntry ? l10n.newQuickEntry : l10n.newEntry),
         actions: [
+          if (_canSaveAsQuickEntry && !widget.newQuickEntry)
+            IconButton(key: const Key('editor.saveAsQuick'), tooltip: l10n.saveAsQuickEntry, icon: const Icon(Icons.bolt_outlined), onPressed: _saveAsQuickEntry),
           if (_isEditing)
             IconButton(key: const Key('editor.again'), tooltip: l10n.entryAgain, icon: const Icon(Icons.replay_rounded), onPressed: _again),
           if (_isEditing)
@@ -770,6 +829,20 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   Widget _saveButtons(AppLocalizations l10n, MoneyFormat moneyFormat) {
     // The buttons follow the header's kind colour, so an expense saves in coral.
     final kindTint = _headerColor(context);
+    if (widget.newQuickEntry) {
+      return FilledButton.icon(
+        key: const ValueKey('editor.saveQuick'),
+        style: FilledButton.styleFrom(backgroundColor: kindTint, foregroundColor: Colors.white),
+        icon: const Icon(Icons.bolt_outlined),
+        label: Text(l10n.saveQuickEntry),
+        onPressed: () async {
+          if (await _saveAsQuickEntry() && mounted) {
+            _openedWith = _draft;
+            popOrGoHome(context);
+          }
+        },
+      );
+    }
     final save = FilledButton(
       key: const ValueKey('editor.save'),
       style: FilledButton.styleFrom(backgroundColor: kindTint, foregroundColor: Colors.white),

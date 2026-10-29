@@ -135,10 +135,10 @@ Future<void> addQuickEntry(BuildContext context, WidgetRef ref, QuickEntry quick
     return;
   }
   await entries.saveEntry(entry);
-  messenger
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(
-      content: Text(l10n.quickEntryAdded(quick.label, formatMinor(entry.amountMinor.value, format: moneyFormat))),
-      action: SnackBarAction(label: l10n.undo, onPressed: () => entries.deleteEntry(entry.id.value)),
-    ));
+  showUndoSnackBar(
+    messenger,
+    message: l10n.quickEntryAdded(quick.label, formatMinor(entry.amountMinor.value, format: moneyFormat)),
+    undoLabel: l10n.undo,
+    onUndo: () => entries.deleteEntry(entry.id.value),
+  );
 }

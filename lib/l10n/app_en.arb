@@ -1535,5 +1535,13 @@
   "@smsPayeeRemembered": {"placeholders": {"category": {"type": "String"}, "payee": {"type": "String"}}},
   "safeToSpendPerDay": "Safe to spend {amount}/day",
   "@safeToSpendPerDay": {"placeholders": {"amount": {"type": "String"}}},
-  "safeToSpendOverBudget": "Over budget"
+  "safeToSpendOverBudget": "Over budget",
+  "smsEntryChannelName": "Added from SMS",
+  "smsEntryChannelDescription": "Entries Hisab added from bank SMS, with Change category and Undo",
+  "smsEntryChangeCategory": "Change category",
+  "smsEntryNewPayeeHint": "New payee: pick a category",
+  "smsEntryGoneTitle": "This entry no longer exists",
+  "smsEntryGoneBody": "It was undone or deleted.",
+  "smsEntryCategoryChanged": "Category changed to {category}",
+  "@smsEntryCategoryChanged": {"placeholders": {"category": {"type": "String"}}}
 }

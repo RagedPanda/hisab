@@ -1201,5 +1201,12 @@
   "smsPayeePickCategory": "श्रेणी चुनें",
   "smsPayeeRemembered": "अब से {payee} के लिए {category} लगेगी",
   "safeToSpendPerDay": "सुरक्षित खर्च {amount}/दिन",
-  "safeToSpendOverBudget": "बजट से ऊपर"
+  "safeToSpendOverBudget": "बजट से ऊपर",
+  "smsEntryChannelName": "एसएमएस से जोड़ी गई एंट्री",
+  "smsEntryChannelDescription": "बैंक एसएमएस से Hisab द्वारा जोड़ी गई एंट्री, श्रेणी बदलें और पूर्ववत करें के साथ",
+  "smsEntryChangeCategory": "श्रेणी बदलें",
+  "smsEntryNewPayeeHint": "नया प्राप्तकर्ता: श्रेणी चुनें",
+  "smsEntryGoneTitle": "यह एंट्री अब मौजूद नहीं है",
+  "smsEntryGoneBody": "इसे पूर्ववत किया गया या हटा दिया गया।",
+  "smsEntryCategoryChanged": "श्रेणी बदलकर {category} की गई"
 }

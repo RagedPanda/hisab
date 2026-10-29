@@ -4424,4 +4424,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get safeToSpendOverBudget => 'Over budget';
+
+  @override
+  String get smsEntryChannelName => 'Added from SMS';
+
+  @override
+  String get smsEntryChannelDescription =>
+      'Entries Hisab added from bank SMS, with Change category and Undo';
+
+  @override
+  String get smsEntryChangeCategory => 'Change category';
+
+  @override
+  String get smsEntryNewPayeeHint => 'New payee: pick a category';
+
+  @override
+  String get smsEntryGoneTitle => 'This entry no longer exists';
+
+  @override
+  String get smsEntryGoneBody => 'It was undone or deleted.';
+
+  @override
+  String smsEntryCategoryChanged(String category) {
+    return 'Category changed to $category';
+  }
 }

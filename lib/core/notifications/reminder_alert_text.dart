@@ -24,6 +24,8 @@ NotificationSetupTexts notificationSetupTexts(AppLocalizations l10n) => Notifica
       markPaidLabel: l10n.reminderMarkPaid,
       doneLabel: l10n.reminderMarkDone,
       snoozeLabel: l10n.reminderSnoozeOneDay,
+      smsChannelName: l10n.smsEntryChannelName,
+      smsChannelDescription: l10n.smsEntryChannelDescription,
       updatesChannelName: l10n.notificationsUpdatesChannel,
       updatesChannelDescription: l10n.notificationsUpdatesChannelDescription,
     );

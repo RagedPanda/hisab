@@ -7,6 +7,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'background_actions.dart';
 import 'notification_gateway.dart';
 import 'reminder_payload.dart';
+import 'sms_entry_payload.dart';
 
 const String _channelId = 'reminders';
 const String _updatesChannelId = 'updates';
@@ -102,12 +103,15 @@ class PluginNotificationGateway implements NotificationGateway {
   }
 
   @override
-  Future<void> show(AlertRequest request) => _plugin.show(
-        id: request.id,
-        title: request.title,
-        body: request.body,
-        payload: request.payload,
-        notificationDetails: _details(request),
+  Future<void> show(ShownAlert alert) => _plugin.show(
+        id: alert.id,
+        title: alert.title,
+        body: alert.body,
+        payload: alert.payload,
+        notificationDetails: switch (alert) {
+          AlertRequest request => _details(request),
+          SmsEntryAlert entry => _smsEntryDetails(entry),
+        },
       );
 
   NotificationDetails _details(AlertRequest request) {
@@ -134,6 +138,24 @@ class PluginNotificationGateway implements NotificationGateway {
       ),
     );
   }
+
+  /// Android only: Bank SMS is read on Android alone.
+  NotificationDetails _smsEntryDetails(SmsEntryAlert alert) => NotificationDetails(
+        android: AndroidNotificationDetails(
+          kSmsEntryChannelId,
+          _texts.smsChannelName,
+          channelDescription: _texts.smsChannelDescription,
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+          icon: '@drawable/ic_notification',
+          category: AndroidNotificationCategory.status,
+          styleInformation: BigTextStyleInformation(alert.body),
+          actions: [
+            AndroidNotificationAction(kSmsChangeCategoryActionId, alert.changeCategoryLabel, showsUserInterface: true),
+            AndroidNotificationAction(kSmsUndoActionId, alert.undoLabel),
+          ],
+        ),
+      );
 
   @override
   Future<void> cancel(int id) => _plugin.cancel(id: id);

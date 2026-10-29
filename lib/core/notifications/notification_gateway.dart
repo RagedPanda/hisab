@@ -7,14 +7,24 @@ enum AlertChannel {
   updates,
 }
 
+/// A notification [NotificationGateway.show] can post at once.
+sealed class ShownAlert {
+  const ShownAlert({required this.id, required this.title, required this.body, required this.payload});
+
+  final int id;
+  final String title;
+  final String body;
+  final String payload;
+}
+
 /// One local notification to post at [fireAt].
-class AlertRequest {
+class AlertRequest extends ShownAlert {
   const AlertRequest({
-    required this.id,
-    required this.title,
-    required this.body,
+    required super.id,
+    required super.title,
+    required super.body,
     required this.fireAt,
-    required this.payload,
+    required super.payload,
     required this.markPaidLabel,
     required this.snoozeLabel,
     required this.isMoney,
@@ -22,11 +32,7 @@ class AlertRequest {
     this.channel = AlertChannel.reminders,
   });
 
-  final int id;
-  final String title;
-  final String body;
   final DateTime fireAt;
-  final String payload;
 
   /// Action button labels ("Mark paid" / "Done", "Snooze 1 day").
   final String markPaidLabel;
@@ -39,6 +45,22 @@ class AlertRequest {
   final bool withActions;
 
   final AlertChannel channel;
+}
+
+/// A notification shown at once for an entry added from a bank SMS, with
+/// Change category (opens the app) and Undo (runs in the background).
+class SmsEntryAlert extends ShownAlert {
+  const SmsEntryAlert({
+    required super.id,
+    required super.title,
+    required super.body,
+    required super.payload,
+    required this.changeCategoryLabel,
+    required this.undoLabel,
+  });
+
+  final String changeCategoryLabel;
+  final String undoLabel;
 }
 
 /// A notification the OS still holds for later.
@@ -75,6 +97,8 @@ class NotificationSetupTexts {
     required this.markPaidLabel,
     required this.doneLabel,
     required this.snoozeLabel,
+    required this.smsChannelName,
+    required this.smsChannelDescription,
     this.updatesChannelName,
     this.updatesChannelDescription,
   });
@@ -88,6 +112,10 @@ class NotificationSetupTexts {
   final String markPaidLabel;
   final String doneLabel;
   final String snoozeLabel;
+
+  /// Channel of the "added from SMS" notifications.
+  final String smsChannelName;
+  final String smsChannelDescription;
 }
 
 /// The plugin calls NotificationService needs, behind an interface so the
@@ -103,8 +131,10 @@ abstract interface class NotificationGateway {
 
   Future<void> schedule(AlertRequest request, {required bool exact});
 
-  /// Posts [request] now, ignoring its fire time (Settings' samples).
-  Future<void> show(AlertRequest request);
+  /// Posts [alert] now, replacing one with the same id: an [AlertRequest]
+  /// ignores its fire time (Settings' samples, the evening summary), an
+  /// [SmsEntryAlert] carries Change category and Undo.
+  Future<void> show(ShownAlert alert);
   Future<void> cancel(int id);
   Future<List<PendingAlert>> pending();
 

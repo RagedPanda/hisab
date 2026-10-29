@@ -80,12 +80,14 @@ ThemeData buildTheme(Brightness brightness) {
     bottomSheetTheme: BottomSheetThemeData(backgroundColor: scheme.surface, surfaceTintColor: Colors.transparent),
     chipTheme: base.chipTheme.copyWith(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      // Unselected chips get an outline so they read as controls; the fill alone marks selection (P2-9).
+      // Unselected chips get a quiet outline so they read as controls; the
+      // selected one gets a primary tint and outline, which stays visible on
+      // the dark background where secondaryContainer barely did (P2-9).
       side: WidgetStateBorderSide.resolveWith(
-        (states) => states.contains(WidgetState.selected) ? BorderSide.none : BorderSide(color: scheme.outlineVariant),
+        (states) => BorderSide(color: states.contains(WidgetState.selected) ? scheme.primary : scheme.outlineVariant),
       ),
       backgroundColor: scheme.surface,
-      selectedColor: scheme.secondaryContainer,
+      selectedColor: scheme.primary.withValues(alpha: isDark ? 0.28 : 0.16),
       labelStyle: base.textTheme.labelLarge?.copyWith(color: scheme.onSurface),
       showCheckmark: false,
     ),

@@ -40,6 +40,9 @@ class RecordingNotificationGateway implements NotificationGateway {
   }
 
   @override
+  Future<void> show(SmsEntryAlert alert) => _delegate.show(alert);
+
+  @override
   Future<void> cancel(int id) {
     log.recordCancel(id);
     return _delegate.cancel(id);

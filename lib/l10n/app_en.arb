@@ -1361,5 +1361,13 @@
   "@smsPayeeAskTitle": {"placeholders": {"payee": {"type": "String"}}},
   "smsPayeePickCategory": "Pick category",
   "smsPayeeRemembered": "Hisab will use {category} for {payee} from now on",
-  "@smsPayeeRemembered": {"placeholders": {"category": {"type": "String"}, "payee": {"type": "String"}}}
+  "@smsPayeeRemembered": {"placeholders": {"category": {"type": "String"}, "payee": {"type": "String"}}},
+  "smsEntryChannelName": "Added from SMS",
+  "smsEntryChannelDescription": "Entries Hisab added from bank SMS, with Change category and Undo",
+  "smsEntryChangeCategory": "Change category",
+  "smsEntryNewPayeeHint": "New payee: pick a category",
+  "smsEntryGoneTitle": "This entry no longer exists",
+  "smsEntryGoneBody": "It was undone or deleted.",
+  "smsEntryCategoryChanged": "Category changed to {category}",
+  "@smsEntryCategoryChanged": {"placeholders": {"category": {"type": "String"}}}
 }

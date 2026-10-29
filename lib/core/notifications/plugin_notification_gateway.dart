@@ -7,8 +7,10 @@ import 'package:timezone/timezone.dart' as tz;
 import 'background_actions.dart';
 import 'notification_gateway.dart';
 import 'reminder_payload.dart';
+import 'sms_entry_payload.dart';
 
 const String _channelId = 'reminders';
+const String _smsChannelId = 'sms_entries';
 const String _moneyCategoryId = 'reminderMoney';
 const String _doneCategoryId = 'reminderDone';
 
@@ -110,6 +112,31 @@ class PluginNotificationGateway implements NotificationGateway {
       ),
     );
   }
+
+  /// Android only: Bank SMS is read on Android alone.
+  @override
+  Future<void> show(SmsEntryAlert alert) => _plugin.show(
+        id: alert.id,
+        title: alert.title,
+        body: alert.body,
+        payload: alert.payload,
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            _smsChannelId,
+            _texts.smsChannelName,
+            channelDescription: _texts.smsChannelDescription,
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
+            icon: '@drawable/ic_notification',
+            category: AndroidNotificationCategory.status,
+            styleInformation: BigTextStyleInformation(alert.body),
+            actions: [
+              AndroidNotificationAction(kSmsChangeCategoryActionId, alert.changeCategoryLabel, showsUserInterface: true),
+              AndroidNotificationAction(kSmsUndoActionId, alert.undoLabel),
+            ],
+          ),
+        ),
+      );
 
   @override
   Future<void> cancel(int id) => _plugin.cancel(id: id);

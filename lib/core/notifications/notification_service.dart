@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../data/db/database.dart';
 import '../../domain/reminders/reminder_kind.dart';
 import '../../domain/reminders/reminder_schedule.dart';
@@ -37,6 +39,16 @@ class NotificationService {
 
   /// Opens the Android "Alarms & reminders" setting; true when exact alarms are allowed.
   Future<bool> requestExactAlarms() => _gateway.requestExactAlarms();
+
+  /// Shows the notification of an entry added from a bank SMS. Never throws:
+  /// the entry is already saved, and the in-app history still lists it.
+  Future<void> showSmsEntry(SmsEntryAlert alert) async {
+    try {
+      await _gateway.show(alert);
+    } catch (error) {
+      debugPrint('Hisab: SMS entry notification not shown ($error)');
+    }
+  }
 
   /// Replaces every alert of [reminder] with the ones still due at now.
   /// Done, skipped, deleted or un-timed reminders end up with none.

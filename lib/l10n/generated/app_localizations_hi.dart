@@ -3891,4 +3891,28 @@ class AppLocalizationsHi extends AppLocalizations {
   String smsPayeeRemembered(String category, String payee) {
     return 'अब से $payee के लिए $category लगेगी';
   }
+
+  @override
+  String get smsEntryChannelName => 'एसएमएस से जोड़ी गई एंट्री';
+
+  @override
+  String get smsEntryChannelDescription =>
+      'बैंक एसएमएस से Hisab द्वारा जोड़ी गई एंट्री, श्रेणी बदलें और पूर्ववत करें के साथ';
+
+  @override
+  String get smsEntryChangeCategory => 'श्रेणी बदलें';
+
+  @override
+  String get smsEntryNewPayeeHint => 'नया प्राप्तकर्ता: श्रेणी चुनें';
+
+  @override
+  String get smsEntryGoneTitle => 'यह एंट्री अब मौजूद नहीं है';
+
+  @override
+  String get smsEntryGoneBody => 'इसे पूर्ववत किया गया या हटा दिया गया।';
+
+  @override
+  String smsEntryCategoryChanged(String category) {
+    return 'श्रेणी बदलकर $category की गई';
+  }
 }

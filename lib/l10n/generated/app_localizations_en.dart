@@ -3917,4 +3917,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String smsPayeeRemembered(String category, String payee) {
     return 'Hisab will use $category for $payee from now on';
   }
+
+  @override
+  String get smsEntryChannelName => 'Added from SMS';
+
+  @override
+  String get smsEntryChannelDescription =>
+      'Entries Hisab added from bank SMS, with Change category and Undo';
+
+  @override
+  String get smsEntryChangeCategory => 'Change category';
+
+  @override
+  String get smsEntryNewPayeeHint => 'New payee: pick a category';
+
+  @override
+  String get smsEntryGoneTitle => 'This entry no longer exists';
+
+  @override
+  String get smsEntryGoneBody => 'It was undone or deleted.';
+
+  @override
+  String smsEntryCategoryChanged(String category) {
+    return 'Category changed to $category';
+  }
 }

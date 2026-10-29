@@ -29,6 +29,26 @@ class AlertRequest {
   final bool withActions;
 }
 
+/// A notification shown at once for an entry added from a bank SMS, with
+/// Change category (opens the app) and Undo (runs in the background).
+class SmsEntryAlert {
+  const SmsEntryAlert({
+    required this.id,
+    required this.title,
+    required this.body,
+    required this.payload,
+    required this.changeCategoryLabel,
+    required this.undoLabel,
+  });
+
+  final int id;
+  final String title;
+  final String body;
+  final String payload;
+  final String changeCategoryLabel;
+  final String undoLabel;
+}
+
 /// A notification the OS still holds for later.
 class PendingAlert {
   const PendingAlert({required this.id, this.payload});
@@ -63,6 +83,8 @@ class NotificationSetupTexts {
     required this.markPaidLabel,
     required this.doneLabel,
     required this.snoozeLabel,
+    required this.smsChannelName,
+    required this.smsChannelDescription,
   });
 
   final String channelName;
@@ -70,6 +92,10 @@ class NotificationSetupTexts {
   final String markPaidLabel;
   final String doneLabel;
   final String snoozeLabel;
+
+  /// Channel of the "added from SMS" notifications.
+  final String smsChannelName;
+  final String smsChannelDescription;
 }
 
 /// The plugin calls NotificationService needs, behind an interface so the
@@ -84,6 +110,9 @@ abstract interface class NotificationGateway {
   Future<NotificationTap?> launchTap();
 
   Future<void> schedule(AlertRequest request, {required bool exact});
+
+  /// Shows [alert] now, replacing one with the same id.
+  Future<void> show(SmsEntryAlert alert);
   Future<void> cancel(int id);
   Future<List<PendingAlert>> pending();
 

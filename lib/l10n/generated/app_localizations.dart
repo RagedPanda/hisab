@@ -6229,6 +6229,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hisab will use {category} for {payee} from now on'**
   String smsPayeeRemembered(String category, String payee);
+
+  /// No description provided for @smsEntryChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Added from SMS'**
+  String get smsEntryChannelName;
+
+  /// No description provided for @smsEntryChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries Hisab added from bank SMS, with Change category and Undo'**
+  String get smsEntryChannelDescription;
+
+  /// No description provided for @smsEntryChangeCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Change category'**
+  String get smsEntryChangeCategory;
+
+  /// No description provided for @smsEntryNewPayeeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New payee: pick a category'**
+  String get smsEntryNewPayeeHint;
+
+  /// No description provided for @smsEntryGoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This entry no longer exists'**
+  String get smsEntryGoneTitle;
+
+  /// No description provided for @smsEntryGoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It was undone or deleted.'**
+  String get smsEntryGoneBody;
+
+  /// No description provided for @smsEntryCategoryChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Category changed to {category}'**
+  String smsEntryCategoryChanged(String category);
 }
 
 class _AppLocalizationsDelegate

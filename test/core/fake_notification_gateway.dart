@@ -38,10 +38,17 @@ class FakeNotificationGateway implements NotificationGateway {
     exactById[request.id] = exact;
   }
 
+  /// SMS entry notifications shown, by id.
+  final Map<int, SmsEntryAlert> shown = {};
+
+  @override
+  Future<void> show(SmsEntryAlert alert) async => shown[alert.id] = alert;
+
   @override
   Future<void> cancel(int id) async {
     cancelled.add(id);
     scheduled.remove(id);
+    shown.remove(id);
   }
 
   @override

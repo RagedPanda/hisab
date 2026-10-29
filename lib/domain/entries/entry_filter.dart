@@ -113,6 +113,12 @@ List<String> parseTags(String raw) {
   ];
 }
 
+/// [tags] as stored on an entry: `home, trip`.
+String formatTags(Iterable<String> tags) => tags.join(', ');
+
+/// [raw] tags text with [tag] added unless it is already there (ignoring case).
+String withTag(String raw, String tag) => formatTags(parseTags('$raw,$tag'));
+
 /// Every tag used across [rawTags], sorted case-insensitively.
 List<String> distinctTags(Iterable<String> rawTags) {
   final byLower = <String, String>{};

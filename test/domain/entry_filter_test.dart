@@ -124,6 +124,13 @@ void main() {
     });
   });
 
+  test('formatTags and withTag keep one spelling of each tag', () {
+    expect(formatTags(['home', 'trip']), 'home, trip');
+    expect(withTag('', 'goa'), 'goa');
+    expect(withTag('#home trip', 'Goa'), 'home, trip, Goa');
+    expect(withTag('home, Goa', 'goa'), 'home, Goa', reason: 'already there, ignoring case');
+  });
+
   test('parseTags and distinctTags', () {
     expect(parseTags('#home, trip  #Home,,'), ['home', 'trip']);
     expect(parseTags(''), isEmpty);

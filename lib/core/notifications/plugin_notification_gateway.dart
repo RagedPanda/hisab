@@ -10,7 +10,6 @@ import 'reminder_payload.dart';
 import 'sms_entry_payload.dart';
 
 const String _channelId = 'reminders';
-const String _smsChannelId = 'sms_entries';
 const String _moneyCategoryId = 'reminderMoney';
 const String _doneCategoryId = 'reminderDone';
 
@@ -122,7 +121,7 @@ class PluginNotificationGateway implements NotificationGateway {
         payload: alert.payload,
         notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
-            _smsChannelId,
+            kSmsEntryChannelId,
             _texts.smsChannelName,
             channelDescription: _texts.smsChannelDescription,
             importance: Importance.defaultImportance,

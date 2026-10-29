@@ -8,6 +8,10 @@ import '../../domain/reminders/reminder_schedule.dart';
 const String _scheme = 'hisab';
 const String _host = 'sms-entry';
 
+/// Android channel (and notification kind) of the "added from SMS"
+/// notifications; one place to gate or toggle this kind by.
+const String kSmsEntryChannelId = 'sms_entries';
+
 /// Action id: undo the automatic add without opening the app.
 const String kSmsUndoActionId = 'smsUndo';
 

@@ -28,7 +28,7 @@ class SmsReceiver : BroadcastReceiver() {
         val sms = QueuedSms(sender, body, System.currentTimeMillis())
         SmsQueue.append(context, sms)
         SmsCaptureBridge.signalQueued()
-        if (!SmsCaptureBridge.appVisible && SmsCapturePolicy.shouldNotify(body)) {
+        if (settings.notify && !SmsCaptureBridge.appVisible && SmsCapturePolicy.shouldNotify(body)) {
             SmsNotifier.post(context, settings, sms)
         }
     }

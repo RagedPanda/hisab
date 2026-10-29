@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/debug/demo_plan.dart';
 import 'package:hisab/data/debug/demo_seed.dart';
+import 'package:hisab/data/debug/demo_story.dart';
 import 'package:hisab/data/repositories/accounts_repository.dart';
 import 'package:hisab/data/repositories/budgets_repository.dart';
 import 'package:hisab/data/repositories/groups_repository.dart';
@@ -23,7 +24,7 @@ void main() {
     await seedDemoData(db, entryCount: 30, now: now);
 
     expect(await hasDemoData(db), isTrue);
-    expect(await demoEntryCount(), planDemoEntries(count: 30, now: now).length + 1, reason: 'the planned entries plus the trip hotel');
+    expect(await demoEntryCount(), planDemoEntries(count: 30, now: now).length + 2 + kDemoTripExpenses.length, reason: 'the planned entries, the trip hotel, the dairy bill and the other trip bills');
     expect((await AccountsRepository(db).getAll()).map((account) => account.name), containsAll(['HDFC Savings', 'Axis Credit Card']));
     expect(await BudgetsRepository(db).watchAll().first, hasLength(3));
     expect((await GroupsRepository(db).watchGroups().first).single.name, 'Goa trip');

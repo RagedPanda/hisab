@@ -4292,6 +4292,168 @@ abstract class AppLocalizations {
   /// **'Alerts before bills, EMIs, card dues and renewals are due'**
   String get reminderChannelDescription;
 
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{on} of {total} on'**
+  String notificationsSettingsSubtitle(int on, int total);
+
+  /// No description provided for @notificationsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick what Hisab may notify you about. Each one starts off; turn on only what helps.'**
+  String get notificationsIntro;
+
+  /// No description provided for @notificationsBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are blocked for Hisab on this phone.'**
+  String get notificationsBlocked;
+
+  /// No description provided for @notificationsAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get notificationsAllow;
+
+  /// No description provided for @notificationsShowSample.
+  ///
+  /// In en, this message translates to:
+  /// **'Show sample'**
+  String get notificationsShowSample;
+
+  /// No description provided for @notificationsSampleSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample sent. Pull down the notification shade to see it.'**
+  String get notificationsSampleSent;
+
+  /// No description provided for @notificationsSampleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample · {title}'**
+  String notificationsSampleTitle(String title);
+
+  /// No description provided for @notificationsUpdatesChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily summary and samples'**
+  String get notificationsUpdatesChannel;
+
+  /// No description provided for @notificationsUpdatesChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The evening summary and samples sent from Settings'**
+  String get notificationsUpdatesChannelDescription;
+
+  /// No description provided for @notifKindReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get notifKindReminders;
+
+  /// No description provided for @notifKindRemindersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills, documents, card dues and group settle-ups you set reminders for'**
+  String get notifKindRemindersHelp;
+
+  /// No description provided for @notifKindSalary.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary not seen yet'**
+  String get notifKindSalary;
+
+  /// No description provided for @notifKindSalaryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'When your salary has not arrived by its expected day'**
+  String get notifKindSalaryHelp;
+
+  /// No description provided for @notifKindSalaryNeedsSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up salary first'**
+  String get notifKindSalaryNeedsSetup;
+
+  /// No description provided for @notifKindBankSms.
+  ///
+  /// In en, this message translates to:
+  /// **'New bank SMS'**
+  String get notifKindBankSms;
+
+  /// No description provided for @notifKindBankSmsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A bank transaction SMS arrived while Hisab was closed'**
+  String get notifKindBankSmsHelp;
+
+  /// No description provided for @notifKindBankSmsNeedsSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Works once Bank SMS is on'**
+  String get notifKindBankSmsNeedsSetup;
+
+  /// No description provided for @notifKindEveningSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening summary'**
+  String get notifKindEveningSummary;
+
+  /// No description provided for @notifKindEveningSummaryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s spend, SMS to review and bills due in the next 3 days'**
+  String get notifKindEveningSummaryHelp;
+
+  /// No description provided for @eveningSummaryTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary time'**
+  String get eveningSummaryTime;
+
+  /// No description provided for @eveningSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your day in Hisab'**
+  String get eveningSummaryTitle;
+
+  /// No description provided for @eveningSummarySpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent {amount} today'**
+  String eveningSummarySpent(String amount);
+
+  /// No description provided for @eveningSummaryNothingSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing spent today'**
+  String get eveningSummaryNothingSpent;
+
+  /// No description provided for @eveningSummaryReview.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 SMS to review} other{{count} SMS to review}}'**
+  String eveningSummaryReview(int count);
+
+  /// No description provided for @eveningSummaryDue.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 bill due in the next 3 days} other{{count} bills due in the next 3 days}}'**
+  String eveningSummaryDue(int count);
+
+  /// No description provided for @notifSampleReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Electricity bill'**
+  String get notifSampleReminderTitle;
+
   /// No description provided for @reminderMarkPaid.
   ///
   /// In en, this message translates to:

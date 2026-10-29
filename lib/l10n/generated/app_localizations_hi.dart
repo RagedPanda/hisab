@@ -2522,6 +2522,114 @@ class AppLocalizationsHi extends AppLocalizations {
       'बिल, ईएमआई, कार्ड बकाया और रिन्यूअल से पहले सूचना';
 
   @override
+  String get notificationsTitle => 'सूचनाएँ';
+
+  @override
+  String notificationsSettingsSubtitle(int on, int total) {
+    return '$total में से $on चालू';
+  }
+
+  @override
+  String get notificationsIntro =>
+      'चुनें कि Hisab किन बातों की सूचना दे। हर एक शुरू में बंद है; जो काम का हो वही चालू करें।';
+
+  @override
+  String get notificationsBlocked => 'इस फ़ोन पर Hisab की सूचनाएँ बंद हैं।';
+
+  @override
+  String get notificationsAllow => 'अनुमति दें';
+
+  @override
+  String get notificationsShowSample => 'नमूना दिखाएँ';
+
+  @override
+  String get notificationsSampleSent =>
+      'नमूना भेजा गया। देखने के लिए सूचना पट्टी नीचे खींचें।';
+
+  @override
+  String notificationsSampleTitle(String title) {
+    return 'नमूना · $title';
+  }
+
+  @override
+  String get notificationsUpdatesChannel => 'रोज़ का सारांश और नमूने';
+
+  @override
+  String get notificationsUpdatesChannelDescription =>
+      'शाम का सारांश और सेटिंग्स से भेजे गए नमूने';
+
+  @override
+  String get notifKindReminders => 'रिमाइंडर';
+
+  @override
+  String get notifKindRemindersHelp =>
+      'बिल, दस्तावेज़, कार्ड बकाया और ग्रुप हिसाब, जिनके रिमाइंडर आपने लगाए हैं';
+
+  @override
+  String get notifKindSalary => 'सैलरी अभी नहीं आई';
+
+  @override
+  String get notifKindSalaryHelp => 'जब तय दिन तक सैलरी न आए';
+
+  @override
+  String get notifKindSalaryNeedsSetup => 'पहले सैलरी सेट करें';
+
+  @override
+  String get notifKindBankSms => 'नया बैंक SMS';
+
+  @override
+  String get notifKindBankSmsHelp => 'Hisab बंद रहते बैंक लेन-देन का SMS आया';
+
+  @override
+  String get notifKindBankSmsNeedsSetup => 'बैंक SMS चालू होने पर काम करता है';
+
+  @override
+  String get notifKindEveningSummary => 'शाम का सारांश';
+
+  @override
+  String get notifKindEveningSummaryHelp =>
+      'आज का खर्च, देखने को बचे SMS और अगले 3 दिन में देय बिल';
+
+  @override
+  String get eveningSummaryTime => 'सारांश का समय';
+
+  @override
+  String get eveningSummaryTitle => 'Hisab में आपका दिन';
+
+  @override
+  String eveningSummarySpent(String amount) {
+    return 'आज $amount खर्च';
+  }
+
+  @override
+  String get eveningSummaryNothingSpent => 'आज कोई खर्च नहीं';
+
+  @override
+  String eveningSummaryReview(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count SMS देखने बाकी',
+      one: '1 SMS देखना बाकी',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String eveningSummaryDue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'अगले 3 दिन में $count बिल देय',
+      one: 'अगले 3 दिन में 1 बिल देय',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifSampleReminderTitle => 'बिजली का बिल';
+
+  @override
   String get reminderMarkPaid => 'चुकाया';
 
   @override

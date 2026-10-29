@@ -6,7 +6,6 @@ import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/recurring_repository.dart';
 import 'package:hisab/domain/recurring/recurrence.dart';
-import 'package:hisab/domain/recurring/repeat_draft.dart';
 import 'package:hisab/features/recurring/recurring_screen.dart';
 
 import '../support/app_harness.dart';

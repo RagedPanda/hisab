@@ -1,45 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/providers.dart';
-import 'package:hisab/data/launcher/launcher_channel.dart';
 import 'package:hisab/domain/launcher/quick_entry_shortcuts.dart';
 import 'package:hisab/features/shortcuts/launcher_sync.dart';
 import 'package:hisab/features/shortcuts/shortcut_settings.dart';
 import 'package:hisab/features/shortcuts/shortcuts_screen.dart';
 
+import '../../core/fake_notification_gateway.dart';
 import '../../support/app_harness.dart';
+import '../../support/fake_launcher_channel.dart';
 import '../../support/screen_harness.dart';
 import '../../support/seed.dart';
 
-/// Android as far as the app can tell, without a platform: records what
-/// would reach the launcher and turns down every system request.
-class _FakeLauncher extends LauncherChannel {
-  final shortcuts = <List<LauncherShortcut>>[];
-  final widgets = <Map<String, Object>>[];
-  final notifications = <Map<String, Object>>[];
-
-  @override
-  bool get isSupported => true;
-
-  @override
-  Future<void> setQuickEntryShortcuts(List<LauncherShortcut> shortcuts) async => this.shortcuts.add(shortcuts);
-
-  @override
-  Future<void> updateSpendWidget(Map<String, Object> data) async => widgets.add(data);
-
-  @override
-  Future<void> setAddExpenseNotification(AddExpenseNotificationConfig config) async => notifications.add(config.toMap());
-
-  @override
-  Future<bool> requestAddTile() async => false;
-
-  @override
-  Future<bool> requestPinWidget() async => false;
-}
-
 void main() {
   testWidgets('keeps the launcher shortcuts, widget and notification in step', (tester) async {
-    final launcher = _FakeLauncher();
+    final launcher = FakeLauncherChannel();
     final container = await createContainer(overrides: [launcherChannelProvider.overrideWithValue(launcher)]);
     await seedEntry(container, id: 'e1', payee: 'Shop', amountMinor: 45000);
     await pumpAt(tester, container, '/home');
@@ -57,7 +32,7 @@ void main() {
   });
 
   testWidgets('explains the manual way when the system cannot add the tile or widget', (tester) async {
-    final container = await createContainer(overrides: [launcherChannelProvider.overrideWithValue(_FakeLauncher())]);
+    final container = await createContainer(overrides: [launcherChannelProvider.overrideWithValue(FakeLauncherChannel())]);
     await pumpAt(tester, container, kShortcutsLocation);
 
     await tapAndSettle(tester, find.byKey(const Key('shortcuts.tile')));
@@ -66,6 +41,23 @@ void main() {
 
     await tapAndSettle(tester, find.byKey(const Key('shortcuts.widget')));
     expect(find.textContaining('tap Widgets and pick Hisab'), findsOneWidget);
+  });
+
+  testWidgets('the notification switch asks for access and offers the system settings when refused', (tester) async {
+    final gateway = FakeNotificationGateway(notificationsAllowed: false, grantOnRequest: false);
+    final container = await createContainer(overrides: [launcherChannelProvider.overrideWithValue(FakeLauncherChannel()), notificationGatewayProvider.overrideWithValue(gateway)]);
+    await pumpAt(tester, container, kShortcutsLocation);
+    final toggle = find.byKey(const Key('shortcuts.notification'));
+
+    await tapAndSettle(tester, toggle);
+    expect(gateway.permissionRequests, 1);
+    expect(container.read(shortcutSettingsProvider).addExpenseNotification, isFalse);
+    expect(find.text('Allow notifications for Hisab to show the shortcut'), findsOneWidget);
+
+    gateway.grantOnRequest = true;
+    await tapAndSettle(tester, toggle);
+    expect(container.read(shortcutSettingsProvider).addExpenseNotification, isTrue);
+    expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
   });
 
   testWidgets('Settings opens Shortcuts & widget', (tester) async {

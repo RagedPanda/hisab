@@ -4,6 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import 'add_expense_notification_toggle.dart';
 import 'launcher_sync.dart';
 import 'shortcut_settings.dart';
 
@@ -79,15 +80,10 @@ class ShortcutsScreen extends ConsumerWidget {
   /// Turning it on asks for notification access first; without it the
   /// switch stays off and offers the system settings instead.
   Future<void> _setNotification(BuildContext context, WidgetRef ref, bool enabled) async {
-    final notifier = ref.read(shortcutSettingsProvider.notifier);
-    if (!enabled || !ref.read(launcherChannelProvider).isSupported) return notifier.setAddExpenseNotification(enabled);
     final messenger = ScaffoldMessenger.of(context);
     final l10n = context.l10n;
-    if (!(await Permission.notification.request()).isGranted) {
-      showActionSnackBar(messenger, message: l10n.addExpenseNotificationBlocked, actionLabel: l10n.settings, onAction: () => openAppSettings());
-      return;
-    }
-    await notifier.setAddExpenseNotification(true);
+    if (await setAddExpenseNotification(ref, enabled)) return;
+    showActionSnackBar(messenger, message: l10n.addExpenseNotificationBlocked, actionLabel: l10n.settings, onAction: () => openAppSettings());
   }
 
   Future<void> _addTile(BuildContext context, WidgetRef ref) async {

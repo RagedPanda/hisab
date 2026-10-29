@@ -1,6 +1,7 @@
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hisab/core/providers.dart';
+import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 
 /// The id of the seeded category with catalog key [seedKey] (e.g. `food`).
@@ -35,3 +36,9 @@ Future<void> seedEntry(
           accountId: accountId,
           projectId: projectId,
         ).copyWith(tags: Value(tags)));
+
+/// Every entry that is not deleted.
+Future<List<Entry>> liveEntries(ProviderContainer container) {
+  final db = container.read(databaseProvider);
+  return (db.select(db.entries)..where((entry) => entry.deletedAt.isNull())).get();
+}

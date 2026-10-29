@@ -237,6 +237,7 @@
   "language": "Language",
   "languageSystem": "Device language",
   "money": "Money",
+  "advancedSettings": "Advanced",
   "currency": "Currency",
   "currencyChooseTitle": "Choose your currency",
   "currencyChooseBody": "Amounts in Hisab show in this currency. You can change it later in Settings.",

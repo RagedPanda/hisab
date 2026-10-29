@@ -1280,6 +1280,12 @@ abstract class AppLocalizations {
   /// **'Money'**
   String get money;
 
+  /// No description provided for @advancedSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get advancedSettings;
+
   /// No description provided for @currency.
   ///
   /// In en, this message translates to:

@@ -11,6 +11,7 @@ import '../../data/repositories/entries_repository.dart';
 import '../../data/repositories/payee_category_repository.dart';
 import '../../data/repositories/sms_log_repository.dart';
 import '../../data/sms/sms_ingest_service.dart';
+import '../../domain/notifications/notification_kinds.dart';
 import '../../domain/sms/payee_category_memory.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -20,7 +21,8 @@ import '../../l10n/generated/app_localizations.dart';
 bool announcesInNotification(AppLifecycleState? state) => state != null && state != AppLifecycleState.resumed;
 
 /// Posts the "added from SMS" notification (payee, category, account, with
-/// Change category and Undo) for an entry added while Hisab is not on screen.
+/// Change category and Undo) for an entry added while Hisab is not on screen,
+/// unless the user switched Bank SMS off in Settings > Notifications.
 class SmsEntryNotifier {
   SmsEntryNotifier({
     required this.entries,
@@ -29,6 +31,7 @@ class SmsEntryNotifier {
     required this.notifications,
     required this.l10n,
     required this.moneyFormat,
+    this.alertsAllowed = true,
   });
 
   final EntriesRepository entries;
@@ -38,7 +41,11 @@ class SmsEntryNotifier {
   final AppLocalizations l10n;
   final MoneyFormat moneyFormat;
 
+  /// False when the Bank SMS switch is off ([bankSmsAlertsAllowed]): nothing is posted.
+  final bool alertsAllowed;
+
   Future<void> notify(SmsAutoAdded added) async {
+    if (!alertsAllowed) return;
     final details = await entries.getEntry(added.entryId);
     if (details == null || details.entry.deletedAt != null) return;
     final payee = parsedSmsPayee((await smsLog.getById(added.smsId))?.parsedJson);
@@ -66,5 +73,6 @@ final smsEntryNotifierProvider = Provider((ref) {
     notifications: ref.watch(notificationServiceProvider),
     l10n: notificationLocalizations(settings.localeCode),
     moneyFormat: ref.watch(homeMoneyFormatProvider),
+    alertsAllowed: bankSmsAlertsAllowed(ref.watch(notificationPrefsProvider).choices),
   );
 });

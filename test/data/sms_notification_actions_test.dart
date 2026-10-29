@@ -1,6 +1,7 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/money.dart';
+import 'package:hisab/core/notification_prefs.dart';
 import 'package:hisab/core/notifications/background_actions.dart';
 import 'package:hisab/core/notifications/notification_service.dart';
 import 'package:hisab/core/notifications/reminder_alert_text.dart';
@@ -19,6 +20,7 @@ import 'package:hisab/data/sms/sms_channel.dart';
 import 'package:hisab/data/sms/sms_ingest_service.dart';
 import 'package:hisab/data/sms/sms_linked_reminder_scheduler.dart';
 import 'package:hisab/data/sms/sms_reminder_linker.dart';
+import 'package:hisab/domain/notifications/notification_kinds.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
 import 'package:hisab/domain/sms/parsed_transaction.dart';
@@ -28,6 +30,7 @@ import 'package:hisab/features/sms/sms_entry_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/fake_notification_gateway.dart';
+import '../support/app_harness.dart';
 
 // Synthetic messages only.
 const _swiggyDebit = 'Rs.459.00 debited from A/c XX1234 on 21-10-26 to swiggy@ybl (UPI Ref No 123456789012). Avl bal Rs.15,541.00';
@@ -150,13 +153,14 @@ void main() {
   });
 
   group('SmsEntryNotifier', () {
-    SmsEntryNotifier notifier() => SmsEntryNotifier(
+    SmsEntryNotifier notifier({bool alertsAllowed = true}) => SmsEntryNotifier(
           entries: EntriesRepository(db),
           smsLog: SmsLogRepository(db),
           payeeCategories: PayeeCategoryRepository(db),
           notifications: NotificationService(gateway, buildAlert: (_, _) => throw UnimplementedError()),
           l10n: notificationLocalizations('en'),
           moneyFormat: MoneyFormat.inr,
+          alertsAllowed: alertsAllowed,
         );
 
     test('shows payee, category and account with Change category and Undo', () async {
@@ -181,6 +185,18 @@ void main() {
       await PayeeCategoryRepository(db).remember(kind: kPayeeExpense, raw: 'rahul.sharma@okaxis', categoryId: 'family');
       await notifier().notify(added);
       expect(gateway.smsEntries.values.single.body, isNot(contains('pick a category')), reason: 'the same id is replaced, not stacked');
+    });
+
+    test('posts nothing while the Bank SMS notification switch is off', () async {
+      final added = await autoAdd(_swiggyDebit);
+      await notifier(alertsAllowed: false).notify(added);
+      expect(gateway.shown, isEmpty);
+    });
+
+    test('the provider follows the Bank SMS switch in Settings > Notifications', () async {
+      expect((await createContainer()).read(smsEntryNotifierProvider).alertsAllowed, isTrue, reason: 'on until the user turns it off');
+      final off = await createContainer(preferences: {notificationChoiceKey(NotificationKind.bankSms): false});
+      expect(off.read(smsEntryNotifierProvider).alertsAllowed, isFalse);
     });
 
     test('an entry already undone posts nothing', () async {

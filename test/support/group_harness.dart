@@ -1,5 +1,7 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +10,8 @@ import 'package:hisab/core/ids.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
+import 'package:hisab/features/groups/group_export.dart';
+import 'package:hisab/features/groups/settle_up_sheet.dart';
 import 'package:hisab/features/shell/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -78,4 +82,62 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
   await settle(tester, 3);
   await tester.tap(finder);
   await settle(tester);
+}
+
+/// Stands in for the share sheet, other apps and CSV export, recording what
+/// the app handed them and answering as the test sets.
+class FakeOutsideWorld {
+  final List<String> sharedTexts = [];
+  final List<Uri> launchedUris = [];
+  final List<String> exportedFiles = [];
+  final List<String> copiedTexts = [];
+
+  /// False: the person dismissed the share sheet.
+  bool shareCompletes = true;
+
+  /// False: no app on the phone opened the link.
+  bool linkOpens = true;
+
+  /// True: writing the CSV file fails.
+  bool exportThrows = false;
+
+  /// Answers clipboard writes, which otherwise never complete in a widget
+  /// test, and records the copied text.
+  void fakeClipboard(WidgetTester tester) {
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.setData') copiedTexts.add((call.arguments as Map)['text'] as String);
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+  }
+
+  List<Override> get overrides => [
+        textSharerProvider.overrideWithValue((text) async {
+          sharedTexts.add(text);
+          return shareCompletes;
+        }),
+        linkLauncherProvider.overrideWithValue((uri) async {
+          launchedUris.add(uri);
+          return linkOpens;
+        }),
+        csvFileSharerProvider.overrideWithValue(({required fileName, required csv, required subject}) async {
+          if (exportThrows) throw Exception('disk full');
+          exportedFiles.add(fileName);
+          return true;
+        }),
+      ];
+}
+
+/// "Goa" with simplify off: Amit (phone and UPI ID) owes me ₹150 and I owe
+/// Priya (UPI ID only) ₹100, so the Balances tab offers both Remind and Pay.
+Future<String> seedSettleUpGroup(ProviderContainer container) async {
+  final groups = container.read(groupsRepositoryProvider);
+  final groupId = await groups.createGroup(name: 'Goa', icon: 'flight', myName: 'You', otherMembers: ['Amit', 'Priya']);
+  await groups.updateGroup(GroupsCompanion(id: Value(groupId), simplifyDebts: const Value(false)));
+  final members = await memberIdsByName(container, groupId);
+  await groups.editMember(members['Amit']!, name: 'Amit', phone: '98765 43210', upiId: 'amit@upi');
+  await groups.editMember(members['Priya']!, name: 'Priya', upiId: 'priya@upi');
+  await addEqualExpense(container, groupId, paidBy: members['You']!, totalMinor: 30000, sharedBy: [members['You']!, members['Amit']!], note: 'Villa');
+  await addEqualExpense(container, groupId, paidBy: members['Priya']!, totalMinor: 20000, sharedBy: [members['You']!, members['Priya']!], note: 'Scooter');
+  return groupId;
 }

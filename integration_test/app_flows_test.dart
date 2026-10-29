@@ -167,6 +167,14 @@ Future<void> _expectSpent(WidgetTester tester, String amount, {String? reason}) 
   expect(shown(), amount, reason: reason);
 }
 
+/// Taps + in a group and, when it opened a copy of the last expense, swaps
+/// it for an empty form so the flow enters every field itself.
+Future<void> _newGroupExpense(WidgetTester tester, {int frames = 8}) async {
+  await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'), frames: frames);
+  final startBlank = find.byKey(const Key('editor.startBlank'));
+  if (startBlank.evaluate().isNotEmpty) await tapFinder(tester, startBlank, frames: frames);
+}
+
 Future<void> _pickCategory(WidgetTester tester, String query, String name) async {
   await tapText(tester, 'Uncategorised');
   await enterText(tester, find.widgetWithText(TextField, 'Search categories'), query);
@@ -468,7 +476,7 @@ void main() {
     expect(members.map((m) => m.name), containsAll(['You', 'Rahul', 'Priya']));
 
     // Expense 1: 300 paid by me, equal split.
-    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _newGroupExpense(tester);
     expect(find.text('Group expense'), findsOneWidget);
     await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
     await enterText(tester, _amountField(), '300');
@@ -480,7 +488,11 @@ void main() {
     expect(find.text(formatMinor(20000)), findsOneWidget, reason: 'I lent the other two their shares');
 
     // Expense 2: 500 paid by Rahul, exact amounts Me 300 / Rahul 100 / Priya 100.
+    // + starts from a copy of expense 1; Start blank gives an empty form.
     await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    expect(find.byKey(const Key('editor.copiedFromLast')), findsOneWidget);
+    expect(find.text('Restaurants & Cafes'), findsOneWidget, reason: 'the copy keeps the last category');
+    await tapFinder(tester, find.byKey(const Key('editor.startBlank')));
     await _pickCategory(tester, 'hotels', 'Hotels & Stays');
     await enterText(tester, _amountField(), '500');
     await scrollTo(tester, find.text('Paid by'), within: find.byType(ExpenseEditorScreen));
@@ -1552,7 +1564,7 @@ void main() {
     await pumpApp(tester, fresh);
     await goTab(tester, 'Groups');
     await tapText(tester, 'Dinner club');
-    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _newGroupExpense(tester);
     await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
     await enterText(tester, _amountField(), '900');
     await scrollTo(tester, _chip('2+ people'), within: find.byType(ExpenseEditorScreen));
@@ -1635,7 +1647,7 @@ void main() {
 
     await goBack(tester);
     expect(find.text('Rent is due on the 1st'), findsOneWidget, reason: 'notes show on the Expenses tab');
-    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'), frames: 12);
+    await _newGroupExpense(tester, frames: 12);
     await scrollTo(tester, _splitPicker(), within: find.byType(ExpenseEditorScreen));
     expect(_splitIs('Shares / ratio'), isTrue, reason: 'new expenses start from the default split');
     expect(find.textContaining('€'), findsWidgets, reason: 'the editor shows the group currency label');
@@ -1670,7 +1682,7 @@ void main() {
     await pumpApp(tester, fresh);
     await goTab(tester, 'Groups');
     await tapText(tester, 'Movie night');
-    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _newGroupExpense(tester);
     await _pickCategory(tester, 'restaurants', title);
     await enterText(tester, _amountField(), '600');
     await _saveEntry(tester, formatMinor(60000));
@@ -1825,7 +1837,7 @@ void main() {
     await pumpApp(tester, fresh);
     await goTab(tester, 'Groups');
     await tapText(tester, 'Pizza night');
-    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _newGroupExpense(tester);
     await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
     await scrollTo(tester, find.text('Add items to split by item'), within: editor);
     expect(_splitIs('By item'), isFalse, reason: 'no items, no by-item split');
@@ -2286,12 +2298,12 @@ void main() {
     await pumpApp(tester, fresh);
     await goTab(tester, 'Groups');
     await tapText(tester, 'Goa trip');
-    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _newGroupExpense(tester);
     await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
     await enterText(tester, _amountField(), '900');
     await _saveEntry(tester, formatMinor(90000));
 
-    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _newGroupExpense(tester);
     await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
     await enterText(tester, _amountField(), '300');
     await scrollTo(tester, find.text('Paid by'), within: find.byType(ExpenseEditorScreen));

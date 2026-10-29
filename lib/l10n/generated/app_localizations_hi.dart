@@ -450,6 +450,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get newQuickEntry => 'नई क्विक एंट्री';
 
   @override
+  String get editQuickEntry => 'क्विक एंट्री बदलें';
+
+  @override
   String get quickEntryName => 'चिप पर नाम';
 
   @override

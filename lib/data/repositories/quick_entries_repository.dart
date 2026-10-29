@@ -37,20 +37,50 @@ class QuickEntriesRepository {
           ..where(db.quickEntries.deletedAt.isNull()))
         .map((row) => row.read(db.quickEntries.sortOrder.max()))
         .getSingle();
-    await db.into(db.quickEntries).insert(QuickEntriesCompanion.insert(
-          id: id,
-          label: label.trim(),
-          kind: Value(kind),
-          amountMinor: Value(amountMinor),
-          categoryId: Value(categoryId),
-          accountId: Value(accountId),
-          payee: Value(payee),
-          note: Value(note),
-          tags: Value(tags),
-          sortOrder: Value((last ?? -1) + 1),
-        ));
+    await db.into(db.quickEntries).insert(_fields(
+          label: label, kind: kind, amountMinor: amountMinor, categoryId: categoryId,
+          accountId: accountId, payee: payee, note: note, tags: tags,
+        ).copyWith(id: Value(id), sortOrder: Value((last ?? -1) + 1)));
     return id;
   }
+
+  /// Replaces what quick entry [id] adds, keeping its place in the list.
+  Future<void> update(
+    String id, {
+    required String label,
+    String kind = 'expense',
+    int? amountMinor,
+    String? categoryId,
+    String? accountId,
+    String? payee,
+    String note = '',
+    String tags = '',
+  }) =>
+      (db.update(db.quickEntries)..where((t) => t.id.equals(id))).write(_fields(
+            label: label, kind: kind, amountMinor: amountMinor, categoryId: categoryId,
+            accountId: accountId, payee: payee, note: note, tags: tags,
+          ).copyWith(updatedAt: Value(DateTime.now())));
+
+  QuickEntriesCompanion _fields({
+    required String label,
+    required String kind,
+    required int? amountMinor,
+    required String? categoryId,
+    required String? accountId,
+    required String? payee,
+    required String note,
+    required String tags,
+  }) =>
+      QuickEntriesCompanion(
+        label: Value(label.trim()),
+        kind: Value(kind),
+        amountMinor: Value(amountMinor),
+        categoryId: Value(categoryId),
+        accountId: Value(accountId),
+        payee: Value(payee),
+        note: Value(note),
+        tags: Value(tags),
+      );
 
   Future<void> rename(String id, String label) => (db.update(db.quickEntries)..where((t) => t.id.equals(id)))
       .write(QuickEntriesCompanion(label: Value(label.trim()), updatedAt: Value(DateTime.now())));

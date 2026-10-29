@@ -157,6 +157,7 @@
   "saveAsQuickEntry": "Save as quick entry",
   "saveQuickEntry": "Save quick entry",
   "newQuickEntry": "New quick entry",
+  "editQuickEntry": "Edit quick entry",
   "quickEntryName": "Name on the chip",
   "quickEntrySaved": "Saved as a quick entry. Tap it on Home to add it.",
   "quickEntryAdded": "Added {label} · {amount}",

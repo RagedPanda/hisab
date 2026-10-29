@@ -866,6 +866,12 @@ abstract class AppLocalizations {
   /// **'New quick entry'**
   String get newQuickEntry;
 
+  /// No description provided for @editQuickEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit quick entry'**
+  String get editQuickEntry;
+
   /// No description provided for @quickEntryName.
   ///
   /// In en, this message translates to:

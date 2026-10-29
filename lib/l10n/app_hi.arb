@@ -128,6 +128,7 @@
   "saveAsQuickEntry": "क्विक एंट्री के रूप में सेव करें",
   "saveQuickEntry": "क्विक एंट्री सेव करें",
   "newQuickEntry": "नई क्विक एंट्री",
+  "editQuickEntry": "क्विक एंट्री बदलें",
   "quickEntryName": "चिप पर नाम",
   "quickEntrySaved": "क्विक एंट्री सेव हुई। होम पर टैप करके जोड़ें।",
   "quickEntryAdded": "{label} जोड़ा · {amount}",

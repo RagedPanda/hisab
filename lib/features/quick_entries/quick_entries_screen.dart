@@ -110,7 +110,9 @@ class _QuickEntryTile extends ConsumerWidget {
       trailing: PopupMenuButton<String>(
         key: Key('quickEntries.menu.${quick.id}'),
         onSelected: (action) async {
-          if (action == 'rename') {
+          if (action == 'edit') {
+            context.push('/entry?quick=${quick.id}&saveAs=quick');
+          } else if (action == 'rename') {
             final label = await promptText(context, title: l10n.quickEntryName, initial: quick.label);
             if (label != null && label.trim().isNotEmpty) await repo.rename(quick.id, label.trim());
           } else if (await confirmDialog(context, title: l10n.deleteNamed(quick.label))) {
@@ -118,6 +120,7 @@ class _QuickEntryTile extends ConsumerWidget {
           }
         },
         itemBuilder: (_) => [
+          PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
           PopupMenuItem(value: 'rename', child: Text(l10n.rename)),
           PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
         ],

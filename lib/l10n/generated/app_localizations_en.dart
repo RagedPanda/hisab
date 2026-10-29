@@ -450,6 +450,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newQuickEntry => 'New quick entry';
 
   @override
+  String get editQuickEntry => 'Edit quick entry';
+
+  @override
   String get quickEntryName => 'Name on the chip';
 
   @override

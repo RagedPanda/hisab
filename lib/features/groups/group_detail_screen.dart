@@ -40,6 +40,11 @@ int groupDetailInitialTab(String? tab) => switch (tab) {
       _ => 0,
     };
 
+
+/// Where + in a group goes: a new expense prefilled from the group's latest
+/// one, [lastEntryId], so a daily bill like milk needs only Save.
+String newGroupExpenseRoute(String groupId, String? lastEntryId) =>
+    lastEntryId == null ? '/entry?group=$groupId' : '/entry?group=$groupId&copy=$lastEntryId';
 class GroupDetailScreen extends ConsumerWidget {
   const GroupDetailScreen({super.key, required this.groupId, this.initialTab = 0});
   final String groupId;
@@ -123,7 +128,7 @@ class GroupDetailScreen extends ConsumerWidget {
                 heroTag: 'add-group-expense',
                 onPressed: members.length < 2
                     ? () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.addMemberFirst)))
-                    : () => context.push('/entry?group=$groupId'),
+                    : () => context.push(newGroupExpenseRoute(groupId, entries.firstOrNull?.$1.id)),
                 icon: const Icon(Icons.add),
                 label: Text(l10n.addExpense),
               ),

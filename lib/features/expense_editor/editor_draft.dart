@@ -5,6 +5,7 @@ library;
 
 import 'dart:convert';
 
+import '../../domain/entries/entry_filter.dart';
 import '../../domain/projects/project_fields.dart';
 import '../../domain/recurring/repeat_draft.dart';
 import '../../domain/split/split_calculator.dart';
@@ -19,6 +20,7 @@ String editorDraftFingerprint({
   required int? amountMinor,
   required String note,
   required String payee,
+  String tags = '',
   required DateTime occurredAt,
   required String? categoryId,
   required String? accountId,
@@ -37,6 +39,7 @@ String editorDraftFingerprint({
   'amount': amountMinor ?? 0,
   'note': note.trim(),
   'payee': payee.trim(),
+  'tags': [for (final tag in parseTags(tags)) tag.toLowerCase()],
   'date': occurredAt.toIso8601String(),
   'category': categoryId,
   'account': accountId,

@@ -368,6 +368,35 @@ void main() {
     });
   });
 
+  group('tags', () {
+    final tagsField = find.byKey(const ValueKey('editor.tags'));
+
+    testWidgets('typed tags save tidied, and a tag used before is one tap away', (tester) async {
+      final container = await openEditor(tester, seed: (container) => seedEntry(container, id: 'old', payee: 'Hotel', amountMinor: 900000, tags: 'goa'));
+      await enterEditorAmount(tester, '250');
+      await openMoreDetails(tester);
+      await revealInEditor(tester, tagsField);
+      await tester.enterText(tagsField, '#home  #Home');
+      await settle(tester);
+      await tapInEditor(tester, find.byKey(const ValueKey('editor.tag.goa')));
+      expect(find.byKey(const ValueKey('editor.tag.goa')), findsNothing, reason: 'a tag already on the entry is not offered again');
+      await saveEditor(tester);
+
+      final saved = (await savedEntries(tester, container)).singleWhere((entry) => entry.id != 'old');
+      expect(saved.tags, 'home, goa');
+    });
+
+    testWidgets('editing a tagged entry keeps its tags', (tester) async {
+      final container = await openEditor(tester, location: () => '/entry?id=trip', seed: (container) async => seedEntry(container, id: 'trip', payee: 'Cab', amountMinor: 40000, accountId: await cashAccountId(container), tags: 'goa, work'));
+      expect(tester.widget<TextField>(tagsField).controller!.text, 'goa, work', reason: 'tags open More details on their own');
+      await revealInEditor(tester, payeeField);
+      await tester.enterText(payeeField, 'Ola');
+      await saveEditor(tester);
+      final saved = (await savedEntries(tester, container)).single;
+      expect((saved.payee, saved.tags), ('Ola', 'goa, work'));
+    });
+  });
+
   group('editing and deleting', () {
     testWidgets('deleting asks first, then removes the entry and gives the amount back to the account', (tester) async {
       final container = await openEditor(tester);

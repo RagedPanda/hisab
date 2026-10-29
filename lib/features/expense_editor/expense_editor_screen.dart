@@ -20,6 +20,7 @@ import '../../data/repositories/projects_repository.dart';
 import '../../data/repositories/group_recurring_repository.dart';
 import '../../data/repositories/recurring_repository.dart';
 import '../../domain/entries/entry_accounts.dart';
+import '../../domain/entries/entry_filter.dart';
 import '../../domain/ledger/balance_effects.dart';
 import '../../domain/projects/project_fields.dart';
 import '../../domain/projects/project_math.dart';
@@ -80,6 +81,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   /// reopened the keyboard and scrolled the editor away from the Repeat tile.
   bool _autofocusAmount = true;
   final _noteController = TextEditingController();
+  final _tagsController = TextEditingController();
   final _payeeController = TextEditingController();
 
   String _kind = 'expense';
@@ -147,6 +149,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _items.isNotEmpty ||
       _projectId != null ||
       _noteController.text.trim().isNotEmpty ||
+      _tagsController.text.trim().isNotEmpty ||
       _payeeController.text.trim().isNotEmpty ||
       !isSameDay(_occurredAt, DateTime.now());
 
@@ -162,6 +165,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         kind: _kind,
         amountMinor: _hasItems ? _itemsTotalMinor : parseAmountToMinor(_amountController.text, format: _moneyFormat),
         note: _noteController.text,
+        tags: _tagsController.text,
         payee: _payeeController.text,
         occurredAt: _occurredAt,
         categoryId: _category?.id,
@@ -233,7 +237,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _groupId = widget.groupId;
     _projectId = widget.projectId;
     _smsId = widget.smsId;
-    for (final controller in [_amountController, _noteController, _payeeController]) {
+    for (final controller in [_amountController, _noteController, _tagsController, _payeeController]) {
       controller.addListener(_onTextChanged);
     }
     _load();
@@ -255,6 +259,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         _kind = entry.kind;
         _amountController.text = amountInputText(entry.amountMinor, format: _moneyFormat);
         _noteController.text = entry.note;
+        _tagsController.text = entry.tags;
         _payeeController.text = entry.payee ?? '';
         _category = details.category;
         _accountId = entry.accountId;
@@ -805,6 +810,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     setState(() {
       _amountController.clear();
       _noteController.clear();
+      _tagsController.clear();
       _payeeController.clear();
       _category = null;
       _items = [];
@@ -903,7 +909,42 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       TextField(controller: _payeeController, decoration: InputDecoration(labelText: l10n.payeeLabel, prefixIcon: const Icon(Icons.storefront_outlined)), textCapitalization: TextCapitalization.words),
       const SizedBox(height: 12),
       TextField(controller: _noteController, decoration: InputDecoration(labelText: l10n.note, prefixIcon: const Icon(Icons.notes)), textCapitalization: TextCapitalization.sentences, maxLines: 2),
+      const SizedBox(height: 12),
+      _tagsField(l10n),
     ];
+  }
+
+  /// Free-text tags (`home, trip`) with the tags used before offered as chips.
+  Widget _tagsField(AppLocalizations l10n) {
+    final current = {for (final tag in parseTags(_tagsController.text)) tag.toLowerCase()};
+    final usedBefore = (ref.watch(entryTagsProvider).value ?? const <String>[]).where((tag) => !current.contains(tag.toLowerCase())).take(8);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          key: const ValueKey('editor.tags'),
+          controller: _tagsController,
+          decoration: InputDecoration(labelText: l10n.tags, hintText: l10n.tagsHint, prefixIcon: const Icon(Icons.sell_outlined)),
+          onChanged: (_) => setState(() {}),
+        ),
+        if (usedBefore.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                for (final tag in usedBefore)
+                  ActionChip(
+                    key: ValueKey('editor.tag.$tag'),
+                    label: Text('#$tag'),
+                    onPressed: () => setState(() => _tagsController.text = withTag(_tagsController.text, tag)),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _itemsSection(MoneyFormat moneyFormat, List<String> units) {
@@ -1124,7 +1165,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       paidByMemberId: _paidByMemberId,
       splitMethod: _groupId == null ? null : _splitMethod.name,
       projectId: projectId,
-    ).copyWith(toAccountId: Value(_kind == 'transfer' ? _toAccountId : null));
+    ).copyWith(toAccountId: Value(_kind == 'transfer' ? _toAccountId : null), tags: Value(formatTags(parseTags(_tagsController.text))));
     final weights = {for (final i in _splitInputs) i.memberId: i};
     // Group expenses go through the groups repository so the change is logged.
     final save = _groupId == null ? ref.read(entriesRepositoryProvider).saveEntry : ref.read(groupsRepositoryProvider).saveGroupExpense;
@@ -1251,6 +1292,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _amountController.dispose();
     _amountFocus.dispose();
     _noteController.dispose();
+    _tagsController.dispose();
     _payeeController.dispose();
     _detailsController.dispose();
     super.dispose();

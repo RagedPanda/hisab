@@ -2148,6 +2148,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tags => 'Tags';
 
   @override
+  String get tagsHint => 'Comma separated, e.g. home, trip';
+
+  @override
   String get showResults => 'Show results';
 
   @override

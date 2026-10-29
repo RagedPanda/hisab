@@ -745,10 +745,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     );
   }
 
-  /// The kind's colour behind the app bar and amount: coral expense, mint
+  /// The kind's colour behind the app bar and amount: rose expense, green
   /// income, blue transfer (a group expense is always an expense).
   Color _headerColor(BuildContext context) =>
-      kindColor(_kind, fallback: Theme.of(context).colorScheme.primary);
+      kindSurfaceColor(_kind, fallback: Theme.of(context).colorScheme.primary);
 
   /// The top of the form: the kind switch and a large "How much?" amount on
   /// the kind's colour, ending in a rounded edge the rest of the form sits on.

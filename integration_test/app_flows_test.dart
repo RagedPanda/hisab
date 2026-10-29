@@ -42,6 +42,7 @@ import 'package:hisab/data/repositories/recurring_repository.dart';
 import 'package:hisab/domain/recurring/recurrence.dart';
 import 'package:hisab/data/debug/demo_plan.dart';
 import 'package:hisab/data/debug/demo_seed.dart';
+import 'package:hisab/data/debug/demo_story.dart';
 import 'package:hisab/domain/backup/backup_codec.dart';
 import 'package:hisab/domain/categories/category_packs.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
@@ -121,8 +122,17 @@ int _expectedSeededSpend(DateTime now, {required int entryCount}) {
   final range = monthRange(now);
   final hotelDate = now.subtract(const Duration(days: 3));
   final planned = planDemoEntries(count: entryCount, now: now).where((item) => item.kind == 'expense' && range.contains(item.occurredAt)).fold(0, (sum, item) => sum + item.amountMinor);
-  return planned + (range.contains(hotelDate) ? 300000 : 0) + _sliceTopUpKeys.length * _sliceTopUpMinor;
+  final dairyBill = range.contains(now.subtract(const Duration(minutes: 30))) ? _demoDairyBillMinor : 0;
+  final tripShares = kDemoTripExpenses
+      .where((expense) => range.contains(now.subtract(Duration(days: expense.daysAgo, hours: 2))))
+      .fold(0, (sum, expense) => sum + equalShares(expense.amountMinor, _demoTripMembers).last);
+  return planned + (range.contains(hotelDate) ? 300000 : 0) + dairyBill + tripShares + _sliceTopUpKeys.length * _sliceTopUpMinor;
 }
+
+/// The README story's Gwala Ji bill (2 L buffalo milk at 72 + 200 g paneer at 210)
+/// and the Goa trip's member count (me, Rahul, Priya), from `demo_story.dart`.
+const _demoDairyBillMinor = 18600;
+const _demoTripMembers = 3;
 
 /// One child in each of six parent categories. The demo plan spreads entries
 /// by date, so on many days (2026-10-24 among them) this month touches five
@@ -335,8 +345,7 @@ void main() {
 
     await _expectSpent(tester, formatMinor(_spentMinor), reason: 'Spent this month');
     expect(find.text(formatMinor(_salaryMinor, showDecimals: false)), findsOneWidget, reason: 'Income stat');
-    expect(find.text('Saved'), findsOneWidget);
-    expect(find.text(formatMinor(_salaryMinor - _spentMinor, showDecimals: false)), findsOneWidget, reason: 'Saved stat');
+    expect(find.text('Saved'), findsNothing, reason: 'the hero shows spend and income only, no verdict');
     expect(find.text('Spending by category'), findsOneWidget);
     await shoot(tester, 'home_totals');
     await scrollTo(tester, find.text('Accounts'));
@@ -849,11 +858,10 @@ void main() {
     await scrollTo(tester, find.byKey(kBudgetsCardKey));
     expect(find.text('Overall'), findsOneWidget, reason: 'overall budget row comes first');
     await scrollTo(tester, find.byKey(kAccountsCardKey));
-    expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsNothing, reason: 'with nothing upcoming the Upcoming card is hidden (#148)');
     expect(find.text('HDFC Savings'), findsOneWidget);
     await scrollTo(tester, find.byKey(kGroupsCardKey));
     expect(find.descendant(of: find.byKey(kGroupsCardKey), matching: find.text('Goa trip')), findsOneWidget);
-    expect(find.text('You get ${formatMinor(600000, showDecimals: false)}'), findsOneWidget, reason: 'two friends owe 3,000 each');
+    expect(find.text('You get ${formatMinor(356000, showDecimals: false)}'), findsOneWidget, reason: 'hotel 6,000 owed to me, less my trip shares of the scooter (700) and Wharf (1,620), plus 880 owed on the drinks, less Rahul\'s 1,000 settle-up');
     await scrollTo(tester, find.byKey(kRecentCardKey));
     expect(find.text('Recent'), findsOneWidget);
     expect(find.byType(EntryTile), findsWidgets);

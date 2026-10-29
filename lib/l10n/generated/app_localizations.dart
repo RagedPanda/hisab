@@ -6188,6 +6188,30 @@ abstract class AppLocalizations {
   /// **'Next month'**
   String get upcomingCalendarNextMonth;
 
+  /// No description provided for @spendingCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending calendar'**
+  String get spendingCalendar;
+
+  /// No description provided for @spendingCalendarOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open spending calendar'**
+  String get spendingCalendarOpen;
+
+  /// No description provided for @spendingCalendarDayEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing spent on this day'**
+  String get spendingCalendarDayEmpty;
+
+  /// No description provided for @spendingCalendarSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} spent'**
+  String spendingCalendarSpent(String amount);
+
   /// No description provided for @upcomingConfirm.
   ///
   /// In en, this message translates to:

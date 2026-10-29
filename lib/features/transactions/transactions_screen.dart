@@ -13,6 +13,7 @@ import '../../domain/entries/entry_summary.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../projects/project_picker_sheet.dart';
+import '../spending_calendar/spending_calendar_screen.dart';
 import 'entry_filter_sheet.dart';
 import '../shell/widgets/common.dart';
 
@@ -126,7 +127,18 @@ class TransactionsScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.entries), actions: [if (window == null) const MonthSwitcher()]),
+      appBar: AppBar(
+        title: Text(l10n.entries),
+        actions: [
+          IconButton(
+            key: const ValueKey('entries.calendar'),
+            tooltip: l10n.spendingCalendarOpen,
+            onPressed: () => context.push(kSpendingCalendarRoute),
+            icon: const Icon(Icons.calendar_month_outlined),
+          ),
+          if (window == null) const MonthSwitcher(),
+        ],
+      ),
       body: DismissKeyboardOnTap(
         child: Column(
         children: [

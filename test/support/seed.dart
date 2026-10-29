@@ -42,3 +42,10 @@ Future<List<Entry>> liveEntries(ProviderContainer container) {
   final db = container.read(databaseProvider);
   return (db.select(db.entries)..where((entry) => entry.deletedAt.isNull())).get();
 }
+
+/// Removes the starter quick entries a fresh database comes with, for tests
+/// that start from the user's own.
+Future<void> clearQuickEntries(ProviderContainer container) {
+  final db = container.read(databaseProvider);
+  return db.delete(db.quickEntries).go();
+}

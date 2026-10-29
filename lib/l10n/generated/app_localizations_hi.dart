@@ -450,10 +450,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get newQuickEntry => 'नई क्विक एंट्री';
 
   @override
+  String get editQuickEntry => 'क्विक एंट्री बदलें';
+
+  @override
   String get quickEntryName => 'चिप पर नाम';
 
   @override
   String get quickEntrySaved => 'क्विक एंट्री सेव हुई। होम पर टैप करके जोड़ें।';
+
+  @override
+  String quickEntryConfirm(String label) {
+    return '$label जोड़ें?';
+  }
 
   @override
   String quickEntryAdded(String label, String amount) {

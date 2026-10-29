@@ -1033,7 +1033,7 @@ void main() {
     await db.close();
   });
 
-  test('upgrading from schema 19 adds an empty quick entries table', () async {
+  test('upgrading from schema 19 adds the quick entries table with the starters', () async {
     final seed = AppDatabase(NativeDatabase(file));
     await seed.into(seed.categories).insert(CategoriesCompanion.insert(id: 'c1', name: 'Milk', icon: 'local_drink', color: 0xFF2196F3, kind: 'expense'));
     await seed.close();
@@ -1042,11 +1042,41 @@ void main() {
     final db = AppDatabase(NativeDatabase(file));
     final version = await db.customSelect('PRAGMA user_version').getSingle();
     expect(version.data['user_version'], db.schemaVersion);
-    expect(await db.select(db.quickEntries).get(), isEmpty);
+    expect((await db.select(db.quickEntries).get()).map((quick) => quick.id), ['seed.quick.milk', 'seed.quick.tea', 'seed.quick.petrol', 'seed.quick.auto']);
     await db.into(db.quickEntries).insert(QuickEntriesCompanion.insert(id: 'q1', label: 'Milk', amountMinor: const Value(6000), categoryId: const Value('c1')));
-    expect((await db.select(db.quickEntries).getSingle()).kind, 'expense');
+    expect((await (db.select(db.quickEntries)..where((t) => t.id.equals('q1'))).getSingle()).kind, 'expense');
     expect((await db.select(db.categories).get()).map((category) => category.id), contains('c1'), reason: 'older rows survive the upgrade');
     await db.close();
+  });
+
+  group('upgrading from schema 20', () {
+    /// A v20 install holding only [rows] in quick_entries.
+    Future<void> rewindToVersion20(List<QuickEntriesCompanion> rows) async {
+      final seed = AppDatabase(NativeDatabase(file));
+      await seed.delete(seed.quickEntries).go();
+      for (final row in rows) {
+        await seed.into(seed.quickEntries).insert(row);
+      }
+      await seed.customStatement('PRAGMA user_version = 20');
+      await seed.close();
+    }
+
+    Future<List<String>> idsAfterUpgrade() async {
+      final db = AppDatabase(NativeDatabase(file));
+      final ids = (await db.select(db.quickEntries).get()).map((quick) => quick.id).toList();
+      await db.close();
+      return ids;
+    }
+
+    test('adds the starters when there were no quick entries', () async {
+      await rewindToVersion20(const []);
+      expect(await idsAfterUpgrade(), hasLength(4));
+    });
+
+    test('leaves an install with quick entries alone, deleted ones included', () async {
+      await rewindToVersion20([QuickEntriesCompanion.insert(id: 'q1', label: 'Milk', deletedAt: Value(DateTime(2026, 10, 28)))]);
+      expect(await idsAfterUpgrade(), ['q1']);
+    });
   });
 
   test('upgrading from schema 18 adds the People list from members that have an email', () async {

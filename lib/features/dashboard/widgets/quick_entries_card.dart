@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/dates.dart';
+import '../../../core/format.dart';
 import '../../../core/ids.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../data/db/database.dart';
 import '../../../data/repositories/quick_entries_repository.dart';
 import '../../../domain/quick_entries/quick_entry_strip.dart';
+import '../../../l10n/category_names.dart';
 import '../../../l10n/l10n.dart';
 import '../../quick_entries/quick_entries_screen.dart';
 import '../../shell/widgets/common.dart';
@@ -114,7 +117,8 @@ class QuickEntryChip extends ConsumerWidget {
   }
 }
 
-/// Adds the entry [quick] stands for now, then offers Undo; opens the editor
+/// Asks to confirm the entry [quick] stands for, on a day the user can
+/// change (today by default), then adds it and offers Undo; opens the editor
 /// instead when it cannot be added as it is (no account left).
 Future<void> addQuickEntry(BuildContext context, WidgetRef ref, QuickEntry quick, {required Category? category}) async {
   final l10n = context.l10n;
@@ -122,18 +126,21 @@ Future<void> addQuickEntry(BuildContext context, WidgetRef ref, QuickEntry quick
   final moneyFormat = ref.read(homeMoneyFormatProvider);
   final router = GoRouter.of(context);
   final entries = ref.read(entriesRepositoryProvider);
-  final entry = entryFromQuickEntry(
-    quick,
-    accounts: await ref.read(accountsRepositoryProvider).getAll(),
-    category: category,
-    configuredAccountId: ref.read(settingsProvider).defaultAccountId,
-    now: DateTime.now(),
-    id: newId(),
-  );
-  if (entry == null) {
+  final accounts = await ref.read(accountsRepositoryProvider).getAll();
+  final configuredAccountId = ref.read(settingsProvider).defaultAccountId;
+  final id = newId();
+  EntriesCompanion? entryAt(DateTime at) => entryFromQuickEntry(quick, accounts: accounts, category: category, configuredAccountId: configuredAccountId, now: at, id: id);
+  if (entryAt(DateTime.now()) == null) {
     router.push('/entry?quick=${quick.id}');
     return;
   }
+  if (!context.mounted) return;
+  final day = await showDialog<DateTime>(
+    context: context,
+    builder: (_) => _ConfirmQuickEntryDialog(quick: quick, category: category, amountText: formatMinor(quick.amountMinor ?? 0, format: moneyFormat)),
+  );
+  if (day == null) return;
+  final entry = entryAt(onDayAt(day, DateTime.now()))!;
   await entries.saveEntry(entry);
   showUndoSnackBar(
     messenger,
@@ -141,4 +148,55 @@ Future<void> addQuickEntry(BuildContext context, WidgetRef ref, QuickEntry quick
     undoLabel: l10n.undo,
     onUndo: () => entries.deleteEntry(entry.id.value),
   );
+}
+
+/// "Add Milk?" with the amount, category and the day it goes on; pops the
+/// chosen day, or null on Cancel.
+class _ConfirmQuickEntryDialog extends StatefulWidget {
+  const _ConfirmQuickEntryDialog({required this.quick, required this.category, required this.amountText});
+  final QuickEntry quick;
+  final Category? category;
+  final String amountText;
+
+  @override
+  State<_ConfirmQuickEntryDialog> createState() => _ConfirmQuickEntryDialogState();
+}
+
+class _ConfirmQuickEntryDialogState extends State<_ConfirmQuickEntryDialog> {
+  DateTime _day = startOfDay(DateTime.now());
+
+  Future<void> _pickDay() async {
+    final today = startOfDay(DateTime.now());
+    final picked = await showDatePicker(context: context, initialDate: _day, firstDate: DateTime(today.year - 5), lastDate: today);
+    if (picked != null) setState(() => _day = picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final category = widget.category;
+    return AlertDialog(
+      key: const Key('quick.confirm'),
+      title: Text(l10n.quickEntryConfirm(widget.quick.label)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.amountText, style: Theme.of(context).textTheme.headlineSmall),
+          if (category != null) Text(category.displayName(context), style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            key: const Key('quick.confirm.day'),
+            onPressed: _pickDay,
+            icon: const Icon(Icons.calendar_today_outlined, size: 18),
+            label: Text(formatDayLabel(_day, today: l10n.today, yesterday: l10n.yesterday, locale: Localizations.localeOf(context).toString())),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+        FilledButton(key: const Key('quick.confirm.add'), onPressed: () => Navigator.pop(context, _day), child: Text(l10n.add)),
+      ],
+    );
+  }
 }

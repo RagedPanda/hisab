@@ -21,7 +21,27 @@ void main() {
   Future<List<String>> labels() async => [for (final quick in await quickEntries.watchAll().first) quick.label];
   Future<Category> seeded(String seedKey) => (db.select(db.categories)..where((t) => t.seedKey.equals(seedKey))).getSingle();
 
+  test('a fresh database starts with the starters, filed under their seeded categories', () async {
+    expect(await labels(), ['Milk', 'Tea & snacks', 'Petrol', 'Auto / cab']);
+    final petrol = (await quickEntries.find('seed.quick.petrol'))!;
+    expect((petrol.categoryId, petrol.amountMinor), ((await seeded('fuel')).id, null));
+  });
+
+  test('erasing all data brings the starters back', () async {
+    await quickEntries.delete('seed.quick.milk');
+    await db.eraseAllData();
+    expect(await labels(), hasLength(4));
+  });
+
+  test('update replaces the fields and keeps the place in the list', () async {
+    await quickEntries.update('seed.quick.tea', label: 'Chai', amountMinor: 1500, payee: 'Sharma Tea Stall');
+    expect(await labels(), ['Milk', 'Chai', 'Petrol', 'Auto / cab']);
+    final chai = (await quickEntries.find('seed.quick.tea'))!;
+    expect((chai.amountMinor, chai.payee, chai.categoryId), (1500, 'Sharma Tea Stall', null));
+  });
+
   test('new quick entries go to the end, and reorder, rename and delete stick', () async {
+    await db.delete(db.quickEntries).go();
     final milk = await quickEntries.add(label: ' Milk ', amountMinor: 3200);
     final tea = await quickEntries.add(label: 'Tea', amountMinor: 1500);
     final auto = await quickEntries.add(label: 'Auto');

@@ -450,11 +450,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newQuickEntry => 'New quick entry';
 
   @override
+  String get editQuickEntry => 'Edit quick entry';
+
+  @override
   String get quickEntryName => 'Name on the chip';
 
   @override
   String get quickEntrySaved =>
       'Saved as a quick entry. Tap it on Home to add it.';
+
+  @override
+  String quickEntryConfirm(String label) {
+    return 'Add $label?';
+  }
 
   @override
   String quickEntryAdded(String label, String amount) {

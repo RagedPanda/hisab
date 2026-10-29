@@ -330,6 +330,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   Future<void> _prefillFromQuickEntry(String id) async {
     final quick = await ref.read(quickEntriesRepositoryProvider).find(id);
     if (quick == null) return;
+    _quickEntryName = quick.label;
     _kind = quick.kind;
     if (quick.amountMinor case final amount?) _amountController.text = amountInputText(amount, format: _moneyFormat);
     if (quick.categoryId case final categoryId?) {
@@ -341,6 +342,12 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _noteController.text = quick.note;
     _tagsController.text = quick.tags;
   }
+
+  /// The name of the quick entry the form was opened from, if any.
+  String? _quickEntryName;
+
+  /// Editing a saved quick entry rather than adding a new one.
+  bool get _editingQuickEntry => widget.newQuickEntry && widget.quickEntryId != null;
 
   bool get _canSaveAsQuickEntry => _groupId == null && _kind != 'transfer';
 
@@ -356,18 +363,28 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   /// once saved.
   Future<bool> _saveAsQuickEntry() async {
     final l10n = context.l10n;
-    final label = await promptText(context, title: l10n.quickEntryName, initial: _quickEntryLabel);
+    final label = await promptText(context, title: l10n.quickEntryName, initial: _editingQuickEntry ? _quickEntryName : _quickEntryLabel);
     if (label == null || label.isEmpty || !mounted) return false;
     final payee = _payeeController.text.trim();
-    await ref.read(quickEntriesRepositoryProvider).add(
+    final repo = ref.read(quickEntriesRepositoryProvider);
+    final amountMinor = _amountMinor > 0 ? _amountMinor : null;
+    final note = _noteController.text.trim();
+    final tags = formatTags(parseTags(_tagsController.text));
+    if (_editingQuickEntry) {
+      await repo.update(widget.quickEntryId!,
+          label: label, kind: _kind, amountMinor: amountMinor, categoryId: _category?.id,
+          accountId: _accountId, payee: payee.isEmpty ? null : payee, note: note, tags: tags);
+      return true;
+    }
+    await repo.add(
           label: label,
           kind: _kind,
-          amountMinor: _amountMinor > 0 ? _amountMinor : null,
+          amountMinor: amountMinor,
           categoryId: _category?.id,
           accountId: _accountId,
           payee: payee.isEmpty ? null : payee,
-          note: _noteController.text.trim(),
-          tags: formatTags(parseTags(_tagsController.text)),
+          note: note,
+          tags: tags,
         );
     if (!mounted) return true;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.quickEntrySaved)));
@@ -625,7 +642,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         scrolledUnderElevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent),
         titleTextStyle: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(color: Colors.white),
-        title: Text(_isEditing ? l10n.editEntry : _groupId != null ? l10n.groupExpense : widget.newQuickEntry ? l10n.newQuickEntry : l10n.newEntry),
+        title: Text(_isEditing ? l10n.editEntry : _groupId != null ? l10n.groupExpense : _editingQuickEntry ? l10n.editQuickEntry : widget.newQuickEntry ? l10n.newQuickEntry : l10n.newEntry),
         actions: [
           // Less common actions sit in a labelled menu: bare icons for them
           // were not understood.

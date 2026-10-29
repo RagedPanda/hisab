@@ -392,6 +392,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteEntryQuestion => 'Delete this entry?';
 
   @override
+  String get splitThis => 'Split this';
+
+  @override
+  String get splitThisPickGroup => 'Split with which group?';
+
+  @override
+  String get splitThisHint =>
+      'Saving moves this entry into the group. Only your share counts as spent.';
+
+  @override
+  String splitThisDone(String group) {
+    return 'Moved to $group. Only your share counts as spent.';
+  }
+
+  @override
   String totalOfItems(int count) {
     return 'Total of $count items';
   }

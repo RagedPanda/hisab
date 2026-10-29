@@ -15,6 +15,7 @@ import '../data/repositories/project_fields_repository.dart';
 import '../data/repositories/projects_repository.dart';
 import '../data/repositories/recurring_repository.dart';
 import '../data/repositories/payee_category_repository.dart';
+import '../data/repositories/quick_entries_repository.dart';
 import '../data/repositories/people_repository.dart';
 import '../data/repositories/reminders_repository.dart';
 import '../data/repositories/settle_schedule_repository.dart';
@@ -60,6 +61,8 @@ final projectsRepositoryProvider = Provider((ref) => ProjectsRepository(ref.watc
 final projectFieldsRepositoryProvider = Provider((ref) => ProjectFieldsRepository(ref.watch(databaseProvider)));
 final smsLogRepositoryProvider = Provider((ref) => SmsLogRepository(ref.watch(databaseProvider)));
 final payeeCategoryRepositoryProvider = Provider((ref) => PayeeCategoryRepository(ref.watch(databaseProvider)));
+final quickEntriesRepositoryProvider = Provider((ref) => QuickEntriesRepository(ref.watch(databaseProvider)));
+final quickEntriesProvider = StreamProvider((ref) => ref.watch(quickEntriesRepositoryProvider).watchAll());
 final peopleRepositoryProvider = Provider((ref) => PeopleRepository(ref.watch(databaseProvider)));
 final remindersRepositoryProvider = Provider((ref) => RemindersRepository(ref.watch(databaseProvider)));
 final recurringRepositoryProvider = Provider((ref) => RecurringRepository(ref.watch(databaseProvider)));

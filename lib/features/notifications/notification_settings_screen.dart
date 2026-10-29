@@ -9,6 +9,7 @@ import '../reminders/reminder_actions.dart';
 import '../salary/salary_providers.dart';
 import '../salary/salary_reminder.dart' show kSalaryLocation;
 import '../shell/widgets/common.dart';
+import '../shortcuts/launcher_sync.dart' show launcherChannelProvider;
 import 'notification_settings_actions.dart';
 
 const String kNotificationSettingsLocation = '/notifications';
@@ -30,6 +31,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final allowed = ref.watch(notificationPermissionProvider).value?.notificationsAllowed;
+    final kinds = notificationKindsShown(launcherSupported: ref.watch(launcherChannelProvider).isSupported);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notificationsTitle)),
       body: ListView(
@@ -45,7 +47,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 trailing: TextButton(onPressed: () => turnOnReminderNotifications(context), child: Text(l10n.notificationsAllow)),
               ),
             ),
-          for (final kind in NotificationKind.values) _KindCard(kind),
+          for (final kind in kinds) _KindCard(kind),
         ],
       ),
     );
@@ -131,12 +133,13 @@ class NotificationsSettingsTile extends ConsumerWidget {
     final l10n = context.l10n;
     final choices = ref.watch(notificationPrefsProvider).choices;
     final facts = notificationFactsOf(ref);
-    final on = NotificationKind.values.where((kind) => notificationKindOn(kind, choices: choices, facts: facts)).length;
+    final kinds = notificationKindsShown(launcherSupported: ref.watch(launcherChannelProvider).isSupported);
+    final on = kinds.where((kind) => notificationKindOn(kind, choices: choices, facts: facts)).length;
     return ListTile(
       key: const Key('settingsNotifications'),
       leading: const Icon(Icons.notifications_outlined),
       title: Text(l10n.notificationsTitle),
-      subtitle: Text(l10n.notificationsSettingsSubtitle(on, NotificationKind.values.length)),
+      subtitle: Text(l10n.notificationsSettingsSubtitle(on, kinds.length)),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => context.push(kNotificationSettingsLocation),
     );

@@ -61,12 +61,19 @@ void main() {
   });
 
   testWidgets('Settings opens Shortcuts & widget', (tester) async {
-    final container = await createContainer();
+    final container = await createContainer(overrides: [launcherChannelProvider.overrideWithValue(FakeLauncherChannel())]);
     await pumpAt(tester, container, '/settings');
     final tile = find.byKey(const Key('settings.shortcuts'));
     await tester.scrollUntilVisible(tile, 200, scrollable: find.byType(Scrollable).first);
     await tapAndSettle(tester, tile);
     expect(find.byType(ShortcutsScreen), findsOneWidget);
     expect(find.text('Add expense notification'), findsOneWidget);
+  });
+
+  testWidgets('Settings has no Shortcuts & widget row off Android', (tester) async {
+    final container = await createContainer();
+    await pumpAt(tester, container, '/settings');
+    await tester.scrollUntilVisible(find.byKey(const Key('settingsNotifications')), 200, scrollable: find.byType(Scrollable).first);
+    expect(find.byKey(const Key('settings.shortcuts')), findsNothing);
   });
 }

@@ -24,7 +24,7 @@ void main() {
 
   testWidgets('on a new install every kind is off, and turning on the evening summary offers its time and remembers it', (tester) async {
     final gateway = FakeNotificationGateway();
-    final container = await createContainer(overrides: [notificationGatewayProvider.overrideWithValue(gateway)]);
+    final container = await createContainer(overrides: [notificationGatewayProvider.overrideWithValue(gateway), launcherChannelProvider.overrideWithValue(FakeLauncherChannel())]);
     await pumpScreen(tester, container, const NotificationSettingsScreen(), size: const Size(360, 1600));
 
     for (final kind in NotificationKind.values) {
@@ -89,11 +89,25 @@ void main() {
   });
 
   testWidgets('the Settings row counts what is on and opens the screen', (tester) async {
-    final container = await createContainer(preferences: {notificationChoiceKey(NotificationKind.eveningSummary): true}, overrides: [notificationGatewayProvider.overrideWithValue(FakeNotificationGateway())]);
+    final container = await createContainer(
+      preferences: {notificationChoiceKey(NotificationKind.eveningSummary): true},
+      overrides: [notificationGatewayProvider.overrideWithValue(FakeNotificationGateway()), launcherChannelProvider.overrideWithValue(FakeLauncherChannel())],
+    );
     await pumpScreen(tester, container, const Scaffold(body: NotificationsSettingsTile()));
 
     expect(find.text('1 of 5 on'), findsOneWidget);
     await tapAndWait(tester, find.byKey(const Key('settingsNotifications')));
     expect(find.text(openedLocation(kNotificationSettingsLocation)), findsOneWidget);
+  });
+
+  testWidgets('off Android the Add expense shortcut is neither listed nor counted', (tester) async {
+    final container = await createContainer(preferences: {notificationChoiceKey(NotificationKind.eveningSummary): true}, overrides: [notificationGatewayProvider.overrideWithValue(FakeNotificationGateway())]);
+    await pumpScreen(tester, container, const NotificationSettingsScreen(), size: const Size(360, 1600));
+
+    expect(find.byKey(Key('notificationKind-${NotificationKind.addExpenseShortcut.name}')), findsNothing);
+    expect(find.byKey(Key('notificationKind-${NotificationKind.eveningSummary.name}')), findsOneWidget);
+
+    await pumpScreen(tester, container, const Scaffold(body: NotificationsSettingsTile()));
+    expect(find.text('1 of 4 on'), findsOneWidget);
   });
 }

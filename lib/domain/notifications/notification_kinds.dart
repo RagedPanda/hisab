@@ -23,6 +23,14 @@ enum NotificationKind {
   addExpenseShortcut,
 }
 
+/// The kinds Settings > Notifications lists: every kind, except the
+/// persistent "Add expense" shortcut where the launcher (tile, notification,
+/// widget) is not available, i.e. off Android.
+List<NotificationKind> notificationKindsShown({required bool launcherSupported}) => [
+      for (final kind in NotificationKind.values)
+        if (kind != NotificationKind.addExpenseShortcut || launcherSupported) kind,
+    ];
+
 /// What this install already does without having been asked, so a switch
 /// the user has never touched shows (and behaves) the way Hisab worked
 /// before the switches existed.

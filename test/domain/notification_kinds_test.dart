@@ -52,4 +52,10 @@ void main() {
     expect(bankSmsAlertsAllowed({NotificationKind.bankSms: false}), isFalse);
     expect(bankSmsAlertsAllowed({NotificationKind.reminders: false}), isTrue);
   });
+
+  test('the Add expense shortcut is listed only where the launcher works', () {
+    expect(notificationKindsShown(launcherSupported: true), NotificationKind.values);
+    expect(notificationKindsShown(launcherSupported: false), isNot(contains(NotificationKind.addExpenseShortcut)));
+    expect(notificationKindsShown(launcherSupported: false), hasLength(NotificationKind.values.length - 1));
+  });
 }

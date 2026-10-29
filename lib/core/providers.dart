@@ -29,12 +29,14 @@ import '../data/sms/sms_notification_prompt.dart';
 import '../data/sms/sms_reminder_linker.dart';
 import '../data/sms/sms_sync_cursor.dart';
 import '../domain/entries/entry_filter.dart';
+import '../domain/notifications/notification_kinds.dart';
 import '../domain/sms/sms_currency.dart';
 import '../domain/sms/sms_parser.dart';
 import '../domain/stats/dashboard_ledger.dart';
 import '../domain/stats/spend_series.dart';
 import 'dates.dart';
 import 'home_currency.dart';
+import 'notification_prefs.dart';
 import 'notifications/notification_gateway.dart';
 import 'notifications/notification_service.dart';
 import 'notifications/plugin_notification_gateway.dart';
@@ -125,11 +127,10 @@ final recurringViewsProvider = StreamProvider((ref) => ref.watch(recurringReposi
 /// were ignored, are left out so they neither show nor count on Home.
 final pendingSmsProvider = StreamProvider((ref) {
   final homeCurrency = ref.watch(homeCurrencyCodeProvider);
-  return ref
-      .watch(smsLogRepositoryProvider)
-      .watchPending()
-      .map((rows) => rows.where((row) => !isForeignCurrency(smsCurrencyCode(row.body), homeCurrency)).toList());
+  return watchReviewableSms(ref.watch(smsLogRepositoryProvider), homeCurrency);
 });
+Stream<List<SmsLogData>> watchReviewableSms(SmsLogRepository repository, String homeCurrency) =>
+    repository.watchPending().map((rows) => rows.where((row) => !isForeignCurrency(smsCurrencyCode(row.body), homeCurrency)).toList());
 /// Categories remembered per SMS payee, as row id -> category id.
 final payeeMemoryProvider = StreamProvider((ref) => ref.watch(payeeCategoryRepositoryProvider).watchMemory());
 
@@ -230,6 +231,19 @@ final notificationGatewayProvider = Provider<NotificationGateway>((ref) {
   return PluginNotificationGateway(notificationSetupTexts(notificationLocalizations(localeCode)));
 });
 
+/// Settings > Notifications: which kinds the user switched on or off.
+class NotificationPrefsNotifier extends Notifier<NotificationPrefs> {
+  @override
+  NotificationPrefs build() => NotificationPrefs.fromPrefs(ref.watch(sharedPreferencesProvider));
+
+  Future<void> update(NotificationPrefs Function(NotificationPrefs) change) async {
+    state = change(state);
+    await state.writeTo(ref.read(sharedPreferencesProvider));
+  }
+}
+
+final notificationPrefsProvider = NotifierProvider<NotificationPrefsNotifier, NotificationPrefs>(NotificationPrefsNotifier.new);
+
 /// The single notification layer: schedule, cancel, rescheduleAll, permissions.
 final notificationServiceProvider = Provider((ref) {
   final localeCode = ref.watch(settingsProvider.select((settings) => settings.localeCode));
@@ -238,6 +252,7 @@ final notificationServiceProvider = Provider((ref) {
   return NotificationService(
     ref.watch(notificationGatewayProvider),
     buildAlert: (reminder, alert) => alertRequestFor(reminder, alert, l10n, moneyFormat: moneyFormat),
+    remindersAllowed: ref.watch(notificationPrefsProvider.select((prefs) => reminderAlertsAllowed(prefs.choices))),
   );
 });
 

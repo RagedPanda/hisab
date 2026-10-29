@@ -9,7 +9,7 @@ import 'package:hisab/features/budgets/budget_views.dart';
 
 import '../support/app_harness.dart' show enter, settle;
 import '../support/screen_harness.dart';
-import 'groups_screen_test.dart' show createContainer;
+import '../support/app_harness.dart' show createContainer;
 
 /// Live budgets, as the screen sees them.
 Future<List<Budget>> _liveBudgets(WidgetTester tester, ProviderContainer container) async =>

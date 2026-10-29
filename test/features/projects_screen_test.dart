@@ -10,7 +10,7 @@ import 'package:hisab/l10n/generated/app_localizations_en.dart';
 
 import '../support/app_harness.dart' show settle;
 import '../support/screen_harness.dart';
-import 'groups_screen_test.dart' show createContainer;
+import '../support/app_harness.dart' show createContainer;
 
 /// Creates a project named [name] with [budgetMinor] and moves it to [status].
 Future<String> seedProject(ProviderContainer container, String name, {int? budgetMinor, ProjectStatus status = ProjectStatus.active}) async {

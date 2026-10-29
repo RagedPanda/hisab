@@ -15,7 +15,7 @@ import 'package:hisab/l10n/generated/app_localizations.dart';
 
 import '../support/app_harness.dart' show enter, settle;
 import '../support/screen_harness.dart';
-import 'groups_screen_test.dart' show createContainer;
+import '../support/app_harness.dart' show createContainer;
 
 const _moneyFormat = MoneyFormat.inr;
 

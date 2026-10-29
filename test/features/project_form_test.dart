@@ -6,7 +6,7 @@ import 'package:hisab/domain/projects/project_templates.dart';
 
 import '../support/app_harness.dart' show enter, settle;
 import '../support/screen_harness.dart';
-import 'groups_screen_test.dart' show createContainer;
+import '../support/app_harness.dart' show createContainer;
 import 'projects_screen_test.dart' show seedProject;
 
 Finder _field(String label) => find.widgetWithText(TextField, label);

@@ -11,7 +11,7 @@ import 'package:hisab/features/shell/router.dart';
 
 import '../support/app_harness.dart' show enter, settle;
 import '../support/screen_harness.dart';
-import 'groups_screen_test.dart' show createContainer;
+import '../support/app_harness.dart' show createContainer;
 import 'subscriptions_screen_test.dart' show seedSubscription;
 
 const _nameField = Key('subscriptionName');

@@ -17,7 +17,7 @@ import 'package:hisab/l10n/generated/app_localizations_en.dart';
 
 import '../support/app_harness.dart' show settle;
 import '../support/screen_harness.dart';
-import 'groups_screen_test.dart' show createContainer;
+import '../support/app_harness.dart' show createContainer;
 
 /// Saves a subscription named [name] costing [amountMinor] per [cycle] that
 /// next renews [daysAhead] days from today.

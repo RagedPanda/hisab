@@ -11,7 +11,7 @@ import 'package:hisab/features/shell/router.dart';
 
 import '../support/app_harness.dart' show settle;
 import '../support/screen_harness.dart';
-import 'groups_screen_test.dart' show createContainer;
+import '../support/app_harness.dart' show createContainer;
 import 'projects_screen_test.dart' show seedProject;
 
 /// Records an expense of [amountMinor] on [projectId] in the first category

@@ -108,7 +108,7 @@
   "groupExpense": "ग्रुप खर्च",
   "copiedFromLastEntry": "पिछले खर्च से भरा गया",
   "startBlank": "खाली से शुरू करें",
-  "entryAgain": "फिर से",
+  "entryAgain": "आज के लिए फिर से जोड़ें",
   "copiedFromEntry": "आज की तारीख़ वाली कॉपी। जो बदलना हो बदलें, फिर सेव करें।",
   "deleteEntryQuestion": "यह लेन-देन हटाएँ?",
   "totalOfItems": "{count} आइटम का कुल",

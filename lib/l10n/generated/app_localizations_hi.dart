@@ -382,7 +382,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get startBlank => 'खाली से शुरू करें';
 
   @override
-  String get entryAgain => 'फिर से';
+  String get entryAgain => 'आज के लिए फिर से जोड़ें';
 
   @override
   String get copiedFromEntry =>

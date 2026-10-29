@@ -12,6 +12,7 @@ const Key kTrendCardKey = ValueKey('dashboard.trend');
 const Key kCategoryCardKey = ValueKey('dashboard.categories');
 const Key kBudgetsCardKey = ValueKey('dashboard.budgets');
 const Key kProjectsCardKey = ValueKey('dashboard.projects');
+const Key kQuickEntriesCardKey = ValueKey('dashboard.quickEntries');
 const Key kUpcomingCardKey = ValueKey('dashboard.upcoming');
 const Key kAccountsCardKey = ValueKey('dashboard.accounts');
 const Key kGroupsCardKey = ValueKey('dashboard.groups');

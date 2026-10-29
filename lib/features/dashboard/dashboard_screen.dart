@@ -8,6 +8,7 @@ import '../recurring/recurring_list_model.dart';
 import '../shell/widgets/common.dart';
 import 'widgets/accounts_card.dart';
 import 'widgets/budgets_card.dart';
+import 'widgets/quick_entries_card.dart';
 import 'widgets/category_donut.dart';
 import 'widgets/dashboard_card.dart';
 import 'widgets/groups_card.dart';
@@ -34,6 +35,7 @@ class DashboardScreen extends ConsumerWidget {
       if (pending.isNotEmpty) _ActionBanner(icon: Icons.sms_outlined, label: l10n.smsToReview(pending.length), route: '/sms/review'),
       if (recurringWaiting > 0) _ActionBanner(key: const ValueKey('dashboard.recurringBanner'), icon: Icons.repeat, label: l10n.recurringToConfirm(recurringWaiting), route: '/recurring'),
       const HeroCard(),
+      const QuickEntriesCard(),
       const UpcomingCard(),
       const TrendCard(),
       const CategoryDonutCard(),

@@ -1424,6 +1424,48 @@ abstract class AppLocalizations {
   /// **'Merges; newer local edits are kept'**
   String get restoreBackupHelp;
 
+  /// No description provided for @eraseAllData.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase all data'**
+  String get eraseAllData;
+
+  /// No description provided for @eraseAllDataHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes every entry, account, group and setting on this phone'**
+  String get eraseAllDataHelp;
+
+  /// No description provided for @eraseAllDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase everything?'**
+  String get eraseAllDataTitle;
+
+  /// No description provided for @eraseAllDataBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes all entries, accounts, groups, budgets, reminders and settings from this phone. It can\'t be undone. Backups already on Google Drive are kept.\n\nType {word} to confirm.'**
+  String eraseAllDataBody(String word);
+
+  /// No description provided for @eraseConfirmLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type {word}'**
+  String eraseConfirmLabel(String word);
+
+  /// No description provided for @eraseAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase'**
+  String get eraseAction;
+
+  /// No description provided for @dataErased.
+  ///
+  /// In en, this message translates to:
+  /// **'All data erased. Hisab is back to a fresh start.'**
+  String get dataErased;
+
   /// No description provided for @about.
   ///
   /// In en, this message translates to:

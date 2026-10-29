@@ -820,6 +820,17 @@ class AppDatabase extends _$AppDatabase {
     await (update(smsLog)..where((row) => row.id.isIn(wipeIds))).write(const SmsLogCompanion(body: Value('')));
   }
 
+  /// Deletes every row in every table, then seeds the defaults again, leaving
+  /// the database as a fresh install has it. Foreign keys are checked at
+  /// commit, so the delete order does not matter.
+  Future<void> eraseAllData() => transaction(() async {
+        await customStatement('PRAGMA defer_foreign_keys = ON');
+        for (final table in allTables) {
+          await delete(table).go();
+        }
+        await seedDefaults();
+      });
+
   /// Inserts the category catalog and a Cash account. Idempotent by seedKey.
   Future<void> seedDefaults() async {
     final existing = (await select(categories).get()).map((c) => c.seedKey).toSet();

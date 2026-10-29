@@ -48,10 +48,15 @@ void main() {
       expect(find.byKey(kQuickEntriesCardKey), findsNothing);
     });
 
-    testWidgets('tapping a chip adds the entry at once, and Undo takes it back', (tester) async {
+    testWidgets('tapping a chip asks first, then adds today on Add, and Undo takes it back', (tester) async {
       final container = await pumpApp(tester, seed: (container) => _seedQuickEntries(container, ['Milk']));
       await tester.ensureVisible(_chip('Milk'));
       await tester.tap(_chip('Milk'));
+      await settle(tester);
+      expect(find.text('Add Milk?'), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('quick.confirm.day')), matching: find.text('Today')), findsOneWidget);
+      expect(await readDb(tester, () => liveEntries(container)), isEmpty, reason: 'nothing is added before Add');
+      await tester.tap(find.byKey(const Key('quick.confirm.add')));
       await settle(tester);
 
       final added = (await readDb(tester, () => liveEntries(container))).single;
@@ -60,6 +65,17 @@ void main() {
 
       await tester.tap(find.text('Undo'));
       await settle(tester);
+      expect(await readDb(tester, () => liveEntries(container)), isEmpty);
+    });
+
+    testWidgets('Cancel on the confirmation adds nothing', (tester) async {
+      final container = await pumpApp(tester, seed: (container) => _seedQuickEntries(container, ['Milk']));
+      await tester.ensureVisible(_chip('Milk'));
+      await tester.tap(_chip('Milk'));
+      await settle(tester);
+      await tester.tap(find.text('Cancel'));
+      await settle(tester);
+      expect(find.byKey(const Key('quick.confirm')), findsNothing);
       expect(await readDb(tester, () => liveEntries(container)), isEmpty);
     });
 

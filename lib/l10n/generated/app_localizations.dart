@@ -884,6 +884,12 @@ abstract class AppLocalizations {
   /// **'Saved as a quick entry. Tap it on Home to add it.'**
   String get quickEntrySaved;
 
+  /// No description provided for @quickEntryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {label}?'**
+  String quickEntryConfirm(String label);
+
   /// No description provided for @quickEntryAdded.
   ///
   /// In en, this message translates to:

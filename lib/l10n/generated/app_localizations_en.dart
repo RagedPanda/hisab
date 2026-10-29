@@ -460,6 +460,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Saved as a quick entry. Tap it on Home to add it.';
 
   @override
+  String quickEntryConfirm(String label) {
+    return 'Add $label?';
+  }
+
+  @override
   String quickEntryAdded(String label, String amount) {
     return 'Added $label · $amount';
   }

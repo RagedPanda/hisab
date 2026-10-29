@@ -160,6 +160,8 @@
   "editQuickEntry": "Edit quick entry",
   "quickEntryName": "Name on the chip",
   "quickEntrySaved": "Saved as a quick entry. Tap it on Home to add it.",
+  "quickEntryConfirm": "Add {label}?",
+  "@quickEntryConfirm": {"placeholders": {"label": {"type": "String"}}},
   "quickEntryAdded": "Added {label} · {amount}",
   "@quickEntryAdded": {"placeholders": {"label": {"type": "String"}, "amount": {"type": "String"}}},
   "quickEntriesMore": "+{count} more",

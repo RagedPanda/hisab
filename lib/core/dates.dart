@@ -14,6 +14,10 @@ class DateRange {
 DateTime startOfDay(DateTime value) =>
     DateTime(value.year, value.month, value.day);
 
+/// The calendar day of [day] at the time of day of [time].
+DateTime onDayAt(DateTime day, DateTime time) =>
+    DateTime(day.year, day.month, day.day, time.hour, time.minute, time.second);
+
 /// The calendar day containing [anchor]: local midnight up to (not
 /// including) the next midnight, so DST days keep their true length.
 DateRange dayRange(DateTime anchor) =>

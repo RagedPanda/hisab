@@ -37,4 +37,8 @@ void main() {
     expect(year.contains(DateTime(2026, 12, 31, 23)), isTrue);
     expect(year.contains(DateTime(2027)), isFalse);
   });
+
+  test('onDayAt keeps the day and takes the time of day', () {
+    expect(onDayAt(DateTime(2026, 10, 27, 23, 59), DateTime(2026, 10, 29, 9, 15, 30)), DateTime(2026, 10, 27, 9, 15, 30));
+  });
 }

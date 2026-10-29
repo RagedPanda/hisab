@@ -48,6 +48,7 @@
 - 🧮 **Built-in calculator** keypad for the amount, so 450 + 120 is one step.
 - 🔁 **Repeat** any entry daily, weekly, monthly or yearly straight from the editor.
 - 🔎 **Search and filters** across payee, note, item and category, with expense / income / transfer and project filters.
+- ⚡ **Add from outside the app** on Android: a Quick Settings tile, an optional "Add expense" notification, launcher shortcuts for your top quick entries, and a Home screen widget with this month's spend vs last month.
 
 ### 📩 Bank SMS auto-tracking
 - 🏦 **Reads bank alerts on Android** (opt-in, on-device): detects debits, credits, card spends and balances from 70+ Indian bank sender IDs.

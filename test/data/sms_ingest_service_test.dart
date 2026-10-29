@@ -492,6 +492,34 @@ void main() {
       await matchingService.ingest(RawSms(sender: 'HDFCBK', body: _atmDebit, receivedAt: received), autoAdd: true);
       expect(reminders.paid, isEmpty);
     });
+
+    test('linkSavedEntry links nothing for an unknown or unreadable SMS', () async {
+      await smsLog.record(id: 'chatter', sender: 'HDFCBK', body: 'Your OTP is 123456', receivedAt: received, status: 'ignored');
+      expect(await matchingService.linkSavedEntry('missing', 'edited-entry'), isNull);
+      expect(await matchingService.linkSavedEntry('chatter', 'edited-entry'), isNull);
+      expect(reminders.paid, isEmpty);
+    });
+  });
+
+  group('the account behind a logged SMS', () {
+    final received = DateTime(2026, 10, 21, 10, 0);
+
+    test('is created from the SMS when the editor saves without one', () async {
+      await service.ingest(RawSms(sender: 'HDFCBK', body: _upiDebit, receivedAt: received), autoAdd: false);
+      final row = (await smsLog.watchPending().first).single;
+      expect((await service.ensureAccountForSms(row.id))?.name, 'HDFC Bank ••1234');
+    });
+
+    test('is null for an unknown or unreadable SMS', () async {
+      await smsLog.record(id: 'chatter', sender: 'HDFCBK', body: 'Your OTP is 123456', receivedAt: received, status: 'ignored');
+      expect(await service.ensureAccountForSms('missing'), isNull);
+      expect(await service.ensureAccountForSms('chatter'), isNull);
+    });
+  });
+
+  test('SMS permission is never granted off Android', () async {
+    expect(await service.requestPermission(), isFalse);
+    expect(await service.hasPermission(), isFalse);
   });
 
   group('the same payment arriving twice (#46)', () {

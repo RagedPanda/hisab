@@ -1,5 +1,6 @@
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/app.dart';
@@ -360,6 +361,93 @@ void main() {
     appRouter.push('/reminders/$id');
     await _settle(tester);
     expect(find.text('Already marked paid'), findsOneWidget);
+  });
+
+  group('row menu', () {
+    Future<void> openMenuOf(WidgetTester tester, String reminderId) async {
+      await tester.tap(find.descendant(of: find.byKey(ValueKey('reminder-$reminderId')), matching: find.byWidgetPredicate((widget) => widget is PopupMenuButton)).first);
+      await _settle(tester);
+    }
+
+    testWidgets('Skip closes this month only and History says it was skipped', (tester) async {
+      final gateway = FakeNotificationGateway();
+      final (container, db) = await _pumpReminders(tester, gateway, location: '/settings');
+      final id = await _addBill(container);
+      appRouter.push('/reminders');
+      await _settle(tester);
+
+      await openMenuOf(tester, id);
+      await tester.tap(find.text('Skip this time'));
+      await _settle(tester);
+
+      expect(find.text('Skipped this time'), findsOneWidget);
+      expect((await (db.select(db.reminders)..where((t) => t.id.equals(id))).getSingle()).status, 'skipped');
+      await tester.tap(find.text('History'));
+      await _settle(tester);
+      expect(find.textContaining('Skipped '), findsWidgets);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Delete removes the reminder and Undo brings it back; Edit opens the editor', (tester) async {
+      final gateway = FakeNotificationGateway();
+      final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');
+      final id = await _addBill(container, repeat: ReminderRepeat.once);
+      appRouter.push('/reminders');
+      await _settle(tester);
+
+      await openMenuOf(tester, id);
+      expect(find.text('Skip this time'), findsNothing, reason: 'a one-off reminder cannot be skipped');
+      await tester.tap(find.text('Delete'));
+      await _settle(tester);
+      expect(find.text('Reminder deleted'), findsOneWidget);
+      expect(find.text('Electricity'), findsNothing);
+      await tester.tap(find.text('Undo'));
+      await _settle(tester);
+      expect(find.text('Electricity'), findsOneWidget);
+
+      await openMenuOf(tester, id);
+      await tester.tap(find.text('Edit'));
+      await _settle(tester);
+      expect(find.text('Edit reminder'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets('a document reminder is marked done, not paid', (tester) async {
+    final gateway = FakeNotificationGateway();
+    final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');
+    await container.read(reminderSchedulerProvider).save(ReminderDraft(kind: ReminderKind.document, title: 'Passport', dueAt: _inDays(30), repeat: ReminderRepeat.once, remindDaysBefore: const [7]));
+    appRouter.push('/reminders');
+    await _settle(tester);
+
+    await tester.tap(find.byTooltip('Done'));
+    await _settle(tester);
+    expect(find.text('Marked done'), findsOneWidget);
+    await tester.tap(find.text('History'));
+    await _settle(tester);
+    expect(find.textContaining('Done '), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Turn on when the OS will not ask again opens the app settings instead', (tester) async {
+    final settingsOpened = <String>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(const MethodChannel('flutter.baseflow.com/permissions/methods'), (call) async {
+      settingsOpened.add(call.method);
+      return true;
+    });
+    addTearDown(() => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(const MethodChannel('flutter.baseflow.com/permissions/methods'), null));
+    final gateway = FakeNotificationGateway(notificationsAllowed: false, grantOnRequest: false);
+    final (container, _) = await _pumpReminders(tester, gateway, location: '/settings');
+    await _addBill(container);
+    appRouter.push('/reminders');
+    await _settle(tester);
+
+    await tester.tap(find.text('Turn on'));
+    await _settle(tester);
+
+    expect(gateway.permissionRequests, 1);
+    expect(settingsOpened, ['openAppSettings']);
+    expect(gateway.exactRequests, 0, reason: 'no Alarms & reminders sheet without notifications');
   });
 
   group('documents & renewals', () {

@@ -1,3 +1,12 @@
+/// The Android channel a notification goes to, so each can be muted apart.
+enum AlertChannel {
+  /// Bills, due dates and the salary alert.
+  reminders,
+
+  /// The evening summary and the samples Settings > Notifications shows.
+  updates,
+}
+
 /// One local notification to post at [fireAt].
 class AlertRequest {
   const AlertRequest({
@@ -10,6 +19,7 @@ class AlertRequest {
     required this.snoozeLabel,
     required this.isMoney,
     this.withActions = true,
+    this.channel = AlertChannel.reminders,
   });
 
   final int id;
@@ -27,6 +37,8 @@ class AlertRequest {
 
   /// False for plain nudges (the salary alert) that have nothing to mark paid or snooze.
   final bool withActions;
+
+  final AlertChannel channel;
 }
 
 /// A notification the OS still holds for later.
@@ -63,10 +75,16 @@ class NotificationSetupTexts {
     required this.markPaidLabel,
     required this.doneLabel,
     required this.snoozeLabel,
+    this.updatesChannelName,
+    this.updatesChannelDescription,
   });
 
   final String channelName;
   final String channelDescription;
+
+  /// Name of the [AlertChannel.updates] channel; [channelName] when null.
+  final String? updatesChannelName;
+  final String? updatesChannelDescription;
   final String markPaidLabel;
   final String doneLabel;
   final String snoozeLabel;
@@ -84,6 +102,9 @@ abstract interface class NotificationGateway {
   Future<NotificationTap?> launchTap();
 
   Future<void> schedule(AlertRequest request, {required bool exact});
+
+  /// Posts [request] now, ignoring its fire time (Settings' samples).
+  Future<void> show(AlertRequest request);
   Future<void> cancel(int id);
   Future<List<PendingAlert>> pending();
 

@@ -139,4 +139,60 @@ void main() {
     await entries.deleteEntry(deletedId);
     expect(await entries.watchTagTexts().first, ['#home']);
   });
+
+  group('watchEntries filters', () {
+    late String travelId;
+
+    setUp(() async {
+      travelId = await CategoriesRepository(db).create(name: 'Road Trips', icon: 'flight', color: 0xFF000000, kind: 'expense');
+      await entries.saveEntry(EntriesRepository.newExpense(id: 'fuel', amountMinor: 3000, occurredAt: DateTime(2026, 10, 4), accountId: 'hdfc', categoryId: travelId, note: 'Fuel for Goa'));
+      await entries.saveEntry(EntriesRepository.newExpense(id: 'dinner', amountMinor: 9000, occurredAt: DateTime(2026, 10, 5), groupId: 'flatmates', payee: 'Toit'));
+      await entries.saveEntry(EntriesRepository.newExpense(id: 'snacks', amountMinor: 500, occurredAt: DateTime(2026, 10, 6)).copyWith(tags: const Value('goa')));
+    });
+
+    Future<List<String>> idsOf(Stream<List<EntryDetails>> stream) async => [for (final details in await stream.first) details.entry.id];
+
+    test('narrow by group, account and category', () async {
+      expect(await idsOf(entries.watchEntries(groupId: 'flatmates')), ['dinner']);
+      expect(await idsOf(entries.watchEntries(accountId: 'hdfc')), ['fuel']);
+      expect(await idsOf(entries.watchEntries(categoryId: travelId)), ['fuel']);
+    });
+
+    test('search matches note, payee, category name or tags, ignoring case', () async {
+      expect(await idsOf(entries.watchEntries(search: ' GOA ')), unorderedEquals(['fuel', 'snacks']));
+      expect(await idsOf(entries.watchEntries(search: 'toit')), ['dinner']);
+      expect(await idsOf(entries.watchEntries(search: 'road')), ['fuel']);
+      expect(await idsOf(entries.watchEntries(search: '   ')), hasLength(3), reason: 'a blank search does not filter');
+    });
+
+    test('limit keeps the newest entries', () async {
+      expect(await idsOf(entries.watchEntries(limit: 2)), ['snacks', 'dinner']);
+    });
+
+    test('watching one entry by id follows it', () async {
+      final line = (await entries.watchEntriesById('fuel').first).single.ledgerLine;
+      expect((line.amountMinor, line.categoryId), (3000, travelId));
+      expect(await entries.watchEntriesById('missing').first, isEmpty);
+    });
+  });
+
+  test('recent payees and categories list the newest distinct values', () async {
+    final categories = await CategoriesRepository(db).getAll();
+    final food = categories.firstWhere((category) => category.kind == 'expense').id;
+    final salary = categories.firstWhere((category) => category.kind == 'income').id;
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 100, occurredAt: DateTime(2026, 10, 1), payee: 'Swiggy', categoryId: food));
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 200, occurredAt: DateTime(2026, 10, 3), payee: 'Zomato', categoryId: food));
+    await entries.saveEntry(EntriesRepository.newExpense(kind: 'income', amountMinor: 900, occurredAt: DateTime(2026, 10, 2), categoryId: salary));
+
+    expect(await entries.recentPayees(), ['Zomato', 'Swiggy']);
+    expect(await entries.recentPayees(limit: 1), ['Zomato']);
+    expect(await entries.recentCategoryIds(kind: 'expense'), [food]);
+    expect(await entries.recentCategoryIds(kind: 'income'), [salary]);
+  });
+
+  test('an SMS is known once an entry records it', () async {
+    expect(await entries.existsForSms('sms-42'), isFalse);
+    await entries.saveEntry(EntriesRepository.newExpense(amountMinor: 100, occurredAt: DateTime(2026, 10, 1), source: 'sms', smsId: 'sms-42'));
+    expect(await entries.existsForSms('sms-42'), isTrue);
+  });
 }

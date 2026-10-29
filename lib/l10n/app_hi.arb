@@ -93,8 +93,6 @@
   "smsToReview": "{count, plural, =1{1 एसएमएस समीक्षा के लिए} other{{count} एसएमएस समीक्षा के लिए}}",
   "spentThisMonth": "इस महीने का खर्च",
   "income": "आय",
-  "saved": "बचत",
-  "overspent": "ज़्यादा खर्च",
   "balances": "बैलेंस",
   "spendingByCategory": "श्रेणी के हिसाब से खर्च",
   "recent": "हाल के",

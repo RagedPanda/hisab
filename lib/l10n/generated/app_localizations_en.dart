@@ -336,12 +336,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get income => 'Income';
 
   @override
-  String get saved => 'Saved';
-
-  @override
-  String get overspent => 'Overspent';
-
-  @override
   String get balances => 'Balances';
 
   @override

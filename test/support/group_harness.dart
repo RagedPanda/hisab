@@ -46,12 +46,12 @@ Future<String> seedGroupOwingMe(ProviderContainer container, String name, int to
 
 /// Saves an expense of [totalMinor] paid by [paidBy] and split equally across
 /// [sharedBy] (null: the group's current members), dated [occurredAt] (null: now).
-Future<void> addEqualExpense(ProviderContainer container, String groupId, {required String paidBy, required int totalMinor, List<String>? sharedBy, String note = 'Dinner', DateTime? occurredAt}) async {
+Future<void> addEqualExpense(ProviderContainer container, String groupId, {required String paidBy, required int totalMinor, List<String>? sharedBy, String note = 'Dinner', DateTime? occurredAt, String? categoryId}) async {
   final groups = container.read(groupsRepositoryProvider);
   final memberIds = sharedBy ?? [for (final member in await groups.getMembers(groupId)) member.id];
   final entryId = newId();
   await groups.saveGroupExpense(
-    EntriesRepository.newExpense(id: entryId, amountMinor: totalMinor, occurredAt: occurredAt ?? DateTime.now(), note: note, groupId: groupId, paidByMemberId: paidBy, splitMethod: 'equal'),
+    EntriesRepository.newExpense(id: entryId, amountMinor: totalMinor, occurredAt: occurredAt ?? DateTime.now(), note: note, groupId: groupId, paidByMemberId: paidBy, splitMethod: 'equal', categoryId: categoryId),
     splits: [for (final memberId in memberIds) SplitsCompanion.insert(id: newId(), entryId: entryId, memberId: memberId, amountMinor: totalMinor ~/ memberIds.length)],
   );
 }

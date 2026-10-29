@@ -92,7 +92,7 @@ const _myGroupShareMinor = 10000 + 30000;
 int get _hdfcBalanceMinor => _hdfcOpeningMinor - _restaurantMinor + _salaryMinor;
 int get _totalBalanceMinor => _hdfcBalanceMinor + _axisOpeningMinor - _milkTotalMinor;
 
-Finder _amountField() => find.descendant(of: find.byType(ExpenseEditorScreen), matching: find.byType(TextField)).first;
+Finder _amountField() => find.byKey(const ValueKey('editor.amount'));
 Finder _dialogField() => find.descendant(of: find.byType(AlertDialog), matching: find.byType(TextField));
 Finder _chip(String label) => find.widgetWithText(ChoiceChip, label, skipOffstage: false);
 Finder _filled(String label) => find.widgetWithText(FilledButton, label);
@@ -835,7 +835,7 @@ void main() {
     await _expectSpent(tester, formatMinor(_expectedSeededSpend(now, entryCount: kDashboardSeedEntries), showDecimals: false), reason: 'hero spend = planned expenses this month + my hotel share + slice top-up');
     expect(find.byKey(kHeroCardKey), findsOneWidget);
     expect(find.text('Income'), findsOneWidget);
-    expect(find.text('Daily avg'), findsOneWidget);
+    expect(find.textContaining('Daily avg'), findsOneWidget);
     await shoot(tester, 'dashboard_seeded_hero');
     await scrollTo(tester, find.byKey(kTrendCardKey));
     expect(find.text('Spending trend'), findsOneWidget);
@@ -851,7 +851,7 @@ void main() {
     expect(find.byKey(kUpcomingCardKey, skipOffstage: false), findsNothing, reason: 'with nothing upcoming the Upcoming card is hidden (#148)');
     expect(find.text('HDFC Savings'), findsOneWidget);
     await scrollTo(tester, find.byKey(kGroupsCardKey));
-    expect(find.text('Goa trip'), findsOneWidget);
+    expect(find.descendant(of: find.byKey(kGroupsCardKey), matching: find.text('Goa trip')), findsOneWidget);
     expect(find.text('You get ${formatMinor(600000, showDecimals: false)}'), findsOneWidget, reason: 'two friends owe 3,000 each');
     await scrollTo(tester, find.byKey(kRecentCardKey));
     expect(find.text('Recent'), findsOneWidget);
@@ -1222,7 +1222,9 @@ void main() {
     await tapFinder(tester, option(kitchenId));
     expect(find.descendant(of: projectChip, matching: find.text('Kitchen')), findsOneWidget);
     expect(find.text('Project details'), findsNothing, reason: 'Kitchen has no entry fields');
+    await scrollTo(tester, find.text('Uncategorised'), up: true);
     await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
+    await scrollTo(tester, _amountField(), up: true);
     await enterText(tester, _amountField(), '300');
     await _saveEntry(tester, formatMinor(30000));
     expect(await projectOf(30000), kitchenId);

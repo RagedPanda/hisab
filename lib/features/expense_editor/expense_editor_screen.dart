@@ -640,6 +640,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                 Text(l10n.howMuch, style: theme.textTheme.titleMedium?.copyWith(color: Colors.white.withValues(alpha: 0.8))),
                 const SizedBox(height: 4),
                 TextField(
+                  key: const ValueKey('editor.amount'),
                   controller: _amountController,
                   focusNode: _amountFocus,
                   readOnly: _hasItems,

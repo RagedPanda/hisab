@@ -41,6 +41,9 @@ class SmsAutoAdded {
   final String? payee;
 }
 
+/// Whether the logged SMS [row] is still the automatic add of [entryId].
+bool isCurrentAutoAdd(SmsLogData? row, String entryId) => row != null && row.status == SmsLogStatus.added && row.entryId == entryId;
+
 /// What one [SmsIngestService.sync] did.
 class SmsSyncResult {
   const SmsSyncResult({required this.scanned, required this.pending, required this.added});
@@ -195,10 +198,34 @@ class SmsIngestService {
   /// Reverses an automatic add: a reminder it paid reopens, the entry is
   /// deleted and the SMS is marked ignored, so it does not come back in the
   /// review queue.
-  Future<void> undoAutoAdd(SmsAutoAdded added) async {
-    await reminderLinker?.unlinkEntry(smsId: added.smsId, entryId: added.entryId);
-    await entries.deleteEntry(added.entryId);
-    await smsLog.setStatus(added.smsId, SmsLogStatus.ignored);
+  Future<void> undoAutoAdd(SmsAutoAdded added) => _undoAdd(smsId: added.smsId, entryId: added.entryId);
+
+  /// Undo from the notification of an automatic add, possibly long after it
+  /// was posted: only while the SMS is still logged as added with
+  /// [entryId], so a repeated tap or an entry already undone or re-saved is
+  /// left alone. True when the add was undone.
+  Future<bool> undoAutoAddIfCurrent({required String smsId, required String entryId}) async {
+    if (!isCurrentAutoAdd(await smsLog.getById(smsId), entryId)) return false;
+    await _undoAdd(smsId: smsId, entryId: entryId);
+    return true;
+  }
+
+  Future<void> _undoAdd({required String smsId, required String entryId}) async {
+    await reminderLinker?.unlinkEntry(smsId: smsId, entryId: entryId);
+    await entries.deleteEntry(entryId);
+    await smsLog.setStatus(smsId, SmsLogStatus.ignored);
+  }
+
+  /// Moves the entry an SMS added to [categoryId] and remembers it for the
+  /// SMS payee. False (nothing written) when the entry is gone or the
+  /// category is not usable for it.
+  Future<bool> changeSmsEntryCategory({required String smsId, required String entryId, required String categoryId}) async {
+    final details = await entries.getEntry(entryId);
+    if (details == null || details.entry.deletedAt != null) return false;
+    if (!isUsablePayeeCategory(await categories.byId(categoryId), details.entry.kind)) return false;
+    if (!await entries.setCategory(entryId, categoryId)) return false;
+    await rememberCategoryForSms(smsId, categoryId);
+    return true;
   }
 
   /// Runs an ignored or unparsed message through ingest again, e.g. after

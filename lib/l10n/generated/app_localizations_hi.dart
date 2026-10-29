@@ -382,6 +382,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get startBlank => 'खाली से शुरू करें';
 
   @override
+  String get entryAgain => 'फिर से';
+
+  @override
+  String get copiedFromEntry =>
+      'आज की तारीख़ वाली कॉपी। जो बदलना हो बदलें, फिर सेव करें।';
+
+  @override
   String get deleteEntryQuestion => 'यह लेन-देन हटाएँ?';
 
   @override

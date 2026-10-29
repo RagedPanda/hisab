@@ -382,6 +382,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startBlank => 'Start blank';
 
   @override
+  String get entryAgain => 'Again';
+
+  @override
+  String get copiedFromEntry =>
+      'A copy dated today. Change anything, then save.';
+
+  @override
   String get deleteEntryQuestion => 'Delete this entry?';
 
   @override

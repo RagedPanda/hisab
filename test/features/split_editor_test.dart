@@ -11,7 +11,7 @@ void main() {
   Member member(String id, String name, {bool isMe = false}) =>
       Member(updatedAt: DateTime(2026, 10, 1), id: id, groupId: 'g1', name: name, isMe: isMe, weight: 1);
 
-  testWidgets('#58: a by-item split opens with every method chip built and By item selected, at 360dp', (tester) async {
+  testWidgets('#58: a by-item split shows By item and offers every method, at 360dp', (tester) async {
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -39,15 +39,16 @@ void main() {
       ),
     ));
     await tester.pumpAndSettle();
+    expect(find.byKey(const Key('split-method-picker')), findsOneWidget);
+    expect(find.text('By item'), findsOneWidget, reason: 'the row shows the chosen method');
+    await tester.tap(find.byKey(const Key('split-method-picker')));
+    await tester.pumpAndSettle();
     for (final method in SplitMethod.values) {
-      final chip = find.byKey(Key('split-method-${method.name}'));
-      expect(chip, findsOneWidget, reason: '${method.name} chip is built');
-      final rect = tester.getRect(chip);
-      expect(rect.right <= 360 && rect.left >= 0, isTrue, reason: '${method.name} chip is on screen');
+      expect(find.byKey(Key('split-method-${method.name}')), findsOneWidget, reason: '${method.name} is offered in the sheet');
     }
-    expect(tester.widget<ChoiceChip>(find.byKey(const Key('split-method-byItem'))).selected, isTrue);
-    final chipKeys = tester.widgetList<ChoiceChip>(find.byType(ChoiceChip)).map((chip) => chip.key).toList();
-    expect(chipKeys.first, const Key('split-method-byItem'), reason: 'By item is the first option when there are items');
+    final optionKeys = tester.widgetList<ListTile>(find.descendant(of: find.byType(BottomSheet), matching: find.byType(ListTile))).map((tile) => tile.key).toList();
+    expect(optionKeys.first, const Key('split-method-byItem'), reason: 'By item is the first option when there are items');
+    expect(tester.widget<ListTile>(find.byKey(const Key('split-method-byItem'))).selected, isTrue);
     expect(tester.takeException(), isNull, reason: 'no overflow at 360dp');
   });
 

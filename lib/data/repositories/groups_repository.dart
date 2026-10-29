@@ -9,7 +9,6 @@ import '../../domain/split/group_settings.dart';
 import '../../domain/split/group_activity.dart';
 import '../../domain/split/group_timeline.dart';
 import '../../domain/split/group_totals.dart';
-import '../../domain/split/split_calculator.dart';
 import '../db/database.dart';
 import '../db/watch_tables.dart';
 import 'entries_repository.dart';
@@ -269,14 +268,8 @@ class GroupsRepository {
 
   /// The ledger form of a group expense, or null when it has no payer. Payer
   /// rows win over [Entry.paidByMemberId] when several members paid.
-  static LedgerExpense? ledgerExpenseOf(Entry entry, List<Split> splits, [List<EntryPayer> payers = const []]) {
-    final shares = [for (final split in splits) SplitShare(split.memberId, split.amountMinor)];
-    if (payers.isNotEmpty) {
-      return LedgerExpense.multi(payers: [for (final payer in payers) SplitShare(payer.memberId, payer.amountMinor)], shares: shares);
-    }
-    final payerId = entry.paidByMemberId;
-    return payerId == null ? null : LedgerExpense(paidByMemberId: payerId, shares: shares);
-  }
+  static LedgerExpense? ledgerExpenseOf(Entry entry, List<Split> splits, [List<EntryPayer> payers = const []]) =>
+      groupLedgerExpense(entry, splits, payers);
 
   static GroupBalances computeBalances({
     required List<Member> members,

@@ -640,6 +640,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                 Text(l10n.howMuch, style: theme.textTheme.titleMedium?.copyWith(color: Colors.white.withValues(alpha: 0.8))),
                 const SizedBox(height: 4),
                 TextField(
+                  key: const ValueKey('editor.amount'),
                   controller: _amountController,
                   focusNode: _amountFocus,
                   readOnly: _hasItems,
@@ -692,8 +693,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   bool get _saveBlocked => _isByItem && anyItemUnassigned(_itemInputs);
 
   Widget _saveButtons(AppLocalizations l10n, MoneyFormat moneyFormat) {
+    // The buttons follow the header's kind colour, so an expense saves in coral.
+    final kindTint = _headerColor(context);
     final save = FilledButton(
       key: const ValueKey('editor.save'),
+      style: FilledButton.styleFrom(backgroundColor: kindTint, foregroundColor: Colors.white),
       onPressed: _saving || _saveBlocked ? null : _save,
       child: FittedBox(
         fit: BoxFit.scaleDown,
@@ -707,6 +711,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         Expanded(
           child: OutlinedButton(
             key: const ValueKey('editor.saveAndAddAnother'),
+            style: OutlinedButton.styleFrom(foregroundColor: kindTint, side: BorderSide(color: kindTint)),
             onPressed: _saving || _saveBlocked ? null : () => _save(addAnother: true),
             child: FittedBox(fit: BoxFit.scaleDown, child: Text(l10n.saveAndAddAnother)),
           ),

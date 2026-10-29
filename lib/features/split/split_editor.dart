@@ -54,6 +54,16 @@ List<SplitMethod> splitMethodOptions({required bool hasItems}) => [
         if (method != SplitMethod.byItem) method,
     ];
 
+/// Icon for a split method in the picker row and its sheet.
+IconData splitMethodIcon(SplitMethod method) => switch (method) {
+      SplitMethod.equal => Icons.drag_handle,
+      SplitMethod.exact => Icons.edit_note,
+      SplitMethod.percent => Icons.percent,
+      SplitMethod.shares => Icons.pie_chart_outline,
+      SplitMethod.adjustment => Icons.tune,
+      SplitMethod.byItem => Icons.receipt_long,
+    };
+
 String splitMethodHelp(SplitMethod method, AppLocalizations l10n) => switch (method) {
       SplitMethod.equal => l10n.splitHelpEqual,
       SplitMethod.exact => l10n.splitHelpExact,
@@ -103,23 +113,7 @@ class SplitEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Wrapped, not a scrolling ChipRow: the selected method must always be
-        // visible, also when an edit opens on the last chip (#58).
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          children: [
-            for (final option in splitMethodOptions(hasItems: items.isNotEmpty))
-              ChoiceChip(
-                key: Key('split-method-${option.name}'),
-                label: Text(splitMethodLabel(option, l10n)),
-                selected: method == option,
-                onSelected: (_) => onMethodChanged(option),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(splitMethodHelp(method, l10n), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        SplitMethodTile(method: method, options: splitMethodOptions(hasItems: items.isNotEmpty), onPick: onMethodChanged),
         if (items.isEmpty)
           Text(l10n.byItemHint, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 8),
@@ -239,3 +233,57 @@ List<SplitInput> defaultSplitInputs(List<Member> members, SplitMethod method) =>
           },
         ),
     ];
+
+/// One row showing the chosen split method and how it works, like the
+/// account row; tapping it opens a sheet of every method.
+class SplitMethodTile extends StatelessWidget {
+  const SplitMethodTile({super.key, required this.method, required this.options, required this.onPick});
+  final SplitMethod method;
+  final List<SplitMethod> options;
+  final ValueChanged<SplitMethod> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ListTile(
+      key: const Key('split-method-picker'),
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(splitMethodIcon(method), color: Theme.of(context).colorScheme.primary),
+      title: Text(splitMethodLabel(method, l10n)),
+      subtitle: Text(splitMethodHelp(method, l10n)),
+      trailing: const Icon(Icons.expand_more),
+      onTap: () async {
+        final picked = await showSplitMethodPicker(context, options: options, selected: method);
+        if (picked != null && picked != method) onPick(picked);
+      },
+    );
+  }
+}
+
+/// Bottom sheet listing [options] with a line on each; returns the picked
+/// method, or null when dismissed.
+Future<SplitMethod?> showSplitMethodPicker(BuildContext context, {required List<SplitMethod> options, required SplitMethod selected}) {
+  final l10n = context.l10n;
+  return showModalBottomSheet<SplitMethod>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    builder: (context) => ListView(
+      shrinkWrap: true,
+      padding: const EdgeInsets.only(bottom: 16),
+      children: [
+        for (final option in options)
+          ListTile(
+            key: Key('split-method-${option.name}'),
+            leading: Icon(splitMethodIcon(option)),
+            title: Text(splitMethodLabel(option, l10n)),
+            subtitle: Text(splitMethodHelp(option, l10n)),
+            trailing: option == selected ? const Icon(Icons.check) : null,
+            selected: option == selected,
+            onTap: () => Navigator.of(context).pop(option),
+          ),
+      ],
+    ),
+  );
+}

@@ -435,6 +435,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String sameAsLastTime(int count) {
+    return 'Same as last time · $count items';
+  }
+
+  @override
   String get itemsHelp =>
       'Optional: break this expense into items with quantity and price (e.g. buffalo milk 1 L). Hisab remembers them for next time.';
 

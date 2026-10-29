@@ -419,6 +419,25 @@ class EntriesRepository {
     return suggestions.take(limit).toList();
   }
 
+  /// The items of the latest live entry in [categoryId] that has any, in
+  /// their saved order, so a repeat bill (milk, groceries) can be added in
+  /// one tap. Empty when no such entry exists.
+  Future<List<EntryItem>> lastBillItems(String categoryId) async {
+    final latest = await (db.select(db.entries).join([
+      innerJoin(db.entryItems, db.entryItems.entryId.equalsExp(db.entries.id) & db.entryItems.deletedAt.isNull()),
+    ])
+          ..where(db.entries.categoryId.equals(categoryId) & db.entries.deletedAt.isNull())
+          ..orderBy([OrderingTerm.desc(db.entries.occurredAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    if (latest == null) return const [];
+    final entryId = latest.readTable(db.entries).id;
+    return (db.select(db.entryItems)
+          ..where((item) => item.entryId.equals(entryId) & item.deletedAt.isNull())
+          ..orderBy([(item) => OrderingTerm.asc(item.sortOrder)]))
+        .get();
+  }
+
   Future<List<String>> recentPayees({int limit = 20}) async {
     final query = db.selectOnly(db.entries, distinct: true)
       ..addColumns([db.entries.payee])

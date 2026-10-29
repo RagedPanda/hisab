@@ -107,6 +107,12 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   List<ProjectField> _projectFields = const [];
   Map<String, FieldReading> _fieldValues = const {};
   List<ItemSuggestion> _suggestions = const [];
+
+  /// The items of the category's latest bill, offered as one "Same as last
+  /// time" chip when there are several.
+  List<EntryItem> _lastBill = const [];
+  final _detailsController = ExpansibleController();
+  final _itemsKey = GlobalKey();
   List<Member> _members = const [];
   Group? _group;
   String _source = 'manual';
@@ -413,9 +419,49 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   }
 
   Future<void> _refreshSuggestions() async {
-    if (_category == null) return;
-    final suggestions = await ref.read(entriesRepositoryProvider).itemSuggestions(_category!.id);
-    if (mounted) setState(() => _suggestions = suggestions);
+    final categoryId = _category?.id;
+    if (categoryId == null) {
+      setState(() {
+        _suggestions = const [];
+        _lastBill = const [];
+      });
+      return;
+    }
+    final repository = ref.read(entriesRepositoryProvider);
+    final suggestions = await repository.itemSuggestions(categoryId);
+    final lastBill = await repository.lastBillItems(categoryId);
+    if (!mounted) return;
+    setState(() {
+      _suggestions = suggestions;
+      _lastBill = lastBill;
+    });
+  }
+
+  Future<void> _pickCategory() async {
+    final picked = await showCategoryPicker(context, kind: _kind, selectedId: _category?.id, allowClear: _category != null);
+    if (picked == null || !mounted) return;
+    setState(() => _category = identical(picked, clearedCategory) ? null : picked);
+    await _refreshSuggestions();
+    if (mounted) _revealItemSuggestions();
+  }
+
+  /// A category bought by the item (milk, groceries) opens the items section
+  /// with last time's items, instead of leaving them behind "More details".
+  void _revealItemSuggestions() {
+    if (_kind != 'expense' || _hasItems || _suggestions.isEmpty) return;
+    if (_groupId == null) _detailsController.expand();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final itemsContext = _itemsKey.currentContext;
+      if (itemsContext != null && itemsContext.mounted) {
+        Scrollable.ensureVisible(itemsContext, duration: const Duration(milliseconds: 250), alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd);
+      }
+    });
+  }
+
+  /// "Next" on the amount keyboard moves on to the category of a new entry
+  /// that has none yet; otherwise it just closes the keyboard.
+  void _amountSubmitted() {
+    if (!_isEditing && _kind != 'transfer' && _category == null) _pickCategory();
   }
 
   int get _itemsTotalMinor => _items.fold(0, (sum, i) => sum + i.amountMinor);
@@ -564,13 +610,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               leading: IconBadge(icon: _category?.icon ?? 'category', color: _category?.color ?? 0xFF9E9E9E),
               title: Text(_category?.displayName(context) ?? l10n.uncategorised),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () async {
-                final picked = await showCategoryPicker(context, kind: _kind, selectedId: _category?.id, allowClear: _category != null);
-                if (picked != null) {
-                  setState(() => _category = identical(picked, clearedCategory) ? null : picked);
-                  await _refreshSuggestions();
-                }
-              },
+              onTap: _pickCategory,
             ),
           // Group expenses are a ledger between people, not an account
           // movement, so they never pick (or touch) a personal account.
@@ -674,6 +714,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                   readOnly: _hasItems,
                   autofocus: _autofocusAmount && !_isEditing && !_hasItems,
                   keyboardType: amountKeyboardType(moneyFormat),
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: (_) => _amountSubmitted(),
                   inputFormatters: amountInputFormatters(moneyFormat),
                   style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700, color: Colors.white).tabular,
                   cursorColor: Colors.white,
@@ -815,6 +857,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
         key: const ValueKey('editor.moreDetails'),
+        controller: _detailsController,
         initiallyExpanded: _startExpanded,
         shape: const Border(),
         collapsedShape: const Border(),
@@ -866,6 +909,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   Widget _itemsSection(MoneyFormat moneyFormat, List<String> units) {
     final l10n = context.l10n;
     return Column(
+      key: _itemsKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
@@ -883,6 +927,13 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               spacing: 8,
               runSpacing: 6,
               children: [
+                if (_lastBill.length > 1 && !_hasItems)
+                  ActionChip(
+                    key: const ValueKey('editor.sameAsLastTime'),
+                    avatar: const Icon(Icons.replay_rounded, size: 16),
+                    label: Text(l10n.sameAsLastTime(_lastBill.length)),
+                    onPressed: () => _updateItems(() => _items.addAll([for (final row in _lastBill) ItemDraft.fromRow(row, keepId: false)])),
+                  ),
                 for (final suggestion in _suggestions.where((s) => !_items.any((i) => i.name.toLowerCase() == s.name.toLowerCase())))
                   ActionChip(
                     avatar: const Icon(Icons.history, size: 16),
@@ -1201,6 +1252,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _amountFocus.dispose();
     _noteController.dispose();
     _payeeController.dispose();
+    _detailsController.dispose();
     super.dispose();
   }
 }

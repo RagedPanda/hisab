@@ -13,6 +13,7 @@ import '../groups/group_detail_screen.dart';
 import '../groups/group_settings_screen.dart';
 import '../groups/group_totals_screen.dart';
 import '../groups/groups_screen.dart';
+import '../groups/split_this_screen.dart';
 import '../projects/project_detail_screen.dart';
 import '../projects/project_form_screen.dart';
 import '../projects/project_templates_screen.dart';
@@ -75,8 +76,10 @@ final appRouter = GoRouter(
         copyFromId: state.uri.queryParameters['copy'],
         quickEntryId: state.uri.queryParameters['quick'],
         newQuickEntry: state.uri.queryParameters['saveAs'] == 'quick',
+        splitFromId: state.uri.queryParameters['splitFrom'],
       ),
     ),
+    GoRoute(path: '/split/:entryId', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: SplitThisScreen(entryId: state.pathParameters['entryId']!))),
     GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(
           key: ValueKey(state.uri.toString()),
           groupId: state.pathParameters['id']!,

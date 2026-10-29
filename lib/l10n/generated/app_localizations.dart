@@ -764,6 +764,30 @@ abstract class AppLocalizations {
   /// **'Delete this entry?'**
   String get deleteEntryQuestion;
 
+  /// No description provided for @splitThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Split this'**
+  String get splitThis;
+
+  /// No description provided for @splitThisPickGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Split with which group?'**
+  String get splitThisPickGroup;
+
+  /// No description provided for @splitThisHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving moves this entry into the group. Only your share counts as spent.'**
+  String get splitThisHint;
+
+  /// No description provided for @splitThisDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to {group}. Only your share counts as spent.'**
+  String splitThisDone(String group);
+
   /// No description provided for @totalOfItems.
   ///
   /// In en, this message translates to:

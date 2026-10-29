@@ -12,6 +12,9 @@ class FakeNotificationGateway implements NotificationGateway {
   final Map<int, AlertRequest> scheduled = {};
   final Map<int, bool> exactById = {};
   final List<int> cancelled = [];
+
+  /// Posted at once through [show], oldest first.
+  final List<AlertRequest> shown = [];
   int permissionRequests = 0;
   NotificationTap? launch;
 
@@ -37,6 +40,9 @@ class FakeNotificationGateway implements NotificationGateway {
     scheduled[request.id] = request;
     exactById[request.id] = exact;
   }
+
+  @override
+  Future<void> show(AlertRequest request) async => shown.add(request);
 
   @override
   Future<void> cancel(int id) async {

@@ -29,6 +29,7 @@ void main() {
       'title': 'New bank transaction',
       'bodyWithAmount': '{amount} from {sender}',
       'bodyWithoutAmount': 'From {sender}',
+      'notify': true,
     });
   });
 

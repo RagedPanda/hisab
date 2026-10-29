@@ -906,6 +906,7 @@ void main() {
 
     await tapText(tester, 'Add entry');
     await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
+    await scrollTo(tester, _amountField(), up: true);
     await enterText(tester, _amountField(), '2500');
     await _saveEntry(tester, formatMinor(fuelMinor));
     await waitFor(tester, find.byType(EntryTile));
@@ -1227,6 +1228,7 @@ void main() {
     await shoot(tester, 'editor_project_picked');
     await scrollTo(tester, find.text('Uncategorised'), up: true);
     await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
+    await scrollTo(tester, _amountField(), up: true);
     await enterText(tester, _amountField(), '2500');
     await _saveEntry(tester, formatMinor(250000));
     expect(await projectOf(250000), carId);

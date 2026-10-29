@@ -3863,6 +3863,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upcomingCalendarNextMonth => 'Next month';
 
   @override
+  String get spendingCalendar => 'Spending calendar';
+
+  @override
+  String get spendingCalendarOpen => 'Open spending calendar';
+
+  @override
+  String get spendingCalendarDayEmpty => 'Nothing spent on this day';
+
+  @override
+  String spendingCalendarSpent(String amount) {
+    return '$amount spent';
+  }
+
+  @override
   String get upcomingConfirm => 'Confirm';
 
   @override

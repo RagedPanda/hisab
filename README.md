@@ -27,19 +27,15 @@
 <table>
   <tr>
     <td align="center"><img src="docs/screenshots/01-dashboard.png" width="200" alt="Dashboard"><br><sub>Dashboard</sub></td>
-    <td align="center"><img src="docs/screenshots/02-entries.png" width="200" alt="Entries with search and filters"><br><sub>Entries, search and filters</sub></td>
-    <td align="center"><img src="docs/screenshots/03-multi-item-entry.png" width="200" alt="Entry with multiple items"><br><sub>Multi-item entry</sub></td>
+    <td align="center"><img src="docs/screenshots/09-spending-calendar.png" width="200" alt="Spending calendar"><br><sub>Spending calendar</sub></td>
     <td align="center"><img src="docs/screenshots/04-group-expenses.png" width="200" alt="Group expenses"><br><sub>Group expenses</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/screenshots/05-group-settle-up.png" width="200" alt="Group totals, balances and settle-up"><br><sub>Totals and settle-up</sub></td>
-    <td align="center"><img src="docs/screenshots/06-sms-review.png" width="200" alt="Bank SMS review"><br><sub>Bank SMS review</sub></td>
-    <td align="center"><img src="docs/screenshots/07-subscriptions-dark.png" width="200" alt="Subscriptions in dark theme"><br><sub>Subscriptions (dark)</sub></td>
-    <td align="center"><img src="docs/screenshots/08-hindi-budgets.png" width="200" alt="Categories and budgets in Hindi"><br><sub>Budgets (Hindi)</sub></td>
+    <td align="center"><img src="docs/screenshots/ios/07-subscriptions-dark.png" width="200" alt="Subscriptions in dark theme on iOS"><br><sub>Subscriptions (dark, iOS)</sub></td>
   </tr>
 </table>
 
-<sub>Screens from an Android emulator with made-up demo data.</sub>
+<p align="center"><b><a href="docs/SCREENSHOTS.md">More screenshots: all 13 screens on Android and iOS →</a></b></p>
+
+<sub>Screens from an Android emulator and an iPhone simulator with made-up demo data.</sub>
 
 ## Features
 

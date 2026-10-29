@@ -5,9 +5,12 @@ import 'package:hisab/core/providers.dart';
 import 'package:hisab/domain/notifications/notification_kinds.dart';
 import 'package:hisab/features/notifications/notification_settings_screen.dart';
 import 'package:hisab/features/notifications/notification_texts.dart';
+import 'package:hisab/features/shortcuts/launcher_sync.dart';
+import 'package:hisab/features/shortcuts/shortcut_settings.dart';
 
 import '../core/fake_notification_gateway.dart';
 import '../support/app_harness.dart';
+import '../support/fake_launcher_channel.dart';
 
 void main() {
   Finder switchOf(NotificationKind kind) => find.descendant(of: find.byKey(Key('notificationKind-${kind.name}')), matching: find.byType(Switch));
@@ -61,11 +64,35 @@ void main() {
     expect(find.textContaining('Sample sent'), findsOneWidget);
   });
 
+  testWidgets('the Add expense shortcut switch asks for access, stays off without it, and shares its setting with Shortcuts & widget', (tester) async {
+    final gateway = FakeNotificationGateway(notificationsAllowed: false, grantOnRequest: false);
+    final launcher = FakeLauncherChannel();
+    final container = await createContainer(overrides: [notificationGatewayProvider.overrideWithValue(gateway), launcherChannelProvider.overrideWithValue(launcher)]);
+    await pumpScreen(tester, container, const NotificationSettingsScreen(), size: const Size(360, 2000));
+    final shortcut = switchOf(NotificationKind.addExpenseShortcut);
+
+    await tapAndWait(tester, shortcut);
+    expect(gateway.permissionRequests, 1);
+    expect(isOn(tester, NotificationKind.addExpenseShortcut), isFalse, reason: 'no notification access, so nothing to show');
+    expect(container.read(shortcutSettingsProvider).addExpenseNotification, isFalse);
+
+    gateway.grantOnRequest = true;
+    await tapAndWait(tester, shortcut);
+    expect(gateway.permissionRequests, 2);
+    expect(isOn(tester, NotificationKind.addExpenseShortcut), isTrue);
+    expect(container.read(sharedPreferencesProvider).getBool(kAddExpenseNotificationKey), isTrue);
+    expect(container.read(sharedPreferencesProvider).containsKey(notificationChoiceKey(NotificationKind.addExpenseShortcut)), isFalse, reason: 'one setting, kept by Shortcuts & widget');
+
+    await container.read(shortcutSettingsProvider.notifier).setAddExpenseNotification(false);
+    await pumpWithDatabase(tester, 5);
+    expect(isOn(tester, NotificationKind.addExpenseShortcut), isFalse, reason: 'turned off on Shortcuts & widget');
+  });
+
   testWidgets('the Settings row counts what is on and opens the screen', (tester) async {
     final container = await createContainer(preferences: {notificationChoiceKey(NotificationKind.eveningSummary): true}, overrides: [notificationGatewayProvider.overrideWithValue(FakeNotificationGateway())]);
     await pumpScreen(tester, container, const Scaffold(body: NotificationsSettingsTile()));
 
-    expect(find.text('1 of 4 on'), findsOneWidget);
+    expect(find.text('1 of 5 on'), findsOneWidget);
     await tapAndWait(tester, find.byKey(const Key('settingsNotifications')));
     expect(find.text(openedLocation(kNotificationSettingsLocation)), findsOneWidget);
   });

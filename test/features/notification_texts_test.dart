@@ -70,6 +70,7 @@ void main() {
       expect(sample(NotificationKind.bankSms).body, en.smsNotificationBodyAmount('₹1,850', kSampleSmsSender));
       expect(sample(NotificationKind.bankSms, smsAutoAdd: true).body, en.smsNotificationBodyAmountAutoAdd('₹1,850', kSampleSmsSender));
       expect(sample(NotificationKind.eveningSummary).body, eveningSummaryBody(busy, en, moneyFormat: MoneyFormat.inr));
+      expect((sample(NotificationKind.addExpenseShortcut).title, sample(NotificationKind.addExpenseShortcut).body), ('Sample · ${en.addExpense}', en.addExpenseNotificationBody));
     });
 
     test('is localised', () {

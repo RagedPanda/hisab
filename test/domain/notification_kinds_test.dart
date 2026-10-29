@@ -25,6 +25,12 @@ void main() {
       expect(on(NotificationKind.salary, facts: const NotificationFacts()), isFalse);
     });
 
+    test('the Add expense shortcut follows its own setting on Shortcuts & widget', () {
+      expect(on(NotificationKind.addExpenseShortcut, facts: const NotificationFacts(addExpenseShortcutOn: true)), isTrue);
+      const everythingElse = NotificationFacts(hasReminders: true, salaryAlertOn: true, smsEnabled: true);
+      expect(on(NotificationKind.addExpenseShortcut, facts: everythingElse), isFalse);
+    });
+
     test('the evening summary is new, so it stays off whatever else is set up', () {
       const everything = NotificationFacts(hasReminders: true, salaryAlertOn: true, smsEnabled: true);
       expect(on(NotificationKind.eveningSummary, facts: everything), isFalse);

@@ -2,10 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
 
-/// Notification kind of the persistent "Add expense" shortcut, for a
-/// per-kind notification setting. Off by default.
-const String kAddExpenseNotificationKind = 'addExpenseShortcut';
-
 const String kAddExpenseNotificationKey = 'addExpenseNotification';
 const String kSpendWidgetOpacityKey = 'spendWidgetOpacity';
 

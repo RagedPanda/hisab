@@ -12,7 +12,8 @@ const String kEveningSummaryMinuteKey = 'notify.eveningSummaryMinute';
 /// Settings > Notifications, kept on this device beside [AppSettings].
 /// Holds only the switches the user flipped; see [notificationKindOn] for
 /// how an untouched one reads. The salary alert's switch lives on the
-/// salary setup and is not stored here.
+/// salary setup, and the Add expense shortcut's on Shortcuts & widget;
+/// neither is stored here.
 class NotificationPrefs {
   const NotificationPrefs({this.choices = const {}, this.eveningSummaryMinute = kDefaultEveningSummaryMinute});
 

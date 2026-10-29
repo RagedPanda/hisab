@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/currency/currency_lookup.dart';
 import '../domain/money/money_format.dart';
 import '../domain/money/money_format_resolver.dart';
+import '../domain/quick_entries/quick_entry_strip.dart';
 import '../domain/sms/sms_confidence.dart';
 
 /// Preference behind Settings > "Month starts on"; also read by backups.
@@ -33,6 +34,7 @@ class AppSettings {
     this.localeCode = '',
     this.numberFormat = NumberFormatChoice.automatic,
     this.defaultAccountId = '',
+    this.quickEntriesShown = kDefaultQuickEntriesShown,
   });
 
   /// ISO 4217 code of the home currency; the symbol is derived from it.
@@ -69,6 +71,9 @@ class AppSettings {
   /// Account a new entry starts on; empty means auto (a cash account).
   final String defaultAccountId;
 
+  /// How many quick entries Home shows before "+N more".
+  final int quickEntriesShown;
+
   AppSettings copyWith({
     String? currencyCode,
     bool? currencyConfirmed,
@@ -82,6 +87,7 @@ class AppSettings {
     String? localeCode,
     NumberFormatChoice? numberFormat,
     String? defaultAccountId,
+    int? quickEntriesShown,
   }) =>
       AppSettings(
         currencyCode: currencyCode ?? this.currencyCode,
@@ -96,6 +102,7 @@ class AppSettings {
         localeCode: localeCode ?? this.localeCode,
         numberFormat: numberFormat ?? this.numberFormat,
         defaultAccountId: defaultAccountId ?? this.defaultAccountId,
+        quickEntriesShown: quickEntriesShown ?? this.quickEntriesShown,
       );
 
   static AppSettings fromPrefs(SharedPreferences prefs) => AppSettings(
@@ -111,6 +118,7 @@ class AppSettings {
         localeCode: prefs.getString('localeCode') ?? '',
         numberFormat: NumberFormatChoice.fromStorageKey(prefs.getString(kNumberFormatKey)),
         defaultAccountId: prefs.getString('defaultAccountId') ?? '',
+        quickEntriesShown: clampQuickEntriesShown(prefs.getInt(kQuickEntriesShownKey) ?? kDefaultQuickEntriesShown),
       );
 
   Future<void> writeTo(SharedPreferences prefs) async {
@@ -129,6 +137,7 @@ class AppSettings {
     await prefs.setString('localeCode', localeCode);
     await prefs.setString(kNumberFormatKey, numberFormat.storageKey);
     await prefs.setString('defaultAccountId', defaultAccountId);
+    await prefs.setInt(kQuickEntriesShownKey, quickEntriesShown);
   }
 }
 

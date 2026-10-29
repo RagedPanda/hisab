@@ -435,6 +435,52 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get quickEntries => 'क्विक एंट्री';
+
+  @override
+  String get quickEntriesHint => 'होम पर एक टैप वाले खर्च';
+
+  @override
+  String get saveAsQuickEntry => 'क्विक एंट्री के रूप में सेव करें';
+
+  @override
+  String get saveQuickEntry => 'क्विक एंट्री सेव करें';
+
+  @override
+  String get newQuickEntry => 'नई क्विक एंट्री';
+
+  @override
+  String get quickEntryName => 'चिप पर नाम';
+
+  @override
+  String get quickEntrySaved => 'क्विक एंट्री सेव हुई। होम पर टैप करके जोड़ें।';
+
+  @override
+  String quickEntryAdded(String label, String amount) {
+    return '$label जोड़ा · $amount';
+  }
+
+  @override
+  String quickEntriesMore(int count) {
+    return '+$count और';
+  }
+
+  @override
+  String get quickEntriesShown => 'होम पर दिखें';
+
+  @override
+  String quickEntriesShownHint(int count) {
+    return '$count चिप; बाकी +और में';
+  }
+
+  @override
+  String get quickEntriesEmpty =>
+      'अभी कोई क्विक एंट्री नहीं। यहाँ जोड़ें, या कोई भी एंट्री खोलकर बिजली वाले बटन से सेव करें।';
+
+  @override
+  String get quickEntryNoAmount => 'एडिटर खुलेगा';
+
+  @override
   String sameAsLastTime(int count) {
     return 'पिछली बार जैसा · $count आइटम';
   }

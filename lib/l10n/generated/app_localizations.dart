@@ -836,6 +836,84 @@ abstract class AppLocalizations {
   /// **'{name} · {quantity} @ {price}'**
   String itemSuggestion(String name, String quantity, String price);
 
+  /// Saved spends shown as one-tap chips on Home
+  ///
+  /// In en, this message translates to:
+  /// **'Quick entries'**
+  String get quickEntries;
+
+  /// No description provided for @quickEntriesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One-tap spends on Home'**
+  String get quickEntriesHint;
+
+  /// No description provided for @saveAsQuickEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as quick entry'**
+  String get saveAsQuickEntry;
+
+  /// No description provided for @saveQuickEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Save quick entry'**
+  String get saveQuickEntry;
+
+  /// No description provided for @newQuickEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'New quick entry'**
+  String get newQuickEntry;
+
+  /// No description provided for @quickEntryName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name on the chip'**
+  String get quickEntryName;
+
+  /// No description provided for @quickEntrySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as a quick entry. Tap it on Home to add it.'**
+  String get quickEntrySaved;
+
+  /// No description provided for @quickEntryAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {label} · {amount}'**
+  String quickEntryAdded(String label, String amount);
+
+  /// No description provided for @quickEntriesMore.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String quickEntriesMore(int count);
+
+  /// No description provided for @quickEntriesShown.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown on Home'**
+  String get quickEntriesShown;
+
+  /// No description provided for @quickEntriesShownHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} chips; the rest go behind +more'**
+  String quickEntriesShownHint(int count);
+
+  /// No description provided for @quickEntriesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No quick entries yet. Add one here, or open any entry and tap the bolt to save it as one.'**
+  String get quickEntriesEmpty;
+
+  /// No description provided for @quickEntryNoAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the editor'**
+  String get quickEntryNoAmount;
+
   /// Chip in the entry editor that adds every item of the latest bill in the chosen category
   ///
   /// In en, this message translates to:

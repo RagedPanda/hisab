@@ -3680,6 +3680,24 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 result} other{{count} results}}'**
   String resultsCount(int count);
 
+  /// No description provided for @filteredTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total spent'**
+  String get filteredTotal;
+
+  /// No description provided for @itemBoughtTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} · {count, plural, =1{1 time} other{{count} times}}'**
+  String itemBoughtTimes(String quantity, int count);
+
+  /// No description provided for @moreItems.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more items'**
+  String moreItems(int count);
+
   /// No description provided for @amountFrom.
   ///
   /// In en, this message translates to:

@@ -2150,6 +2150,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get filteredTotal => 'Total spent';
+
+  @override
+  String itemBoughtTimes(String quantity, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: '1 time',
+    );
+    return '$quantity · $_temp0';
+  }
+
+  @override
+  String moreItems(int count) {
+    return '+$count more items';
+  }
+
+  @override
   String amountFrom(String amount) {
     return 'From $amount';
   }

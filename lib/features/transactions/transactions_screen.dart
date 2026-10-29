@@ -9,6 +9,7 @@ import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
 import '../../domain/entries/entry_filter.dart';
+import '../../domain/entries/entry_summary.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../projects/project_picker_sheet.dart';
@@ -85,6 +86,14 @@ EntryFacts entryFacts(BuildContext context, EntryDetails details) => EntryFacts(
       toAccountId: details.entry.toAccountId,
       projectId: details.entry.projectId,
       tags: details.entry.tags,
+    );
+
+/// What the filtered-list summary sees of one listed entry: the user's share
+/// of a shared expense, and its item lines as entered.
+SummaryEntry summaryEntry(EntryDetails details) => (
+      kind: details.entry.kind,
+      amountMinor: details.myAmountMinor,
+      items: [for (final item in details.items) (name: item.name, quantity: item.quantity, unit: item.unit, amountMinor: item.amountMinor)],
     );
 
 class TransactionsScreen extends ConsumerWidget {
@@ -188,9 +197,10 @@ class TransactionsScreen extends ConsumerWidget {
                     : ListView.builder(
                         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-                        itemCount: groups.length,
+                        itemCount: groups.length + (narrowed ? 1 : 0),
                         itemBuilder: (context, index) {
-                          final group = groups[index];
+                          if (narrowed && index == 0) return _FilteredSummaryCard(summary: summarizeEntries(entries.map(summaryEntry)), moneyFormat: moneyFormat);
+                          final group = groups[index - (narrowed ? 1 : 0)];
                           final dayTotal = group.items.where((d) => d.entry.kind == 'expense').fold(0, (sum, d) => sum + d.myAmountMinor);
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,6 +225,63 @@ class TransactionsScreen extends ConsumerWidget {
           ),
         ],
         ),
+      ),
+    );
+  }
+}
+
+/// Total spent across the filtered entries, and how much of each item was
+/// bought: "Buffalo milk · 62 L · 58 times · ₹4,650".
+class _FilteredSummaryCard extends StatelessWidget {
+  const _FilteredSummaryCard({required this.summary, required this.moneyFormat});
+
+  final EntrySummary summary;
+  final MoneyFormat moneyFormat;
+
+  static const _maxItems = 6;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    final shown = summary.items.take(_maxItems).toList();
+    return Card(
+      key: const ValueKey('entries.summary'),
+      margin: const EdgeInsets.only(top: 8),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Expanded(child: Text(l10n.filteredTotal, style: theme.textTheme.titleSmall)),
+            Text(formatMinor(summary.spentMinor, format: moneyFormat), key: const ValueKey('entries.summary.spent'), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+          ]),
+          if (summary.incomeMinor > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Row(children: [
+                Expanded(child: Text(l10n.income, style: muted)),
+                Text(formatMinor(summary.incomeMinor, format: moneyFormat), style: muted),
+              ]),
+            ),
+          if (shown.isNotEmpty) ...[
+            const Divider(height: 20),
+            for (final item in shown)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(children: [
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(item.name, style: theme.textTheme.bodyMedium),
+                      Text(l10n.itemBoughtTimes(formatQuantity(item.quantity, item.unit), item.entryCount), style: muted),
+                    ]),
+                  ),
+                  Text(formatMinor(item.amountMinor, format: moneyFormat), style: theme.textTheme.bodyMedium),
+                ]),
+              ),
+            if (summary.items.length > shown.length) Text(l10n.moreItems(summary.items.length - shown.length), style: muted),
+          ],
+        ]),
       ),
     );
   }

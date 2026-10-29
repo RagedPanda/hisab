@@ -49,6 +49,13 @@ class SmsSyncResult {
   final int added;
 }
 
+/// What the SMS log stores about a read message: the parsed transaction, the
+/// suggested category and the account it belongs to, if already known.
+Map<String, dynamic> smsLogPayload(ParsedTransaction parsed, {String? accountId}) => parsed.toJson()
+  ..['suggestedCategory'] = suggestCategoryKey(parsed)
+  ..['accountKey'] = parsed.accountKey
+  ..['accountId'] = accountId;
+
 /// Turns raw SMS into log rows, accounts and (optionally) entries.
 class SmsIngestService {
   SmsIngestService({
@@ -168,11 +175,7 @@ class SmsIngestService {
     if (known != null && parsed.balanceMinor != null) {
       await accounts.applyReportedBalance(known.id, parsed.balanceMinor!, parsed.occurredAt);
     }
-    final categoryKey = suggestCategoryKey(parsed);
-    final payload = parsed.toJson()
-      ..['suggestedCategory'] = categoryKey
-      ..['accountKey'] = parsed.accountKey
-      ..['accountId'] = known?.id;
+    final payload = smsLogPayload(parsed, accountId: known?.id);
 
     if (routeForSms(parsed: parsed, autoAddEnabled: autoAdd, possibleTransaction: true) != SmsRoute.autoAdd) {
       await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.pending, parsed: payload, transactionKey: transactionKey);

@@ -34,6 +34,7 @@ import 'package:hisab/core/money.dart';
 import 'package:hisab/core/notifications/reminder_payload.dart';
 import 'package:hisab/core/dates.dart';
 import 'package:hisab/core/providers.dart';
+import 'package:hisab/core/theme.dart';
 import 'package:hisab/data/backup/backup_service.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
@@ -2265,6 +2266,73 @@ void main() {
     await shoot(tester, 'hi_upcoming_card');
     await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(localeCode: 'en'));
     await settle(tester, 6);
+  });
+
+  testWidgets('38 entries: shared expenses carry the group tag and say who lent and who borrowed', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    await fresh.read(groupsRepositoryProvider).createGroup(name: 'Goa trip', icon: 'flight', myName: 'You', otherMembers: ['Rahul', 'Priya']);
+    final groupTag = find.byKey(const Key('group-tag'));
+    Color? colorOf(Finder text) => tester.widget<Text>(text).style?.color;
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Groups');
+    await tapText(tester, 'Goa trip');
+    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _pickCategory(tester, 'restaurants', 'Restaurants & Cafes');
+    await enterText(tester, _amountField(), '900');
+    await _saveEntry(tester, formatMinor(90000));
+
+    await tapFinder(tester, find.widgetWithText(FloatingActionButton, 'Add expense'));
+    await _pickCategory(tester, 'fuel', 'Fuel / Petrol / Diesel');
+    await enterText(tester, _amountField(), '300');
+    await scrollTo(tester, find.text('Paid by'), within: find.byType(ExpenseEditorScreen));
+    await tapFinder(tester, _chip('Rahul'));
+    await scrollTo(tester, _amountField(), within: find.byType(ExpenseEditorScreen), up: true);
+    await _saveEntry(tester, formatMinor(30000));
+    await goBack(tester);
+
+    await goTab(tester, 'Entries');
+    expect(find.descendant(of: groupTag, matching: find.text('Goa trip')), findsNWidgets(2), reason: 'both shared rows carry the group tag');
+    expect(find.byKey(const Key('group-mark')), findsNWidgets(2));
+    final lent = find.text('you lent ${formatMinor(60000)}');
+    final borrowed = find.text('you borrowed ${formatMinor(10000)}');
+    expect(lent, findsOneWidget, reason: 'I paid 900 split three ways, so the other two owe me 600');
+    expect(borrowed, findsOneWidget, reason: 'Rahul paid 300, so I owe my 100 share');
+    expect(colorOf(lent), kIncomeColor);
+    expect(colorOf(borrowed), kExpenseColor);
+    expect(find.textContaining(formatMinor(30000)), findsOneWidget, reason: 'the dinner row shows my 300 share, not the 900 bill');
+    await shoot(tester, 'entries_shared_rows');
+
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(themeMode: ThemeMode.dark));
+    await settle(tester, 8);
+    await shoot(tester, 'dark_entries_shared_rows');
+    await fresh.read(settingsProvider.notifier).update((settings) => settings.copyWith(themeMode: ThemeMode.light));
+    await settle(tester, 6);
+  });
+
+  testWidgets('39 budgets: swipe a budget away, undo brings it back', (tester) async {
+    final fresh = await createApp();
+    addTearDown(fresh.container.dispose);
+    final budgets = fresh.read(budgetsRepositoryProvider);
+    await budgets.save(period: 'month', amountMinor: 500000);
+    Future<int> liveBudgets() async => (await fresh.db.select(fresh.db.budgets).get()).where((budget) => budget.deletedAt == null).length;
+
+    await pumpApp(tester, fresh);
+    await goTab(tester, 'Settings');
+    await scrollTo(tester, find.text('Budgets'));
+    await tapText(tester, 'Budgets');
+    final row = find.ancestor(of: find.text('Overall'), matching: find.byType(Dismissible));
+    expect(row, findsOneWidget);
+    await tester.fling(row, const Offset(-600, 0), 1500);
+    await settle(tester, 12);
+    expect(find.text('Overall'), findsNothing);
+    expect(await liveBudgets(), 0, reason: 'the swipe deletes the budget');
+    await shoot(tester, 'budget_swiped');
+
+    await tapText(tester, 'Undo');
+    await waitFor(tester, find.text('Overall'));
+    expect(await liveBudgets(), 1, reason: 'undo restores the same budget');
   });
 }
 

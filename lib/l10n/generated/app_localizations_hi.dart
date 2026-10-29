@@ -435,6 +435,11 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String sameAsLastTime(int count) {
+    return 'पिछली बार जैसा · $count आइटम';
+  }
+
+  @override
   String get itemsHelp =>
       'वैकल्पिक: इस खर्च को मात्रा और दाम के साथ आइटम में बाँटें (जैसे भैंस का दूध 1 लीटर)। हिसाब इन्हें अगली बार याद रखेगा।';
 

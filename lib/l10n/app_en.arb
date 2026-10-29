@@ -151,6 +151,8 @@
   "items": "Items",
   "addItem": "Add item",
   "itemSuggestion": "{name} · {quantity} @ {price}",
+  "sameAsLastTime": "Same as last time · {count} items",
+  "@sameAsLastTime": {"description": "Chip in the entry editor that adds every item of the latest bill in the chosen category", "placeholders": {"count": {"type": "int"}}},
   "@itemSuggestion": {"placeholders": {"name": {"type": "String"}, "quantity": {"type": "String"}, "price": {"type": "String"}}},
   "itemsHelp": "Optional: break this expense into items with quantity and price (e.g. buffalo milk 1 L). Hisab remembers them for next time.",
   "paidBy": "Paid by",

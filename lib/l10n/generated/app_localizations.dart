@@ -836,6 +836,12 @@ abstract class AppLocalizations {
   /// **'{name} · {quantity} @ {price}'**
   String itemSuggestion(String name, String quantity, String price);
 
+  /// Chip in the entry editor that adds every item of the latest bill in the chosen category
+  ///
+  /// In en, this message translates to:
+  /// **'Same as last time · {count} items'**
+  String sameAsLastTime(int count);
+
   /// No description provided for @itemsHelp.
   ///
   /// In en, this message translates to:

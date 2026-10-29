@@ -2,4 +2,7 @@
 <resources>
     <string name="shortcut_add_expense">खर्च जोड़ें</string>
     <string name="shortcut_add_income">आय जोड़ें</string>
+    <string name="widget_spend_description">इस महीने का खर्च बनाम पिछला महीना, जोड़ने के लिए + के साथ</string>
+    <string name="widget_spend_open_app">अपडेट करने के लिए हिसाब खोलें</string>
+    <string name="widget_spend_label">मासिक खर्च</string>
 </resources>

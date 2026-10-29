@@ -2,4 +2,7 @@
 <resources>
     <string name="shortcut_add_expense">Add expense</string>
     <string name="shortcut_add_income">Add income</string>
+    <string name="widget_spend_description">This month\'s spend vs last month, with + to add</string>
+    <string name="widget_spend_open_app">Open Hisab to update</string>
+    <string name="widget_spend_label">Monthly spend</string>
 </resources>

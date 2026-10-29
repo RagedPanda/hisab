@@ -3,4 +3,10 @@
     <color name="ic_launcher_background">#0D9488</color>
     <!-- Matches the Flutter light scaffold (kLightBackground). -->
     <color name="splash_background">#F0F3F2</color>
+    <!-- Home-screen spend widget, matching the app's light theme. -->
+    <color name="widget_surface">#FFFFFFFF</color>
+    <color name="widget_on_surface">#FF0F1F1E</color>
+    <color name="widget_on_surface_variant">#FF55686A</color>
+    <color name="widget_accent">#FF0D9488</color>
+    <color name="widget_on_accent">#FFFFFFFF</color>
 </resources>

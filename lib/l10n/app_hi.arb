@@ -1208,5 +1208,22 @@
   "smsEntryNewPayeeHint": "नया प्राप्तकर्ता: श्रेणी चुनें",
   "smsEntryGoneTitle": "यह एंट्री अब मौजूद नहीं है",
   "smsEntryGoneBody": "इसे पूर्ववत किया गया या हटा दिया गया।",
-  "smsEntryCategoryChanged": "श्रेणी बदलकर {category} की गई"
+  "smsEntryCategoryChanged": "श्रेणी बदलकर {category} की गई",
+  "shortcutsTitle": "शॉर्टकट और विजेट",
+  "shortcutsHint": "नोटिफ़िकेशन शेड, क्विक सेटिंग्स या होम स्क्रीन से खर्च जोड़ें",
+  "launcherShortcutsHelp": "खर्च जोड़ें, आय जोड़ें और अपनी पहली तीन क्विक एंट्री के लिए हिसाब आइकन को दबाकर रखें।",
+  "addExpenseNotification": "खर्च जोड़ें नोटिफ़िकेशन",
+  "addExpenseNotificationHint": "नोटिफ़िकेशन शेड में खर्च जोड़ें का शॉर्टकट रखता है",
+  "addExpenseNotificationChannel": "खर्च जोड़ें शॉर्टकट",
+  "addExpenseNotificationBody": "खर्च लिखने के लिए टैप करें",
+  "addExpenseNotificationBlocked": "शॉर्टकट दिखाने के लिए हिसाब को नोटिफ़िकेशन की अनुमति दें",
+  "quickSettingsTile": "क्विक सेटिंग्स टाइल",
+  "quickSettingsTileHint": "ऊपर से नीचे खींचने वाले पैनल से खर्च जोड़ें",
+  "quickSettingsTileManual": "स्क्रीन के ऊपर से दो बार नीचे खींचें, बदलने के लिए पेंसिल पर टैप करें, फिर हिसाब की खर्च जोड़ें टाइल को जगह पर खींचें।",
+  "homeScreenWidget": "होम स्क्रीन विजेट",
+  "homeScreenWidgetHint": "इस महीने का खर्च बनाम पिछला महीना, जोड़ने के लिए + के साथ",
+  "homeScreenWidgetManual": "होम स्क्रीन पर किसी खाली जगह को दबाकर रखें, विजेट पर टैप करें और हिसाब चुनें।",
+  "widgetBackground": "विजेट बैकग्राउंड",
+  "widgetBackgroundValue": "{percent}% अपारदर्शी",
+  "widgetLastMonth": "{month}: {amount}"
 }

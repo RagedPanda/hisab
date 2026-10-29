@@ -7093,6 +7093,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Category changed to {category}'**
   String smsEntryCategoryChanged(String category);
+
+  /// No description provided for @shortcutsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortcuts & widget'**
+  String get shortcutsTitle;
+
+  /// No description provided for @shortcutsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an expense from the notification shade, Quick Settings or Home screen'**
+  String get shortcutsHint;
+
+  /// No description provided for @launcherShortcutsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press the Hisab icon for Add expense, Add income and your first three quick entries.'**
+  String get launcherShortcutsHelp;
+
+  /// No description provided for @addExpenseNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Add expense notification'**
+  String get addExpenseNotification;
+
+  /// No description provided for @addExpenseNotificationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps an Add expense shortcut in the notification shade'**
+  String get addExpenseNotificationHint;
+
+  /// No description provided for @addExpenseNotificationChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add expense shortcut'**
+  String get addExpenseNotificationChannel;
+
+  /// No description provided for @addExpenseNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to log a spend'**
+  String get addExpenseNotificationBody;
+
+  /// No description provided for @addExpenseNotificationBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notifications for Hisab to show the shortcut'**
+  String get addExpenseNotificationBlocked;
+
+  /// No description provided for @quickSettingsTile.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Settings tile'**
+  String get quickSettingsTile;
+
+  /// No description provided for @quickSettingsTileHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add expense from the panel you swipe down'**
+  String get quickSettingsTileHint;
+
+  /// No description provided for @quickSettingsTileManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe down twice from the top of the screen, tap the pencil to edit, then drag Hisab\'s Add expense tile into place.'**
+  String get quickSettingsTileManual;
+
+  /// No description provided for @homeScreenWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Home screen widget'**
+  String get homeScreenWidget;
+
+  /// No description provided for @homeScreenWidgetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This month\'s spend vs last month, with + to add'**
+  String get homeScreenWidgetHint;
+
+  /// No description provided for @homeScreenWidgetManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press an empty spot on your Home screen, tap Widgets and pick Hisab.'**
+  String get homeScreenWidgetManual;
+
+  /// No description provided for @widgetBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget background'**
+  String get widgetBackground;
+
+  /// No description provided for @widgetBackgroundValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% opaque'**
+  String widgetBackgroundValue(int percent);
+
+  /// No description provided for @widgetLastMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'{month}: {amount}'**
+  String widgetLastMonth(String month, String amount);
 }
 
 class _AppLocalizationsDelegate

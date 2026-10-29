@@ -9,6 +9,7 @@ import 'features/recurring/recurring_catch_up.dart';
 import 'features/recurring/recurring_list_model.dart';
 import 'features/salary/salary_reminder_watcher.dart';
 import 'features/shell/router.dart';
+import 'features/shortcuts/launcher_sync.dart';
 import 'features/sms/sms_auto_add_snackbar.dart';
 import 'features/sms/sms_auto_sync.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -82,9 +83,9 @@ class _HisabAppState extends ConsumerState<HisabApp> {
       // every route, including Bank SMS opened directly from a hisab://sms link.
       // SmsAutoSync drains queued SMS and catches up on the inbox on start and resume.
       // SalaryReminderWatcher re-plans the salary-not-seen alert on start, resume
-      // and income changes.
+      // and income changes. LauncherSync keeps the launcher shortcuts in step.
       builder: (context, child) => settings.currencyConfirmed
-          ? SalaryReminderWatcher(child: SmsAutoSync(child: SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink())))
+          ? LauncherSync(child: SalaryReminderWatcher(child: SmsAutoSync(child: SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink()))))
           : const FirstLaunchCurrencyGate(),
     );
   }

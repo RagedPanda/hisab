@@ -4418,4 +4418,67 @@ class AppLocalizationsHi extends AppLocalizations {
   String smsEntryCategoryChanged(String category) {
     return 'श्रेणी बदलकर $category की गई';
   }
+
+  @override
+  String get shortcutsTitle => 'शॉर्टकट और विजेट';
+
+  @override
+  String get shortcutsHint =>
+      'नोटिफ़िकेशन शेड, क्विक सेटिंग्स या होम स्क्रीन से खर्च जोड़ें';
+
+  @override
+  String get launcherShortcutsHelp =>
+      'खर्च जोड़ें, आय जोड़ें और अपनी पहली तीन क्विक एंट्री के लिए हिसाब आइकन को दबाकर रखें।';
+
+  @override
+  String get addExpenseNotification => 'खर्च जोड़ें नोटिफ़िकेशन';
+
+  @override
+  String get addExpenseNotificationHint =>
+      'नोटिफ़िकेशन शेड में खर्च जोड़ें का शॉर्टकट रखता है';
+
+  @override
+  String get addExpenseNotificationChannel => 'खर्च जोड़ें शॉर्टकट';
+
+  @override
+  String get addExpenseNotificationBody => 'खर्च लिखने के लिए टैप करें';
+
+  @override
+  String get addExpenseNotificationBlocked =>
+      'शॉर्टकट दिखाने के लिए हिसाब को नोटिफ़िकेशन की अनुमति दें';
+
+  @override
+  String get quickSettingsTile => 'क्विक सेटिंग्स टाइल';
+
+  @override
+  String get quickSettingsTileHint =>
+      'ऊपर से नीचे खींचने वाले पैनल से खर्च जोड़ें';
+
+  @override
+  String get quickSettingsTileManual =>
+      'स्क्रीन के ऊपर से दो बार नीचे खींचें, बदलने के लिए पेंसिल पर टैप करें, फिर हिसाब की खर्च जोड़ें टाइल को जगह पर खींचें।';
+
+  @override
+  String get homeScreenWidget => 'होम स्क्रीन विजेट';
+
+  @override
+  String get homeScreenWidgetHint =>
+      'इस महीने का खर्च बनाम पिछला महीना, जोड़ने के लिए + के साथ';
+
+  @override
+  String get homeScreenWidgetManual =>
+      'होम स्क्रीन पर किसी खाली जगह को दबाकर रखें, विजेट पर टैप करें और हिसाब चुनें।';
+
+  @override
+  String get widgetBackground => 'विजेट बैकग्राउंड';
+
+  @override
+  String widgetBackgroundValue(int percent) {
+    return '$percent% अपारदर्शी';
+  }
+
+  @override
+  String widgetLastMonth(String month, String amount) {
+    return '$month: $amount';
+  }
 }

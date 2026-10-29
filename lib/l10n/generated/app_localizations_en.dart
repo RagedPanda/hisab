@@ -4448,4 +4448,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String smsEntryCategoryChanged(String category) {
     return 'Category changed to $category';
   }
+
+  @override
+  String get shortcutsTitle => 'Shortcuts & widget';
+
+  @override
+  String get shortcutsHint =>
+      'Add an expense from the notification shade, Quick Settings or Home screen';
+
+  @override
+  String get launcherShortcutsHelp =>
+      'Long-press the Hisab icon for Add expense, Add income and your first three quick entries.';
+
+  @override
+  String get addExpenseNotification => 'Add expense notification';
+
+  @override
+  String get addExpenseNotificationHint =>
+      'Keeps an Add expense shortcut in the notification shade';
+
+  @override
+  String get addExpenseNotificationChannel => 'Add expense shortcut';
+
+  @override
+  String get addExpenseNotificationBody => 'Tap to log a spend';
+
+  @override
+  String get addExpenseNotificationBlocked =>
+      'Allow notifications for Hisab to show the shortcut';
+
+  @override
+  String get quickSettingsTile => 'Quick Settings tile';
+
+  @override
+  String get quickSettingsTileHint =>
+      'Add expense from the panel you swipe down';
+
+  @override
+  String get quickSettingsTileManual =>
+      'Swipe down twice from the top of the screen, tap the pencil to edit, then drag Hisab\'s Add expense tile into place.';
+
+  @override
+  String get homeScreenWidget => 'Home screen widget';
+
+  @override
+  String get homeScreenWidgetHint =>
+      'This month\'s spend vs last month, with + to add';
+
+  @override
+  String get homeScreenWidgetManual =>
+      'Long-press an empty spot on your Home screen, tap Widgets and pick Hisab.';
+
+  @override
+  String get widgetBackground => 'Widget background';
+
+  @override
+  String widgetBackgroundValue(int percent) {
+    return '$percent% opaque';
+  }
+
+  @override
+  String widgetLastMonth(String month, String amount) {
+    return '$month: $amount';
+  }
 }

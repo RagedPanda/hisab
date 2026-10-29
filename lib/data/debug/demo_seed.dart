@@ -1,7 +1,7 @@
 /// Debug-only demo data writer. Fills an app database with accounts,
-/// budgets, a group and a few hundred entries so dashboards and lists can be
-/// checked with realistic volume. Idempotent: a database that already holds
-/// demo entries is left alone.
+/// budgets, a group, the README story ([seedDemoStory]) and a few hundred
+/// entries so dashboards and lists can be checked with realistic volume.
+/// Idempotent: a database that already holds demo entries is left alone.
 library;
 
 import 'package:drift/drift.dart';
@@ -14,6 +14,7 @@ import '../repositories/categories_repository.dart';
 import '../repositories/entries_repository.dart';
 import '../repositories/groups_repository.dart';
 import 'demo_plan.dart';
+import 'demo_story.dart';
 
 /// Entries written by the seeder carry this source so a rerun can detect them.
 const String kDemoSource = 'demo';
@@ -79,4 +80,5 @@ Future<void> seedDemoData(AppDatabase db, {required int entryCount, DateTime? no
       for (final member in members) SplitsCompanion.insert(id: newId(), entryId: entryId, memberId: member.id, amountMinor: 300000, shareValue: const Value(1)),
     ],
   );
+  await seedDemoStory(db, now: clock, groupId: groupId, accountIds: accountIds, categoryIdByKey: categoryIdByKey, source: kDemoSource);
 }

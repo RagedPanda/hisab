@@ -627,10 +627,27 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         titleTextStyle: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(color: Colors.white),
         title: Text(_isEditing ? l10n.editEntry : _groupId != null ? l10n.groupExpense : widget.newQuickEntry ? l10n.newQuickEntry : l10n.newEntry),
         actions: [
-          if (_canSaveAsQuickEntry && !widget.newQuickEntry)
-            IconButton(key: const Key('editor.saveAsQuick'), tooltip: l10n.saveAsQuickEntry, icon: const Icon(Icons.bolt_outlined), onPressed: _saveAsQuickEntry),
-          if (_isEditing)
-            IconButton(key: const Key('editor.again'), tooltip: l10n.entryAgain, icon: const Icon(Icons.replay_rounded), onPressed: _again),
+          // Less common actions sit in a labelled menu: bare icons for them
+          // were not understood.
+          if (_isEditing || (_canSaveAsQuickEntry && !widget.newQuickEntry))
+            PopupMenuButton<VoidCallback>(
+              key: const Key('editor.more'),
+              onSelected: (action) => action(),
+              itemBuilder: (_) => [
+                if (_isEditing)
+                  PopupMenuItem(
+                    key: const Key('editor.again'),
+                    value: _again,
+                    child: ListTile(leading: const Icon(Icons.replay_rounded), title: Text(l10n.entryAgain), contentPadding: EdgeInsets.zero),
+                  ),
+                if (_canSaveAsQuickEntry && !widget.newQuickEntry)
+                  PopupMenuItem(
+                    key: const Key('editor.saveAsQuick'),
+                    value: _saveAsQuickEntry,
+                    child: ListTile(leading: const Icon(Icons.bolt_outlined), title: Text(l10n.saveAsQuickEntry), contentPadding: EdgeInsets.zero),
+                  ),
+              ],
+            ),
           if (_isEditing)
             IconButton(
               tooltip: l10n.delete,

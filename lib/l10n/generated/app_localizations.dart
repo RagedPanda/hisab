@@ -749,7 +749,7 @@ abstract class AppLocalizations {
   /// Entry editor action: copy this saved entry to a new one dated today
   ///
   /// In en, this message translates to:
-  /// **'Again'**
+  /// **'Add again for today'**
   String get entryAgain;
 
   /// No description provided for @copiedFromEntry.

@@ -376,6 +376,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get groupExpense => 'ग्रुप खर्च';
 
   @override
+  String get copiedFromLastEntry => 'पिछले खर्च से भरा गया';
+
+  @override
+  String get startBlank => 'खाली से शुरू करें';
+
+  @override
   String get deleteEntryQuestion => 'यह लेन-देन हटाएँ?';
 
   @override

@@ -46,8 +46,9 @@ class ItemDraft {
         memberIds: memberIds ?? this.memberIds,
       );
 
-  static ItemDraft fromRow(EntryItem row, {List<String>? memberIds}) => ItemDraft(
-        id: row.id,
+  /// A draft of a saved item row; [keepId] false makes a fresh row (a copy).
+  static ItemDraft fromRow(EntryItem row, {List<String>? memberIds, bool keepId = true}) => ItemDraft(
+        id: keepId ? row.id : null,
         name: row.name,
         quantity: row.quantity,
         unit: row.unit,

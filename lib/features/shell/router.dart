@@ -70,6 +70,7 @@ final appRouter = GoRouter(
         smsId: state.uri.queryParameters['sms'],
         projectId: state.uri.queryParameters['project'],
         reminderId: state.uri.queryParameters['reminder'],
+        copyFromId: state.uri.queryParameters['copy'],
       ),
     ),
     GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(

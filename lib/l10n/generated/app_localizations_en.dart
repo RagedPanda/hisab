@@ -376,6 +376,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupExpense => 'Group expense';
 
   @override
+  String get copiedFromLastEntry => 'Filled in from the last expense';
+
+  @override
+  String get startBlank => 'Start blank';
+
+  @override
   String get deleteEntryQuestion => 'Delete this entry?';
 
   @override

@@ -50,7 +50,7 @@ import 'editor_draft.dart';
 import 'item_row.dart';
 
 class ExpenseEditorScreen extends ConsumerStatefulWidget {
-  const ExpenseEditorScreen({super.key, this.entryId, this.groupId, this.initialKind, this.smsId, this.projectId, this.reminderId});
+  const ExpenseEditorScreen({super.key, this.entryId, this.groupId, this.initialKind, this.smsId, this.projectId, this.reminderId, this.copyFromId});
   final String? entryId;
   final String? groupId;
 
@@ -62,6 +62,9 @@ class ExpenseEditorScreen extends ConsumerStatefulWidget {
   /// Due reminder this entry pays (notification "Mark paid"); prefills the
   /// form and marks the reminder paid on save.
   final String? reminderId;
+
+  /// Saved entry a new one starts as a copy of (a group's last expense), dated now.
+  final String? copyFromId;
 
   @override
   ConsumerState<ExpenseEditorScreen> createState() => _ExpenseEditorScreenState();
@@ -223,33 +226,37 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
   }
 
   Future<void> _load() async {
-    if (widget.entryId != null) {
-      final details = await ref.read(entriesRepositoryProvider).getEntry(widget.entryId!);
+    final sourceId = widget.entryId ?? widget.copyFromId;
+    final asCopy = widget.entryId == null;
+    if (sourceId != null) {
+      final details = await ref.read(entriesRepositoryProvider).getEntry(sourceId);
       if (details != null) {
         final entry = details.entry;
-        _existingId = entry.id;
         _kind = entry.kind;
         _amountController.text = amountInputText(entry.amountMinor, format: _moneyFormat);
         _noteController.text = entry.note;
         _payeeController.text = entry.payee ?? '';
-        _occurredAt = entry.occurredAt;
         _category = details.category;
         _accountId = entry.accountId;
         _toAccountId = entry.toAccountId;
         _groupId = entry.groupId;
         _projectId = entry.projectId;
         _paidByMemberId = entry.paidByMemberId;
-        _source = entry.source;
-        _smsId = entry.smsId;
-        _recurringId = entry.recurringId;
-        _previousSnapshot = snapshotOfEntry(entry);
+        if (!asCopy) {
+          _existingId = entry.id;
+          _occurredAt = entry.occurredAt;
+          _source = entry.source;
+          _smsId = entry.smsId;
+          _recurringId = entry.recurringId;
+          _previousSnapshot = snapshotOfEntry(entry);
+        }
         _splitMethod = SplitMethod.values.firstWhere((m) => m.name == entry.splitMethod, orElse: () => SplitMethod.equal);
-        _items = details.items.map(ItemDraft.fromRow).toList();
+        _items = [for (final row in details.items) ItemDraft.fromRow(row, keepId: !asCopy)];
         if (_groupId != null) {
           await _loadMembers();
           _splitInputs = _inputsFromSplits(details.splits);
           final assignments = await ref.read(entriesRepositoryProvider).getItemAssignments(entry.id);
-          _items = [for (final row in details.items) ItemDraft.fromRow(row, memberIds: assignments[row.id] ?? (row.isShared ? const [] : _everyone))];
+          _items = [for (final row in details.items) ItemDraft.fromRow(row, keepId: !asCopy, memberIds: assignments[row.id] ?? (row.isShared ? const [] : _everyone))];
           final payers = await ref.read(entriesRepositoryProvider).getPayers(entry.id);
           if (payers.isNotEmpty) {
             _multiplePayers = true;
@@ -525,6 +532,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           padding: const EdgeInsets.only(bottom: 120),
           children: [
           _amountHeader(context, l10n, moneyFormat, headerColor),
+          if (widget.copyFromId != null && _groupId != null)
+            _CopiedFromLastBanner(onStartBlank: () => context.pushReplacement('/entry?group=$_groupId')),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
@@ -1174,5 +1183,28 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _noteController.dispose();
     _payeeController.dispose();
     super.dispose();
+  }
+}
+
+/// Tells the user a new group expense starts as a copy of the group's last
+/// one, with a way back to an empty form.
+class _CopiedFromLastBanner extends StatelessWidget {
+  const _CopiedFromLastBanner({required this.onStartBlank});
+  final VoidCallback onStartBlank;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      key: const Key('editor.copiedFromLast'),
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+      child: Row(children: [
+        Icon(Icons.content_copy_rounded, size: 18, color: scheme.onSurfaceVariant),
+        const SizedBox(width: 8),
+        Expanded(child: Text(l10n.copiedFromLastEntry, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant))),
+        TextButton(key: const Key('editor.startBlank'), onPressed: onStartBlank, child: Text(l10n.startBlank)),
+      ]),
+    );
   }
 }

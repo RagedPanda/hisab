@@ -734,6 +734,18 @@ abstract class AppLocalizations {
   /// **'Group expense'**
   String get groupExpense;
 
+  /// Group expense editor: the form starts as a copy of the group's latest expense
+  ///
+  /// In en, this message translates to:
+  /// **'Filled in from the last expense'**
+  String get copiedFromLastEntry;
+
+  /// No description provided for @startBlank.
+  ///
+  /// In en, this message translates to:
+  /// **'Start blank'**
+  String get startBlank;
+
   /// No description provided for @deleteEntryQuestion.
   ///
   /// In en, this message translates to:

@@ -296,12 +296,6 @@ abstract class AppLocalizations {
   /// **'Uncategorised'**
   String get uncategorised;
 
-  /// No description provided for @yourShareOf.
-  ///
-  /// In en, this message translates to:
-  /// **'{group} · your share'**
-  String yourShareOf(String group);
-
   /// No description provided for @sourceSms.
   ///
   /// In en, this message translates to:

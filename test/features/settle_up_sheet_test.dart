@@ -3,21 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/providers.dart';
-import 'package:hisab/data/repositories/groups_repository.dart';
 
 import '../support/group_harness.dart';
-
-/// The settle-up group on its Balances tab, with the outside world faked.
-Future<(ProviderContainer, String, FakeOutsideWorld)> openBalances(WidgetTester tester) async {
-  final world = FakeOutsideWorld();
-  final container = await createContainer(overrides: world.overrides);
-  final groupId = (await tester.runAsync(() => seedSettleUpGroup(container)))!;
-  await openAppAt(tester, container, '/groups/$groupId?tab=balances');
-  return (container, groupId, world);
-}
-
-Future<GroupDetail> savedDetail(WidgetTester tester, ProviderContainer container, String groupId) async =>
-    (await tester.runAsync<GroupDetail?>(() => container.read(groupsRepositoryProvider).getGroupDetail(groupId)))!;
 
 /// Channels of the reminders logged for the group, oldest first.
 Future<List<String>> reminderChannels(WidgetTester tester, ProviderContainer container, String groupId) async {

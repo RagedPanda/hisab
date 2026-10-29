@@ -10,6 +10,7 @@ import 'package:hisab/core/ids.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
+import 'package:hisab/data/repositories/groups_repository.dart';
 import 'package:hisab/features/groups/group_export.dart';
 import 'package:hisab/features/groups/settle_up_sheet.dart';
 import 'package:hisab/features/shell/router.dart';
@@ -74,10 +75,11 @@ Future<void> leaveApp(WidgetTester tester) async {
   await tester.pump();
 }
 
-/// Scrolls the page's list until [finder] is built (lazy lists build only what
+/// Scrolls the vertical list on screen until [finder] is built (lazy lists build only what
 /// is on screen), brings it into view and taps it.
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
-  if (finder.evaluate().isEmpty) await tester.scrollUntilVisible(finder, 200, scrollable: find.byType(Scrollable).first);
+  final verticalList = find.byWidgetPredicate((widget) => widget is Scrollable && widget.axisDirection == AxisDirection.down).hitTestable();
+  if (finder.evaluate().isEmpty) await tester.scrollUntilVisible(finder, 200, scrollable: verticalList.first);
   await tester.ensureVisible(finder);
   await settle(tester, 3);
   await tester.tap(finder);
@@ -141,3 +143,16 @@ Future<String> seedSettleUpGroup(ProviderContainer container) async {
   await addEqualExpense(container, groupId, paidBy: members['Priya']!, totalMinor: 20000, sharedBy: [members['You']!, members['Priya']!], note: 'Scooter');
   return groupId;
 }
+
+/// The settle-up group open on [tab] (Balances by default), with the outside
+/// world faked.
+Future<(ProviderContainer, String, FakeOutsideWorld)> openBalances(WidgetTester tester, {String tab = 'balances'}) async {
+  final world = FakeOutsideWorld();
+  final container = await createContainer(overrides: world.overrides);
+  final groupId = (await tester.runAsync(() => seedSettleUpGroup(container)))!;
+  await openAppAt(tester, container, '/groups/$groupId?tab=$tab');
+  return (container, groupId, world);
+}
+
+Future<GroupDetail> savedDetail(WidgetTester tester, ProviderContainer container, String groupId) async =>
+    (await tester.runAsync<GroupDetail?>(() => container.read(groupsRepositoryProvider).getGroupDetail(groupId)))!;

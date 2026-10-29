@@ -8,6 +8,8 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../data/launcher/launcher_channel.dart';
 import '../../domain/launcher/quick_entry_shortcuts.dart';
+import '../../l10n/l10n.dart';
+import 'shortcut_settings.dart';
 
 /// Platform access for [LauncherSync]; tests override it with a fake.
 final launcherChannelProvider = Provider<LauncherChannel>((ref) => const LauncherChannel());
@@ -29,8 +31,17 @@ final quickEntryShortcutsProvider = Provider<List<LauncherShortcut>?>((ref) {
   ]);
 });
 
+/// The persistent "Add expense" notification in the user's language.
+AddExpenseNotificationConfig addExpenseNotificationConfig(AppLocalizations l10n, {required bool enabled}) => AddExpenseNotificationConfig(
+      enabled: enabled,
+      channelName: l10n.addExpenseNotificationChannel,
+      title: l10n.addExpense,
+      body: l10n.addExpenseNotificationBody,
+    );
+
 /// Keeps what Hisab shows outside the app in step with its data: the
-/// quick-entry launcher shortcuts. Sends only when something changed.
+/// quick-entry launcher shortcuts and the "Add expense" notification. Sends
+/// only when something changed.
 class LauncherSync extends ConsumerStatefulWidget {
   const LauncherSync({super.key, required this.child});
   final Widget child;
@@ -41,12 +52,30 @@ class LauncherSync extends ConsumerStatefulWidget {
 
 class _LauncherSyncState extends ConsumerState<LauncherSync> {
   List<LauncherShortcut>? _sentShortcuts;
+  Map<String, Object>? _sentNotification;
 
   @override
   void initState() {
     super.initState();
     if (!ref.read(launcherChannelProvider).isSupported) return;
     ref.listenManual(quickEntryShortcutsProvider, (_, shortcuts) => _sendShortcuts(shortcuts), fireImmediately: true);
+    ref.listenManual(shortcutSettingsProvider.select((settings) => settings.addExpenseNotification), (_, _) => _sendNotification());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Runs first on start and again when the language changes.
+    _sendNotification();
+  }
+
+  void _sendNotification() {
+    final channel = ref.read(launcherChannelProvider);
+    if (!channel.isSupported) return;
+    final config = addExpenseNotificationConfig(context.l10n, enabled: ref.read(shortcutSettingsProvider).addExpenseNotification);
+    if (mapEquals(config.toMap(), _sentNotification)) return;
+    _sentNotification = config.toMap();
+    unawaited(channel.setAddExpenseNotification(config));
   }
 
   void _sendShortcuts(List<LauncherShortcut>? shortcuts) {

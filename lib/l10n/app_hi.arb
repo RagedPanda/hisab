@@ -1166,5 +1166,16 @@
   "smsPayeePickCategory": "श्रेणी चुनें",
   "smsPayeeRemembered": "अब से {payee} के लिए {category} लगेगी",
   "safeToSpendPerDay": "सुरक्षित खर्च {amount}/दिन",
-  "safeToSpendOverBudget": "बजट से ऊपर"
+  "safeToSpendOverBudget": "बजट से ऊपर",
+  "shortcutsTitle": "शॉर्टकट और विजेट",
+  "shortcutsHint": "नोटिफ़िकेशन शेड, क्विक सेटिंग्स या होम स्क्रीन से खर्च जोड़ें",
+  "launcherShortcutsHelp": "खर्च जोड़ें, आय जोड़ें और अपनी पहली तीन क्विक एंट्री के लिए हिसाब आइकन को दबाकर रखें।",
+  "addExpenseNotification": "खर्च जोड़ें नोटिफ़िकेशन",
+  "addExpenseNotificationHint": "नोटिफ़िकेशन शेड में खर्च जोड़ें का शॉर्टकट रखता है",
+  "addExpenseNotificationChannel": "खर्च जोड़ें शॉर्टकट",
+  "addExpenseNotificationBody": "खर्च लिखने के लिए टैप करें",
+  "addExpenseNotificationBlocked": "शॉर्टकट दिखाने के लिए हिसाब को नोटिफ़िकेशन की अनुमति दें",
+  "quickSettingsTile": "क्विक सेटिंग्स टाइल",
+  "quickSettingsTileHint": "ऊपर से नीचे खींचने वाले पैनल से खर्च जोड़ें",
+  "quickSettingsTileManual": "स्क्रीन के ऊपर से दो बार नीचे खींचें, बदलने के लिए पेंसिल पर टैप करें, फिर हिसाब की खर्च जोड़ें टाइल को जगह पर खींचें।"
 }

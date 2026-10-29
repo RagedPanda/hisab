@@ -21,6 +21,7 @@ import '../salary/salary_setup_screen.dart';
 import '../salary/salary_reminder.dart';
 import '../settings/drive_backup_screen.dart';
 import '../settings/settings_screen.dart';
+import '../shortcuts/shortcuts_screen.dart';
 import '../reminders/reminders_screen.dart';
 import '../sms/sms_history_screen.dart';
 import '../sms/sms_payees_screen.dart';
@@ -97,6 +98,7 @@ final appRouter = GoRouter(
     ),
     GoRoute(path: kSalaryLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const SalarySetupScreen()),
     GoRoute(path: kQuickEntriesLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const QuickEntriesScreen()),
+    GoRoute(path: kShortcutsLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const ShortcutsScreen()),
     GoRoute(path: kDriveBackupLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const DriveBackupScreen()),
     GoRoute(path: '/budgets', parentNavigatorKey: _rootKey, builder: (_, _) => const BudgetsScreen()),
     GoRoute(

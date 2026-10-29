@@ -4284,4 +4284,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get safeToSpendOverBudget => 'Over budget';
+
+  @override
+  String get shortcutsTitle => 'Shortcuts & widget';
+
+  @override
+  String get shortcutsHint =>
+      'Add an expense from the notification shade, Quick Settings or Home screen';
+
+  @override
+  String get launcherShortcutsHelp =>
+      'Long-press the Hisab icon for Add expense, Add income and your first three quick entries.';
+
+  @override
+  String get addExpenseNotification => 'Add expense notification';
+
+  @override
+  String get addExpenseNotificationHint =>
+      'Keeps an Add expense shortcut in the notification shade';
+
+  @override
+  String get addExpenseNotificationChannel => 'Add expense shortcut';
+
+  @override
+  String get addExpenseNotificationBody => 'Tap to log a spend';
+
+  @override
+  String get addExpenseNotificationBlocked =>
+      'Allow notifications for Hisab to show the shortcut';
+
+  @override
+  String get quickSettingsTile => 'Quick Settings tile';
+
+  @override
+  String get quickSettingsTileHint =>
+      'Add expense from the panel you swipe down';
+
+  @override
+  String get quickSettingsTileManual =>
+      'Swipe down twice from the top of the screen, tap the pencil to edit, then drag Hisab\'s Add expense tile into place.';
 }

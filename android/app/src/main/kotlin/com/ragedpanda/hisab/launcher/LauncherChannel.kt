@@ -12,6 +12,7 @@ import io.flutter.plugin.common.MethodChannel
 object LauncherChannel {
     private const val NAME = "com.ragedpanda.hisab/launcher"
 
+    /** [context] is the activity: asking to add the tile needs a foreground app. */
     fun register(context: Context, messenger: BinaryMessenger) {
         val appContext = context.applicationContext
         MethodChannel(messenger, NAME).setMethodCallHandler { call, result ->
@@ -20,6 +21,11 @@ object LauncherChannel {
                     QuickEntryShortcuts.publish(appContext, call.arguments as? List<*> ?: emptyList<Any>())
                     result.success(null)
                 }
+                "setAddExpenseNotification" -> {
+                    AddExpenseNotifier.configure(appContext, call.arguments as? Map<*, *> ?: emptyMap<Any, Any>())
+                    result.success(null)
+                }
+                "requestAddTile" -> result.success(AddExpenseTileRequest.request(context))
                 else -> result.notImplemented()
             }
         }

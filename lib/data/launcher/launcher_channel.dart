@@ -5,7 +5,8 @@ import 'package:flutter/services.dart';
 import '../../domain/launcher/quick_entry_shortcuts.dart';
 
 /// Thin wrapper over the Android channel for what Hisab shows outside the
-/// app: launcher shortcuts. Every method is a no-op off Android.
+/// app: launcher shortcuts, the Quick Settings tile and the persistent
+/// "Add expense" notification. Every method is a no-op off Android.
 class LauncherChannel {
   const LauncherChannel();
 
@@ -18,4 +19,30 @@ class LauncherChannel {
     if (!isSupported) return;
     await _methods.invokeMethod<void>('setQuickEntryShortcuts', [for (final shortcut in shortcuts) shortcut.toMap()]);
   }
+
+  /// Shows or removes the persistent "Add expense" notification. Native code
+  /// keeps [config] so it can post it again after a reboot.
+  Future<void> setAddExpenseNotification(AddExpenseNotificationConfig config) async {
+    if (!isSupported) return;
+    await _methods.invokeMethod<void>('setAddExpenseNotification', config.toMap());
+  }
+
+  /// Asks the system to add the "Add expense" Quick Settings tile (Android
+  /// 13+). False where it cannot ask, so the caller explains the manual way.
+  Future<bool> requestAddTile() async {
+    if (!isSupported) return false;
+    return await _methods.invokeMethod<bool>('requestAddTile') ?? false;
+  }
+}
+
+/// The persistent "Add expense" notification in the user's language.
+class AddExpenseNotificationConfig {
+  const AddExpenseNotificationConfig({required this.enabled, required this.channelName, required this.title, required this.body});
+
+  final bool enabled;
+  final String channelName;
+  final String title;
+  final String body;
+
+  Map<String, Object> toMap() => {'enabled': enabled, 'channelName': channelName, 'title': title, 'body': body};
 }

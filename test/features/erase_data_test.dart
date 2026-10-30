@@ -2,18 +2,25 @@ import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/app.dart';
 import 'package:hisab/core/providers.dart';
+import 'package:hisab/data/backup/scheduled_backup_prefs.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/features/settings/drive_backup_providers.dart';
+import 'package:hisab/domain/backup/backup_schedule.dart';
+import 'package:hisab/domain/backup/scheduled_backup.dart';
 import 'package:hisab/features/settings/erase_data.dart';
+import 'package:hisab/features/settings/scheduled_backup_providers.dart';
 import 'package:hisab/features/shell/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/fake_notification_gateway.dart';
 import '../data/fake_drive_backup.dart';
+import '../data/fake_scheduled_backup.dart';
 
 Future<void> _settle(WidgetTester tester, [int frames = 12]) async {
   for (var i = 0; i < frames; i++) {
@@ -50,16 +57,26 @@ void main() {
   });
 
   testWidgets('Settings erases everything only after DELETE is typed', (tester) async {
-    SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'USD', kDriveBackupEmailPref: 'me@example.com'});
+    const daily = ScheduledBackupChoices(frequency: BackupFrequency.daily, folderUri: 'content://tree/primary%3ABackups', folderName: 'Backups');
+    SharedPreferences.setMockInitialValues({
+      'onboarded': true,
+      'currencyCode': 'USD',
+      kDriveBackupEmailPref: 'me@example.com',
+      kScheduledBackupChoicesPref: jsonEncode(daily.toJson()),
+    });
     final prefs = await SharedPreferences.getInstance();
     final db = AppDatabase(NativeDatabase.memory());
     final account = FakeDriveAccount();
+    final vault = FakePassphraseVault('correct horse');
+    final scheduler = FakeBackgroundScheduler()..enabled = true;
     final container = ProviderContainer(overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
       databaseProvider.overrideWithValue(db),
       notificationGatewayProvider.overrideWithValue(FakeNotificationGateway()),
       driveAccountProvider.overrideWithValue(account),
       driveBackupStoreProvider.overrideWithValue(FakeDriveBackupStore(now: () => DateTime(2026, 10, 29))),
+      backupPassphraseVaultProvider.overrideWithValue(vault),
+      backgroundBackupSchedulerProvider.overrideWithValue(scheduler),
     ]);
     addTearDown(container.dispose);
     await tester.binding.setSurfaceSize(const Size(360, 780));
@@ -100,6 +117,9 @@ void main() {
     expect(prefs.getString('currencyCode'), isNull);
     expect(container.read(driveBackupEmailProvider), isNull);
     expect(account.disconnected, isTrue);
+    expect(container.read(scheduledBackupChoicesProvider).isOn, isFalse, reason: 'the schedule is not kept in memory past the erase');
+    expect(vault.passphrase, isNull);
+    expect(scheduler.enabled, isFalse);
     expect(find.text('All data erased. Hisab is back to a fresh start.'), findsOneWidget);
     expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/home');
   });

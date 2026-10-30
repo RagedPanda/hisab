@@ -2,9 +2,11 @@ package com.ragedpanda.hisab
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Telephony
-import io.flutter.embedding.android.FlutterActivity
+import android.view.WindowManager
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
@@ -19,8 +21,11 @@ import com.ragedpanda.hisab.sms.SmsQueue
  * (see sms/SmsReceiver.kt) to Dart. Only runs when the user has granted
  * READ_SMS / RECEIVE_SMS from the in-app opt-in; the Dart side never calls
  * these methods before that. Nothing is sent off the device.
+ *
+ * A FlutterFragmentActivity because the app lock's fingerprint / face
+ * prompt (local_auth, androidx.biometric) is a fragment.
  */
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     // Text shared from another app arrives as ACTION_SEND. Turn it into the
     // hisab://sms?text=... link before Flutter reads the intent, so the
     // router opens the SMS paste screen as it does for any deep link.
@@ -38,6 +43,30 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         LauncherChannel.register(this, flutterEngine.dartExecutor.binaryMessenger)
+
+        // Settings > App lock > Hide in recent apps: a blank recents card, no screenshots.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, APP_LOCK_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "setSecure" -> {
+                    if (call.arguments == true) {
+                        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    }
+                    result.success(null)
+                }
+                // App lock on: the recents card shows the app icon, not a
+                // snapshot. Android takes that snapshot before Flutter can
+                // draw a cover, so this is the only way without FLAG_SECURE.
+                "setRecentsHidden" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        setRecentsScreenshotEnabled(call.arguments != true)
+                    }
+                    result.success(null)
+                }
+                else -> result.notImplemented()
+            }
+        }
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, METHOD_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
@@ -126,6 +155,7 @@ class MainActivity : FlutterActivity() {
     companion object {
         const val METHOD_CHANNEL = "com.ragedpanda.hisab/sms"
         const val EVENT_CHANNEL = "com.ragedpanda.hisab/sms_events"
+        const val APP_LOCK_CHANNEL = "com.ragedpanda.hisab/app_lock"
     }
 }
 

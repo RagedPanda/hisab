@@ -143,6 +143,7 @@ More in [docs/PLAN.md](docs/PLAN.md): architecture, feature matrix and the sync 
 - **Your data stays on your device.** Hisab has no account, no server and no analytics.
 - **SMS is read on-device.** Bank SMS reading is opt-in, Android only, and messages are parsed locally; nothing is uploaded.
 - **Backups are yours.** An exported backup is encrypted with your passphrase before it leaves the app.
+- **App lock, if you want it.** Settings → App lock asks for your fingerprint, face or phone screen lock before Hisab shows anything, also when opened from a shortcut or notification. On Android it can hide Hisab in recent apps too.
 
 Every permission, per platform, is listed in [docs/PERMISSIONS.md](docs/PERMISSIONS.md).
 

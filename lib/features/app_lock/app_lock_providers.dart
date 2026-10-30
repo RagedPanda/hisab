@@ -81,11 +81,15 @@ class AppLockController extends Notifier<AppLockSession> {
     return AppLockSession.coldStart(enabled: ref.read(appLockSettingsProvider).enabled);
   }
 
+  AppLifecycleState? _lifecycle;
+
   /// Follows the app in and out of the foreground. True when the user came
   /// back to a locked app, so the caller shows the prompt.
   bool onLifecycle(AppLifecycleState lifecycle) {
     final now = ref.read(appLockClockProvider)();
-    if (isLeaving(lifecycle)) {
+    final previous = _lifecycle;
+    _lifecycle = lifecycle;
+    if (isLeaving(lifecycle, previous: previous)) {
       state = state.left(now);
       return false;
     }

@@ -89,6 +89,21 @@ void main() {
     expect(lockScreen, findsOneWidget, reason: 'leaving on its own still locks');
   });
 
+  testWidgets('a picker that answers before the app is back does not lock it either', (tester) async {
+    final auth = FakeAuthenticator(results: [AppAuthResult.unlocked]);
+    final container = await start(tester, auth, preferences: lockOn(timeout: AppLockTimeout.immediately));
+    final picked = Completer<String>();
+    final picking = container.read(appLockProvider.notifier).whileInSystemScreen(() => picked.future);
+
+    await leave(tester);
+    picked.complete('Signed in');
+    expect(await picking, 'Signed in');
+    await comeBack(tester, const Duration(minutes: 2));
+    expect(lockScreen, findsNothing);
+    expect(home, findsOneWidget);
+    expect(auth.prompts, 1, reason: 'only the cold start asked');
+  });
+
   testWidgets('locks again only after the chosen timeout in the background', (tester) async {
     final auth = FakeAuthenticator(results: [AppAuthResult.unlocked]);
     await start(tester, auth, preferences: lockOn());

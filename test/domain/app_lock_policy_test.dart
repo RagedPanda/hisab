@@ -43,6 +43,15 @@ void main() {
     expect(coversContent(AppLifecycleState.resumed, isIOS: true), isFalse);
   });
 
+  test('hidden and paused on the way out leave the app; hidden on the way back does not', () {
+    expect(isLeaving(AppLifecycleState.hidden, previous: AppLifecycleState.inactive), isTrue);
+    expect(isLeaving(AppLifecycleState.paused, previous: AppLifecycleState.hidden), isTrue);
+    expect(isLeaving(AppLifecycleState.hidden), isTrue);
+    expect(isLeaving(AppLifecycleState.hidden, previous: AppLifecycleState.paused), isFalse);
+    expect(isLeaving(AppLifecycleState.inactive, previous: AppLifecycleState.hidden), isFalse);
+    expect(isLeaving(AppLifecycleState.resumed, previous: AppLifecycleState.inactive), isFalse);
+  });
+
   group('AppLockSession', () {
     test('a cold start is locked only with the lock on', () {
       expect(AppLockSession.coldStart(enabled: true).locked, isTrue);

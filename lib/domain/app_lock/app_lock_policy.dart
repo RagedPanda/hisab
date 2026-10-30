@@ -39,8 +39,12 @@ bool coversContent(AppLifecycleState state, {required bool isIOS}) => switch (st
       AppLifecycleState.hidden || AppLifecycleState.paused => true,
     };
 
-/// Whether [state] means the user left the app, which starts the timeout.
-bool isLeaving(AppLifecycleState state) => state == AppLifecycleState.hidden || state == AppLifecycleState.paused;
+/// Whether moving from [previous] to [state] means the user left the app,
+/// which starts the timeout. Coming back passes through hidden after
+/// paused; that is the way in, not out.
+bool isLeaving(AppLifecycleState state, {AppLifecycleState? previous}) =>
+    (state == AppLifecycleState.hidden || state == AppLifecycleState.paused) &&
+    !(state == AppLifecycleState.hidden && previous == AppLifecycleState.paused);
 
 /// The lock's state while the app runs. Each change returns a new session.
 class AppLockSession {

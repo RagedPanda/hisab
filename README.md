@@ -26,10 +26,10 @@
 
 <table>
   <tr>
-    <td align="center"><img src="docs/screenshots/01-dashboard.png" width="200" alt="Dashboard"><br><sub>Dashboard</sub></td>
-    <td align="center"><img src="docs/screenshots/09-spending-calendar.png" width="200" alt="Spending calendar"><br><sub>Spending calendar</sub></td>
-    <td align="center"><img src="docs/screenshots/04-group-expenses.png" width="200" alt="Group expenses"><br><sub>Group expenses</sub></td>
-    <td align="center"><img src="docs/screenshots/ios/07-subscriptions-dark.png" width="200" alt="Subscriptions in dark theme on iOS"><br><sub>Subscriptions (dark, iOS)</sub></td>
+    <td align="center"><img src="docs/screenshots/framed/android/01-dashboard.png" width="200" alt="Dashboard"><br><sub>Dashboard</sub></td>
+    <td align="center"><img src="docs/screenshots/framed/android/09-spending-calendar.png" width="200" alt="Spending calendar"><br><sub>Spending calendar</sub></td>
+    <td align="center"><img src="docs/screenshots/framed/android/04-group-expenses.png" width="200" alt="Group expenses"><br><sub>Group expenses</sub></td>
+    <td align="center"><img src="docs/screenshots/framed/ios/07-subscriptions-dark.png" width="200" alt="Subscriptions in dark theme on iOS"><br><sub>Subscriptions (dark, iOS)</sub></td>
   </tr>
 </table>
 

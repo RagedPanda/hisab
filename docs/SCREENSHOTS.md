@@ -27,8 +27,8 @@ The month's spend and income, SMS waiting for review, quick entries and upcoming
 <table>
   <tr><th>Android</th><th>iOS</th></tr>
   <tr>
-    <td align="center"><img src="screenshots/01-dashboard.png" width="300" alt="Dashboard on Android"></td>
-    <td align="center"><img src="screenshots/ios/01-dashboard.png" width="300" alt="Dashboard on iOS"></td>
+    <td align="center"><img src="screenshots/framed/android/01-dashboard.png" width="300" alt="Dashboard on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/01-dashboard.png" width="300" alt="Dashboard on iOS"></td>
   </tr>
 </table>
 
@@ -41,8 +41,8 @@ Every entry with search, filters and the month switcher; the calendar button ope
 <table>
   <tr><th>Android</th><th>iOS</th></tr>
   <tr>
-    <td align="center"><img src="screenshots/02-entries.png" width="300" alt="Entries on Android"></td>
-    <td align="center"><img src="screenshots/ios/02-entries.png" width="300" alt="Entries on iOS"></td>
+    <td align="center"><img src="screenshots/framed/android/02-entries.png" width="300" alt="Entries on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/02-entries.png" width="300" alt="Entries on iOS"></td>
   </tr>
 </table>
 
@@ -55,8 +55,8 @@ One bill split into items (buffalo milk, paneer), each with its own quantity, un
 <table>
   <tr><th>Android</th><th>iOS</th></tr>
   <tr>
-    <td align="center"><img src="screenshots/03-multi-item-entry.png" width="300" alt="Multi-item entry on Android"></td>
-    <td align="center"><img src="screenshots/ios/03-multi-item-entry.png" width="300" alt="Multi-item entry on iOS"></td>
+    <td align="center"><img src="screenshots/framed/android/03-multi-item-entry.png" width="300" alt="Multi-item entry on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/03-multi-item-entry.png" width="300" alt="Multi-item entry on iOS"></td>
   </tr>
 </table>
 
@@ -69,8 +69,8 @@ A shared trip: who paid what, and how each expense is split.
 <table>
   <tr><th>Android</th><th>iOS</th></tr>
   <tr>
-    <td align="center"><img src="screenshots/04-group-expenses.png" width="300" alt="Group expenses on Android"></td>
-    <td align="center"><img src="screenshots/ios/04-group-expenses.png" width="300" alt="Group expenses on iOS"></td>
+    <td align="center"><img src="screenshots/framed/android/04-group-expenses.png" width="300" alt="Group expenses on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/04-group-expenses.png" width="300" alt="Group expenses on iOS"></td>
   </tr>
 </table>
 
@@ -83,8 +83,8 @@ Totals and balances per member, with the fewest payments to settle up.
 <table>
   <tr><th>Android</th><th>iOS</th></tr>
   <tr>
-    <td align="center"><img src="screenshots/05-group-settle-up.png" width="300" alt="Group settle-up on Android"></td>
-    <td align="center"><img src="screenshots/ios/05-group-settle-up.png" width="300" alt="Group settle-up on iOS"></td>
+    <td align="center"><img src="screenshots/framed/android/05-group-settle-up.png" width="300" alt="Group settle-up on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/05-group-settle-up.png" width="300" alt="Group settle-up on iOS"></td>
   </tr>
 </table>
 
@@ -97,8 +97,8 @@ Transactions read from bank SMS wait here to be confirmed or dismissed.
 <table>
   <tr><th>Android</th><th>iOS</th></tr>
   <tr>
-    <td align="center"><img src="screenshots/06-sms-review.png" width="300" alt="Bank SMS review on Android"></td>
-    <td align="center"><img src="screenshots/ios/06-sms-review.png" width="300" alt="Bank SMS review on iOS"></td>
+    <td align="center"><img src="screenshots/framed/android/06-sms-review.png" width="300" alt="Bank SMS review on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/06-sms-review.png" width="300" alt="Bank SMS review on iOS"></td>
   </tr>
 </table>
 
@@ -111,8 +111,8 @@ Recurring payments with their next due date, in the dark theme.
 <table>
   <tr><th>Android</th><th>iOS</th></tr>
   <tr>
-    <td align="center"><img src="screenshots/07-subscriptions-dark.png" width="300" alt="Subscriptions (dark) on Android"></td>
-    <td align="center"><img src="screenshots/ios/07-subscriptions-dark.png" width="300" alt="Subscriptions (dark) on iOS"></td>
+    <td align="center"><img src="screenshots/framed/android/07-subscriptions-dark.png" width="300" alt="Subscriptions (dark) on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/07-subscriptions-dark.png" width="300" alt="Subscriptions (dark) on iOS"></td>
   </tr>
 </table>
 
@@ -125,8 +125,8 @@ Category budgets, accounts and recent entries with the app in Hindi.
 <table>
   <tr><th>Android</th><th>iOS</th></tr>
   <tr>
-    <td align="center"><img src="screenshots/08-hindi-budgets.png" width="300" alt="Budgets (Hindi) on Android"></td>
-    <td align="center"><img src="screenshots/ios/08-hindi-budgets.png" width="300" alt="Budgets (Hindi) on iOS"></td>
+    <td align="center"><img src="screenshots/framed/android/08-hindi-budgets.png" width="300" alt="Budgets (Hindi) on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/08-hindi-budgets.png" width="300" alt="Budgets (Hindi) on iOS"></td>
   </tr>
 </table>
 
@@ -139,8 +139,8 @@ Each day shaded by what was spent; tap a day to list its entries.
 <table>
   <tr><th>Android</th><th>iOS</th></tr>
   <tr>
-    <td align="center"><img src="screenshots/09-spending-calendar.png" width="300" alt="Spending calendar on Android"></td>
-    <td align="center"><img src="screenshots/ios/09-spending-calendar.png" width="300" alt="Spending calendar on iOS"></td>
+    <td align="center"><img src="screenshots/framed/android/09-spending-calendar.png" width="300" alt="Spending calendar on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/09-spending-calendar.png" width="300" alt="Spending calendar on iOS"></td>
   </tr>
 </table>
 
@@ -153,8 +153,8 @@ Upcoming bills and subscriptions laid out by due date.
 <table>
   <tr><th>Android</th><th>iOS</th></tr>
   <tr>
-    <td align="center"><img src="screenshots/10-due-calendar.png" width="300" alt="Due calendar on Android"></td>
-    <td align="center"><img src="screenshots/ios/10-due-calendar.png" width="300" alt="Due calendar on iOS"></td>
+    <td align="center"><img src="screenshots/framed/android/10-due-calendar.png" width="300" alt="Due calendar on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/10-due-calendar.png" width="300" alt="Due calendar on iOS"></td>
   </tr>
 </table>
 
@@ -167,8 +167,8 @@ Adding an expense, here prefilled from a quick entry.
 <table>
   <tr><th>Android</th><th>iOS</th></tr>
   <tr>
-    <td align="center"><img src="screenshots/11-new-entry.png" width="300" alt="New entry on Android"></td>
-    <td align="center"><img src="screenshots/ios/11-new-entry.png" width="300" alt="New entry on iOS"></td>
+    <td align="center"><img src="screenshots/framed/android/11-new-entry.png" width="300" alt="New entry on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/11-new-entry.png" width="300" alt="New entry on iOS"></td>
   </tr>
 </table>
 
@@ -181,8 +181,8 @@ One-tap templates for things bought often.
 <table>
   <tr><th>Android</th><th>iOS</th></tr>
   <tr>
-    <td align="center"><img src="screenshots/12-quick-entries.png" width="300" alt="Quick entries on Android"></td>
-    <td align="center"><img src="screenshots/ios/12-quick-entries.png" width="300" alt="Quick entries on iOS"></td>
+    <td align="center"><img src="screenshots/framed/android/12-quick-entries.png" width="300" alt="Quick entries on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/12-quick-entries.png" width="300" alt="Quick entries on iOS"></td>
   </tr>
 </table>
 
@@ -195,8 +195,8 @@ The spending calendar in the dark theme.
 <table>
   <tr><th>Android</th><th>iOS</th></tr>
   <tr>
-    <td align="center"><img src="screenshots/13-spending-calendar-dark.png" width="300" alt="Spending calendar (dark) on Android"></td>
-    <td align="center"><img src="screenshots/ios/13-spending-calendar-dark.png" width="300" alt="Spending calendar (dark) on iOS"></td>
+    <td align="center"><img src="screenshots/framed/android/13-spending-calendar-dark.png" width="300" alt="Spending calendar (dark) on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/13-spending-calendar-dark.png" width="300" alt="Spending calendar (dark) on iOS"></td>
   </tr>
 </table>
 

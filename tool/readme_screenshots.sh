@@ -1,7 +1,9 @@
 #!/bin/bash
 # Shoots the README gallery (integration_test/readme_gallery_test.dart) on one
 # device and writes 360-wide PNGs: Android to docs/screenshots, iOS to
-# docs/screenshots/ios. Status bar in demo mode with the clock at 10:00.
+# docs/screenshots/ios. Status bar in demo mode with the clock at 10:00. Then
+# draws a phone body around each one into docs/screenshots/framed/<platform>,
+# which the README and docs/SCREENSHOTS.md show.
 #
 # Usage: tool/readme_screenshots.sh android <adb-serial>
 #        tool/readme_screenshots.sh ios <simulator-udid>
@@ -46,3 +48,5 @@ for shot in "$RAW"/*_device.png; do
   sips --resampleWidth 360 "$shot" --out "$OUT/${name#*_}.png" >/dev/null
   echo "wrote $OUT/${name#*_}.png"
 done
+
+tool/frame_screenshots.py "$PLATFORM" "$OUT" "docs/screenshots/framed/$PLATFORM"

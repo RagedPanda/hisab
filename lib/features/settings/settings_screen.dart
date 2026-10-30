@@ -16,6 +16,7 @@ import '../../domain/backup/backup_file_name.dart';
 import '../../domain/currency/currency_lookup.dart';
 import '../currency/currency_picker.dart';
 import '../../l10n/l10n.dart';
+import '../app_lock/app_lock_providers.dart';
 import '../app_lock/app_lock_settings_screen.dart';
 import '../groups/member_display.dart';
 import '../notifications/notification_settings_screen.dart';
@@ -390,7 +391,7 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _import(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
-    final picked = await FilePicker.pickFiles();
+    final picked = await ref.read(appLockProvider.notifier).whileInSystemScreen(() => FilePicker.pickFiles());
     if (picked.isEmpty) return;
     final data = await picked.first.readAsBytes();
     if (!context.mounted) return;

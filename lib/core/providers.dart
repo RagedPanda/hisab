@@ -2,8 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../data/backup/backup_service.dart';
-import '../data/backup/month_start_backup.dart';
+import '../data/backup/app_backup_service.dart';
 import '../data/db/database.dart';
 import '../data/repositories/accounts_repository.dart';
 import '../data/repositories/entry_removal.dart';
@@ -20,7 +19,6 @@ import '../data/repositories/people_repository.dart';
 import '../data/repositories/reminders_repository.dart';
 import '../data/repositories/settle_schedule_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
-import '../data/salary/salary_backup.dart';
 import '../data/sms/reminder_payment_adapter.dart';
 import '../data/sms/sms_channel.dart';
 import '../data/sms/sms_ingest_service.dart';
@@ -221,12 +219,7 @@ final smsNotificationPromptProvider = Provider((ref) => SmsNotificationPrompt(
       },
     ));
 
-final backupServiceProvider = Provider(
-  (ref) => BackupService(ref.watch(databaseProvider), sections: [
-        MonthStartBackupSection(ref.watch(sharedPreferencesProvider)),
-        SalaryBackupSection(ref.watch(sharedPreferencesProvider)),
-      ]),
-);
+final backupServiceProvider = Provider((ref) => appBackupService(ref.watch(databaseProvider), ref.watch(sharedPreferencesProvider)));
 
 // Reminders and notifications ------------------------------------------------
 

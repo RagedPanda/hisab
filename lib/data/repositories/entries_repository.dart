@@ -191,25 +191,27 @@ class EntriesRepository {
 
   /// Live personal expenses of exactly [amountMinor] paid from a bank
   /// account between [from] and [to]: what a card's "payment received" SMS
-  /// may be the other side of.
+  /// may be the other side of. Udhaar entries never are.
   Future<List<Entry>> bankDebitsBetween({required int amountMinor, required DateTime from, required DateTime to}) =>
       (db.select(db.entries)
             ..where((t) =>
                 t.deletedAt.isNull() &
                 t.groupId.isNull() &
+                t.udhaarKind.isNull() &
                 t.kind.equals('expense') &
                 t.amountMinor.equals(amountMinor) &
                 t.occurredAt.isBetweenValues(from, to) &
                 t.accountId.isInQuery(_accountIdsOfType('bank'))))
           .get();
 
-  /// Live card bill payments read from SMS (transfers into a card) of exactly
-  /// [amountMinor] between [from] and [to].
+  /// Live card bill payments read from SMS (transfers into a card, never
+  /// udhaar) of exactly [amountMinor] between [from] and [to].
   Future<List<Entry>> smsCardPaymentsBetween({required int amountMinor, required DateTime from, required DateTime to}) =>
       (db.select(db.entries)
             ..where((t) =>
                 t.deletedAt.isNull() &
                 t.source.equals('sms') &
+                t.udhaarKind.isNull() &
                 t.kind.equals('transfer') &
                 t.amountMinor.equals(amountMinor) &
                 t.occurredAt.isBetweenValues(from, to) &

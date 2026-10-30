@@ -2258,6 +2258,28 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entry> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _personIdMeta = const VerificationMeta(
+    'personId',
+  );
+  @override
+  late final GeneratedColumn<String> personId = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _udhaarKindMeta = const VerificationMeta(
+    'udhaarKind',
+  );
+  @override
+  late final GeneratedColumn<String> udhaarKind = GeneratedColumn<String>(
+    'udhaar_kind',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -2281,6 +2303,8 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entry> {
     projectId,
     recurringId,
     createdAt,
+    personId,
+    udhaarKind,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2440,6 +2464,18 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entry> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIdMeta,
+        personId.isAcceptableOrUnknown(data['person_id']!, _personIdMeta),
+      );
+    }
+    if (data.containsKey('udhaar_kind')) {
+      context.handle(
+        _udhaarKindMeta,
+        udhaarKind.isAcceptableOrUnknown(data['udhaar_kind']!, _udhaarKindMeta),
+      );
+    }
     return context;
   }
 
@@ -2533,6 +2569,14 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entry> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      personId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      ),
+      udhaarKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}udhaar_kind'],
+      ),
     );
   }
 
@@ -2572,6 +2616,14 @@ class Entry extends DataClass implements Insertable<Entry> {
   /// Recurring rule that produced (or started) this entry.
   final String? recurringId;
   final DateTime createdAt;
+
+  /// Person (People row) an udhaar entry was lent to, borrowed from or
+  /// repaid by; null for every other entry (v23).
+  final String? personId;
+
+  /// lent | borrowed | repaid_to_me | repaid_by_me on an udhaar entry, which
+  /// is stored as a one-sided transfer (see `domain/udhaar/udhaar.dart`) (v23).
+  final String? udhaarKind;
   const Entry({
     required this.updatedAt,
     this.deletedAt,
@@ -2594,6 +2646,8 @@ class Entry extends DataClass implements Insertable<Entry> {
     this.projectId,
     this.recurringId,
     required this.createdAt,
+    this.personId,
+    this.udhaarKind,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2641,6 +2695,12 @@ class Entry extends DataClass implements Insertable<Entry> {
       map['recurring_id'] = Variable<String>(recurringId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || personId != null) {
+      map['person_id'] = Variable<String>(personId);
+    }
+    if (!nullToAbsent || udhaarKind != null) {
+      map['udhaar_kind'] = Variable<String>(udhaarKind);
+    }
     return map;
   }
 
@@ -2689,6 +2749,12 @@ class Entry extends DataClass implements Insertable<Entry> {
           ? const Value.absent()
           : Value(recurringId),
       createdAt: Value(createdAt),
+      personId: personId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personId),
+      udhaarKind: udhaarKind == null && nullToAbsent
+          ? const Value.absent()
+          : Value(udhaarKind),
     );
   }
 
@@ -2719,6 +2785,8 @@ class Entry extends DataClass implements Insertable<Entry> {
       projectId: serializer.fromJson<String?>(json['projectId']),
       recurringId: serializer.fromJson<String?>(json['recurringId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      personId: serializer.fromJson<String?>(json['personId']),
+      udhaarKind: serializer.fromJson<String?>(json['udhaarKind']),
     );
   }
   @override
@@ -2746,6 +2814,8 @@ class Entry extends DataClass implements Insertable<Entry> {
       'projectId': serializer.toJson<String?>(projectId),
       'recurringId': serializer.toJson<String?>(recurringId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'personId': serializer.toJson<String?>(personId),
+      'udhaarKind': serializer.toJson<String?>(udhaarKind),
     };
   }
 
@@ -2771,6 +2841,8 @@ class Entry extends DataClass implements Insertable<Entry> {
     Value<String?> projectId = const Value.absent(),
     Value<String?> recurringId = const Value.absent(),
     DateTime? createdAt,
+    Value<String?> personId = const Value.absent(),
+    Value<String?> udhaarKind = const Value.absent(),
   }) => Entry(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -2795,6 +2867,8 @@ class Entry extends DataClass implements Insertable<Entry> {
     projectId: projectId.present ? projectId.value : this.projectId,
     recurringId: recurringId.present ? recurringId.value : this.recurringId,
     createdAt: createdAt ?? this.createdAt,
+    personId: personId.present ? personId.value : this.personId,
+    udhaarKind: udhaarKind.present ? udhaarKind.value : this.udhaarKind,
   );
   Entry copyWithCompanion(EntriesCompanion data) {
     return Entry(
@@ -2833,6 +2907,10 @@ class Entry extends DataClass implements Insertable<Entry> {
           ? data.recurringId.value
           : this.recurringId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      personId: data.personId.present ? data.personId.value : this.personId,
+      udhaarKind: data.udhaarKind.present
+          ? data.udhaarKind.value
+          : this.udhaarKind,
     );
   }
 
@@ -2859,7 +2937,9 @@ class Entry extends DataClass implements Insertable<Entry> {
           ..write('tags: $tags, ')
           ..write('projectId: $projectId, ')
           ..write('recurringId: $recurringId, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('personId: $personId, ')
+          ..write('udhaarKind: $udhaarKind')
           ..write(')'))
         .toString();
   }
@@ -2887,6 +2967,8 @@ class Entry extends DataClass implements Insertable<Entry> {
     projectId,
     recurringId,
     createdAt,
+    personId,
+    udhaarKind,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -2912,7 +2994,9 @@ class Entry extends DataClass implements Insertable<Entry> {
           other.tags == this.tags &&
           other.projectId == this.projectId &&
           other.recurringId == this.recurringId &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.personId == this.personId &&
+          other.udhaarKind == this.udhaarKind);
 }
 
 class EntriesCompanion extends UpdateCompanion<Entry> {
@@ -2937,6 +3021,8 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
   final Value<String?> projectId;
   final Value<String?> recurringId;
   final Value<DateTime> createdAt;
+  final Value<String?> personId;
+  final Value<String?> udhaarKind;
   final Value<int> rowid;
   const EntriesCompanion({
     this.updatedAt = const Value.absent(),
@@ -2960,6 +3046,8 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
     this.projectId = const Value.absent(),
     this.recurringId = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.personId = const Value.absent(),
+    this.udhaarKind = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   EntriesCompanion.insert({
@@ -2984,6 +3072,8 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
     this.projectId = const Value.absent(),
     this.recurringId = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.personId = const Value.absent(),
+    this.udhaarKind = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        kind = Value(kind),
@@ -3011,6 +3101,8 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
     Expression<String>? projectId,
     Expression<String>? recurringId,
     Expression<DateTime>? createdAt,
+    Expression<String>? personId,
+    Expression<String>? udhaarKind,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3035,6 +3127,8 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
       if (projectId != null) 'project_id': projectId,
       if (recurringId != null) 'recurring_id': recurringId,
       if (createdAt != null) 'created_at': createdAt,
+      if (personId != null) 'person_id': personId,
+      if (udhaarKind != null) 'udhaar_kind': udhaarKind,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3061,6 +3155,8 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
     Value<String?>? projectId,
     Value<String?>? recurringId,
     Value<DateTime>? createdAt,
+    Value<String?>? personId,
+    Value<String?>? udhaarKind,
     Value<int>? rowid,
   }) {
     return EntriesCompanion(
@@ -3085,6 +3181,8 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
       projectId: projectId ?? this.projectId,
       recurringId: recurringId ?? this.recurringId,
       createdAt: createdAt ?? this.createdAt,
+      personId: personId ?? this.personId,
+      udhaarKind: udhaarKind ?? this.udhaarKind,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3155,6 +3253,12 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (personId.present) {
+      map['person_id'] = Variable<String>(personId.value);
+    }
+    if (udhaarKind.present) {
+      map['udhaar_kind'] = Variable<String>(udhaarKind.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3185,6 +3289,8 @@ class EntriesCompanion extends UpdateCompanion<Entry> {
           ..write('projectId: $projectId, ')
           ..write('recurringId: $recurringId, ')
           ..write('createdAt: $createdAt, ')
+          ..write('personId: $personId, ')
+          ..write('udhaarKind: $udhaarKind, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -14759,8 +14865,24 @@ class $PeopleTable extends People with TableInfo<$PeopleTable, Person> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _phoneMeta = const VerificationMeta('phone');
   @override
-  List<GeneratedColumn> get $columns => [updatedAt, deletedAt, id, name, email];
+  late final GeneratedColumn<String> phone = GeneratedColumn<String>(
+    'phone',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    updatedAt,
+    deletedAt,
+    id,
+    name,
+    email,
+    phone,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -14806,6 +14928,12 @@ class $PeopleTable extends People with TableInfo<$PeopleTable, Person> {
     } else if (isInserting) {
       context.missing(_emailMeta);
     }
+    if (data.containsKey('phone')) {
+      context.handle(
+        _phoneMeta,
+        phone.isAcceptableOrUnknown(data['phone']!, _phoneMeta),
+      );
+    }
     return context;
   }
 
@@ -14835,6 +14963,10 @@ class $PeopleTable extends People with TableInfo<$PeopleTable, Person> {
         DriftSqlType.string,
         data['${effectivePrefix}email'],
       )!,
+      phone: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}phone'],
+      ),
     );
   }
 
@@ -14850,12 +14982,16 @@ class Person extends DataClass implements Insertable<Person> {
   final String id;
   final String name;
   final String email;
+
+  /// Phone for WhatsApp reminders about udhaar; null when not known (v23).
+  final String? phone;
   const Person({
     required this.updatedAt,
     this.deletedAt,
     required this.id,
     required this.name,
     required this.email,
+    this.phone,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -14867,6 +15003,9 @@ class Person extends DataClass implements Insertable<Person> {
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['email'] = Variable<String>(email);
+    if (!nullToAbsent || phone != null) {
+      map['phone'] = Variable<String>(phone);
+    }
     return map;
   }
 
@@ -14879,6 +15018,9 @@ class Person extends DataClass implements Insertable<Person> {
       id: Value(id),
       name: Value(name),
       email: Value(email),
+      phone: phone == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phone),
     );
   }
 
@@ -14893,6 +15035,7 @@ class Person extends DataClass implements Insertable<Person> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       email: serializer.fromJson<String>(json['email']),
+      phone: serializer.fromJson<String?>(json['phone']),
     );
   }
   @override
@@ -14904,6 +15047,7 @@ class Person extends DataClass implements Insertable<Person> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'email': serializer.toJson<String>(email),
+      'phone': serializer.toJson<String?>(phone),
     };
   }
 
@@ -14913,12 +15057,14 @@ class Person extends DataClass implements Insertable<Person> {
     String? id,
     String? name,
     String? email,
+    Value<String?> phone = const Value.absent(),
   }) => Person(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     id: id ?? this.id,
     name: name ?? this.name,
     email: email ?? this.email,
+    phone: phone.present ? phone.value : this.phone,
   );
   Person copyWithCompanion(PeopleCompanion data) {
     return Person(
@@ -14927,6 +15073,7 @@ class Person extends DataClass implements Insertable<Person> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       email: data.email.present ? data.email.value : this.email,
+      phone: data.phone.present ? data.phone.value : this.phone,
     );
   }
 
@@ -14937,13 +15084,14 @@ class Person extends DataClass implements Insertable<Person> {
           ..write('deletedAt: $deletedAt, ')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('email: $email')
+          ..write('email: $email, ')
+          ..write('phone: $phone')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(updatedAt, deletedAt, id, name, email);
+  int get hashCode => Object.hash(updatedAt, deletedAt, id, name, email, phone);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -14952,7 +15100,8 @@ class Person extends DataClass implements Insertable<Person> {
           other.deletedAt == this.deletedAt &&
           other.id == this.id &&
           other.name == this.name &&
-          other.email == this.email);
+          other.email == this.email &&
+          other.phone == this.phone);
 }
 
 class PeopleCompanion extends UpdateCompanion<Person> {
@@ -14961,6 +15110,7 @@ class PeopleCompanion extends UpdateCompanion<Person> {
   final Value<String> id;
   final Value<String> name;
   final Value<String> email;
+  final Value<String?> phone;
   final Value<int> rowid;
   const PeopleCompanion({
     this.updatedAt = const Value.absent(),
@@ -14968,6 +15118,7 @@ class PeopleCompanion extends UpdateCompanion<Person> {
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.email = const Value.absent(),
+    this.phone = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PeopleCompanion.insert({
@@ -14976,6 +15127,7 @@ class PeopleCompanion extends UpdateCompanion<Person> {
     required String id,
     required String name,
     required String email,
+    this.phone = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -14986,6 +15138,7 @@ class PeopleCompanion extends UpdateCompanion<Person> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? email,
+    Expression<String>? phone,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -14994,6 +15147,7 @@ class PeopleCompanion extends UpdateCompanion<Person> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (email != null) 'email': email,
+      if (phone != null) 'phone': phone,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -15004,6 +15158,7 @@ class PeopleCompanion extends UpdateCompanion<Person> {
     Value<String>? id,
     Value<String>? name,
     Value<String>? email,
+    Value<String?>? phone,
     Value<int>? rowid,
   }) {
     return PeopleCompanion(
@@ -15012,6 +15167,7 @@ class PeopleCompanion extends UpdateCompanion<Person> {
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
+      phone: phone ?? this.phone,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -15034,6 +15190,9 @@ class PeopleCompanion extends UpdateCompanion<Person> {
     if (email.present) {
       map['email'] = Variable<String>(email.value);
     }
+    if (phone.present) {
+      map['phone'] = Variable<String>(phone.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -15048,6 +15207,7 @@ class PeopleCompanion extends UpdateCompanion<Person> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('email: $email, ')
+          ..write('phone: $phone, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -15790,6 +15950,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'entries_recurring_id',
     'CREATE INDEX entries_recurring_id ON entries (recurring_id)',
   );
+  late final Index entriesPersonId = Index(
+    'entries_person_id',
+    'CREATE INDEX entries_person_id ON entries (person_id)',
+  );
   late final Index smsLogTransactionKey = Index(
     'sms_log_transaction_key',
     'CREATE INDEX sms_log_transaction_key ON sms_log (transaction_key)',
@@ -15854,6 +16018,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     quickEntries,
     entriesProjectId,
     entriesRecurringId,
+    entriesPersonId,
     smsLogTransactionKey,
     projectFieldsProjectId,
     entryFieldValuesEntryId,
@@ -16789,6 +16954,8 @@ typedef $$EntriesTableCreateCompanionBuilder = EntriesCompanion Function({
   Value<String?> projectId,
   Value<String?> recurringId,
   Value<DateTime> createdAt,
+  Value<String?> personId,
+  Value<String?> udhaarKind,
   Value<int> rowid,
 });
 typedef $$EntriesTableUpdateCompanionBuilder = EntriesCompanion Function({
@@ -16813,6 +16980,8 @@ typedef $$EntriesTableUpdateCompanionBuilder = EntriesCompanion Function({
   Value<String?> projectId,
   Value<String?> recurringId,
   Value<DateTime> createdAt,
+  Value<String?> personId,
+  Value<String?> udhaarKind,
   Value<int> rowid,
 });
 
@@ -16927,6 +17096,16 @@ class $$EntriesTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get personId => $composableBuilder(
+    column: $table.personId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get udhaarKind => $composableBuilder(
+    column: $table.udhaarKind,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -17044,6 +17223,16 @@ class $$EntriesTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get personId => $composableBuilder(
+    column: $table.personId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get udhaarKind => $composableBuilder(
+    column: $table.udhaarKind,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$EntriesTableAnnotationComposer
@@ -17131,6 +17320,14 @@ class $$EntriesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get personId =>
+      $composableBuilder(column: $table.personId, builder: (column) => column);
+
+  GeneratedColumn<String> get udhaarKind => $composableBuilder(
+    column: $table.udhaarKind,
+    builder: (column) => column,
+  );
 }
 
 class $$EntriesTableTableManager
@@ -17182,6 +17379,8 @@ class $$EntriesTableTableManager
                 Value<String?> projectId = const Value.absent(),
                 Value<String?> recurringId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> personId = const Value.absent(),
+                Value<String?> udhaarKind = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => EntriesCompanion(
                 updatedAt: updatedAt,
@@ -17205,6 +17404,8 @@ class $$EntriesTableTableManager
                 projectId: projectId,
                 recurringId: recurringId,
                 createdAt: createdAt,
+                personId: personId,
+                udhaarKind: udhaarKind,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -17230,6 +17431,8 @@ class $$EntriesTableTableManager
                 Value<String?> projectId = const Value.absent(),
                 Value<String?> recurringId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> personId = const Value.absent(),
+                Value<String?> udhaarKind = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => EntriesCompanion.insert(
                 updatedAt: updatedAt,
@@ -17253,6 +17456,8 @@ class $$EntriesTableTableManager
                 projectId: projectId,
                 recurringId: recurringId,
                 createdAt: createdAt,
+                personId: personId,
+                udhaarKind: udhaarKind,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -22836,6 +23041,7 @@ typedef $$PeopleTableCreateCompanionBuilder = PeopleCompanion Function({
   required String id,
   required String name,
   required String email,
+  Value<String?> phone,
   Value<int> rowid,
 });
 typedef $$PeopleTableUpdateCompanionBuilder = PeopleCompanion Function({
@@ -22844,6 +23050,7 @@ typedef $$PeopleTableUpdateCompanionBuilder = PeopleCompanion Function({
   Value<String> id,
   Value<String> name,
   Value<String> email,
+  Value<String?> phone,
   Value<int> rowid,
 });
 
@@ -22878,6 +23085,11 @@ class $$PeopleTableFilterComposer
 
   ColumnFilters<String> get email => $composableBuilder(
     column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get phone => $composableBuilder(
+    column: $table.phone,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -22915,6 +23127,11 @@ class $$PeopleTableOrderingComposer
     column: $table.email,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get phone => $composableBuilder(
+    column: $table.phone,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PeopleTableAnnotationComposer
@@ -22940,6 +23157,9 @@ class $$PeopleTableAnnotationComposer
 
   GeneratedColumn<String> get email =>
       $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get phone =>
+      $composableBuilder(column: $table.phone, builder: (column) => column);
 }
 
 class $$PeopleTableTableManager
@@ -22975,6 +23195,7 @@ class $$PeopleTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> email = const Value.absent(),
+                Value<String?> phone = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PeopleCompanion(
                 updatedAt: updatedAt,
@@ -22982,6 +23203,7 @@ class $$PeopleTableTableManager
                 id: id,
                 name: name,
                 email: email,
+                phone: phone,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -22991,6 +23213,7 @@ class $$PeopleTableTableManager
                 required String id,
                 required String name,
                 required String email,
+                Value<String?> phone = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PeopleCompanion.insert(
                 updatedAt: updatedAt,
@@ -22998,6 +23221,7 @@ class $$PeopleTableTableManager
                 id: id,
                 name: name,
                 email: email,
+                phone: phone,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

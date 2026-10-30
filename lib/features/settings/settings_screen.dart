@@ -126,6 +126,14 @@ class SettingsScreen extends ConsumerWidget {
               ListTile(leading: const Icon(Icons.repeat), title: Text(l10n.recurringTitle), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/recurring')),
               ListTile(leading: const Icon(Icons.autorenew), title: Text(l10n.subscriptions), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/subscriptions')),
               ListTile(
+                key: const Key('settings.udhaar'),
+                leading: const Icon(Icons.handshake_outlined),
+                title: Text(l10n.udhaarPeopleAndUdhaar),
+                subtitle: Text(l10n.udhaarPeopleHint, maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/udhaar'),
+              ),
+              ListTile(
                 key: const Key('settingsSalary'),
                 leading: const Icon(Icons.payments_outlined),
                 title: Text(salary.isSetUp ? l10n.salaryTitle : l10n.salarySetUp),

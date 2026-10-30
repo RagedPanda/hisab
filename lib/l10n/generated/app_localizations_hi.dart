@@ -4693,4 +4693,144 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get smsCardUpdated => 'कार्ड की जानकारी अपडेट हुई।';
+
+  @override
+  String get udhaarTitle => 'उधार';
+
+  @override
+  String get udhaarPeopleAndUdhaar => 'लोग और उधार';
+
+  @override
+  String get udhaarPeopleHint =>
+      'ग्रुप के बाहर लोगों को दिया या उनसे लिया उधार';
+
+  @override
+  String udhaarOwesYou(String name, String amount) {
+    return '$name पर आपके $amount बाकी हैं';
+  }
+
+  @override
+  String udhaarYouOwe(String name, String amount) {
+    return 'आप पर $name के $amount बाकी हैं';
+  }
+
+  @override
+  String udhaarSettledWith(String name) {
+    return '$name के साथ सब चुकता';
+  }
+
+  @override
+  String udhaarOwesYouShort(String amount) {
+    return 'आपको $amount मिलेंगे';
+  }
+
+  @override
+  String udhaarYouOweShort(String amount) {
+    return 'आप पर $amount बकाया';
+  }
+
+  @override
+  String get udhaarKindLent => 'दिया';
+
+  @override
+  String get udhaarKindBorrowed => 'लिया';
+
+  @override
+  String get udhaarKindRepaidToMe => 'वापस मिला';
+
+  @override
+  String get udhaarKindRepaidByMe => 'वापस किया';
+
+  @override
+  String get udhaarRepayment => 'वापसी';
+
+  @override
+  String udhaarLentTo(String name) {
+    return '$name को उधार दिया';
+  }
+
+  @override
+  String udhaarBorrowedFrom(String name) {
+    return '$name से उधार लिया';
+  }
+
+  @override
+  String udhaarRepaidByThem(String name) {
+    return '$name ने पैसे लौटाए';
+  }
+
+  @override
+  String udhaarRepaidByMe(String name) {
+    return 'आपने $name को पैसे लौटाए';
+  }
+
+  @override
+  String get udhaarEmpty =>
+      'अभी कोई उधार नहीं। ग्रुप के बाहर किसी को दिया या किसी से लिया उधार यहाँ दिखेगा।';
+
+  @override
+  String udhaarPersonEmpty(String name) {
+    return '$name के साथ अभी कोई लेन-देन नहीं।';
+  }
+
+  @override
+  String get udhaarOtherPeople => 'चुकता और बाकी लोग';
+
+  @override
+  String get udhaarAddPerson => 'व्यक्ति जोड़ें';
+
+  @override
+  String get udhaarEditPerson => 'व्यक्ति बदलें';
+
+  @override
+  String get udhaarPerson => 'व्यक्ति';
+
+  @override
+  String get udhaarPickPerson => 'व्यक्ति चुनें';
+
+  @override
+  String get udhaarAdd => 'उधार जोड़ें';
+
+  @override
+  String get udhaarEdit => 'उधार बदलें';
+
+  @override
+  String get udhaarPaidFrom => 'किस खाते से दिया';
+
+  @override
+  String get udhaarReceivedIn => 'किस खाते में आया';
+
+  @override
+  String get udhaarRemind => 'WhatsApp पर याद दिलाएँ';
+
+  @override
+  String udhaarReminderGreeting(String name, String amount, String date) {
+    return 'नमस्ते $name, $date से बाकी $amount की एक याद।';
+  }
+
+  @override
+  String udhaarReminderPay(String link) {
+    return 'UPI से भेजें: $link';
+  }
+
+  @override
+  String get udhaarMyUpiId => 'आपकी UPI ID';
+
+  @override
+  String get udhaarMyUpiIdHelp =>
+      'याद दिलाने वाले संदेश में जुड़ेगी ताकि लोग एक टैप में पैसे लौटा सकें। न चाहें तो खाली छोड़ें।';
+
+  @override
+  String get udhaarDeleted => 'उधार की एंट्री हटाई गई';
+
+  @override
+  String get udhaarFromEditor => 'किसी को उधार दिया या किसी से लिया?';
+
+  @override
+  String get udhaarInGroups => 'ग्रुप में';
+
+  @override
+  String udhaarBalanceAfter(String amount) {
+    return 'बाकी $amount';
+  }
 }

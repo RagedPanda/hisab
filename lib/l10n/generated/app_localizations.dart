@@ -7543,6 +7543,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Card details updated.'**
   String get smsCardUpdated;
+
+  /// No description provided for @udhaarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Udhaar'**
+  String get udhaarTitle;
+
+  /// No description provided for @udhaarPeopleAndUdhaar.
+  ///
+  /// In en, this message translates to:
+  /// **'People & udhaar'**
+  String get udhaarPeopleAndUdhaar;
+
+  /// No description provided for @udhaarPeopleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Money lent to or borrowed from people outside groups'**
+  String get udhaarPeopleHint;
+
+  /// No description provided for @udhaarOwesYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes you {amount}'**
+  String udhaarOwesYou(String name, String amount);
+
+  /// No description provided for @udhaarYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {name} {amount}'**
+  String udhaarYouOwe(String name, String amount);
+
+  /// No description provided for @udhaarSettledWith.
+  ///
+  /// In en, this message translates to:
+  /// **'All settled with {name}'**
+  String udhaarSettledWith(String name);
+
+  /// No description provided for @udhaarOwesYouShort.
+  ///
+  /// In en, this message translates to:
+  /// **'owes you {amount}'**
+  String udhaarOwesYouShort(String amount);
+
+  /// No description provided for @udhaarYouOweShort.
+  ///
+  /// In en, this message translates to:
+  /// **'you owe {amount}'**
+  String udhaarYouOweShort(String amount);
+
+  /// No description provided for @udhaarKindLent.
+  ///
+  /// In en, this message translates to:
+  /// **'Lent'**
+  String get udhaarKindLent;
+
+  /// No description provided for @udhaarKindBorrowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Borrowed'**
+  String get udhaarKindBorrowed;
+
+  /// No description provided for @udhaarKindRepaidToMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Got back'**
+  String get udhaarKindRepaidToMe;
+
+  /// No description provided for @udhaarKindRepaidByMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid back'**
+  String get udhaarKindRepaidByMe;
+
+  /// No description provided for @udhaarRepayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Repayment'**
+  String get udhaarRepayment;
+
+  /// No description provided for @udhaarLentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Lent to {name}'**
+  String udhaarLentTo(String name);
+
+  /// No description provided for @udhaarBorrowedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Borrowed from {name}'**
+  String udhaarBorrowedFrom(String name);
+
+  /// No description provided for @udhaarRepaidByThem.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} paid you back'**
+  String udhaarRepaidByThem(String name);
+
+  /// No description provided for @udhaarRepaidByMe.
+  ///
+  /// In en, this message translates to:
+  /// **'You paid {name} back'**
+  String udhaarRepaidByMe(String name);
+
+  /// No description provided for @udhaarEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No udhaar yet. Money you lend to or borrow from someone outside a group shows here.'**
+  String get udhaarEmpty;
+
+  /// No description provided for @udhaarPersonEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing lent or borrowed with {name} yet.'**
+  String udhaarPersonEmpty(String name);
+
+  /// No description provided for @udhaarOtherPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled and other people'**
+  String get udhaarOtherPeople;
+
+  /// No description provided for @udhaarAddPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Add person'**
+  String get udhaarAddPerson;
+
+  /// No description provided for @udhaarEditPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit person'**
+  String get udhaarEditPerson;
+
+  /// No description provided for @udhaarPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Person'**
+  String get udhaarPerson;
+
+  /// No description provided for @udhaarPickPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a person'**
+  String get udhaarPickPerson;
+
+  /// No description provided for @udhaarAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add udhaar'**
+  String get udhaarAdd;
+
+  /// No description provided for @udhaarEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit udhaar'**
+  String get udhaarEdit;
+
+  /// No description provided for @udhaarPaidFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid from'**
+  String get udhaarPaidFrom;
+
+  /// No description provided for @udhaarReceivedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Received in'**
+  String get udhaarReceivedIn;
+
+  /// No description provided for @udhaarRemind.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind on WhatsApp'**
+  String get udhaarRemind;
+
+  /// No description provided for @udhaarReminderGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi {name}, a reminder about {amount} from {date}.'**
+  String udhaarReminderGreeting(String name, String amount, String date);
+
+  /// No description provided for @udhaarReminderPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay via UPI: {link}'**
+  String udhaarReminderPay(String link);
+
+  /// No description provided for @udhaarMyUpiId.
+  ///
+  /// In en, this message translates to:
+  /// **'Your UPI ID'**
+  String get udhaarMyUpiId;
+
+  /// No description provided for @udhaarMyUpiIdHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to reminders so people can pay you back in one tap. Leave blank to skip.'**
+  String get udhaarMyUpiIdHelp;
+
+  /// No description provided for @udhaarDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Udhaar entry deleted'**
+  String get udhaarDeleted;
+
+  /// No description provided for @udhaarFromEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Lent to or borrowed from someone?'**
+  String get udhaarFromEditor;
+
+  /// No description provided for @udhaarInGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'In groups'**
+  String get udhaarInGroups;
+
+  /// No description provided for @udhaarBalanceAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance {amount}'**
+  String udhaarBalanceAfter(String amount);
 }
 
 class _AppLocalizationsDelegate

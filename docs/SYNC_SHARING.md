@@ -99,6 +99,10 @@ can suggest them instead of making you type them again. It is deliberately simpl
   second device, updates the same row (latest name wins) instead of creating a duplicate.
 - **Filled automatically.** Adding or editing a member with an email saves them; there is no
   separate "contacts" screen to maintain. Members without an email stay group-only.
+- **Udhaar people (schema v22).** People you lend to or borrow from outside any group are
+  added from Settings → People & udhaar. They may have no email: such a row gets a generated
+  id and an empty email, plus an optional phone for WhatsApp reminders. Udhaar entries point at
+  the person (`entries.person_id`) and stay personal, never in a group file.
 - **Suggested while typing.** In the add-member sheet, typing a name or an email lists up to
   three matching people (a match at the start ranks first); people already in the group are
   skipped. Tapping one fills the name and email.

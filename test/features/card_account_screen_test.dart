@@ -185,6 +185,70 @@ void main() {
     expect(saved.balanceMinor, 0);
   });
 
+  Future<AppDatabase> insertSmsCard(WidgetTester tester) async {
+    final container = await pumpApp(tester, overrides: [notificationGatewayProvider.overrideWithValue(FakeNotificationGateway())]);
+    final db = container.read(databaseProvider);
+    final today = startOfDay(DateTime.now());
+    final statementAt = previousStatementDate(today, 5);
+    await db.into(db.accounts).insert(AccountsCompanion.insert(
+          id: 'card',
+          name: 'HDFC Millennia',
+          type: 'card',
+          color: 0xFF1E88E5,
+          balanceMinor: const Value(-2345678),
+          statementDay: const Value(5),
+          dueDay: const Value(25),
+          lastStatementMinor: const Value(2345678),
+          lastStatementAt: Value(statementAt),
+          minimumDueMinor: const Value(118000),
+          statementFromSmsAt: Value(statementAt.add(const Duration(hours: 9))),
+          availableLimitMinor: const Value(7654321),
+          availableLimitAt: Value(today),
+        ));
+    appRouter.push('/accounts/card/card');
+    await settle(tester);
+    return db;
+  }
+
+  testWidgets('card facts read from SMS show where they came from', (tester) async {
+    await insertSmsCard(tester);
+
+    expect(find.descendant(of: find.byKey(kCardStatementKey), matching: find.textContaining('From SMS, ')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(kCardDueKey), matching: find.text('Minimum due ₹1,180')), findsOneWidget);
+    expect(find.byKey(kCardSmsLimitKey), findsOneWidget);
+    expect(find.textContaining('₹76,543 available, from SMS, '), findsOneWidget);
+  });
+
+  testWidgets('editing the statement amount drops the minimum due read from SMS', (tester) async {
+    final db = await insertSmsCard(tester);
+    await tester.tap(find.byTooltip('Edit'));
+    await settle(tester);
+    await enter(tester, find.byKey(const ValueKey('account.lastStatement')), '20000');
+    await tapSave(tester);
+
+    final saved = await savedCard(db);
+    expect(saved.lastStatementMinor, 2000000);
+    expect(saved.minimumDueMinor, isNull);
+    expect(saved.statementFromSmsAt, isNull);
+    expect(saved.availableLimitMinor, 7654321, reason: 'still a card');
+  });
+
+  testWidgets('editing other card details keeps the statement read from SMS', (tester) async {
+    final db = await insertSmsCard(tester);
+    await tester.tap(find.byTooltip('Edit'));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('account.dueDay')));
+    await settle(tester);
+    await tester.tap(find.text('20').last);
+    await settle(tester);
+    await tapSave(tester);
+
+    final saved = await savedCard(db);
+    expect(saved.dueDay, 20);
+    expect(saved.minimumDueMinor, 118000);
+    expect(saved.statementFromSmsAt, isNotNull);
+  });
+
   testWidgets('editing a card in credit keeps the credit (#98)', (tester) async {
     final container = await pumpApp(tester);
     final db = container.read(databaseProvider);

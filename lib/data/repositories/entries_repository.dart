@@ -189,6 +189,48 @@ class EntriesRepository {
   SimpleSelectStatement<$EntriesTable, Entry> _accountMovementsQuery(String accountId, DateTime since) => db.select(db.entries)
     ..where((t) => t.deletedAt.isNull() & t.occurredAt.isBiggerOrEqualValue(since) & (t.accountId.equals(accountId) | t.toAccountId.equals(accountId)));
 
+  /// Live personal expenses of exactly [amountMinor] paid from a bank
+  /// account between [from] and [to]: what a card's "payment received" SMS
+  /// may be the other side of.
+  Future<List<Entry>> bankDebitsBetween({required int amountMinor, required DateTime from, required DateTime to}) =>
+      (db.select(db.entries)
+            ..where((t) =>
+                t.deletedAt.isNull() &
+                t.groupId.isNull() &
+                t.kind.equals('expense') &
+                t.amountMinor.equals(amountMinor) &
+                t.occurredAt.isBetweenValues(from, to) &
+                t.accountId.isInQuery(_accountIdsOfType('bank'))))
+          .get();
+
+  /// Live card bill payments read from SMS (transfers into a card) of exactly
+  /// [amountMinor] between [from] and [to].
+  Future<List<Entry>> smsCardPaymentsBetween({required int amountMinor, required DateTime from, required DateTime to}) =>
+      (db.select(db.entries)
+            ..where((t) =>
+                t.deletedAt.isNull() &
+                t.source.equals('sms') &
+                t.kind.equals('transfer') &
+                t.amountMinor.equals(amountMinor) &
+                t.occurredAt.isBetweenValues(from, to) &
+                t.toAccountId.isInQuery(_accountIdsOfType('card'))))
+          .get();
+
+  JoinedSelectStatement<$AccountsTable, Account> _accountIdsOfType(String type) => db.selectOnly(db.accounts)
+    ..addColumns([db.accounts.id])
+    ..where(db.accounts.type.equals(type) & db.accounts.deletedAt.isNull());
+
+  /// Makes entry [id] a transfer from [fromAccountId] (unchanged when null)
+  /// to [toAccountId]; a transfer has no category.
+  Future<void> setTransfer(String id, {String? fromAccountId, required String toAccountId}) =>
+      (db.update(db.entries)..where((t) => t.id.equals(id))).write(EntriesCompanion(
+        kind: const Value('transfer'),
+        accountId: fromAccountId == null ? const Value.absent() : Value(fromAccountId),
+        toAccountId: Value(toAccountId),
+        categoryId: const Value(null),
+        updatedAt: Value(DateTime.now()),
+      ));
+
   List<CardMovement> _toCardMovements(List<Entry> rows) => [
         for (final row in rows)
           CardMovement(kind: row.kind, amountMinor: row.amountMinor, occurredAt: row.occurredAt, accountId: row.accountId, toAccountId: row.toAccountId),

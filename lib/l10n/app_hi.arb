@@ -1279,5 +1279,9 @@
   "backupFailureFolderUnavailable": "फ़ोल्डर तक पहुँच नहीं; उसे फिर से चुनें",
   "backupFailureSignInNeeded": "Google Drive पर बैकअप लें में जाकर फिर से साइन इन करें",
   "backupFailureOffline": "इंटरनेट कनेक्शन नहीं है",
-  "backupFailureUnknown": "{error}"
+  "backupFailureUnknown": "{error}",
+  "cardFromSms": "SMS से, {date}",
+  "cardMinimumDue": "न्यूनतम देय {amount}",
+  "cardSmsAvailableLimit": "{amount} लिमिट बची, SMS से, {date}",
+  "smsCardUpdated": "कार्ड की जानकारी अपडेट हुई।"
 }

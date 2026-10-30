@@ -24,6 +24,7 @@ const Key kCardDueKey = ValueKey('card.due');
 const Key kCardDueChipKey = ValueKey('card.dueChip');
 const Key kCardCycleKey = ValueKey('card.cycle');
 const Key kCardStatementKey = ValueKey('card.statement');
+const Key kCardSmsLimitKey = ValueKey('card.smsLimit');
 
 /// A credit card: what is owed against the limit, when the bill is due, this
 /// cycle's spend and the last statement.
@@ -58,9 +59,9 @@ class CardAccountScreen extends ConsumerWidget {
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
           children: [
-            _OutstandingCard(overview: overview, moneyFormat: moneyFormat),
+            _OutstandingCard(overview: overview, moneyFormat: moneyFormat, account: account, shortDate: shortDate),
             const SizedBox(height: kDashboardCardGap),
-            _DueCard(overview: overview, moneyFormat: moneyFormat, locale: locale, onSetUp: () => _edit(context, ref, account)),
+            _DueCard(overview: overview, moneyFormat: moneyFormat, locale: locale, minimumDueMinor: account.minimumDueMinor, onSetUp: () => _edit(context, ref, account)),
             // A card with a due date has a due reminder with alerts.
             if (remindersMayArriveLate(permission, hasAlerts: overview.due != null)) const ReminderLateNote(),
             const SizedBox(height: kDashboardCardGap),
@@ -84,7 +85,12 @@ class CardAccountScreen extends ConsumerWidget {
                       key: kCardStatementKey,
                       label: l10n.cardLastStatement,
                       value: account.lastStatementMinor == null ? '—' : formatMinor(account.lastStatementMinor!, format: moneyFormat, showDecimals: false),
-                      caption: account.lastStatementAt == null ? l10n.cardNoStatement : l10n.cardStatementOn(shortDate(account.lastStatementAt!)),
+                      caption: account.lastStatementAt == null
+                          ? l10n.cardNoStatement
+                          : [
+                              l10n.cardStatementOn(shortDate(account.lastStatementAt!)),
+                              if (account.statementFromSmsAt != null) l10n.cardFromSms(shortDate(account.statementFromSmsAt!)),
+                            ].join('\n'),
                     ),
                   ),
                 ],
@@ -117,11 +123,14 @@ Future<void> _edit(BuildContext context, WidgetRef ref, Account account) async {
   }
 }
 
-/// Outstanding amount, utilisation bar and available limit.
+/// Outstanding amount, utilisation bar and available limit, plus the
+/// available limit the card's last SMS reported.
 class _OutstandingCard extends StatelessWidget {
-  const _OutstandingCard({required this.overview, required this.moneyFormat});
+  const _OutstandingCard({required this.overview, required this.moneyFormat, required this.account, required this.shortDate});
   final CardOverview overview;
   final MoneyFormat moneyFormat;
+  final Account account;
+  final String Function(DateTime date) shortDate;
 
   @override
   Widget build(BuildContext context) {
@@ -172,6 +181,14 @@ class _OutstandingCard extends StatelessWidget {
               ],
             ),
           ],
+          if (account.availableLimitMinor != null && account.availableLimitAt != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              l10n.cardSmsAvailableLimit(formatMinor(account.availableLimitMinor!, format: moneyFormat, showDecimals: false), shortDate(account.availableLimitAt!)),
+              key: kCardSmsLimitKey,
+              style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant).tabular,
+            ),
+          ],
         ],
       ),
     );
@@ -181,10 +198,13 @@ class _OutstandingCard extends StatelessWidget {
 /// Due date with a days-left chip and the unpaid part of the statement; a
 /// prompt to fill in the card's days when they are missing.
 class _DueCard extends StatelessWidget {
-  const _DueCard({required this.overview, required this.moneyFormat, required this.locale, required this.onSetUp});
+  const _DueCard({required this.overview, required this.moneyFormat, required this.locale, required this.minimumDueMinor, required this.onSetUp});
   final CardOverview overview;
   final MoneyFormat moneyFormat;
   final String locale;
+
+  /// The statement's minimum due, read from its SMS.
+  final int? minimumDueMinor;
   final VoidCallback onSetUp;
 
   @override
@@ -230,6 +250,10 @@ class _DueCard extends StatelessWidget {
           if (amountDue != null) ...[
             const SizedBox(height: 8),
             Text(l10n.cardAmountLeftToPay(formatMinor(amountDue, format: moneyFormat)), style: theme.textTheme.bodyMedium?.tabular),
+            if (minimumDueMinor != null) ...[
+              const SizedBox(height: 4),
+              Text(l10n.cardMinimumDue(formatMinor(minimumDueMinor!, format: moneyFormat)), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant).tabular),
+            ],
           ],
         ],
       ),

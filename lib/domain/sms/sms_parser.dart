@@ -197,6 +197,64 @@ ParsedTransaction? parseBankSms({
   );
 }
 
+/// The SMS body as the parser reads it: math glyphs mapped back to ASCII
+/// and runs of whitespace collapsed.
+String normalizedSmsText(String body) => _normalizedText(body);
+
+/// Pattern for an amount's digits ("1,23,456.78"); group 1 is the number.
+const smsNumberPattern = _number;
+
+/// Whether the parser drops [text] (normalised) as an OTP, offer, set-up
+/// notice, reminder or failure, whatever its amount.
+bool isIgnorableSmsText(String sender, String text) => _isIgnorable(sender, text.toLowerCase());
+
+/// Whether [text] (normalised) is an OTP or marketing, by sender or wording.
+bool isOtpOrOfferSmsText(String sender, String text) =>
+    isPromotionalSender(sender) || _promotion.hasMatch(text) || isOtpOrPromotionSms(text);
+
+/// Last digits of the account or card [text] (normalised) refers to, matched
+/// as for transactions.
+String? smsAccountLast4(String text) => _account(text);
+
+/// The moved amount in [text] (normalised): the first amount that is not a
+/// balance or an available limit.
+int? smsMovedAmountMinor(String text) {
+  final match = _firstAmountOutside(text, [_balancePattern.firstMatch(text), _limitPattern.firstMatch(text)]);
+  return match == null ? null : parseAmountToMinor(match.group(1)!);
+}
+
+/// The available credit limit [text] (normalised) states, if any.
+int? smsAvailableLimitMinor(String text) {
+  final match = _limitPattern.firstMatch(text);
+  return match == null ? null : parseAmountToMinor(match.group(1)!);
+}
+
+/// The bank reference number in [text] (normalised), if any.
+String? smsReference(String text) => _reference(text);
+
+/// Whether [text] (normalised) is a card issuer confirming a bill payment
+/// ("Payment of Rs X received on your Credit Card XX1234").
+bool isCardPaymentAcknowledgementText(String text) => _isCardPaymentAcknowledgement(text, text.toLowerCase());
+
+/// Every calendar date written in [text] with where it starts, in text order.
+List<(DateTime, int)> smsDatesIn(String text) {
+  final found = <(DateTime, int)>[];
+  for (final numeric in _numericDate.allMatches(text)) {
+    final day = int.parse(numeric.group(1)!);
+    final month = int.parse(numeric.group(2)!);
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) found.add((DateTime(_year(numeric.group(3)!), month, day), numeric.start));
+  }
+  for (final named in _namedDate.allMatches(text)) {
+    final month = _months.indexOf(named.group(2)!.toLowerCase()) + 1;
+    final day = int.parse(named.group(1)!);
+    if (month > 0 && day >= 1 && day <= 31) found.add((DateTime(_year(named.group(3)!), month, day), named.start));
+  }
+  for (final iso in _isoDate.allMatches(text)) {
+    found.add((DateTime(int.parse(iso.group(1)!), int.parse(iso.group(2)!), int.parse(iso.group(3)!)), iso.start));
+  }
+  return found..sort((a, b) => a.$2.compareTo(b.$2));
+}
+
 String _normalizedText(String body) => normalizeMathGlyphs(body).replaceAll(RegExp(r'\s+'), ' ').trim();
 
 /// True when [body] is an OTP or a promotion by the same wording the parser

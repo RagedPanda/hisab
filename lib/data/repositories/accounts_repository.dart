@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../core/ids.dart';
+import '../../domain/cards/card_sms_facts.dart';
 import '../db/database.dart';
 
 class AccountsRepository {
@@ -81,6 +82,25 @@ class AccountsRepository {
     if (current.balanceAsOf != null && !asOf.isAfter(current.balanceAsOf!)) return;
     await update(AccountsCompanion(id: Value(id), balanceMinor: Value(balanceMinor), balanceAsOf: Value(asOf)));
   }
+
+  /// Records the available limit a card SMS reported, unless a newer report
+  /// is already stored ([takesReportedLimit]).
+  Future<void> applyReportedLimit(String id, int availableLimitMinor, DateTime asOf) async {
+    final current = await getById(id);
+    if (current == null || !takesReportedLimit(reportedAt: asOf, storedAt: current.availableLimitAt)) return;
+    await update(AccountsCompanion(id: Value(id), availableLimitMinor: Value(availableLimitMinor), availableLimitAt: Value(asOf)));
+  }
+
+  /// Stores a statement read from a card SMS (see [cardStatementFromSms]).
+  Future<void> applySmsStatement(String id, CardStatementFields fields) => update(AccountsCompanion(
+        id: Value(id),
+        lastStatementMinor: Value(fields.lastStatementMinor),
+        lastStatementAt: Value(fields.lastStatementAt),
+        minimumDueMinor: Value(fields.minimumDueMinor),
+        statementFromSmsAt: Value(fields.statementFromSmsAt),
+        dueDay: Value(fields.dueDay),
+        statementDay: Value(fields.statementDay),
+      ));
 
   /// Moves the running balance for a manual entry; SMS entries carry the
   /// bank's own balance instead so they do not adjust it twice.

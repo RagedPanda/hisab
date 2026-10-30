@@ -213,5 +213,6 @@ Color smsOutcomeColor(ColorScheme scheme, SmsOutcome outcome) => switch (outcome
 String reprocessResultMessage(AppLocalizations l10n, IngestStatus status) => switch (status) {
       IngestStatus.pending => l10n.smsFoundReview,
       IngestStatus.added => l10n.smsAdded,
+      IngestStatus.cardUpdated => l10n.smsCardUpdated,
       _ => l10n.smsNotFound,
     };

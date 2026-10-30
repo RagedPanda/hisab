@@ -1622,5 +1622,12 @@
   "backupFailureSignInNeeded": "Google needs you to sign in again in Back up to Google Drive",
   "backupFailureOffline": "no internet connection",
   "backupFailureUnknown": "{error}",
-  "@backupFailureUnknown": {"placeholders": {"error": {"type": "String"}}}
+  "@backupFailureUnknown": {"placeholders": {"error": {"type": "String"}}},
+  "cardFromSms": "From SMS, {date}",
+  "@cardFromSms": {"placeholders": {"date": {"type": "String"}}},
+  "cardMinimumDue": "Minimum due {amount}",
+  "@cardMinimumDue": {"placeholders": {"amount": {"type": "String"}}},
+  "cardSmsAvailableLimit": "{amount} available, from SMS, {date}",
+  "@cardSmsAvailableLimit": {"placeholders": {"amount": {"type": "String"}, "date": {"type": "String"}}},
+  "smsCardUpdated": "Card details updated."
 }

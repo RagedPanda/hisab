@@ -52,6 +52,15 @@ class Accounts extends Table with SyncColumns {
   IntColumn get lastStatementMinor => integer().nullable()();
   DateTimeColumn get lastStatementAt => dateTime().nullable()();
 
+  /// Read from bank SMS: the minimum due of the last statement and when the
+  /// statement came from an SMS (null when it was typed in).
+  IntColumn get minimumDueMinor => integer().nullable()();
+  DateTimeColumn get statementFromSmsAt => dateTime().nullable()();
+
+  /// Read from bank SMS: the available limit the latest card SMS reported, and when.
+  IntColumn get availableLimitMinor => integer().nullable()();
+  DateTimeColumn get availableLimitAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -621,7 +630,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -706,6 +715,8 @@ class AppDatabase extends _$AppDatabase {
           if (from < 20) await m.createTable(quickEntries);
           // v21: starter quick entries, unless the user already made some.
           if (from < 21) await seedQuickEntries();
+          // v22: card facts read from bank SMS (minimum due, available limit).
+          if (from < 22) await _upgradeToCardSmsFacts(m);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -797,6 +808,15 @@ class AppDatabase extends _$AppDatabase {
 
   /// v17 step. Adds the credit card columns a table lacks; pre-release
   /// builds of card dues stored them under schema 7.
+  /// v22 step. Accounts gain the card SMS fact columns they lack; checking
+  /// what exists keeps it idempotent.
+  Future<void> _upgradeToCardSmsFacts(Migrator m) async {
+    final existing = await _columnNames('accounts');
+    for (final column in cardSmsFactColumns(accounts)) {
+      if (!existing.contains(column.name)) await m.addColumn(accounts, column);
+    }
+  }
+
   Future<void> _upgradeToCardDetails(Migrator m) async {
     final existing = await _columnNames('accounts');
     for (final column in cardDetailColumns(accounts)) {
@@ -1034,6 +1054,14 @@ List<GeneratedColumn> cardDetailColumns($AccountsTable table) => [
       table.creditLimitMinor,
       table.lastStatementMinor,
       table.lastStatementAt,
+    ];
+
+/// The card facts read from SMS added to accounts at schema v22.
+List<GeneratedColumn> cardSmsFactColumns($AccountsTable table) => [
+      table.minimumDueMinor,
+      table.statementFromSmsAt,
+      table.availableLimitMinor,
+      table.availableLimitAt,
     ];
 
 /// Columns v11 added to [Reminders]; a v5..v10 database gains exactly these.

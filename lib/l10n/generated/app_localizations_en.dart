@@ -4702,4 +4702,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String backupFailureUnknown(String error) {
     return '$error';
   }
+
+  @override
+  String cardFromSms(String date) {
+    return 'From SMS, $date';
+  }
+
+  @override
+  String cardMinimumDue(String amount) {
+    return 'Minimum due $amount';
+  }
+
+  @override
+  String cardSmsAvailableLimit(String amount, String date) {
+    return '$amount available, from SMS, $date';
+  }
+
+  @override
+  String get smsCardUpdated => 'Card details updated.';
 }

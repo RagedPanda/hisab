@@ -81,6 +81,9 @@ class SmsLogRepository {
         ]);
   }
 
+  /// Every logged message that points at entry [entryId].
+  Future<List<SmsLogData>> forEntry(String entryId) => (db.select(db.smsLog)..where((t) => t.entryId.equals(entryId))).get();
+
   Future<void> delete(String id) => (db.delete(db.smsLog)..where((t) => t.id.equals(id))).go();
 
   /// Hides every non-pending message from the history and wipes its text.

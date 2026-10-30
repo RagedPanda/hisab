@@ -52,6 +52,7 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
     setState(() => _lastResult = switch (status) {
           IngestStatus.pending => l10n.smsFoundReview,
           IngestStatus.added => l10n.smsAdded,
+          IngestStatus.cardUpdated => l10n.smsCardUpdated,
           IngestStatus.duplicate => l10n.smsDuplicate,
           IngestStatus.foreignCurrency => l10n.smsForeignCurrency,
           _ => l10n.smsNotFound,

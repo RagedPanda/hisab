@@ -199,6 +199,50 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _minimumDueMinorMeta = const VerificationMeta(
+    'minimumDueMinor',
+  );
+  @override
+  late final GeneratedColumn<int> minimumDueMinor = GeneratedColumn<int>(
+    'minimum_due_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statementFromSmsAtMeta =
+      const VerificationMeta('statementFromSmsAt');
+  @override
+  late final GeneratedColumn<DateTime> statementFromSmsAt =
+      GeneratedColumn<DateTime>(
+        'statement_from_sms_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _availableLimitMinorMeta =
+      const VerificationMeta('availableLimitMinor');
+  @override
+  late final GeneratedColumn<int> availableLimitMinor = GeneratedColumn<int>(
+    'available_limit_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _availableLimitAtMeta = const VerificationMeta(
+    'availableLimitAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> availableLimitAt =
+      GeneratedColumn<DateTime>(
+        'available_limit_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -219,6 +263,10 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     creditLimitMinor,
     lastStatementMinor,
     lastStatementAt,
+    minimumDueMinor,
+    statementFromSmsAt,
+    availableLimitMinor,
+    availableLimitAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -366,6 +414,42 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         ),
       );
     }
+    if (data.containsKey('minimum_due_minor')) {
+      context.handle(
+        _minimumDueMinorMeta,
+        minimumDueMinor.isAcceptableOrUnknown(
+          data['minimum_due_minor']!,
+          _minimumDueMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('statement_from_sms_at')) {
+      context.handle(
+        _statementFromSmsAtMeta,
+        statementFromSmsAt.isAcceptableOrUnknown(
+          data['statement_from_sms_at']!,
+          _statementFromSmsAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('available_limit_minor')) {
+      context.handle(
+        _availableLimitMinorMeta,
+        availableLimitMinor.isAcceptableOrUnknown(
+          data['available_limit_minor']!,
+          _availableLimitMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('available_limit_at')) {
+      context.handle(
+        _availableLimitAtMeta,
+        availableLimitAt.isAcceptableOrUnknown(
+          data['available_limit_at']!,
+          _availableLimitAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -447,6 +531,22 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_statement_at'],
       ),
+      minimumDueMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}minimum_due_minor'],
+      ),
+      statementFromSmsAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}statement_from_sms_at'],
+      ),
+      availableLimitMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}available_limit_minor'],
+      ),
+      availableLimitAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}available_limit_at'],
+      ),
     );
   }
 
@@ -485,6 +585,15 @@ class Account extends DataClass implements Insertable<Account> {
   /// Amount billed on the most recent statement and that statement's date.
   final int? lastStatementMinor;
   final DateTime? lastStatementAt;
+
+  /// Read from bank SMS: the minimum due of the last statement and when the
+  /// statement came from an SMS (null when it was typed in).
+  final int? minimumDueMinor;
+  final DateTime? statementFromSmsAt;
+
+  /// Read from bank SMS: the available limit the latest card SMS reported, and when.
+  final int? availableLimitMinor;
+  final DateTime? availableLimitAt;
   const Account({
     required this.updatedAt,
     this.deletedAt,
@@ -504,6 +613,10 @@ class Account extends DataClass implements Insertable<Account> {
     this.creditLimitMinor,
     this.lastStatementMinor,
     this.lastStatementAt,
+    this.minimumDueMinor,
+    this.statementFromSmsAt,
+    this.availableLimitMinor,
+    this.availableLimitAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -545,6 +658,18 @@ class Account extends DataClass implements Insertable<Account> {
     }
     if (!nullToAbsent || lastStatementAt != null) {
       map['last_statement_at'] = Variable<DateTime>(lastStatementAt);
+    }
+    if (!nullToAbsent || minimumDueMinor != null) {
+      map['minimum_due_minor'] = Variable<int>(minimumDueMinor);
+    }
+    if (!nullToAbsent || statementFromSmsAt != null) {
+      map['statement_from_sms_at'] = Variable<DateTime>(statementFromSmsAt);
+    }
+    if (!nullToAbsent || availableLimitMinor != null) {
+      map['available_limit_minor'] = Variable<int>(availableLimitMinor);
+    }
+    if (!nullToAbsent || availableLimitAt != null) {
+      map['available_limit_at'] = Variable<DateTime>(availableLimitAt);
     }
     return map;
   }
@@ -589,6 +714,18 @@ class Account extends DataClass implements Insertable<Account> {
       lastStatementAt: lastStatementAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastStatementAt),
+      minimumDueMinor: minimumDueMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(minimumDueMinor),
+      statementFromSmsAt: statementFromSmsAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(statementFromSmsAt),
+      availableLimitMinor: availableLimitMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(availableLimitMinor),
+      availableLimitAt: availableLimitAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(availableLimitAt),
     );
   }
 
@@ -616,6 +753,16 @@ class Account extends DataClass implements Insertable<Account> {
       creditLimitMinor: serializer.fromJson<int?>(json['creditLimitMinor']),
       lastStatementMinor: serializer.fromJson<int?>(json['lastStatementMinor']),
       lastStatementAt: serializer.fromJson<DateTime?>(json['lastStatementAt']),
+      minimumDueMinor: serializer.fromJson<int?>(json['minimumDueMinor']),
+      statementFromSmsAt: serializer.fromJson<DateTime?>(
+        json['statementFromSmsAt'],
+      ),
+      availableLimitMinor: serializer.fromJson<int?>(
+        json['availableLimitMinor'],
+      ),
+      availableLimitAt: serializer.fromJson<DateTime?>(
+        json['availableLimitAt'],
+      ),
     );
   }
   @override
@@ -640,6 +787,10 @@ class Account extends DataClass implements Insertable<Account> {
       'creditLimitMinor': serializer.toJson<int?>(creditLimitMinor),
       'lastStatementMinor': serializer.toJson<int?>(lastStatementMinor),
       'lastStatementAt': serializer.toJson<DateTime?>(lastStatementAt),
+      'minimumDueMinor': serializer.toJson<int?>(minimumDueMinor),
+      'statementFromSmsAt': serializer.toJson<DateTime?>(statementFromSmsAt),
+      'availableLimitMinor': serializer.toJson<int?>(availableLimitMinor),
+      'availableLimitAt': serializer.toJson<DateTime?>(availableLimitAt),
     };
   }
 
@@ -662,6 +813,10 @@ class Account extends DataClass implements Insertable<Account> {
     Value<int?> creditLimitMinor = const Value.absent(),
     Value<int?> lastStatementMinor = const Value.absent(),
     Value<DateTime?> lastStatementAt = const Value.absent(),
+    Value<int?> minimumDueMinor = const Value.absent(),
+    Value<DateTime?> statementFromSmsAt = const Value.absent(),
+    Value<int?> availableLimitMinor = const Value.absent(),
+    Value<DateTime?> availableLimitAt = const Value.absent(),
   }) => Account(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -687,6 +842,18 @@ class Account extends DataClass implements Insertable<Account> {
     lastStatementAt: lastStatementAt.present
         ? lastStatementAt.value
         : this.lastStatementAt,
+    minimumDueMinor: minimumDueMinor.present
+        ? minimumDueMinor.value
+        : this.minimumDueMinor,
+    statementFromSmsAt: statementFromSmsAt.present
+        ? statementFromSmsAt.value
+        : this.statementFromSmsAt,
+    availableLimitMinor: availableLimitMinor.present
+        ? availableLimitMinor.value
+        : this.availableLimitMinor,
+    availableLimitAt: availableLimitAt.present
+        ? availableLimitAt.value
+        : this.availableLimitAt,
   );
   Account copyWithCompanion(AccountsCompanion data) {
     return Account(
@@ -722,6 +889,18 @@ class Account extends DataClass implements Insertable<Account> {
       lastStatementAt: data.lastStatementAt.present
           ? data.lastStatementAt.value
           : this.lastStatementAt,
+      minimumDueMinor: data.minimumDueMinor.present
+          ? data.minimumDueMinor.value
+          : this.minimumDueMinor,
+      statementFromSmsAt: data.statementFromSmsAt.present
+          ? data.statementFromSmsAt.value
+          : this.statementFromSmsAt,
+      availableLimitMinor: data.availableLimitMinor.present
+          ? data.availableLimitMinor.value
+          : this.availableLimitMinor,
+      availableLimitAt: data.availableLimitAt.present
+          ? data.availableLimitAt.value
+          : this.availableLimitAt,
     );
   }
 
@@ -745,13 +924,17 @@ class Account extends DataClass implements Insertable<Account> {
           ..write('dueDay: $dueDay, ')
           ..write('creditLimitMinor: $creditLimitMinor, ')
           ..write('lastStatementMinor: $lastStatementMinor, ')
-          ..write('lastStatementAt: $lastStatementAt')
+          ..write('lastStatementAt: $lastStatementAt, ')
+          ..write('minimumDueMinor: $minimumDueMinor, ')
+          ..write('statementFromSmsAt: $statementFromSmsAt, ')
+          ..write('availableLimitMinor: $availableLimitMinor, ')
+          ..write('availableLimitAt: $availableLimitAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     updatedAt,
     deletedAt,
     id,
@@ -770,7 +953,11 @@ class Account extends DataClass implements Insertable<Account> {
     creditLimitMinor,
     lastStatementMinor,
     lastStatementAt,
-  );
+    minimumDueMinor,
+    statementFromSmsAt,
+    availableLimitMinor,
+    availableLimitAt,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -792,7 +979,11 @@ class Account extends DataClass implements Insertable<Account> {
           other.dueDay == this.dueDay &&
           other.creditLimitMinor == this.creditLimitMinor &&
           other.lastStatementMinor == this.lastStatementMinor &&
-          other.lastStatementAt == this.lastStatementAt);
+          other.lastStatementAt == this.lastStatementAt &&
+          other.minimumDueMinor == this.minimumDueMinor &&
+          other.statementFromSmsAt == this.statementFromSmsAt &&
+          other.availableLimitMinor == this.availableLimitMinor &&
+          other.availableLimitAt == this.availableLimitAt);
 }
 
 class AccountsCompanion extends UpdateCompanion<Account> {
@@ -814,6 +1005,10 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   final Value<int?> creditLimitMinor;
   final Value<int?> lastStatementMinor;
   final Value<DateTime?> lastStatementAt;
+  final Value<int?> minimumDueMinor;
+  final Value<DateTime?> statementFromSmsAt;
+  final Value<int?> availableLimitMinor;
+  final Value<DateTime?> availableLimitAt;
   final Value<int> rowid;
   const AccountsCompanion({
     this.updatedAt = const Value.absent(),
@@ -834,6 +1029,10 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.creditLimitMinor = const Value.absent(),
     this.lastStatementMinor = const Value.absent(),
     this.lastStatementAt = const Value.absent(),
+    this.minimumDueMinor = const Value.absent(),
+    this.statementFromSmsAt = const Value.absent(),
+    this.availableLimitMinor = const Value.absent(),
+    this.availableLimitAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AccountsCompanion.insert({
@@ -855,6 +1054,10 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.creditLimitMinor = const Value.absent(),
     this.lastStatementMinor = const Value.absent(),
     this.lastStatementAt = const Value.absent(),
+    this.minimumDueMinor = const Value.absent(),
+    this.statementFromSmsAt = const Value.absent(),
+    this.availableLimitMinor = const Value.absent(),
+    this.availableLimitAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -879,6 +1082,10 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Expression<int>? creditLimitMinor,
     Expression<int>? lastStatementMinor,
     Expression<DateTime>? lastStatementAt,
+    Expression<int>? minimumDueMinor,
+    Expression<DateTime>? statementFromSmsAt,
+    Expression<int>? availableLimitMinor,
+    Expression<DateTime>? availableLimitAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -901,6 +1108,12 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       if (lastStatementMinor != null)
         'last_statement_minor': lastStatementMinor,
       if (lastStatementAt != null) 'last_statement_at': lastStatementAt,
+      if (minimumDueMinor != null) 'minimum_due_minor': minimumDueMinor,
+      if (statementFromSmsAt != null)
+        'statement_from_sms_at': statementFromSmsAt,
+      if (availableLimitMinor != null)
+        'available_limit_minor': availableLimitMinor,
+      if (availableLimitAt != null) 'available_limit_at': availableLimitAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -924,6 +1137,10 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Value<int?>? creditLimitMinor,
     Value<int?>? lastStatementMinor,
     Value<DateTime?>? lastStatementAt,
+    Value<int?>? minimumDueMinor,
+    Value<DateTime?>? statementFromSmsAt,
+    Value<int?>? availableLimitMinor,
+    Value<DateTime?>? availableLimitAt,
     Value<int>? rowid,
   }) {
     return AccountsCompanion(
@@ -945,6 +1162,10 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       creditLimitMinor: creditLimitMinor ?? this.creditLimitMinor,
       lastStatementMinor: lastStatementMinor ?? this.lastStatementMinor,
       lastStatementAt: lastStatementAt ?? this.lastStatementAt,
+      minimumDueMinor: minimumDueMinor ?? this.minimumDueMinor,
+      statementFromSmsAt: statementFromSmsAt ?? this.statementFromSmsAt,
+      availableLimitMinor: availableLimitMinor ?? this.availableLimitMinor,
+      availableLimitAt: availableLimitAt ?? this.availableLimitAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1006,6 +1227,20 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     if (lastStatementAt.present) {
       map['last_statement_at'] = Variable<DateTime>(lastStatementAt.value);
     }
+    if (minimumDueMinor.present) {
+      map['minimum_due_minor'] = Variable<int>(minimumDueMinor.value);
+    }
+    if (statementFromSmsAt.present) {
+      map['statement_from_sms_at'] = Variable<DateTime>(
+        statementFromSmsAt.value,
+      );
+    }
+    if (availableLimitMinor.present) {
+      map['available_limit_minor'] = Variable<int>(availableLimitMinor.value);
+    }
+    if (availableLimitAt.present) {
+      map['available_limit_at'] = Variable<DateTime>(availableLimitAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1033,6 +1268,10 @@ class AccountsCompanion extends UpdateCompanion<Account> {
           ..write('creditLimitMinor: $creditLimitMinor, ')
           ..write('lastStatementMinor: $lastStatementMinor, ')
           ..write('lastStatementAt: $lastStatementAt, ')
+          ..write('minimumDueMinor: $minimumDueMinor, ')
+          ..write('statementFromSmsAt: $statementFromSmsAt, ')
+          ..write('availableLimitMinor: $availableLimitMinor, ')
+          ..write('availableLimitAt: $availableLimitAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -15646,6 +15885,10 @@ typedef $$AccountsTableCreateCompanionBuilder = AccountsCompanion Function({
   Value<int?> creditLimitMinor,
   Value<int?> lastStatementMinor,
   Value<DateTime?> lastStatementAt,
+  Value<int?> minimumDueMinor,
+  Value<DateTime?> statementFromSmsAt,
+  Value<int?> availableLimitMinor,
+  Value<DateTime?> availableLimitAt,
   Value<int> rowid,
 });
 typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
@@ -15667,6 +15910,10 @@ typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
   Value<int?> creditLimitMinor,
   Value<int?> lastStatementMinor,
   Value<DateTime?> lastStatementAt,
+  Value<int?> minimumDueMinor,
+  Value<DateTime?> statementFromSmsAt,
+  Value<int?> availableLimitMinor,
+  Value<DateTime?> availableLimitAt,
   Value<int> rowid,
 });
 
@@ -15766,6 +16013,26 @@ class $$AccountsTableFilterComposer
 
   ColumnFilters<DateTime> get lastStatementAt => $composableBuilder(
     column: $table.lastStatementAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get minimumDueMinor => $composableBuilder(
+    column: $table.minimumDueMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get statementFromSmsAt => $composableBuilder(
+    column: $table.statementFromSmsAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get availableLimitMinor => $composableBuilder(
+    column: $table.availableLimitMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get availableLimitAt => $composableBuilder(
+    column: $table.availableLimitAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -15868,6 +16135,26 @@ class $$AccountsTableOrderingComposer
     column: $table.lastStatementAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get minimumDueMinor => $composableBuilder(
+    column: $table.minimumDueMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get statementFromSmsAt => $composableBuilder(
+    column: $table.statementFromSmsAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get availableLimitMinor => $composableBuilder(
+    column: $table.availableLimitMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get availableLimitAt => $composableBuilder(
+    column: $table.availableLimitAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AccountsTableAnnotationComposer
@@ -15946,6 +16233,26 @@ class $$AccountsTableAnnotationComposer
     column: $table.lastStatementAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get minimumDueMinor => $composableBuilder(
+    column: $table.minimumDueMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get statementFromSmsAt => $composableBuilder(
+    column: $table.statementFromSmsAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get availableLimitMinor => $composableBuilder(
+    column: $table.availableLimitMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get availableLimitAt => $composableBuilder(
+    column: $table.availableLimitAt,
+    builder: (column) => column,
+  );
 }
 
 class $$AccountsTableTableManager
@@ -15994,6 +16301,10 @@ class $$AccountsTableTableManager
                 Value<int?> creditLimitMinor = const Value.absent(),
                 Value<int?> lastStatementMinor = const Value.absent(),
                 Value<DateTime?> lastStatementAt = const Value.absent(),
+                Value<int?> minimumDueMinor = const Value.absent(),
+                Value<DateTime?> statementFromSmsAt = const Value.absent(),
+                Value<int?> availableLimitMinor = const Value.absent(),
+                Value<DateTime?> availableLimitAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AccountsCompanion(
                 updatedAt: updatedAt,
@@ -16014,6 +16325,10 @@ class $$AccountsTableTableManager
                 creditLimitMinor: creditLimitMinor,
                 lastStatementMinor: lastStatementMinor,
                 lastStatementAt: lastStatementAt,
+                minimumDueMinor: minimumDueMinor,
+                statementFromSmsAt: statementFromSmsAt,
+                availableLimitMinor: availableLimitMinor,
+                availableLimitAt: availableLimitAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -16036,6 +16351,10 @@ class $$AccountsTableTableManager
                 Value<int?> creditLimitMinor = const Value.absent(),
                 Value<int?> lastStatementMinor = const Value.absent(),
                 Value<DateTime?> lastStatementAt = const Value.absent(),
+                Value<int?> minimumDueMinor = const Value.absent(),
+                Value<DateTime?> statementFromSmsAt = const Value.absent(),
+                Value<int?> availableLimitMinor = const Value.absent(),
+                Value<DateTime?> availableLimitAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AccountsCompanion.insert(
                 updatedAt: updatedAt,
@@ -16056,6 +16375,10 @@ class $$AccountsTableTableManager
                 creditLimitMinor: creditLimitMinor,
                 lastStatementMinor: lastStatementMinor,
                 lastStatementAt: lastStatementAt,
+                minimumDueMinor: minimumDueMinor,
+                statementFromSmsAt: statementFromSmsAt,
+                availableLimitMinor: availableLimitMinor,
+                availableLimitAt: availableLimitAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

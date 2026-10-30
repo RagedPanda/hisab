@@ -7,6 +7,11 @@ enum Instrument { upi, card, netbanking, atm, neft, imps, rtgs, emi, wallet, che
 /// for categories and account mapping.
 enum TxnKind { general, salary, refund, atmWithdrawal, emi, autopay, cardSpend, walletTopUp }
 
+/// Stable key so a bank account or card can be matched across messages,
+/// stored on the account as `smsKey` ("HDFC Bank:cc:4521").
+String smsAccountKey({required String? bank, required bool isCreditCard, required String? last4}) =>
+    '${bank ?? 'unknown'}:${isCreditCard ? 'cc' : 'ac'}:${last4 ?? '????'}';
+
 /// What the SMS parser extracted from one bank message. Immutable.
 class ParsedTransaction {
   const ParsedTransaction({
@@ -57,7 +62,7 @@ class ParsedTransaction {
   bool get isDebit => direction == TxnDirection.debit;
 
   /// Stable key so a bank account can be matched across messages.
-  String get accountKey => '${bank ?? 'unknown'}:${isCreditCard ? 'cc' : 'ac'}:${accountLast4 ?? '????'}';
+  String get accountKey => smsAccountKey(bank: bank, isCreditCard: isCreditCard, last4: accountLast4);
 
   Map<String, dynamic> toJson() => {
         'direction': direction.name,

@@ -11,6 +11,7 @@ import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../domain/accounts/account_label.dart';
 import '../../domain/accounts/balance_input.dart';
+import '../../domain/cards/card_sms_facts.dart';
 import '../../domain/cards/card_summary.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
@@ -220,6 +221,12 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                           .id;
                     } else {
                       accountId = existing.id;
+                      final keepsStatement = keepsSmsStatement(
+                        previousMinor: existing.lastStatementMinor,
+                        previousAt: existing.lastStatementAt,
+                        newMinor: card.lastStatementMinor,
+                        newAt: card.lastStatementAt,
+                      );
                       await repo.update(AccountsCompanion(
                         id: Value(existing.id),
                         name: Value(name),
@@ -233,6 +240,11 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                         creditLimitMinor: Value(card.creditLimitMinor),
                         lastStatementMinor: Value(card.lastStatementMinor),
                         lastStatementAt: Value(card.lastStatementAt),
+                        // The minimum due and "from SMS" note go once the statement is edited.
+                        minimumDueMinor: keepsStatement ? const Value.absent() : const Value(null),
+                        statementFromSmsAt: keepsStatement ? const Value.absent() : const Value(null),
+                        availableLimitMinor: type == 'card' ? const Value.absent() : const Value(null),
+                        availableLimitAt: type == 'card' ? const Value.absent() : const Value(null),
                       ));
                     }
                     // A card with a due date gets a due reminder with alerts:

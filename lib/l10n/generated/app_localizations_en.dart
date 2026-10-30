@@ -4511,4 +4511,125 @@ class AppLocalizationsEn extends AppLocalizations {
   String widgetLastMonth(String month, String amount) {
     return '$month: $amount';
   }
+
+  @override
+  String get scheduledBackupTitle => 'Scheduled backup';
+
+  @override
+  String get scheduledBackupOff =>
+      'Off · back up on its own to a folder you choose';
+
+  @override
+  String scheduledBackupSummary(String frequency, String status) {
+    return '$frequency · $status';
+  }
+
+  @override
+  String get backupFrequency => 'How often';
+
+  @override
+  String get backupFrequencyOff => 'Off';
+
+  @override
+  String get backupFrequencyDaily => 'Daily';
+
+  @override
+  String get backupFrequencyWeekly => 'Weekly';
+
+  @override
+  String get backupFrequencyMonthly => 'Monthly';
+
+  @override
+  String get backupFolder => 'Folder';
+
+  @override
+  String get backupFolderNotChosen => 'Choose a folder';
+
+  @override
+  String get backupFolderHelp =>
+      'Any folder on this phone or a synced one, such as Drive, OneDrive or an SD card';
+
+  @override
+  String get backupsKept => 'Backups to keep';
+
+  @override
+  String backupsKeptValue(int count) {
+    return 'Last $count';
+  }
+
+  @override
+  String get backupsKeptHelp =>
+      'Older Hisab backups in this folder are deleted; other files are never touched';
+
+  @override
+  String get backupIncludeDrive => 'Also update the Google Drive copy';
+
+  @override
+  String get backupIncludeDriveHelp =>
+      'Replaces the Drive copy on the same schedule, when Hisab is open';
+
+  @override
+  String get backupIncludeDriveNotConnected =>
+      'Connect Back up to Google Drive first';
+
+  @override
+  String get scheduledBackupPassphraseSaved =>
+      'Saved in this phone\'s secure storage, so backups run without asking';
+
+  @override
+  String get scheduledBackupPassphraseMissing =>
+      'Not set: scheduled backups can\'t run';
+
+  @override
+  String get scheduledBackupPassphraseNote =>
+      'Scheduled backups are encrypted with this passphrase. It stays in this phone\'s secure storage so a backup can run without asking. You need it to restore, so keep a copy somewhere safe.';
+
+  @override
+  String get scheduledBackupWhenBackground =>
+      'Runs in the background once it is due (Android picks the moment, usually within a few hours) and whenever you open Hisab.';
+
+  @override
+  String get scheduledBackupWhenOnOpen =>
+      'Runs when you open Hisab and a backup is due.';
+
+  @override
+  String get scheduledBackupSaved => 'Backup saved';
+
+  @override
+  String scheduledBackupLast(String time, String place) {
+    return 'Last backup: $time, $place';
+  }
+
+  @override
+  String get scheduledBackupNone => 'No backup yet';
+
+  @override
+  String scheduledBackupFailed(String time, String reason) {
+    return 'Backup failed $time: $reason';
+  }
+
+  @override
+  String get scheduledBackupGoogleDrive => 'Google Drive';
+
+  @override
+  String get backupFailureNoPassphrase => 'no passphrase saved on this phone';
+
+  @override
+  String get backupFailureNoFolder => 'no folder chosen';
+
+  @override
+  String get backupFailureFolderUnavailable =>
+      'the folder can\'t be reached; choose it again';
+
+  @override
+  String get backupFailureSignInNeeded =>
+      'Google needs you to sign in again in Back up to Google Drive';
+
+  @override
+  String get backupFailureOffline => 'no internet connection';
+
+  @override
+  String backupFailureUnknown(String error) {
+    return '$error';
+  }
 }

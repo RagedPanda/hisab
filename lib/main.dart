@@ -5,10 +5,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'core/providers.dart';
+import 'data/backup/scheduled_backup_background.dart';
 import 'data/db/database.dart';
 import 'data/debug/demo_seed.dart';
 import 'data/settings/currency_migration.dart';
 import 'features/reminders/reminder_startup.dart';
+import 'features/settings/scheduled_backup_startup.dart';
 
 /// Debug/profile builds started with `--dart-define=HISAB_SEED_ENTRIES=300`
 /// fill the database with that many demo entries once; release ignores it.
@@ -24,5 +26,12 @@ Future<void> main() async {
     overrides: [sharedPreferencesProvider.overrideWithValue(prefs), databaseProvider.overrideWithValue(db)],
   );
   runApp(UncontrolledProviderScope(container: container, child: const HisabApp()));
-  WidgetsBinding.instance.addPostFrameCallback((_) => startReminderNotifications(container));
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    startReminderNotifications(container);
+    startScheduledBackups(container);
+  });
 }
+
+/// Entry point of the Android background backup job (ScheduledBackupJob.kt).
+@pragma('vm:entry-point')
+Future<void> scheduledBackupMain() => runScheduledBackupInBackground();

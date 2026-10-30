@@ -12,6 +12,7 @@ import '../../core/providers.dart';
 import '../../core/settings.dart';
 import '../../data/db/database.dart';
 import '../../domain/accounts/default_account.dart';
+import '../../domain/backup/backup_file_name.dart';
 import '../../domain/currency/currency_lookup.dart';
 import '../currency/currency_picker.dart';
 import '../../l10n/l10n.dart';
@@ -27,6 +28,8 @@ import '../shortcuts/shortcuts_screen.dart';
 import 'backup_actions.dart';
 import 'drive_backup_providers.dart';
 import 'drive_backup_screen.dart';
+import 'scheduled_backup_providers.dart';
+import 'scheduled_backup_screen.dart';
 import 'erase_data.dart';
 import 'made_with_love.dart';
 
@@ -218,6 +221,14 @@ class SettingsScreen extends ConsumerWidget {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push(kDriveBackupLocation),
                 ),
+              ListTile(
+                key: const Key('scheduledBackupTile'),
+                leading: const Icon(Icons.schedule),
+                title: Text(l10n.scheduledBackupTitle),
+                subtitle: Text(scheduledBackupSummary(l10n, ref.watch(scheduledBackupChoicesProvider), ref.watch(scheduledBackupHistoryProvider), locale: Localizations.localeOf(context).toString())),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(kScheduledBackupLocation),
+              ),
             ]),
           ),
           const SizedBox(height: 12),
@@ -354,8 +365,7 @@ class SettingsScreen extends ConsumerWidget {
       numberFormat: ref.read(settingsProvider).numberFormat,
     );
     final dir = await getTemporaryDirectory();
-    final stamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
-    final file = File('${dir.path}/hisab-backup-$stamp.hisab');
+    final file = File('${dir.path}/${backupFileName(DateTime.now())}');
     await file.writeAsBytes(bytes, flush: true);
     await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], text: l10n.backupShareSubject));
   }

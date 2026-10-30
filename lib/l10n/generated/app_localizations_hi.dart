@@ -4481,4 +4481,126 @@ class AppLocalizationsHi extends AppLocalizations {
   String widgetLastMonth(String month, String amount) {
     return '$month: $amount';
   }
+
+  @override
+  String get scheduledBackupTitle => 'तय समय पर बैकअप';
+
+  @override
+  String get scheduledBackupOff =>
+      'बंद · अपने चुने फ़ोल्डर में अपने-आप बैकअप लें';
+
+  @override
+  String scheduledBackupSummary(String frequency, String status) {
+    return '$frequency · $status';
+  }
+
+  @override
+  String get backupFrequency => 'कितनी बार';
+
+  @override
+  String get backupFrequencyOff => 'बंद';
+
+  @override
+  String get backupFrequencyDaily => 'रोज़';
+
+  @override
+  String get backupFrequencyWeekly => 'हर हफ़्ते';
+
+  @override
+  String get backupFrequencyMonthly => 'हर महीने';
+
+  @override
+  String get backupFolder => 'फ़ोल्डर';
+
+  @override
+  String get backupFolderNotChosen => 'फ़ोल्डर चुनें';
+
+  @override
+  String get backupFolderHelp =>
+      'इस फ़ोन का कोई भी फ़ोल्डर या सिंक होने वाला फ़ोल्डर, जैसे Drive, OneDrive या SD कार्ड';
+
+  @override
+  String get backupsKept => 'कितने बैकअप रखें';
+
+  @override
+  String backupsKeptValue(int count) {
+    return 'पिछले $count';
+  }
+
+  @override
+  String get backupsKeptHelp =>
+      'इस फ़ोल्डर के पुराने हिसाब बैकअप हटा दिए जाते हैं; बाकी फ़ाइलों को छुआ नहीं जाता';
+
+  @override
+  String get backupIncludeDrive => 'Google Drive की कॉपी भी अपडेट करें';
+
+  @override
+  String get backupIncludeDriveHelp =>
+      'हिसाब खुला होने पर उसी समय Drive की कॉपी बदल देता है';
+
+  @override
+  String get backupIncludeDriveNotConnected =>
+      'पहले Google Drive पर बैकअप जोड़ें';
+
+  @override
+  String get scheduledBackupPassphraseSaved =>
+      'इस फ़ोन के सुरक्षित स्टोरेज में सहेजा गया, ताकि बैकअप बिना पूछे चले';
+
+  @override
+  String get scheduledBackupPassphraseMissing =>
+      'सेट नहीं है: तय समय पर बैकअप नहीं चल सकता';
+
+  @override
+  String get scheduledBackupPassphraseNote =>
+      'तय समय वाले बैकअप इसी पासफ़्रेज़ से एन्क्रिप्ट होते हैं। यह इस फ़ोन के सुरक्षित स्टोरेज में रहता है ताकि बैकअप बिना पूछे चल सके। वापस लाने के लिए यही चाहिए होगा, इसलिए इसे कहीं सुरक्षित लिख लें।';
+
+  @override
+  String get scheduledBackupWhenBackground =>
+      'समय होने पर बैकग्राउंड में चलता है (सही पल Android चुनता है, आम तौर पर कुछ घंटों में) और जब भी आप हिसाब खोलें।';
+
+  @override
+  String get scheduledBackupWhenOnOpen =>
+      'बैकअप का समय होने पर हिसाब खोलते ही चलता है।';
+
+  @override
+  String get scheduledBackupSaved => 'बैकअप सहेजा गया';
+
+  @override
+  String scheduledBackupLast(String time, String place) {
+    return 'पिछला बैकअप: $time, $place';
+  }
+
+  @override
+  String get scheduledBackupNone => 'अभी तक कोई बैकअप नहीं';
+
+  @override
+  String scheduledBackupFailed(String time, String reason) {
+    return 'बैकअप नहीं हुआ $time: $reason';
+  }
+
+  @override
+  String get scheduledBackupGoogleDrive => 'Google Drive';
+
+  @override
+  String get backupFailureNoPassphrase =>
+      'इस फ़ोन पर कोई पासफ़्रेज़ सहेजा नहीं है';
+
+  @override
+  String get backupFailureNoFolder => 'कोई फ़ोल्डर नहीं चुना';
+
+  @override
+  String get backupFailureFolderUnavailable =>
+      'फ़ोल्डर तक पहुँच नहीं; उसे फिर से चुनें';
+
+  @override
+  String get backupFailureSignInNeeded =>
+      'Google Drive पर बैकअप लें में जाकर फिर से साइन इन करें';
+
+  @override
+  String get backupFailureOffline => 'इंटरनेट कनेक्शन नहीं है';
+
+  @override
+  String backupFailureUnknown(String error) {
+    return '$error';
+  }
 }

@@ -7,6 +7,7 @@ import '../../core/dates.dart';
 import '../../data/db/database.dart';
 import '../sms/card_sms.dart';
 import 'card_cycle.dart';
+import 'card_summary.dart';
 
 /// The statement columns of a card account after a statement SMS.
 class CardStatementFields {
@@ -72,6 +73,23 @@ CardStatementFields? cardStatementFromSms(
     statementDay: statementDay ?? statement.statementDate?.day,
   );
 }
+
+/// Whether a statement read from SMS at [receivedAt] sets the card's
+/// outstanding, the way a bank SMS sets a bank balance: when no balance is on
+/// record ([hasCardBalanceOnRecord]) or the one on record is not newer. A
+/// balance moved only by entries (no date) is left alone.
+bool takesSmsStatementBalance({required int balanceMinor, DateTime? balanceAsOf, required DateTime receivedAt}) =>
+    balanceAsOf == null ? !hasCardBalanceOnRecord(balanceMinor: balanceMinor) : !receivedAt.isBefore(balanceAsOf);
+
+/// Whether [card]'s balance is still the one its SMS statement set (stamped
+/// with the statement's arrival), so bill payments read from SMS later bring
+/// it down. Editing the balance or the statement by hand ends this.
+bool balanceFollowsSmsStatement(Account card) =>
+    card.lastStatementMinor != null &&
+    card.lastStatementAt != null &&
+    card.statementFromSmsAt != null &&
+    card.balanceAsOf != null &&
+    card.balanceAsOf!.isAtSameMomentAs(card.statementFromSmsAt!);
 
 /// Whether an available limit reported at [reportedAt] replaces the one
 /// stored at [storedAt]: only a newer report does.

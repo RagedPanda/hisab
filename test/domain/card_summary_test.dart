@@ -255,4 +255,47 @@ void main() {
       expect(lastStatementExceedsAmountDue(lastStatementMinor: 600000, previousStatementMinor: 500000, amountDueMinor: 200000, paidSinceStatementMinor: 300000), isTrue);
     });
   });
+
+  group('balanceSinceStatementMinor', () {
+    final statementAt = DateTime(2026, 10, 12);
+
+    test('is the statement less payments since, plus spend after the statement day', () {
+      final movements = [
+        move('expense', 10000, DateTime(2026, 10, 12, 18), from: card),
+        move('transfer', 500000, DateTime(2026, 10, 20), from: bank, to: card),
+        move('expense', 20000, DateTime(2026, 10, 21), from: card),
+        move('income', 5000, DateTime(2026, 10, 22), to: card),
+      ];
+      expect(balanceSinceStatementMinor(cardId: card, statementMinor: 2000000, statementAt: statementAt, movements: movements), -(2000000 - 500000 + 20000));
+    });
+
+    test('a bill paid beyond what is owed leaves credit', () {
+      final movements = [move('transfer', 2100000, DateTime(2026, 10, 20), from: bank, to: card)];
+      expect(balanceSinceStatementMinor(cardId: card, statementMinor: 2000000, statementAt: statementAt, movements: movements), 100000);
+    });
+  });
+
+  group('cardBalanceFromForm', () {
+    final statementAt = DateTime(2026, 10, 12);
+    final paid = [move('transfer', 50000, DateTime(2026, 10, 20), from: bank, to: card)];
+
+    test('an amount due left at 0 with none on record follows the statement', () {
+      expect(
+        cardBalanceFromForm(cardId: card, enteredBalanceMinor: 0, hasBalanceOnRecord: false, lastStatementMinor: 150000, lastStatementAt: statementAt, movements: paid),
+        -100000,
+      );
+    });
+
+    test('keeps what was entered or is on record', () {
+      expect(cardBalanceFromForm(cardId: card, enteredBalanceMinor: -40000, hasBalanceOnRecord: false, lastStatementMinor: 150000, lastStatementAt: statementAt), -40000);
+      expect(cardBalanceFromForm(cardId: card, enteredBalanceMinor: 0, hasBalanceOnRecord: true, lastStatementMinor: 150000, lastStatementAt: statementAt), 0);
+      expect(cardBalanceFromForm(cardId: card, enteredBalanceMinor: 0, hasBalanceOnRecord: false), 0);
+    });
+  });
+
+  test('hasCardBalanceOnRecord', () {
+    expect(hasCardBalanceOnRecord(balanceMinor: 0), isFalse);
+    expect(hasCardBalanceOnRecord(balanceMinor: 0, balanceAsOf: DateTime(2026, 10, 1)), isTrue);
+    expect(hasCardBalanceOnRecord(balanceMinor: -100), isTrue);
+  });
 }

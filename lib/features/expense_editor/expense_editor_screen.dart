@@ -37,6 +37,7 @@ import '../../domain/split/item_split.dart';
 import '../../domain/split/payers.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../domain/split/split_this.dart';
+import '../../domain/udhaar/udhaar.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../accounts/account_picker_tile.dart';
@@ -50,6 +51,7 @@ import '../shell/widgets/common.dart';
 import '../split/item_assign_strip.dart';
 import '../split/payers_editor.dart';
 import '../split/split_editor.dart';
+import '../udhaar/udhaar_routes.dart';
 import 'calculator_sheet.dart';
 import 'editor_draft.dart';
 import 'item_row.dart';
@@ -306,6 +308,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       final details = await ref.read(entriesRepositoryProvider).getEntry(sourceId);
       if (details != null) {
         final entry = details.entry;
+        if (UdhaarKind.parse(entry.udhaarKind) case final udhaarKind?) {
+          if (mounted) context.pushReplacement(udhaarEditorLocation(entry, udhaarKind, asCopy: asCopy));
+          return;
+        }
         _kind = entry.kind;
         _amountController.text = amountInputText(entry.amountMinor, format: _moneyFormat);
         _noteController.text = entry.note;
@@ -820,6 +826,19 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                 accounts: accounts.where((a) => a.id != _accountId).toList(),
                 selectedId: _toAccountId,
                 onPick: (id) => setState(() => _toAccountId = id),
+              ),
+            if (_kind == 'transfer' && _existingId == null)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  key: const ValueKey('editor.udhaar'),
+                  icon: const Icon(Icons.handshake_outlined),
+                  label: Text(l10n.udhaarFromEditor),
+                  onPressed: () => context.pushReplacement(udhaarEntryLocation(
+                    amountMinor: parseAmountToMinor(_amountController.text, format: _moneyFormat),
+                    accountId: _accountId,
+                  )),
+                ),
               ),
           ],
           const SizedBox(height: 8),

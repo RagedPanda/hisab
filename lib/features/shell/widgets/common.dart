@@ -10,8 +10,10 @@ import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../data/repositories/entries_repository.dart';
 import '../../../domain/split/group_timeline.dart';
+import '../../../domain/udhaar/udhaar.dart';
 import '../../../l10n/category_names.dart';
 import '../../../l10n/l10n.dart';
+import '../../udhaar/udhaar_labels.dart';
 
 /// Rounded tile with a coloured icon, used for categories, accounts and groups.
 class IconBadge extends StatelessWidget {
@@ -68,15 +70,18 @@ class EntryTile extends StatelessWidget {
     final entry = details.entry;
     final category = details.category;
     final categoryName = category?.displayName(context);
-    final title = entry.payee?.isNotEmpty == true
+    final udhaarKind = UdhaarKind.parse(entry.udhaarKind);
+    final title = udhaarKind != null
+        ? udhaarEntryTitle(l10n, udhaarKind, entry.payee ?? '')
+        : entry.payee?.isNotEmpty == true
         ? entry.payee!
         : entry.note.isNotEmpty
             ? entry.note
             : categoryName ?? (entry.kind == 'transfer' ? l10n.kindTransfer : l10n.uncategorised);
     final locale = Localizations.localeOf(context).toString();
-    final accountLabel = entry.kind == 'transfer' && details.toAccount != null
-        ? l10n.transferArrow(details.account?.name ?? '', details.toAccount!.name)
-        : details.account?.name;
+    final accountLabel = entry.kind == 'transfer' && details.account != null && details.toAccount != null
+        ? l10n.transferArrow(details.account!.name, details.toAccount!.name)
+        : details.account?.name ?? details.toAccount?.name;
     // Line 2 keeps the context; the date moves under the amount so it never gets truncated away (P2-5, P2-22).
     final subtitleParts = <String>[
       if (categoryName != null && title != categoryName) categoryName,

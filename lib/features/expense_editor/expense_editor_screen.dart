@@ -37,6 +37,7 @@ import '../../domain/split/item_split.dart';
 import '../../domain/split/payers.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../domain/split/split_this.dart';
+import '../../domain/sms/card_sms.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../accounts/account_picker_tile.dart';
@@ -533,7 +534,15 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     _category = await ref.read(smsIngestServiceProvider).rememberedCategoryFor(kind: _kind, counterparty: parsed['counterparty'] as String?);
     if (_category == null && categoryKey != null) _category = await ref.read(categoriesRepositoryProvider).findBySeedKey(categoryKey);
     final accountKey = parsed['accountKey'] as String?;
-    if (accountKey != null) _accountId = (await ref.read(accountsRepositoryProvider).findBySmsKey(accountKey))?.id;
+    final smsAccountId = accountKey == null ? null : (await ref.read(accountsRepositoryProvider).findBySmsKey(accountKey))?.id;
+    if (isCardPaymentPayload(parsed)) {
+      // A card bill payment: a transfer from the default account into the card.
+      _kind = 'transfer';
+      _category = null;
+      _toAccountId = (parsed['accountId'] as String?) ?? smsAccountId;
+      return;
+    }
+    if (accountKey != null) _accountId = smsAccountId;
   }
 
   Future<void> _prefillFromReminder(String reminderId) async {

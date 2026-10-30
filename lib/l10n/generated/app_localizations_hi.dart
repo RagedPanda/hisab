@@ -4481,4 +4481,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String widgetLastMonth(String month, String amount) {
     return '$month: $amount';
   }
+
+  @override
+  String cardFromSms(String date) {
+    return 'SMS से, $date';
+  }
+
+  @override
+  String cardMinimumDue(String amount) {
+    return 'न्यूनतम देय $amount';
+  }
+
+  @override
+  String cardSmsAvailableLimit(String amount, String date) {
+    return '$amount लिमिट बची, SMS से, $date';
+  }
+
+  @override
+  String get smsCardUpdated => 'कार्ड की जानकारी अपडेट हुई।';
 }

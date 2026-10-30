@@ -7195,6 +7195,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{month}: {amount}'**
   String widgetLastMonth(String month, String amount);
+
+  /// No description provided for @cardFromSms.
+  ///
+  /// In en, this message translates to:
+  /// **'From SMS, {date}'**
+  String cardFromSms(String date);
+
+  /// No description provided for @cardMinimumDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum due {amount}'**
+  String cardMinimumDue(String amount);
+
+  /// No description provided for @cardSmsAvailableLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} available, from SMS, {date}'**
+  String cardSmsAvailableLimit(String amount, String date);
+
+  /// No description provided for @smsCardUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Card details updated.'**
+  String get smsCardUpdated;
 }
 
 class _AppLocalizationsDelegate

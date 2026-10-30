@@ -9,6 +9,7 @@ import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../data/db/database.dart';
 import '../../../data/repositories/payee_category_repository.dart';
+import '../../../domain/sms/card_sms.dart';
 import '../../../domain/sms/payee_category_memory.dart';
 import '../../../domain/sms/payee_normaliser.dart';
 import '../../categories/category_picker.dart';
@@ -63,7 +64,7 @@ class SmsReviewCard extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (parsed != null) AmountText(amount, kind: isDebit ? 'expense' : 'income'),
+              if (parsed != null) AmountText(amount, kind: isCardPaymentPayload(parsed) ? 'transfer' : (isDebit ? 'expense' : 'income')),
             ]),
             const SizedBox(height: 4),
             Text(

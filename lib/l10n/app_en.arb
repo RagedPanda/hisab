@@ -1562,5 +1562,12 @@
   "widgetBackgroundValue": "{percent}% opaque",
   "@widgetBackgroundValue": {"placeholders": {"percent": {"type": "int"}}},
   "widgetLastMonth": "{month}: {amount}",
-  "@widgetLastMonth": {"placeholders": {"month": {"type": "String"}, "amount": {"type": "String"}}}
+  "@widgetLastMonth": {"placeholders": {"month": {"type": "String"}, "amount": {"type": "String"}}},
+  "cardFromSms": "From SMS, {date}",
+  "@cardFromSms": {"placeholders": {"date": {"type": "String"}}},
+  "cardMinimumDue": "Minimum due {amount}",
+  "@cardMinimumDue": {"placeholders": {"amount": {"type": "String"}}},
+  "cardSmsAvailableLimit": "{amount} available, from SMS, {date}",
+  "@cardSmsAvailableLimit": {"placeholders": {"amount": {"type": "String"}, "date": {"type": "String"}}},
+  "smsCardUpdated": "Card details updated."
 }

@@ -1225,5 +1225,9 @@
   "homeScreenWidgetManual": "होम स्क्रीन पर किसी खाली जगह को दबाकर रखें, विजेट पर टैप करें और हिसाब चुनें।",
   "widgetBackground": "विजेट बैकग्राउंड",
   "widgetBackgroundValue": "{percent}% अपारदर्शी",
-  "widgetLastMonth": "{month}: {amount}"
+  "widgetLastMonth": "{month}: {amount}",
+  "cardFromSms": "SMS से, {date}",
+  "cardMinimumDue": "न्यूनतम देय {amount}",
+  "cardSmsAvailableLimit": "{amount} लिमिट बची, SMS से, {date}",
+  "smsCardUpdated": "कार्ड की जानकारी अपडेट हुई।"
 }

@@ -65,6 +65,7 @@ SmsIngestService buildSmsIngestService(AppDatabase db, AppSettings settings, Sha
       reminders: ReminderPaymentAdapter(reminders: RemindersRepository(db), scheduler: scheduler, accounts: accounts),
     ),
     payeeCategories: PayeeCategoryRepository(db),
+    defaultAccountId: () => settings.defaultAccountId,
   );
 }
 

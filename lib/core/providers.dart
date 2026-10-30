@@ -201,6 +201,7 @@ final smsIngestServiceProvider = Provider((ref) => SmsIngestService(
       homeCurrencyCode: () => ref.read(homeCurrencyCodeProvider),
       reminderLinker: ref.watch(smsReminderLinkerProvider),
       payeeCategories: ref.watch(payeeCategoryRepositoryProvider),
+      defaultAccountId: () => ref.read(settingsProvider).defaultAccountId,
     ));
 
 /// Marks a pending reminder paid when an SMS entry matches it (R2).

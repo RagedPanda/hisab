@@ -4698,4 +4698,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get appLockLockedOut =>
       'बहुत ज़्यादा कोशिशें हुईं। थोड़ी देर बाद फिर कोशिश करें।';
+
+  @override
+  String get cardLast4 => 'आख़िरी 4 अंक';
+
+  @override
+  String get cardLast4Invalid => 'ठीक 4 अंक डालें, या इसे ख़ाली छोड़ दें।';
 }

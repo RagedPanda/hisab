@@ -4725,4 +4725,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appLockLockedOut => 'Too many tries. Wait a little and try again.';
+
+  @override
+  String get cardLast4 => 'Last 4 digits';
+
+  @override
+  String get cardLast4Invalid => 'Enter 4 digits, or leave it empty.';
 }

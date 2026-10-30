@@ -123,6 +123,28 @@ void main() {
     expect(tester.testTextInput.isVisible, isTrue, reason: 'the amount takes focus once unlocked');
   });
 
+  testWidgets('an editor locked while open gets its keypad back once the window is in front again', (tester) async {
+    final auth = FakeAuthenticator(results: [AppAuthResult.unlocked]);
+    await start(tester, auth, preferences: lockOn());
+    await settle(tester, 4);
+    appRouter.go('/entry?kind=expense');
+    await settle(tester);
+    expect(tester.testTextInput.isVisible, isTrue);
+
+    auth.hold = true;
+    await leave(tester);
+    await comeBack(tester, const Duration(minutes: 3));
+    expect(lockScreen, findsOneWidget);
+    // The system prompt covers the window: Flutter reads inactive until it closes.
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    auth.pending!.complete(AppAuthResult.unlocked);
+    await settle(tester, 4);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await settle(tester, 4);
+    expect(find.text('New entry'), findsOneWidget);
+    expect(tester.testTextInput.isVisible, isTrue);
+  });
+
   testWidgets('typed input survives a lock', (tester) async {
     final auth = FakeAuthenticator(results: [AppAuthResult.unlocked, AppAuthResult.unlocked]);
     await start(tester, auth, preferences: lockOn());

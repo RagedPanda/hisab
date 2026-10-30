@@ -9,6 +9,7 @@ import '../reminders/reminder_actions.dart';
 import '../salary/salary_providers.dart';
 import '../salary/salary_reminder.dart' show kSalaryLocation;
 import '../shell/widgets/common.dart';
+import '../shortcuts/launcher_sync.dart' show launcherChannelProvider;
 import 'notification_settings_actions.dart';
 
 const String kNotificationSettingsLocation = '/notifications';
@@ -19,6 +20,7 @@ const String kNotificationSettingsLocation = '/notifications';
       NotificationKind.salary => (title: l10n.notifKindSalary, help: l10n.notifKindSalaryHelp, icon: Icons.payments_outlined),
       NotificationKind.bankSms => (title: l10n.notifKindBankSms, help: l10n.notifKindBankSmsHelp, icon: Icons.sms_outlined),
       NotificationKind.eveningSummary => (title: l10n.notifKindEveningSummary, help: l10n.notifKindEveningSummaryHelp, icon: Icons.nights_stay_outlined),
+      NotificationKind.addExpenseShortcut => (title: l10n.addExpenseNotification, help: l10n.addExpenseNotificationHint, icon: Icons.add_circle_outline),
     };
 
 /// Settings > Notifications: a switch per kind, each with a sample.
@@ -29,6 +31,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final allowed = ref.watch(notificationPermissionProvider).value?.notificationsAllowed;
+    final kinds = notificationKindsShown(launcherSupported: ref.watch(launcherChannelProvider).isSupported);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notificationsTitle)),
       body: ListView(
@@ -44,7 +47,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 trailing: TextButton(onPressed: () => turnOnReminderNotifications(context), child: Text(l10n.notificationsAllow)),
               ),
             ),
-          for (final kind in NotificationKind.values) _KindCard(kind),
+          for (final kind in kinds) _KindCard(kind),
         ],
       ),
     );
@@ -121,7 +124,7 @@ class _KindCard extends ConsumerWidget {
       MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay(hour: minute ~/ 60, minute: minute % 60), alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context));
 }
 
-/// Settings > Automation row: "2 of 4 on".
+/// Settings > Automation row: "2 of 5 on".
 class NotificationsSettingsTile extends ConsumerWidget {
   const NotificationsSettingsTile({super.key});
 
@@ -130,12 +133,13 @@ class NotificationsSettingsTile extends ConsumerWidget {
     final l10n = context.l10n;
     final choices = ref.watch(notificationPrefsProvider).choices;
     final facts = notificationFactsOf(ref);
-    final on = NotificationKind.values.where((kind) => notificationKindOn(kind, choices: choices, facts: facts)).length;
+    final kinds = notificationKindsShown(launcherSupported: ref.watch(launcherChannelProvider).isSupported);
+    final on = kinds.where((kind) => notificationKindOn(kind, choices: choices, facts: facts)).length;
     return ListTile(
       key: const Key('settingsNotifications'),
       leading: const Icon(Icons.notifications_outlined),
       title: Text(l10n.notificationsTitle),
-      subtitle: Text(l10n.notificationsSettingsSubtitle(on, NotificationKind.values.length)),
+      subtitle: Text(l10n.notificationsSettingsSubtitle(on, kinds.length)),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => context.push(kNotificationSettingsLocation),
     );

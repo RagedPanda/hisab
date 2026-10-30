@@ -40,7 +40,7 @@ class RecordingNotificationGateway implements NotificationGateway {
   }
 
   @override
-  Future<void> show(AlertRequest request) => _delegate.show(request);
+  Future<void> show(ShownAlert alert) => _delegate.show(alert);
 
   @override
   Future<void> cancel(int id) {

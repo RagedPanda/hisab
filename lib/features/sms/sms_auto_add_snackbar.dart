@@ -8,6 +8,7 @@ import '../../core/providers.dart';
 import '../../data/sms/sms_ingest_service.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import 'sms_entry_notifier.dart';
 
 /// How long the Undo for an automatic SMS add stays on screen.
 const kSmsUndoWindow = Duration(seconds: 5);
@@ -16,8 +17,9 @@ const kSmsUndoWindow = Duration(seconds: 5);
 /// share one snackbar and one Undo.
 const kSmsAutoAddBatchWindow = Duration(milliseconds: 600);
 
-/// While the app is open, announces every entry added from an SMS with a
-/// short snackbar that offers Undo.
+/// Announces every entry added from an SMS: with a short snackbar that
+/// offers Undo while the app is on screen, otherwise with a notification
+/// that offers Change category and Undo.
 class SmsAutoAddSnackbar extends ConsumerStatefulWidget {
   const SmsAutoAddSnackbar({super.key, required this.child});
   final Widget child;
@@ -45,6 +47,10 @@ class _SmsAutoAddSnackbarState extends ConsumerState<SmsAutoAddSnackbar> {
   }
 
   void _onAutoAdded(SmsAutoAdded added) {
+    if (announcesInNotification(WidgetsBinding.instance.lifecycleState)) {
+      unawaited(ref.read(smsEntryNotifierProvider).notify(added));
+      return;
+    }
     _batch.add(added);
     _batchTimer?.cancel();
     _batchTimer = Timer(kSmsAutoAddBatchWindow, _announceBatch);

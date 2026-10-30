@@ -14,7 +14,10 @@ class FakeNotificationGateway implements NotificationGateway {
   final List<int> cancelled = [];
 
   /// Posted at once through [show], oldest first.
-  final List<AlertRequest> shown = [];
+  final List<ShownAlert> shown = [];
+
+  /// SMS entry notifications still on screen, by id (replaced by id, removed by [cancel]).
+  final Map<int, SmsEntryAlert> smsEntries = {};
   int permissionRequests = 0;
   NotificationTap? launch;
 
@@ -42,12 +45,16 @@ class FakeNotificationGateway implements NotificationGateway {
   }
 
   @override
-  Future<void> show(AlertRequest request) async => shown.add(request);
+  Future<void> show(ShownAlert alert) async {
+    shown.add(alert);
+    if (alert is SmsEntryAlert) smsEntries[alert.id] = alert;
+  }
 
   @override
   Future<void> cancel(int id) async {
     cancelled.add(id);
     scheduled.remove(id);
+    smsEntries.remove(id);
   }
 
   @override

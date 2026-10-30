@@ -4,9 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/notifications/notification_gateway.dart';
 import 'package:hisab/core/notifications/plugin_notification_gateway.dart';
 import 'package:hisab/core/notifications/reminder_payload.dart';
+import 'package:hisab/core/notifications/sms_entry_payload.dart';
 import 'package:timezone/timezone.dart' as tz;
 
-const _texts = NotificationSetupTexts(channelName: 'Reminders', channelDescription: 'Bills and documents', markPaidLabel: 'Mark paid', doneLabel: 'Done', snoozeLabel: 'Snooze 1 day');
+const _texts = NotificationSetupTexts(channelName: 'Reminders', channelDescription: 'Bills and documents', markPaidLabel: 'Mark paid', doneLabel: 'Done', snoozeLabel: 'Snooze 1 day', smsChannelName: 'Added from SMS', smsChannelDescription: 'Entries added from bank SMS');
 
 /// Android side of the plugin: answers permission questions and records the
 /// channel it was asked to create.
@@ -73,11 +74,7 @@ class FakeNotificationsPlugin implements FlutterLocalNotificationsPlugin {
   DidReceiveBackgroundNotificationResponseCallback? onBackgroundResponse;
   final List<({int id, String? title, String? payload, tz.TZDateTime scheduledDate, NotificationDetails details, AndroidScheduleMode mode})> scheduled = [];
   final List<int> cancelled = [];
-  final List<({int id, String? title, NotificationDetails? details})> shown = [];
-
-  @override
-  Future<void> show({required int id, String? title, String? body, NotificationDetails? notificationDetails, String? payload}) async =>
-      shown.add((id: id, title: title, details: notificationDetails));
+  final List<({int id, String? title, String? body, String? payload, NotificationDetails? details})> shown = [];
 
   @override
   T? resolvePlatformSpecificImplementation<T extends FlutterLocalNotificationsPlatform>() {
@@ -113,6 +110,10 @@ class FakeNotificationsPlugin implements FlutterLocalNotificationsPlugin {
     DateTimeComponents? matchDateTimeComponents,
   }) async =>
       scheduled.add((id: id, title: title, payload: payload, scheduledDate: scheduledDate, details: notificationDetails, mode: androidScheduleMode));
+
+  @override
+  Future<void> show({required int id, String? title, String? body, NotificationDetails? notificationDetails, String? payload}) async =>
+      shown.add((id: id, title: title, body: body, payload: payload, details: notificationDetails));
 
   @override
   Future<void> cancel({required int id, String? tag}) async => cancelled.add(id);
@@ -266,6 +267,29 @@ void main() {
     expect(android.channelName, 'Reminders', reason: 'falls back to the reminders channel name when none is given');
     expect(android.actions, isNull);
     expect(plugin.scheduled, isEmpty);
+  });
+
+  test('an SMS entry shows at once on its own channel with Change category (opens the app) and Undo', () async {
+    final plugin = FakeNotificationsPlugin();
+    final payload = smsEntryPayload(smsId: 's1', entryId: 'e1');
+    await PluginNotificationGateway(_texts, plugin: plugin).show(SmsEntryAlert(
+      id: 7,
+      title: 'Added ₹459 from SMS',
+      body: 'Swiggy · Food · HDFC',
+      payload: payload,
+      changeCategoryLabel: 'Change category',
+      undoLabel: 'Undo',
+    ));
+
+    final posted = plugin.shown.single;
+    expect((posted.id, posted.title, posted.body, posted.payload), (7, 'Added ₹459 from SMS', 'Swiggy · Food · HDFC', payload));
+    final android = posted.details!.android!;
+    expect(android.channelId, kSmsEntryChannelId);
+    expect(android.channelName, 'Added from SMS');
+    expect(android.actions!.map((action) => (action.id, action.title, action.showsUserInterface)), [
+      (kSmsChangeCategoryActionId, 'Change category', true),
+      (kSmsUndoActionId, 'Undo', false),
+    ]);
   });
 
   test('cancel and pending pass through to the plugin', () async {

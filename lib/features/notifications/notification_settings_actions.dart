@@ -8,6 +8,8 @@ import '../../domain/notifications/notification_kinds.dart';
 import '../salary/salary_providers.dart';
 import '../salary/salary_reminder.dart';
 import '../salary/salary_setup_screen.dart' show ensureSalaryNotificationPermission;
+import '../shortcuts/add_expense_notification_toggle.dart';
+import '../shortcuts/shortcut_settings.dart';
 import 'evening_summary_service.dart';
 import 'notification_texts.dart';
 
@@ -18,14 +20,18 @@ NotificationFacts notificationFactsOf(WidgetRef ref) {
     hasReminders: (ref.watch(upcomingRemindersProvider).value ?? const []).isNotEmpty,
     salaryAlertOn: salary.isSetUp && salary.reminderEnabled,
     smsEnabled: ref.watch(settingsProvider).smsEnabled,
+    addExpenseShortcutOn: ref.watch(shortcutSettingsProvider).addExpenseNotification,
   );
 }
 
 /// Turns [kind] on or off and brings what is posted in line straight away.
 /// Turning one on asks for the notification permission when it is missing.
 Future<void> setNotificationKind(WidgetRef ref, NotificationKind kind, bool on) async {
-  if (on) await ensureSalaryNotificationPermission(ref);
+  // The Add expense shortcut asks itself, and stays off without access.
+  if (on && kind != NotificationKind.addExpenseShortcut) await ensureSalaryNotificationPermission(ref);
   switch (kind) {
+    case NotificationKind.addExpenseShortcut:
+      await setAddExpenseNotification(ref, on);
     case NotificationKind.salary:
       final salary = ref.read(salarySettingsProvider);
       await ref.read(salarySettingsProvider.notifier).save(salary.copyWith(reminderEnabled: on));

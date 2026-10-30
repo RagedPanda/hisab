@@ -178,6 +178,14 @@ class _TodayPill extends StatelessWidget {
   }
 }
 
+/// "▲ 12% vs Sep", "▼ 5% vs Sep" or "Same as Sep"; also on the Home-screen
+/// widget.
+String vsLastMonthText(AppLocalizations l10n, int percent, String month) => percent > 0
+    ? l10n.vsLastMonthUp(percent, month)
+    : percent < 0
+        ? l10n.vsLastMonthDown(-percent, month)
+        : l10n.vsLastMonthSame(month);
+
 class _ComparisonPill extends StatelessWidget {
   const _ComparisonPill({required this.percent, required this.previousRange, required this.foreground});
   final int percent;
@@ -188,11 +196,7 @@ class _ComparisonPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final month = formatMonthName(previousRange, locale: Localizations.localeOf(context).toString(), short: true);
-    final text = percent > 0
-        ? l10n.vsLastMonthUp(percent, month)
-        : percent < 0
-            ? l10n.vsLastMonthDown(-percent, month)
-            : l10n.vsLastMonthSame(month);
+    final text = vsLastMonthText(l10n, percent, month);
     // A plain fact, not a verdict: the pill is never tinted good or bad.
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

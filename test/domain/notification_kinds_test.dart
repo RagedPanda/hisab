@@ -25,6 +25,12 @@ void main() {
       expect(on(NotificationKind.salary, facts: const NotificationFacts()), isFalse);
     });
 
+    test('the Add expense shortcut follows its own setting on Shortcuts & widget', () {
+      expect(on(NotificationKind.addExpenseShortcut, facts: const NotificationFacts(addExpenseShortcutOn: true)), isTrue);
+      const everythingElse = NotificationFacts(hasReminders: true, salaryAlertOn: true, smsEnabled: true);
+      expect(on(NotificationKind.addExpenseShortcut, facts: everythingElse), isFalse);
+    });
+
     test('the evening summary is new, so it stays off whatever else is set up', () {
       const everything = NotificationFacts(hasReminders: true, salaryAlertOn: true, smsEnabled: true);
       expect(on(NotificationKind.eveningSummary, facts: everything), isFalse);
@@ -45,5 +51,11 @@ void main() {
     expect(bankSmsAlertsAllowed(const {}), isTrue);
     expect(bankSmsAlertsAllowed({NotificationKind.bankSms: false}), isFalse);
     expect(bankSmsAlertsAllowed({NotificationKind.reminders: false}), isTrue);
+  });
+
+  test('the Add expense shortcut is listed only where the launcher works', () {
+    expect(notificationKindsShown(launcherSupported: true), NotificationKind.values);
+    expect(notificationKindsShown(launcherSupported: false), isNot(contains(NotificationKind.addExpenseShortcut)));
+    expect(notificationKindsShown(launcherSupported: false), hasLength(NotificationKind.values.length - 1));
   });
 }

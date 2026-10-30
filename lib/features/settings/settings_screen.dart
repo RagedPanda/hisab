@@ -22,6 +22,8 @@ import '../reminders/reminders_settings_tile.dart';
 import '../salary/salary_providers.dart';
 import '../salary/salary_reminder.dart';
 import '../shell/widgets/common.dart';
+import '../shortcuts/launcher_sync.dart' show launcherChannelProvider;
+import '../shortcuts/shortcuts_screen.dart';
 import 'backup_actions.dart';
 import 'drive_backup_providers.dart';
 import 'drive_backup_screen.dart';
@@ -166,6 +168,17 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const Card(child: RemindersSettingsTile()),
           const Card(child: NotificationsSettingsTile()),
+          if (ref.watch(launcherChannelProvider).isSupported)
+            Card(
+              child: ListTile(
+                key: const Key('settings.shortcuts'),
+                leading: const Icon(Icons.widgets_outlined),
+                title: Text(l10n.shortcutsTitle),
+                subtitle: Text(l10n.shortcutsHint, maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(kShortcutsLocation),
+              ),
+            ),
           SectionHeader(l10n.groups),
           Card(
             child: ListTile(

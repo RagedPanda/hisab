@@ -71,6 +71,7 @@ AlertRequest sampleAlertFor(
         smsAutoAdd ? l10n.smsNotificationBodyAmountAutoAdd(sampleAmount, kSampleSmsSender) : l10n.smsNotificationBodyAmount(sampleAmount, kSampleSmsSender),
       ),
     NotificationKind.eveningSummary => (l10n.eveningSummaryTitle, eveningSummaryBody(summary, l10n, moneyFormat: moneyFormat)),
+    NotificationKind.addExpenseShortcut => (l10n.addExpense, l10n.addExpenseNotificationBody),
   };
   return _plainAlert(id: sampleNotificationId(kind), title: l10n.notificationsSampleTitle(title), body: body, fireAt: now, payload: kSamplePayload);
 }

@@ -14,13 +14,13 @@
   <img alt="Android 7.0+ (API 24)" src="https://img.shields.io/badge/Android-7.0%2B%20(API%2024)-3DDC84?logo=android&logoColor=white">
   <img alt="iOS 15+" src="https://img.shields.io/badge/iOS-15%2B-000000?logo=apple&logoColor=white">
   <br>
-  <img alt="2003 tests passing" src="https://img.shields.io/badge/tests-2003%20passing-brightgreen">
-  <img alt="Line coverage 99.0%" src="https://img.shields.io/badge/coverage-99.0%25-brightgreen">
+  <img alt="2169 tests passing" src="https://img.shields.io/badge/tests-2169%20passing-brightgreen">
+  <img alt="Line coverage 98.6%" src="https://img.shields.io/badge/coverage-98.6%25-brightgreen">
   <img alt="Languages: English and Hindi" src="https://img.shields.io/badge/languages-English%20%7C%20Hindi-orange">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
 </p>
 
-<p align="center"><sub>Tests and coverage measured on 2026-10-29 with <code>flutter test --coverage</code> (line coverage of <code>lib/</code>, generated <code>*.g.dart</code> and <code>lib/l10n/generated</code> excluded).</sub></p>
+<p align="center"><sub>Tests and coverage measured on 2026-10-30 with <code>flutter test --coverage</code> (line coverage of <code>lib/</code>, generated <code>*.g.dart</code> and <code>lib/l10n/generated</code> excluded).</sub></p>
 
 ## Screenshots
 
@@ -44,6 +44,7 @@
 - 🧮 **Built-in calculator** keypad for the amount, so 450 + 120 is one step.
 - 🔁 **Repeat** any entry daily, weekly, monthly or yearly straight from the editor.
 - 🔎 **Search and filters** across payee, note, item and category, with expense / income / transfer and project filters.
+- ⚡ **Add from outside the app** on Android: a Quick Settings tile, an optional "Add expense" notification, launcher shortcuts for your top quick entries, and a Home screen widget with this month's spend vs last month.
 
 ### 📩 Bank SMS auto-tracking
 - 🏦 **Reads bank alerts on Android** (opt-in, on-device): detects debits, credits, card spends and balances from 70+ Indian bank sender IDs.

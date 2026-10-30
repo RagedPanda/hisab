@@ -17,13 +17,25 @@ enum NotificationKind {
 
   /// Once a day at a chosen time: today's spend, SMS to review, bills due soon.
   eveningSummary,
+
+  /// The persistent "Add expense" shortcut in the notification shade;
+  /// stored on Settings > Shortcuts & widget, not here.
+  addExpenseShortcut,
 }
+
+/// The kinds Settings > Notifications lists: every kind, except the
+/// persistent "Add expense" shortcut where the launcher (tile, notification,
+/// widget) is not available, i.e. off Android.
+List<NotificationKind> notificationKindsShown({required bool launcherSupported}) => [
+      for (final kind in NotificationKind.values)
+        if (kind != NotificationKind.addExpenseShortcut || launcherSupported) kind,
+    ];
 
 /// What this install already does without having been asked, so a switch
 /// the user has never touched shows (and behaves) the way Hisab worked
 /// before the switches existed.
 class NotificationFacts {
-  const NotificationFacts({this.hasReminders = false, this.salaryAlertOn = false, this.smsEnabled = false});
+  const NotificationFacts({this.hasReminders = false, this.salaryAlertOn = false, this.smsEnabled = false, this.addExpenseShortcutOn = false});
 
   /// Any pending reminder (or settle-up schedule) with alerts.
   final bool hasReminders;
@@ -33,6 +45,9 @@ class NotificationFacts {
 
   /// The user opted in to Bank SMS.
   final bool smsEnabled;
+
+  /// The persistent "Add expense" notification is on (off until turned on).
+  final bool addExpenseShortcutOn;
 }
 
 /// Whether [kind] is on, given the user's explicit [choices] (kinds absent
@@ -49,6 +64,7 @@ bool notificationKindOn(NotificationKind kind, {required Map<NotificationKind, b
       NotificationKind.salary => facts.salaryAlertOn,
       NotificationKind.bankSms => choices[kind] ?? facts.smsEnabled,
       NotificationKind.eveningSummary => choices[kind] ?? false,
+      NotificationKind.addExpenseShortcut => facts.addExpenseShortcutOn,
     };
 
 /// Whether reminder alerts may be posted: true unless the user turned the

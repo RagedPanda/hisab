@@ -330,6 +330,13 @@ class EntriesRepository {
     });
   }
 
+  /// Moves a live entry to [categoryId]; true when the entry was changed.
+  Future<bool> setCategory(String id, String categoryId) async {
+    final changed = await (db.update(db.entries)..where((t) => t.id.equals(id) & t.deletedAt.isNull()))
+        .write(EntriesCompanion(categoryId: Value(categoryId), updatedAt: Value(DateTime.now())));
+    return changed > 0;
+  }
+
   Future<void> deleteEntry(String id) {
     final now = DateTime.now();
     return db.transaction(() async {

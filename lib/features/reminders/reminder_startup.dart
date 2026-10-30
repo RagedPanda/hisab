@@ -5,6 +5,7 @@ import '../../core/notifications/alarm_timing.dart';
 import '../../core/notifications/notification_gateway.dart';
 import '../../core/notifications/reminder_payload.dart';
 import '../../core/notifications/reminder_tap_gate.dart';
+import '../../core/notifications/sms_entry_payload.dart';
 import '../../core/providers.dart';
 import '../accounts/card_reminder_sync.dart';
 import '../groups/settle_reminder_service.dart';
@@ -16,12 +17,24 @@ import '../shell/router.dart';
 final _tapGate = ReminderTapGate();
 
 /// Opens the screen a reminder notification (or its Mark paid button) points
-/// at; Snooze is applied in place without opening anything. A tap delivered
-/// twice is handled once.
+/// at; Snooze is applied in place without opening anything. An "added from
+/// SMS" notification opens its entry, or the category picker for Change
+/// category. A tap delivered twice is handled once.
 Future<void> handleReminderTap(ProviderContainer container, NotificationTap tap) async {
   if (!_tapGate.admit(tap)) return;
   if (tap.payload == kSalaryAlertPayload) {
     appRouter.push(kSalaryLocation);
+    return;
+  }
+  final smsEntry = smsEntryFromPayload(tap.payload);
+  if (smsEntry != null) {
+    // Undo normally runs in the background isolate; handle it here too if delivered.
+    if (tap.actionId == kSmsUndoActionId) {
+      await container.read(smsIngestServiceProvider).undoAutoAddIfCurrent(smsId: smsEntry.smsId, entryId: smsEntry.entryId);
+      return;
+    }
+    final location = smsEntryLocationFor(payload: tap.payload, actionId: tap.actionId);
+    if (location != null) appRouter.push(location);
     return;
   }
   final reminderId = reminderIdFromPayload(tap.payload);

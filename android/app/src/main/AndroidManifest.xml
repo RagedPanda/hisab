@@ -6,12 +6,15 @@
     <!-- Due reminders (Settings > Reminders) and the "New bank transaction" notification
          for SMS captured while Hisab is closed: local notifications only, nothing leaves
          the device. Asked for when the first timed reminder is saved or Bank SMS is
-         turned on, never at launch; reminders and capture both work without it. -->
+         turned on, never at launch; reminders and capture both work without it.
+         Also the opt-in "Add expense" shortcut notification, asked for when it is
+         turned on in Settings > Shortcuts & widget. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Exact alert times on Android 12+ when the user allows "Alarms & reminders";
          without it reminders are posted inexact (a few minutes late), never blocked. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <!-- Re-post reminder alerts after a reboot or an app update. -->
+    <!-- Re-post reminder alerts, and the opt-in "Add expense" notification, after a
+         reboot or an app update. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Only for the opt-in Settings > Back up to Google Drive: talks to the user's own
@@ -82,6 +85,32 @@
             android:permission="android.permission.BROADCAST_SMS">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+        <!-- Quick Settings "Add expense" tile: opens the editor for a new expense. -->
+        <service
+            android:name=".launcher.AddExpenseTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile_add_expense"
+            android:label="@string/shortcut_add_expense"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE" android:value="false" />
+        </service>
+        <!-- Home-screen widget: this month's spend vs last month, + to add an expense. -->
+        <receiver android:exported="false" android:name=".launcher.SpendWidgetProvider" android:label="@string/widget_spend_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/spend_widget_info" />
+        </receiver>
+        <!-- Re-posts the opt-in "Add expense" notification after a reboot or update. -->
+        <receiver android:exported="false" android:name=".launcher.AddExpenseBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
         <!-- Don't delete the meta-data below.

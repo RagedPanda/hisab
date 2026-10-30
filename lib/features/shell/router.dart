@@ -24,6 +24,7 @@ import '../projects/projects_screen.dart';
 import '../salary/salary_setup_screen.dart';
 import '../salary/salary_reminder.dart';
 import '../settings/drive_backup_screen.dart';
+import '../settings/scheduled_backup_screen.dart';
 import '../settings/settings_screen.dart';
 import '../shortcuts/shortcuts_screen.dart';
 import '../reminders/reminders_screen.dart';
@@ -108,6 +109,7 @@ final appRouter = GoRouter(
     GoRoute(path: kQuickEntriesLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const QuickEntriesScreen()),
     GoRoute(path: kShortcutsLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const ShortcutsScreen()),
     GoRoute(path: kDriveBackupLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const DriveBackupScreen()),
+    GoRoute(path: kScheduledBackupLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const ScheduledBackupScreen()),
     GoRoute(path: '/budgets', parentNavigatorKey: _rootKey, builder: (_, _) => const BudgetsScreen()),
     GoRoute(
       path: '/recurring',

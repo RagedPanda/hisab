@@ -10,6 +10,7 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import com.ragedpanda.hisab.backup.ScheduledBackupChannel
 import com.ragedpanda.hisab.launcher.LauncherChannel
 import com.ragedpanda.hisab.sms.SmsCaptureBridge
 import com.ragedpanda.hisab.sms.SmsCaptureSettings
@@ -26,6 +27,8 @@ import com.ragedpanda.hisab.sms.SmsQueue
  * prompt (local_auth, androidx.biometric) is a fragment.
  */
 class MainActivity : FlutterFragmentActivity() {
+    private var scheduledBackup: ScheduledBackupChannel? = null
+
     // Text shared from another app arrives as ACTION_SEND. Turn it into the
     // hisab://sms?text=... link before Flutter reads the intent, so the
     // router opens the SMS paste screen as it does for any deep link.
@@ -43,6 +46,7 @@ class MainActivity : FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         LauncherChannel.register(this, flutterEngine.dartExecutor.binaryMessenger)
+        scheduledBackup = ScheduledBackupChannel(this, flutterEngine.dartExecutor.binaryMessenger, activity = this)
 
         // Settings > App lock > Hide in recent apps: a blank recents card, no screenshots.
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, APP_LOCK_CHANNEL).setMethodCallHandler { call, result ->
@@ -135,6 +139,14 @@ class MainActivity : FlutterFragmentActivity() {
             }
         }
         return rows
+    }
+
+    @Deprecated("FlutterActivity has no Activity Result API; the folder picker comes back here.")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (scheduledBackup?.onActivityResult(requestCode, resultCode, data) != true) {
+            @Suppress("DEPRECATION")
+            super.onActivityResult(requestCode, resultCode, data)
+        }
     }
 
     override fun onResume() {

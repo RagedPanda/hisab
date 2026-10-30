@@ -15,6 +15,14 @@ class DriveSignInCancelledException implements Exception {
   String toString() => 'Google sign-in cancelled';
 }
 
+/// Google needs the user on screen (to sign in or grant access again), so
+/// a scheduled backup cannot write Drive until they open Drive backup.
+class DriveSignInNeededException implements Exception {
+  const DriveSignInNeededException();
+  @override
+  String toString() => 'Google sign-in needed';
+}
+
 /// The Google account Drive backups run as. Every call is user-initiated;
 /// nothing here runs at launch, so the app never needs a network to start.
 abstract interface class DriveAccount {
@@ -23,6 +31,10 @@ abstract interface class DriveAccount {
 
   /// A `drive.appdata` access token, asking the user again only if needed.
   Future<String> accessToken();
+
+  /// A `drive.appdata` access token without showing any Google screen, for
+  /// scheduled backups. Throws [DriveSignInNeededException] when one is needed.
+  Future<String> silentAccessToken();
 
   /// Forgets a token Drive rejected, so the next [accessToken] is fresh.
   Future<void> clearToken(String token);
@@ -74,6 +86,16 @@ class GoogleDriveAccount implements DriveAccount {
 
   @override
   Future<String> accessToken() => _guard(() async => _token(await _signedIn()));
+
+  @override
+  Future<String> silentAccessToken() async {
+    await _ensureInitialized();
+    final account = _account ??= await _signIn.attemptLightweightAuthentication(reportAllExceptions: false);
+    if (account == null) throw const DriveSignInNeededException();
+    final authorization = await account.authorizationClient.authorizationForScopes(_scopes);
+    if (authorization == null) throw const DriveSignInNeededException();
+    return authorization.accessToken;
+  }
 
   @override
   Future<void> clearToken(String token) => _signIn.authorizationClient.clearAuthorizationToken(accessToken: token);

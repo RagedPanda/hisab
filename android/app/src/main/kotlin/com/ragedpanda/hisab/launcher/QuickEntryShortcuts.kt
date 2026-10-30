@@ -20,7 +20,7 @@ object QuickEntryShortcuts {
 
     fun publish(context: Context, rows: List<*>) {
         val room = (ShortcutManagerCompat.getMaxShortcutCountPerActivity(context) - STATIC_SHORTCUTS).coerceAtLeast(0)
-        val shortcuts = rows.mapNotNull { it as? Map<*, *> }.take(room).mapNotNull { row -> build(context, row) }
+        val shortcuts = rows.mapNotNull { it as? Map<*, *> }.take(room).mapIndexedNotNull { rank, row -> build(context, row, rank) }
         try {
             ShortcutManagerCompat.setDynamicShortcuts(context, shortcuts)
         } catch (error: IllegalArgumentException) {
@@ -30,7 +30,7 @@ object QuickEntryShortcuts {
         }
     }
 
-    private fun build(context: Context, row: Map<*, *>): ShortcutInfoCompat? {
+    private fun build(context: Context, row: Map<*, *>, rank: Int): ShortcutInfoCompat? {
         val id = row["id"] as? String ?: return null
         val shortLabel = row["shortLabel"] as? String ?: return null
         val link = row["link"] as? String ?: return null
@@ -40,6 +40,8 @@ object QuickEntryShortcuts {
             .setLongLabel(row["longLabel"] as? String ?: shortLabel)
             .setIcon(IconCompat.createWithResource(context, R.drawable.ic_shortcut_quick))
             .setIntent(open)
+            // Launchers sort by rank; keep the user's quick entry order.
+            .setRank(rank)
             .build()
     }
 }

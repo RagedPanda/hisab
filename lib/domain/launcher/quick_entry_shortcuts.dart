@@ -3,9 +3,9 @@
 library;
 
 /// Dynamic shortcuts shown after the two static ones (Add expense, Add
-/// income). Launchers show about five in all, so three keeps every one
-/// visible.
-const int kMaxQuickEntryShortcuts = 3;
+/// income). Pixel Launcher and most others show four in all, so two keeps
+/// every one visible.
+const int kMaxQuickEntryShortcuts = 2;
 
 /// Prefix of a quick-entry shortcut id, so they never clash with the static
 /// `add_expense` / `add_income` ids.

@@ -1496,7 +1496,7 @@
   "safeToSpendOverBudget": "Over budget",
   "shortcutsTitle": "Shortcuts & widget",
   "shortcutsHint": "Add an expense from the notification shade, Quick Settings or Home screen",
-  "launcherShortcutsHelp": "Long-press the Hisab icon for Add expense, Add income and your first three quick entries.",
+  "launcherShortcutsHelp": "Long-press the Hisab icon for Add expense, Add income and your first two quick entries.",
   "addExpenseNotification": "Add expense notification",
   "addExpenseNotificationHint": "Keeps an Add expense shortcut in the notification shade",
   "addExpenseNotificationChannel": "Add expense shortcut",

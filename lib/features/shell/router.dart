@@ -13,6 +13,7 @@ import '../groups/group_detail_screen.dart';
 import '../groups/group_settings_screen.dart';
 import '../groups/group_totals_screen.dart';
 import '../groups/groups_screen.dart';
+import '../groups/split_this_screen.dart';
 import '../notifications/notification_settings_screen.dart';
 import '../projects/project_detail_screen.dart';
 import '../projects/project_form_screen.dart';
@@ -26,6 +27,7 @@ import '../reminders/reminders_screen.dart';
 import '../sms/sms_history_screen.dart';
 import '../sms/sms_payees_screen.dart';
 import '../sms/sms_review_screen.dart';
+import '../spending_calendar/spending_calendar_screen.dart';
 import '../upcoming/upcoming_calendar_screen.dart';
 import '../upcoming/upcoming_routes.dart';
 import '../sms/sms_screen.dart';
@@ -75,8 +77,10 @@ final appRouter = GoRouter(
         copyFromId: state.uri.queryParameters['copy'],
         quickEntryId: state.uri.queryParameters['quick'],
         newQuickEntry: state.uri.queryParameters['saveAs'] == 'quick',
+        splitFromId: state.uri.queryParameters['splitFrom'],
       ),
     ),
+    GoRoute(path: '/split/:entryId', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: SplitThisScreen(entryId: state.pathParameters['entryId']!))),
     GoRoute(path: '/groups/:id', parentNavigatorKey: _rootKey, builder: (_, state) => GroupDetailScreen(
           key: ValueKey(state.uri.toString()),
           groupId: state.pathParameters['id']!,
@@ -143,6 +147,7 @@ final appRouter = GoRouter(
     GoRoute(path: kNotificationSettingsLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const NotificationSettingsScreen()),
     GoRoute(path: '/reminders/:id', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: RemindersScreen(highlightId: state.pathParameters['id']))),
     GoRoute(path: kUpcomingCalendarRoute, parentNavigatorKey: _rootKey, builder: (_, _) => const UpcomingCalendarScreen()),
+    GoRoute(path: kSpendingCalendarRoute, parentNavigatorKey: _rootKey, builder: (_, _) => const SpendingCalendarScreen()),
     GoRoute(path: '/sms', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: SmsScreen(sharedText: state.uri.queryParameters['text']))),
     GoRoute(path: '/sms/review', parentNavigatorKey: _rootKey, builder: (_, _) => const HomeFallbackPop(child: SmsReviewScreen())),
     GoRoute(path: '/sms/history', parentNavigatorKey: _rootKey, builder: (_, _) => const SmsHistoryScreen()),

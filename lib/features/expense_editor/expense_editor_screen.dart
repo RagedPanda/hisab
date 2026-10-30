@@ -15,6 +15,7 @@ import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/entries_repository.dart';
 import '../../data/repositories/entry_removal.dart';
+import '../../data/repositories/groups_repository.dart';
 import '../../data/repositories/payee_category_repository.dart';
 import '../../data/repositories/project_fields_repository.dart';
 import '../../data/repositories/projects_repository.dart';
@@ -35,10 +36,12 @@ import '../../domain/split/group_settings.dart';
 import '../../domain/split/item_split.dart';
 import '../../domain/split/payers.dart';
 import '../../domain/split/split_calculator.dart';
+import '../../domain/split/split_this.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../accounts/account_picker_tile.dart';
 import '../groups/member_display.dart';
+import '../groups/split_this_screen.dart';
 import '../categories/category_picker.dart';
 import '../projects/project_field_inputs.dart';
 import '../projects/project_picker_sheet.dart';
@@ -52,7 +55,7 @@ import 'editor_draft.dart';
 import 'item_row.dart';
 
 class ExpenseEditorScreen extends ConsumerStatefulWidget {
-  const ExpenseEditorScreen({super.key, this.entryId, this.groupId, this.initialKind, this.smsId, this.projectId, this.reminderId, this.copyFromId, this.quickEntryId, this.newQuickEntry = false});
+  const ExpenseEditorScreen({super.key, this.entryId, this.groupId, this.initialKind, this.smsId, this.projectId, this.reminderId, this.copyFromId, this.quickEntryId, this.newQuickEntry = false, this.splitFromId});
   final String? entryId;
   final String? groupId;
 
@@ -67,6 +70,10 @@ class ExpenseEditorScreen extends ConsumerStatefulWidget {
 
   /// Saved entry a new one starts as a copy of (a group's last expense), dated now.
   final String? copyFromId;
+
+  /// "Split this": a saved personal expense that becomes a new expense in
+  /// [groupId]. It keeps its id, so saving replaces it instead of adding one.
+  final String? splitFromId;
 
   /// A quick entry to start from (a Home chip without an amount, or a long press).
   final String? quickEntryId;
@@ -139,6 +146,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   /// Rule an existing entry was posted by (or started), if any.
   String? _recurringId;
+
+  /// The personal entry being split, as it was, so the split can be undone.
+  SplitSource? _splitSource;
+
   /// Balance-relevant fields of the stored entry, used to reverse its
   /// effect when the entry is edited or deleted.
   EntrySnapshot? _previousSnapshot;
@@ -223,20 +234,28 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   /// "Again": swaps this saved entry for a new copy of it dated now. Unsaved
   /// edits here are asked about first, since the copy starts from the saved one.
-  Future<void> _again() async {
+  Future<void> _again() => _replaceWith('/entry?copy=$_existingId');
+
+  /// "Split this": swaps this saved entry for the group picker and then a
+  /// group expense made from it, asking about unsaved edits the same way.
+  Future<void> _splitThis() => _replaceWith(splitThisLocation(_existingId!));
+
+  /// Leaves this saved entry for [location], which starts from the saved
+  /// entry, so unsaved edits here are asked about first.
+  Future<void> _replaceWith(String location) async {
     if (_hasUnsavedInput && !await _askDiscard()) return;
     if (!mounted) return;
     setState(() => _openedWith = null);
-    context.pushReplacement('/entry?copy=$_existingId');
+    context.pushReplacement(location);
   }
 
   /// "Save & add another" is offered for new entries typed by hand; SMS
   /// entries and edits close the editor on save.
-  bool get _canAddAnother => !_isEditing && widget.smsId == null && widget.reminderId == null && _source != 'sms';
+  bool get _canAddAnother => !_isEditing && widget.smsId == null && widget.reminderId == null && widget.splitFromId == null && _source != 'sms';
 
   /// Repeat is offered on new entries typed by hand, group expenses included
   /// (rent, maid, wifi). SMS entries record what happened.
-  bool get _canRepeat => !_isEditing && _source == 'manual';
+  bool get _canRepeat => !_isEditing && widget.splitFromId == null && _source == 'manual';
 
   @override
   void initState() {
@@ -297,6 +316,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
           }
         }
       }
+    } else if (widget.splitFromId != null) {
+      await _prefillFromSplitSource(widget.splitFromId!);
     } else if (widget.smsId != null) {
       await _prefillFromSms(widget.smsId!);
     } else {
@@ -312,19 +333,48 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
         activeIds: {for (final project in projects) if (ProjectStatus.parse(project.status) == ProjectStatus.active) project.id},
         isGroup: _groupId != null,
       );
-      if (_groupId != null) {
-        await _loadMembers();
-        _paidByMemberId = _members.where((m) => m.isMe).firstOrNull?.id ?? _members.firstOrNull?.id;
-        // New expenses start from the group's default split; saved ones keep theirs.
-        _splitMethod = parseDefaultSplitMethod(_group?.defaultSplitMethod);
-        _splitInputs = defaultSplitInputs(_members, _splitMethod);
-      }
+      if (_groupId != null) await _startGroupExpense();
     }
     await _loadProjectFields();
     if (_category != null) await _refreshSuggestions();
     _openedWith = _draft;
     _loadedCategoryId = _category?.id;
     if (mounted) setState(() => _loaded = true);
+  }
+
+  /// A new group expense: paid by me, split the group's default way.
+  Future<void> _startGroupExpense() async {
+    await _loadMembers();
+    _paidByMemberId = _members.where((m) => m.isMe).firstOrNull?.id ?? _members.firstOrNull?.id;
+    // New expenses start from the group's default split; saved ones keep theirs.
+    _splitMethod = parseDefaultSplitMethod(_group?.defaultSplitMethod);
+    _splitInputs = defaultSplitInputs(_members, _splitMethod);
+  }
+
+  /// "Split this": a new expense in the chosen group that starts from the
+  /// saved personal entry [entryId] (amount, date, category, payee, note, tags
+  /// and items) and takes over its id, so saving converts that entry.
+  Future<void> _prefillFromSplitSource(String entryId) async {
+    final source = await ref.read(groupsRepositoryProvider).splitSourceOf(entryId);
+    if (source != null) {
+      final entry = source.entry;
+      _splitSource = source;
+      _existingId = entry.id;
+      _amountController.text = amountInputText(entry.amountMinor, format: _moneyFormat);
+      _occurredAt = entry.occurredAt;
+      _noteController.text = entry.note;
+      _tagsController.text = entry.tags;
+      _payeeController.text = entry.payee ?? '';
+      _source = entry.source;
+      _smsId = entry.smsId;
+      if (entry.categoryId case final categoryId?) {
+        final category = await ref.read(categoriesRepositoryProvider).byId(categoryId);
+        if (category?.deletedAt == null) _category = category;
+      }
+    }
+    if (_groupId == null) return;
+    await _startGroupExpense();
+    if (source != null) _items = [for (final row in source.items) ItemDraft.fromRow(row, keepId: true, memberIds: row.isShared ? const [] : _everyone)];
   }
 
   Future<void> _prefillFromQuickEntry(String id) async {
@@ -657,6 +707,12 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                     value: _again,
                     child: ListTile(leading: const Icon(Icons.replay_rounded), title: Text(l10n.entryAgain), contentPadding: EdgeInsets.zero),
                   ),
+                if (_isEditing && canSplitEntry(kind: _kind, groupId: _groupId))
+                  PopupMenuItem(
+                    key: const Key('editor.splitThis'),
+                    value: _splitThis,
+                    child: ListTile(leading: const Icon(Icons.call_split_rounded), title: Text(l10n.splitThis), contentPadding: EdgeInsets.zero),
+                  ),
                 if (_canSaveAsQuickEntry && !widget.newQuickEntry)
                   PopupMenuItem(
                     key: const Key('editor.saveAsQuick'),
@@ -697,6 +753,8 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               label: widget.groupId != null ? l10n.copiedFromLastEntry : l10n.copiedFromEntry,
               onStartBlank: () => context.pushReplacement(_groupId == null ? '/entry' : '/entry?group=$_groupId'),
             ),
+          if (_splitSource != null)
+            _CopiedFromLastBanner(bannerKey: const Key('editor.splitThisHint'), icon: Icons.call_split_rounded, label: l10n.splitThisHint),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
@@ -1320,6 +1378,10 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     } else if (_smsId != null) {
       await ref.read(smsIngestServiceProvider).linkSavedEntry(_smsId!, id);
     }
+    if (_splitSource case final source?) {
+      final groups = ref.read(groupsRepositoryProvider);
+      showUndoSnackBar(messenger, message: l10n.splitThisDone(_group?.name ?? ''), undoLabel: l10n.undo, onUndo: () => groups.unsplitExpense(source));
+    }
     if (!mounted) return;
     if (addAnother) {
       _startNextEntry();
@@ -1407,24 +1469,27 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 }
 
 /// Tells the user a new entry starts as a copy of a saved one (a group's last
-/// expense, or "Again" on any entry), with a way back to an empty form.
+/// expense, or "Again" on any entry), with a way back to an empty form; or,
+/// without [onStartBlank], that "Split this" converts the saved entry.
 class _CopiedFromLastBanner extends StatelessWidget {
-  const _CopiedFromLastBanner({required this.label, required this.onStartBlank});
+  const _CopiedFromLastBanner({required this.label, this.onStartBlank, this.icon = Icons.content_copy_rounded, this.bannerKey = const Key('editor.copiedFromLast')});
   final String label;
-  final VoidCallback onStartBlank;
+  final VoidCallback? onStartBlank;
+  final IconData icon;
+  final Key bannerKey;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      key: const Key('editor.copiedFromLast'),
-      padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+      key: bannerKey,
+      padding: EdgeInsets.fromLTRB(16, 8, onStartBlank == null ? 16 : 8, 0),
       child: Row(children: [
-        Icon(Icons.content_copy_rounded, size: 18, color: scheme.onSurfaceVariant),
+        Icon(icon, size: 18, color: scheme.onSurfaceVariant),
         const SizedBox(width: 8),
         Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant))),
-        TextButton(key: const Key('editor.startBlank'), onPressed: onStartBlank, child: Text(l10n.startBlank)),
+        if (onStartBlank != null) TextButton(key: const Key('editor.startBlank'), onPressed: onStartBlank, child: Text(l10n.startBlank)),
       ]),
     );
   }

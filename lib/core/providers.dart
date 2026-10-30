@@ -166,6 +166,11 @@ final monthDailyExpenseProvider = StreamProvider((ref) {
   return ref.watch(entriesRepositoryProvider).watchDailyExpense(range);
 });
 
+/// What I spent each day of an explicit window, for the spending calendar.
+final dailyExpenseProvider = StreamProvider.family<Map<DateTime, int>, ({DateTime start, DateTime end})>(
+  (ref, window) => ref.watch(entriesRepositoryProvider).watchDailyExpense(DateRange(window.start, window.end)),
+);
+
 /// Months of ledger the dashboard loads in one stream: the selected month and
 /// the five before it, for the trend bars and last-month comparisons.
 const int kDashboardMonths = 6;

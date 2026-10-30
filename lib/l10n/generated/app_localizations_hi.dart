@@ -392,6 +392,21 @@ class AppLocalizationsHi extends AppLocalizations {
   String get deleteEntryQuestion => 'यह लेन-देन हटाएँ?';
 
   @override
+  String get splitThis => 'इसे बाँटें';
+
+  @override
+  String get splitThisPickGroup => 'किस ग्रुप के साथ बाँटें?';
+
+  @override
+  String get splitThisHint =>
+      'सेव करने पर यह लेन-देन ग्रुप में चला जाएगा। खर्च में सिर्फ़ आपका हिस्सा गिना जाएगा।';
+
+  @override
+  String splitThisDone(String group) {
+    return '$group में भेजा गया। खर्च में सिर्फ़ आपका हिस्सा गिना जाएगा।';
+  }
+
+  @override
   String totalOfItems(int count) {
     return '$count आइटम का कुल';
   }
@@ -3948,6 +3963,20 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get upcomingCalendarNextMonth => 'अगला महीना';
+
+  @override
+  String get spendingCalendar => 'खर्च कैलेंडर';
+
+  @override
+  String get spendingCalendarOpen => 'खर्च कैलेंडर खोलें';
+
+  @override
+  String get spendingCalendarDayEmpty => 'इस दिन कोई खर्च नहीं';
+
+  @override
+  String spendingCalendarSpent(String amount) {
+    return '$amount खर्च';
+  }
 
   @override
   String get upcomingConfirm => 'पुष्टि करें';

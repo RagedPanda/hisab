@@ -9,6 +9,7 @@ import '../../domain/split/group_settings.dart';
 import '../../domain/split/group_activity.dart';
 import '../../domain/split/group_timeline.dart';
 import '../../domain/split/group_totals.dart';
+import '../../domain/split/split_this.dart';
 import '../db/database.dart';
 import '../db/watch_tables.dart';
 import 'entries_repository.dart';
@@ -25,6 +26,15 @@ class GroupSummary {
   /// Positive: others owe me. Negative: I owe.
   final int myNetMinor;
   final int totalSpentMinor;
+}
+
+/// A personal expense as it was before "Split this" made it a group expense:
+/// what [GroupsRepository.unsplitExpense] puts back.
+class SplitSource {
+  const SplitSource({required this.entry, this.items = const [], this.fieldValues = const []});
+  final Entry entry;
+  final List<EntryItem> items;
+  final List<EntryFieldValue> fieldValues;
 }
 
 class GroupBalances {
@@ -536,11 +546,14 @@ class GroupsRepository {
     Map<String, List<String>>? itemAssignments,
   }) {
     final entryId = entry.id.value;
+    final groupId = entry.groupId.present ? entry.groupId.value : null;
     return db.transaction(() async {
-      final before = await _expenseSnapshot(entryId, liveOnly: true);
+      // A personal entry turned into a group expense ("Split this") is new to
+      // the group, so it logs as added rather than edited.
+      final wasInGroup = (await _entryById(entryId))?.groupId == groupId;
+      final before = wasInGroup ? await _expenseSnapshot(entryId, liveOnly: true) : null;
       await _entries.saveEntry(entry, items: items, splits: splits, fieldValues: fieldValues, payers: payers, itemAssignments: itemAssignments);
       final after = await _expenseSnapshot(entryId, liveOnly: true);
-      final groupId = entry.groupId.present ? entry.groupId.value : null;
       if (after == null || groupId == null) return;
       if (before != null && !isMeaningfulEdit(before, after)) return;
       await _log(
@@ -592,6 +605,34 @@ class GroupsRepository {
             .write(EntryPayersCompanion(deletedAt: const Value(null), updatedAt: Value(now)));
         await _entries.restoreAssignments(entryId, ids: deletedState?.assignmentIds, deletedAt: deletedAt);
         await _log(groupId: groupId, action: ActivityAction.restored, subject: ActivitySubject.expense, subjectId: entryId, after: await _expenseSnapshot(entryId, liveOnly: true));
+      });
+
+  /// The saved personal expense [entryId] as "Split this" starts from it,
+  /// kept so the split can be undone; null when it is gone or not splittable.
+  Future<SplitSource?> splitSourceOf(String entryId) async {
+    final details = await _entries.getEntry(entryId);
+    final entry = details?.entry;
+    if (entry == null || entry.deletedAt != null || !canSplitEntry(kind: entry.kind, groupId: entry.groupId)) return null;
+    final fieldValues = await (db.select(db.entryFieldValues)..where((t) => t.entryId.equals(entryId) & t.deletedAt.isNull())).get();
+    return SplitSource(entry: entry, items: details!.items, fieldValues: fieldValues);
+  }
+
+  /// Undoes "Split this": the group expense made from [source] goes back to
+  /// being that personal entry, with its account, items and project details,
+  /// and is logged as deleted from its group.
+  Future<void> unsplitExpense(SplitSource source) => db.transaction(() async {
+        final entryId = source.entry.id;
+        final groupId = (await _entryById(entryId))?.groupId;
+        final before = await _expenseSnapshot(entryId, liveOnly: true);
+        await _entries.saveEntry(
+          source.entry.toCompanion(false),
+          items: [for (final item in source.items) item.toCompanion(false)],
+          payers: const [],
+          itemAssignments: const {},
+          fieldValues: [for (final value in source.fieldValues) value.toCompanion(false)],
+        );
+        if (groupId == null || before == null) return;
+        await _log(groupId: groupId, action: ActivityAction.deleted, subject: ActivitySubject.expense, subjectId: entryId, before: before);
       });
 
   Future<Entry?> _entryById(String id) => (db.select(db.entries)..where((t) => t.id.equals(id))).getSingleOrNull();

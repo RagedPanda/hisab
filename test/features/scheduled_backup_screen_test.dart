@@ -47,7 +47,7 @@ Future<_Harness> _pumpScheduledBackup(
   ScheduledBackupChoices? choices,
   ScheduledBackupHistory? history,
   String? passphrase,
-  void Function(String subtitle)? checkTile,
+  void Function(Text subtitle)? checkTile,
 }) async {
   SharedPreferences.setMockInitialValues({
     'onboarded': true,
@@ -79,7 +79,7 @@ Future<_Harness> _pumpScheduledBackup(
   await tester.scrollUntilVisible(tile, 200, scrollable: find.byType(Scrollable).first);
   await tester.ensureVisible(tile);
   await _settle(tester, 4);
-  checkTile?.call(tester.widget<Text>(find.descendant(of: tile, matching: find.byType(Text)).last).data!);
+  checkTile?.call(tester.widget<Text>(find.descendant(of: tile, matching: find.byType(Text)).last));
   await tester.tap(tile);
   await _settle(tester);
   return _Harness(container, folder, vault, scheduler);
@@ -112,10 +112,13 @@ void main() {
         english.scheduledBackupFailed(formatShortDateTime(DateTime(2026, 10, 30, 9), locale: 'en'), english.backupFailureFolderUnavailable),
       ),
     );
+    expect(scheduledBackupFailing(daily, saved), isFalse);
+    expect(scheduledBackupFailing(daily, failed), isTrue);
+    expect(scheduledBackupFailing(const ScheduledBackupChoices(), failed), isFalse);
   });
 
   testWidgets('turning the schedule on asks for a passphrase and a folder, and starts the background job', (tester) async {
-    final harness = await _pumpScheduledBackup(tester, checkTile: (subtitle) => expect(subtitle, english.scheduledBackupOff));
+    final harness = await _pumpScheduledBackup(tester, checkTile: (subtitle) => expect(subtitle.data, english.scheduledBackupOff));
     expect(find.text(english.scheduledBackupWhenBackground), findsOneWidget);
 
     await tester.tap(find.text(english.backupFrequencyWeekly));
@@ -148,11 +151,20 @@ void main() {
         .record(ScheduledBackupTarget.folder, BackupAttempt(at: DateTime(2026, 10, 29, 9)))
         .record(ScheduledBackupTarget.folder, BackupAttempt(at: DateTime(2026, 10, 30, 9), failure: ScheduledBackupFailure.noPassphrase));
     final failure = english.scheduledBackupFailed(formatShortDateTime(DateTime(2026, 10, 30, 9), locale: 'en'), english.backupFailureNoPassphrase);
-    await _pumpScheduledBackup(tester, choices: daily, history: history, checkTile: (subtitle) => expect(subtitle, contains(failure)));
+    await _pumpScheduledBackup(
+      tester,
+      choices: daily,
+      history: history,
+      checkTile: (subtitle) {
+        expect(subtitle.data, contains(failure));
+        expect(subtitle.style?.color, Theme.of(tester.element(find.byKey(const Key('scheduledBackupTile')))).colorScheme.error);
+      },
+    );
 
     final status = tester.widget<Text>(find.byKey(const Key('scheduledBackupStatus-folder')));
     expect(status.data, failure);
-    expect(status.style?.color, Theme.of(tester.element(find.byType(ScheduledBackupScreen))).colorScheme.error);
+    final error = Theme.of(tester.element(find.byType(ScheduledBackupScreen))).colorScheme.error;
+    expect(status.style?.color, error);
     expect(find.text(english.scheduledBackupPassphraseMissing), findsOneWidget);
   });
 

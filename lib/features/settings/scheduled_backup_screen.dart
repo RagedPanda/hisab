@@ -46,14 +46,22 @@ String scheduledBackupStatus(AppLocalizations l10n, ScheduledBackupTarget target
   return l10n.scheduledBackupLast(formatShortDateTime(success.at, locale: locale), backupPlaceLabel(l10n, target, choices));
 }
 
+/// The most recent attempt across destinations, or null before any run.
+MapEntry<ScheduledBackupTarget, BackupAttempt>? latestBackupAttempt(ScheduledBackupHistory history) =>
+    history.lastAttempt.entries.fold<MapEntry<ScheduledBackupTarget, BackupAttempt>?>(
+      null,
+      (newest, entry) => newest == null || entry.value.at.isAfter(newest.value.at) ? entry : newest,
+    );
+
+/// Whether the Settings row should show its summary as a failure.
+bool scheduledBackupFailing(ScheduledBackupChoices choices, ScheduledBackupHistory history) =>
+    choices.isOn && latestBackupAttempt(history)?.value.succeeded == false;
+
 /// The Settings row's subtitle: off, or how often plus the most recent
 /// attempt's status (a failure shows plainly).
 String scheduledBackupSummary(AppLocalizations l10n, ScheduledBackupChoices choices, ScheduledBackupHistory history, {String? locale}) {
   if (!choices.isOn) return l10n.scheduledBackupOff;
-  final latest = history.lastAttempt.entries.fold<MapEntry<ScheduledBackupTarget, BackupAttempt>?>(
-    null,
-    (newest, entry) => newest == null || entry.value.at.isAfter(newest.value.at) ? entry : newest,
-  );
+  final latest = latestBackupAttempt(history);
   final status = latest == null ? l10n.scheduledBackupNone : scheduledBackupStatus(l10n, latest.key, choices, history, locale: locale);
   return l10n.scheduledBackupSummary(backupFrequencyLabel(l10n, choices.frequency), status);
 }

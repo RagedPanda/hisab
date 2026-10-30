@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/notifications/sms_entry_payload.dart';
 import '../accounts/accounts_screen.dart';
+import '../app_lock/app_lock_settings_screen.dart';
 import '../accounts/card_account_screen.dart';
 import '../budgets/budgets_screen.dart';
 import '../categories/categories_screen.dart';
@@ -23,6 +24,7 @@ import '../projects/projects_screen.dart';
 import '../salary/salary_setup_screen.dart';
 import '../salary/salary_reminder.dart';
 import '../settings/drive_backup_screen.dart';
+import '../settings/scheduled_backup_screen.dart';
 import '../settings/settings_screen.dart';
 import '../shortcuts/shortcuts_screen.dart';
 import '../reminders/reminders_screen.dart';
@@ -107,6 +109,7 @@ final appRouter = GoRouter(
     GoRoute(path: kQuickEntriesLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const QuickEntriesScreen()),
     GoRoute(path: kShortcutsLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const ShortcutsScreen()),
     GoRoute(path: kDriveBackupLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const DriveBackupScreen()),
+    GoRoute(path: kScheduledBackupLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const ScheduledBackupScreen()),
     GoRoute(path: '/budgets', parentNavigatorKey: _rootKey, builder: (_, _) => const BudgetsScreen()),
     GoRoute(
       path: '/recurring',
@@ -149,6 +152,7 @@ final appRouter = GoRouter(
     ),
     GoRoute(path: '/reminders', parentNavigatorKey: _rootKey, builder: (_, _) => const RemindersScreen()),
     GoRoute(path: kNotificationSettingsLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const NotificationSettingsScreen()),
+    GoRoute(path: kAppLockLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const AppLockSettingsScreen()),
     GoRoute(path: '/reminders/:id', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: RemindersScreen(highlightId: state.pathParameters['id']))),
     GoRoute(path: kUpcomingCalendarRoute, parentNavigatorKey: _rootKey, builder: (_, _) => const UpcomingCalendarScreen()),
     GoRoute(path: kSpendingCalendarRoute, parentNavigatorKey: _rootKey, builder: (_, _) => const SpendingCalendarScreen()),

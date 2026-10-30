@@ -66,6 +66,15 @@ class FakeDriveAccount implements DriveAccount {
   @override
   Future<String> accessToken() async => 'token';
 
+  /// Set to act as if Google needs the user to sign in again.
+  bool signInNeeded = false;
+
+  @override
+  Future<String> silentAccessToken() async {
+    if (signInNeeded) throw const DriveSignInNeededException();
+    return 'token';
+  }
+
   @override
   Future<void> clearToken(String token) async {}
 

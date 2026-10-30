@@ -4529,4 +4529,200 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smsCardUpdated => 'Card details updated.';
+
+  @override
+  String get scheduledBackupTitle => 'Scheduled backup';
+
+  @override
+  String get scheduledBackupOff =>
+      'Off · back up on its own to a folder you choose';
+
+  @override
+  String scheduledBackupSummary(String frequency, String status) {
+    return '$frequency · $status';
+  }
+
+  @override
+  String get backupFrequency => 'How often';
+
+  @override
+  String get backupFrequencyOff => 'Off';
+
+  @override
+  String get backupFrequencyDaily => 'Daily';
+
+  @override
+  String get backupFrequencyWeekly => 'Weekly';
+
+  @override
+  String get backupFrequencyMonthly => 'Monthly';
+
+  @override
+  String get backupFolder => 'Folder';
+
+  @override
+  String get backupFolderNotChosen => 'Choose a folder';
+
+  @override
+  String get backupFolderHelp =>
+      'Any folder on this phone or a synced one, such as Drive, OneDrive or an SD card';
+
+  @override
+  String get backupsKept => 'Backups to keep';
+
+  @override
+  String backupsKeptValue(int count) {
+    return 'Last $count';
+  }
+
+  @override
+  String get backupsKeptHelp =>
+      'Older Hisab backups in this folder are deleted; other files are never touched';
+
+  @override
+  String get backupIncludeDrive => 'Also update the Google Drive copy';
+
+  @override
+  String get backupIncludeDriveHelp =>
+      'Replaces the Drive copy on the same schedule, when Hisab is open';
+
+  @override
+  String get backupIncludeDriveNotConnected =>
+      'Connect Back up to Google Drive first';
+
+  @override
+  String get scheduledBackupPassphraseSaved =>
+      'Saved in this phone\'s secure storage, so backups run without asking';
+
+  @override
+  String get scheduledBackupPassphraseMissing =>
+      'Not set: scheduled backups can\'t run';
+
+  @override
+  String get scheduledBackupPassphraseNote =>
+      'Scheduled backups are encrypted with this passphrase. It stays in this phone\'s secure storage so a backup can run without asking. You need it to restore, so keep a copy somewhere safe.';
+
+  @override
+  String get scheduledBackupWhenBackground =>
+      'Runs in the background once it is due (Android picks the moment, usually within a few hours) and whenever you open Hisab.';
+
+  @override
+  String get scheduledBackupWhenOnOpen =>
+      'Runs when you open Hisab and a backup is due.';
+
+  @override
+  String get scheduledBackupSaved => 'Backup saved';
+
+  @override
+  String scheduledBackupFailedNow(String reason) {
+    return 'Backup failed: $reason';
+  }
+
+  @override
+  String scheduledBackupLast(String time, String place) {
+    return 'Last backup: $time, $place';
+  }
+
+  @override
+  String get scheduledBackupNone => 'No backup yet';
+
+  @override
+  String scheduledBackupFailed(String time, String reason) {
+    return 'Backup failed $time: $reason';
+  }
+
+  @override
+  String get scheduledBackupGoogleDrive => 'Google Drive';
+
+  @override
+  String get backupFailureNoPassphrase => 'no passphrase saved on this phone';
+
+  @override
+  String get backupFailureNoFolder => 'no folder chosen';
+
+  @override
+  String get backupFailureFolderUnavailable =>
+      'the folder can\'t be reached; choose it again';
+
+  @override
+  String get backupFailureSignInNeeded =>
+      'Google needs you to sign in again in Back up to Google Drive';
+
+  @override
+  String get backupFailureOffline => 'no internet connection';
+
+  @override
+  String backupFailureUnknown(String error) {
+    return '$error';
+  }
+
+  @override
+  String get appLockTitle => 'App lock';
+
+  @override
+  String get appLockSettingsHint =>
+      'Ask for your fingerprint, face or screen lock to open Hisab';
+
+  @override
+  String appLockOnSummary(String timeout) {
+    return 'On, locks $timeout';
+  }
+
+  @override
+  String get appLockSwitch => 'Lock Hisab';
+
+  @override
+  String get appLockSwitchHelp =>
+      'Uses your phone\'s fingerprint, face or screen lock (PIN, pattern or password). There is no separate PIN to forget.';
+
+  @override
+  String get appLockAfter => 'Lock again after leaving Hisab';
+
+  @override
+  String get appLockImmediately => 'immediately';
+
+  @override
+  String get appLockOneMinute => 'after 1 minute';
+
+  @override
+  String get appLockFiveMinutes => 'after 5 minutes';
+
+  @override
+  String get appLockImmediatelyShort => 'Immediately';
+
+  @override
+  String get appLockOneMinuteShort => '1 min';
+
+  @override
+  String get appLockFiveMinutesShort => '5 min';
+
+  @override
+  String get appLockHideInRecents => 'Hide in recent apps';
+
+  @override
+  String get appLockHideInRecentsHelp =>
+      'Shows a blank card in the recent apps list. Screenshots of Hisab are blocked too.';
+
+  @override
+  String get appLockNoScreenLock =>
+      'Your phone has no screen lock. Set a PIN, pattern or password in your phone\'s settings, then turn on app lock.';
+
+  @override
+  String get appLockEnableReason => 'Confirm it\'s you to turn on app lock';
+
+  @override
+  String get appLockPromptReason => 'Unlock Hisab';
+
+  @override
+  String get appLockLockedTitle => 'Hisab is locked';
+
+  @override
+  String get appLockLockedHint =>
+      'Use your fingerprint, face or screen lock to open it.';
+
+  @override
+  String get appLockUnlock => 'Unlock';
+
+  @override
+  String get appLockLockedOut => 'Too many tries. Wait a little and try again.';
 }

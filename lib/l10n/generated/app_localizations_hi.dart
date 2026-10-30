@@ -4499,4 +4499,203 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get smsCardUpdated => 'कार्ड की जानकारी अपडेट हुई।';
+
+  @override
+  String get scheduledBackupTitle => 'तय समय पर बैकअप';
+
+  @override
+  String get scheduledBackupOff =>
+      'बंद · अपने चुने फ़ोल्डर में अपने-आप बैकअप लें';
+
+  @override
+  String scheduledBackupSummary(String frequency, String status) {
+    return '$frequency · $status';
+  }
+
+  @override
+  String get backupFrequency => 'कितनी बार';
+
+  @override
+  String get backupFrequencyOff => 'बंद';
+
+  @override
+  String get backupFrequencyDaily => 'रोज़';
+
+  @override
+  String get backupFrequencyWeekly => 'हर हफ़्ते';
+
+  @override
+  String get backupFrequencyMonthly => 'हर महीने';
+
+  @override
+  String get backupFolder => 'फ़ोल्डर';
+
+  @override
+  String get backupFolderNotChosen => 'फ़ोल्डर चुनें';
+
+  @override
+  String get backupFolderHelp =>
+      'इस फ़ोन का कोई भी फ़ोल्डर या सिंक होने वाला फ़ोल्डर, जैसे Drive, OneDrive या SD कार्ड';
+
+  @override
+  String get backupsKept => 'कितने बैकअप रखें';
+
+  @override
+  String backupsKeptValue(int count) {
+    return 'पिछले $count';
+  }
+
+  @override
+  String get backupsKeptHelp =>
+      'इस फ़ोल्डर के पुराने हिसाब बैकअप हटा दिए जाते हैं; बाकी फ़ाइलों को छुआ नहीं जाता';
+
+  @override
+  String get backupIncludeDrive => 'Google Drive की कॉपी भी अपडेट करें';
+
+  @override
+  String get backupIncludeDriveHelp =>
+      'हिसाब खुला होने पर उसी समय Drive की कॉपी बदल देता है';
+
+  @override
+  String get backupIncludeDriveNotConnected =>
+      'पहले Google Drive पर बैकअप जोड़ें';
+
+  @override
+  String get scheduledBackupPassphraseSaved =>
+      'इस फ़ोन के सुरक्षित स्टोरेज में सहेजा गया, ताकि बैकअप बिना पूछे चले';
+
+  @override
+  String get scheduledBackupPassphraseMissing =>
+      'सेट नहीं है: तय समय पर बैकअप नहीं चल सकता';
+
+  @override
+  String get scheduledBackupPassphraseNote =>
+      'तय समय वाले बैकअप इसी पासफ़्रेज़ से एन्क्रिप्ट होते हैं। यह इस फ़ोन के सुरक्षित स्टोरेज में रहता है ताकि बैकअप बिना पूछे चल सके। वापस लाने के लिए यही चाहिए होगा, इसलिए इसे कहीं सुरक्षित लिख लें।';
+
+  @override
+  String get scheduledBackupWhenBackground =>
+      'समय होने पर बैकग्राउंड में चलता है (सही पल Android चुनता है, आम तौर पर कुछ घंटों में) और जब भी आप हिसाब खोलें।';
+
+  @override
+  String get scheduledBackupWhenOnOpen =>
+      'बैकअप का समय होने पर हिसाब खोलते ही चलता है।';
+
+  @override
+  String get scheduledBackupSaved => 'बैकअप सहेजा गया';
+
+  @override
+  String scheduledBackupFailedNow(String reason) {
+    return 'बैकअप नहीं हुआ: $reason';
+  }
+
+  @override
+  String scheduledBackupLast(String time, String place) {
+    return 'पिछला बैकअप: $time, $place';
+  }
+
+  @override
+  String get scheduledBackupNone => 'अभी तक कोई बैकअप नहीं';
+
+  @override
+  String scheduledBackupFailed(String time, String reason) {
+    return 'बैकअप नहीं हुआ $time: $reason';
+  }
+
+  @override
+  String get scheduledBackupGoogleDrive => 'Google Drive';
+
+  @override
+  String get backupFailureNoPassphrase =>
+      'इस फ़ोन पर कोई पासफ़्रेज़ सहेजा नहीं है';
+
+  @override
+  String get backupFailureNoFolder => 'कोई फ़ोल्डर नहीं चुना';
+
+  @override
+  String get backupFailureFolderUnavailable =>
+      'फ़ोल्डर तक पहुँच नहीं; उसे फिर से चुनें';
+
+  @override
+  String get backupFailureSignInNeeded =>
+      'Google Drive पर बैकअप लें में जाकर फिर से साइन इन करें';
+
+  @override
+  String get backupFailureOffline => 'इंटरनेट कनेक्शन नहीं है';
+
+  @override
+  String backupFailureUnknown(String error) {
+    return '$error';
+  }
+
+  @override
+  String get appLockTitle => 'ऐप लॉक';
+
+  @override
+  String get appLockSettingsHint =>
+      'हिसाब खोलने के लिए फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक माँगें';
+
+  @override
+  String appLockOnSummary(String timeout) {
+    return 'चालू, $timeout लॉक';
+  }
+
+  @override
+  String get appLockSwitch => 'हिसाब लॉक करें';
+
+  @override
+  String get appLockSwitchHelp =>
+      'आपके फ़ोन का फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक (पिन, पैटर्न या पासवर्ड) इस्तेमाल होता है। कोई अलग पिन याद नहीं रखना।';
+
+  @override
+  String get appLockAfter => 'हिसाब से बाहर जाने के बाद फिर लॉक करें';
+
+  @override
+  String get appLockImmediately => 'तुरंत';
+
+  @override
+  String get appLockOneMinute => '1 मिनट बाद';
+
+  @override
+  String get appLockFiveMinutes => '5 मिनट बाद';
+
+  @override
+  String get appLockImmediatelyShort => 'तुरंत';
+
+  @override
+  String get appLockOneMinuteShort => '1 मिनट';
+
+  @override
+  String get appLockFiveMinutesShort => '5 मिनट';
+
+  @override
+  String get appLockHideInRecents => 'हाल के ऐप्स में छिपाएँ';
+
+  @override
+  String get appLockHideInRecentsHelp =>
+      'हाल के ऐप्स की सूची में खाली कार्ड दिखता है। हिसाब के स्क्रीनशॉट भी नहीं लिए जा सकते।';
+
+  @override
+  String get appLockNoScreenLock =>
+      'आपके फ़ोन में स्क्रीन लॉक नहीं है। फ़ोन की सेटिंग में पिन, पैटर्न या पासवर्ड लगाएँ, फिर ऐप लॉक चालू करें।';
+
+  @override
+  String get appLockEnableReason =>
+      'ऐप लॉक चालू करने के लिए पुष्टि करें कि यह आप हैं';
+
+  @override
+  String get appLockPromptReason => 'हिसाब अनलॉक करें';
+
+  @override
+  String get appLockLockedTitle => 'हिसाब लॉक है';
+
+  @override
+  String get appLockLockedHint =>
+      'खोलने के लिए फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक इस्तेमाल करें।';
+
+  @override
+  String get appLockUnlock => 'अनलॉक करें';
+
+  @override
+  String get appLockLockedOut =>
+      'बहुत ज़्यादा कोशिशें हुईं। थोड़ी देर बाद फिर कोशिश करें।';
 }

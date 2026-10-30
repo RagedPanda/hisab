@@ -10,10 +10,16 @@ Person _person(String name, String email) => Person(id: email, name: name, email
 
 final _people = [_person('Amit', 'amit@gmail.com'), _person('Riya', 'riya@example.com')];
 
+/// Udhaar people: generated ids, no email, maybe a phone.
+final _udhaarPeople = [
+  Person(id: 'p-rahul', name: 'Rahul', email: '', phone: '9876543210', updatedAt: DateTime(2026, 10, 1)),
+  Person(id: 'p-ravi', name: 'Ravi', email: '', updatedAt: DateTime(2026, 10, 1)),
+];
+
 /// Opens the add-member sheet over a button; [onResult] gets what it returned.
-Future<void> _openSheet(WidgetTester tester, {Set<String> groupEmails = const {}, required void Function(MemberDetails?) onResult}) async {
+Future<void> _openSheet(WidgetTester tester, {Set<String> groupEmails = const {}, List<Person>? people, required void Function(MemberDetails?) onResult}) async {
   await tester.pumpWidget(ProviderScope(
-    overrides: [peopleProvider.overrideWith((ref) => Stream.value(_people))],
+    overrides: [peopleProvider.overrideWith((ref) => Stream.value(people ?? _people))],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -46,6 +52,23 @@ void main() {
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
     expect((result?.name, result?.email), ('Amit', 'amit@gmail.com'));
+  });
+
+  testWidgets('people without an email are suggested side by side and picking fills their phone', (tester) async {
+    MemberDetails? result;
+    await _openSheet(tester, people: [..._people, ..._udhaarPeople], onResult: (details) => result = details);
+    await tester.enterText(_field('Member name'), 'ra');
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const ValueKey('member.suggestion.p-rahul')), findsOneWidget);
+    expect(find.byKey(const ValueKey('member.suggestion.p-ravi')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('member.suggestion.p-rahul')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('member.suggestion.p-rahul')), findsNothing, reason: 'a picked person is no longer suggested');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect((result?.name, result?.email, result?.phone), ('Rahul', null, '9876543210'));
   });
 
   testWidgets('typing an email suggests by email and skips people already in the group', (tester) async {

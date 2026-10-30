@@ -54,21 +54,29 @@ class _MemberSheetState extends ConsumerState<_MemberSheet> {
   bool get _emailInvalid => isInvalidEmail(_email.text);
   bool get _canSave => _name.text.trim().isNotEmpty && !_upiInvalid && !_emailInvalid;
 
-  /// Fills the sheet from a suggested person.
-  void _pick(PersonContact person) => setState(() {
+  /// The suggested person last picked, so they stop being suggested while
+  /// the name still reads as theirs (udhaar people may have no email).
+  Person? _picked;
+
+  /// Fills the sheet from a suggested person, keeping a phone already typed.
+  void _pick(Person person) => setState(() {
+        _picked = person;
         _name.text = person.name;
         _email.text = person.email;
+        if (_phone.text.trim().isEmpty) _phone.text = person.phone ?? '';
       });
 
   /// People matching what was typed in the name or email field, while adding;
-  /// none once the typed email is already someone's.
-  List<PersonContact> _suggestions(List<Person> people) {
+  /// none once the typed email is already someone's or a person was picked.
+  List<Person> _suggestions(List<Person> people) {
     if (widget.existing != null) return const [];
+    if (_picked case final picked? when picked.name == _name.text && picked.email == _email.text) return const [];
     final contacts = [for (final person in people) (name: person.name, email: person.email)];
     final typedEmail = normaliseEmail(_email.text);
     if (typedEmail != null && contacts.any((person) => person.email == typedEmail)) return const [];
     final query = _email.text.trim().isNotEmpty ? _email.text : _name.text;
-    return matchingPeople(contacts, query, excludeEmails: widget.groupEmails);
+    final matches = matchingPeople(contacts, query, excludeEmails: widget.groupEmails);
+    return [for (final match in matches) people.firstWhere((person) => person.name == match.name && person.email == match.email)];
   }
 
   void _save() {
@@ -105,11 +113,11 @@ class _MemberSheetState extends ConsumerState<_MemberSheet> {
             ),
             for (final person in suggestions)
               ListTile(
-                key: ValueKey('member.suggestion.${person.email}'),
+                key: ValueKey('member.suggestion.${person.email.isEmpty ? person.id : person.email}'),
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.person_outline),
                 title: Text(person.name),
-                subtitle: Text(person.email),
+                subtitle: person.email.isEmpty ? null : Text(person.email),
                 onTap: () => _pick(person),
               ),
             const SizedBox(height: 12),

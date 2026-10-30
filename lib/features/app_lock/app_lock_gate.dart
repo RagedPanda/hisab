@@ -44,6 +44,9 @@ class _AppLockGateState extends ConsumerState<AppLockGate> {
     ref.listenManual(appLockSettingsProvider.select((settings) => settings.secureWindow), (_, secure) {
       ref.read(secureWindowChannelProvider).setSecure(secure).ignore();
     }, fireImmediately: true);
+    ref.listenManual(appLockSettingsProvider.select((settings) => settings.enabled), (_, enabled) {
+      ref.read(secureWindowChannelProvider).setRecentsHidden(enabled).ignore();
+    }, fireImmediately: true);
     WidgetsBinding.instance.addPostFrameCallback((_) => _promptIfInFront());
   }
 

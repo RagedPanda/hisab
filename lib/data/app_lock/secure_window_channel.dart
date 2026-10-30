@@ -15,4 +15,11 @@ class SecureWindowChannel {
     if (!isSupported) return;
     await _methods.invokeMethod<void>('setSecure', secure);
   }
+
+  /// Android 13+: the recent-apps card shows the app icon instead of a
+  /// snapshot of the screen. Screenshots still work.
+  Future<void> setRecentsHidden(bool hidden) async {
+    if (!isSupported) return;
+    await _methods.invokeMethod<void>('setRecentsHidden', hidden);
+  }
 }

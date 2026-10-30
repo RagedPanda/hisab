@@ -150,4 +150,13 @@ void main() {
     await tester.pump();
     expect(secure.calls, [true, false]);
   });
+
+  testWidgets('the recent-apps snapshot is hidden while the lock is on', (tester) async {
+    final secure = FakeSecureWindow();
+    final container = await start(tester, FakeAuthenticator(results: [AppAuthResult.unlocked]), preferences: lockOn(), secure: secure);
+    expect(secure.recentsCalls, [true]);
+    await container.read(appLockSettingsProvider.notifier).setEnabled(false);
+    await tester.pump();
+    expect(secure.recentsCalls, [true, false]);
+  });
 }

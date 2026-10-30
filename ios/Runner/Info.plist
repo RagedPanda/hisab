@@ -29,6 +29,8 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Face ID unlocks Hisab when App lock is on.</string>
 	<key>CFBundleName</key>
 	<string>hisab</string>
 	<key>CFBundlePackageType</key>

@@ -250,6 +250,29 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     }
     _load();
     _amountFocus.addListener(_stopAmountAutofocus);
+    // Opened from a launcher shortcut, the Quick Settings tile or a
+    // notification, the editor builds before its window has focus, so
+    // Android ignores the autofocused amount's keypad. Ask again once the
+    // window is focused (the app reads as resumed).
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      _keypadOnResume = AppLifecycleListener(onResume: _showAmountKeypad);
+    }
+  }
+
+  AppLifecycleListener? _keypadOnResume;
+
+  /// Shows the keypad for the amount when it still has focus; only once.
+  /// Focusing the field again reconnects it to the now focused window,
+  /// which a bare TextInput.show is too early for.
+  void _showAmountKeypad() {
+    _keypadOnResume?.dispose();
+    _keypadOnResume = null;
+    if (!mounted || !_amountFocus.hasFocus) return;
+    _amountFocus.unfocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _amountFocus.requestFocus();
+    });
+    WidgetsBinding.instance.scheduleFrame();
   }
 
   /// Once the amount field has had focus, a rebuilt field never autofocuses.
@@ -615,15 +638,21 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     return PopScope(
       canPop: !_unsavedAtBuild && context.canPop(),
       onPopInvokedWithResult: (didPop, _) {
-        if (didPop) return;
-        if (_hasUnsavedInput) {
-          _confirmDiscard();
-        } else {
-          context.go(kHomeLocation);
-        }
+        if (!didPop) _leave();
       },
       child: _form(context),
     );
+  }
+
+  /// Leaves the editor the way Back does: asks first when there is unsaved
+  /// input, and goes Home when the editor was opened on its own (a launcher
+  /// shortcut, the Quick Settings tile, a notification).
+  void _leave() {
+    if (_hasUnsavedInput) {
+      _confirmDiscard();
+    } else {
+      popOrGoHome(context);
+    }
   }
 
   Widget _form(BuildContext context) {
@@ -636,6 +665,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     final headerColor = _headerColor(context);
     return Scaffold(
       appBar: AppBar(
+        // Opened straight from outside the app there is nothing to pop to,
+        // so AppBar would show no back arrow; this one goes Home.
+        leading: context.canPop() ? null : BackButton(onPressed: _leave),
         backgroundColor: headerColor,
         foregroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
@@ -1396,6 +1428,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 
   @override
   void dispose() {
+    _keypadOnResume?.dispose();
     _amountController.dispose();
     _amountFocus.dispose();
     _noteController.dispose();

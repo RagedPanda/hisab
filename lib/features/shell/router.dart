@@ -37,6 +37,10 @@ import '../sms/sms_screen.dart';
 import '../subscriptions/subscription_form_screen.dart';
 import '../subscriptions/subscriptions_screen.dart';
 import '../transactions/transactions_screen.dart';
+import '../udhaar/person_udhaar_screen.dart';
+import '../udhaar/udhaar_form_screen.dart';
+import '../udhaar/udhaar_screen.dart';
+import '../../domain/udhaar/udhaar.dart';
 import '../recurring/recurring_rule_form_screen.dart';
 import '../quick_entries/quick_entries_screen.dart';
 import '../recurring/recurring_screen.dart';
@@ -93,6 +97,24 @@ final appRouter = GoRouter(
     GoRoute(path: '/groups/:id/settings', parentNavigatorKey: _rootKey, builder: (_, state) => GroupSettingsScreen(groupId: state.pathParameters['id']!)),
     GoRoute(path: '/groups/:id/activity', parentNavigatorKey: _rootKey, builder: (_, state) => ActivityScreen(groupId: state.pathParameters['id']!)),
     GoRoute(path: '/activity', parentNavigatorKey: _rootKey, builder: (_, _) => const ActivityScreen()),
+    GoRoute(path: '/udhaar', parentNavigatorKey: _rootKey, builder: (_, _) => const UdhaarScreen()),
+    GoRoute(path: '/udhaar/person/:id', parentNavigatorKey: _rootKey, builder: (_, state) => HomeFallbackPop(child: PersonUdhaarScreen(personId: state.pathParameters['id']!))),
+    GoRoute(
+      path: '/udhaar/entry',
+      parentNavigatorKey: _rootKey,
+      builder: (_, state) {
+        final query = state.uri.queryParameters;
+        return HomeFallbackPop(
+          child: UdhaarFormScreen(
+            entryId: query['id'],
+            personId: query['person'],
+            kind: UdhaarKind.parse(query['kind']),
+            amountMinor: int.tryParse(query['amount'] ?? ''),
+            accountId: query['account'],
+          ),
+        );
+      },
+    ),
     GoRoute(path: '/categories', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoriesScreen()),
     GoRoute(path: '/categories/packs', parentNavigatorKey: _rootKey, builder: (_, _) => const CategoryPacksScreen()),
     GoRoute(

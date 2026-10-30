@@ -4511,4 +4511,144 @@ class AppLocalizationsEn extends AppLocalizations {
   String widgetLastMonth(String month, String amount) {
     return '$month: $amount';
   }
+
+  @override
+  String get udhaarTitle => 'Udhaar';
+
+  @override
+  String get udhaarPeopleAndUdhaar => 'People & udhaar';
+
+  @override
+  String get udhaarPeopleHint =>
+      'Money lent to or borrowed from people outside groups';
+
+  @override
+  String udhaarOwesYou(String name, String amount) {
+    return '$name owes you $amount';
+  }
+
+  @override
+  String udhaarYouOwe(String name, String amount) {
+    return 'You owe $name $amount';
+  }
+
+  @override
+  String udhaarSettledWith(String name) {
+    return 'All settled with $name';
+  }
+
+  @override
+  String udhaarOwesYouShort(String amount) {
+    return 'owes you $amount';
+  }
+
+  @override
+  String udhaarYouOweShort(String amount) {
+    return 'you owe $amount';
+  }
+
+  @override
+  String get udhaarKindLent => 'Lent';
+
+  @override
+  String get udhaarKindBorrowed => 'Borrowed';
+
+  @override
+  String get udhaarKindRepaidToMe => 'Got back';
+
+  @override
+  String get udhaarKindRepaidByMe => 'Paid back';
+
+  @override
+  String get udhaarRepayment => 'Repayment';
+
+  @override
+  String udhaarLentTo(String name) {
+    return 'Lent to $name';
+  }
+
+  @override
+  String udhaarBorrowedFrom(String name) {
+    return 'Borrowed from $name';
+  }
+
+  @override
+  String udhaarRepaidByThem(String name) {
+    return '$name paid you back';
+  }
+
+  @override
+  String udhaarRepaidByMe(String name) {
+    return 'You paid $name back';
+  }
+
+  @override
+  String get udhaarEmpty =>
+      'No udhaar yet. Money you lend to or borrow from someone outside a group shows here.';
+
+  @override
+  String udhaarPersonEmpty(String name) {
+    return 'Nothing lent or borrowed with $name yet.';
+  }
+
+  @override
+  String get udhaarOtherPeople => 'Settled and other people';
+
+  @override
+  String get udhaarAddPerson => 'Add person';
+
+  @override
+  String get udhaarEditPerson => 'Edit person';
+
+  @override
+  String get udhaarPerson => 'Person';
+
+  @override
+  String get udhaarPickPerson => 'Pick a person';
+
+  @override
+  String get udhaarAdd => 'Add udhaar';
+
+  @override
+  String get udhaarEdit => 'Edit udhaar';
+
+  @override
+  String get udhaarPaidFrom => 'Paid from';
+
+  @override
+  String get udhaarReceivedIn => 'Received in';
+
+  @override
+  String get udhaarRemind => 'Remind on WhatsApp';
+
+  @override
+  String udhaarReminderGreeting(String name, String amount, String date) {
+    return 'Hi $name, a reminder about $amount from $date.';
+  }
+
+  @override
+  String udhaarReminderPay(String link) {
+    return 'Pay via UPI: $link';
+  }
+
+  @override
+  String get udhaarMyUpiId => 'Your UPI ID';
+
+  @override
+  String get udhaarMyUpiIdHelp =>
+      'Added to reminders so people can pay you back in one tap. Leave blank to skip.';
+
+  @override
+  String get udhaarDeleted => 'Udhaar entry deleted';
+
+  @override
+  String get udhaarFromEditor => 'Lent to or borrowed from someone?';
+
+  @override
+  String get udhaarInGroups => 'In groups';
+
+  @override
+  String udhaarBalanceAfter(String amount) {
+    return 'Balance $amount';
+  }
 }

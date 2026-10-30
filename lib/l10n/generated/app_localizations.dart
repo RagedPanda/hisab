@@ -7321,6 +7321,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many tries. Wait a little and try again.'**
   String get appLockLockedOut;
+
+  /// No description provided for @scheduledBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled backup'**
+  String get scheduledBackupTitle;
+
+  /// No description provided for @scheduledBackupOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off · back up on its own to a folder you choose'**
+  String get scheduledBackupOff;
+
+  /// No description provided for @scheduledBackupSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{frequency} · {status}'**
+  String scheduledBackupSummary(String frequency, String status);
+
+  /// No description provided for @backupFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'How often'**
+  String get backupFrequency;
+
+  /// No description provided for @backupFrequencyOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get backupFrequencyOff;
+
+  /// No description provided for @backupFrequencyDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get backupFrequencyDaily;
+
+  /// No description provided for @backupFrequencyWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get backupFrequencyWeekly;
+
+  /// No description provided for @backupFrequencyMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get backupFrequencyMonthly;
+
+  /// No description provided for @backupFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get backupFolder;
+
+  /// No description provided for @backupFolderNotChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a folder'**
+  String get backupFolderNotChosen;
+
+  /// No description provided for @backupFolderHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Any folder on this phone or a synced one, such as Drive, OneDrive or an SD card'**
+  String get backupFolderHelp;
+
+  /// No description provided for @backupsKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Backups to keep'**
+  String get backupsKept;
+
+  /// No description provided for @backupsKeptValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Last {count}'**
+  String backupsKeptValue(int count);
+
+  /// No description provided for @backupsKeptHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Older Hisab backups in this folder are deleted; other files are never touched'**
+  String get backupsKeptHelp;
+
+  /// No description provided for @backupIncludeDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Also update the Google Drive copy'**
+  String get backupIncludeDrive;
+
+  /// No description provided for @backupIncludeDriveHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Replaces the Drive copy on the same schedule, when Hisab is open'**
+  String get backupIncludeDriveHelp;
+
+  /// No description provided for @backupIncludeDriveNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Back up to Google Drive first'**
+  String get backupIncludeDriveNotConnected;
+
+  /// No description provided for @scheduledBackupPassphraseSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved in this phone\'s secure storage, so backups run without asking'**
+  String get scheduledBackupPassphraseSaved;
+
+  /// No description provided for @scheduledBackupPassphraseMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set: scheduled backups can\'t run'**
+  String get scheduledBackupPassphraseMissing;
+
+  /// No description provided for @scheduledBackupPassphraseNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled backups are encrypted with this passphrase. It stays in this phone\'s secure storage so a backup can run without asking. You need it to restore, so keep a copy somewhere safe.'**
+  String get scheduledBackupPassphraseNote;
+
+  /// No description provided for @scheduledBackupWhenBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs in the background once it is due (Android picks the moment, usually within a few hours) and whenever you open Hisab.'**
+  String get scheduledBackupWhenBackground;
+
+  /// No description provided for @scheduledBackupWhenOnOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs when you open Hisab and a backup is due.'**
+  String get scheduledBackupWhenOnOpen;
+
+  /// No description provided for @scheduledBackupSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved'**
+  String get scheduledBackupSaved;
+
+  /// No description provided for @scheduledBackupLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup: {time}, {place}'**
+  String scheduledBackupLast(String time, String place);
+
+  /// No description provided for @scheduledBackupNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup yet'**
+  String get scheduledBackupNone;
+
+  /// No description provided for @scheduledBackupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup failed {time}: {reason}'**
+  String scheduledBackupFailed(String time, String reason);
+
+  /// No description provided for @scheduledBackupGoogleDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive'**
+  String get scheduledBackupGoogleDrive;
+
+  /// No description provided for @backupFailureNoPassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'no passphrase saved on this phone'**
+  String get backupFailureNoPassphrase;
+
+  /// No description provided for @backupFailureNoFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'no folder chosen'**
+  String get backupFailureNoFolder;
+
+  /// No description provided for @backupFailureFolderUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'the folder can\'t be reached; choose it again'**
+  String get backupFailureFolderUnavailable;
+
+  /// No description provided for @backupFailureSignInNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Google needs you to sign in again in Back up to Google Drive'**
+  String get backupFailureSignInNeeded;
+
+  /// No description provided for @backupFailureOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'no internet connection'**
+  String get backupFailureOffline;
+
+  /// No description provided for @backupFailureUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'{error}'**
+  String backupFailureUnknown(String error);
 }
 
 class _AppLocalizationsDelegate

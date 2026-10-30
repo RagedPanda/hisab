@@ -37,4 +37,21 @@ void main() {
       expect(defaultEntryAccountId(const [], configuredId: 'hdfc'), isNull);
     });
   });
+
+  group('cardPaymentSourceAccountId', () {
+    test('takes the default account when it is a bank account', () {
+      final accounts = [account('hdfc', 'bank'), account('sbi', 'bank'), account('cash', 'cash')];
+      expect(cardPaymentSourceAccountId(accounts, configuredId: 'sbi'), 'sbi');
+    });
+
+    test('takes the only bank account when the default is not a bank', () {
+      final accounts = [account('hdfc', 'bank'), account('cash', 'cash'), account('card', 'card')];
+      expect(cardPaymentSourceAccountId(accounts, configuredId: 'cash'), 'hdfc');
+    });
+
+    test('is null with several banks and none chosen, or no bank at all', () {
+      expect(cardPaymentSourceAccountId([account('hdfc', 'bank'), account('sbi', 'bank')]), isNull);
+      expect(cardPaymentSourceAccountId([account('cash', 'cash'), account('card', 'card')]), isNull);
+    });
+  });
 }

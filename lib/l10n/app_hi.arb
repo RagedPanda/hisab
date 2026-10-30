@@ -1321,5 +1321,7 @@
   "udhaarFromEditor": "किसी को उधार दिया या किसी से लिया?",
   "udhaarInGroups": "ग्रुप में",
   "udhaarBalanceAfter": "बाकी {amount}",
-  "scheduledBackupFailedNow": "बैकअप नहीं हुआ: {reason}"
+  "scheduledBackupFailedNow": "बैकअप नहीं हुआ: {reason}",
+  "cardLast4": "आख़िरी 4 अंक",
+  "cardLast4Invalid": "ठीक 4 अंक डालें, या इसे ख़ाली छोड़ दें।"
 }

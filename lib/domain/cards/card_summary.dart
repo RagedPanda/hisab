@@ -74,6 +74,44 @@ DateTime? lastStatementDateAfterEdit({
   return statementDateForEntry(today, statementDay);
 }
 
+/// What a card owes counted from its last statement, as a card balance
+/// (negative when owed, positive when in credit): [statementMinor] plus the
+/// spend charged after the statement day, less the bill payments since the
+/// statement date ([statementAt]).
+int balanceSinceStatementMinor({
+  required String cardId,
+  required int statementMinor,
+  required DateTime statementAt,
+  required Iterable<CardMovement> movements,
+}) {
+  final afterStatementDay = DateTime(statementAt.year, statementAt.month, statementAt.day + 1);
+  final spend = cycleSpendMinor(movements, cardId: cardId, range: DateRange(afterStatementDay, _endOfTime));
+  return paymentsSinceMinor(movements, cardId: cardId, since: statementAt) - statementMinor - spend;
+}
+
+final _endOfTime = DateTime(9999);
+
+/// The balance the account editor saves for a card: as entered, except that
+/// an amount due left at 0 on a card with no balance on record (a card read
+/// from SMS before its statement set one, or a new card) is counted from the
+/// entered statement ([balanceSinceStatementMinor]), so the amount due
+/// agrees with the statement instead of the statement being refused.
+int cardBalanceFromForm({
+  required String cardId,
+  required int enteredBalanceMinor,
+  required bool hasBalanceOnRecord,
+  int? lastStatementMinor,
+  DateTime? lastStatementAt,
+  Iterable<CardMovement> movements = const [],
+}) =>
+    enteredBalanceMinor != 0 || hasBalanceOnRecord || lastStatementMinor == null || lastStatementAt == null
+        ? enteredBalanceMinor
+        : balanceSinceStatementMinor(cardId: cardId, statementMinor: lastStatementMinor, statementAt: lastStatementAt, movements: movements);
+
+/// Whether a card's balance was ever recorded: set to something other than
+/// 0, or stamped with the date it was set or reported.
+bool hasCardBalanceOnRecord({required int balanceMinor, DateTime? balanceAsOf}) => balanceMinor != 0 || balanceAsOf != null;
+
 enum CardDueState { upcoming, dueToday, overdue, paid }
 
 class CardDue {

@@ -1681,5 +1681,7 @@
   "udhaarBalanceAfter": "Balance {amount}",
   "@udhaarBalanceAfter": {"placeholders": {"amount": {"type": "String"}}},
   "scheduledBackupFailedNow": "Backup failed: {reason}",
-  "@scheduledBackupFailedNow": {"placeholders": {"reason": {"type": "String"}}}
+  "@scheduledBackupFailedNow": {"placeholders": {"reason": {"type": "String"}}},
+  "cardLast4": "Last 4 digits",
+  "cardLast4Invalid": "Enter 4 digits, or leave it empty."
 }

@@ -7771,6 +7771,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Backup failed: {reason}'**
   String scheduledBackupFailedNow(String reason);
+
+  /// No description provided for @cardLast4.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 4 digits'**
+  String get cardLast4;
+
+  /// No description provided for @cardLast4Invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter 4 digits, or leave it empty.'**
+  String get cardLast4Invalid;
 }
 
 class _AppLocalizationsDelegate

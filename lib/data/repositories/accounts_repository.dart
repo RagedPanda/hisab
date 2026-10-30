@@ -92,8 +92,12 @@ class AccountsRepository {
   }
 
   /// Stores a statement read from a card SMS (see [cardStatementFromSms]).
-  Future<void> applySmsStatement(String id, CardStatementFields fields) => update(AccountsCompanion(
+  /// A [balanceMinor] the statement sets is stamped with its arrival, which
+  /// marks the balance as following it ([balanceFollowsSmsStatement]).
+  Future<void> applySmsStatement(String id, CardStatementFields fields, {int? balanceMinor}) => update(AccountsCompanion(
         id: Value(id),
+        balanceMinor: balanceMinor == null ? const Value.absent() : Value(balanceMinor),
+        balanceAsOf: balanceMinor == null ? const Value.absent() : Value(fields.statementFromSmsAt),
         lastStatementMinor: Value(fields.lastStatementMinor),
         lastStatementAt: Value(fields.lastStatementAt),
         minimumDueMinor: Value(fields.minimumDueMinor),

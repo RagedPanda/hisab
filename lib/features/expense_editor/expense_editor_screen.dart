@@ -21,6 +21,7 @@ import '../../data/repositories/project_fields_repository.dart';
 import '../../data/repositories/projects_repository.dart';
 import '../../data/repositories/group_recurring_repository.dart';
 import '../../data/repositories/recurring_repository.dart';
+import '../../domain/cards/card_payment_match.dart' show kCardPaymentCategoryKey;
 import '../../domain/entries/entry_accounts.dart';
 import '../../domain/entries/entry_filter.dart';
 import '../../domain/ledger/balance_effects.dart';
@@ -575,7 +576,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     if (isCardPaymentPayload(parsed)) {
       // A card bill payment: a transfer from the default account into the card.
       _kind = 'transfer';
-      _category = null;
+      _category = await ref.read(categoriesRepositoryProvider).findBySeedKey(kCardPaymentCategoryKey);
       _toAccountId = (parsed['accountId'] as String?) ?? smsAccountId;
       return;
     }

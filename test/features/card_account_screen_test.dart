@@ -331,4 +331,57 @@ void main() {
     expect(fields.lastStatementMinor, isNull);
     expect(fields.lastStatementAt, isNull);
   });
+
+  testWidgets('the card sheet takes the last 4 digits, exactly four, so its SMS find the card', (tester) async {
+    final container = await pumpApp(tester, overrides: [notificationGatewayProvider.overrideWithValue(FakeNotificationGateway())]);
+    final db = container.read(databaseProvider);
+    await db.into(db.accounts).insert(AccountsCompanion.insert(id: 'card', name: 'Amex', type: 'card', color: 0xFF1E88E5, balanceMinor: const Value(-50000)));
+
+    appRouter.push('/accounts/card/card');
+    await settle(tester);
+    await tester.tap(find.byTooltip('Edit'));
+    await settle(tester);
+    expect(find.text('Last 4 digits'), findsOneWidget);
+    await enter(tester, find.byKey(const ValueKey('account.last4')), '452');
+    await tapSave(tester);
+    expect(find.text('Enter 4 digits, or leave it empty.'), findsOneWidget);
+    expect((await savedCard(db)).last4, isNull);
+
+    await enter(tester, find.byKey(const ValueKey('account.last4')), '45a21x');
+    expect(find.text('Enter 4 digits, or leave it empty.'), findsNothing, reason: 'typing clears the error');
+    expect(tester.widget<TextField>(find.byKey(const ValueKey('account.last4'))).controller!.text, '4521', reason: 'digits only, at most four');
+    await tapSave(tester);
+    expect((await savedCard(db)).last4, '4521');
+  });
+
+  testWidgets('a card read from SMS with no amount due on record takes a hand-edited statement', (tester) async {
+    final container = await pumpApp(tester, overrides: [notificationGatewayProvider.overrideWithValue(FakeNotificationGateway())]);
+    final db = container.read(databaseProvider);
+    final statementAt = previousStatementDate(startOfDay(DateTime.now()), 5);
+    await db.into(db.accounts).insert(AccountsCompanion.insert(
+          id: 'card',
+          name: 'HDFC Bank Card 4521',
+          type: 'card',
+          color: 0xFF1E88E5,
+          last4: const Value('4521'),
+          smsKey: const Value('HDFC Bank:cc:4521'),
+          statementDay: const Value(5),
+          dueDay: const Value(25),
+          lastStatementMinor: const Value(500000),
+          lastStatementAt: Value(statementAt),
+          statementFromSmsAt: Value(statementAt),
+        ));
+
+    appRouter.push('/accounts/card/card');
+    await settle(tester);
+    await tester.tap(find.byTooltip('Edit'));
+    await settle(tester);
+    await enter(tester, find.byKey(const ValueKey('account.lastStatement')), '6000');
+    await tapSave(tester);
+
+    expect(find.textContaining('More than the amount due'), findsNothing);
+    final saved = await savedCard(db);
+    expect(saved.lastStatementMinor, 600000);
+    expect(saved.balanceMinor, -600000, reason: 'the amount due follows the statement');
+  });
 }

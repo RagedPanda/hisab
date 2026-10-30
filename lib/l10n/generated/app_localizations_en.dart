@@ -4865,4 +4865,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String scheduledBackupFailedNow(String reason) {
     return 'Backup failed: $reason';
   }
+
+  @override
+  String get cardLast4 => 'Last 4 digits';
+
+  @override
+  String get cardLast4Invalid => 'Enter 4 digits, or leave it empty.';
 }

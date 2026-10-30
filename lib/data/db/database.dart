@@ -84,6 +84,7 @@ class Categories extends Table with SyncColumns {
 
 @TableIndex(name: 'entries_project_id', columns: {#projectId})
 @TableIndex(name: 'entries_recurring_id', columns: {#recurringId})
+@TableIndex(name: 'entries_person_id', columns: {#personId})
 class Entries extends Table with SyncColumns {
   TextColumn get id => text()();
 
@@ -112,6 +113,14 @@ class Entries extends Table with SyncColumns {
   /// Recurring rule that produced (or started) this entry.
   TextColumn get recurringId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Person (People row) an udhaar entry was lent to, borrowed from or
+  /// repaid by; null for every other entry (v22).
+  TextColumn get personId => text().nullable()();
+
+  /// lent | borrowed | repaid_to_me | repaid_by_me on an udhaar entry, which
+  /// is stored as a one-sided transfer (see `domain/udhaar/udhaar.dart`) (v22).
+  TextColumn get udhaarKind => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -535,11 +544,16 @@ class PayeeCategories extends Table with SyncColumns {
 /// The user's own People list: everyone they added to a group with an email,
 /// so a new group can suggest them (see `domain/people/people.dart`). [id] is
 /// the lowercased email, so the same friend added on two devices is one row.
+/// People added for udhaar without an email get a generated id and an empty
+/// [email] (v22).
 @DataClassName('Person')
 class People extends Table with SyncColumns {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get email => text()();
+
+  /// Phone for WhatsApp reminders about udhaar; null when not known (v22).
+  TextColumn get phone => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -621,7 +635,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -706,6 +720,14 @@ class AppDatabase extends _$AppDatabase {
           if (from < 20) await m.createTable(quickEntries);
           // v21: starter quick entries, unless the user already made some.
           if (from < 21) await seedQuickEntries();
+          // v22: udhaar (money lent to or borrowed from a person) on entries, and People phones.
+          if (from < 22) {
+            await m.addColumn(entries, entries.personId);
+            await m.addColumn(entries, entries.udhaarKind);
+            await m.createIndex(entriesPersonId);
+            // Before v19 the People table is created above, phone included.
+            if (from >= 19) await m.addColumn(people, people.phone);
+          }
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');

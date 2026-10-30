@@ -7109,7 +7109,7 @@ abstract class AppLocalizations {
   /// No description provided for @launcherShortcutsHelp.
   ///
   /// In en, this message translates to:
-  /// **'Long-press the Hisab icon for Add expense, Add income and your first three quick entries.'**
+  /// **'Long-press the Hisab icon for Add expense, Add income and your first two quick entries.'**
   String get launcherShortcutsHelp;
 
   /// No description provided for @addExpenseNotification.

@@ -8,8 +8,8 @@ void main() {
       final shortcuts = quickEntryShortcuts([
         for (final name in ['Milk', 'Chai', 'Auto', 'Bread']) (id: name.toLowerCase(), label: name, amountText: null),
       ]);
-      expect(shortcuts.map((shortcut) => shortcut.shortLabel), ['Milk', 'Chai', 'Auto']);
-      expect(kMaxQuickEntryShortcuts, 3);
+      expect(shortcuts.map((shortcut) => shortcut.shortLabel), ['Milk', 'Chai']);
+      expect(kMaxQuickEntryShortcuts, 2);
     });
 
     test('adds the amount to the long label only', () {

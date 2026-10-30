@@ -4428,7 +4428,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get launcherShortcutsHelp =>
-      'खर्च जोड़ें, आय जोड़ें और अपनी पहली तीन क्विक एंट्री के लिए हिसाब आइकन को दबाकर रखें।';
+      'खर्च जोड़ें, आय जोड़ें और अपनी पहली दो क्विक एंट्री के लिए हिसाब आइकन को दबाकर रखें।';
 
   @override
   String get addExpenseNotification => 'खर्च जोड़ें नोटिफ़िकेशन';

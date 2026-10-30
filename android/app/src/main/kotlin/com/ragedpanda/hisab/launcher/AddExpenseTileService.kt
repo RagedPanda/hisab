@@ -23,7 +23,13 @@ class AddExpenseTileService : TileService() {
 
     override fun onClick() {
         super.onClick()
-        if (isLocked) unlockAndRun { openEditor() } else openEditor()
+        // From Android 14 the PendingIntent launch asks for the PIN itself;
+        // unlockAndRun there unlocks but never runs the editor.
+        if (isLocked && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            unlockAndRun { openEditor() }
+        } else {
+            openEditor()
+        }
     }
 
     // The Intent overload throws on Android 14+; the PendingIntent one is

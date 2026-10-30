@@ -4458,7 +4458,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get launcherShortcutsHelp =>
-      'Long-press the Hisab icon for Add expense, Add income and your first three quick entries.';
+      'Long-press the Hisab icon for Add expense, Add income and your first two quick entries.';
 
   @override
   String get addExpenseNotification => 'Add expense notification';

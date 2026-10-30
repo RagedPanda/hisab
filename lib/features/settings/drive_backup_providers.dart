@@ -7,6 +7,7 @@ import '../../data/backup/drive_account.dart';
 import '../../data/backup/drive_backup_service.dart';
 import '../../data/backup/drive_backup_store.dart';
 import '../../data/backup/drive_rest_backup_store.dart';
+import '../app_lock/app_lock_providers.dart';
 
 /// Drive backup is Android only for now: iOS personal backup is planned on
 /// CloudKit (docs/SYNC_SHARING.md), and Google sign-in there needs an iOS client.
@@ -38,7 +39,7 @@ class DriveBackupEmailNotifier extends Notifier<String?> {
 
   /// Runs the Google sign-in and permission screens, then remembers the account.
   Future<void> connect() async {
-    final email = await ref.read(driveAccountProvider).connect();
+    final email = await ref.read(appLockProvider.notifier).whileInSystemScreen(ref.read(driveAccountProvider).connect);
     await ref.read(sharedPreferencesProvider).setString(kDriveBackupEmailPref, email);
     state = email;
   }

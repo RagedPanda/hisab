@@ -43,6 +43,15 @@ void main() {
     expect(coversContent(AppLifecycleState.resumed, isIOS: true), isFalse);
   });
 
+  test('hidden and paused on the way out leave the app; hidden on the way back does not', () {
+    expect(isLeaving(AppLifecycleState.hidden, previous: AppLifecycleState.inactive), isTrue);
+    expect(isLeaving(AppLifecycleState.paused, previous: AppLifecycleState.hidden), isTrue);
+    expect(isLeaving(AppLifecycleState.hidden), isTrue);
+    expect(isLeaving(AppLifecycleState.hidden, previous: AppLifecycleState.paused), isFalse);
+    expect(isLeaving(AppLifecycleState.inactive, previous: AppLifecycleState.hidden), isFalse);
+    expect(isLeaving(AppLifecycleState.resumed, previous: AppLifecycleState.inactive), isFalse);
+  });
+
   group('AppLockSession', () {
     test('a cold start is locked only with the lock on', () {
       expect(AppLockSession.coldStart(enabled: true).locked, isTrue);
@@ -74,6 +83,14 @@ void main() {
       final session = const AppLockSession(locked: true).startAuthenticating().left(leftAt).returned(leftAt.add(const Duration(minutes: 10)), enabled: true, timeout: AppLockTimeout.immediately);
       expect(session.leftAt, isNull);
       expect(session.finishAuthenticating(unlocked: true).locked, isFalse);
+    });
+
+    test('a picker Hisab opened is not leaving; leaving after it closes is', () {
+      final picking = const AppLockSession(locked: false).openedSystemScreen().left(leftAt);
+      expect(picking.leftAt, isNull);
+      final back = picking.returned(leftAt.add(const Duration(minutes: 1)), enabled: true, timeout: AppLockTimeout.immediately).closedSystemScreen();
+      expect((back.locked, back.inSystemScreen), (false, false));
+      expect(back.left(leftAt).returned(leftAt.add(const Duration(seconds: 1)), enabled: true, timeout: AppLockTimeout.immediately).locked, isTrue);
     });
 
     test('a failed prompt keeps it locked; turning the lock off unlocks', () {

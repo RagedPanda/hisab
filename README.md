@@ -14,8 +14,8 @@
   <img alt="Android 7.0+ (API 24)" src="https://img.shields.io/badge/Android-7.0%2B%20(API%2024)-3DDC84?logo=android&logoColor=white">
   <img alt="iOS 15+" src="https://img.shields.io/badge/iOS-15%2B-000000?logo=apple&logoColor=white">
   <br>
-  <img alt="2169 tests passing" src="https://img.shields.io/badge/tests-2169%20passing-brightgreen">
-  <img alt="Line coverage 98.6%" src="https://img.shields.io/badge/coverage-98.6%25-brightgreen">
+  <img alt="2373 tests passing" src="https://img.shields.io/badge/tests-2373%20passing-brightgreen">
+  <img alt="Line coverage 97.9%" src="https://img.shields.io/badge/coverage-97.9%25-brightgreen">
   <img alt="Languages: English and Hindi" src="https://img.shields.io/badge/languages-English%20%7C%20Hindi-orange">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
 </p>

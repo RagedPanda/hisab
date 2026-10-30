@@ -39,12 +39,16 @@ bool coversContent(AppLifecycleState state, {required bool isIOS}) => switch (st
       AppLifecycleState.hidden || AppLifecycleState.paused => true,
     };
 
-/// Whether [state] means the user left the app, which starts the timeout.
-bool isLeaving(AppLifecycleState state) => state == AppLifecycleState.hidden || state == AppLifecycleState.paused;
+/// Whether moving from [previous] to [state] means the user left the app,
+/// which starts the timeout. Coming back passes through hidden after
+/// paused; that is the way in, not out.
+bool isLeaving(AppLifecycleState state, {AppLifecycleState? previous}) =>
+    (state == AppLifecycleState.hidden || state == AppLifecycleState.paused) &&
+    !(state == AppLifecycleState.hidden && previous == AppLifecycleState.paused);
 
 /// The lock's state while the app runs. Each change returns a new session.
 class AppLockSession {
-  const AppLockSession({required this.locked, this.leftAt, this.authenticating = false});
+  const AppLockSession({required this.locked, this.leftAt, this.authenticating = false, this.inSystemScreen = false});
 
   /// A cold start is locked whenever the lock is on.
   factory AppLockSession.coldStart({required bool enabled}) => AppLockSession(locked: enabled);
@@ -60,24 +64,40 @@ class AppLockSession {
   /// background, which must not count as leaving it.
   final bool authenticating;
 
+  /// True while a system screen Hisab opened itself (a folder or file
+  /// picker, the Google account chooser) is up. Like [authenticating], the
+  /// trip there is not leaving the app, so the user is not locked out on
+  /// the way back.
+  final bool inSystemScreen;
+
+  AppLockSession _copy({bool? locked, DateTime? leftAt, bool clearLeftAt = false, bool? authenticating, bool? inSystemScreen}) => AppLockSession(
+        locked: locked ?? this.locked,
+        leftAt: clearLeftAt ? null : leftAt ?? this.leftAt,
+        authenticating: authenticating ?? this.authenticating,
+        inSystemScreen: inSystemScreen ?? this.inSystemScreen,
+      );
+
   /// The user left the app at [now]. The first moment counts: hidden and
   /// paused both arrive on the way out.
-  AppLockSession left(DateTime now) =>
-      authenticating || leftAt != null ? this : AppLockSession(locked: locked, leftAt: now, authenticating: authenticating);
+  AppLockSession left(DateTime now) => authenticating || inSystemScreen || leftAt != null ? this : _copy(leftAt: now);
 
   /// The user came back at [now]: locked when away for at least [timeout]
   /// with the lock on.
   AppLockSession returned(DateTime now, {required bool enabled, required AppLockTimeout timeout}) {
     final away = leftAt;
     final tooLong = enabled && away != null && isAwayTooLong(leftAt: away, now: now, timeout: timeout);
-    return AppLockSession(locked: locked || tooLong, authenticating: authenticating);
+    return _copy(locked: locked || tooLong, clearLeftAt: true);
   }
 
-  AppLockSession startAuthenticating() => AppLockSession(locked: locked, leftAt: leftAt, authenticating: true);
+  AppLockSession startAuthenticating() => _copy(authenticating: true);
 
   /// The prompt closed; [unlocked] when the user proved who they are.
-  AppLockSession finishAuthenticating({required bool unlocked}) => AppLockSession(locked: locked && !unlocked, leftAt: leftAt);
+  AppLockSession finishAuthenticating({required bool unlocked}) => _copy(locked: locked && !unlocked, authenticating: false);
+
+  AppLockSession openedSystemScreen() => _copy(inSystemScreen: true);
+
+  AppLockSession closedSystemScreen() => _copy(inSystemScreen: false);
 
   /// The lock was turned off: nothing stays locked.
-  AppLockSession disabled() => AppLockSession(locked: false, leftAt: leftAt, authenticating: authenticating);
+  AppLockSession disabled() => _copy(locked: false);
 }

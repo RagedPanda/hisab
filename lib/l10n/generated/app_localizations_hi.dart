@@ -4483,22 +4483,76 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String cardFromSms(String date) {
-    return 'SMS से, $date';
+  String get appLockTitle => 'ऐप लॉक';
+
+  @override
+  String get appLockSettingsHint =>
+      'हिसाब खोलने के लिए फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक माँगें';
+
+  @override
+  String appLockOnSummary(String timeout) {
+    return 'चालू, $timeout लॉक';
   }
 
   @override
-  String cardMinimumDue(String amount) {
-    return 'न्यूनतम देय $amount';
-  }
+  String get appLockSwitch => 'हिसाब लॉक करें';
 
   @override
-  String cardSmsAvailableLimit(String amount, String date) {
-    return '$amount लिमिट बची, SMS से, $date';
-  }
+  String get appLockSwitchHelp =>
+      'आपके फ़ोन का फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक (पिन, पैटर्न या पासवर्ड) इस्तेमाल होता है। कोई अलग पिन याद नहीं रखना।';
 
   @override
-  String get smsCardUpdated => 'कार्ड की जानकारी अपडेट हुई।';
+  String get appLockAfter => 'हिसाब से बाहर जाने के बाद फिर लॉक करें';
+
+  @override
+  String get appLockImmediately => 'तुरंत';
+
+  @override
+  String get appLockOneMinute => '1 मिनट बाद';
+
+  @override
+  String get appLockFiveMinutes => '5 मिनट बाद';
+
+  @override
+  String get appLockImmediatelyShort => 'तुरंत';
+
+  @override
+  String get appLockOneMinuteShort => '1 मिनट';
+
+  @override
+  String get appLockFiveMinutesShort => '5 मिनट';
+
+  @override
+  String get appLockHideInRecents => 'हाल के ऐप्स में छिपाएँ';
+
+  @override
+  String get appLockHideInRecentsHelp =>
+      'हाल के ऐप्स की सूची में खाली कार्ड दिखता है। हिसाब के स्क्रीनशॉट भी नहीं लिए जा सकते।';
+
+  @override
+  String get appLockNoScreenLock =>
+      'आपके फ़ोन में स्क्रीन लॉक नहीं है। फ़ोन की सेटिंग में पिन, पैटर्न या पासवर्ड लगाएँ, फिर ऐप लॉक चालू करें।';
+
+  @override
+  String get appLockEnableReason =>
+      'ऐप लॉक चालू करने के लिए पुष्टि करें कि यह आप हैं';
+
+  @override
+  String get appLockPromptReason => 'हिसाब अनलॉक करें';
+
+  @override
+  String get appLockLockedTitle => 'हिसाब लॉक है';
+
+  @override
+  String get appLockLockedHint =>
+      'खोलने के लिए फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक इस्तेमाल करें।';
+
+  @override
+  String get appLockUnlock => 'अनलॉक करें';
+
+  @override
+  String get appLockLockedOut =>
+      'बहुत ज़्यादा कोशिशें हुईं। थोड़ी देर बाद फिर कोशिश करें।';
 
   @override
   String get scheduledBackupTitle => 'तय समय पर बैकअप';
@@ -4584,11 +4638,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get scheduledBackupSaved => 'बैकअप सहेजा गया';
 
   @override
-  String scheduledBackupFailedNow(String reason) {
-    return 'बैकअप नहीं हुआ: $reason';
-  }
-
-  @override
   String scheduledBackupLast(String time, String place) {
     return 'पिछला बैकअप: $time, $place';
   }
@@ -4628,76 +4677,167 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get appLockTitle => 'ऐप लॉक';
-
-  @override
-  String get appLockSettingsHint =>
-      'हिसाब खोलने के लिए फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक माँगें';
-
-  @override
-  String appLockOnSummary(String timeout) {
-    return 'चालू, $timeout लॉक';
+  String cardFromSms(String date) {
+    return 'SMS से, $date';
   }
 
   @override
-  String get appLockSwitch => 'हिसाब लॉक करें';
+  String cardMinimumDue(String amount) {
+    return 'न्यूनतम देय $amount';
+  }
 
   @override
-  String get appLockSwitchHelp =>
-      'आपके फ़ोन का फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक (पिन, पैटर्न या पासवर्ड) इस्तेमाल होता है। कोई अलग पिन याद नहीं रखना।';
+  String cardSmsAvailableLimit(String amount, String date) {
+    return '$amount लिमिट बची, SMS से, $date';
+  }
 
   @override
-  String get appLockAfter => 'हिसाब से बाहर जाने के बाद फिर लॉक करें';
+  String get smsCardUpdated => 'कार्ड की जानकारी अपडेट हुई।';
 
   @override
-  String get appLockImmediately => 'तुरंत';
+  String get udhaarTitle => 'उधार';
 
   @override
-  String get appLockOneMinute => '1 मिनट बाद';
+  String get udhaarPeopleAndUdhaar => 'लोग और उधार';
 
   @override
-  String get appLockFiveMinutes => '5 मिनट बाद';
+  String get udhaarPeopleHint =>
+      'ग्रुप के बाहर लोगों को दिया या उनसे लिया उधार';
 
   @override
-  String get appLockImmediatelyShort => 'तुरंत';
+  String udhaarOwesYou(String name, String amount) {
+    return '$name पर आपके $amount बाकी हैं';
+  }
 
   @override
-  String get appLockOneMinuteShort => '1 मिनट';
+  String udhaarYouOwe(String name, String amount) {
+    return 'आप पर $name के $amount बाकी हैं';
+  }
 
   @override
-  String get appLockFiveMinutesShort => '5 मिनट';
+  String udhaarSettledWith(String name) {
+    return '$name के साथ सब चुकता';
+  }
 
   @override
-  String get appLockHideInRecents => 'हाल के ऐप्स में छिपाएँ';
+  String udhaarOwesYouShort(String amount) {
+    return 'आपको $amount मिलेंगे';
+  }
 
   @override
-  String get appLockHideInRecentsHelp =>
-      'हाल के ऐप्स की सूची में खाली कार्ड दिखता है। हिसाब के स्क्रीनशॉट भी नहीं लिए जा सकते।';
+  String udhaarYouOweShort(String amount) {
+    return 'आप पर $amount बकाया';
+  }
 
   @override
-  String get appLockNoScreenLock =>
-      'आपके फ़ोन में स्क्रीन लॉक नहीं है। फ़ोन की सेटिंग में पिन, पैटर्न या पासवर्ड लगाएँ, फिर ऐप लॉक चालू करें।';
+  String get udhaarKindLent => 'दिया';
 
   @override
-  String get appLockEnableReason =>
-      'ऐप लॉक चालू करने के लिए पुष्टि करें कि यह आप हैं';
+  String get udhaarKindBorrowed => 'लिया';
 
   @override
-  String get appLockPromptReason => 'हिसाब अनलॉक करें';
+  String get udhaarKindRepaidToMe => 'वापस मिला';
 
   @override
-  String get appLockLockedTitle => 'हिसाब लॉक है';
+  String get udhaarKindRepaidByMe => 'वापस किया';
 
   @override
-  String get appLockLockedHint =>
-      'खोलने के लिए फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक इस्तेमाल करें।';
+  String get udhaarRepayment => 'वापसी';
 
   @override
-  String get appLockUnlock => 'अनलॉक करें';
+  String udhaarLentTo(String name) {
+    return '$name को उधार दिया';
+  }
 
   @override
-  String get appLockLockedOut =>
-      'बहुत ज़्यादा कोशिशें हुईं। थोड़ी देर बाद फिर कोशिश करें।';
+  String udhaarBorrowedFrom(String name) {
+    return '$name से उधार लिया';
+  }
+
+  @override
+  String udhaarRepaidByThem(String name) {
+    return '$name ने पैसे लौटाए';
+  }
+
+  @override
+  String udhaarRepaidByMe(String name) {
+    return 'आपने $name को पैसे लौटाए';
+  }
+
+  @override
+  String get udhaarEmpty =>
+      'अभी कोई उधार नहीं। ग्रुप के बाहर किसी को दिया या किसी से लिया उधार यहाँ दिखेगा।';
+
+  @override
+  String udhaarPersonEmpty(String name) {
+    return '$name के साथ अभी कोई लेन-देन नहीं।';
+  }
+
+  @override
+  String get udhaarOtherPeople => 'चुकता और बाकी लोग';
+
+  @override
+  String get udhaarAddPerson => 'व्यक्ति जोड़ें';
+
+  @override
+  String get udhaarEditPerson => 'व्यक्ति बदलें';
+
+  @override
+  String get udhaarPerson => 'व्यक्ति';
+
+  @override
+  String get udhaarPickPerson => 'व्यक्ति चुनें';
+
+  @override
+  String get udhaarAdd => 'उधार जोड़ें';
+
+  @override
+  String get udhaarEdit => 'उधार बदलें';
+
+  @override
+  String get udhaarPaidFrom => 'किस खाते से दिया';
+
+  @override
+  String get udhaarReceivedIn => 'किस खाते में आया';
+
+  @override
+  String get udhaarRemind => 'WhatsApp पर याद दिलाएँ';
+
+  @override
+  String udhaarReminderGreeting(String name, String amount, String date) {
+    return 'नमस्ते $name, $date से बाकी $amount की एक याद।';
+  }
+
+  @override
+  String udhaarReminderPay(String link) {
+    return 'UPI से भेजें: $link';
+  }
+
+  @override
+  String get udhaarMyUpiId => 'आपकी UPI ID';
+
+  @override
+  String get udhaarMyUpiIdHelp =>
+      'याद दिलाने वाले संदेश में जुड़ेगी ताकि लोग एक टैप में पैसे लौटा सकें। न चाहें तो खाली छोड़ें।';
+
+  @override
+  String get udhaarDeleted => 'उधार की एंट्री हटाई गई';
+
+  @override
+  String get udhaarFromEditor => 'किसी को उधार दिया या किसी से लिया?';
+
+  @override
+  String get udhaarInGroups => 'ग्रुप में';
+
+  @override
+  String udhaarBalanceAfter(String amount) {
+    return 'बाकी $amount';
+  }
+
+  @override
+  String scheduledBackupFailedNow(String reason) {
+    return 'बैकअप नहीं हुआ: $reason';
+  }
 
   @override
   String get cardLast4 => 'आख़िरी 4 अंक';

@@ -4513,22 +4513,74 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String cardFromSms(String date) {
-    return 'From SMS, $date';
+  String get appLockTitle => 'App lock';
+
+  @override
+  String get appLockSettingsHint =>
+      'Ask for your fingerprint, face or screen lock to open Hisab';
+
+  @override
+  String appLockOnSummary(String timeout) {
+    return 'On, locks $timeout';
   }
 
   @override
-  String cardMinimumDue(String amount) {
-    return 'Minimum due $amount';
-  }
+  String get appLockSwitch => 'Lock Hisab';
 
   @override
-  String cardSmsAvailableLimit(String amount, String date) {
-    return '$amount available, from SMS, $date';
-  }
+  String get appLockSwitchHelp =>
+      'Uses your phone\'s fingerprint, face or screen lock (PIN, pattern or password). There is no separate PIN to forget.';
 
   @override
-  String get smsCardUpdated => 'Card details updated.';
+  String get appLockAfter => 'Lock again after leaving Hisab';
+
+  @override
+  String get appLockImmediately => 'immediately';
+
+  @override
+  String get appLockOneMinute => 'after 1 minute';
+
+  @override
+  String get appLockFiveMinutes => 'after 5 minutes';
+
+  @override
+  String get appLockImmediatelyShort => 'Immediately';
+
+  @override
+  String get appLockOneMinuteShort => '1 min';
+
+  @override
+  String get appLockFiveMinutesShort => '5 min';
+
+  @override
+  String get appLockHideInRecents => 'Hide in recent apps';
+
+  @override
+  String get appLockHideInRecentsHelp =>
+      'Shows a blank card in the recent apps list. Screenshots of Hisab are blocked too.';
+
+  @override
+  String get appLockNoScreenLock =>
+      'Your phone has no screen lock. Set a PIN, pattern or password in your phone\'s settings, then turn on app lock.';
+
+  @override
+  String get appLockEnableReason => 'Confirm it\'s you to turn on app lock';
+
+  @override
+  String get appLockPromptReason => 'Unlock Hisab';
+
+  @override
+  String get appLockLockedTitle => 'Hisab is locked';
+
+  @override
+  String get appLockLockedHint =>
+      'Use your fingerprint, face or screen lock to open it.';
+
+  @override
+  String get appLockUnlock => 'Unlock';
+
+  @override
+  String get appLockLockedOut => 'Too many tries. Wait a little and try again.';
 
   @override
   String get scheduledBackupTitle => 'Scheduled backup';
@@ -4614,11 +4666,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scheduledBackupSaved => 'Backup saved';
 
   @override
-  String scheduledBackupFailedNow(String reason) {
-    return 'Backup failed: $reason';
-  }
-
-  @override
   String scheduledBackupLast(String time, String place) {
     return 'Last backup: $time, $place';
   }
@@ -4657,74 +4704,167 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get appLockTitle => 'App lock';
-
-  @override
-  String get appLockSettingsHint =>
-      'Ask for your fingerprint, face or screen lock to open Hisab';
-
-  @override
-  String appLockOnSummary(String timeout) {
-    return 'On, locks $timeout';
+  String cardFromSms(String date) {
+    return 'From SMS, $date';
   }
 
   @override
-  String get appLockSwitch => 'Lock Hisab';
+  String cardMinimumDue(String amount) {
+    return 'Minimum due $amount';
+  }
 
   @override
-  String get appLockSwitchHelp =>
-      'Uses your phone\'s fingerprint, face or screen lock (PIN, pattern or password). There is no separate PIN to forget.';
+  String cardSmsAvailableLimit(String amount, String date) {
+    return '$amount available, from SMS, $date';
+  }
 
   @override
-  String get appLockAfter => 'Lock again after leaving Hisab';
+  String get smsCardUpdated => 'Card details updated.';
 
   @override
-  String get appLockImmediately => 'immediately';
+  String get udhaarTitle => 'Udhaar';
 
   @override
-  String get appLockOneMinute => 'after 1 minute';
+  String get udhaarPeopleAndUdhaar => 'People & udhaar';
 
   @override
-  String get appLockFiveMinutes => 'after 5 minutes';
+  String get udhaarPeopleHint =>
+      'Money lent to or borrowed from people outside groups';
 
   @override
-  String get appLockImmediatelyShort => 'Immediately';
+  String udhaarOwesYou(String name, String amount) {
+    return '$name owes you $amount';
+  }
 
   @override
-  String get appLockOneMinuteShort => '1 min';
+  String udhaarYouOwe(String name, String amount) {
+    return 'You owe $name $amount';
+  }
 
   @override
-  String get appLockFiveMinutesShort => '5 min';
+  String udhaarSettledWith(String name) {
+    return 'All settled with $name';
+  }
 
   @override
-  String get appLockHideInRecents => 'Hide in recent apps';
+  String udhaarOwesYouShort(String amount) {
+    return 'owes you $amount';
+  }
 
   @override
-  String get appLockHideInRecentsHelp =>
-      'Shows a blank card in the recent apps list. Screenshots of Hisab are blocked too.';
+  String udhaarYouOweShort(String amount) {
+    return 'you owe $amount';
+  }
 
   @override
-  String get appLockNoScreenLock =>
-      'Your phone has no screen lock. Set a PIN, pattern or password in your phone\'s settings, then turn on app lock.';
+  String get udhaarKindLent => 'Lent';
 
   @override
-  String get appLockEnableReason => 'Confirm it\'s you to turn on app lock';
+  String get udhaarKindBorrowed => 'Borrowed';
 
   @override
-  String get appLockPromptReason => 'Unlock Hisab';
+  String get udhaarKindRepaidToMe => 'Got back';
 
   @override
-  String get appLockLockedTitle => 'Hisab is locked';
+  String get udhaarKindRepaidByMe => 'Paid back';
 
   @override
-  String get appLockLockedHint =>
-      'Use your fingerprint, face or screen lock to open it.';
+  String get udhaarRepayment => 'Repayment';
 
   @override
-  String get appLockUnlock => 'Unlock';
+  String udhaarLentTo(String name) {
+    return 'Lent to $name';
+  }
 
   @override
-  String get appLockLockedOut => 'Too many tries. Wait a little and try again.';
+  String udhaarBorrowedFrom(String name) {
+    return 'Borrowed from $name';
+  }
+
+  @override
+  String udhaarRepaidByThem(String name) {
+    return '$name paid you back';
+  }
+
+  @override
+  String udhaarRepaidByMe(String name) {
+    return 'You paid $name back';
+  }
+
+  @override
+  String get udhaarEmpty =>
+      'No udhaar yet. Money you lend to or borrow from someone outside a group shows here.';
+
+  @override
+  String udhaarPersonEmpty(String name) {
+    return 'Nothing lent or borrowed with $name yet.';
+  }
+
+  @override
+  String get udhaarOtherPeople => 'Settled and other people';
+
+  @override
+  String get udhaarAddPerson => 'Add person';
+
+  @override
+  String get udhaarEditPerson => 'Edit person';
+
+  @override
+  String get udhaarPerson => 'Person';
+
+  @override
+  String get udhaarPickPerson => 'Pick a person';
+
+  @override
+  String get udhaarAdd => 'Add udhaar';
+
+  @override
+  String get udhaarEdit => 'Edit udhaar';
+
+  @override
+  String get udhaarPaidFrom => 'Paid from';
+
+  @override
+  String get udhaarReceivedIn => 'Received in';
+
+  @override
+  String get udhaarRemind => 'Remind on WhatsApp';
+
+  @override
+  String udhaarReminderGreeting(String name, String amount, String date) {
+    return 'Hi $name, a reminder about $amount from $date.';
+  }
+
+  @override
+  String udhaarReminderPay(String link) {
+    return 'Pay via UPI: $link';
+  }
+
+  @override
+  String get udhaarMyUpiId => 'Your UPI ID';
+
+  @override
+  String get udhaarMyUpiIdHelp =>
+      'Added to reminders so people can pay you back in one tap. Leave blank to skip.';
+
+  @override
+  String get udhaarDeleted => 'Udhaar entry deleted';
+
+  @override
+  String get udhaarFromEditor => 'Lent to or borrowed from someone?';
+
+  @override
+  String get udhaarInGroups => 'In groups';
+
+  @override
+  String udhaarBalanceAfter(String amount) {
+    return 'Balance $amount';
+  }
+
+  @override
+  String scheduledBackupFailedNow(String reason) {
+    return 'Backup failed: $reason';
+  }
 
   @override
   String get cardLast4 => 'Last 4 digits';

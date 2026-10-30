@@ -93,6 +93,7 @@ class Categories extends Table with SyncColumns {
 
 @TableIndex(name: 'entries_project_id', columns: {#projectId})
 @TableIndex(name: 'entries_recurring_id', columns: {#recurringId})
+@TableIndex(name: 'entries_person_id', columns: {#personId})
 class Entries extends Table with SyncColumns {
   TextColumn get id => text()();
 
@@ -121,6 +122,14 @@ class Entries extends Table with SyncColumns {
   /// Recurring rule that produced (or started) this entry.
   TextColumn get recurringId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Person (People row) an udhaar entry was lent to, borrowed from or
+  /// repaid by; null for every other entry (v23).
+  TextColumn get personId => text().nullable()();
+
+  /// lent | borrowed | repaid_to_me | repaid_by_me on an udhaar entry, which
+  /// is stored as a one-sided transfer (see `domain/udhaar/udhaar.dart`) (v23).
+  TextColumn get udhaarKind => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -544,11 +553,16 @@ class PayeeCategories extends Table with SyncColumns {
 /// The user's own People list: everyone they added to a group with an email,
 /// so a new group can suggest them (see `domain/people/people.dart`). [id] is
 /// the lowercased email, so the same friend added on two devices is one row.
+/// People added for udhaar without an email get a generated id and an empty
+/// [email] (v23).
 @DataClassName('Person')
 class People extends Table with SyncColumns {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get email => text()();
+
+  /// Phone for WhatsApp reminders about udhaar; null when not known (v23).
+  TextColumn get phone => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -630,7 +644,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -716,7 +730,10 @@ class AppDatabase extends _$AppDatabase {
           // v21: starter quick entries, unless the user already made some.
           if (from < 21) await seedQuickEntries();
           // v22: card facts read from bank SMS (minimum due, available limit).
-          if (from < 22) await _upgradeToCardSmsFacts(m);
+          // Re-checked at v23: a pre-release udhaar build used schema 22 too.
+          if (from < 23) await _upgradeToCardSmsFacts(m);
+          // v23: udhaar (money lent to or borrowed from a person) on entries, and People phones.
+          if (from < 23) await _upgradeToUdhaar(m, from);
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
@@ -806,8 +823,6 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// v17 step. Adds the credit card columns a table lacks; pre-release
-  /// builds of card dues stored them under schema 7.
   /// v22 step. Accounts gain the card SMS fact columns they lack; checking
   /// what exists keeps it idempotent.
   Future<void> _upgradeToCardSmsFacts(Migrator m) async {
@@ -817,6 +832,24 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
+  /// v23 step. Entries gain the udhaar person and kind (with the person
+  /// index) and People a phone, each only where missing, so a database a
+  /// pre-release udhaar build moved to schema 22 upgrades cleanly too.
+  Future<void> _upgradeToUdhaar(Migrator m, int from) async {
+    final entryColumns = await _columnNames('entries');
+    if (!entryColumns.contains(entries.personId.name)) {
+      await m.addColumn(entries, entries.personId);
+      await m.createIndex(entriesPersonId);
+    }
+    if (!entryColumns.contains(entries.udhaarKind.name)) await m.addColumn(entries, entries.udhaarKind);
+    // Before v19 the People table is created above, phone included.
+    if (from >= 19 && !(await _columnNames('people')).contains(people.phone.name)) {
+      await m.addColumn(people, people.phone);
+    }
+  }
+
+  /// v17 step. Adds the credit card columns a table lacks; pre-release
+  /// builds of card dues stored them under schema 7.
   Future<void> _upgradeToCardDetails(Migrator m) async {
     final existing = await _columnNames('accounts');
     for (final column in cardDetailColumns(accounts)) {

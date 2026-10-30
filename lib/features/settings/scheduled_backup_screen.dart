@@ -6,6 +6,7 @@ import '../../core/format.dart';
 import '../../domain/backup/backup_schedule.dart';
 import '../../domain/backup/scheduled_backup.dart';
 import '../../l10n/l10n.dart';
+import '../app_lock/app_lock_providers.dart';
 import '../shell/widgets/common.dart';
 import 'backup_actions.dart';
 import 'drive_backup_providers.dart';
@@ -106,7 +107,7 @@ class _ScheduledBackupScreenState extends ConsumerState<ScheduledBackupScreen> {
 
   /// Shows the folder picker; returns the choices with the folder, or null when dismissed.
   Future<ScheduledBackupChoices?> _pickFolder() async {
-    final folder = await ref.read(backupFolderAccessProvider).pick();
+    final folder = await ref.read(appLockProvider.notifier).whileInSystemScreen(ref.read(backupFolderAccessProvider).pick);
     if (folder == null) return null;
     return ref.read(scheduledBackupChoicesProvider).copyWith(folderUri: folder.uri, folderName: folder.name);
   }

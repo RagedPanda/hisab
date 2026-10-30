@@ -7196,29 +7196,131 @@ abstract class AppLocalizations {
   /// **'{month}: {amount}'**
   String widgetLastMonth(String month, String amount);
 
-  /// No description provided for @cardFromSms.
+  /// No description provided for @appLockTitle.
   ///
   /// In en, this message translates to:
-  /// **'From SMS, {date}'**
-  String cardFromSms(String date);
+  /// **'App lock'**
+  String get appLockTitle;
 
-  /// No description provided for @cardMinimumDue.
+  /// No description provided for @appLockSettingsHint.
   ///
   /// In en, this message translates to:
-  /// **'Minimum due {amount}'**
-  String cardMinimumDue(String amount);
+  /// **'Ask for your fingerprint, face or screen lock to open Hisab'**
+  String get appLockSettingsHint;
 
-  /// No description provided for @cardSmsAvailableLimit.
+  /// No description provided for @appLockOnSummary.
   ///
   /// In en, this message translates to:
-  /// **'{amount} available, from SMS, {date}'**
-  String cardSmsAvailableLimit(String amount, String date);
+  /// **'On, locks {timeout}'**
+  String appLockOnSummary(String timeout);
 
-  /// No description provided for @smsCardUpdated.
+  /// No description provided for @appLockSwitch.
   ///
   /// In en, this message translates to:
-  /// **'Card details updated.'**
-  String get smsCardUpdated;
+  /// **'Lock Hisab'**
+  String get appLockSwitch;
+
+  /// No description provided for @appLockSwitchHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses your phone\'s fingerprint, face or screen lock (PIN, pattern or password). There is no separate PIN to forget.'**
+  String get appLockSwitchHelp;
+
+  /// No description provided for @appLockAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock again after leaving Hisab'**
+  String get appLockAfter;
+
+  /// No description provided for @appLockImmediately.
+  ///
+  /// In en, this message translates to:
+  /// **'immediately'**
+  String get appLockImmediately;
+
+  /// No description provided for @appLockOneMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'after 1 minute'**
+  String get appLockOneMinute;
+
+  /// No description provided for @appLockFiveMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'after 5 minutes'**
+  String get appLockFiveMinutes;
+
+  /// No description provided for @appLockImmediatelyShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediately'**
+  String get appLockImmediatelyShort;
+
+  /// No description provided for @appLockOneMinuteShort.
+  ///
+  /// In en, this message translates to:
+  /// **'1 min'**
+  String get appLockOneMinuteShort;
+
+  /// No description provided for @appLockFiveMinutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'5 min'**
+  String get appLockFiveMinutesShort;
+
+  /// No description provided for @appLockHideInRecents.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide in recent apps'**
+  String get appLockHideInRecents;
+
+  /// No description provided for @appLockHideInRecentsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows a blank card in the recent apps list. Screenshots of Hisab are blocked too.'**
+  String get appLockHideInRecentsHelp;
+
+  /// No description provided for @appLockNoScreenLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone has no screen lock. Set a PIN, pattern or password in your phone\'s settings, then turn on app lock.'**
+  String get appLockNoScreenLock;
+
+  /// No description provided for @appLockEnableReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm it\'s you to turn on app lock'**
+  String get appLockEnableReason;
+
+  /// No description provided for @appLockPromptReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Hisab'**
+  String get appLockPromptReason;
+
+  /// No description provided for @appLockLockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hisab is locked'**
+  String get appLockLockedTitle;
+
+  /// No description provided for @appLockLockedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your fingerprint, face or screen lock to open it.'**
+  String get appLockLockedHint;
+
+  /// No description provided for @appLockUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get appLockUnlock;
+
+  /// No description provided for @appLockLockedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries. Wait a little and try again.'**
+  String get appLockLockedOut;
 
   /// No description provided for @scheduledBackupTitle.
   ///
@@ -7358,12 +7460,6 @@ abstract class AppLocalizations {
   /// **'Backup saved'**
   String get scheduledBackupSaved;
 
-  /// No description provided for @scheduledBackupFailedNow.
-  ///
-  /// In en, this message translates to:
-  /// **'Backup failed: {reason}'**
-  String scheduledBackupFailedNow(String reason);
-
   /// No description provided for @scheduledBackupLast.
   ///
   /// In en, this message translates to:
@@ -7424,131 +7520,257 @@ abstract class AppLocalizations {
   /// **'{error}'**
   String backupFailureUnknown(String error);
 
-  /// No description provided for @appLockTitle.
+  /// No description provided for @cardFromSms.
   ///
   /// In en, this message translates to:
-  /// **'App lock'**
-  String get appLockTitle;
+  /// **'From SMS, {date}'**
+  String cardFromSms(String date);
 
-  /// No description provided for @appLockSettingsHint.
+  /// No description provided for @cardMinimumDue.
   ///
   /// In en, this message translates to:
-  /// **'Ask for your fingerprint, face or screen lock to open Hisab'**
-  String get appLockSettingsHint;
+  /// **'Minimum due {amount}'**
+  String cardMinimumDue(String amount);
 
-  /// No description provided for @appLockOnSummary.
+  /// No description provided for @cardSmsAvailableLimit.
   ///
   /// In en, this message translates to:
-  /// **'On, locks {timeout}'**
-  String appLockOnSummary(String timeout);
+  /// **'{amount} available, from SMS, {date}'**
+  String cardSmsAvailableLimit(String amount, String date);
 
-  /// No description provided for @appLockSwitch.
+  /// No description provided for @smsCardUpdated.
   ///
   /// In en, this message translates to:
-  /// **'Lock Hisab'**
-  String get appLockSwitch;
+  /// **'Card details updated.'**
+  String get smsCardUpdated;
 
-  /// No description provided for @appLockSwitchHelp.
+  /// No description provided for @udhaarTitle.
   ///
   /// In en, this message translates to:
-  /// **'Uses your phone\'s fingerprint, face or screen lock (PIN, pattern or password). There is no separate PIN to forget.'**
-  String get appLockSwitchHelp;
+  /// **'Udhaar'**
+  String get udhaarTitle;
 
-  /// No description provided for @appLockAfter.
+  /// No description provided for @udhaarPeopleAndUdhaar.
   ///
   /// In en, this message translates to:
-  /// **'Lock again after leaving Hisab'**
-  String get appLockAfter;
+  /// **'People & udhaar'**
+  String get udhaarPeopleAndUdhaar;
 
-  /// No description provided for @appLockImmediately.
+  /// No description provided for @udhaarPeopleHint.
   ///
   /// In en, this message translates to:
-  /// **'immediately'**
-  String get appLockImmediately;
+  /// **'Money lent to or borrowed from people outside groups'**
+  String get udhaarPeopleHint;
 
-  /// No description provided for @appLockOneMinute.
+  /// No description provided for @udhaarOwesYou.
   ///
   /// In en, this message translates to:
-  /// **'after 1 minute'**
-  String get appLockOneMinute;
+  /// **'{name} owes you {amount}'**
+  String udhaarOwesYou(String name, String amount);
 
-  /// No description provided for @appLockFiveMinutes.
+  /// No description provided for @udhaarYouOwe.
   ///
   /// In en, this message translates to:
-  /// **'after 5 minutes'**
-  String get appLockFiveMinutes;
+  /// **'You owe {name} {amount}'**
+  String udhaarYouOwe(String name, String amount);
 
-  /// No description provided for @appLockImmediatelyShort.
+  /// No description provided for @udhaarSettledWith.
   ///
   /// In en, this message translates to:
-  /// **'Immediately'**
-  String get appLockImmediatelyShort;
+  /// **'All settled with {name}'**
+  String udhaarSettledWith(String name);
 
-  /// No description provided for @appLockOneMinuteShort.
+  /// No description provided for @udhaarOwesYouShort.
   ///
   /// In en, this message translates to:
-  /// **'1 min'**
-  String get appLockOneMinuteShort;
+  /// **'owes you {amount}'**
+  String udhaarOwesYouShort(String amount);
 
-  /// No description provided for @appLockFiveMinutesShort.
+  /// No description provided for @udhaarYouOweShort.
   ///
   /// In en, this message translates to:
-  /// **'5 min'**
-  String get appLockFiveMinutesShort;
+  /// **'you owe {amount}'**
+  String udhaarYouOweShort(String amount);
 
-  /// No description provided for @appLockHideInRecents.
+  /// No description provided for @udhaarKindLent.
   ///
   /// In en, this message translates to:
-  /// **'Hide in recent apps'**
-  String get appLockHideInRecents;
+  /// **'Lent'**
+  String get udhaarKindLent;
 
-  /// No description provided for @appLockHideInRecentsHelp.
+  /// No description provided for @udhaarKindBorrowed.
   ///
   /// In en, this message translates to:
-  /// **'Shows a blank card in the recent apps list. Screenshots of Hisab are blocked too.'**
-  String get appLockHideInRecentsHelp;
+  /// **'Borrowed'**
+  String get udhaarKindBorrowed;
 
-  /// No description provided for @appLockNoScreenLock.
+  /// No description provided for @udhaarKindRepaidToMe.
   ///
   /// In en, this message translates to:
-  /// **'Your phone has no screen lock. Set a PIN, pattern or password in your phone\'s settings, then turn on app lock.'**
-  String get appLockNoScreenLock;
+  /// **'Got back'**
+  String get udhaarKindRepaidToMe;
 
-  /// No description provided for @appLockEnableReason.
+  /// No description provided for @udhaarKindRepaidByMe.
   ///
   /// In en, this message translates to:
-  /// **'Confirm it\'s you to turn on app lock'**
-  String get appLockEnableReason;
+  /// **'Paid back'**
+  String get udhaarKindRepaidByMe;
 
-  /// No description provided for @appLockPromptReason.
+  /// No description provided for @udhaarRepayment.
   ///
   /// In en, this message translates to:
-  /// **'Unlock Hisab'**
-  String get appLockPromptReason;
+  /// **'Repayment'**
+  String get udhaarRepayment;
 
-  /// No description provided for @appLockLockedTitle.
+  /// No description provided for @udhaarLentTo.
   ///
   /// In en, this message translates to:
-  /// **'Hisab is locked'**
-  String get appLockLockedTitle;
+  /// **'Lent to {name}'**
+  String udhaarLentTo(String name);
 
-  /// No description provided for @appLockLockedHint.
+  /// No description provided for @udhaarBorrowedFrom.
   ///
   /// In en, this message translates to:
-  /// **'Use your fingerprint, face or screen lock to open it.'**
-  String get appLockLockedHint;
+  /// **'Borrowed from {name}'**
+  String udhaarBorrowedFrom(String name);
 
-  /// No description provided for @appLockUnlock.
+  /// No description provided for @udhaarRepaidByThem.
   ///
   /// In en, this message translates to:
-  /// **'Unlock'**
-  String get appLockUnlock;
+  /// **'{name} paid you back'**
+  String udhaarRepaidByThem(String name);
 
-  /// No description provided for @appLockLockedOut.
+  /// No description provided for @udhaarRepaidByMe.
   ///
   /// In en, this message translates to:
-  /// **'Too many tries. Wait a little and try again.'**
-  String get appLockLockedOut;
+  /// **'You paid {name} back'**
+  String udhaarRepaidByMe(String name);
+
+  /// No description provided for @udhaarEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No udhaar yet. Money you lend to or borrow from someone outside a group shows here.'**
+  String get udhaarEmpty;
+
+  /// No description provided for @udhaarPersonEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing lent or borrowed with {name} yet.'**
+  String udhaarPersonEmpty(String name);
+
+  /// No description provided for @udhaarOtherPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled and other people'**
+  String get udhaarOtherPeople;
+
+  /// No description provided for @udhaarAddPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Add person'**
+  String get udhaarAddPerson;
+
+  /// No description provided for @udhaarEditPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit person'**
+  String get udhaarEditPerson;
+
+  /// No description provided for @udhaarPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Person'**
+  String get udhaarPerson;
+
+  /// No description provided for @udhaarPickPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a person'**
+  String get udhaarPickPerson;
+
+  /// No description provided for @udhaarAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add udhaar'**
+  String get udhaarAdd;
+
+  /// No description provided for @udhaarEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit udhaar'**
+  String get udhaarEdit;
+
+  /// No description provided for @udhaarPaidFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid from'**
+  String get udhaarPaidFrom;
+
+  /// No description provided for @udhaarReceivedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Received in'**
+  String get udhaarReceivedIn;
+
+  /// No description provided for @udhaarRemind.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind on WhatsApp'**
+  String get udhaarRemind;
+
+  /// No description provided for @udhaarReminderGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi {name}, a reminder about {amount} from {date}.'**
+  String udhaarReminderGreeting(String name, String amount, String date);
+
+  /// No description provided for @udhaarReminderPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay via UPI: {link}'**
+  String udhaarReminderPay(String link);
+
+  /// No description provided for @udhaarMyUpiId.
+  ///
+  /// In en, this message translates to:
+  /// **'Your UPI ID'**
+  String get udhaarMyUpiId;
+
+  /// No description provided for @udhaarMyUpiIdHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to reminders so people can pay you back in one tap. Leave blank to skip.'**
+  String get udhaarMyUpiIdHelp;
+
+  /// No description provided for @udhaarDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Udhaar entry deleted'**
+  String get udhaarDeleted;
+
+  /// No description provided for @udhaarFromEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Lent to or borrowed from someone?'**
+  String get udhaarFromEditor;
+
+  /// No description provided for @udhaarInGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'In groups'**
+  String get udhaarInGroups;
+
+  /// No description provided for @udhaarBalanceAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance {amount}'**
+  String udhaarBalanceAfter(String amount);
+
+  /// No description provided for @scheduledBackupFailedNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup failed: {reason}'**
+  String scheduledBackupFailedNow(String reason);
 
   /// No description provided for @cardLast4.
   ///

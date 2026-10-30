@@ -6,6 +6,7 @@ import '../../core/providers.dart';
 import '../../l10n/l10n.dart';
 import '../recurring/recurring_list_model.dart';
 import '../shell/widgets/common.dart';
+import '../udhaar/udhaar_card.dart';
 import 'widgets/accounts_card.dart';
 import 'widgets/budgets_card.dart';
 import 'widgets/quick_entries_card.dart';
@@ -43,6 +44,7 @@ class DashboardScreen extends ConsumerWidget {
       const ProjectsCard(),
       const AccountsCard(),
       const GroupsCard(),
+      const UdhaarCard(),
       const RecentCard(),
     ];
     return Scaffold(

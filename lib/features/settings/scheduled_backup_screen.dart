@@ -103,9 +103,13 @@ class _ScheduledBackupScreenState extends ConsumerState<ScheduledBackupScreen> {
     return ref.read(scheduledBackupChoicesProvider).copyWith(folderUri: folder.uri, folderName: folder.name);
   }
 
+  /// A new folder while a schedule is on gets a backup straight away, so the
+  /// status shows the new folder working rather than the old one's failure.
   Future<void> _chooseFolder() async {
     final picked = await _pickFolder();
-    if (picked != null) await _choices.save(picked);
+    if (picked == null) return;
+    await _choices.save(picked);
+    if (picked.isOn && mounted) await _backUpNow();
   }
 
   Future<void> _chooseKeep(int current) async {

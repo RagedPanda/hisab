@@ -171,4 +171,18 @@ void main() {
     expect(lastSuccess.detail, name);
     expect(find.text(english.scheduledBackupLast(formatShortDateTime(lastSuccess.at, locale: 'en'), 'Backups')), findsOneWidget);
   });
+
+  testWidgets('choosing the folder again after a failure backs up there at once', (tester) async {
+    final history = const ScheduledBackupHistory().record(ScheduledBackupTarget.folder, BackupAttempt(at: DateTime.now(), failure: ScheduledBackupFailure.folderUnavailable));
+    final harness = await _pumpScheduledBackup(tester, choices: daily, history: history, passphrase: 'correct horse');
+
+    await tester.tap(find.byKey(const Key('backupFolderTile')));
+    await tester.runAsync(() => _settle(tester, 30));
+    await _settle(tester);
+
+    expect(harness.folder.picks, 1);
+    expect(isHisabBackupName(harness.folder.files.keys.single), isTrue);
+    expect(harness.container.read(scheduledBackupHistoryProvider).lastAttempt[ScheduledBackupTarget.folder]!.succeeded, isTrue);
+    expect(find.text(english.scheduledBackupSaved), findsOneWidget);
+  });
 }

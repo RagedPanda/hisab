@@ -8,6 +8,7 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import com.ragedpanda.hisab.backup.ScheduledBackupChannel
 import com.ragedpanda.hisab.launcher.LauncherChannel
 import com.ragedpanda.hisab.sms.SmsCaptureBridge
 import com.ragedpanda.hisab.sms.SmsCaptureSettings
@@ -21,6 +22,8 @@ import com.ragedpanda.hisab.sms.SmsQueue
  * these methods before that. Nothing is sent off the device.
  */
 class MainActivity : FlutterActivity() {
+    private var scheduledBackup: ScheduledBackupChannel? = null
+
     // Text shared from another app arrives as ACTION_SEND. Turn it into the
     // hisab://sms?text=... link before Flutter reads the intent, so the
     // router opens the SMS paste screen as it does for any deep link.
@@ -38,6 +41,7 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         LauncherChannel.register(this, flutterEngine.dartExecutor.binaryMessenger)
+        scheduledBackup = ScheduledBackupChannel(this, flutterEngine.dartExecutor.binaryMessenger, activity = this)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, METHOD_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
@@ -106,6 +110,14 @@ class MainActivity : FlutterActivity() {
             }
         }
         return rows
+    }
+
+    @Deprecated("FlutterActivity has no Activity Result API; the folder picker comes back here.")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (scheduledBackup?.onActivityResult(requestCode, resultCode, data) != true) {
+            @Suppress("DEPRECATION")
+            super.onActivityResult(requestCode, resultCode, data)
+        }
     }
 
     override fun onResume() {

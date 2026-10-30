@@ -14,7 +14,7 @@
          without it reminders are posted inexact (a few minutes late), never blocked. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <!-- Re-post reminder alerts, and the opt-in "Add expense" notification, after a
-         reboot or an app update. -->
+         reboot or an app update. Also keeps the scheduled backup job across reboots. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Only for the opt-in Settings > Back up to Google Drive: talks to the user's own
@@ -113,6 +113,13 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+        <!-- Scheduled backup (Settings > Scheduled backup): a periodic job that wakes
+             Hisab while a schedule is on to write a due encrypted backup to the folder
+             the user chose. Only the system may bind it. -->
+        <service
+            android:name=".backup.ScheduledBackupJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

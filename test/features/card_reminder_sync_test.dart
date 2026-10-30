@@ -14,6 +14,7 @@ import 'package:hisab/data/repositories/reminders_repository.dart';
 import 'package:hisab/core/notifications/reminder_payload.dart';
 import 'package:hisab/domain/reminders/reminder_draft.dart';
 import 'package:hisab/domain/cards/card_reminder.dart';
+import 'package:hisab/domain/cards/card_sms_facts.dart';
 import 'package:hisab/domain/reminders/reminder_kind.dart';
 import 'package:hisab/domain/reminders/reminder_schedule.dart';
 import 'package:hisab/features/accounts/card_reminder_sync.dart';
@@ -85,6 +86,29 @@ void main() {
     final moved = (await cardReminders()).single;
     expect(moved.id, first.id);
     expect(moved.dueAt, DateTime(2026, 10, 20));
+  });
+
+  test('a statement read from SMS moves the same reminder to its bill', () async {
+    final card = await addCard();
+    await sync.syncAccount(card);
+    final first = (await cardReminders()).single;
+    final fields = CardStatementFields(
+      lastStatementMinor: 2345678,
+      lastStatementAt: DateTime(2026, 10, 5),
+      minimumDueMinor: 118000,
+      statementFromSmsAt: DateTime(2026, 10, 6, 9),
+      dueDay: 24,
+      statementDay: 5,
+    );
+    await accounts.applySmsStatement(card.id, fields);
+    await sync.syncAccountById(card.id);
+    await accounts.applySmsStatement(card.id, fields);
+    await sync.syncAccountById(card.id);
+    final rows = await cardReminders();
+    expect(rows, hasLength(1), reason: 'updated in place, never duplicated');
+    expect(rows.single.id, first.id);
+    expect(rows.single.dueAt, DateTime(2026, 10, 24));
+    expect(rows.single.amountMinor, 2345678);
   });
 
   test('a payment towards the bill lowers the reminder amount', () async {

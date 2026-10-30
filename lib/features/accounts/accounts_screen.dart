@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,6 +12,7 @@ import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../domain/accounts/account_label.dart';
 import '../../domain/accounts/balance_input.dart';
+import '../../domain/accounts/card_last4.dart';
 import '../../domain/cards/card_sms_facts.dart';
 import '../../domain/cards/card_summary.dart';
 import '../../l10n/l10n.dart';
@@ -85,6 +87,8 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
     var statementDay = existing?.statementDay;
     var dueDay = existing?.dueDay;
     String? statementError;
+    String? last4Error;
+    final last4Controller = TextEditingController(text: existing?.last4 ?? '');
     final limitController = TextEditingController(text: existing?.creditLimitMinor == null ? '' : amountInputText(existing!.creditLimitMinor!, format: moneyFormat));
     final lastStatementController = TextEditingController(text: existing?.lastStatementMinor == null ? '' : amountInputText(existing!.lastStatementMinor!, format: moneyFormat));
     final l10n = context.l10n;
@@ -141,6 +145,11 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                   limitController: limitController,
                   lastStatementController: lastStatementController,
                   statementError: statementError,
+                  last4Controller: last4Controller,
+                  last4Error: last4Error,
+                  onLast4Changed: () {
+                    if (last4Error != null) setSheetState(() => last4Error = null);
+                  },
                   onStatementChanged: () {
                     if (statementError != null) setSheetState(() => statementError = null);
                   },
@@ -181,7 +190,7 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                   onPressed: () async {
                     final name = nameController.text.trim();
                     if (name.isEmpty) return;
-                    final signed = signedBalanceFromInput(enteredMinor: parseAmountToMinor(balanceController.text, format: moneyFormat) ?? 0, negative: balanceNegative);
+                    var signed = signedBalanceFromInput(enteredMinor: parseAmountToMinor(balanceController.text, format: moneyFormat) ?? 0, negative: balanceNegative);
                     final repo = ref.read(accountsRepositoryProvider);
                     final card = cardFieldsFromForm(
                       isCard: type == 'card',
@@ -192,12 +201,26 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                       existing: existing,
                       moneyFormat: moneyFormat,
                     );
+                    if (type == 'card' && !isValidLast4Input(last4Controller.text)) {
+                      setSheetState(() => last4Error = l10n.cardLast4Invalid);
+                      return;
+                    }
+                    final last4 = type == 'card' ? last4FromInput(last4Controller.text) : existing?.last4;
                     if (type == 'card') {
-                      final amountDueMinor = outstandingMinor(signed);
                       final statementAt = card.lastStatementAt;
-                      final paidSince = existing == null || statementAt == null
-                          ? 0
-                          : paymentsSinceMinor(await ref.read(entriesRepositoryProvider).getAccountMovements(existing.id, since: statementAt), cardId: existing.id, since: statementAt);
+                      final movements = existing == null || statementAt == null
+                          ? const <CardMovement>[]
+                          : await ref.read(entriesRepositoryProvider).getAccountMovements(existing.id, since: statementAt);
+                      signed = cardBalanceFromForm(
+                        cardId: existing?.id ?? '',
+                        enteredBalanceMinor: signed,
+                        hasBalanceOnRecord: existing != null && hasCardBalanceOnRecord(balanceMinor: existing.balanceMinor, balanceAsOf: existing.balanceAsOf),
+                        lastStatementMinor: card.lastStatementMinor,
+                        lastStatementAt: statementAt,
+                        movements: movements,
+                      );
+                      final amountDueMinor = outstandingMinor(signed);
+                      final paidSince = existing == null || statementAt == null ? 0 : paymentsSinceMinor(movements, cardId: existing.id, since: statementAt);
                       final previousStatement = existing?.type == 'card' ? existing?.lastStatementMinor : null;
                       if (lastStatementExceedsAmountDue(lastStatementMinor: card.lastStatementMinor, amountDueMinor: amountDueMinor, previousStatementMinor: previousStatement, paidSinceStatementMinor: paidSince)) {
                         setSheetState(() => statementError = l10n.cardStatementOverAmountDue(formatMinor(amountDueMinor, format: moneyFormat)));
@@ -212,6 +235,7 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                         color: color,
                         balanceMinor: signed,
                         includeInTotal: include,
+                        last4: last4,
                         statementDay: card.statementDay,
                         dueDay: card.dueDay,
                         creditLimitMinor: card.creditLimitMinor,
@@ -235,6 +259,8 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                         balanceMinor: Value(signed),
                         balanceAsOf: Value(signed == existing.balanceMinor ? existing.balanceAsOf : DateTime.now()),
                         includeInTotal: Value(include),
+                        last4: Value(last4),
+                        smsKey: Value(smsKeyAfterLast4Edit(smsKey: existing.smsKey, previousLast4: existing.last4, newLast4: last4)),
                         statementDay: Value(card.statementDay),
                         dueDay: Value(card.dueDay),
                         creditLimitMinor: Value(card.creditLimitMinor),
@@ -305,6 +331,9 @@ class _CardFields extends StatelessWidget {
     required this.limitController,
     required this.lastStatementController,
     required this.statementError,
+    required this.last4Controller,
+    required this.last4Error,
+    required this.onLast4Changed,
     required this.onStatementChanged,
     required this.onStatementDay,
     required this.onDueDay,
@@ -315,6 +344,9 @@ class _CardFields extends StatelessWidget {
   final TextEditingController limitController;
   final TextEditingController lastStatementController;
   final String? statementError;
+  final TextEditingController last4Controller;
+  final String? last4Error;
+  final VoidCallback onLast4Changed;
   final VoidCallback onStatementChanged;
   final ValueChanged<int?> onStatementDay;
   final ValueChanged<int?> onDueDay;
@@ -346,12 +378,32 @@ class _CardFields extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        TextField(
-          key: const ValueKey('account.creditLimit'),
-          controller: limitController,
-          keyboardType: amountKeyboardType(moneyFormat),
-          inputFormatters: amountInputFormatters(moneyFormat),
-          decoration: InputDecoration(labelText: l10n.cardCreditLimit),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextField(
+                key: const ValueKey('account.creditLimit'),
+                controller: limitController,
+                keyboardType: amountKeyboardType(moneyFormat),
+                inputFormatters: amountInputFormatters(moneyFormat),
+                decoration: InputDecoration(labelText: l10n.cardCreditLimit),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // The digits card SMS are matched on, so a card added by hand
+            // gets its bank's messages instead of a second card.
+            Expanded(
+              child: TextField(
+                key: const ValueKey('account.last4'),
+                controller: last4Controller,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(4)],
+                onChanged: (_) => onLast4Changed(),
+                decoration: InputDecoration(labelText: l10n.cardLast4, errorText: last4Error, errorMaxLines: 3),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         TextField(

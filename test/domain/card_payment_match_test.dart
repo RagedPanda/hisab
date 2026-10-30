@@ -44,4 +44,17 @@ void main() {
       expect(hintsCardBillPayment('Swiggy order'), isFalse);
     });
   });
+
+  group('linkedCardPaymentCategoryId', () {
+    test('keeps the category the entry had', () {
+      expect(linkedCardPaymentCategoryId(entryCategoryId: 'bill', entrySeedKey: 'credit_card_bill', cardPaymentCategoryId: 'ccp'), 'bill');
+      expect(linkedCardPaymentCategoryId(entryCategoryId: 'mine', cardPaymentCategoryId: 'ccp'), 'mine', reason: 'a category the user made');
+    });
+
+    test('takes Credit Card Payment for none or a catch-all', () {
+      expect(linkedCardPaymentCategoryId(cardPaymentCategoryId: 'ccp'), 'ccp');
+      expect(linkedCardPaymentCategoryId(entryCategoryId: 'other', entrySeedKey: 'other_expense', cardPaymentCategoryId: 'ccp'), 'ccp');
+      expect(linkedCardPaymentCategoryId(entryCategoryId: 'other', entrySeedKey: 'other_expense'), isNull);
+    });
+  });
 }

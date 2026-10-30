@@ -43,3 +43,16 @@ CardPaymentCandidate? pickCardPaymentMatch(
   if (hinted.isNotEmpty) return hinted.first;
   return inWindow.length == 1 ? inWindow.single : null;
 }
+
+/// Seed key of the transfer category for card bill payments.
+const kCardPaymentCategoryKey = 'credit_card_payment';
+
+/// Seed keys of the catch-all categories, which say nothing about a payment.
+const _catchAllCategoryKeys = {'other_expense', 'other_income'};
+
+/// The category a card bill payment keeps once it is linked as a transfer:
+/// the one the entry already had ([entryCategoryId], seeded as
+/// [entrySeedKey]) unless that is a catch-all such as "Other"; otherwise
+/// [cardPaymentCategoryId], the "Credit Card Payment" category.
+String? linkedCardPaymentCategoryId({String? entryCategoryId, String? entrySeedKey, String? cardPaymentCategoryId}) =>
+    entryCategoryId != null && !_catchAllCategoryKeys.contains(entrySeedKey) ? entryCategoryId : cardPaymentCategoryId;

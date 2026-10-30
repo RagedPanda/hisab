@@ -73,6 +73,11 @@ class FakeNotificationsPlugin implements FlutterLocalNotificationsPlugin {
   DidReceiveBackgroundNotificationResponseCallback? onBackgroundResponse;
   final List<({int id, String? title, String? payload, tz.TZDateTime scheduledDate, NotificationDetails details, AndroidScheduleMode mode})> scheduled = [];
   final List<int> cancelled = [];
+  final List<({int id, String? title, NotificationDetails? details})> shown = [];
+
+  @override
+  Future<void> show({required int id, String? title, String? body, NotificationDetails? notificationDetails, String? payload}) async =>
+      shown.add((id: id, title: title, details: notificationDetails));
 
   @override
   T? resolvePlatformSpecificImplementation<T extends FlutterLocalNotificationsPlatform>() {
@@ -157,7 +162,8 @@ void main() {
 
       await PluginNotificationGateway(_texts, plugin: plugin).initialize(onTap: taps.add);
 
-      final channel = android.channels.single;
+      expect(android.channels.map((channel) => channel.id), ['reminders', 'updates']);
+      final channel = android.channels.first;
       expect(channel.id, 'reminders');
       expect(channel.name, 'Reminders');
       expect(channel.description, 'Bills and documents');
@@ -235,6 +241,31 @@ void main() {
       expect(posted.details.android!.actions, isNull);
       expect(posted.details.iOS!.categoryIdentifier, isNull);
     });
+  });
+
+  test('show posts at once on the updates channel, without actions', () async {
+    final plugin = FakeNotificationsPlugin();
+    final request = AlertRequest(
+      id: 7,
+      title: 'Sample · Your day in Hisab',
+      body: 'Nothing spent today',
+      fireAt: DateTime(2026, 10, 29, 21),
+      payload: 'hisab://sample',
+      markPaidLabel: '',
+      snoozeLabel: '',
+      isMoney: false,
+      withActions: false,
+      channel: AlertChannel.updates,
+    );
+
+    await PluginNotificationGateway(_texts, plugin: plugin).show(request);
+
+    final android = plugin.shown.single.details!.android!;
+    expect(plugin.shown.single.id, 7);
+    expect(android.channelId, 'updates');
+    expect(android.channelName, 'Reminders', reason: 'falls back to the reminders channel name when none is given');
+    expect(android.actions, isNull);
+    expect(plugin.scheduled, isEmpty);
   });
 
   test('cancel and pending pass through to the plugin', () async {

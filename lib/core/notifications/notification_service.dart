@@ -17,12 +17,16 @@ typedef AlertBuilder = AlertRequest Function(Reminder reminder, PlannedAlert ale
 /// alarm_timing.dart); otherwise they fall back to inexact and the Reminders
 /// screen asks for "Alarms & reminders". Nothing is blocked either way.
 class NotificationService {
-  NotificationService(this._gateway, {required this.buildAlert, DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
+  NotificationService(this._gateway, {required this.buildAlert, this.remindersAllowed = true, DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
 
   final NotificationGateway _gateway;
 
   /// Turns a planned alert into the notification posted (texts in the app language).
   final AlertBuilder buildAlert;
+
+  /// False when the user turned reminder notifications off in Settings >
+  /// Notifications: reminders still show in the app, nothing is posted.
+  final bool remindersAllowed;
   final DateTime Function() _clock;
 
   Future<void> initialize({required void Function(NotificationTap tap) onTap}) => _gateway.initialize(onTap: onTap);
@@ -83,7 +87,7 @@ class NotificationService {
   }
 
   List<PlannedAlert> _plan(Reminder reminder) {
-    final schedulable = reminder.deletedAt == null && reminder.status == ReminderStatus.pending && reminder.dueAt != null;
+    final schedulable = remindersAllowed && reminder.deletedAt == null && reminder.status == ReminderStatus.pending && reminder.dueAt != null;
     if (!schedulable) return const [];
     // A group's settle-up schedule posts its next few occurrences, so one
     // firing while the app stays closed never leaves the following week bare.

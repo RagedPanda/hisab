@@ -15,6 +15,8 @@ data class SmsCaptureSettings(
     val bodyWithAmount: String,
     /** Contains a "{sender}" placeholder. */
     val bodyWithoutAmount: String,
+    /** False when the user turned "New bank SMS" off in Settings > Notifications. */
+    val notify: Boolean = true,
 ) {
     fun body(amount: String?, sender: String): String =
         (if (amount == null) bodyWithoutAmount else bodyWithAmount.replace("{amount}", amount)).replace("{sender}", sender)
@@ -38,6 +40,7 @@ data class SmsCaptureSettings(
                 title = prefs.getString("title", null) ?: DEFAULT.title,
                 bodyWithAmount = prefs.getString("bodyWithAmount", null) ?: DEFAULT.bodyWithAmount,
                 bodyWithoutAmount = prefs.getString("bodyWithoutAmount", null) ?: DEFAULT.bodyWithoutAmount,
+                notify = prefs.getBoolean("notify", DEFAULT.notify),
             )
         }
 
@@ -48,6 +51,7 @@ data class SmsCaptureSettings(
                 .putString("title", settings.title)
                 .putString("bodyWithAmount", settings.bodyWithAmount)
                 .putString("bodyWithoutAmount", settings.bodyWithoutAmount)
+                .putBoolean("notify", settings.notify)
                 .commit()
         }
 
@@ -57,6 +61,7 @@ data class SmsCaptureSettings(
             title = arguments["title"] as? String ?: DEFAULT.title,
             bodyWithAmount = arguments["bodyWithAmount"] as? String ?: DEFAULT.bodyWithAmount,
             bodyWithoutAmount = arguments["bodyWithoutAmount"] as? String ?: DEFAULT.bodyWithoutAmount,
+            notify = arguments["notify"] as? Boolean ?: DEFAULT.notify,
         )
     }
 }

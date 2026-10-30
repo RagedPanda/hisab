@@ -74,6 +74,7 @@ class SmsCaptureConfig {
     required this.title,
     required this.bodyWithAmount,
     required this.bodyWithoutAmount,
+    this.notify = true,
   });
 
   final bool enabled;
@@ -82,12 +83,17 @@ class SmsCaptureConfig {
   final String bodyWithAmount;
   final String bodyWithoutAmount;
 
+  /// Whether "New bank transaction" is posted; false when the user turned it
+  /// off in Settings > Notifications. Messages are still captured.
+  final bool notify;
+
   Map<String, Object> toMap() => {
         'enabled': enabled,
         'channelName': channelName,
         'title': title,
         'bodyWithAmount': bodyWithAmount,
         'bodyWithoutAmount': bodyWithoutAmount,
+        'notify': notify,
       };
 }
 

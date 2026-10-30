@@ -8,6 +8,7 @@ import '../../core/notifications/reminder_tap_gate.dart';
 import '../../core/providers.dart';
 import '../accounts/card_reminder_sync.dart';
 import '../groups/settle_reminder_service.dart';
+import '../notifications/evening_summary_service.dart';
 import '../salary/salary_reminder.dart';
 import '../shell/router.dart';
 
@@ -52,8 +53,17 @@ Future<void> startReminderNotifications(ProviderContainer container) async {
     await container.read(reminderSchedulerProvider).rescheduleAll();
     // Re-post the salary alert now the plugin is ready (the first sync can beat it).
     await syncSalaryReminder(container.read, now: DateTime.now());
+    await refreshEveningSummary(container.read);
     _resumeListener?.dispose();
-    _resumeListener = AppLifecycleListener(onResume: () async => known = await recheckAlarmAccess(container, known));
+    // The evening summary's text is worked out ahead, so it is redone each
+    // time the app comes back or is left, when the day's figures may have moved.
+    _resumeListener = AppLifecycleListener(
+      onResume: () async {
+        known = await recheckAlarmAccess(container, known);
+        await refreshEveningSummary(container.read);
+      },
+      onPause: () => refreshEveningSummary(container.read),
+    );
   } catch (error, stack) {
     debugPrint('Hisab: reminder notifications unavailable: $error\n$stack');
   }

@@ -16,6 +16,7 @@ import '../../domain/currency/currency_lookup.dart';
 import '../currency/currency_picker.dart';
 import '../../l10n/l10n.dart';
 import '../groups/member_display.dart';
+import '../notifications/notification_settings_screen.dart';
 import '../quick_entries/quick_entries_screen.dart';
 import '../reminders/reminders_settings_tile.dart';
 import '../salary/salary_providers.dart';
@@ -164,6 +165,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const Card(child: RemindersSettingsTile()),
+          const Card(child: NotificationsSettingsTile()),
           SectionHeader(l10n.groups),
           Card(
             child: ListTile(

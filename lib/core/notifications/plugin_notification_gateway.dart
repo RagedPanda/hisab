@@ -9,6 +9,7 @@ import 'notification_gateway.dart';
 import 'reminder_payload.dart';
 
 const String _channelId = 'reminders';
+const String _updatesChannelId = 'updates';
 const String _moneyCategoryId = 'reminderMoney';
 const String _doneCategoryId = 'reminderDone';
 
@@ -68,7 +69,15 @@ class PluginNotificationGateway implements NotificationGateway {
       description: _texts.channelDescription,
       importance: Importance.high,
     ));
+    await _android?.createNotificationChannel(AndroidNotificationChannel(
+      _updatesChannelId,
+      _updatesName,
+      description: _texts.updatesChannelDescription ?? _texts.channelDescription,
+      importance: Importance.defaultImportance,
+    ));
   }
+
+  String get _updatesName => _texts.updatesChannelName ?? _texts.channelName;
 
   @override
   Future<NotificationTap?> launchTap() async {
@@ -88,25 +97,40 @@ class PluginNotificationGateway implements NotificationGateway {
       payload: request.payload,
       scheduledDate: tz.TZDateTime.from(request.fireAt, tz.local),
       androidScheduleMode: exact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle,
-      notificationDetails: NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          _texts.channelName,
-          channelDescription: _texts.channelDescription,
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@drawable/ic_notification',
-          category: AndroidNotificationCategory.reminder,
-          actions: request.withActions
-              ? [
-                  AndroidNotificationAction(kMarkPaidActionId, request.markPaidLabel, showsUserInterface: true),
-                  AndroidNotificationAction(kSnoozeActionId, request.snoozeLabel),
-                ]
-              : null,
-        ),
-        iOS: DarwinNotificationDetails(
-          categoryIdentifier: request.withActions ? (request.isMoney ? _moneyCategoryId : _doneCategoryId) : null,
-        ),
+      notificationDetails: _details(request),
+    );
+  }
+
+  @override
+  Future<void> show(AlertRequest request) => _plugin.show(
+        id: request.id,
+        title: request.title,
+        body: request.body,
+        payload: request.payload,
+        notificationDetails: _details(request),
+      );
+
+  NotificationDetails _details(AlertRequest request) {
+    final reminders = request.channel == AlertChannel.reminders;
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        reminders ? _channelId : _updatesChannelId,
+        reminders ? _texts.channelName : _updatesName,
+        channelDescription: reminders ? _texts.channelDescription : (_texts.updatesChannelDescription ?? _texts.channelDescription),
+        importance: reminders ? Importance.high : Importance.defaultImportance,
+        priority: reminders ? Priority.high : Priority.defaultPriority,
+        icon: '@drawable/ic_notification',
+        category: reminders ? AndroidNotificationCategory.reminder : AndroidNotificationCategory.status,
+        styleInformation: reminders ? null : BigTextStyleInformation(request.body),
+        actions: request.withActions
+            ? [
+                AndroidNotificationAction(kMarkPaidActionId, request.markPaidLabel, showsUserInterface: true),
+                AndroidNotificationAction(kSnoozeActionId, request.snoozeLabel),
+              ]
+            : null,
+      ),
+      iOS: DarwinNotificationDetails(
+        categoryIdentifier: request.withActions ? (request.isMoney ? _moneyCategoryId : _doneCategoryId) : null,
       ),
     );
   }

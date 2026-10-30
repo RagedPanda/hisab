@@ -2546,6 +2546,117 @@ class AppLocalizationsEn extends AppLocalizations {
       'Alerts before bills, EMIs, card dues and renewals are due';
 
   @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String notificationsSettingsSubtitle(int on, int total) {
+    return '$on of $total on';
+  }
+
+  @override
+  String get notificationsIntro =>
+      'Pick what Hisab may notify you about. Each one starts off; turn on only what helps.';
+
+  @override
+  String get notificationsBlocked =>
+      'Notifications are blocked for Hisab on this phone.';
+
+  @override
+  String get notificationsAllow => 'Allow';
+
+  @override
+  String get notificationsShowSample => 'Show sample';
+
+  @override
+  String get notificationsSampleSent =>
+      'Sample sent. Pull down the notification shade to see it.';
+
+  @override
+  String notificationsSampleTitle(String title) {
+    return 'Sample · $title';
+  }
+
+  @override
+  String get notificationsUpdatesChannel => 'Daily summary and samples';
+
+  @override
+  String get notificationsUpdatesChannelDescription =>
+      'The evening summary and samples sent from Settings';
+
+  @override
+  String get notifKindReminders => 'Reminders';
+
+  @override
+  String get notifKindRemindersHelp =>
+      'Bills, documents, card dues and group settle-ups you set reminders for';
+
+  @override
+  String get notifKindSalary => 'Salary not seen yet';
+
+  @override
+  String get notifKindSalaryHelp =>
+      'When your salary has not arrived by its expected day';
+
+  @override
+  String get notifKindSalaryNeedsSetup => 'Set up salary first';
+
+  @override
+  String get notifKindBankSms => 'New bank SMS';
+
+  @override
+  String get notifKindBankSmsHelp =>
+      'A bank transaction SMS arrived while Hisab was closed';
+
+  @override
+  String get notifKindBankSmsNeedsSetup => 'Works once Bank SMS is on';
+
+  @override
+  String get notifKindEveningSummary => 'Evening summary';
+
+  @override
+  String get notifKindEveningSummaryHelp =>
+      'Today\'s spend, SMS to review and bills due in the next 3 days';
+
+  @override
+  String get eveningSummaryTime => 'Summary time';
+
+  @override
+  String get eveningSummaryTitle => 'Your day in Hisab';
+
+  @override
+  String eveningSummarySpent(String amount) {
+    return 'Spent $amount today';
+  }
+
+  @override
+  String get eveningSummaryNothingSpent => 'Nothing spent today';
+
+  @override
+  String eveningSummaryReview(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count SMS to review',
+      one: '1 SMS to review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String eveningSummaryDue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bills due in the next 3 days',
+      one: '1 bill due in the next 3 days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifSampleReminderTitle => 'Electricity bill';
+
+  @override
   String get reminderMarkPaid => 'Mark paid';
 
   @override

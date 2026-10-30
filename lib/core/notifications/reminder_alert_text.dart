@@ -24,6 +24,8 @@ NotificationSetupTexts notificationSetupTexts(AppLocalizations l10n) => Notifica
       markPaidLabel: l10n.reminderMarkPaid,
       doneLabel: l10n.reminderMarkDone,
       snoozeLabel: l10n.reminderSnoozeOneDay,
+      updatesChannelName: l10n.notificationsUpdatesChannel,
+      updatesChannelDescription: l10n.notificationsUpdatesChannelDescription,
     );
 
 /// "Due in 3 days · ₹2,100", "Due today", "Overdue by 2 days · ₹999".

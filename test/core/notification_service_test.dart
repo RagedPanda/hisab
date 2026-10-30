@@ -48,6 +48,23 @@ void main() {
         notifyAtMinute: 9 * 60 + 30,
       );
 
+  test('with reminder notifications switched off nothing is posted, and turning them back on restores the alerts', () async {
+    final id = await scheduler.save(electricity());
+    final muted = ReminderScheduler(
+      reminders: repository,
+      notifications: NotificationService(gateway, buildAlert: (r, a) => alertRequestFor(r, a, english, moneyFormat: MoneyFormat.inr), remindersAllowed: false, clock: () => now),
+      clock: () => now,
+    );
+
+    expect(await muted.rescheduleAll(), 0);
+    expect(gateway.alertsFor(reminderPayload(id)), isEmpty, reason: 'the alerts already posted are dropped too');
+    await muted.snooze(id);
+    expect(gateway.alertsFor(reminderPayload(id)), isEmpty);
+
+    expect(await scheduler.rescheduleAll(), greaterThan(0));
+    expect(gateway.alertsFor(reminderPayload(id)), isNotEmpty);
+  });
+
   test('save schedules one alert per day before with texts, actions and payload', () async {
     final id = await scheduler.save(electricity());
     final alerts = gateway.alertsFor(reminderPayload(id));

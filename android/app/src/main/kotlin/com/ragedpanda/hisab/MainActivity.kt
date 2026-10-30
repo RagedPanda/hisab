@@ -2,6 +2,7 @@ package com.ragedpanda.hisab
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Telephony
 import android.view.WindowManager
@@ -55,6 +56,15 @@ class MainActivity : FlutterFragmentActivity() {
                         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
                     } else {
                         window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    }
+                    result.success(null)
+                }
+                // App lock on: the recents card shows the app icon, not a
+                // snapshot. Android takes that snapshot before Flutter can
+                // draw a cover, so this is the only way without FLAG_SECURE.
+                "setRecentsHidden" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        setRecentsScreenshotEnabled(call.arguments != true)
                     }
                     result.success(null)
                 }

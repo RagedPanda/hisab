@@ -281,14 +281,32 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _keypadOnResume = AppLifecycleListener(onResume: _showAmountKeypad);
     }
     // Opened behind the app lock, the amount could not take focus; it takes
-    // it once the user unlocks.
+    // it once the user unlocks. So does an amount the lock took focus from.
     ref.listenManual(appLockedProvider, (wasLocked, locked) {
+      if (locked) _amountFocusedAtLock = _amountFocus.hasFocus;
       if (wasLocked == true && !locked) _focusAmountAfterUnlock();
     });
   }
 
+  /// Whether the amount had focus when the app lock came up; null when the
+  /// editor opened behind the lock.
+  bool? _amountFocusedAtLock;
+
   void _focusAmountAfterUnlock() {
-    if (!_autofocusAmount || _isEditing || _hasItems || _amountFocus.hasFocus) return;
+    final refocus = _amountFocusedAtLock ?? (_autofocusAmount && !_isEditing && !_hasItems);
+    if (!refocus || _amountFocus.hasFocus) return;
+    // The closing prompt still holds the window's focus, and Android drops
+    // a keypad asked for before the window is focused again.
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      _keypadOnResume?.dispose();
+      _keypadOnResume = AppLifecycleListener(onResume: () {
+        _keypadOnResume?.dispose();
+        _keypadOnResume = null;
+        _focusAmountAfterUnlock();
+      });
+      return;
+    }
+    _amountFocusedAtLock = null;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _amountFocus.requestFocus();
     });

@@ -33,4 +33,9 @@ class FakeSecureWindow extends SecureWindowChannel {
 
   @override
   Future<void> setSecure(bool secure) async => calls.add(secure);
+
+  final recentsCalls = <bool>[];
+
+  @override
+  Future<void> setRecentsHidden(bool hidden) async => recentsCalls.add(hidden);
 }

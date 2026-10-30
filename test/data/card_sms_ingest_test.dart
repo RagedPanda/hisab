@@ -21,6 +21,8 @@ void main() {
   late AppDatabase db;
   late AccountsRepository accounts;
   late SmsLogRepository smsLog;
+  late CategoriesRepository categories;
+  late EntriesRepository entries;
   late SmsIngestService service;
   var defaultAccountId = '';
 
@@ -29,12 +31,14 @@ void main() {
     db = AppDatabase(NativeDatabase.memory());
     accounts = AccountsRepository(db);
     smsLog = SmsLogRepository(db);
+    categories = CategoriesRepository(db);
+    entries = EntriesRepository(db);
     defaultAccountId = '';
     service = SmsIngestService(
       smsLog: smsLog,
       accounts: accounts,
-      categories: CategoriesRepository(db),
-      entries: EntriesRepository(db),
+      categories: categories,
+      entries: entries,
       cursor: SmsSyncCursor(await SharedPreferences.getInstance()),
       homeCurrencyCode: () => 'INR',
       defaultAccountId: () => defaultAccountId,
@@ -120,7 +124,7 @@ void main() {
       expect(payments.single.kind, 'transfer');
       expect(payments.single.accountId, (await accounts.findBySmsKey('HDFC Bank:ac:7781'))!.id);
       expect(payments.single.toAccountId, (await card())!.id);
-      expect(payments.single.categoryId, isNull);
+      expect(payments.single.categoryId, isNotNull, reason: 'the debit keeps a category as a transfer');
       expect(added, isEmpty, reason: 'nothing new was added, so nothing to announce');
     });
 
@@ -205,6 +209,112 @@ void main() {
       expect(await smsLog.watchPending().first, isEmpty);
       final payments = [for (final entry in await liveEntries()) if (entry.amountMinor == 1200000) entry];
       expect(payments.single.accountId, (await accounts.findBySmsKey('HDFC Bank:ac:7781'))!.id);
+    });
+  });
+
+  group('amount owed from the statement', () {
+    final received = DateTime(2026, 10, 13, 10);
+
+    test('a statement sets what a card read from SMS owes', () async {
+      await ingest(_statement, at: received);
+      final saved = (await card())!;
+      expect(saved.balanceMinor, -2345678, reason: 'Outstanding and Due are the statement, not 0');
+      expect(saved.balanceAsOf, received);
+    });
+
+    test('bill payments and card spends read from SMS later move it; undo puts it back', () async {
+      final savings = await bank();
+      defaultAccountId = savings.id;
+      await ingest(_statement, at: received);
+      final added = <SmsAutoAdded>[];
+      final subscription = service.autoAdded.listen(added.add);
+      await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
+      expect((await card())!.balanceMinor, -(2345678 + 125000));
+      await ingest(_cardPayment, at: DateTime(2026, 10, 21, 12));
+      expect((await card())!.balanceMinor, -(2345678 + 125000 - 1200000));
+      await Future<void>.delayed(Duration.zero);
+      await subscription.cancel();
+      await service.undoAutoAdd(added.last);
+      expect((await card())!.balanceMinor, -(2345678 + 125000));
+    });
+
+    test('a newer balance set by hand is kept, and stops following the statement', () async {
+      final hand = await accounts.create(name: 'Regalia', type: 'card', color: 0, last4: '4521', balanceMinor: -500000);
+      await ingest(_statement, at: received);
+      expect((await accounts.getById(hand.id))!.balanceMinor, -500000);
+      expect((await accounts.getById(hand.id))!.lastStatementMinor, 2345678);
+    });
+
+    test('the next statement takes over from a balance it set', () async {
+      await ingest(_statement, at: received);
+      await ingest(
+        'Statement for HDFC Bank Credit Card XX4521 dated 12-11-26: Total Amt Due Rs 9,000.00, Min Amt Due Rs 450.00, Due Date 01-12-26.',
+        at: DateTime(2026, 11, 13, 10),
+      );
+      expect((await card())!.balanceMinor, -900000);
+    });
+  });
+
+  group('card added by hand with its last 4 digits', () {
+    Future<Account> handCard() => accounts.create(name: 'Regalia', type: 'card', color: 0, last4: '4521');
+    Future<List<Account>> cards() async => [for (final account in await accounts.getAll()) if (account.type == 'card') account];
+
+    test('card spend, statement and payment SMS land on it, not on a new card', () async {
+      final hand = await handCard();
+      defaultAccountId = (await bank()).id;
+      await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
+      await ingest(_statement, at: DateTime(2026, 10, 13, 10));
+      await ingest(_cardPayment, at: DateTime(2026, 10, 21, 12));
+      final all = await cards();
+      expect(all.map((account) => account.id), [hand.id]);
+      expect(all.single.smsKey, 'HDFC Bank:cc:4521', reason: 'later messages find it by key');
+      expect(all.single.lastStatementMinor, 2345678);
+      expect([for (final entry in await liveEntries()) if (entry.kind == 'expense') entry.accountId], [hand.id]);
+    });
+
+    test('next to a card read from SMS with the same digits, no further card is made', () async {
+      await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
+      await handCard();
+      await ingest(_statement, at: DateTime(2026, 10, 13, 10));
+      await ingest('Rs 99.00 spent on HDFC Bank Credit Card XX4521 at ZOMATO on 2026-10-22. Avl Lmt: Rs 70,000.00', at: DateTime(2026, 10, 22, 9));
+      expect(await cards(), hasLength(2));
+    });
+  });
+
+  group('category of a card bill payment', () {
+    Future<Category> cardPaymentCategory() async => (await categories.findBySeedKey('credit_card_payment'))!;
+
+    test('a bank debit linked to the card keeps its own category', () async {
+      await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
+      await ingest(_bankDebit, at: DateTime(2026, 10, 21, 11));
+      final debit = (await liveEntries()).singleWhere((entry) => entry.amountMinor == 1200000);
+      final bill = (await categories.findBySeedKey('credit_card_bill'))!;
+      await entries.setCategory(debit.id, bill.id);
+      await ingest(_cardPayment, at: DateTime(2026, 10, 21, 12));
+      final payment = (await liveEntries()).singleWhere((entry) => entry.id == debit.id);
+      expect(payment.kind, 'transfer');
+      expect(payment.categoryId, bill.id);
+    });
+
+    test('a debit filed under Other becomes Credit Card Payment', () async {
+      await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
+      await ingest(_bankDebit, at: DateTime(2026, 10, 21, 11));
+      final debit = (await liveEntries()).singleWhere((entry) => entry.amountMinor == 1200000);
+      await entries.setCategory(debit.id, (await categories.findBySeedKey('other_expense'))!.id);
+      await ingest(_cardPayment, at: DateTime(2026, 10, 21, 12));
+      final payment = (await liveEntries()).singleWhere((entry) => entry.id == debit.id);
+      expect(payment.categoryId, (await cardPaymentCategory()).id);
+    });
+
+    test('a transfer from the card SMS is filed under Credit Card Payment and keeps it once the bank side links', () async {
+      await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
+      await bank();
+      defaultAccountId = (await accounts.create(name: 'SBI', type: 'bank', color: 0)).id;
+      await ingest(_cardPayment, at: DateTime(2026, 10, 21, 10));
+      await ingest(_bankDebit, at: DateTime(2026, 10, 21, 11));
+      final payment = (await liveEntries()).singleWhere((entry) => entry.amountMinor == 1200000);
+      expect(payment.kind, 'transfer', reason: 'so Home spent leaves it out');
+      expect(payment.categoryId, (await cardPaymentCategory()).id);
     });
   });
 }

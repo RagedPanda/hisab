@@ -8,6 +8,7 @@ import '../../core/theme.dart';
 import '../../domain/accounts/default_account.dart';
 import '../../domain/cards/card_payment_match.dart';
 import '../../domain/cards/card_sms_facts.dart';
+import '../../domain/cards/card_summary.dart';
 import '../../domain/ledger/balance_effects.dart';
 import '../../domain/sms/bank_senders.dart';
 import '../../domain/sms/card_sms.dart';
@@ -189,7 +190,7 @@ class SmsIngestService {
 
     // Only an account we already know gets its balance refreshed here; a new
     // account is created when the user approves the transaction, not before.
-    final known = await accounts.findBySmsKey(parsed.accountKey);
+    final known = await _knownAccount(parsed);
     if (known != null) await _applyReportedFigures(known.id, parsed);
     final payload = smsLogPayload(parsed, accountId: known?.id);
 
@@ -207,6 +208,7 @@ class SmsIngestService {
     }
     final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(id, parsed, await categoryIdFor(parsed), account?.id);
+    await _refreshStatementBalance(account?.id);
     await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.added, parsed: payload, entryId: entryId, transactionKey: transactionKey);
     await reminderLinker?.linkEntry(smsId: id, parsed: parsed, entryId: entryId);
     _autoAddedController.add(SmsAutoAdded(
@@ -235,9 +237,12 @@ class SmsIngestService {
   }
 
   Future<void> _undoAdd({required String smsId, required String entryId}) async {
+    final removed = (await entries.getEntry(entryId))?.entry;
     await reminderLinker?.unlinkEntry(smsId: smsId, entryId: entryId);
     await entries.deleteEntry(entryId);
     await smsLog.setStatus(smsId, SmsLogStatus.ignored);
+    await _refreshStatementBalance(removed?.accountId);
+    await _refreshStatementBalance(removed?.toAccountId);
   }
 
   /// Moves the entry an SMS added to [categoryId] and remembers it for the
@@ -288,6 +293,7 @@ class SmsIngestService {
     }
     final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(row.id, parsed, await categoryIdFor(parsed), account?.id);
+    await _refreshStatementBalance(account?.id);
     await smsLog.setStatus(row.id, SmsLogStatus.added, entryId: entryId);
     await reminderLinker?.linkEntry(smsId: row.id, parsed: parsed, entryId: entryId);
     return entryId;
@@ -361,8 +367,14 @@ class SmsIngestService {
 
   static String? _payeeFor(ParsedTransaction parsed) => parsed.counterparty == null ? null : normalisePayee(parsed.counterparty!);
 
+  /// The account [parsed] belongs to: the one with its SMS key, or for a
+  /// card SMS the card that fits its digits ([_findCard]).
+  Future<Account?> _knownAccount(ParsedTransaction parsed) => parsed.isCreditCard
+      ? _findCard(bank: parsed.bank, last4: parsed.accountLast4, key: parsed.accountKey)
+      : accounts.findBySmsKey(parsed.accountKey);
+
   Future<Account?> _ensureAccount(ParsedTransaction parsed) async {
-    final existing = await accounts.findBySmsKey(parsed.accountKey);
+    final existing = await _knownAccount(parsed);
     if (existing != null) return existing;
     final created = await _createSmsAccount(bank: parsed.bank, isCreditCard: parsed.isCreditCard, last4: parsed.accountLast4, key: parsed.accountKey);
     await _applyReportedFigures(created.id, parsed);
@@ -388,13 +400,50 @@ class SmsIngestService {
   }
 
   /// The card account a card SMS belongs to: the one with its SMS key, else
-  /// the single card that fits its bank and digits ([matchingCardId]).
+  /// the single card that fits its bank and digits ([matchingCardId]). A card
+  /// found by its digits (one added by hand) takes the SMS key, so later
+  /// messages and the review screen find it directly.
   Future<Account?> _findCard({required String? bank, required String? last4, required String key}) async {
     final byKey = await accounts.findBySmsKey(key);
     if (byKey != null) return byKey;
     final all = await accounts.getAll();
     final id = matchingCardId(all, bank: bank, last4: last4);
-    return id == null ? null : all.firstWhere((account) => account.id == id);
+    if (id == null) return null;
+    final card = all.firstWhere((account) => account.id == id);
+    if (last4 == null || card.smsKey != null) return card;
+    await accounts.update(AccountsCompanion(id: Value(card.id), smsKey: Value(key)));
+    return card.copyWith(smsKey: Value(key));
+  }
+
+  /// What [cardId] owes counted from a statement of [statementMinor] on
+  /// [statementAt] and the entries since ([balanceSinceStatementMinor]).
+  Future<int> _balanceSinceStatement(String cardId, int statementMinor, DateTime statementAt) async => balanceSinceStatementMinor(
+        cardId: cardId,
+        statementMinor: statementMinor,
+        statementAt: statementAt,
+        movements: await entries.getAccountMovements(cardId, since: statementAt),
+      );
+
+  /// Brings a card balance that follows its SMS statement
+  /// ([balanceFollowsSmsStatement]) in line with the entries recorded since:
+  /// SMS entries never move balances, so a card spend or bill payment read
+  /// from SMS (or its undo) is counted here.
+  Future<void> _refreshStatementBalance(String? cardId) async {
+    final card = cardId == null ? null : await accounts.getById(cardId);
+    if (card == null || !balanceFollowsSmsStatement(card)) return;
+    final balance = await _balanceSinceStatement(card.id, card.lastStatementMinor!, card.lastStatementAt!);
+    if (balance != card.balanceMinor) await accounts.update(AccountsCompanion(id: Value(card.id), balanceMinor: Value(balance)));
+  }
+
+  /// The category a card bill payment transfer gets from [entry] (the entry
+  /// it was before, if any): see [linkedCardPaymentCategoryId].
+  Future<String?> _cardPaymentCategoryId([Entry? entry]) async {
+    final own = entry?.categoryId == null ? null : await categories.byId(entry!.categoryId!);
+    return linkedCardPaymentCategoryId(
+      entryCategoryId: own?.deletedAt == null ? own?.id : null,
+      entrySeedKey: own?.seedKey,
+      cardPaymentCategoryId: (await categories.findBySeedKey(kCardPaymentCategoryKey))?.id,
+    );
   }
 
   /// A card statement or card bill payment SMS; null for any other message.
@@ -416,7 +465,12 @@ class SmsIngestService {
       return IngestStatus.unparsed;
     }
     final fields = cardStatementFromSms(statement, statementDay: card.statementDay, dueDay: card.dueDay, lastStatementAt: card.lastStatementAt);
-    if (fields != null) await accounts.applySmsStatement(card.id, fields);
+    if (fields != null) {
+      // The statement sets what is owed unless a newer balance is on record.
+      final setsBalance = takesSmsStatementBalance(balanceMinor: card.balanceMinor, balanceAsOf: card.balanceAsOf, receivedAt: statement.receivedAt);
+      final balance = setsBalance ? await _balanceSinceStatement(card.id, fields.lastStatementMinor, fields.lastStatementAt) : null;
+      await accounts.applySmsStatement(card.id, fields, balanceMinor: balance);
+    }
     await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.added);
     return IngestStatus.cardUpdated;
   }
@@ -452,6 +506,7 @@ class SmsIngestService {
     final linked = card == null ? null : await _linkCardPaymentToBankDebit(payment, card.id);
     if (linked != null) {
       await record(SmsLogStatus.added, entryId: linked);
+      await _refreshStatementBalance(card!.id);
       return IngestStatus.added;
     }
     final entryId = card == null || !autoAdd ? null : await _addCardPaymentTransfer(id, payment, card.id);
@@ -460,6 +515,7 @@ class SmsIngestService {
       return IngestStatus.pending;
     }
     await record(SmsLogStatus.added, entryId: entryId);
+    await _refreshStatementBalance(card!.id);
     _autoAddedController.add(SmsAutoAdded(smsId: id, entryId: entryId, amountMinor: payment.amountMinor, isDebit: true));
     return IngestStatus.added;
   }
@@ -469,6 +525,7 @@ class SmsIngestService {
         await _createSmsAccount(bank: payment.bank, isCreditCard: true, last4: payment.cardLast4, key: payment.accountKey);
     final entryId = await _linkCardPaymentToBankDebit(payment, card.id) ?? await _addCardPaymentTransfer(row.id, payment, card.id);
     if (entryId != null) await smsLog.setStatus(row.id, SmsLogStatus.added, entryId: entryId);
+    await _refreshStatementBalance(card.id);
     return entryId;
   }
 
@@ -483,6 +540,7 @@ class SmsIngestService {
       kind: 'transfer',
       amountMinor: payment.amountMinor,
       occurredAt: payment.occurredAt,
+      categoryId: await _cardPaymentCategoryId(),
       accountId: fromAccountId,
       note: smsEntryNote(reference: payment.reference, rawCounterparty: null),
       source: 'sms',
@@ -511,7 +569,7 @@ class SmsIngestService {
     final match = pickCardPaymentMatch(candidates, amountMinor: payment.amountMinor, at: payment.occurredAt);
     if (match == null) return null;
     final debit = debits.firstWhere((entry) => entry.id == match.entryId);
-    await entries.setTransfer(debit.id, toAccountId: cardId);
+    await entries.setTransfer(debit.id, toAccountId: cardId, categoryId: await _cardPaymentCategoryId(debit));
     final previous = snapshotOfEntry(debit);
     await accounts.applyBalanceDeltas(editDeltas(
       previous: previous,
@@ -542,7 +600,7 @@ class SmsIngestService {
     if (match == null) return null;
     final bank = await _ensureAccount(parsed);
     final payment = payments.firstWhere((entry) => entry.id == match.entryId);
-    await entries.setTransfer(payment.id, fromAccountId: bank?.id, toAccountId: payment.toAccountId!);
+    await entries.setTransfer(payment.id, fromAccountId: bank?.id, toAccountId: payment.toAccountId!, categoryId: await _cardPaymentCategoryId(payment));
     return payment.id;
   }
 

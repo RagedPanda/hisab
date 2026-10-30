@@ -21,6 +21,11 @@ void main() {
     }
   });
 
+  test('a bank debit towards a card bill is a card payment, not Other', () {
+    final parsed = parseSms('VM-HDFCBK-S', 'Rs 12,000.00 debited from HDFC Bank A/c XX7781 on 21-10-26 towards HDFC Credit Card bill. Avl Bal Rs 30,000.00')!;
+    expect(suggestCategoryKey(parsed), 'credit_card_payment');
+  });
+
   test('a refund credited to a credit card is a refund, not a card payment (#119)', () {
     final parsed = parseSms(
       'BP-ICICIT',

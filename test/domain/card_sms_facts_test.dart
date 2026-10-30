@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/domain/cards/card_sms_facts.dart';
@@ -112,6 +113,43 @@ void main() {
       expect(matchingCardId(cards, bank: null, last4: '7781'), isNull);
       expect(matchingCardId([...cards, card('hdfc2', bank: 'HDFC Bank', last4: '4521')], bank: null, last4: '4521'), isNull);
       expect(matchingCardId(cards, bank: null, last4: null), isNull);
+    });
+  });
+
+  group('takesSmsStatementBalance', () {
+    final received = DateTime(2026, 10, 13, 10);
+
+    test('sets the balance of a card with none on record', () {
+      expect(takesSmsStatementBalance(balanceMinor: 0, receivedAt: received), isTrue);
+    });
+
+    test('replaces an older balance but not a newer one', () {
+      expect(takesSmsStatementBalance(balanceMinor: -50000, balanceAsOf: DateTime(2026, 10, 1), receivedAt: received), isTrue);
+      expect(takesSmsStatementBalance(balanceMinor: -50000, balanceAsOf: DateTime(2026, 10, 20), receivedAt: received), isFalse);
+    });
+
+    test('leaves a balance moved by entries alone', () {
+      expect(takesSmsStatementBalance(balanceMinor: -50000, receivedAt: received), isFalse);
+    });
+  });
+
+  group('balanceFollowsSmsStatement', () {
+    final received = DateTime(2026, 10, 13, 10);
+    Account withStatement({DateTime? balanceAsOf, DateTime? fromSmsAt}) => card('c').copyWith(
+          lastStatementMinor: const Value(2345678),
+          lastStatementAt: Value(DateTime(2026, 10, 12)),
+          statementFromSmsAt: Value(fromSmsAt),
+          balanceAsOf: Value(balanceAsOf),
+        );
+
+    test('while the balance carries the statement arrival', () {
+      expect(balanceFollowsSmsStatement(withStatement(balanceAsOf: received, fromSmsAt: received)), isTrue);
+    });
+
+    test('not once the balance or the statement was edited by hand', () {
+      expect(balanceFollowsSmsStatement(withStatement(balanceAsOf: DateTime(2026, 10, 14), fromSmsAt: received)), isFalse);
+      expect(balanceFollowsSmsStatement(withStatement(balanceAsOf: received)), isFalse);
+      expect(balanceFollowsSmsStatement(card('c')), isFalse);
     });
   });
 }

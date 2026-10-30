@@ -1631,5 +1631,7 @@
   "appLockLockedTitle": "Hisab is locked",
   "appLockLockedHint": "Use your fingerprint, face or screen lock to open it.",
   "appLockUnlock": "Unlock",
-  "appLockLockedOut": "Too many tries. Wait a little and try again."
+  "appLockLockedOut": "Too many tries. Wait a little and try again.",
+  "cardLast4": "Last 4 digits",
+  "cardLast4Invalid": "Enter 4 digits, or leave it empty."
 }

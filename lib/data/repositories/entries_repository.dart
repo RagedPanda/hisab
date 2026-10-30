@@ -222,12 +222,12 @@ class EntriesRepository {
 
   /// Makes entry [id] a transfer from [fromAccountId] (unchanged when null)
   /// to [toAccountId]; a transfer has no category.
-  Future<void> setTransfer(String id, {String? fromAccountId, required String toAccountId}) =>
+  Future<void> setTransfer(String id, {String? fromAccountId, required String toAccountId, String? categoryId}) =>
       (db.update(db.entries)..where((t) => t.id.equals(id))).write(EntriesCompanion(
         kind: const Value('transfer'),
         accountId: fromAccountId == null ? const Value.absent() : Value(fromAccountId),
         toAccountId: Value(toAccountId),
-        categoryId: const Value(null),
+        categoryId: Value(categoryId),
         updatedAt: Value(DateTime.now()),
       ));
 

@@ -161,6 +161,14 @@ void main() {
     expect(find.text(openedLocation('/udhaar/person/$rahulId')), findsOneWidget);
   });
 
+  testWidgets('the Home card opens the People & udhaar list even with one person', (tester) async {
+    final container = await createContainer();
+    await seedRahul(tester, container, amountMinor: 250000);
+    await pumpScreen(tester, container, const Scaffold(body: SingleChildScrollView(child: UdhaarCard())));
+    await tapAndSettle(tester, find.byKey(const Key('dashboard.udhaarSeeAll')));
+    expect(find.text(openedLocation('/udhaar')), findsOneWidget);
+  });
+
   testWidgets('the People & udhaar list adds a person and opens their page', (tester) async {
     final container = await createContainer();
     final rahulId = await seedRahul(tester, container, amountMinor: 1000);

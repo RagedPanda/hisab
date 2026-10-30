@@ -13,7 +13,7 @@ import 'udhaar_providers.dart';
 import 'udhaar_routes.dart';
 import 'udhaar_screen.dart';
 
-/// How many people the Home card lists before "see all".
+/// How many people the Home card lists above its "see all" row.
 const int kUdhaarCardPeople = 3;
 
 /// Home card: who owes me and whom I owe outside groups; hidden when every
@@ -48,13 +48,12 @@ class UdhaarCard extends ConsumerWidget {
         child: Column(
           children: [
             for (final person in owing.take(kUdhaarCardPeople)) UdhaarPersonTile(person: person, balance: balances[person.id] ?? 0),
-            if (owing.length > kUdhaarCardPeople)
-              ListTile(
-                key: const Key('dashboard.udhaarSeeAll'),
-                title: Text(l10n.seeAll),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push(kUdhaarLocation),
-              ),
+            ListTile(
+              key: const Key('dashboard.udhaarSeeAll'),
+              title: Text(l10n.seeAll),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(kUdhaarLocation),
+            ),
           ],
         ),
       ),

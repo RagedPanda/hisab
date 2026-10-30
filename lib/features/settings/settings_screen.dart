@@ -15,6 +15,7 @@ import '../../domain/accounts/default_account.dart';
 import '../../domain/currency/currency_lookup.dart';
 import '../currency/currency_picker.dart';
 import '../../l10n/l10n.dart';
+import '../app_lock/app_lock_settings_screen.dart';
 import '../groups/member_display.dart';
 import '../notifications/notification_settings_screen.dart';
 import '../quick_entries/quick_entries_screen.dart';
@@ -220,6 +221,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
             ]),
           ),
+          const Card(child: AppLockSettingsTile()),
           const SizedBox(height: 12),
           Card(
             child: ListTile(

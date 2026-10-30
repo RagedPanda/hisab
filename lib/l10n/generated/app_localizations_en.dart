@@ -4511,4 +4511,74 @@ class AppLocalizationsEn extends AppLocalizations {
   String widgetLastMonth(String month, String amount) {
     return '$month: $amount';
   }
+
+  @override
+  String get appLockTitle => 'App lock';
+
+  @override
+  String get appLockSettingsHint =>
+      'Ask for your fingerprint, face or screen lock to open Hisab';
+
+  @override
+  String appLockOnSummary(String timeout) {
+    return 'On, locks $timeout';
+  }
+
+  @override
+  String get appLockSwitch => 'Lock Hisab';
+
+  @override
+  String get appLockSwitchHelp =>
+      'Uses your phone\'s fingerprint, face or screen lock (PIN, pattern or password). There is no separate PIN to forget.';
+
+  @override
+  String get appLockAfter => 'Lock again after leaving Hisab';
+
+  @override
+  String get appLockImmediately => 'immediately';
+
+  @override
+  String get appLockOneMinute => 'after 1 minute';
+
+  @override
+  String get appLockFiveMinutes => 'after 5 minutes';
+
+  @override
+  String get appLockImmediatelyShort => 'Immediately';
+
+  @override
+  String get appLockOneMinuteShort => '1 min';
+
+  @override
+  String get appLockFiveMinutesShort => '5 min';
+
+  @override
+  String get appLockHideInRecents => 'Hide in recent apps';
+
+  @override
+  String get appLockHideInRecentsHelp =>
+      'Shows a blank card in the recent apps list. Screenshots of Hisab are blocked too.';
+
+  @override
+  String get appLockNoScreenLock =>
+      'Your phone has no screen lock. Set a PIN, pattern or password in your phone\'s settings, then turn on app lock.';
+
+  @override
+  String get appLockEnableReason => 'Confirm it\'s you to turn on app lock';
+
+  @override
+  String get appLockPromptReason => 'Unlock Hisab';
+
+  @override
+  String get appLockLockedTitle => 'Hisab is locked';
+
+  @override
+  String get appLockLockedHint =>
+      'Use your fingerprint, face or screen lock to open it.';
+
+  @override
+  String get appLockUnlock => 'Unlock';
+
+  @override
+  String get appLockLockedOut => 'Too many tries. Wait a little and try again.';
 }

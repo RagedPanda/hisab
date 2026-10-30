@@ -40,6 +40,7 @@ import '../../domain/split/split_this.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../accounts/account_picker_tile.dart';
+import '../app_lock/app_lock_providers.dart';
 import '../groups/member_display.dart';
 import '../groups/split_this_screen.dart';
 import '../categories/category_picker.dart';
@@ -276,6 +277,18 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
       _keypadOnResume = AppLifecycleListener(onResume: _showAmountKeypad);
     }
+    // Opened behind the app lock, the amount could not take focus; it takes
+    // it once the user unlocks.
+    ref.listenManual(appLockedProvider, (wasLocked, locked) {
+      if (wasLocked == true && !locked) _focusAmountAfterUnlock();
+    });
+  }
+
+  void _focusAmountAfterUnlock() {
+    if (!_autofocusAmount || _isEditing || _hasItems || _amountFocus.hasFocus) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _amountFocus.requestFocus();
+    });
   }
 
   AppLifecycleListener? _keypadOnResume;

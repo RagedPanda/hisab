@@ -15,8 +15,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Drives the real app on an in-memory database through the main journeys,
 /// with [overrides] on top of the test database and preferences. [seed] runs
 /// against the database before the first frame, while no query is in flight.
-Future<ProviderContainer> pumpApp(WidgetTester tester, {List<Override> overrides = const [], Future<void> Function(ProviderContainer container)? seed}) async {
-  SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR'});
+/// [preferences] are stored before the app starts, as from an earlier run.
+Future<ProviderContainer> pumpApp(
+  WidgetTester tester, {
+  List<Override> overrides = const [],
+  Future<void> Function(ProviderContainer container)? seed,
+  Map<String, Object> preferences = const {},
+}) async {
+  SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'INR', ...preferences});
   final prefs = await SharedPreferences.getInstance();
   final db = AppDatabase(NativeDatabase.memory());
   final container = ProviderContainer(overrides: [

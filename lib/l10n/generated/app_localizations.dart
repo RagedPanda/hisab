@@ -7334,6 +7334,12 @@ abstract class AppLocalizations {
   /// **'Backup saved'**
   String get scheduledBackupSaved;
 
+  /// No description provided for @scheduledBackupFailedNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup failed: {reason}'**
+  String scheduledBackupFailedNow(String reason);
+
   /// No description provided for @scheduledBackupLast.
   ///
   /// In en, this message translates to:

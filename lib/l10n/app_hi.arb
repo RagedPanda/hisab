@@ -1249,6 +1249,7 @@
   "scheduledBackupWhenBackground": "समय होने पर बैकग्राउंड में चलता है (सही पल Android चुनता है, आम तौर पर कुछ घंटों में) और जब भी आप हिसाब खोलें।",
   "scheduledBackupWhenOnOpen": "बैकअप का समय होने पर हिसाब खोलते ही चलता है।",
   "scheduledBackupSaved": "बैकअप सहेजा गया",
+  "scheduledBackupFailedNow": "बैकअप नहीं हुआ: {reason}",
   "scheduledBackupLast": "पिछला बैकअप: {time}, {place}",
   "scheduledBackupNone": "अभी तक कोई बैकअप नहीं",
   "scheduledBackupFailed": "बैकअप नहीं हुआ {time}: {reason}",

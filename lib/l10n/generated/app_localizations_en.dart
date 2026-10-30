@@ -4596,6 +4596,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scheduledBackupSaved => 'Backup saved';
 
   @override
+  String scheduledBackupFailedNow(String reason) {
+    return 'Backup failed: $reason';
+  }
+
+  @override
   String scheduledBackupLast(String time, String place) {
     return 'Last backup: $time, $place';
   }

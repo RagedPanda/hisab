@@ -141,7 +141,7 @@ class _ScheduledBackupScreenState extends ConsumerState<ScheduledBackupScreen> {
     try {
       final attempts = await ref.read(scheduledBackupGateProvider).runNow(DateTime.now());
       final failed = attempts.values.where((attempt) => !attempt.succeeded).firstOrNull;
-      if (attempts.isNotEmpty) messenger.showSnackBar(SnackBar(content: Text(failed == null ? l10n.scheduledBackupSaved : backupFailureLabel(l10n, failed))));
+      if (attempts.isNotEmpty) messenger.showSnackBar(SnackBar(content: Text(failed == null ? l10n.scheduledBackupSaved : l10n.scheduledBackupFailedNow(backupFailureLabel(l10n, failed)))));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

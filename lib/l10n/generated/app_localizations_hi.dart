@@ -4566,6 +4566,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get scheduledBackupSaved => 'बैकअप सहेजा गया';
 
   @override
+  String scheduledBackupFailedNow(String reason) {
+    return 'बैकअप नहीं हुआ: $reason';
+  }
+
+  @override
   String scheduledBackupLast(String time, String place) {
     return 'पिछला बैकअप: $time, $place';
   }

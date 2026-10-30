@@ -1588,6 +1588,8 @@
   "scheduledBackupWhenBackground": "Runs in the background once it is due (Android picks the moment, usually within a few hours) and whenever you open Hisab.",
   "scheduledBackupWhenOnOpen": "Runs when you open Hisab and a backup is due.",
   "scheduledBackupSaved": "Backup saved",
+  "scheduledBackupFailedNow": "Backup failed: {reason}",
+  "@scheduledBackupFailedNow": {"placeholders": {"reason": {"type": "String"}}},
   "scheduledBackupLast": "Last backup: {time}, {place}",
   "@scheduledBackupLast": {"placeholders": {"time": {"type": "String"}, "place": {"type": "String"}}},
   "scheduledBackupNone": "No backup yet",

@@ -76,6 +76,14 @@ void main() {
       expect(session.finishAuthenticating(unlocked: true).locked, isFalse);
     });
 
+    test('a picker Hisab opened is not leaving; leaving after it closes is', () {
+      final picking = const AppLockSession(locked: false).openedSystemScreen().left(leftAt);
+      expect(picking.leftAt, isNull);
+      final back = picking.returned(leftAt.add(const Duration(minutes: 1)), enabled: true, timeout: AppLockTimeout.immediately).closedSystemScreen();
+      expect((back.locked, back.inSystemScreen), (false, false));
+      expect(back.left(leftAt).returned(leftAt.add(const Duration(seconds: 1)), enabled: true, timeout: AppLockTimeout.immediately).locked, isTrue);
+    });
+
     test('a failed prompt keeps it locked; turning the lock off unlocks', () {
       final locked = const AppLockSession(locked: true).startAuthenticating().finishAuthenticating(unlocked: false);
       expect(locked.locked, isTrue);

@@ -117,6 +117,18 @@ class AppLockController extends Notifier<AppLockSession> {
     }
     return result;
   }
+
+  /// Runs [action], which opens a system screen (a folder or file picker,
+  /// the Google account chooser), without the trip there counting as
+  /// leaving the app.
+  Future<T> whileInSystemScreen<T>(Future<T> Function() action) async {
+    state = state.openedSystemScreen();
+    try {
+      return await action();
+    } finally {
+      state = state.closedSystemScreen();
+    }
+  }
 }
 
 final appLockProvider = NotifierProvider<AppLockController, AppLockSession>(AppLockController.new);

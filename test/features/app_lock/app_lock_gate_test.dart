@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -65,6 +67,26 @@ void main() {
     await settle(tester, 4);
     expect(lockScreen, findsNothing);
     expect(home, findsOneWidget);
+  });
+
+  testWidgets('a picker Hisab opened does not lock it, even set to Immediately', (tester) async {
+    final auth = FakeAuthenticator(results: [AppAuthResult.unlocked]);
+    final container = await start(tester, auth, preferences: lockOn(timeout: AppLockTimeout.immediately));
+    final picked = Completer<String>();
+    final picking = container.read(appLockProvider.notifier).whileInSystemScreen(() => picked.future);
+
+    await leave(tester);
+    await comeBack(tester, const Duration(minutes: 2));
+    picked.complete('Backups');
+    expect(await picking, 'Backups');
+    await settle(tester, 4);
+    expect(lockScreen, findsNothing);
+    expect(home, findsOneWidget);
+    expect(auth.prompts, 1, reason: 'only the cold start asked');
+
+    await leave(tester);
+    await comeBack(tester, const Duration(seconds: 1));
+    expect(lockScreen, findsOneWidget, reason: 'leaving on its own still locks');
   });
 
   testWidgets('locks again only after the chosen timeout in the background', (tester) async {

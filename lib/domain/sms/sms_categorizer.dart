@@ -39,7 +39,7 @@ const Map<String, List<String>> _debitRules = {
   'vehicle_insurance': ['acko', 'motor insurance', 'vehicle insurance', 'car insurance', 'bike insurance', 'two wheeler insurance'],
   'investments': ['zerodha', 'groww', 'upstox', 'kuvera', 'coin', 'mutual fund', 'sip', 'nps', 'ppf', 'angel one', 'angelone', 'paytm money', 'indmoney', 'et money', 'etmoney', 'smallcase', 'icici direct', 'hdfc securities', 'kotak securities', 'sbi mf', 'nippon', 'axis mf', 'bse', 'nse', 'cams', 'kfintech', 'demat', 'rd ', 'fd '],
   'loan_emi': ['emi', 'loan', 'bajaj finserv', 'bajaj finance', 'hdb', 'tata capital', 'home credit', 'kreditbee', 'moneyview', 'navi', 'lazypay', 'simpl'],
-  'credit_card_payment': ['cred', 'credit card payment', 'card payment', 'cc payment', 'payment received'],
+  'credit_card_payment': ['cred', 'credit card payment', 'card payment', 'cc payment', 'payment received', 'credit card bill', 'card bill'],
   'rent': ['rent', 'nobroker', 'housing.com', 'landlord'],
   'society_maintenance': ['maintenance', 'society', 'apartment', 'mygate', 'nobroker hood', 'adda'],
   'home_repairs': ['plumber', 'electrician', 'carpenter', 'repair', 'hardware', 'paint'],

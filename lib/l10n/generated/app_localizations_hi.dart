@@ -4608,4 +4608,76 @@ class AppLocalizationsHi extends AppLocalizations {
   String backupFailureUnknown(String error) {
     return '$error';
   }
+
+  @override
+  String get appLockTitle => 'ऐप लॉक';
+
+  @override
+  String get appLockSettingsHint =>
+      'हिसाब खोलने के लिए फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक माँगें';
+
+  @override
+  String appLockOnSummary(String timeout) {
+    return 'चालू, $timeout लॉक';
+  }
+
+  @override
+  String get appLockSwitch => 'हिसाब लॉक करें';
+
+  @override
+  String get appLockSwitchHelp =>
+      'आपके फ़ोन का फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक (पिन, पैटर्न या पासवर्ड) इस्तेमाल होता है। कोई अलग पिन याद नहीं रखना।';
+
+  @override
+  String get appLockAfter => 'हिसाब से बाहर जाने के बाद फिर लॉक करें';
+
+  @override
+  String get appLockImmediately => 'तुरंत';
+
+  @override
+  String get appLockOneMinute => '1 मिनट बाद';
+
+  @override
+  String get appLockFiveMinutes => '5 मिनट बाद';
+
+  @override
+  String get appLockImmediatelyShort => 'तुरंत';
+
+  @override
+  String get appLockOneMinuteShort => '1 मिनट';
+
+  @override
+  String get appLockFiveMinutesShort => '5 मिनट';
+
+  @override
+  String get appLockHideInRecents => 'हाल के ऐप्स में छिपाएँ';
+
+  @override
+  String get appLockHideInRecentsHelp =>
+      'हाल के ऐप्स की सूची में खाली कार्ड दिखता है। हिसाब के स्क्रीनशॉट भी नहीं लिए जा सकते।';
+
+  @override
+  String get appLockNoScreenLock =>
+      'आपके फ़ोन में स्क्रीन लॉक नहीं है। फ़ोन की सेटिंग में पिन, पैटर्न या पासवर्ड लगाएँ, फिर ऐप लॉक चालू करें।';
+
+  @override
+  String get appLockEnableReason =>
+      'ऐप लॉक चालू करने के लिए पुष्टि करें कि यह आप हैं';
+
+  @override
+  String get appLockPromptReason => 'हिसाब अनलॉक करें';
+
+  @override
+  String get appLockLockedTitle => 'हिसाब लॉक है';
+
+  @override
+  String get appLockLockedHint =>
+      'खोलने के लिए फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक इस्तेमाल करें।';
+
+  @override
+  String get appLockUnlock => 'अनलॉक करें';
+
+  @override
+  String get appLockLockedOut =>
+      'बहुत ज़्यादा कोशिशें हुईं। थोड़ी देर बाद फिर कोशिश करें।';
 }

@@ -16,6 +16,7 @@ Last reviewed: 2026-10-28.
 | `android.permission.READ_SMS` | Runtime, **restricted by Play policy** | Only after the user turns on *Settings → Bank SMS* and accepts the in-app disclosure dialog | Scan the inbox for bank / UPI / card alerts to log transactions and show account balances. Processing is fully on-device; no SMS text ever leaves the phone. OTPs, promotions and personal messages are ignored by the parser and never stored. | Yes. The app works fully with manual entry, paste, or CSV. The toggle is off by default. |
 | `android.permission.RECEIVE_SMS` | Runtime, **restricted by Play policy** | Same opt-in as above (granted together under the SMS group) | Catch new bank alerts in real time while the app is open so the review inbox stays current. | Yes, same as above. |
 | `android.permission.INTERNET` | Normal (no prompt) | Never prompts | Only for the opt-in *Settings → Back up to Google Drive*: reaching Google sign-in and the user's own Drive `appDataFolder`. Nothing else uses the network, and the app never contacts a Hisab server (there is none). Also used by debug hot-reload. | N/A. Hisab works fully offline; without connecting Drive nothing is sent. |
+| `android.permission.USE_BIOMETRIC` | Normal (no prompt) | Never prompts | Only for the opt-in *Settings → App lock*: shows the system fingerprint / face prompt (with the device PIN, pattern or password as the fallback). Hisab never sees the fingerprint or face; the system only answers "unlocked" or not. Declared by `local_auth`. | N/A. App lock is off by default. |
 
 No other permissions are declared. Hisab does **not** request contacts, location, camera,
 microphone, phone state, call log, accessibility, notification access, or storage.
@@ -24,7 +25,8 @@ File export/import uses the system document picker and share sheet, which need n
 ### iOS (`ios/Runner/Info.plist`)
 
 iOS does not let third-party apps read SMS, so Hisab requests **no** privacy-sensitive
-permissions on iOS. There are no `NS*UsageDescription` keys.
+permissions on iOS. The only `NS*UsageDescription` key is `NSFaceIDUsageDescription`, which iOS
+shows the first time the user turns on the opt-in *Settings → App lock*.
 
 | Capability | Why |
 |---|---|
@@ -149,6 +151,7 @@ footprint in this comparison set.
 - Parser and discard rules: `lib/domain/sms/sms_parser.dart` (OTP / promo rejection list at the top)
 - What is stored: `SmsLog` table in `lib/data/db/database.dart` (sender, body, parsed JSON, status)
 - URL scheme: `ios/Runner/Info.plist` and the `hisab` intent filter in `AndroidManifest.xml`
+- App lock: `lib/features/app_lock/` (gate, settings) and `lib/data/app_lock/device_authenticator.dart`
 - Drive backup: consent and connected screens in `lib/features/settings/drive_backup_screen.dart`;
   scope and sign-in in `lib/data/backup/drive_account.dart`; Drive REST calls in
   `lib/data/backup/drive_rest_backup_store.dart`

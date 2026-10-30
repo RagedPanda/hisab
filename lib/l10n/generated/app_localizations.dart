@@ -7399,6 +7399,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{error}'**
   String backupFailureUnknown(String error);
+
+  /// No description provided for @appLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock'**
+  String get appLockTitle;
+
+  /// No description provided for @appLockSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for your fingerprint, face or screen lock to open Hisab'**
+  String get appLockSettingsHint;
+
+  /// No description provided for @appLockOnSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'On, locks {timeout}'**
+  String appLockOnSummary(String timeout);
+
+  /// No description provided for @appLockSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock Hisab'**
+  String get appLockSwitch;
+
+  /// No description provided for @appLockSwitchHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses your phone\'s fingerprint, face or screen lock (PIN, pattern or password). There is no separate PIN to forget.'**
+  String get appLockSwitchHelp;
+
+  /// No description provided for @appLockAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock again after leaving Hisab'**
+  String get appLockAfter;
+
+  /// No description provided for @appLockImmediately.
+  ///
+  /// In en, this message translates to:
+  /// **'immediately'**
+  String get appLockImmediately;
+
+  /// No description provided for @appLockOneMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'after 1 minute'**
+  String get appLockOneMinute;
+
+  /// No description provided for @appLockFiveMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'after 5 minutes'**
+  String get appLockFiveMinutes;
+
+  /// No description provided for @appLockImmediatelyShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediately'**
+  String get appLockImmediatelyShort;
+
+  /// No description provided for @appLockOneMinuteShort.
+  ///
+  /// In en, this message translates to:
+  /// **'1 min'**
+  String get appLockOneMinuteShort;
+
+  /// No description provided for @appLockFiveMinutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'5 min'**
+  String get appLockFiveMinutesShort;
+
+  /// No description provided for @appLockHideInRecents.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide in recent apps'**
+  String get appLockHideInRecents;
+
+  /// No description provided for @appLockHideInRecentsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows a blank card in the recent apps list. Screenshots of Hisab are blocked too.'**
+  String get appLockHideInRecentsHelp;
+
+  /// No description provided for @appLockNoScreenLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone has no screen lock. Set a PIN, pattern or password in your phone\'s settings, then turn on app lock.'**
+  String get appLockNoScreenLock;
+
+  /// No description provided for @appLockEnableReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm it\'s you to turn on app lock'**
+  String get appLockEnableReason;
+
+  /// No description provided for @appLockPromptReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Hisab'**
+  String get appLockPromptReason;
+
+  /// No description provided for @appLockLockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hisab is locked'**
+  String get appLockLockedTitle;
+
+  /// No description provided for @appLockLockedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your fingerprint, face or screen lock to open it.'**
+  String get appLockLockedHint;
+
+  /// No description provided for @appLockUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get appLockUnlock;
+
+  /// No description provided for @appLockLockedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries. Wait a little and try again.'**
+  String get appLockLockedOut;
 }
 
 class _AppLocalizationsDelegate

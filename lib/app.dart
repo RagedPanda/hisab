@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/providers.dart';
 import 'core/theme.dart';
+import 'features/app_lock/app_lock_gate.dart';
 import 'features/currency/first_launch_currency_screen.dart';
 import 'features/recurring/recurring_catch_up.dart';
 import 'features/recurring/recurring_list_model.dart';
@@ -84,8 +85,9 @@ class _HisabAppState extends ConsumerState<HisabApp> {
       // SmsAutoSync drains queued SMS and catches up on the inbox on start and resume.
       // SalaryReminderWatcher re-plans the salary-not-seen alert on start, resume
       // and income changes. LauncherSync keeps the launcher shortcuts in step.
+      // AppLockGate covers all of it while locked; links still route underneath.
       builder: (context, child) => settings.currencyConfirmed
-          ? LauncherSync(child: SalaryReminderWatcher(child: SmsAutoSync(child: SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink()))))
+          ? AppLockGate(child: LauncherSync(child: SalaryReminderWatcher(child: SmsAutoSync(child: SmsAutoAddSnackbar(child: child ?? const SizedBox.shrink())))))
           : const FirstLaunchCurrencyGate(),
     );
   }

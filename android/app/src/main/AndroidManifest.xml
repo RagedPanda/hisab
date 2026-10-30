@@ -21,6 +21,9 @@
          Drive appDataFolder, never a Hisab server. Nothing uses the network otherwise.
          (google_sign_in declares it too; listed here so it is visible.) -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Only for the opt-in Settings > App lock: the system fingerprint / face prompt,
+         with the device PIN as the fallback. (local_auth declares it too.) -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <application
         android:label="Hisab"
         android:name="${applicationName}"

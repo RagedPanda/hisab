@@ -6,6 +6,7 @@ import '../../l10n/l10n.dart';
 import '../salary/salary_providers.dart';
 import '../upcoming/upcoming_providers.dart';
 import 'drive_backup_providers.dart';
+import 'scheduled_backup_providers.dart';
 
 /// The word the user types to unlock Erase. Kept in English in every
 /// language so it reads the same as on the keyboard.
@@ -19,15 +20,22 @@ Future<bool> confirmEraseAllData(BuildContext context) async =>
     await showDialog<bool>(context: context, builder: (_) => const _EraseConfirmDialog()) ?? false;
 
 /// Wipes the app back to a fresh install: every table (defaults re-seeded),
-/// every pref, and the Drive connection. The Drive copy itself is left alone.
+/// every pref, the Drive connection, and the scheduled backup (its saved
+/// passphrase and background job). The Drive copy and the backups already in
+/// the folder are left alone.
 Future<void> eraseEverything(WidgetRef ref) async {
   if (ref.read(driveBackupEmailProvider) != null) await ref.read(driveBackupEmailProvider.notifier).disconnect();
+  await ref.read(backupPassphraseVaultProvider).forgetPassphrase();
   await ref.read(databaseProvider).eraseAllData();
   await ref.read(sharedPreferencesProvider).clear();
   ref.invalidate(settingsProvider);
   ref.invalidate(salarySettingsProvider);
   ref.invalidate(upcomingWindowProvider);
   ref.invalidate(driveBackupEmailProvider);
+  ref.invalidate(scheduledBackupChoicesProvider);
+  ref.invalidate(scheduledBackupHistoryProvider);
+  ref.invalidate(hasBackupPassphraseProvider);
+  await ref.read(scheduledBackupChoicesProvider.notifier).syncBackgroundJob();
   await ref.read(reminderSchedulerProvider).rescheduleAll();
 }
 

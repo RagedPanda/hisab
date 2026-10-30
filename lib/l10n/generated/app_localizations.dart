@@ -7765,6 +7765,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Balance {amount}'**
   String udhaarBalanceAfter(String amount);
+
+  /// No description provided for @scheduledBackupFailedNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup failed: {reason}'**
+  String scheduledBackupFailedNow(String reason);
 }
 
 class _AppLocalizationsDelegate

@@ -47,14 +47,22 @@ String scheduledBackupStatus(AppLocalizations l10n, ScheduledBackupTarget target
   return l10n.scheduledBackupLast(formatShortDateTime(success.at, locale: locale), backupPlaceLabel(l10n, target, choices));
 }
 
+/// The most recent attempt across destinations, or null before any run.
+MapEntry<ScheduledBackupTarget, BackupAttempt>? latestBackupAttempt(ScheduledBackupHistory history) =>
+    history.lastAttempt.entries.fold<MapEntry<ScheduledBackupTarget, BackupAttempt>?>(
+      null,
+      (newest, entry) => newest == null || entry.value.at.isAfter(newest.value.at) ? entry : newest,
+    );
+
+/// Whether the Settings row should show its summary as a failure.
+bool scheduledBackupFailing(ScheduledBackupChoices choices, ScheduledBackupHistory history) =>
+    choices.isOn && latestBackupAttempt(history)?.value.succeeded == false;
+
 /// The Settings row's subtitle: off, or how often plus the most recent
 /// attempt's status (a failure shows plainly).
 String scheduledBackupSummary(AppLocalizations l10n, ScheduledBackupChoices choices, ScheduledBackupHistory history, {String? locale}) {
   if (!choices.isOn) return l10n.scheduledBackupOff;
-  final latest = history.lastAttempt.entries.fold<MapEntry<ScheduledBackupTarget, BackupAttempt>?>(
-    null,
-    (newest, entry) => newest == null || entry.value.at.isAfter(newest.value.at) ? entry : newest,
-  );
+  final latest = latestBackupAttempt(history);
   final status = latest == null ? l10n.scheduledBackupNone : scheduledBackupStatus(l10n, latest.key, choices, history, locale: locale);
   return l10n.scheduledBackupSummary(backupFrequencyLabel(l10n, choices.frequency), status);
 }
@@ -104,9 +112,13 @@ class _ScheduledBackupScreenState extends ConsumerState<ScheduledBackupScreen> {
     return ref.read(scheduledBackupChoicesProvider).copyWith(folderUri: folder.uri, folderName: folder.name);
   }
 
+  /// A new folder while a schedule is on gets a backup straight away, so the
+  /// status shows the new folder working rather than the old one's failure.
   Future<void> _chooseFolder() async {
     final picked = await _pickFolder();
-    if (picked != null) await _choices.save(picked);
+    if (picked == null) return;
+    await _choices.save(picked);
+    if (picked.isOn && mounted) await _backUpNow();
   }
 
   Future<void> _chooseKeep(int current) async {
@@ -138,7 +150,7 @@ class _ScheduledBackupScreenState extends ConsumerState<ScheduledBackupScreen> {
     try {
       final attempts = await ref.read(scheduledBackupGateProvider).runNow(DateTime.now());
       final failed = attempts.values.where((attempt) => !attempt.succeeded).firstOrNull;
-      if (attempts.isNotEmpty) messenger.showSnackBar(SnackBar(content: Text(failed == null ? l10n.scheduledBackupSaved : backupFailureLabel(l10n, failed))));
+      if (attempts.isNotEmpty) messenger.showSnackBar(SnackBar(content: Text(failed == null ? l10n.scheduledBackupSaved : l10n.scheduledBackupFailedNow(backupFailureLabel(l10n, failed)))));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

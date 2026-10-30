@@ -1679,5 +1679,7 @@
   "udhaarFromEditor": "Lent to or borrowed from someone?",
   "udhaarInGroups": "In groups",
   "udhaarBalanceAfter": "Balance {amount}",
-  "@udhaarBalanceAfter": {"placeholders": {"amount": {"type": "String"}}}
+  "@udhaarBalanceAfter": {"placeholders": {"amount": {"type": "String"}}},
+  "scheduledBackupFailedNow": "Backup failed: {reason}",
+  "@scheduledBackupFailedNow": {"placeholders": {"reason": {"type": "String"}}}
 }

@@ -1320,5 +1320,6 @@
   "udhaarDeleted": "उधार की एंट्री हटाई गई",
   "udhaarFromEditor": "किसी को उधार दिया या किसी से लिया?",
   "udhaarInGroups": "ग्रुप में",
-  "udhaarBalanceAfter": "बाकी {amount}"
+  "udhaarBalanceAfter": "बाकी {amount}",
+  "scheduledBackupFailedNow": "बैकअप नहीं हुआ: {reason}"
 }

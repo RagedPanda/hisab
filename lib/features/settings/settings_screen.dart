@@ -235,7 +235,10 @@ class SettingsScreen extends ConsumerWidget {
                 key: const Key('scheduledBackupTile'),
                 leading: const Icon(Icons.schedule),
                 title: Text(l10n.scheduledBackupTitle),
-                subtitle: Text(scheduledBackupSummary(l10n, ref.watch(scheduledBackupChoicesProvider), ref.watch(scheduledBackupHistoryProvider), locale: Localizations.localeOf(context).toString())),
+                subtitle: Text(
+                  scheduledBackupSummary(l10n, ref.watch(scheduledBackupChoicesProvider), ref.watch(scheduledBackupHistoryProvider), locale: Localizations.localeOf(context).toString()),
+                  style: scheduledBackupFailing(ref.watch(scheduledBackupChoicesProvider), ref.watch(scheduledBackupHistoryProvider)) ? TextStyle(color: Theme.of(context).colorScheme.error) : null,
+                ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(kScheduledBackupLocation),
               ),

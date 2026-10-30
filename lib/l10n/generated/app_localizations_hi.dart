@@ -4833,4 +4833,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String udhaarBalanceAfter(String amount) {
     return 'बाकी $amount';
   }
+
+  @override
+  String scheduledBackupFailedNow(String reason) {
+    return 'बैकअप नहीं हुआ: $reason';
+  }
 }

@@ -4860,4 +4860,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String udhaarBalanceAfter(String amount) {
     return 'Balance $amount';
   }
+
+  @override
+  String scheduledBackupFailedNow(String reason) {
+    return 'Backup failed: $reason';
+  }
 }

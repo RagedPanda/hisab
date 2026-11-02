@@ -239,17 +239,17 @@ class SettingsScreen extends ConsumerWidget {
             const AppLockSettingsTile(),
           ]),
           const SizedBox(height: 12),
-          Card(
-            child: ListTile(
+          TileGroup(danger: true, children: [
+            // Only the icon and title in red: a red two-line subtitle read as an error message.
+            ListTile(
               key: const Key('eraseAllDataTile'),
               iconColor: Theme.of(context).colorScheme.error,
-              textColor: Theme.of(context).colorScheme.error,
               leading: const Icon(Icons.delete_forever_outlined),
-              title: Text(l10n.eraseAllData),
+              title: Text(l10n.eraseAllData, style: TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.w600)),
               subtitle: Text(l10n.eraseAllDataHelp),
               onTap: () => _erase(context, ref),
             ),
-          ),
+          ]),
           SectionHeader(l10n.about),
           Card(
             child: ListTile(

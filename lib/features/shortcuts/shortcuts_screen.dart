@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../../l10n/l10n.dart';
-import '../shell/widgets/common.dart';
+import '../notifications/notification_permission.dart';
 import 'add_expense_notification_toggle.dart';
 import 'launcher_sync.dart';
 import 'shortcut_settings.dart';
@@ -85,7 +84,7 @@ class ShortcutsScreen extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = context.l10n;
     if (await setAddExpenseNotification(ProviderScope.containerOf(context, listen: false), enabled)) return;
-    showActionSnackBar(messenger, message: l10n.addExpenseNotificationBlocked, actionLabel: l10n.settings, onAction: () => openAppSettings());
+    showNotificationsBlockedSnackBar(messenger, l10n, message: l10n.addExpenseNotificationBlocked);
   }
 
   Future<void> _addTile(BuildContext context, WidgetRef ref) async {

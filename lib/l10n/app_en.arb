@@ -1692,5 +1692,6 @@
   "restoreNotABackup": "This file isn't a Hisab backup. Nothing was changed.",
   "restoreFailedUnknown": "Couldn't restore this backup. Try again.",
   "scheduledBackupPassphraseSet": "Passphrase saved. Keep a copy somewhere safe: you need it to restore.",
-  "scheduledBackupPassphraseChanged": "Passphrase changed. New backups use it; older backups still need the old one."
+  "scheduledBackupPassphraseChanged": "Passphrase changed. New backups use it; older backups still need the old one.",
+  "notificationsDenied": "Notifications are blocked for Hisab. Allow them in Settings."
 }

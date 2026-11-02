@@ -7855,6 +7855,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Passphrase changed. New backups use it; older backups still need the old one.'**
   String get scheduledBackupPassphraseChanged;
+
+  /// No description provided for @notificationsDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are blocked for Hisab. Allow them in Settings.'**
+  String get notificationsDenied;
 }
 
 class _AppLocalizationsDelegate

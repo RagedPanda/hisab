@@ -4882,4 +4882,8 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get scheduledBackupPassphraseChanged =>
       'पासफ़्रेज़ बदल गया। नए बैकअप इसी से बनेंगे; पुराने बैकअप के लिए पुराना पासफ़्रेज़ ही चाहिए।';
+
+  @override
+  String get notificationsDenied =>
+      'Hisab की सूचनाएँ बंद हैं। सेटिंग्स में इन्हें चालू करें।';
 }

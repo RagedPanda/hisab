@@ -4909,4 +4909,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get scheduledBackupPassphraseChanged =>
       'Passphrase changed. New backups use it; older backups still need the old one.';
+
+  @override
+  String get notificationsDenied =>
+      'Notifications are blocked for Hisab. Allow them in Settings.';
 }

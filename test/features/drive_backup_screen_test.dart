@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/app.dart';
 import 'package:hisab/core/format.dart';
 import 'package:hisab/core/providers.dart';
+import 'package:hisab/data/backup/drive_backup_store.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/features/settings/drive_backup_providers.dart';
 import 'package:hisab/features/settings/drive_backup_screen.dart';
@@ -191,6 +192,77 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(harness.container.read(settingsProvider).currencyCode, 'USD', reason: "the backup's currency is applied");
   });
+
+  testWidgets('a backup still finishes when its screen closes before the upload ends', (tester) async {
+    final released = Completer<void>();
+    final store = _HeldStore(released, now: () => DateTime(2026, 10, 28, 9, 5));
+    await _pumpDriveBackup(tester, connectedEmail: 'asha@example.com', store: store);
+
+    await tester.tap(find.byKey(const Key('driveBackUpNow')));
+    await _settle(tester);
+    await tester.runAsync(() => _enterPassphrase(tester, 'correct horse'));
+    await tester.runAsync(() => store.waiting.future);
+    // Back out while the upload is still running.
+    appRouter.pop();
+    await _settle(tester);
+    expect(find.byType(DriveBackupScreen), findsNothing);
+    released.complete();
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+    await _settle(tester);
+
+    expect(tester.takeException(), isNull);
+    expect(store.uploads, 1);
+    expect(find.text(english.driveBackedUp), findsOneWidget);
+  });
+
+  testWidgets('Delete Drive copy still finishes when its screen closes before Drive answers', (tester) async {
+    final released = Completer<void>();
+    final store = _HeldStore(released)
+      ..bytes = Uint8List(4)
+      ..modifiedAt = DateTime(2026, 10, 27, 18, 30);
+    await _pumpDriveBackup(tester, connectedEmail: 'asha@example.com', store: store);
+
+    await tester.tap(find.byKey(const Key('driveDeleteCopy')));
+    await _settle(tester);
+    await tester.tap(find.text(english.delete));
+    await _settle(tester);
+    expect(store.waiting.isCompleted, isTrue, reason: 'the delete is under way');
+    // Back out while the delete is still running.
+    appRouter.pop();
+    await _settle(tester);
+    expect(find.byType(DriveBackupScreen), findsNothing);
+    released.complete();
+    await _settle(tester);
+
+    expect(tester.takeException(), isNull);
+    expect(store.bytes, isNull);
+    expect(find.text(english.driveCopyDeleted), findsOneWidget);
+  });
+}
+
+/// Holds uploads and deletes until the test lets them go; [waiting]
+/// completes once one has started.
+class _HeldStore extends FakeDriveBackupStore {
+  _HeldStore(this.release, {super.now});
+  final Completer<void> release;
+  final Completer<void> waiting = Completer<void>();
+
+  Future<void> _hold() {
+    if (!waiting.isCompleted) waiting.complete();
+    return release.future;
+  }
+
+  @override
+  Future<DriveBackupInfo> upload(Uint8List data) async {
+    await _hold();
+    return super.upload(data);
+  }
+
+  @override
+  Future<bool> delete() async {
+    await _hold();
+    return super.delete();
+  }
 }
 
 /// Holds the download until the test lets it go.

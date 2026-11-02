@@ -264,3 +264,32 @@ bool lastStatementExceedsAmountDue({
   int paidSinceStatementMinor = 0,
 }) =>
     lastStatementMinor != null && lastStatementMinor != previousStatementMinor && lastStatementMinor - paidSinceStatementMinor > amountDueMinor;
+
+enum CardHeadlineKind { due, paid, credit }
+
+/// What a card shows in account lists ([cardHeadline]).
+class CardHeadline {
+  const CardHeadline(this.kind, this.amountMinor);
+  final CardHeadlineKind kind;
+  final int amountMinor;
+
+  @override
+  bool operator ==(Object other) => other is CardHeadline && other.kind == kind && other.amountMinor == amountMinor;
+
+  @override
+  int get hashCode => Object.hash(kind, amountMinor);
+
+  @override
+  String toString() => 'CardHeadline($kind, $amountMinor)';
+}
+
+/// The one figure a card shows in account lists: credit on the card; else,
+/// with a statement recorded, what is left to pay on it (the statement less
+/// the payments since, [CardHeadlineKind.paid] once nothing is left, however much was spent
+/// after it); else, with no statement, the amount owed.
+CardHeadline cardHeadline({required int balanceMinor, int? lastStatementMinor, int paidSinceStatementMinor = 0}) {
+  if (balanceMinor > 0) return CardHeadline(CardHeadlineKind.credit, balanceMinor);
+  if (lastStatementMinor == null) return CardHeadline(CardHeadlineKind.due, outstandingMinor(balanceMinor));
+  final left = lastStatementMinor - paidSinceStatementMinor;
+  return left > 0 ? CardHeadline(CardHeadlineKind.due, left) : const CardHeadline(CardHeadlineKind.paid, 0);
+}

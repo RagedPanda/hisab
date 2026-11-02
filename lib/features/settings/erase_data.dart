@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
 import '../../l10n/l10n.dart';
+import '../../domain/salary/salary_schedule.dart';
 import '../salary/salary_providers.dart';
+import '../salary/salary_reminder.dart';
 import '../udhaar/udhaar_providers.dart';
 import '../upcoming/upcoming_providers.dart';
 import 'drive_backup_providers.dart';
@@ -23,7 +25,8 @@ Future<bool> confirmEraseAllData(BuildContext context) async =>
 /// Wipes the app back to a fresh install: every table (defaults re-seeded),
 /// every pref, the Drive connection, and the scheduled backup (its saved
 /// passphrase and background job). The Drive copy and the backups already in
-/// the folder are left alone. Takes the [container] rather than a widget's
+/// the folder are left alone. The salary alert is dismissed here too: the
+/// reminder watcher is gone with the old screens and cannot do it. Takes the [container] rather than a widget's
 /// ref: the fresh start sends the app to onboarding, which unmounts Settings
 /// before the erase is done.
 Future<void> eraseEverything(ProviderContainer container) async {
@@ -41,6 +44,7 @@ Future<void> eraseEverything(ProviderContainer container) async {
   container.invalidate(hasBackupPassphraseProvider);
   await container.read(scheduledBackupChoicesProvider.notifier).syncBackgroundJob();
   await container.read(reminderSchedulerProvider).rescheduleAll();
+  await container.read(salaryAlertSinkProvider).apply(const CancelSalaryNotification());
 }
 
 class _EraseConfirmDialog extends StatefulWidget {

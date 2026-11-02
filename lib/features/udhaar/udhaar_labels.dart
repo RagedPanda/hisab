@@ -36,5 +36,13 @@ Color? udhaarBalanceColor(int balance) => balance > 0
         ? kExpenseColor
         : null;
 
+/// The entry kind whose colour and sign an udhaar entry of [kind] borrows in
+/// lists: money out reads like an expense, money in like income. Display
+/// only; the entry stays a transfer and is never counted as spend.
+String udhaarDisplayKind(UdhaarKind kind) => kind.isMoneyOut ? 'expense' : 'income';
+
+/// Red for money out (lent, paid back), green for money in.
+Color udhaarKindColor(UdhaarKind kind) => kindColor(udhaarDisplayKind(kind), fallback: kTransferColor);
+
 /// The icon of an udhaar entry: money going out or coming in.
 IconData udhaarKindIcon(UdhaarKind kind) => kind.isMoneyOut ? Icons.north_east : Icons.south_west;

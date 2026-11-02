@@ -230,7 +230,7 @@ void main() {
       await tester.ensureVisible(find.textContaining('Save ₹'));
       await tester.tap(find.textContaining('Save ₹'));
       await settle(tester, 4);
-      expect(find.text('Pick both accounts for a transfer'), findsOneWidget);
+      expect(find.text('A transfer needs two of your accounts. Money given to a person is udhaar.'), findsOneWidget);
       expect(await savedEntries(tester, container), isEmpty);
     });
   });

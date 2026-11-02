@@ -1290,8 +1290,6 @@
   "udhaarOwesYou": "{name} पर आपके {amount} बाकी हैं",
   "udhaarYouOwe": "आप पर {name} के {amount} बाकी हैं",
   "udhaarSettledWith": "{name} के साथ सब चुकता",
-  "udhaarOwesYouShort": "आपको {amount} मिलेंगे",
-  "udhaarYouOweShort": "आप पर {amount} बकाया",
   "udhaarKindLent": "दिया",
   "udhaarKindBorrowed": "लिया",
   "udhaarKindRepaidToMe": "वापस मिला",
@@ -1318,10 +1316,12 @@
   "udhaarMyUpiId": "आपकी UPI ID",
   "udhaarMyUpiIdHelp": "याद दिलाने वाले संदेश में जुड़ेगी ताकि लोग एक टैप में पैसे लौटा सकें। न चाहें तो खाली छोड़ें।",
   "udhaarDeleted": "उधार की एंट्री हटाई गई",
-  "udhaarFromEditor": "किसी को उधार दिया या किसी से लिया?",
+  "udhaarFromEditor": "किसी व्यक्ति को पैसे दे रहे हैं? इसे उधार में लिखें",
   "udhaarInGroups": "ग्रुप में",
   "udhaarBalanceAfter": "बाकी {amount}",
   "scheduledBackupFailedNow": "बैकअप नहीं हुआ: {reason}",
   "cardLast4": "आख़िरी 4 अंक",
-  "cardLast4Invalid": "ठीक 4 अंक डालें, या इसे ख़ाली छोड़ दें।"
+  "cardLast4Invalid": "ठीक 4 अंक डालें, या इसे ख़ाली छोड़ दें।",
+  "udhaarTransferNeedsAccount": "ट्रांसफ़र के लिए आपके दो खाते चाहिए। किसी व्यक्ति को दिए पैसे उधार हैं।",
+  "udhaarRecordAction": "उधार लिखें"
 }

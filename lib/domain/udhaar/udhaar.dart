@@ -117,3 +117,13 @@ List<int> balancesAfter(List<UdhaarLine> newestFirst) {
   }
   return after;
 }
+
+/// The account a repayment should default to: the one used by the most
+/// recent of a person's udhaar [entries] whose account is still in
+/// [accountIds]. Null when none is, so the caller falls back to the default
+/// account.
+String? lastUdhaarAccountId(Iterable<({DateTime occurredAt, String? accountId})> entries, {required Set<String> accountIds}) {
+  final usable = entries.where((entry) => accountIds.contains(entry.accountId)).toList()
+    ..sort((left, right) => right.occurredAt.compareTo(left.occurredAt));
+  return usable.firstOrNull?.accountId;
+}

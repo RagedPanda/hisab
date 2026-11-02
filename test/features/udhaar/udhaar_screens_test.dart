@@ -1,17 +1,23 @@
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/dates.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/domain/udhaar/udhaar.dart';
+import 'package:hisab/core/theme.dart';
+import 'package:hisab/features/accounts/account_picker_tile.dart';
+import 'package:hisab/features/budgets/budget_views.dart';
 import 'package:hisab/features/udhaar/udhaar_card.dart';
 import 'package:hisab/features/udhaar/udhaar_form_screen.dart';
 import 'package:hisab/features/udhaar/udhaar_providers.dart';
+import 'package:hisab/features/udhaar/udhaar_screen.dart';
 
 import '../../support/app_harness.dart' show createContainer, enter, openedLocation, pumpScreen, settle;
 import '../../support/group_harness.dart' show FakeOutsideWorld;
 import '../../support/screen_harness.dart';
+import '../../support/seed.dart';
 
 /// Rahul (with a phone) on the People list, and [amountMinor] lent to him on
 /// 12 Oct from Cash when given. Returns his id.
@@ -76,6 +82,33 @@ void main() {
     expect(totals, (expense: 0, income: 0));
   });
 
+  testWidgets('an udhaar entry is listed in Entries, coloured by direction, and never counts against a budget', (tester) async {
+    final container = await createContainer();
+    final rahulId = await seedRahul(tester, container);
+    await tester.runAsync(() async {
+      final cashId = (await container.read(accountsRepositoryProvider).getAll()).single.id;
+      await container.read(budgetsRepositoryProvider).save(period: 'month', amountMinor: 1000000);
+      await seedEntry(container, id: 'chai', payee: 'Chai', amountMinor: 5000, occurredAt: DateTime.now(), accountId: cashId);
+      await container.read(udhaarRepositoryProvider).save((
+        personId: rahulId,
+        personName: 'Rahul',
+        kind: UdhaarKind.lent,
+        amountMinor: 2000000,
+        occurredAt: DateTime.now(),
+        accountId: cashId,
+        note: '',
+      ));
+    });
+    container.listen(budgetViewsProvider, (_, _) {});
+    await pumpAt(tester, container, '/transactions');
+
+    expect(find.text('Lent to Rahul'), findsOneWidget);
+    final amount = tester.widget<Text>(find.text('-₹20,000'));
+    expect(amount.style?.color, kExpenseColor, reason: 'money out, not the transfer blue');
+    final budget = container.read(budgetViewsProvider).single.progress;
+    expect(budget.spentMinor, 5000, reason: 'only the chai is spend');
+  });
+
   testWidgets('a repayment is prefilled with the balance and settles it', (tester) async {
     final container = await createContainer();
     final rahulId = await seedRahul(tester, container, amountMinor: 80000);
@@ -90,6 +123,28 @@ void main() {
 
     expect(balanceText(tester), 'All settled with Rahul');
     expect(await cashBalance(tester, container), 0);
+  });
+
+  testWidgets('a repayment defaults to the account of their latest udhaar, not the default one', (tester) async {
+    final container = await createContainer();
+    final rahulId = await seedRahul(tester, container, amountMinor: 80000);
+    final hdfcId = (await tester.runAsync(() async {
+      final hdfc = await container.read(accountsRepositoryProvider).create(name: 'HDFC', type: 'bank', color: 0xFF1E88E5);
+      await container.read(udhaarRepositoryProvider).save((
+        personId: rahulId,
+        personName: 'Rahul',
+        kind: UdhaarKind.lent,
+        amountMinor: 20000,
+        occurredAt: DateTime(2026, 10, 20, 9),
+        accountId: hdfc.id,
+        note: '',
+      ));
+      return hdfc.id;
+    }))!;
+    await pumpAt(tester, container, '/udhaar/person/$rahulId');
+
+    await tapAndSettle(tester, find.byKey(const Key('udhaar.addRepayment')));
+    expect(tester.widget<AccountPickerTile>(find.byKey(const Key('udhaar.account'))).selectedId, hdfcId);
   });
 
   testWidgets('deleting an entry from its form can be undone', (tester) async {
@@ -159,6 +214,30 @@ void main() {
     expect(find.text('You get ₹2,500'), findsOneWidget);
     await tapAndSettle(tester, find.byKey(ValueKey('udhaar.person.$rahulId')));
     expect(find.text(openedLocation('/udhaar/person/$rahulId')), findsOneWidget);
+  });
+
+  testWidgets('the Home card rounds each person to whole rupees like its totals', (tester) async {
+    final container = await createContainer();
+    await seedRahul(tester, container, amountMinor: 250050);
+    await pumpScreen(tester, container, const Scaffold(body: SingleChildScrollView(child: UdhaarCard())));
+    expect(find.text('You get ₹2,501'), findsOneWidget);
+    expect(find.text('₹2,501'), findsOneWidget, reason: 'the row');
+  });
+
+  testWidgets('in Hindi a crore balance keeps the name whole and the amount on one line', (tester) async {
+    final container = await createContainer();
+    final rahulId = await seedRahul(tester, container, amountMinor: 1234567850);
+    await tester.runAsync(() => container.read(peopleRepositoryProvider).updatePerson(rahulId, name: 'राहुल', phone: null));
+    // The test font draws every glyph a full em wide, so a phone's width in
+    // real Devanagari needs a wider test screen.
+    await pumpScreen(tester, container, const UdhaarScreen(), locale: const Locale('hi'), size: const Size(430, 932));
+    await settle(tester);
+    expect(tester.takeException(), isNull, reason: 'no overflow');
+
+    expect(tester.renderObject<RenderParagraph>(find.text('राहुल')).didExceedMaxLines, isFalse, reason: 'the name is not cut short');
+    final amount = find.text('₹1,23,45,678.50');
+    expect(amount, findsOneWidget);
+    expect(tester.renderObject<RenderParagraph>(amount).didExceedMaxLines, isFalse, reason: 'the amount stays on one line');
   });
 
   testWidgets('the Home card opens the People & udhaar list even with one person', (tester) async {

@@ -47,7 +47,7 @@ class UdhaarCard extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(
           children: [
-            for (final person in owing.take(kUdhaarCardPeople)) UdhaarPersonTile(person: person, balance: balances[person.id] ?? 0),
+            for (final person in owing.take(kUdhaarCardPeople)) UdhaarPersonTile(person: person, balance: balances[person.id] ?? 0, wholeAmounts: true),
             ListTile(
               key: const Key('dashboard.udhaarSeeAll'),
               title: Text(l10n.seeAll),

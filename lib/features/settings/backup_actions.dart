@@ -5,6 +5,7 @@ import '../../core/providers.dart';
 import '../../data/backup/backup_service.dart';
 import '../../l10n/l10n.dart';
 import '../salary/salary_providers.dart';
+import '../udhaar/udhaar_providers.dart';
 import '../shell/widgets/common.dart';
 
 /// Shortest passphrase a new backup may use.
@@ -29,9 +30,10 @@ Future<String?> promptRestorePassphrase(BuildContext context) => promptText(cont
 /// Brings the app in step after a restore: settings the backup wrote to
 /// prefs, its currency and number format, and reminder alarms.
 Future<void> applyRestoredSettings(WidgetRef ref, BackupRestoreResult restored) async {
-  // Settings sections (month start, salary) were written to prefs directly.
+  // Settings sections (month start, salary, udhaar UPI ID) were written to prefs directly.
   ref.invalidate(settingsProvider);
   ref.invalidate(salarySettingsProvider);
+  ref.invalidate(myUpiIdProvider);
   final backupCurrency = restored.currencyCode;
   if (backupCurrency != null) {
     await ref.read(settingsProvider.notifier).update((s) => s.copyWith(currencyCode: backupCurrency, currencyConfirmed: true));

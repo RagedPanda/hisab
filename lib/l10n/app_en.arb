@@ -1639,10 +1639,6 @@
   "@udhaarYouOwe": {"placeholders": {"name": {"type": "String"}, "amount": {"type": "String"}}},
   "udhaarSettledWith": "All settled with {name}",
   "@udhaarSettledWith": {"placeholders": {"name": {"type": "String"}}},
-  "udhaarOwesYouShort": "owes you {amount}",
-  "@udhaarOwesYouShort": {"placeholders": {"amount": {"type": "String"}}},
-  "udhaarYouOweShort": "you owe {amount}",
-  "@udhaarYouOweShort": {"placeholders": {"amount": {"type": "String"}}},
   "udhaarKindLent": "Lent",
   "udhaarKindBorrowed": "Borrowed",
   "udhaarKindRepaidToMe": "Got back",
@@ -1676,12 +1672,14 @@
   "udhaarMyUpiId": "Your UPI ID",
   "udhaarMyUpiIdHelp": "Added to reminders so people can pay you back in one tap. Leave blank to skip.",
   "udhaarDeleted": "Udhaar entry deleted",
-  "udhaarFromEditor": "Lent to or borrowed from someone?",
+  "udhaarFromEditor": "Giving money to a person? Record it as udhaar",
   "udhaarInGroups": "In groups",
   "udhaarBalanceAfter": "Balance {amount}",
   "@udhaarBalanceAfter": {"placeholders": {"amount": {"type": "String"}}},
   "scheduledBackupFailedNow": "Backup failed: {reason}",
   "@scheduledBackupFailedNow": {"placeholders": {"reason": {"type": "String"}}},
   "cardLast4": "Last 4 digits",
-  "cardLast4Invalid": "Enter 4 digits, or leave it empty."
+  "cardLast4Invalid": "Enter 4 digits, or leave it empty.",
+  "udhaarTransferNeedsAccount": "A transfer needs two of your accounts. Money given to a person is udhaar.",
+  "udhaarRecordAction": "Record udhaar"
 }

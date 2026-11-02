@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../db/database.dart';
 import '../salary/salary_backup.dart';
+import '../udhaar/udhaar_backup.dart';
 import 'backup_service.dart';
 import 'month_start_backup.dart';
 
@@ -11,4 +12,5 @@ import 'month_start_backup.dart';
 BackupService appBackupService(AppDatabase db, SharedPreferences prefs) => BackupService(db, sections: [
       MonthStartBackupSection(prefs),
       SalaryBackupSection(prefs),
+      UdhaarBackupSection(prefs),
     ]);

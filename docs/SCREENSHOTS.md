@@ -19,6 +19,7 @@ Every screen of Hisab as it looks on Android and on iOS, shot over the same made
 11. [New entry](#new-entry)
 12. [Quick entries](#quick-entries)
 13. [Spending calendar (dark)](#spending-calendar-dark)
+14. [Udhaar](#udhaar)
 
 ## Dashboard
 
@@ -200,6 +201,20 @@ The spending calendar in the dark theme.
   </tr>
 </table>
 
-[‹ Previous: Quick entries](#quick-entries) · [Contents](#contents) · Next ›
+[‹ Previous: Quick entries](#quick-entries) · [Contents](#contents) · [Next: Udhaar ›](#udhaar)
+
+## Udhaar
+
+People & udhaar: money lent to or borrowed from people outside any group, with who owes you and whom you owe, largest first.
+
+<table>
+  <tr><th>Android</th><th>iOS</th></tr>
+  <tr>
+    <td align="center"><img src="screenshots/framed/android/14-udhaar.png" width="300" alt="Udhaar on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/14-udhaar.png" width="300" alt="Udhaar on iOS"></td>
+  </tr>
+</table>
+
+[‹ Previous: Spending calendar (dark)](#spending-calendar-dark) · [Contents](#contents) · Next ›
 
 <sub>Shot with <code>tool/readme_screenshots.sh</code> on an Android emulator and an iPhone simulator.</sub>

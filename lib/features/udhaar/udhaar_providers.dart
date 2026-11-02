@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/udhaar_repository.dart';
+import '../../data/udhaar/udhaar_backup.dart';
 import '../../domain/udhaar/udhaar.dart';
+
+export '../../data/udhaar/udhaar_backup.dart' show kMyUpiIdPref;
 
 final udhaarRepositoryProvider = Provider((ref) => UdhaarRepository(ref.watch(databaseProvider)));
 
@@ -18,9 +21,6 @@ final personUdhaarEntriesProvider = StreamProvider.family<List<Entry>, String>((
 
 /// One People row as it changes.
 final personProvider = StreamProvider.family<Person?, String>((ref, personId) => ref.watch(peopleRepositoryProvider).watchPerson(personId));
-
-/// Preference holding the user's own UPI ID for udhaar reminders.
-const String kMyUpiIdPref = 'myUpiId';
 
 /// The user's own UPI ID (VPA): null until they are first asked, empty when
 /// they chose to leave it out.

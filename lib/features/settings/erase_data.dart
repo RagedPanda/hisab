@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../l10n/l10n.dart';
 import '../salary/salary_providers.dart';
+import '../udhaar/udhaar_providers.dart';
 import '../upcoming/upcoming_providers.dart';
 import 'drive_backup_providers.dart';
 import 'scheduled_backup_providers.dart';
@@ -30,6 +31,7 @@ Future<void> eraseEverything(WidgetRef ref) async {
   await ref.read(sharedPreferencesProvider).clear();
   ref.invalidate(settingsProvider);
   ref.invalidate(salarySettingsProvider);
+  ref.invalidate(myUpiIdProvider);
   ref.invalidate(upcomingWindowProvider);
   ref.invalidate(driveBackupEmailProvider);
   ref.invalidate(scheduledBackupChoicesProvider);

@@ -16,6 +16,7 @@ import 'package:hisab/domain/backup/scheduled_backup.dart';
 import 'package:hisab/features/settings/erase_data.dart';
 import 'package:hisab/features/settings/scheduled_backup_providers.dart';
 import 'package:hisab/features/shell/router.dart';
+import 'package:hisab/features/udhaar/udhaar_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/fake_notification_gateway.dart';
@@ -63,6 +64,7 @@ void main() {
       'currencyCode': 'USD',
       kDriveBackupEmailPref: 'me@example.com',
       kScheduledBackupChoicesPref: jsonEncode(daily.toJson()),
+      kMyUpiIdPref: 'me@okaxis',
     });
     final prefs = await SharedPreferences.getInstance();
     final db = AppDatabase(NativeDatabase.memory());
@@ -85,6 +87,7 @@ void main() {
     await tester.pumpWidget(UncontrolledProviderScope(container: container, child: const HisabApp()));
     await _settle(tester);
     await EntriesRepository(db).saveEntry(EntriesRepository.newExpense(amountMinor: 7500, occurredAt: DateTime(2026, 10, 1)));
+    expect(container.read(myUpiIdProvider), 'me@okaxis');
 
     final tile = find.byKey(const Key('eraseAllDataTile'));
     await tester.scrollUntilVisible(tile, 200, scrollable: find.byType(Scrollable).first);
@@ -119,6 +122,7 @@ void main() {
     expect(account.disconnected, isTrue);
     expect(container.read(scheduledBackupChoicesProvider).isOn, isFalse, reason: 'the schedule is not kept in memory past the erase');
     expect(vault.passphrase, isNull);
+    expect(container.read(myUpiIdProvider), isNull, reason: 'reminders ask for a UPI ID again');
     expect(scheduler.enabled, isFalse);
     expect(find.text('All data erased. Hisab is back to a fresh start.'), findsOneWidget);
     expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/home');

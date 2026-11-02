@@ -6,7 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/dates.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/domain/udhaar/udhaar.dart';
+import 'package:hisab/core/theme.dart';
 import 'package:hisab/features/accounts/account_picker_tile.dart';
+import 'package:hisab/features/budgets/budget_views.dart';
 import 'package:hisab/features/udhaar/udhaar_card.dart';
 import 'package:hisab/features/udhaar/udhaar_form_screen.dart';
 import 'package:hisab/features/udhaar/udhaar_providers.dart';
@@ -15,6 +17,7 @@ import 'package:hisab/features/udhaar/udhaar_screen.dart';
 import '../../support/app_harness.dart' show createContainer, enter, openedLocation, pumpScreen, settle;
 import '../../support/group_harness.dart' show FakeOutsideWorld;
 import '../../support/screen_harness.dart';
+import '../../support/seed.dart';
 
 /// Rahul (with a phone) on the People list, and [amountMinor] lent to him on
 /// 12 Oct from Cash when given. Returns his id.
@@ -77,6 +80,33 @@ void main() {
     final month = DateRange(DateTime(now.year, now.month), DateTime(now.year, now.month + 1));
     final totals = await tester.runAsync(() => container.read(entriesRepositoryProvider).watchTotals(month).first);
     expect(totals, (expense: 0, income: 0));
+  });
+
+  testWidgets('an udhaar entry is listed in Entries, coloured by direction, and never counts against a budget', (tester) async {
+    final container = await createContainer();
+    final rahulId = await seedRahul(tester, container);
+    await tester.runAsync(() async {
+      final cashId = (await container.read(accountsRepositoryProvider).getAll()).single.id;
+      await container.read(budgetsRepositoryProvider).save(period: 'month', amountMinor: 1000000);
+      await seedEntry(container, id: 'chai', payee: 'Chai', amountMinor: 5000, occurredAt: DateTime.now(), accountId: cashId);
+      await container.read(udhaarRepositoryProvider).save((
+        personId: rahulId,
+        personName: 'Rahul',
+        kind: UdhaarKind.lent,
+        amountMinor: 2000000,
+        occurredAt: DateTime.now(),
+        accountId: cashId,
+        note: '',
+      ));
+    });
+    container.listen(budgetViewsProvider, (_, _) {});
+    await pumpAt(tester, container, '/transactions');
+
+    expect(find.text('Lent to Rahul'), findsOneWidget);
+    final amount = tester.widget<Text>(find.text('-₹20,000'));
+    expect(amount.style?.color, kExpenseColor, reason: 'money out, not the transfer blue');
+    final budget = container.read(budgetViewsProvider).single.progress;
+    expect(budget.spentMinor, 5000, reason: 'only the chai is spend');
   });
 
   testWidgets('a repayment is prefilled with the balance and settles it', (tester) async {

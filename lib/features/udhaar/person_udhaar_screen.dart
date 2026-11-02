@@ -147,8 +147,8 @@ class _EntryRow extends ConsumerWidget {
     return ListTile(
       key: ValueKey('udhaar.entry.${entry.id}'),
       leading: CircleAvatar(
-        backgroundColor: (kind.isMoneyOut ? kExpenseColor : kIncomeColor).withValues(alpha: 0.14),
-        child: Icon(udhaarKindIcon(kind), color: kind.isMoneyOut ? kExpenseColor : kIncomeColor),
+        backgroundColor: udhaarKindColor(kind).withValues(alpha: 0.14),
+        child: Icon(udhaarKindIcon(kind), color: udhaarKindColor(kind)),
       ),
       title: Text(udhaarEntryTitle(l10n, kind, name), maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(details.join(' · '), maxLines: 2, overflow: TextOverflow.ellipsis),

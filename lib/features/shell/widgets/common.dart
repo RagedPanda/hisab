@@ -17,10 +17,13 @@ import '../../udhaar/udhaar_labels.dart';
 
 /// Rounded tile with a coloured icon, used for categories, accounts and groups.
 class IconBadge extends StatelessWidget {
-  const IconBadge({super.key, required this.icon, required this.color, this.size = 40});
+  const IconBadge({super.key, required this.icon, required this.color, this.size = 40, this.iconData});
   final String? icon;
   final int color;
   final double size;
+
+  /// Drawn instead of [icon] when given.
+  final IconData? iconData;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +32,7 @@ class IconBadge extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(color: base.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(size * 0.3)),
-      child: Icon(iconFor(icon), color: base, size: size * 0.55),
+      child: Icon(iconData ?? iconFor(icon), color: base, size: size * 0.55),
     );
   }
 }
@@ -100,10 +103,14 @@ class EntryTile extends StatelessWidget {
             ],
             Expanded(child: Text(subtitleParts.join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis)),
           ]);
-    final badge = IconBadge(
-      icon: entry.kind == 'transfer' ? 'swap_horiz' : category?.icon,
-      color: category?.color ?? 0xFF607D8B,
-    );
+    // An udhaar entry is stored as a transfer but coloured by which way the
+    // money went, so lending and getting it back read apart at a glance.
+    final badge = udhaarKind != null
+        ? IconBadge(icon: null, iconData: udhaarKindIcon(udhaarKind), color: udhaarKindColor(udhaarKind).toARGB32())
+        : IconBadge(
+            icon: entry.kind == 'transfer' ? 'swap_horiz' : category?.icon,
+            color: category?.color ?? 0xFF607D8B,
+          );
     return ListTile(
       onTap: onTap,
       isThreeLine: group != null && contextLine != null,
@@ -119,7 +126,7 @@ class EntryTile extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          AmountText(details.myAmountMinor, kind: entry.kind),
+          AmountText(details.myAmountMinor, kind: udhaarKind == null ? entry.kind : udhaarDisplayKind(udhaarKind)),
           Text(
             showDate ? formatRowDate(entry.occurredAt, locale: locale) : formatTime(entry.occurredAt, locale: locale),
             style: mutedSmall?.tabular,

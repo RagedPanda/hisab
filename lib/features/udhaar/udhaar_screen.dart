@@ -11,6 +11,7 @@ import '../../l10n/l10n.dart';
 import '../groups/net_badge.dart';
 import '../shell/widgets/common.dart';
 import 'person_dialog.dart';
+import 'udhaar_labels.dart';
 import 'udhaar_providers.dart';
 import 'udhaar_reminder_action.dart';
 import 'udhaar_routes.dart';
@@ -99,7 +100,7 @@ class UdhaarPersonTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
       key: ValueKey('udhaar.person.${person.id}'),
-      leading: CircleAvatar(child: Text(person.name.characters.firstOrNull?.toUpperCase() ?? '?')),
+      leading: _PersonAvatar(name: person.name, color: udhaarBalanceColor(balance)),
       title: Text(person.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       // The amount sits under a short label so the name keeps the width,
       // even for crores in Hindi, and the amount never wraps.
@@ -108,5 +109,19 @@ class UdhaarPersonTile extends ConsumerWidget {
           : GroupNetBadge(net: balance, moneyFormat: ref.watch(homeMoneyFormatProvider), showDecimals: wholeAmounts ? false : null),
       onTap: () => context.push(udhaarPersonLocation(person.id)),
     );
+  }
+}
+
+/// A person's initial, tinted green when they owe me and red when I owe
+/// them; the theme's plain avatar when settled.
+class _PersonAvatar extends StatelessWidget {
+  const _PersonAvatar({required this.name, required this.color});
+  final String name;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = Text(name.characters.firstOrNull?.toUpperCase() ?? '?');
+    return color == null ? CircleAvatar(child: initial) : CircleAvatar(backgroundColor: color!.withValues(alpha: 0.16), foregroundColor: color, child: initial);
   }
 }

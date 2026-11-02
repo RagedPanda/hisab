@@ -61,3 +61,11 @@ String editorDraftFingerprint({
       : '${repeat.frequency.name}|${repeat.interval}|${repeat.lastDayOfMonth}|${repeat.end.name}|'
             '${repeat.endDate?.toIso8601String()}|${repeat.maxCount}|${repeat.autoPost}',
 });
+
+/// The baseline Back compares against once the kind changes from [before]
+/// to [after]. A kind switch clears the amount, category and items, so on a
+/// new entry nobody has touched yet it carries no input worth asking about:
+/// the switched form becomes the new baseline. Anything already typed, or a
+/// stored entry whose kind would really change, keeps the old baseline.
+String? baselineAfterKindSwitch({required bool isNew, required String? openedWith, required String before, required String after}) =>
+    isNew && openedWith != null && before == openedWith ? after : openedWith;

@@ -261,7 +261,6 @@
   "passphraseTooShort": "कम से कम 8 अक्षर रखें",
   "backupShareSubject": "हिसाब एन्क्रिप्टेड बैकअप",
   "restoredRecords": "{count} रिकॉर्ड वापस लाए गए",
-  "restoreFailed": "वापस लाना विफल: {error}",
 
   "driveBackupTitle": "Google Drive पर बैकअप लें",
   "driveBackupWhy": "वैकल्पिक। आपकी अपनी Drive में एन्क्रिप्टेड कॉपी; हिसाब सिर्फ़ अपनी फ़ाइलें देख सकता है।",
@@ -296,7 +295,6 @@
   "driveErrorCancelled": "Google साइन-इन रद्द किया गया",
   "driveErrorOffline": "Google Drive तक नहीं पहुँच पाए। कनेक्शन जाँचें और फिर कोशिश करें।",
   "driveErrorNotFound": "इस Google Drive में हिसाब का कोई बैकअप नहीं मिला",
-  "driveErrorWrongPassphrase": "गलत पासफ़्रेज़, या बैकअप खराब है",
   "driveErrorUnknown": "Google Drive विफल: {error}",
   "pasted": "पेस्ट किया गया",
   "smsFoundReview": "लेन-देन मिला। नीचे समीक्षा करें।",
@@ -1274,7 +1272,7 @@
   "scheduledBackupNone": "अभी तक कोई बैकअप नहीं",
   "scheduledBackupFailed": "बैकअप नहीं हुआ {time}: {reason}",
   "scheduledBackupGoogleDrive": "Google Drive",
-  "backupFailureNoPassphrase": "इस फ़ोन पर कोई पासफ़्रेज़ सहेजा नहीं है",
+  "backupFailureNoPassphrase": "इस फ़ोन पर कोई पासफ़्रेज़ सहेजा नहीं है; तय समय पर बैकअप में सेट करें",
   "backupFailureNoFolder": "कोई फ़ोल्डर नहीं चुना",
   "backupFailureFolderUnavailable": "फ़ोल्डर तक पहुँच नहीं; उसे फिर से चुनें",
   "backupFailureSignInNeeded": "Google Drive पर बैकअप लें में जाकर फिर से साइन इन करें",
@@ -1326,5 +1324,16 @@
   "udhaarRecordAction": "उधार लिखें",
   "appLockPromptTitle": "हिसाब ऐप लॉक",
   "appLockPromptHint": "फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक इस्तेमाल करें",
-  "appLockPromptFallback": "पासकोड इस्तेमाल करें"
+  "appLockPromptFallback": "पासकोड इस्तेमाल करें",
+  "passphraseMismatch": "दोनों पासफ़्रेज़ मेल नहीं खाते",
+  "passphraseConfirmHint": "पासफ़्रेज़ फिर से लिखें",
+  "passphraseShow": "पासफ़्रेज़ दिखाएँ",
+  "passphraseHide": "पासफ़्रेज़ छिपाएँ",
+  "restorePassphraseHint": "वह पासफ़्रेज़ जिससे यह बैकअप बना था",
+  "restorePassphraseAction": "वापस लाएँ",
+  "restoreWrongPassphrase": "इस बैकअप का पासफ़्रेज़ गलत है, या फ़ाइल खराब है। वही पासफ़्रेज़ डालें जिससे बैकअप बना था। कुछ नहीं बदला गया।",
+  "restoreNotABackup": "यह फ़ाइल हिसाब का बैकअप नहीं है। कुछ नहीं बदला गया।",
+  "restoreFailedUnknown": "यह बैकअप वापस नहीं ला पाए। फिर से कोशिश करें।",
+  "scheduledBackupPassphraseSet": "पासफ़्रेज़ सहेजा गया। इसे कहीं सुरक्षित लिख लें: वापस लाने के लिए यही चाहिए होगा।",
+  "scheduledBackupPassphraseChanged": "पासफ़्रेज़ बदल गया। नए बैकअप इसी से बनेंगे; पुराने बैकअप के लिए पुराना पासफ़्रेज़ ही चाहिए।"
 }

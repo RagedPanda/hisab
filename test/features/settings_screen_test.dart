@@ -12,10 +12,12 @@ import 'package:hisab/data/db/database.dart';
 import 'package:hisab/domain/money/money_format.dart';
 import 'package:hisab/features/salary/salary_reminder.dart';
 import 'package:hisab/features/shell/router.dart';
+import 'package:hisab/l10n/generated/app_localizations.dart';
 import 'package:share_plus/share_plus.dart' show XFile;
 
 import '../core/fake_notification_gateway.dart';
 import '../support/app_harness.dart' show pumpApp, settle;
+import '../support/passphrase_dialog.dart';
 
 const _pathProvider = MethodChannel('plugins.flutter.io/path_provider');
 const _shareSheet = MethodChannel('dev.fluttercommunity.plus/share');
@@ -173,12 +175,14 @@ void main() {
     await _pumpSettings(tester);
 
     await _tapVisible(tester, find.text('Export encrypted backup'));
-    await _answerPrompt(tester, 'short');
+    await answerPassphraseDialog(tester, 'short');
     expect(find.text('Use at least 8 characters'), findsOneWidget);
-    expect(sharedPaths, isEmpty);
+    await answerPassphraseDialog(tester, 'correct horse', confirmation: 'correct hose');
+    expect(find.text("The two passphrases don't match"), findsOneWidget);
+    expect(sharedPaths, isEmpty, reason: 'the dialog stays open until both entries agree');
 
-    await _tapVisible(tester, find.text('Export encrypted backup'));
-    await _answerPrompt(tester, 'correct horse');
+    await answerPassphraseDialog(tester, 'correct horse');
+    await settle(tester);
     await _waitFor(tester, () => sharedPaths.isNotEmpty);
     final backupPath = sharedPaths.single;
     expect(backupPath, endsWith('.hisab'));
@@ -189,13 +193,16 @@ void main() {
     picker.picked = [_PickedFile(File(backupPath))];
     await _tapVisible(tester, find.text('Restore from backup'));
     await _waitFor(tester, () => find.byType(AlertDialog).evaluate().isNotEmpty);
-    await _answerPrompt(tester, 'wrong passphrase');
-    await _waitFor(tester, () => find.textContaining('Restore failed').evaluate().isNotEmpty);
-    expect(find.textContaining('Restore failed'), findsOneWidget);
+    await answerPassphraseDialog(tester, 'wrong passphrase');
+    await settle(tester);
+    final wrongPassphrase = lookupAppLocalizations(const Locale('en')).restoreWrongPassphrase;
+    await _waitFor(tester, () => find.text(wrongPassphrase).evaluate().isNotEmpty);
+    expect(find.text(wrongPassphrase), findsOneWidget, reason: 'a plain message, no exception text');
 
     await _tapVisible(tester, find.text('Restore from backup'));
     await _waitFor(tester, () => find.byType(AlertDialog).evaluate().isNotEmpty);
-    await _answerPrompt(tester, 'correct horse');
+    await answerPassphraseDialog(tester, 'correct horse');
+    await settle(tester);
     await _waitFor(tester, () => find.textContaining('Restored ').evaluate().isNotEmpty);
     expect(find.textContaining('Restored '), findsOneWidget);
   });

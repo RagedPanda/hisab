@@ -20,6 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/fake_notification_gateway.dart';
 import '../data/fake_drive_backup.dart';
+import '../support/passphrase_dialog.dart';
 
 class _Harness {
   _Harness(this.container, this.prefs, this.account, this.store);
@@ -65,8 +66,7 @@ Future<_Harness> _pumpDriveBackup(WidgetTester tester, {String? connectedEmail, 
 }
 
 Future<void> _enterPassphrase(WidgetTester tester, String passphrase) async {
-  await tester.enterText(find.byType(TextField), passphrase);
-  await tester.tap(find.byType(FilledButton).last);
+  await answerPassphraseDialog(tester, passphrase);
   await _settle(tester, 30);
 }
 

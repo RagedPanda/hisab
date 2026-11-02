@@ -407,7 +407,8 @@ class SettingsScreen extends ConsumerWidget {
       await applyRestoredSettings(container, restored);
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(restored.written))));
     } catch (error) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoreFailed('$error'))));
+      debugPrint('Hisab: restore failed: $error');
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(restoreFailureMessage(l10n, error))));
     }
   }
 }

@@ -914,11 +914,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String restoreFailed(String error) {
-    return 'Restore failed: $error';
-  }
-
-  @override
   String get driveBackupTitle => 'Back up to Google Drive';
 
   @override
@@ -1033,10 +1028,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driveErrorNotFound => 'No Hisab backup found in this Google Drive';
-
-  @override
-  String get driveErrorWrongPassphrase =>
-      'Wrong passphrase, or the backup is damaged';
 
   @override
   String driveErrorUnknown(String error) {
@@ -4682,7 +4673,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scheduledBackupGoogleDrive => 'Google Drive';
 
   @override
-  String get backupFailureNoPassphrase => 'no passphrase saved on this phone';
+  String get backupFailureNoPassphrase =>
+      'no passphrase saved on this phone; set one in Scheduled backup';
 
   @override
   String get backupFailureNoFolder => 'no folder chosen';
@@ -4878,4 +4870,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appLockPromptFallback => 'Use passcode';
+
+  @override
+  String get passphraseMismatch => 'The two passphrases don\'t match';
+
+  @override
+  String get passphraseConfirmHint => 'Type the passphrase again';
+
+  @override
+  String get passphraseShow => 'Show passphrase';
+
+  @override
+  String get passphraseHide => 'Hide passphrase';
+
+  @override
+  String get restorePassphraseHint =>
+      'The passphrase this backup was made with';
+
+  @override
+  String get restorePassphraseAction => 'Restore';
+
+  @override
+  String get restoreWrongPassphrase =>
+      'Wrong passphrase for this backup, or the file is damaged. Use the passphrase it was made with. Nothing was changed.';
+
+  @override
+  String get restoreNotABackup =>
+      'This file isn\'t a Hisab backup. Nothing was changed.';
+
+  @override
+  String get restoreFailedUnknown =>
+      'Couldn\'t restore this backup. Try again.';
+
+  @override
+  String get scheduledBackupPassphraseSet =>
+      'Passphrase saved. Keep a copy somewhere safe: you need it to restore.';
+
+  @override
+  String get scheduledBackupPassphraseChanged =>
+      'Passphrase changed. New backups use it; older backups still need the old one.';
 }

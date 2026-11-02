@@ -17,9 +17,14 @@ const _saltLength = 16;
 const _nonceLength = 12;
 const _iterations = 200000;
 
+/// Why a backup could not be opened. AES-GCM cannot tell a wrong
+/// passphrase from a damaged file, so [wrongPassphrase] covers both.
+enum BackupFormatProblem { notABackup, wrongPassphrase }
+
 class BackupFormatException implements Exception {
-  const BackupFormatException(this.message);
+  const BackupFormatException(this.message, {this.problem = BackupFormatProblem.notABackup});
   final String message;
+  final BackupFormatProblem problem;
   @override
   String toString() => message;
 }
@@ -79,7 +84,7 @@ Future<Map<String, dynamic>> decryptBackup({
     );
     return jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
   } on SecretBoxAuthenticationError {
-    throw const BackupFormatException('Wrong passphrase or corrupted file');
+    throw const BackupFormatException('Wrong passphrase or corrupted file', problem: BackupFormatProblem.wrongPassphrase);
   }
 }
 

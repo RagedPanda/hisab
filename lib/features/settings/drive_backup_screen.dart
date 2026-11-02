@@ -19,7 +19,7 @@ String driveFailureMessage(AppLocalizations l10n, Object error) => switch (drive
   DriveBackupFailure.cancelled => l10n.driveErrorCancelled,
   DriveBackupFailure.offline => l10n.driveErrorOffline,
   DriveBackupFailure.notFound => l10n.driveErrorNotFound,
-  DriveBackupFailure.wrongPassphrase => l10n.driveErrorWrongPassphrase,
+  DriveBackupFailure.wrongPassphrase => restoreFailureMessage(l10n, error),
   DriveBackupFailure.unknown => l10n.driveErrorUnknown('$error'),
 };
 

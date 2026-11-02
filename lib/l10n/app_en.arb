@@ -319,8 +319,6 @@
   "backupShareSubject": "Hisab encrypted backup",
   "restoredRecords": "Restored {count} records",
   "@restoredRecords": {"placeholders": {"count": {"type": "int"}}},
-  "restoreFailed": "Restore failed: {error}",
-  "@restoreFailed": {"placeholders": {"error": {"type": "String"}}},
 
   "driveBackupTitle": "Back up to Google Drive",
   "driveBackupWhy": "Optional. An encrypted copy in your own Drive; Hisab can only see its own files.",
@@ -357,7 +355,6 @@
   "driveErrorCancelled": "Google sign-in was cancelled",
   "driveErrorOffline": "Couldn't reach Google Drive. Check your connection and try again.",
   "driveErrorNotFound": "No Hisab backup found in this Google Drive",
-  "driveErrorWrongPassphrase": "Wrong passphrase, or the backup is damaged",
   "driveErrorUnknown": "Google Drive failed: {error}",
   "@driveErrorUnknown": {"placeholders": {"error": {"type": "String"}}},
 
@@ -1616,7 +1613,7 @@
   "scheduledBackupFailed": "Backup failed {time}: {reason}",
   "@scheduledBackupFailed": {"placeholders": {"time": {"type": "String"}, "reason": {"type": "String"}}},
   "scheduledBackupGoogleDrive": "Google Drive",
-  "backupFailureNoPassphrase": "no passphrase saved on this phone",
+  "backupFailureNoPassphrase": "no passphrase saved on this phone; set one in Scheduled backup",
   "backupFailureNoFolder": "no folder chosen",
   "backupFailureFolderUnavailable": "the folder can't be reached; choose it again",
   "backupFailureSignInNeeded": "Google needs you to sign in again in Back up to Google Drive",
@@ -1684,5 +1681,16 @@
   "udhaarRecordAction": "Record udhaar",
   "appLockPromptTitle": "Hisab app lock",
   "appLockPromptHint": "Use your fingerprint, face or screen lock",
-  "appLockPromptFallback": "Use passcode"
+  "appLockPromptFallback": "Use passcode",
+  "passphraseMismatch": "The two passphrases don't match",
+  "passphraseConfirmHint": "Type the passphrase again",
+  "passphraseShow": "Show passphrase",
+  "passphraseHide": "Hide passphrase",
+  "restorePassphraseHint": "The passphrase this backup was made with",
+  "restorePassphraseAction": "Restore",
+  "restoreWrongPassphrase": "Wrong passphrase for this backup, or the file is damaged. Use the passphrase it was made with. Nothing was changed.",
+  "restoreNotABackup": "This file isn't a Hisab backup. Nothing was changed.",
+  "restoreFailedUnknown": "Couldn't restore this backup. Try again.",
+  "scheduledBackupPassphraseSet": "Passphrase saved. Keep a copy somewhere safe: you need it to restore.",
+  "scheduledBackupPassphraseChanged": "Passphrase changed. New backups use it; older backups still need the old one."
 }

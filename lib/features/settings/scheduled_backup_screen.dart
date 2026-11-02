@@ -82,12 +82,18 @@ class _ScheduledBackupScreenState extends ConsumerState<ScheduledBackupScreen> {
 
   ScheduledBackupChoicesNotifier get _choices => ref.read(scheduledBackupChoicesProvider.notifier);
 
-  /// Asks for a new passphrase and saves it; false when dismissed.
+  /// Asks for a new passphrase and saves it; false when dismissed. Replacing
+  /// a saved one says that older backups still need the old passphrase.
   Future<bool> _setPassphrase() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    final hadPassphrase = await ref.read(hasBackupPassphraseProvider.future);
+    if (!mounted) return false;
     final passphrase = await promptNewBackupPassphrase(context);
     if (passphrase == null) return false;
     await ref.read(backupPassphraseVaultProvider).savePassphrase(passphrase);
     ref.invalidate(hasBackupPassphraseProvider);
+    messenger.showSnackBar(SnackBar(content: Text(hadPassphrase ? l10n.scheduledBackupPassphraseChanged : l10n.scheduledBackupPassphraseSet)));
     return true;
   }
 

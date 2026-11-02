@@ -1,6 +1,6 @@
 /// Debug-only hand-written demo rows that the README screenshots show: a
 /// multi-item dairy bill, a Goa trip with three payers and a settle-up, bank
-/// SMS waiting for review and three subscriptions. Called by `seedDemoData`
+/// SMS waiting for review, three subscriptions and udhaar with three people. Called by `seedDemoData`
 /// after the generated entries, so it runs once per database.
 library;
 
@@ -9,11 +9,14 @@ import 'package:drift/drift.dart';
 import '../../core/ids.dart';
 import '../../domain/recurring/recurrence.dart';
 import '../../domain/sms/sms_parser.dart';
+import '../../domain/udhaar/udhaar.dart';
 import '../db/database.dart';
 import '../repositories/entries_repository.dart';
 import '../repositories/groups_repository.dart';
+import '../repositories/people_repository.dart';
 import '../repositories/recurring_repository.dart';
 import '../repositories/sms_log_repository.dart';
+import '../repositories/udhaar_repository.dart';
 import '../sms/sms_ingest_service.dart';
 
 /// One trip bill split equally between every member.
@@ -48,6 +51,26 @@ const List<(String name, String categoryKey, int amountMinor, int dayOfMonth)> k
   ('Spotify', 'music', 11900, 20),
 ];
 
+/// One udhaar entry with a demo person.
+class DemoUdhaar {
+  const DemoUdhaar({required this.kind, required this.amountMinor, required this.daysAgo, this.note = ''});
+  final UdhaarKind kind;
+  final int amountMinor;
+  final int daysAgo;
+  final String note;
+}
+
+/// People on the udhaar list with their phone and entries: Vikram owes me
+/// what is left after paying part back, Neha owes me and I owe Sunita.
+const List<(String name, String phone, List<DemoUdhaar> entries)> kDemoUdhaar = [
+  ('Vikram Mehta', '9820011223', [
+    DemoUdhaar(kind: UdhaarKind.lent, amountMinor: 2000000, daysAgo: 40, note: 'Bike repair'),
+    DemoUdhaar(kind: UdhaarKind.repaidToMe, amountMinor: 800000, daysAgo: 12),
+  ]),
+  ('Neha Kapoor', '9987654321', [DemoUdhaar(kind: UdhaarKind.lent, amountMinor: 350000, daysAgo: 9, note: 'Concert tickets')]),
+  ('Sunita Aunty', '9811122334', [DemoUdhaar(kind: UdhaarKind.borrowed, amountMinor: 500000, daysAgo: 20, note: 'Diwali shopping')]),
+];
+
 /// Splits [amountMinor] equally [memberCount] ways; the first members take the
 /// leftover paise so the shares always add up to the bill.
 List<int> equalShares(int amountMinor, int memberCount) => [
@@ -72,6 +95,7 @@ Future<void> seedDemoStory(
   await _seedTrip(db, now: now, groupId: groupId, accountId: accountIds[1], categoryIdByKey: categoryIdByKey, source: source);
   await _seedReviewSms(db, now: now);
   await _seedSubscriptions(db, now: now, accountId: accountIds[1], categoryIdByKey: categoryIdByKey);
+  await _seedUdhaar(db, now: now, accountId: accountIds[1]);
 }
 
 Future<void> _seedDairyBill(AppDatabase db, {required DateTime now, required String accountId, String? categoryId, required String source}) async {
@@ -180,5 +204,24 @@ Future<void> _seedSubscriptions(AppDatabase db, {required DateTime now, required
         isSubscription: true,
       ),
     );
+  }
+}
+
+Future<void> _seedUdhaar(AppDatabase db, {required DateTime now, required String accountId}) async {
+  final people = PeopleRepository(db);
+  final udhaar = UdhaarRepository(db);
+  for (final (name, phone, entries) in kDemoUdhaar) {
+    final personId = await people.addPerson(name: name, phone: phone);
+    for (final entry in entries) {
+      await udhaar.save((
+        personId: personId,
+        personName: name,
+        kind: entry.kind,
+        amountMinor: entry.amountMinor,
+        occurredAt: now.subtract(Duration(days: entry.daysAgo, hours: 3)),
+        accountId: accountId,
+        note: entry.note,
+      ));
+    }
   }
 }

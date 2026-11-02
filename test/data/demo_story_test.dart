@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/debug/demo_seed.dart';
 import 'package:hisab/data/debug/demo_story.dart';
+import 'package:hisab/domain/udhaar/udhaar.dart';
 
 void main() {
   late AppDatabase db;
@@ -47,5 +48,13 @@ void main() {
     final subscriptions = await (db.select(db.recurringRules)..where((rule) => rule.isSubscription.equals(true))).get();
     expect(subscriptions.map((rule) => rule.name), unorderedEquals(kDemoSubscriptions.map((subscription) => subscription.$1)));
     expect(subscriptions.every((rule) => !rule.nextDue!.isBefore(DateTime(2026, 10, 29))), isTrue, reason: 'nothing starts overdue');
+
+    final udhaarLines = [
+      for (final entry in await (db.select(db.entries)..where((entry) => entry.udhaarKind.isNotNull())).get())
+        (personId: entry.personId!, kind: UdhaarKind.parse(entry.udhaarKind)!, amountMinor: entry.amountMinor, occurredAt: entry.occurredAt),
+    ];
+    final namesById = {for (final person in await db.select(db.people).get()) person.id: person.name};
+    final balances = {for (final entry in udhaarBalances(udhaarLines).entries) namesById[entry.key]: entry.value};
+    expect(balances, {'Vikram Mehta': 1200000, 'Neha Kapoor': 350000, 'Sunita Aunty': -500000}, reason: 'owes me, partly repaid, and I owe');
   });
 }

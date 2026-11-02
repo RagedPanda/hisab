@@ -4814,7 +4814,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get udhaarDeleted => 'उधार की एंट्री हटाई गई';
 
   @override
-  String get udhaarFromEditor => 'किसी को उधार दिया या किसी से लिया?';
+  String get udhaarFromEditor =>
+      'किसी व्यक्ति को पैसे दे रहे हैं? इसे उधार में लिखें';
 
   @override
   String get udhaarInGroups => 'ग्रुप में';
@@ -4834,4 +4835,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get cardLast4Invalid => 'ठीक 4 अंक डालें, या इसे ख़ाली छोड़ दें।';
+
+  @override
+  String get udhaarTransferNeedsAccount =>
+      'ट्रांसफ़र के लिए आपके दो खाते चाहिए। किसी व्यक्ति को दिए पैसे उधार हैं।';
+
+  @override
+  String get udhaarRecordAction => 'उधार लिखें';
 }

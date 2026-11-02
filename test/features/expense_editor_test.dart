@@ -10,6 +10,7 @@ import 'package:hisab/domain/reminders/reminder_kind.dart';
 import 'package:hisab/features/expense_editor/item_row.dart';
 import 'package:hisab/features/recurring/recurring_rule_form_screen.dart';
 import 'package:hisab/features/shell/router.dart';
+import 'package:hisab/features/udhaar/udhaar_form_screen.dart';
 
 import '../support/app_harness.dart';
 import '../support/editor_harness.dart';
@@ -18,6 +19,9 @@ import '../support/seed.dart';
 /// The personal entry editorScreen: what each control does to the entry that gets
 /// saved, the checks that stop a save, and the forms it opens prefilled
 /// (an SMS, a due reminder, an existing entry).
+/// The failed-save message of a transfer without a To account.
+const kNoToAccountMessage = 'A transfer needs two of your accounts. Money given to a person is udhaar.';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -142,7 +146,7 @@ void main() {
 
       await enter(tester, editorAmountField, '1000');
       await saveEditor(tester);
-      expect(find.text('Pick both accounts for a transfer'), findsOneWidget);
+      expect(find.text(kNoToAccountMessage), findsOneWidget);
 
       await tapInEditor(tester, find.text('To account'));
       await tester.tap(find.byKey(ValueKey('account-option-$bankId')));
@@ -153,6 +157,19 @@ void main() {
       expect(saved.kind, 'transfer');
       expect(saved.toAccountId, bankId);
       expect(saved.categoryId, isNull);
+    });
+
+    testWidgets('a new transfer points money for a person to udhaar, under To and on a failed save', (tester) async {
+      await openEditor(tester, location: () => '/entry?kind=transfer');
+      expect(find.byKey(const ValueKey('editor.udhaar')), findsOneWidget);
+      expect(find.text('Giving money to a person? Record it as udhaar'), findsOneWidget);
+
+      await enter(tester, editorAmountField, '20000');
+      await saveEditor(tester);
+      await tester.tap(find.text('Record udhaar'));
+      await settle(tester);
+      expect(find.byType(UdhaarFormScreen), findsOneWidget);
+      expect(tester.widget<TextField>(find.byKey(const Key('udhaar.amount'))).controller!.text, '20000', reason: 'the amount comes along');
     });
 
     testWidgets('changing the from account to the to account clears the to account', (tester) async {
@@ -169,7 +186,7 @@ void main() {
       await tester.tap(find.byKey(ValueKey('account-option-$bankId')));
       await settle(tester);
       await saveEditor(tester);
-      expect(find.text('Pick both accounts for a transfer'), findsOneWidget, reason: 'from and to can never be the same account');
+      expect(find.text(kNoToAccountMessage), findsOneWidget, reason: 'from and to can never be the same account');
       expect(await savedEntries(tester, container), isEmpty);
     });
   });

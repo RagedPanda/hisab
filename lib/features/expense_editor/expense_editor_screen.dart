@@ -868,19 +868,9 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                 selectedId: _toAccountId,
                 onPick: (id) => setState(() => _toAccountId = id),
               ),
-            if (_kind == 'transfer' && _existingId == null)
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: TextButton.icon(
-                  key: const ValueKey('editor.udhaar'),
-                  icon: const Icon(Icons.handshake_outlined),
-                  label: Text(l10n.udhaarFromEditor),
-                  onPressed: () => context.pushReplacement(udhaarEntryLocation(
-                    amountMinor: parseAmountToMinor(_amountController.text, format: _moneyFormat),
-                    accountId: _accountId,
-                  )),
-                ),
-              ),
+            // Money given to a person is udhaar, not a transfer: say so right
+            // under the To picker, where a person's name was expected.
+            if (_kind == 'transfer' && _existingId == null) _UdhaarHint(label: l10n.udhaarFromEditor, onTap: _openUdhaarForm),
           ],
           const SizedBox(height: 8),
           _dateTimeRow(context),
@@ -1340,6 +1330,16 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
     if (_payerAmounts.isEmpty && _paidByMemberId != null) _payerAmounts = {_paidByMemberId!: _amountMinor};
   }
 
+  /// Swaps this new transfer for the udhaar form, carrying the amount and
+  /// the From account across.
+  void _openUdhaarForm() {
+    if (!mounted) return;
+    context.pushReplacement(udhaarEntryLocation(
+      amountMinor: parseAmountToMinor(_amountController.text, format: _moneyFormat),
+      accountId: _accountId,
+    ));
+  }
+
   String _accountProblemMessage(AppLocalizations l10n, EntryAccountProblem problem) => switch (problem) {
         EntryAccountProblem.missingAccount => l10n.errorPickAccount,
         EntryAccountProblem.missingBothAccounts => l10n.errorPickBothAccounts,
@@ -1366,6 +1366,11 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       toAccountId: _toAccountId,
       accountCreatedOnSave: _source == 'sms' && _smsId != null,
     );
+    if (accountProblem == EntryAccountProblem.missingBothAccounts && _toAccountId == null && _existingId == null) {
+      // No To account usually means the money went to a person: offer udhaar.
+      showActionSnackBar(messenger, message: l10n.udhaarTransferNeedsAccount, actionLabel: l10n.udhaarRecordAction, onAction: _openUdhaarForm);
+      return;
+    }
     if (accountProblem != EntryAccountProblem.none) {
       messenger.showSnackBar(SnackBar(content: Text(_accountProblemMessage(l10n, accountProblem))));
       return;
@@ -1564,6 +1569,33 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
 /// Tells the user a new entry starts as a copy of a saved one (a group's last
 /// expense, or "Again" on any entry), with a way back to an empty form; or,
 /// without [onStartBlank], that "Split this" converts the saved entry.
+/// A tinted, tappable hint under a new transfer's To picker that sends
+/// money given to or taken from a person to the udhaar form.
+class _UdhaarHint extends StatelessWidget {
+  const _UdhaarHint({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      key: const ValueKey('editor.udhaar'),
+      margin: const EdgeInsets.only(top: 4, bottom: 4),
+      elevation: 0,
+      color: scheme.primary.withValues(alpha: 0.10),
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        dense: true,
+        leading: Icon(Icons.handshake_outlined, color: scheme.primary),
+        title: Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurface, fontWeight: FontWeight.w600)),
+        trailing: Icon(Icons.chevron_right, color: scheme.primary),
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
 class _CopiedFromLastBanner extends StatelessWidget {
   const _CopiedFromLastBanner({required this.label, this.onStartBlank, this.icon = Icons.content_copy_rounded, this.bannerKey = const Key('editor.copiedFromLast')});
   final String label;

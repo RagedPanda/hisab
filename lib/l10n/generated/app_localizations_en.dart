@@ -4841,7 +4841,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get udhaarDeleted => 'Udhaar entry deleted';
 
   @override
-  String get udhaarFromEditor => 'Lent to or borrowed from someone?';
+  String get udhaarFromEditor =>
+      'Giving money to a person? Record it as udhaar';
 
   @override
   String get udhaarInGroups => 'In groups';
@@ -4861,4 +4862,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cardLast4Invalid => 'Enter 4 digits, or leave it empty.';
+
+  @override
+  String get udhaarTransferNeedsAccount =>
+      'A transfer needs two of your accounts. Money given to a person is udhaar.';
+
+  @override
+  String get udhaarRecordAction => 'Record udhaar';
 }

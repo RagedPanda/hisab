@@ -7739,7 +7739,7 @@ abstract class AppLocalizations {
   /// No description provided for @udhaarFromEditor.
   ///
   /// In en, this message translates to:
-  /// **'Lent to or borrowed from someone?'**
+  /// **'Giving money to a person? Record it as udhaar'**
   String get udhaarFromEditor;
 
   /// No description provided for @udhaarInGroups.
@@ -7771,6 +7771,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter 4 digits, or leave it empty.'**
   String get cardLast4Invalid;
+
+  /// No description provided for @udhaarTransferNeedsAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'A transfer needs two of your accounts. Money given to a person is udhaar.'**
+  String get udhaarTransferNeedsAccount;
+
+  /// No description provided for @udhaarRecordAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Record udhaar'**
+  String get udhaarRecordAction;
 }
 
 class _AppLocalizationsDelegate

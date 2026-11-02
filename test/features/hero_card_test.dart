@@ -13,8 +13,9 @@ import '../support/app_harness.dart';
 
 /// October 2026 against September, with [expense] spent now and
 /// [previousExpense] last month.
-HeroData _hero({required int expense, int income = 0, required int previousExpense}) => HeroData(
+HeroData _hero({required int expense, int income = 0, required int previousExpense, bool showsFirstRun = false}) => HeroData(
       summary: MonthSummary(expense: expense, income: income, previousExpense: previousExpense, daysElapsed: 24, daysInMonth: 31, elapsedFraction: 0.77),
+      showsFirstRun: showsFirstRun,
       range: DateRange(DateTime(2026, 10, 1), DateTime(2026, 11, 1)),
       previousRange: DateRange(DateTime(2026, 9, 1), DateTime(2026, 10, 1)),
     );
@@ -57,8 +58,8 @@ void main() {
     expect(find.text('Copied'), findsOneWidget);
   });
 
-  testWidgets('an empty month offers to add the first entry', (tester) async {
-    await _pumpHero(tester, _hero(expense: 0, previousExpense: 0));
+  testWidgets('before any entry the hero offers to add the first one', (tester) async {
+    await _pumpHero(tester, _hero(expense: 0, previousExpense: 0, showsFirstRun: true));
     expect(find.text('Nothing spent yet this month'), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Add your first entry'));
     await tester.pumpAndSettle();

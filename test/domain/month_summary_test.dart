@@ -33,4 +33,16 @@ void main() {
     expect(summary.percentVsPrevious, isNull);
     expect(summary.dailyAverageMinor, 0);
   });
+
+  test('the hero offers the first entry only before anything is recorded', () {
+    MonthSummary summarise(List<LedgerLine> lines) => summariseMonth(current: lines, previous: const [], range: october, now: DateTime(2026, 10, 21));
+    final empty = summarise(const []);
+    final udhaarOnly = summarise([_line('transfer', 250000, DateTime(2026, 10, 12))]);
+    final spent = summarise([_line('expense', 5000, DateTime(2026, 10, 3))]);
+
+    expect(heroShowsFirstRun(summary: empty, hasAnyEntries: false), isTrue);
+    expect(heroShowsFirstRun(summary: udhaarOnly, hasAnyEntries: true), isFalse, reason: 'udhaar and transfers move no spend but are entries');
+    expect(heroShowsFirstRun(summary: empty, hasAnyEntries: true), isFalse, reason: 'an older month has entries');
+    expect(heroShowsFirstRun(summary: spent, hasAnyEntries: false), isFalse, reason: 'the month figures win over a lagging count');
+  });
 }

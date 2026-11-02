@@ -103,7 +103,7 @@ class _HeroContent extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      if (summary.isEmpty) const _EmptyRow(foreground: foreground) else _StatsRow(summary: summary, moneyFormat: moneyFormat, foreground: foreground),
+                      if (data.showsFirstRun) const _EmptyRow(foreground: foreground) else _StatsRow(summary: summary, moneyFormat: moneyFormat, foreground: foreground),
                     ],
                   ),
                 ),

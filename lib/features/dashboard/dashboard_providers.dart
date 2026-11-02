@@ -51,16 +51,19 @@ AsyncValue<R> combineAsync<A, B, R>(AsyncValue<A> first, AsyncValue<B> second, R
 // Hero -----------------------------------------------------------------------
 
 class HeroData {
-  const HeroData({required this.summary, required this.range, required this.previousRange, this.todayMinor});
+  const HeroData({required this.summary, required this.range, required this.previousRange, this.todayMinor, this.showsFirstRun = false});
   final MonthSummary summary;
   final DateRange range;
   final DateRange previousRange;
+
+  /// Nothing recorded yet, so the card offers the first entry.
+  final bool showsFirstRun;
 
   /// Today's spend; null when the card shows a month that is not this one.
   final int? todayMinor;
 }
 
-final heroDataProvider = Provider<AsyncValue<HeroData>>((ref) => mapAsync(ref.watch(dashboardLedgerProvider), (ledger) {
+final heroDataProvider = Provider<AsyncValue<HeroData>>((ref) => combineAsync(ref.watch(dashboardLedgerProvider), ref.watch(hasAnyEntriesProvider), (ledger, hasAnyEntries) {
       final now = DateTime.now();
       final currentLines = linesWithin(ledger.lines, ledger.range);
       final summary = summariseMonth(
@@ -74,6 +77,7 @@ final heroDataProvider = Provider<AsyncValue<HeroData>>((ref) => mapAsync(ref.wa
         range: ledger.range,
         previousRange: ledger.previousRange,
         todayMinor: todaySpendMinor(lines: currentLines, shownRange: ledger.range, now: now),
+        showsFirstRun: heroShowsFirstRun(summary: summary, hasAnyEntries: hasAnyEntries),
       );
     }));
 

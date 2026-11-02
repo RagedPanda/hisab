@@ -172,6 +172,24 @@ void main() {
       expect(tester.widget<TextField>(find.byKey(const Key('udhaar.amount'))).controller!.text, '20000', reason: 'the amount comes along');
     });
 
+    testWidgets('the udhaar hint goes once a To account is picked and comes back when To is cleared', (tester) async {
+      late final String bankId;
+      await openEditor(tester, location: () => '/entry?kind=transfer', seed: (container) async {
+        bankId = (await container.read(accountsRepositoryProvider).create(name: 'HDFC Savings', type: 'bank', color: 0xFF1E88E5)).id;
+      });
+      expect(find.byKey(const ValueKey('editor.udhaar')), findsOneWidget);
+
+      await tapInEditor(tester, find.text('To account'));
+      await tester.tap(find.byKey(ValueKey('account-option-$bankId')));
+      await settle(tester);
+      expect(find.byKey(const ValueKey('editor.udhaar')), findsNothing, reason: 'a real To account is not a person');
+
+      await tapInEditor(tester, find.text('From account'));
+      await tester.tap(find.byKey(ValueKey('account-option-$bankId')));
+      await settle(tester);
+      expect(find.byKey(const ValueKey('editor.udhaar')), findsOneWidget, reason: 'From took the To account, so To is empty again');
+    });
+
     testWidgets('changing the from account to the to account clears the to account', (tester) async {
       late final String bankId;
       final container = await openEditor(tester, location: () => '/entry?kind=transfer', seed: (container) async {

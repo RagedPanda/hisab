@@ -30,6 +30,12 @@ class MonthSummary {
   int get dailyAverageMinor => dailyAverage(expenseMinor: expense, daysElapsed: daysElapsed);
 }
 
+/// Whether the hero offers to add the first entry: only before anything at
+/// all is recorded. Udhaar and plain transfers move no spend or income, and
+/// an older month's entries are outside [summary], yet each means the user
+/// has started, so the month's figures show instead.
+bool heroShowsFirstRun({required MonthSummary summary, required bool hasAnyEntries}) => summary.isEmpty && !hasAnyEntries;
+
 MonthSummary summariseMonth({
   required Iterable<LedgerLine> current,
   required Iterable<LedgerLine> previous,

@@ -9,6 +9,7 @@ import 'package:hisab/data/repositories/entries_repository.dart';
 import 'package:hisab/data/repositories/groups_repository.dart';
 import 'package:hisab/data/sms/sms_channel.dart';
 import 'package:hisab/domain/stats/category_shares.dart';
+import 'package:hisab/domain/udhaar/udhaar.dart';
 import 'package:hisab/domain/upcoming/upcoming_items.dart';
 import 'package:hisab/features/dashboard/dashboard_providers.dart';
 import 'package:hisab/features/dashboard/dashboard_screen.dart';
@@ -17,6 +18,7 @@ import 'package:hisab/features/dashboard/widgets/dashboard_card.dart';
 import 'package:hisab/features/dashboard/widgets/groups_card.dart';
 import 'package:hisab/features/dashboard/widgets/upcoming_card.dart';
 import 'package:hisab/features/shell/widgets/common.dart';
+import 'package:hisab/features/udhaar/udhaar_providers.dart';
 import 'package:hisab/features/upcoming/upcoming_providers.dart';
 import 'package:hisab/features/upcoming/upcoming_routes.dart';
 
@@ -73,6 +75,36 @@ void main() {
     await pumpScreen(tester, container, const DashboardScreen(), size: _wholeDashboard);
     await pumpWithDatabase(tester);
     expect(find.text('No entries this month'), findsOneWidget);
+    expect(find.text('Add your first entry'), findsNothing, reason: 'the hero is past first-run too');
+  });
+
+  testWidgets('an empty book offers the first entry on the hero', (tester) async {
+    final container = await createContainer();
+    await pumpScreen(tester, container, const DashboardScreen(), size: _wholeDashboard);
+    await pumpWithDatabase(tester);
+    expect(_inCard(kHeroCardKey, find.text('Add your first entry')), findsOneWidget);
+  });
+
+  testWidgets('only an udhaar entry still shows the month figures on the hero', (tester) async {
+    final container = await createContainer();
+    await tester.runAsync(() async {
+      final rahulId = await container.read(peopleRepositoryProvider).addPerson(name: 'Rahul');
+      final cashId = (await container.read(accountsRepositoryProvider).getAll()).single.id;
+      // Borrowed, so Cash stays positive and its card stays one line shorter.
+      await container.read(udhaarRepositoryProvider).save((
+        personId: rahulId,
+        personName: 'Rahul',
+        kind: UdhaarKind.borrowed,
+        amountMinor: 250000,
+        occurredAt: _today,
+        accountId: cashId,
+        note: '',
+      ));
+    });
+    await pumpScreen(tester, container, const DashboardScreen(), size: _wholeDashboard);
+    await pumpWithDatabase(tester);
+    expect(_inCard(kHeroCardKey, find.text('Add your first entry')), findsNothing);
+    expect(_inCard(kHeroCardKey, find.text('Income')), findsOneWidget, reason: 'the stats row shows instead');
   });
 
   testWidgets('bank SMS waiting for review show a banner and a badge that open the review list', (tester) async {
@@ -99,10 +131,6 @@ void main() {
     final card = (await tester.runAsync(() => accounts.create(name: 'Travel card', type: 'card', color: 0xFF1E88E5)))!;
     final router = await pumpScreen(tester, container, const DashboardScreen(), size: _wholeDashboard);
     await pumpWithDatabase(tester);
-    // Known layout bug: the "Set opening balance" line overflows the 80dp tall
-    // account card by 4dp (accounts_card.dart:93). Drained here so the tap
-    // behaviour is still covered; remove once the card makes room for it.
-    tester.takeException();
 
     await _tapAndSettle(tester, _inCard(kAccountsCardKey, find.text('Travel card')));
     expect(find.text(openedLocation('/accounts/card/${card.id}')), findsOneWidget);
@@ -122,6 +150,18 @@ void main() {
 
     await _tapAndSettle(tester, _inCard(kAccountsCardKey, find.text('Cash')));
     expect(find.text(openedLocation('/transactions?account=${cash.id}')), findsOneWidget);
+  });
+
+  testWidgets('a negative cash card fits its opening-balance prompt at large text', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final container = await createContainer();
+    await tester.runAsync(() => container.read(accountsRepositoryProvider).create(name: 'Wallet', type: 'cash', color: 0xFF43A047, balanceMinor: -50000));
+    await pumpScreen(tester, container, const DashboardScreen(), size: _wholeDashboard);
+    await pumpWithDatabase(tester);
+
+    expect(_inCard(kAccountsCardKey, find.text('Set opening balance')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('the groups card says what I owe and opens a group', (tester) async {

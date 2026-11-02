@@ -30,6 +30,25 @@ String driveLastBackupLabel(AppLocalizations l10n, AsyncValue<DriveBackupInfo?> 
   _ => l10n.driveCheckingBackup,
 };
 
+/// Uploads a backup sealed with [passphrase] in the current currency and
+/// number format, then refreshes the last-backup line. Takes the [container]
+/// rather than a widget's ref: the screen may close before the upload ends.
+Future<void> backUpToDrive(ProviderContainer container, String passphrase) async {
+  final settings = container.read(settingsProvider);
+  await container
+      .read(driveBackupServiceProvider)
+      .backUp(passphrase, currencyCode: settings.currencyCode, numberFormat: settings.numberFormat);
+  container.invalidate(driveLastBackupProvider);
+}
+
+/// Deletes the Drive copy and refreshes the last-backup line. Returns whether
+/// there was a copy to delete.
+Future<bool> deleteDriveCopy(ProviderContainer container) async {
+  final deleted = await container.read(driveBackupServiceProvider).deleteDriveCopy();
+  container.invalidate(driveLastBackupProvider);
+  return deleted;
+}
+
 /// Settings → "Back up to Google Drive": the consent screen until the user
 /// connects, then the account, last backup and the manual actions.
 class DriveBackupScreen extends ConsumerWidget {
@@ -175,38 +194,38 @@ class DriveConnectedView extends ConsumerStatefulWidget {
 }
 
 class _DriveConnectedViewState extends ConsumerState<DriveConnectedView> with _DriveActionRunner {
-  DriveBackupService get _service => ref.read(driveBackupServiceProvider);
+  // Each action captures the container before its first await: the screen
+  // may close (or Disconnect may swap it out) while Drive is still working.
 
   Future<void> _backUp() async {
+    final container = ProviderScope.containerOf(context, listen: false);
     final passphrase = await promptNewBackupPassphrase(context);
     if (passphrase == null || !mounted) return;
     final l10n = context.l10n;
     await runDriveAction(() async {
-      final settings = ref.read(settingsProvider);
-      await _service.backUp(passphrase, currencyCode: settings.currencyCode, numberFormat: settings.numberFormat);
-      ref.invalidate(driveLastBackupProvider);
+      await backUpToDrive(container, passphrase);
       return l10n.driveBackedUp;
     });
   }
 
   Future<void> _restore() async {
+    final container = ProviderScope.containerOf(context, listen: false);
     final passphrase = await promptRestorePassphrase(context);
     if (passphrase == null || !mounted) return;
     final l10n = context.l10n;
-    final container = ProviderScope.containerOf(context, listen: false);
     await runDriveAction(() async {
-      final restored = await _service.restore(passphrase);
+      final restored = await container.read(driveBackupServiceProvider).restore(passphrase);
       await applyRestoredSettings(container, restored);
       return l10n.restoredRecords(restored.written);
     });
   }
 
   Future<void> _deleteCopy() async {
+    final container = ProviderScope.containerOf(context, listen: false);
     final l10n = context.l10n;
-    if (!await confirmDialog(context, title: l10n.driveDeleteCopy, message: l10n.driveDeleteConfirm)) return;
+    if (!await confirmDialog(context, title: l10n.driveDeleteCopy, message: l10n.driveDeleteConfirm) || !mounted) return;
     await runDriveAction(() async {
-      final deleted = await _service.deleteDriveCopy();
-      ref.invalidate(driveLastBackupProvider);
+      final deleted = await deleteDriveCopy(container);
       return deleted ? l10n.driveCopyDeleted : l10n.driveErrorNotFound;
     });
   }

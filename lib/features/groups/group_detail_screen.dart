@@ -29,6 +29,7 @@ import 'settle_reminder_service.dart';
 import 'settle_schedule_tile.dart';
 import 'settle_up_messages.dart';
 import 'settle_up_sheet.dart';
+import 'settle_with_person_sheet.dart';
 
 /// One stream for the whole screen so every tab sees the same snapshot.
 final groupDetailProvider = StreamProvider.family((ref, String id) => ref.watch(groupsRepositoryProvider).watchGroupDetail(id));
@@ -381,6 +382,8 @@ class _BalancesTab extends ConsumerWidget {
               ListTile(
                 leading: MemberAvatar(member: member),
                 title: Text(nameOf(member.id)),
+                // Everything between me and them, here or across groups.
+                onTap: member.isMe || detail.me == null ? null : () => showSettleWithPersonSheet(context, groupId: group.id, member: member),
                 trailing: Text(
                   (net[member.id] ?? 0) == 0
                       ? l10n.settled
@@ -416,6 +419,15 @@ class _BalancesTab extends ConsumerWidget {
               subtitle: Text(l10n.recordAPaymentHint),
               onTap: () => openPayment(),
             ),
+            if (detail.me != null && members.length > 1) ...[
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.handshake_outlined),
+                title: Text(l10n.settleWithPersonTile),
+                subtitle: Text(l10n.settleWithPersonTileHint),
+                onTap: () => showSettlePersonPicker(context, groupId: group.id, members: members),
+              ),
+            ],
             const Divider(height: 1),
             SettleScheduleTile(detail: detail, moneyFormat: moneyFormat),
           ]),

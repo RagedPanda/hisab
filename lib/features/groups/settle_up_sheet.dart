@@ -29,6 +29,24 @@ final textSharerProvider = Provider<Future<bool> Function(String)>(
   (ref) => (text) async => (await SharePlus.instance.share(ShareParams(text: text))).status != ShareResultStatus.dismissed,
 );
 
+/// Asks whether a UPI payment of [amount] to [name] went through: Hisab
+/// cannot see the UPI app's result, so the person confirms. True to record it.
+Future<bool> confirmUpiPaymentWentThrough(BuildContext context, {required String amount, required String name}) async {
+  final l10n = context.l10n;
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(l10n.didPaymentGoThrough),
+      content: Text(l10n.didPaymentGoThroughBody(amount, name)),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.notYet)),
+        FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.yesRecordIt)),
+      ],
+    ),
+  );
+  return confirmed ?? false;
+}
+
 /// Remind (someone owes me) or Pay (I owe someone) for one settle-up transfer:
 /// an editable message plus Share, Copy, and WhatsApp/SMS when the member has a
 /// phone; Pay adds "Pay with UPI" when they have a UPI ID, then asks whether
@@ -144,19 +162,8 @@ class _SettleUpSheetState extends ConsumerState<_SettleUpSheet> {
       return;
     }
     if (!mounted) return;
-    // Hisab cannot see the UPI app's result, so the person confirms.
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.didPaymentGoThrough),
-        content: Text(l10n.didPaymentGoThroughBody(formatMinor(widget.transfer.amountMinor, format: widget.moneyFormat), widget.counterpart.name)),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.notYet)),
-          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.yesRecordIt)),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
+    final confirmed = await confirmUpiPaymentWentThrough(context, amount: formatMinor(widget.transfer.amountMinor, format: widget.moneyFormat), name: widget.counterpart.name);
+    if (!confirmed || !mounted) return;
     await ref.read(groupsRepositoryProvider).addSettlement(
           groupId: widget.group.id,
           fromMemberId: widget.transfer.from,

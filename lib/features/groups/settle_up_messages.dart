@@ -27,6 +27,24 @@ String remindEveryoneMessage(AppLocalizations l10n, {required List<TransferWords
   return '${l10n.reminderEveryone(groupName)}\n${lines.join('\n')}\n\n${l10n.sharedFromHisab}';
 }
 
+/// One group's line in a settle-with-a-person message: positive [netMinor]
+/// means they owe me, already formatted as [amount].
+typedef PersonShareWords = ({String group, int netMinor, String amount});
+
+/// The message for settling everything with [name]: a line per group and,
+/// when there are several, what it comes to per currency ([totals], signed
+/// the same way; even totals are left out).
+String settleWithPersonMessage(AppLocalizations l10n, {required String name, required List<PersonShareWords> shares, required List<({int netMinor, String amount})> totals}) {
+  final lines = [
+    for (final share in shares)
+      share.netMinor > 0 ? l10n.settleWithMessageOwesMe(share.group, share.amount) : l10n.settleWithMessageIOwe(share.group, share.amount),
+    if (shares.length > 1)
+      for (final total in totals)
+        if (total.netMinor != 0) total.netMinor > 0 ? l10n.settleWithMessageTotalOwesMe(total.amount) : l10n.settleWithMessageTotalIOwe(total.amount),
+  ];
+  return '${l10n.settleWithMessageIntro(name)}\n${lines.join('\n')}\n\n${l10n.sharedFromHisab}';
+}
+
 /// Title and body of a scheduled settle-up notification, or null when
 /// nothing is outstanding (a settled group gets no notification).
 /// [nameOf] resolves member ids, [formatAmount] formats minor units.

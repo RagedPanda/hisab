@@ -1323,5 +1323,8 @@
   "cardLast4": "आख़िरी 4 अंक",
   "cardLast4Invalid": "ठीक 4 अंक डालें, या इसे ख़ाली छोड़ दें।",
   "udhaarTransferNeedsAccount": "ट्रांसफ़र के लिए आपके दो खाते चाहिए। किसी व्यक्ति को दिए पैसे उधार हैं।",
-  "udhaarRecordAction": "उधार लिखें"
+  "udhaarRecordAction": "उधार लिखें",
+  "appLockPromptTitle": "हिसाब ऐप लॉक",
+  "appLockPromptHint": "फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक इस्तेमाल करें",
+  "appLockPromptFallback": "पासकोड इस्तेमाल करें"
 }

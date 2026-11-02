@@ -7,6 +7,7 @@ import '../../domain/app_lock/app_lock_policy.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import '../shell/widgets/tile_group.dart';
+import 'app_lock_prompt.dart';
 import 'app_lock_providers.dart';
 
 const String kAppLockLocation = '/app-lock';
@@ -28,9 +29,9 @@ String _timeoutSegmentLabel(AppLocalizations l10n, AppLockTimeout timeout) => sw
 /// never lock someone out of their own data. On a device without a screen
 /// lock it stays off; the result says why. Takes the [container] rather than
 /// a widget's ref: the screen may close while the prompt is up.
-Future<AppAuthResult> turnOnAppLock(ProviderContainer container, String reason) async {
+Future<AppAuthResult> turnOnAppLock(ProviderContainer container, AuthPromptText prompt) async {
   if (!await container.read(appAuthenticatorProvider).isAvailable()) return AppAuthResult.noScreenLock;
-  final result = await container.read(appLockProvider.notifier).authenticate(reason);
+  final result = await container.read(appLockProvider.notifier).authenticate(prompt);
   if (result == AppAuthResult.unlocked) await container.read(appLockSettingsProvider.notifier).setEnabled(true);
   return result;
 }
@@ -103,7 +104,7 @@ class AppLockSettingsScreen extends ConsumerWidget {
   Future<void> _turnOn(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = context.l10n;
-    final result = await turnOnAppLock(ProviderScope.containerOf(context, listen: false), l10n.appLockEnableReason);
+    final result = await turnOnAppLock(ProviderScope.containerOf(context, listen: false), appLockPrompt(l10n, l10n.appLockEnableReason));
     final note = switch (result) {
       AppAuthResult.noScreenLock => l10n.appLockNoScreenLock,
       AppAuthResult.lockedOut => l10n.appLockLockedOut,

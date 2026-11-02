@@ -4842,4 +4842,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get udhaarRecordAction => 'उधार लिखें';
+
+  @override
+  String get appLockPromptTitle => 'हिसाब ऐप लॉक';
+
+  @override
+  String get appLockPromptHint =>
+      'फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक इस्तेमाल करें';
+
+  @override
+  String get appLockPromptFallback => 'पासकोड इस्तेमाल करें';
 }

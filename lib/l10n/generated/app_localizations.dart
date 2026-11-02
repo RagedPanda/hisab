@@ -7783,6 +7783,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Record udhaar'**
   String get udhaarRecordAction;
+
+  /// No description provided for @appLockPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hisab app lock'**
+  String get appLockPromptTitle;
+
+  /// No description provided for @appLockPromptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your fingerprint, face or screen lock'**
+  String get appLockPromptHint;
+
+  /// No description provided for @appLockPromptFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Use passcode'**
+  String get appLockPromptFallback;
 }
 
 class _AppLocalizationsDelegate

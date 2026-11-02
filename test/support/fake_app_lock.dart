@@ -13,13 +13,15 @@ class FakeAuthenticator implements AppAuthenticator {
   bool hold = false;
   Completer<AppAuthResult>? pending;
   int prompts = 0;
+  AuthPromptText? lastPrompt;
 
   @override
   Future<bool> isAvailable() async => available;
 
   @override
-  Future<AppAuthResult> authenticate(String reason) {
+  Future<AppAuthResult> authenticate(AuthPromptText prompt) {
     prompts++;
+    lastPrompt = prompt;
     if (hold) return (pending = Completer<AppAuthResult>()).future;
     return Future.value(results.isEmpty ? AppAuthResult.notUnlocked : results.removeAt(0));
   }

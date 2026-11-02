@@ -4869,4 +4869,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get udhaarRecordAction => 'Record udhaar';
+
+  @override
+  String get appLockPromptTitle => 'Hisab app lock';
+
+  @override
+  String get appLockPromptHint => 'Use your fingerprint, face or screen lock';
+
+  @override
+  String get appLockPromptFallback => 'Use passcode';
 }

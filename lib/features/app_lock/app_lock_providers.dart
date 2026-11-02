@@ -102,20 +102,20 @@ class AppLockController extends Notifier<AppLockSession> {
 
   /// Shows the system prompt; unlocks on success. A device whose screen
   /// lock was removed cannot unlock, so the app lock turns itself off.
-  Future<AppAuthResult> unlock(String reason) async {
-    final result = await authenticate(reason);
+  Future<AppAuthResult> unlock(AuthPromptText prompt) async {
+    final result = await authenticate(prompt);
     if (result == AppAuthResult.noScreenLock) await ref.read(appLockSettingsProvider.notifier).setEnabled(false);
     return result;
   }
 
   /// Runs the system prompt without the trip to the device PIN screen
   /// counting as leaving the app. Unlocks on success.
-  Future<AppAuthResult> authenticate(String reason) async {
+  Future<AppAuthResult> authenticate(AuthPromptText prompt) async {
     if (state.authenticating) return AppAuthResult.notUnlocked;
     state = state.startAuthenticating();
     var result = AppAuthResult.notUnlocked;
     try {
-      result = await ref.read(appAuthenticatorProvider).authenticate(reason);
+      result = await ref.read(appAuthenticatorProvider).authenticate(prompt);
     } finally {
       state = state.finishAuthenticating(unlocked: result == AppAuthResult.unlocked);
     }

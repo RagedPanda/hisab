@@ -86,7 +86,9 @@ class _AccountCard extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(child: Text(label.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.labelLarge)),
             ]),
-            Text(label.mask ?? '', style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            // Only a masked account spends a line on it, which leaves cash room
+            // for the opening-balance prompt below its balance.
+            if (label.mask != null) Text(label.mask!, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
             const Spacer(),
             Text(balanceText, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700, color: balanceColor).tabular),
             if (needsOpeningBalance)

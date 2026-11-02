@@ -131,10 +131,6 @@ void main() {
     final card = (await tester.runAsync(() => accounts.create(name: 'Travel card', type: 'card', color: 0xFF1E88E5)))!;
     final router = await pumpScreen(tester, container, const DashboardScreen(), size: _wholeDashboard);
     await pumpWithDatabase(tester);
-    // Known layout bug: the "Set opening balance" line overflows the 80dp tall
-    // account card by 4dp (accounts_card.dart:93). Drained here so the tap
-    // behaviour is still covered; remove once the card makes room for it.
-    tester.takeException();
 
     await _tapAndSettle(tester, _inCard(kAccountsCardKey, find.text('Travel card')));
     expect(find.text(openedLocation('/accounts/card/${card.id}')), findsOneWidget);
@@ -154,6 +150,18 @@ void main() {
 
     await _tapAndSettle(tester, _inCard(kAccountsCardKey, find.text('Cash')));
     expect(find.text(openedLocation('/transactions?account=${cash.id}')), findsOneWidget);
+  });
+
+  testWidgets('a negative cash card fits its opening-balance prompt at large text', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final container = await createContainer();
+    await tester.runAsync(() => container.read(accountsRepositoryProvider).create(name: 'Wallet', type: 'cash', color: 0xFF43A047, balanceMinor: -50000));
+    await pumpScreen(tester, container, const DashboardScreen(), size: _wholeDashboard);
+    await pumpWithDatabase(tester);
+
+    expect(_inCard(kAccountsCardKey, find.text('Set opening balance')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('the groups card says what I owe and opens a group', (tester) async {

@@ -4869,4 +4869,107 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get udhaarRecordAction => 'Record udhaar';
+
+  @override
+  String settleWithTitle(String name) {
+    return 'Settle up with $name';
+  }
+
+  @override
+  String get settleWithThisGroup => 'This group';
+
+  @override
+  String get settleWithAllGroups => 'All groups';
+
+  @override
+  String settleWithTheyOwe(String name) {
+    return '$name owes you';
+  }
+
+  @override
+  String settleWithIOwe(String name) {
+    return 'You owe $name';
+  }
+
+  @override
+  String settleWithTotalTheyOwe(String name, String amount) {
+    return '$name owes you $amount in all';
+  }
+
+  @override
+  String settleWithTotalIOwe(String name, String amount) {
+    return 'You owe $name $amount in all';
+  }
+
+  @override
+  String settleWithEvensOut(String symbol) {
+    return '$symbol groups even out: nothing changes hands';
+  }
+
+  @override
+  String settleWithSquare(String name) {
+    return 'You and $name are square.';
+  }
+
+  @override
+  String settleWithExplain(String name) {
+    return 'Records one payment in each group so every balance with $name is zero. Payments are not spending.';
+  }
+
+  @override
+  String settleWithAction(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments',
+      one: '1 payment',
+    );
+    return 'Record $_temp0';
+  }
+
+  @override
+  String settleWithRecorded(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count groups',
+      one: '1 group',
+    );
+    return 'Settled up with $name in $_temp0';
+  }
+
+  @override
+  String settleWithMessageIntro(String name) {
+    return 'Hi $name, settling up between us:';
+  }
+
+  @override
+  String settleWithMessageOwesMe(String group, String amount) {
+    return '$group: you owe me $amount';
+  }
+
+  @override
+  String settleWithMessageIOwe(String group, String amount) {
+    return '$group: I owe you $amount';
+  }
+
+  @override
+  String settleWithMessageTotalOwesMe(String amount) {
+    return 'In all, you owe me $amount.';
+  }
+
+  @override
+  String settleWithMessageTotalIOwe(String amount) {
+    return 'In all, I owe you $amount.';
+  }
+
+  @override
+  String get settleWithPersonTile => 'Settle up with one person';
+
+  @override
+  String get settleWithPersonTileHint =>
+      'Everything between you and them, here or across groups';
+
+  @override
+  String get settleWithPickPerson => 'Who are you settling with?';
 }

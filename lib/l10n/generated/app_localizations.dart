@@ -7783,6 +7783,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Record udhaar'**
   String get udhaarRecordAction;
+
+  /// No description provided for @settleWithTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle up with {name}'**
+  String settleWithTitle(String name);
+
+  /// No description provided for @settleWithThisGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'This group'**
+  String get settleWithThisGroup;
+
+  /// No description provided for @settleWithAllGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'All groups'**
+  String get settleWithAllGroups;
+
+  /// No description provided for @settleWithTheyOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes you'**
+  String settleWithTheyOwe(String name);
+
+  /// No description provided for @settleWithIOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {name}'**
+  String settleWithIOwe(String name);
+
+  /// No description provided for @settleWithTotalTheyOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} owes you {amount} in all'**
+  String settleWithTotalTheyOwe(String name, String amount);
+
+  /// No description provided for @settleWithTotalIOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {name} {amount} in all'**
+  String settleWithTotalIOwe(String name, String amount);
+
+  /// No description provided for @settleWithEvensOut.
+  ///
+  /// In en, this message translates to:
+  /// **'{symbol} groups even out: nothing changes hands'**
+  String settleWithEvensOut(String symbol);
+
+  /// No description provided for @settleWithSquare.
+  ///
+  /// In en, this message translates to:
+  /// **'You and {name} are square.'**
+  String settleWithSquare(String name);
+
+  /// No description provided for @settleWithExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'Records one payment in each group so every balance with {name} is zero. Payments are not spending.'**
+  String settleWithExplain(String name);
+
+  /// No description provided for @settleWithAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Record {count, plural, =1{1 payment} other{{count} payments}}'**
+  String settleWithAction(int count);
+
+  /// No description provided for @settleWithRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled up with {name} in {count, plural, =1{1 group} other{{count} groups}}'**
+  String settleWithRecorded(String name, int count);
+
+  /// No description provided for @settleWithMessageIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi {name}, settling up between us:'**
+  String settleWithMessageIntro(String name);
+
+  /// No description provided for @settleWithMessageOwesMe.
+  ///
+  /// In en, this message translates to:
+  /// **'{group}: you owe me {amount}'**
+  String settleWithMessageOwesMe(String group, String amount);
+
+  /// No description provided for @settleWithMessageIOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'{group}: I owe you {amount}'**
+  String settleWithMessageIOwe(String group, String amount);
+
+  /// No description provided for @settleWithMessageTotalOwesMe.
+  ///
+  /// In en, this message translates to:
+  /// **'In all, you owe me {amount}.'**
+  String settleWithMessageTotalOwesMe(String amount);
+
+  /// No description provided for @settleWithMessageTotalIOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'In all, I owe you {amount}.'**
+  String settleWithMessageTotalIOwe(String amount);
+
+  /// No description provided for @settleWithPersonTile.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle up with one person'**
+  String get settleWithPersonTile;
+
+  /// No description provided for @settleWithPersonTileHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything between you and them, here or across groups'**
+  String get settleWithPersonTileHint;
+
+  /// No description provided for @settleWithPickPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Who are you settling with?'**
+  String get settleWithPickPerson;
 }
 
 class _AppLocalizationsDelegate

@@ -114,4 +114,23 @@ void main() {
     expect(balancesAfter(newestFirst), [2300, 2800, 3000]);
     expect(balancesAfter(const []), isEmpty);
   });
+
+  group('lastUdhaarAccountId', () {
+    ({DateTime occurredAt, String? accountId}) used(String? accountId, {required int day}) => (occurredAt: DateTime(2026, 10, day), accountId: accountId);
+
+    test('is the account of the most recent entry, whatever the input order', () {
+      final entries = [used('cash', day: 2), used('hdfc', day: 9), used('sbi', day: 5)];
+      expect(lastUdhaarAccountId(entries, accountIds: {'cash', 'hdfc', 'sbi'}), 'hdfc');
+    });
+
+    test('skips entries whose account is gone or missing', () {
+      final entries = [used('cash', day: 2), used('closed', day: 9), used(null, day: 10)];
+      expect(lastUdhaarAccountId(entries, accountIds: {'cash'}), 'cash');
+    });
+
+    test('is null with no usable entry, so the default account is used', () {
+      expect(lastUdhaarAccountId(const [], accountIds: {'cash'}), isNull);
+      expect(lastUdhaarAccountId([used('closed', day: 1)], accountIds: {'cash'}), isNull);
+    });
+  });
 }

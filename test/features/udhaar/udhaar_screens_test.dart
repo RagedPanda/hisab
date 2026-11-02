@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/dates.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/domain/udhaar/udhaar.dart';
+import 'package:hisab/features/accounts/account_picker_tile.dart';
 import 'package:hisab/features/udhaar/udhaar_card.dart';
 import 'package:hisab/features/udhaar/udhaar_form_screen.dart';
 import 'package:hisab/features/udhaar/udhaar_providers.dart';
@@ -90,6 +91,28 @@ void main() {
 
     expect(balanceText(tester), 'All settled with Rahul');
     expect(await cashBalance(tester, container), 0);
+  });
+
+  testWidgets('a repayment defaults to the account of their latest udhaar, not the default one', (tester) async {
+    final container = await createContainer();
+    final rahulId = await seedRahul(tester, container, amountMinor: 80000);
+    final hdfcId = (await tester.runAsync(() async {
+      final hdfc = await container.read(accountsRepositoryProvider).create(name: 'HDFC', type: 'bank', color: 0xFF1E88E5);
+      await container.read(udhaarRepositoryProvider).save((
+        personId: rahulId,
+        personName: 'Rahul',
+        kind: UdhaarKind.lent,
+        amountMinor: 20000,
+        occurredAt: DateTime(2026, 10, 20, 9),
+        accountId: hdfc.id,
+        note: '',
+      ));
+      return hdfc.id;
+    }))!;
+    await pumpAt(tester, container, '/udhaar/person/$rahulId');
+
+    await tapAndSettle(tester, find.byKey(const Key('udhaar.addRepayment')));
+    expect(tester.widget<AccountPickerTile>(find.byKey(const Key('udhaar.account'))).selectedId, hdfcId);
   });
 
   testWidgets('deleting an entry from its form can be undone', (tester) async {

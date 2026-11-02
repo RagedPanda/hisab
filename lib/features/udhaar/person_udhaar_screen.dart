@@ -84,7 +84,15 @@ class PersonUdhaarScreen extends ConsumerWidget {
                   buttonKey: const Key('udhaar.addRepayment'),
                   label: l10n.udhaarRepayment,
                   icon: Icons.replay,
-                  location: udhaarEntryLocation(personId: personId, kind: repayment, amountMinor: balance.abs()),
+                  location: udhaarEntryLocation(
+                    personId: personId,
+                    kind: repayment,
+                    amountMinor: balance.abs(),
+                    accountId: lastUdhaarAccountId(
+                      [for (final entry in entries) (occurredAt: entry.occurredAt, accountId: udhaarAccountOf(from: entry.accountId, to: entry.toAccountId))],
+                      accountIds: accounts.keys.toSet(),
+                    ),
+                  ),
                 ),
             ]),
           ),

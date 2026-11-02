@@ -73,7 +73,7 @@ class AppLockSettingsScreen extends ConsumerWidget {
                     expandedInsets: EdgeInsets.zero,
                     segments: [
                       for (final timeout in AppLockTimeout.values)
-                        ButtonSegment(value: timeout, label: Text(_timeoutSegmentLabel(l10n, timeout), maxLines: 1, softWrap: false)),
+                        ButtonSegment(value: timeout, label: segmentLabel(_timeoutSegmentLabel(l10n, timeout))),
                     ],
                     selected: {settings.timeout},
                     onSelectionChanged: (set) => notifier.setTimeout(set.first),

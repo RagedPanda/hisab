@@ -52,9 +52,9 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SegmentedButton<String>(
               segments: [
-                ButtonSegment(value: 'expense', label: Text(l10n.kindExpense)),
-                ButtonSegment(value: 'income', label: Text(l10n.kindIncome)),
-                ButtonSegment(value: 'transfer', label: Text(l10n.kindTransfer)),
+                ButtonSegment(value: 'expense', label: segmentLabel(l10n.kindExpense)),
+                ButtonSegment(value: 'income', label: segmentLabel(l10n.kindIncome)),
+                ButtonSegment(value: 'transfer', label: segmentLabel(l10n.kindTransfer)),
               ],
               selected: {_kind},
               onSelectionChanged: (set) => setState(() => _kind = set.first),

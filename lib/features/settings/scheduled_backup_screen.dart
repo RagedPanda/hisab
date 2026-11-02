@@ -193,7 +193,7 @@ class _ScheduledBackupScreenState extends ConsumerState<ScheduledBackupScreen> {
                   SegmentedButton<BackupFrequency>(
                     key: const Key('backupFrequency'),
                     showSelectedIcon: false,
-                    segments: [for (final frequency in BackupFrequency.values) ButtonSegment(value: frequency, label: Text(backupFrequencyLabel(l10n, frequency)))],
+                    segments: [for (final frequency in BackupFrequency.values) ButtonSegment(value: frequency, label: segmentLabel(backupFrequencyLabel(l10n, frequency)))],
                     selected: {choices.frequency},
                     onSelectionChanged: _busy ? null : (selected) => _setFrequency(selected.single),
                   ),

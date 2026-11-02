@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +16,7 @@ import 'package:hisab/domain/backup/backup_schedule.dart';
 import 'package:hisab/domain/backup/scheduled_backup.dart';
 import 'package:hisab/features/settings/erase_data.dart';
 import 'package:hisab/features/settings/scheduled_backup_providers.dart';
+import 'package:hisab/features/settings/settings_screen.dart';
 import 'package:hisab/features/shell/router.dart';
 import 'package:hisab/features/udhaar/udhaar_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,6 +24,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/fake_notification_gateway.dart';
 import '../data/fake_drive_backup.dart';
 import '../data/fake_scheduled_backup.dart';
+import '../support/app_harness.dart';
 
 Future<void> _settle(WidgetTester tester, [int frames = 12]) async {
   for (var i = 0; i < frames; i++) {
@@ -127,4 +130,50 @@ void main() {
     expect(find.text('All data erased. Hisab is back to a fresh start.'), findsOneWidget);
     expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/home');
   });
+
+  testWidgets('erase finishes even when Settings is gone before it ends', (tester) async {
+    const daily = ScheduledBackupChoices(frequency: BackupFrequency.daily, folderUri: 'content://tree/primary%3ABackups', folderName: 'Backups');
+    SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'USD', kScheduledBackupChoicesPref: jsonEncode(daily.toJson())});
+    final prefs = await SharedPreferences.getInstance();
+    final db = AppDatabase(NativeDatabase.memory());
+    final scheduler = FakeBackgroundScheduler()..enabled = true;
+    final forgotten = Completer<void>();
+    final container = ProviderContainer(overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      databaseProvider.overrideWithValue(db),
+      notificationGatewayProvider.overrideWithValue(FakeNotificationGateway()),
+      driveAccountProvider.overrideWithValue(FakeDriveAccount()),
+      backupPassphraseVaultProvider.overrideWithValue(_HeldPassphraseVault(forgotten)),
+      backgroundBackupSchedulerProvider.overrideWithValue(scheduler),
+    ]);
+    addTearDown(container.dispose);
+    final router = await pumpScreen(tester, container, const SettingsScreen());
+
+    final tile = find.byKey(const Key('eraseAllDataTile'));
+    await tester.scrollUntilVisible(tile, 200, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(tile);
+    await _settle(tester, 4);
+    await tester.tap(tile);
+    await _settle(tester, 4);
+    await tester.enterText(find.byKey(const Key('eraseConfirmField')), 'DELETE');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('eraseConfirmButton')));
+    await tester.pump();
+    // A fresh start sends the app to onboarding, which takes Settings away mid-erase.
+    router.pop();
+    await _settle(tester);
+    forgotten.complete();
+    await _settle(tester);
+
+    expect(scheduler.enabled, isFalse, reason: 'the background backup job is still cancelled');
+  });
+}
+
+/// Holds the erase at forgetting the passphrase until the test lets it go.
+class _HeldPassphraseVault extends FakePassphraseVault {
+  _HeldPassphraseVault(this.release) : super('correct horse');
+  final Completer<void> release;
+
+  @override
+  Future<void> forgetPassphrase() => release.future;
 }

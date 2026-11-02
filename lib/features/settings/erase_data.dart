@@ -23,22 +23,24 @@ Future<bool> confirmEraseAllData(BuildContext context) async =>
 /// Wipes the app back to a fresh install: every table (defaults re-seeded),
 /// every pref, the Drive connection, and the scheduled backup (its saved
 /// passphrase and background job). The Drive copy and the backups already in
-/// the folder are left alone.
-Future<void> eraseEverything(WidgetRef ref) async {
-  if (ref.read(driveBackupEmailProvider) != null) await ref.read(driveBackupEmailProvider.notifier).disconnect();
-  await ref.read(backupPassphraseVaultProvider).forgetPassphrase();
-  await ref.read(databaseProvider).eraseAllData();
-  await ref.read(sharedPreferencesProvider).clear();
-  ref.invalidate(settingsProvider);
-  ref.invalidate(salarySettingsProvider);
-  ref.invalidate(myUpiIdProvider);
-  ref.invalidate(upcomingWindowProvider);
-  ref.invalidate(driveBackupEmailProvider);
-  ref.invalidate(scheduledBackupChoicesProvider);
-  ref.invalidate(scheduledBackupHistoryProvider);
-  ref.invalidate(hasBackupPassphraseProvider);
-  await ref.read(scheduledBackupChoicesProvider.notifier).syncBackgroundJob();
-  await ref.read(reminderSchedulerProvider).rescheduleAll();
+/// the folder are left alone. Takes the [container] rather than a widget's
+/// ref: the fresh start sends the app to onboarding, which unmounts Settings
+/// before the erase is done.
+Future<void> eraseEverything(ProviderContainer container) async {
+  if (container.read(driveBackupEmailProvider) != null) await container.read(driveBackupEmailProvider.notifier).disconnect();
+  await container.read(backupPassphraseVaultProvider).forgetPassphrase();
+  await container.read(databaseProvider).eraseAllData();
+  await container.read(sharedPreferencesProvider).clear();
+  container.invalidate(settingsProvider);
+  container.invalidate(salarySettingsProvider);
+  container.invalidate(myUpiIdProvider);
+  container.invalidate(upcomingWindowProvider);
+  container.invalidate(driveBackupEmailProvider);
+  container.invalidate(scheduledBackupChoicesProvider);
+  container.invalidate(scheduledBackupHistoryProvider);
+  container.invalidate(hasBackupPassphraseProvider);
+  await container.read(scheduledBackupChoicesProvider.notifier).syncBackgroundJob();
+  await container.read(reminderSchedulerProvider).rescheduleAll();
 }
 
 class _EraseConfirmDialog extends StatefulWidget {

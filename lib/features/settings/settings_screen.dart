@@ -385,8 +385,9 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Future<void> _erase(BuildContext context, WidgetRef ref) async {
+    final container = ProviderScope.containerOf(context, listen: false);
     if (!await confirmEraseAllData(context)) return;
-    await eraseEverything(ref);
+    await eraseEverything(container);
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.dataErased)));
     context.go('/home');

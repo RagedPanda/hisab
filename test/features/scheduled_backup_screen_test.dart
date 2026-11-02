@@ -24,6 +24,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/fake_notification_gateway.dart';
 import '../data/fake_drive_backup.dart';
 import '../data/fake_scheduled_backup.dart';
+import '../support/one_line_text.dart';
 
 class _Harness {
   _Harness(this.container, this.folder, this.vault, this.scheduler);
@@ -47,11 +48,13 @@ Future<_Harness> _pumpScheduledBackup(
   ScheduledBackupChoices? choices,
   ScheduledBackupHistory? history,
   String? passphrase,
+  String localeCode = '',
   void Function(Text subtitle)? checkTile,
 }) async {
   SharedPreferences.setMockInitialValues({
     'onboarded': true,
     'currencyCode': 'INR',
+    'localeCode': localeCode,
     if (choices != null) kScheduledBackupChoicesPref: jsonEncode(choices.toJson()),
     if (history != null) kScheduledBackupHistoryPref: jsonEncode(history.toJson()),
   });
@@ -197,4 +200,19 @@ void main() {
     expect(harness.container.read(scheduledBackupHistoryProvider).lastAttempt[ScheduledBackupTarget.folder]!.succeeded, isTrue);
     expect(find.text(english.scheduledBackupSaved), findsOneWidget);
   });
+
+  for (final localeCode in const ['en', 'hi']) {
+    for (final textScale in const [1.0, 1.3]) {
+      testWidgets('each How often label fits on one line at 360dp ($localeCode, text x$textScale)', (tester) async {
+        tester.platformDispatcher.textScaleFactorTestValue = textScale;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await _pumpScheduledBackup(tester, localeCode: localeCode);
+        final l10n = lookupAppLocalizations(Locale(localeCode));
+        for (final frequency in BackupFrequency.values) {
+          expectOneLine(tester, find.byKey(const Key('backupFrequency')), backupFrequencyLabel(l10n, frequency));
+        }
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
 }

@@ -5,6 +5,7 @@ import '../../data/db/database.dart';
 import '../../domain/recurring/recurrence.dart';
 import '../../domain/split/settle_reminder.dart';
 import '../../l10n/l10n.dart';
+import '../shell/widgets/common.dart';
 import 'settle_up_messages.dart';
 
 /// What the sheet returns: the new schedule, or a null schedule for "turn
@@ -84,8 +85,8 @@ class _SettleReminderSheetState extends State<_SettleReminderSheet> {
             const SizedBox(height: 4),
             SegmentedButton<RecurrenceFrequency>(
               segments: [
-                ButtonSegment(value: RecurrenceFrequency.monthly, label: Text(l10n.settleReminderMonthly)),
-                ButtonSegment(value: RecurrenceFrequency.weekly, label: Text(l10n.settleReminderWeekly)),
+                ButtonSegment(value: RecurrenceFrequency.monthly, label: segmentLabel(l10n.settleReminderMonthly)),
+                ButtonSegment(value: RecurrenceFrequency.weekly, label: segmentLabel(l10n.settleReminderWeekly)),
               ],
               selected: {_frequency},
               onSelectionChanged: (selection) => setState(() => _frequency = selection.single),

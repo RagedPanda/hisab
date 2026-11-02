@@ -130,8 +130,8 @@ Future<void> showAccountForm(BuildContext context, WidgetRef ref, {Account? exis
                 key: const ValueKey('account.balanceDirection'),
                 showSelectedIcon: false,
                 segments: [
-                  ButtonSegment(value: false, label: Text(type == 'card' ? l10n.cardBalanceCredit : l10n.balanceInAccount)),
-                  ButtonSegment(value: true, label: Text(type == 'card' ? l10n.cardBalanceOwed : l10n.balanceOverdrawn)),
+                  ButtonSegment(value: false, label: segmentLabel(type == 'card' ? l10n.cardBalanceCredit : l10n.balanceInAccount)),
+                  ButtonSegment(value: true, label: segmentLabel(type == 'card' ? l10n.cardBalanceOwed : l10n.balanceOverdrawn)),
                 ],
                 selected: {balanceNegative},
                 onSelectionChanged: (selection) => setSheetState(() => balanceNegative = selection.single),

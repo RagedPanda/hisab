@@ -199,6 +199,38 @@ void main() {
     expect((await groups.getSettlements(groupId)).map((s) => s.id), [id]);
   });
 
+  test('settling with one person records a payment per group, leaves spend alone, and Undo removes them all', () async {
+    Future<(String, String, String)> owingGroup(String name, {required bool iPaid}) async {
+      final groupId = await groups.createGroup(name: name, icon: 'beach', myName: 'You', otherMembers: ['Rahul']);
+      final members = await groups.getMembers(groupId);
+      final me = members.firstWhere((m) => m.isMe).id;
+      final rahul = members.firstWhere((m) => !m.isMe).id;
+      await addGroupExpense(groupId, iPaid ? me : rahul, {me: 500, rahul: 500});
+      return (groupId, me, rahul);
+    }
+
+    final (goa, meInGoa, rahulInGoa) = await owingGroup('Goa', iPaid: true);
+    final (flat, meInFlat, rahulInFlat) = await owingGroup('Flat', iPaid: false);
+    final spentBefore = (await groups.getSummaries()).map((summary) => summary.totalSpentMinor).toList();
+    final entriesBefore = (await db.select(db.entries).get()).length;
+    final ids = await groups.addSettlements([
+      (groupId: goa, transfer: Transfer(rahulInGoa, meInGoa, 500)),
+      (groupId: flat, transfer: Transfer(meInFlat, rahulInFlat, 500)),
+    ], method: 'bank');
+    expect(ids, hasLength(2));
+    final summaries = await groups.getSummaries();
+    expect(summaries.map((summary) => summary.myNetMinor), [0, 0]);
+    expect(summaries.map((summary) => summary.balances.suggested), [isEmpty, isEmpty]);
+    expect(summaries.map((summary) => summary.totalSpentMinor).toList(), spentBefore);
+    expect(await db.select(db.entries).get(), hasLength(entriesBefore), reason: 'payments are never expenses');
+    expect((await groups.getSettlements(goa)).single.method, 'bank');
+
+    await groups.deleteSettlements(ids);
+    expect(await groups.getSettlements(goa), isEmpty);
+    expect(await groups.getSettlements(flat), isEmpty);
+    expect((await groups.getSummaries()).map((summary) => summary.myNetMinor.abs()), [500, 500]);
+  });
+
   test('group detail carries the latest settle-up reminder per member and refreshes on a new one', () async {
     final groupId = await groups.createGroup(name: 'Goa', icon: 'flight', myName: 'Me', otherMembers: ['Rahul', 'Priya']);
     final members = await groups.getMembers(groupId);

@@ -13,6 +13,7 @@ import '../../../domain/split/group_timeline.dart';
 import '../../../domain/udhaar/udhaar.dart';
 import '../../../l10n/category_names.dart';
 import '../../../l10n/l10n.dart';
+import 'segment_label.dart';
 import '../../udhaar/udhaar_labels.dart';
 
 /// Rounded tile with a coloured icon, used for categories, accounts and groups.
@@ -497,9 +498,9 @@ const double kCompactSegmentWidth = 380;
 
 /// A segmented button label that stays on one line: when its segment is too
 /// narrow (small screen, large text, a long translation) it scales down
-/// rather than wrapping mid-word or being clipped. [key] goes on the [Text].
-Widget segmentLabel(String label, {Key? key}) =>
-    FittedBox(fit: BoxFit.scaleDown, child: Text(label, key: key, maxLines: 1, softWrap: false));
+/// rather than wrapping mid-word or being clipped, and every label of the
+/// same button scales alike (see [SegmentLabel]). [key] goes on the [Text].
+Widget segmentLabel(String label, {Key? key}) => SegmentLabel(label, textKey: key);
 
 /// A [ButtonSegment] whose label is always shown. On narrow screens the icon
 /// is dropped to make room, and the label scales down rather than wrapping or

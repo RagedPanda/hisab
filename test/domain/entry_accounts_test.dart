@@ -31,4 +31,11 @@ void main() {
     expect(toAccountAfterFromChange(fromId: 'hdfc', toId: 'sbi'), 'sbi');
     expect(toAccountAfterFromChange(fromId: 'cash', toId: null), isNull);
   });
+
+  test('only a new transfer with no To account yet points at udhaar', () {
+    expect(showsUdhaarHint(kind: 'transfer', isNew: true, toAccountId: null), isTrue);
+    expect(showsUdhaarHint(kind: 'transfer', isNew: true, toAccountId: 'sbi'), isFalse);
+    expect(showsUdhaarHint(kind: 'transfer', isNew: false, toAccountId: null), isFalse);
+    expect(showsUdhaarHint(kind: 'expense', isNew: true, toAccountId: null), isFalse);
+  });
 }

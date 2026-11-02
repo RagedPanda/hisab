@@ -870,7 +870,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
               ),
             // Money given to a person is udhaar, not a transfer: say so right
             // under the To picker, where a person's name was expected.
-            if (_kind == 'transfer' && _existingId == null) _UdhaarHint(label: l10n.udhaarFromEditor, onTap: _openUdhaarForm),
+            if (showsUdhaarHint(kind: _kind, isNew: _existingId == null, toAccountId: _toAccountId)) _UdhaarHint(label: l10n.udhaarFromEditor, onTap: _openUdhaarForm),
           ],
           const SizedBox(height: 8),
           _dateTimeRow(context),

@@ -24,3 +24,8 @@ EntryAccountProblem entryAccountProblem({
 /// The To account once From becomes [fromId]: kept unless it is now the same
 /// account, so the To picker never shows a choice that cannot be saved (#111).
 String? toAccountAfterFromChange({required String? fromId, required String? toId}) => toId == fromId ? null : toId;
+
+/// Whether the editor points a transfer at udhaar: only a new transfer with
+/// no To account yet, since an empty To is where a person's name was expected.
+bool showsUdhaarHint({required String kind, required bool isNew, required String? toAccountId}) =>
+    kind == 'transfer' && isNew && toAccountId == null;

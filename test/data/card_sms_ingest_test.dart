@@ -1,11 +1,14 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/accounts_repository.dart';
+import 'package:hisab/data/repositories/card_statement_balance.dart';
 import 'package:hisab/data/repositories/categories_repository.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
+import 'package:hisab/data/repositories/entry_removal.dart';
 import 'package:hisab/data/repositories/sms_log_repository.dart';
 import 'package:hisab/data/sms/sms_channel.dart';
 import 'package:hisab/data/sms/sms_ingest_service.dart';
@@ -327,6 +330,24 @@ void main() {
       await service.undoAutoAdd(added.single);
       expect(await liveEntries(), isEmpty);
       expect((await card())!.balanceMinor, -2345678);
+    });
+
+    test('deleting the transfer by hand puts the card balance back too', () async {
+      await ingest(_statement, at: DateTime(2026, 10, 13, 10));
+      await ingest(_bankDebit, at: DateTime(2026, 10, 21, 11));
+      final transfer = (await liveEntries()).single;
+      await deleteEntryReversingBalances(entries: entries, accounts: accounts, entryId: transfer.id);
+      expect(await liveEntries(), isEmpty);
+      expect((await card())!.balanceMinor, -2345678);
+    });
+
+    test('re-deriving after editing the transfer follows its new amount', () async {
+      await ingest(_statement, at: DateTime(2026, 10, 13, 10));
+      await ingest(_bankDebit, at: DateTime(2026, 10, 21, 11));
+      final transfer = (await liveEntries()).single;
+      await (db.update(db.entries)..where((t) => t.id.equals(transfer.id))).write(const EntriesCompanion(amountMinor: Value(500000)));
+      await refreshStatementBalances(entries: entries, accounts: accounts, accountIds: [transfer.accountId, transfer.toAccountId]);
+      expect((await card())!.balanceMinor, -(2345678 - 500000));
     });
   });
 

@@ -8,7 +8,6 @@ import '../../core/theme.dart';
 import '../../domain/accounts/default_account.dart';
 import '../../domain/cards/card_payment_match.dart';
 import '../../domain/cards/card_sms_facts.dart';
-import '../../domain/cards/card_summary.dart';
 import '../../domain/ledger/balance_effects.dart';
 import '../../domain/sms/bank_senders.dart';
 import '../../domain/sms/card_sms.dart';
@@ -25,6 +24,7 @@ import '../../domain/sms/sms_parser.dart';
 import '../../domain/sms/sms_transaction_key.dart';
 import '../db/database.dart';
 import '../repositories/accounts_repository.dart';
+import '../repositories/card_statement_balance.dart';
 import '../repositories/categories_repository.dart';
 import '../repositories/entries_repository.dart';
 import '../repositories/entry_removal.dart';
@@ -431,25 +431,11 @@ class SmsIngestService {
     return card.copyWith(smsKey: Value(key));
   }
 
-  /// What [cardId] owes counted from a statement of [statementMinor] on
-  /// [statementAt] and the entries since ([balanceSinceStatementMinor]).
-  Future<int> _balanceSinceStatement(String cardId, int statementMinor, DateTime statementAt) async => balanceSinceStatementMinor(
-        cardId: cardId,
-        statementMinor: statementMinor,
-        statementAt: statementAt,
-        movements: await entries.getAccountMovements(cardId, since: statementAt),
-      );
-
   /// Brings a card balance that follows its SMS statement
   /// ([balanceFollowsSmsStatement]) in line with the entries recorded since:
   /// SMS entries never move balances, so a card spend or bill payment read
   /// from SMS (or its undo) is counted here.
-  Future<void> _refreshStatementBalance(String? cardId) async {
-    final card = cardId == null ? null : await accounts.getById(cardId);
-    if (card == null || !balanceFollowsSmsStatement(card)) return;
-    final balance = await _balanceSinceStatement(card.id, card.lastStatementMinor!, card.lastStatementAt!);
-    if (balance != card.balanceMinor) await accounts.update(AccountsCompanion(id: Value(card.id), balanceMinor: Value(balance)));
-  }
+  Future<void> _refreshStatementBalance(String? cardId) => refreshStatementBalances(entries: entries, accounts: accounts, accountIds: [cardId]);
 
   /// The category a card bill payment transfer gets from [entry] (the entry
   /// it was before, if any): see [linkedCardPaymentCategoryId].
@@ -484,7 +470,7 @@ class SmsIngestService {
     if (fields != null) {
       // The statement sets what is owed unless a newer balance is on record.
       final setsBalance = takesSmsStatementBalance(balanceMinor: card.balanceMinor, balanceAsOf: card.balanceAsOf, receivedAt: statement.receivedAt);
-      final balance = setsBalance ? await _balanceSinceStatement(card.id, fields.lastStatementMinor, fields.lastStatementAt) : null;
+      final balance = setsBalance ? await balanceSinceStatement(entries, cardId: card.id, statementMinor: fields.lastStatementMinor, statementAt: fields.lastStatementAt) : null;
       await accounts.applySmsStatement(card.id, fields, balanceMinor: balance);
     }
     await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.added);

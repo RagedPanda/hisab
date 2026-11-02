@@ -1,6 +1,7 @@
 import '../../domain/ledger/balance_effects.dart';
 import '../db/database.dart';
 import 'accounts_repository.dart';
+import 'card_statement_balance.dart';
 import 'entries_repository.dart';
 
 /// The balance-relevant fields of a stored [entry].
@@ -14,7 +15,8 @@ EntrySnapshot snapshotOfEntry(Entry entry) => EntrySnapshot(
     );
 
 /// Deletes entry [entryId] (with its splits, so group balances drop it) and
-/// reverses its effect on account balances: a full undo of having posted it.
+/// reverses its effect on account balances, a card following its SMS
+/// statement included: a full undo of having posted it.
 /// Does nothing when the entry is already gone.
 Future<void> deleteEntryReversingBalances({
   required EntriesRepository entries,
@@ -25,4 +27,5 @@ Future<void> deleteEntryReversingBalances({
   if (details == null || details.entry.deletedAt != null) return;
   await entries.deleteEntry(entryId);
   await accounts.applyBalanceDeltas(deleteDeltas(snapshotOfEntry(details.entry)));
+  await refreshStatementBalances(entries: entries, accounts: accounts, accountIds: [details.entry.accountId, details.entry.toAccountId]);
 }

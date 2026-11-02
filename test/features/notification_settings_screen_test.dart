@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/notification_prefs.dart';
@@ -62,6 +64,43 @@ void main() {
     expect(gateway.shown.last.body, 'Nothing spent today');
     expect(gateway.scheduled, isEmpty, reason: 'a sample schedules nothing');
     expect(find.textContaining('Sample sent'), findsOneWidget);
+  });
+
+  testWidgets('a switch turned on as the screen closes still takes effect', (tester) async {
+    final released = Completer<void>();
+    final gateway = HeldPermissionGateway(released);
+    final container = await createContainer(overrides: [notificationGatewayProvider.overrideWithValue(gateway), launcherChannelProvider.overrideWithValue(FakeLauncherChannel())]);
+    final router = await pumpScreen(tester, container, const NotificationSettingsScreen(), size: const Size(360, 1600));
+
+    await tester.tap(switchOf(NotificationKind.eveningSummary));
+    await pumpWithDatabase(tester);
+    // Back out while the permission prompt is still up.
+    router.pop();
+    await pumpWithDatabase(tester);
+    expect(find.byType(NotificationSettingsScreen), findsNothing);
+    released.complete();
+    await pumpWithDatabase(tester, 20);
+
+    expect(tester.takeException(), isNull);
+    expect(container.read(sharedPreferencesProvider).getBool(notificationChoiceKey(NotificationKind.eveningSummary)), isTrue);
+    expect(gateway.alertsFor(kEveningSummaryPayload), isNotEmpty, reason: 'the summary is posted for the new choice');
+  });
+
+  testWidgets('Show sample still posts when the screen closes during the permission prompt', (tester) async {
+    final released = Completer<void>();
+    final gateway = HeldPermissionGateway(released);
+    final container = await createContainer(overrides: [notificationGatewayProvider.overrideWithValue(gateway)]);
+    final router = await pumpScreen(tester, container, const NotificationSettingsScreen(), size: const Size(360, 1600));
+
+    await tester.tap(find.byKey(const Key('notificationSample-eveningSummary')));
+    await pumpWithDatabase(tester);
+    router.pop();
+    await pumpWithDatabase(tester);
+    released.complete();
+    await pumpWithDatabase(tester, 20);
+
+    expect(tester.takeException(), isNull);
+    expect(gateway.shown.map((alert) => alert.title), ['Sample · Your day in Hisab']);
   });
 
   testWidgets('the Add expense shortcut switch asks for access, stays off without it, and shares its setting with Shortcuts & widget', (tester) async {

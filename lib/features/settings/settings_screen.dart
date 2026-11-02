@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/money.dart';
+import '../../core/notifications/reminder_alert_text.dart' show notificationLocalizations;
 import '../../core/providers.dart';
 import '../../core/settings.dart';
 import '../../data/db/database.dart';
@@ -386,15 +387,23 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _erase(BuildContext context, WidgetRef ref) async {
     final container = ProviderScope.containerOf(context, listen: false);
-    if (!await confirmEraseAllData(context)) return;
+    if (!await confirmEraseAllData(context) || !context.mounted) return;
+    // The cleared currency brings up onboarding in place of the router, which
+    // takes this screen away mid-erase. The router and the app-wide messenger
+    // outlive it, so the rest goes through them.
+    final router = GoRouter.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     await eraseEverything(container);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.dataErased)));
-    context.go('/home');
+    router.go('/home');
+    await untilCurrencyConfirmed(container);
+    if (!messenger.mounted) return;
+    final l10n = notificationLocalizations(container.read(settingsProvider).localeCode);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.dataErased)));
   }
 
   Future<void> _import(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
+    final container = ProviderScope.containerOf(context, listen: false);
     final picked = await ref.read(appLockProvider.notifier).whileInSystemScreen(() => FilePicker.pickFiles());
     if (picked.isEmpty) return;
     final data = await picked.first.readAsBytes();
@@ -402,8 +411,8 @@ class SettingsScreen extends ConsumerWidget {
     final passphrase = await promptRestorePassphrase(context);
     if (passphrase == null || !context.mounted) return;
     try {
-      final restored = await ref.read(backupServiceProvider).importEncrypted(data, passphrase);
-      await applyRestoredSettings(ref, restored);
+      final restored = await container.read(backupServiceProvider).importEncrypted(data, passphrase);
+      await applyRestoredSettings(container, restored);
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(restored.written))));
     } catch (error) {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoreFailed('$error'))));

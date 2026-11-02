@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -168,4 +169,38 @@ void main() {
     expect(find.text(english.driveDisconnected), findsOneWidget);
     expect(find.byKey(const Key('driveConnect')), findsOneWidget);
   });
+
+  testWidgets('a restore still applies the backup when its screen closes before it ends', (tester) async {
+    final released = Completer<void>();
+    final store = _HeldDownloadStore(released);
+    final harness = await _pumpDriveBackup(tester, connectedEmail: 'asha@example.com', store: store);
+    store.bytes = await tester.runAsync(() => harness.container.read(backupServiceProvider).exportEncrypted('correct horse', currencyCode: 'USD'));
+    store.modifiedAt = DateTime(2026, 10, 27);
+
+    await tester.tap(find.byKey(const Key('driveRestore')));
+    await _settle(tester);
+    await _enterPassphrase(tester, 'correct horse');
+    // Back out while the download is still running.
+    appRouter.pop();
+    await _settle(tester);
+    expect(find.byType(DriveBackupScreen), findsNothing);
+    released.complete();
+    await tester.runAsync(() => Future<void>.delayed(const Duration(seconds: 1)));
+    await _settle(tester);
+
+    expect(tester.takeException(), isNull);
+    expect(harness.container.read(settingsProvider).currencyCode, 'USD', reason: "the backup's currency is applied");
+  });
+}
+
+/// Holds the download until the test lets it go.
+class _HeldDownloadStore extends FakeDriveBackupStore {
+  _HeldDownloadStore(this.release);
+  final Completer<void> release;
+
+  @override
+  Future<Uint8List?> download() async {
+    await release.future;
+    return super.download();
+  }
 }

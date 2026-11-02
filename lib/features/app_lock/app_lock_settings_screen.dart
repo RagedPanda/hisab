@@ -25,11 +25,12 @@ String _timeoutSegmentLabel(AppLocalizations l10n, AppLockTimeout timeout) => sw
 
 /// Turns the app lock on only after the user proves who they are, so it can
 /// never lock someone out of their own data. On a device without a screen
-/// lock it stays off; the result says why.
-Future<AppAuthResult> turnOnAppLock(WidgetRef ref, String reason) async {
-  if (!await ref.read(appAuthenticatorProvider).isAvailable()) return AppAuthResult.noScreenLock;
-  final result = await ref.read(appLockProvider.notifier).authenticate(reason);
-  if (result == AppAuthResult.unlocked) await ref.read(appLockSettingsProvider.notifier).setEnabled(true);
+/// lock it stays off; the result says why. Takes the [container] rather than
+/// a widget's ref: the screen may close while the prompt is up.
+Future<AppAuthResult> turnOnAppLock(ProviderContainer container, String reason) async {
+  if (!await container.read(appAuthenticatorProvider).isAvailable()) return AppAuthResult.noScreenLock;
+  final result = await container.read(appLockProvider.notifier).authenticate(reason);
+  if (result == AppAuthResult.unlocked) await container.read(appLockSettingsProvider.notifier).setEnabled(true);
   return result;
 }
 
@@ -56,7 +57,7 @@ class AppLockSettingsScreen extends ConsumerWidget {
                 title: Text(l10n.appLockSwitch),
                 subtitle: Text(l10n.appLockSwitchHelp),
                 value: settings.enabled,
-                onChanged: (on) => on ? _turnOn(context, ref) : notifier.setEnabled(false),
+                onChanged: (on) => on ? _turnOn(context) : notifier.setEnabled(false),
               ),
               if (settings.enabled) ...[
                 ListTile(
@@ -97,10 +98,10 @@ class AppLockSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _turnOn(BuildContext context, WidgetRef ref) async {
+  Future<void> _turnOn(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = context.l10n;
-    final result = await turnOnAppLock(ref, l10n.appLockEnableReason);
+    final result = await turnOnAppLock(ProviderScope.containerOf(context, listen: false), l10n.appLockEnableReason);
     final note = switch (result) {
       AppAuthResult.noScreenLock => l10n.appLockNoScreenLock,
       AppAuthResult.lockedOut => l10n.appLockLockedOut,

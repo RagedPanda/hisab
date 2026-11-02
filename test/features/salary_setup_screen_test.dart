@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -128,6 +130,22 @@ void main() {
     await tester.tap(find.byKey(const Key('salaryReminderSwitch')));
     await _settle(tester);
     expect(gateway.permissionRequests, 1);
+  });
+
+  testWidgets('closing the screen while the permission prompt is up does not throw', (tester) async {
+    final released = Completer<void>();
+    final gateway = HeldPermissionGateway(released);
+    await _pumpSalary(tester, gateway: gateway, prefsValues: {'salaryReminderEnabled': false});
+    await _reveal(tester, 'salaryReminderSwitch');
+    await tester.tap(find.byKey(const Key('salaryReminderSwitch')));
+    await _settle(tester, 4);
+    appRouter.pop();
+    await _settle(tester);
+    expect(find.byType(SalarySetupScreen), findsNothing);
+    released.complete();
+    await _settle(tester);
+    expect(gateway.permissionRequests, 1);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('a declined month-start suggestion is not offered again for the rule, and Remove resets the form', (tester) async {

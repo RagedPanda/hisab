@@ -26,46 +26,48 @@ NotificationFacts notificationFactsOf(WidgetRef ref) {
 
 /// Turns [kind] on or off and brings what is posted in line straight away.
 /// Turning one on asks for the notification permission when it is missing.
-Future<void> setNotificationKind(WidgetRef ref, NotificationKind kind, bool on) async {
+/// These take the [container] rather than a widget's ref: the screen may close
+/// while the prompt is up, and the change still has to land.
+Future<void> setNotificationKind(ProviderContainer container, NotificationKind kind, bool on) async {
   // The Add expense shortcut asks itself, and stays off without access.
-  if (on && kind != NotificationKind.addExpenseShortcut) await ensureSalaryNotificationPermission(ref);
+  if (on && kind != NotificationKind.addExpenseShortcut) await ensureSalaryNotificationPermission(container);
   switch (kind) {
     case NotificationKind.addExpenseShortcut:
-      await setAddExpenseNotification(ref, on);
+      await setAddExpenseNotification(container, on);
     case NotificationKind.salary:
-      final salary = ref.read(salarySettingsProvider);
-      await ref.read(salarySettingsProvider.notifier).save(salary.copyWith(reminderEnabled: on));
-      await syncSalaryReminder(ref.read, now: DateTime.now());
+      final salary = container.read(salarySettingsProvider);
+      await container.read(salarySettingsProvider.notifier).save(salary.copyWith(reminderEnabled: on));
+      await syncSalaryReminder(container.read, now: DateTime.now());
     case NotificationKind.reminders || NotificationKind.bankSms || NotificationKind.eveningSummary:
-      await ref.read(notificationPrefsProvider.notifier).update((prefs) => prefs.withChoice(kind, on));
+      await container.read(notificationPrefsProvider.notifier).update((prefs) => prefs.withChoice(kind, on));
       // Bank SMS: SmsAutoSync hands the new choice to the native receiver.
-      if (kind == NotificationKind.reminders) await ref.read(reminderSchedulerProvider).rescheduleAll();
-      if (kind == NotificationKind.eveningSummary) await refreshEveningSummary(ref.read);
+      if (kind == NotificationKind.reminders) await container.read(reminderSchedulerProvider).rescheduleAll();
+      if (kind == NotificationKind.eveningSummary) await refreshEveningSummary(container.read);
   }
 }
 
 /// Moves the evening summary to [minuteOfDay] and re-posts it.
-Future<void> setEveningSummaryMinute(WidgetRef ref, int minuteOfDay) async {
-  await ref.read(notificationPrefsProvider.notifier).update((prefs) => prefs.withEveningSummaryMinute(minuteOfDay));
-  await refreshEveningSummary(ref.read);
+Future<void> setEveningSummaryMinute(ProviderContainer container, int minuteOfDay) async {
+  await container.read(notificationPrefsProvider.notifier).update((prefs) => prefs.withEveningSummaryMinute(minuteOfDay));
+  await refreshEveningSummary(container.read);
 }
 
 /// Posts a sample of [kind] now (asking for the permission first when
 /// needed). The evening summary sample shows today's real figures.
-Future<void> showNotificationSample(WidgetRef ref, NotificationKind kind) async {
-  await ensureSalaryNotificationPermission(ref);
+Future<void> showNotificationSample(ProviderContainer container, NotificationKind kind) async {
+  await ensureSalaryNotificationPermission(container);
   final now = DateTime.now();
   final summary = kind == NotificationKind.eveningSummary
-      ? await loadEveningSummary(ref.read, startOfDay(now))
+      ? await loadEveningSummary(container.read, startOfDay(now))
       : const EveningSummary(spentMinor: 0, reviewCount: 0, dueCount: 0, dueMinor: 0);
-  final l10n = notificationLocalizations(ref.read(settingsProvider).localeCode);
+  final l10n = notificationLocalizations(container.read(settingsProvider).localeCode);
   final request = sampleAlertFor(
     kind,
     l10n,
     now: now,
-    moneyFormat: ref.read(homeMoneyFormatProvider),
+    moneyFormat: container.read(homeMoneyFormatProvider),
     summary: summary,
-    smsAutoAdd: ref.read(settingsProvider).smsAutoAdd,
+    smsAutoAdd: container.read(settingsProvider).smsAutoAdd,
   );
-  await ref.read(notificationGatewayProvider).show(request);
+  await container.read(notificationGatewayProvider).show(request);
 }

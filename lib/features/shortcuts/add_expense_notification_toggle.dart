@@ -8,17 +8,19 @@ import 'shortcut_settings.dart';
 /// Turns the persistent "Add expense" notification on or off, for both
 /// Settings > Shortcuts & widget and Settings > Notifications. Turning it on
 /// asks for notification access first; without it the setting stays off and
-/// this returns false so the caller can point at the system settings.
-Future<bool> setAddExpenseNotification(WidgetRef ref, bool enabled) async {
-  if (enabled && ref.read(launcherChannelProvider).isSupported && !await _notificationsAllowedAfterAsking(ref)) return false;
-  await ref.read(shortcutSettingsProvider.notifier).setAddExpenseNotification(enabled);
+/// this returns false so the caller can point at the system settings. Takes
+/// the [container] rather than a widget's ref: the screen may close while the
+/// prompt is up.
+Future<bool> setAddExpenseNotification(ProviderContainer container, bool enabled) async {
+  if (enabled && container.read(launcherChannelProvider).isSupported && !await _notificationsAllowedAfterAsking(container)) return false;
+  await container.read(shortcutSettingsProvider.notifier).setAddExpenseNotification(enabled);
   return true;
 }
 
-Future<bool> _notificationsAllowedAfterAsking(WidgetRef ref) async {
-  await ensureSalaryNotificationPermission(ref);
+Future<bool> _notificationsAllowedAfterAsking(ProviderContainer container) async {
+  await ensureSalaryNotificationPermission(container);
   try {
-    return (await ref.read(notificationServiceProvider).checkPermission()).notificationsAllowed;
+    return (await container.read(notificationServiceProvider).checkPermission()).notificationsAllowed;
   } catch (_) {
     return false;
   }

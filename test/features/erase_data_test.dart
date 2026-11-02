@@ -11,6 +11,7 @@ import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/backup/scheduled_backup_prefs.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
+import 'package:hisab/features/dashboard/dashboard_screen.dart';
 import 'package:hisab/features/salary/salary_reminder.dart';
 import 'package:hisab/features/settings/drive_backup_providers.dart';
 import 'package:hisab/domain/backup/backup_schedule.dart';
@@ -128,8 +129,14 @@ void main() {
     expect(vault.passphrase, isNull);
     expect(container.read(myUpiIdProvider), isNull, reason: 'reminders ask for a UPI ID again');
     expect(scheduler.enabled, isFalse);
-    expect(find.text('All data erased. Hisab is back to a fresh start.'), findsOneWidget);
     expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/home');
+    // The notice waits for the fresh start's currency choice.
+    expect(find.text('All data erased. Hisab is back to a fresh start.'), findsNothing);
+    // The test font is too wide for the empty Home card at phone width.
+    await tester.binding.setSurfaceSize(null);
+    await tester.tap(find.byKey(const ValueKey('currency-continue')));
+    await _settle(tester);
+    expect(find.text('All data erased. Hisab is back to a fresh start.'), findsOneWidget);
   });
 
   testWidgets('erase finishes even when Settings is gone before it ends', (tester) async {
@@ -170,6 +177,56 @@ void main() {
     expect(scheduler.enabled, isFalse, reason: 'the background backup job is still cancelled');
     expect(gateway.cancelled, contains(kSalaryNotificationId), reason: 'a pending salary alert does not outlive the erase');
   });
+
+  testWidgets('after a slow erase and onboarding the app opens on Home and says the data is gone', (tester) async {
+    SharedPreferences.setMockInitialValues({'onboarded': true, 'currencyCode': 'USD'});
+    final prefs = await SharedPreferences.getInstance();
+    final db = AppDatabase(NativeDatabase.memory());
+    final released = Completer<void>();
+    final container = ProviderContainer(overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      databaseProvider.overrideWithValue(db),
+      notificationGatewayProvider.overrideWithValue(FakeNotificationGateway()),
+      driveAccountProvider.overrideWithValue(FakeDriveAccount()),
+      backupPassphraseVaultProvider.overrideWithValue(FakePassphraseVault('correct horse')),
+      backgroundBackupSchedulerProvider.overrideWithValue(_HeldBackgroundScheduler(released)),
+    ]);
+    addTearDown(container.dispose);
+    appRouter.go('/settings');
+    await tester.pumpWidget(UncontrolledProviderScope(container: container, child: const HisabApp()));
+    await _settle(tester);
+
+    final tile = find.byKey(const Key('eraseAllDataTile'));
+    await tester.scrollUntilVisible(tile, 200, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(tile);
+    await _settle(tester, 4);
+    await tester.tap(tile);
+    await _settle(tester, 4);
+    await tester.enterText(find.byKey(const Key('eraseConfirmField')), 'DELETE');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('eraseConfirmButton')));
+    // The erase is still running when the cleared currency brings up onboarding.
+    await _settle(tester);
+    expect(find.byType(SettingsScreen), findsNothing);
+    released.complete();
+    await _settle(tester);
+
+    await tester.tap(find.byKey(const ValueKey('currency-continue')));
+    await _settle(tester);
+
+    expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/home');
+    expect(find.byType(DashboardScreen), findsOneWidget);
+    expect(find.text('All data erased. Hisab is back to a fresh start.'), findsOneWidget);
+  });
+}
+
+/// Holds the erase at the background backup job until the test lets it go.
+class _HeldBackgroundScheduler extends FakeBackgroundScheduler {
+  _HeldBackgroundScheduler(this.release);
+  final Completer<void> release;
+
+  @override
+  Future<void> setEnabled(bool value) => release.future.then((_) => super.setEnabled(value));
 }
 
 /// Holds the erase at forgetting the passphrase until the test lets it go.

@@ -28,19 +28,21 @@ Future<String?> promptNewBackupPassphrase(BuildContext context) async {
 Future<String?> promptRestorePassphrase(BuildContext context) => promptText(context, title: context.l10n.backupPassphrase);
 
 /// Brings the app in step after a restore: settings the backup wrote to
-/// prefs, its currency and number format, and reminder alarms.
-Future<void> applyRestoredSettings(WidgetRef ref, BackupRestoreResult restored) async {
+/// prefs, its currency and number format, and reminder alarms. Takes the
+/// [container] rather than a widget's ref: the screen that started the restore
+/// may close before this is done.
+Future<void> applyRestoredSettings(ProviderContainer container, BackupRestoreResult restored) async {
   // Settings sections (month start, salary, udhaar UPI ID) were written to prefs directly.
-  ref.invalidate(settingsProvider);
-  ref.invalidate(salarySettingsProvider);
-  ref.invalidate(myUpiIdProvider);
+  container.invalidate(settingsProvider);
+  container.invalidate(salarySettingsProvider);
+  container.invalidate(myUpiIdProvider);
   final backupCurrency = restored.currencyCode;
   if (backupCurrency != null) {
-    await ref.read(settingsProvider.notifier).update((s) => s.copyWith(currencyCode: backupCurrency, currencyConfirmed: true));
+    await container.read(settingsProvider.notifier).update((s) => s.copyWith(currencyCode: backupCurrency, currencyConfirmed: true));
   }
   final backupNumberFormat = restored.numberFormat;
   if (backupNumberFormat != null) {
-    await ref.read(settingsProvider.notifier).update((s) => s.copyWith(numberFormat: backupNumberFormat));
+    await container.read(settingsProvider.notifier).update((s) => s.copyWith(numberFormat: backupNumberFormat));
   }
-  await ref.read(reminderSchedulerProvider).rescheduleAll();
+  await container.read(reminderSchedulerProvider).rescheduleAll();
 }

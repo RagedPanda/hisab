@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/domain/launcher/quick_entry_shortcuts.dart';
 import 'package:hisab/features/shortcuts/launcher_sync.dart';
 import 'package:hisab/features/shortcuts/shortcut_settings.dart';
+import 'package:hisab/features/shell/router.dart';
 import 'package:hisab/features/shortcuts/shortcuts_screen.dart';
 
 import '../../core/fake_notification_gateway.dart';
@@ -58,6 +61,24 @@ void main() {
     await tapAndSettle(tester, toggle);
     expect(container.read(shortcutSettingsProvider).addExpenseNotification, isTrue);
     expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
+  });
+
+  testWidgets('leaving while the notification access prompt is up does not throw', (tester) async {
+    final released = Completer<void>();
+    final gateway = HeldPermissionGateway(released);
+    final container = await createContainer(overrides: [launcherChannelProvider.overrideWithValue(FakeLauncherChannel()), notificationGatewayProvider.overrideWithValue(gateway)]);
+    await pumpAt(tester, container, kShortcutsLocation);
+
+    await tester.tap(find.byKey(const Key('shortcuts.notification')));
+    await settle(tester);
+    appRouter.go('/settings');
+    await settle(tester);
+    expect(find.byType(ShortcutsScreen), findsNothing);
+    released.complete();
+    await settle(tester);
+
+    expect(tester.takeException(), isNull);
+    expect(container.read(shortcutSettingsProvider).addExpenseNotification, isTrue, reason: 'access was granted, so the switch still turns on');
   });
 
   testWidgets('Settings opens Shortcuts & widget', (tester) async {

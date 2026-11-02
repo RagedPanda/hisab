@@ -7580,18 +7580,6 @@ abstract class AppLocalizations {
   /// **'All settled with {name}'**
   String udhaarSettledWith(String name);
 
-  /// No description provided for @udhaarOwesYouShort.
-  ///
-  /// In en, this message translates to:
-  /// **'owes you {amount}'**
-  String udhaarOwesYouShort(String amount);
-
-  /// No description provided for @udhaarYouOweShort.
-  ///
-  /// In en, this message translates to:
-  /// **'you owe {amount}'**
-  String udhaarYouOweShort(String amount);
-
   /// No description provided for @udhaarKindLent.
   ///
   /// In en, this message translates to:

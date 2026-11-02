@@ -1290,8 +1290,6 @@
   "udhaarOwesYou": "{name} पर आपके {amount} बाकी हैं",
   "udhaarYouOwe": "आप पर {name} के {amount} बाकी हैं",
   "udhaarSettledWith": "{name} के साथ सब चुकता",
-  "udhaarOwesYouShort": "आपको {amount} मिलेंगे",
-  "udhaarYouOweShort": "आप पर {amount} बकाया",
   "udhaarKindLent": "दिया",
   "udhaarKindBorrowed": "लिया",
   "udhaarKindRepaidToMe": "वापस मिला",

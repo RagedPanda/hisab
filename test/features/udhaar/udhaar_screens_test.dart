@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/dates.dart';
@@ -9,6 +10,7 @@ import 'package:hisab/features/accounts/account_picker_tile.dart';
 import 'package:hisab/features/udhaar/udhaar_card.dart';
 import 'package:hisab/features/udhaar/udhaar_form_screen.dart';
 import 'package:hisab/features/udhaar/udhaar_providers.dart';
+import 'package:hisab/features/udhaar/udhaar_screen.dart';
 
 import '../../support/app_harness.dart' show createContainer, enter, openedLocation, pumpScreen, settle;
 import '../../support/group_harness.dart' show FakeOutsideWorld;
@@ -189,7 +191,23 @@ void main() {
     await seedRahul(tester, container, amountMinor: 250050);
     await pumpScreen(tester, container, const Scaffold(body: SingleChildScrollView(child: UdhaarCard())));
     expect(find.text('You get ₹2,501'), findsOneWidget);
-    expect(find.text('owes you ₹2,501'), findsOneWidget);
+    expect(find.text('₹2,501'), findsOneWidget, reason: 'the row');
+  });
+
+  testWidgets('in Hindi a crore balance keeps the name whole and the amount on one line', (tester) async {
+    final container = await createContainer();
+    final rahulId = await seedRahul(tester, container, amountMinor: 1234567850);
+    await tester.runAsync(() => container.read(peopleRepositoryProvider).updatePerson(rahulId, name: 'राहुल', phone: null));
+    // The test font draws every glyph a full em wide, so a phone's width in
+    // real Devanagari needs a wider test screen.
+    await pumpScreen(tester, container, const UdhaarScreen(), locale: const Locale('hi'), size: const Size(430, 932));
+    await settle(tester);
+    expect(tester.takeException(), isNull, reason: 'no overflow');
+
+    expect(tester.renderObject<RenderParagraph>(find.text('राहुल')).didExceedMaxLines, isFalse, reason: 'the name is not cut short');
+    final amount = find.text('₹1,23,45,678.50');
+    expect(amount, findsOneWidget);
+    expect(tester.renderObject<RenderParagraph>(amount).didExceedMaxLines, isFalse, reason: 'the amount stays on one line');
   });
 
   testWidgets('the Home card opens the People & udhaar list even with one person', (tester) async {

@@ -4747,16 +4747,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String udhaarOwesYouShort(String amount) {
-    return 'owes you $amount';
-  }
-
-  @override
-  String udhaarYouOweShort(String amount) {
-    return 'you owe $amount';
-  }
-
-  @override
   String get udhaarKindLent => 'Lent';
 
   @override

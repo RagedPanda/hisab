@@ -8,9 +8,9 @@ import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../domain/udhaar/udhaar.dart';
 import '../../l10n/l10n.dart';
+import '../groups/net_badge.dart';
 import '../shell/widgets/common.dart';
 import 'person_dialog.dart';
-import 'udhaar_labels.dart';
 import 'udhaar_providers.dart';
 import 'udhaar_reminder_action.dart';
 import 'udhaar_routes.dart';
@@ -97,20 +97,15 @@ class UdhaarPersonTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final amount = formatMinor(balance.abs(), format: ref.watch(homeMoneyFormatProvider), showDecimals: wholeAmounts ? false : null);
-    final status = balance > 0
-        ? l10n.udhaarOwesYouShort(amount)
-        : balance < 0
-            ? l10n.udhaarYouOweShort(amount)
-            : null;
     return ListTile(
       key: ValueKey('udhaar.person.${person.id}'),
       leading: CircleAvatar(child: Text(person.name.characters.firstOrNull?.toUpperCase() ?? '?')),
       title: Text(person.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: status == null
+      // The amount sits under a short label so the name keeps the width,
+      // even for crores in Hindi, and the amount never wraps.
+      trailing: balance == 0
           ? const Icon(Icons.chevron_right)
-          : Text(status, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: udhaarBalanceColor(balance), fontWeight: FontWeight.w600).tabular),
+          : GroupNetBadge(net: balance, moneyFormat: ref.watch(homeMoneyFormatProvider), showDecimals: wholeAmounts ? false : null),
       onTap: () => context.push(udhaarPersonLocation(person.id)),
     );
   }

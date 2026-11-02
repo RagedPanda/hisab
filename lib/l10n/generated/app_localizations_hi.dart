@@ -4720,16 +4720,6 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String udhaarOwesYouShort(String amount) {
-    return 'आपको $amount मिलेंगे';
-  }
-
-  @override
-  String udhaarYouOweShort(String amount) {
-    return 'आप पर $amount बकाया';
-  }
-
-  @override
   String get udhaarKindLent => 'दिया';
 
   @override

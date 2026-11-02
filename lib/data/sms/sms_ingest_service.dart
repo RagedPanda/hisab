@@ -379,6 +379,10 @@ class SmsIngestService {
 
   static String? _payeeFor(ParsedTransaction parsed) => parsed.counterparty == null ? null : normalisePayee(parsed.counterparty!);
 
+  /// The payee of a card bill transfer: [_payeeFor] unless the SMS only
+  /// names the card being paid ([cardBillPayee]).
+  static String? _cardBillPayeeFor(ParsedTransaction parsed) => cardBillPayee(parsed.counterparty) == null ? null : _payeeFor(parsed);
+
   /// The account [parsed] belongs to: the one with its SMS key, or for a
   /// card SMS the card that fits its digits ([_findCard]).
   Future<Account?> _knownAccount(ParsedTransaction parsed) => parsed.isCreditCard
@@ -698,7 +702,7 @@ class SmsIngestService {
     final entryId = await _addCardBillTransfer(id, parsed, cardId);
     await record(SmsLogStatus.added, entryId: entryId);
     await reminderLinker?.linkEntry(smsId: id, parsed: parsed, entryId: entryId);
-    _autoAddedController.add(SmsAutoAdded(smsId: id, entryId: entryId, amountMinor: parsed.amountMinor, isDebit: true, payee: _payeeFor(parsed)));
+    _autoAddedController.add(SmsAutoAdded(smsId: id, entryId: entryId, amountMinor: parsed.amountMinor, isDebit: true, payee: _cardBillPayeeFor(parsed)));
     return IngestStatus.added;
   }
 
@@ -713,7 +717,7 @@ class SmsIngestService {
       occurredAt: parsed.occurredAt,
       categoryId: await _cardPaymentCategoryId(),
       accountId: bank?.id,
-      payee: _payeeFor(parsed),
+      payee: _cardBillPayeeFor(parsed),
       note: smsEntryNote(reference: parsed.reference, rawCounterparty: parsed.counterparty),
       source: 'sms',
       smsId: smsId,

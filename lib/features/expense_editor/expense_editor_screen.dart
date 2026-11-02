@@ -21,7 +21,7 @@ import '../../data/repositories/project_fields_repository.dart';
 import '../../data/repositories/projects_repository.dart';
 import '../../data/repositories/group_recurring_repository.dart';
 import '../../data/repositories/recurring_repository.dart';
-import '../../domain/cards/card_payment_match.dart' show kCardPaymentCategoryKey;
+import '../../domain/cards/card_payment_match.dart' show cardBillPayee, kCardPaymentCategoryKey;
 import '../../domain/entries/entry_accounts.dart';
 import '../../domain/entries/entry_filter.dart';
 import '../../domain/ledger/balance_effects.dart';
@@ -586,6 +586,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _category = await ref.read(categoriesRepositoryProvider).findBySeedKey(kCardPaymentCategoryKey);
       _accountId = smsAccountId;
       _toAccountId = parsed['cardAccountId'] as String?;
+      if (cardBillPayee(parsed['counterparty'] as String?) == null) _payeeController.clear();
       return;
     }
     if (accountKey != null) _accountId = smsAccountId;

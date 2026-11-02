@@ -25,6 +25,15 @@ final _debitCard = RegExp(r'debit\s*card', caseSensitive: false);
 /// money to a card (a transfer) and is never spend.
 bool isCardBillDebitText(String body) => hintsCardBillPayment(body) && !_debitCard.hasMatch(body);
 
+/// Wording that names the card itself rather than who was paid.
+final _namesCard = RegExp(r'\bcard\b', caseSensitive: false);
+
+/// The payee worth keeping for a card bill debit whose counterparty is
+/// [counterparty]: a biller such as "CRED Club" stays, while the card
+/// itself ("Credit Card XX4521", "HDFC Credit Card bill") is no payee, the
+/// transfer's To account already names it.
+String? cardBillPayee(String? counterparty) => counterparty == null || _namesCard.hasMatch(counterparty) ? null : counterparty;
+
 /// The card digits a bank debit for a card bill names: "towards Credit Card
 /// XX4521", "CC ending 4521", "Card No. XXXX4521", "4xxx xxxx xxxx 4521".
 /// The bank account's own digits ("A/c XX7781") never count.

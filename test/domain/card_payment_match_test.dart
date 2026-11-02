@@ -144,4 +144,16 @@ void main() {
       expect(awaitsCardPaymentSide(missingCardSide: true, ownIsCardSide: false, ownSmsId: null, pointing: const []), isFalse);
     });
   });
+
+  group('cardBillPayee', () {
+    test('keeps a biller', () {
+      expect(cardBillPayee('CRED Club'), 'CRED Club');
+    });
+
+    test('drops wording that only names the card', () {
+      expect(cardBillPayee('Credit Card XX4521'), isNull);
+      expect(cardBillPayee('HDFC Credit Card bill'), isNull);
+      expect(cardBillPayee(null), isNull);
+    });
+  });
 }

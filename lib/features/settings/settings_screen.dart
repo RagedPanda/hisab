@@ -89,7 +89,7 @@ class SettingsScreen extends ConsumerWidget {
               leading: const Icon(Icons.currency_rupee),
               title: Text(l10n.currency),
               trailing: SettingValue(currencyShortLabel(settings.currencyCode)),
-              visualDensity: VisualDensity.compact,
+              visualDensity: kCompactRowDensity,
               onTap: () async {
                 final code = await showCurrencyPicker(context, selectedCode: settings.currencyCode);
                 if (code != null) await notifier.update((s) => s.copyWith(currencyCode: code, currencyConfirmed: true));
@@ -101,7 +101,7 @@ class SettingsScreen extends ConsumerWidget {
               title: Text(l10n.defaultAccount),
               subtitle: Text(l10n.defaultAccountHelp, maxLines: 1, overflow: TextOverflow.ellipsis),
               trailing: SettingValue(_defaultAccountLabel(ref, settings.defaultAccountId)),
-              visualDensity: VisualDensity.compact,
+              visualDensity: kCompactRowDensity,
               onTap: () async {
                 final id = await _pickDefaultAccount(context, ref, settings.defaultAccountId);
                 if (id != null) await notifier.update((s) => s.copyWith(defaultAccountId: id));
@@ -114,7 +114,7 @@ class SettingsScreen extends ConsumerWidget {
               title: Text(l10n.quickEntries),
               subtitle: Text(l10n.quickEntriesHint, maxLines: 1, overflow: TextOverflow.ellipsis),
               trailing: const Icon(Icons.chevron_right),
-              visualDensity: VisualDensity.compact,
+              visualDensity: kCompactRowDensity,
               onTap: () => context.push(kQuickEntriesLocation),
             ),
           ]),
@@ -140,7 +140,7 @@ class SettingsScreen extends ConsumerWidget {
                   ? Text(l10n.salarySummary(formatMinor(salary.amountMinor, format: ref.watch(homeMoneyFormatProvider)), salary.salaryDay), maxLines: 1, overflow: TextOverflow.ellipsis)
                   : null,
               trailing: const Icon(Icons.chevron_right),
-              visualDensity: VisualDensity.compact,
+              visualDensity: kCompactRowDensity,
               onTap: () => context.push(kSalaryLocation),
             ),
             ListTile(
@@ -148,7 +148,7 @@ class SettingsScreen extends ConsumerWidget {
               title: Text(l10n.monthStartsOn),
               subtitle: Text(l10n.monthStartsOnHelp, maxLines: 1, overflow: TextOverflow.ellipsis),
               trailing: SettingValue(l10n.dayNumber(settings.monthStartDay)),
-              visualDensity: VisualDensity.compact,
+              visualDensity: kCompactRowDensity,
               onTap: () async {
                 final text = await promptText(context, title: l10n.monthStartPrompt, hint: l10n.monthStartsOnExplain, initial: '${settings.monthStartDay}', keyboardType: TextInputType.number);
                 final day = int.tryParse(text ?? '');
@@ -159,7 +159,7 @@ class SettingsScreen extends ConsumerWidget {
               leading: const Icon(Icons.pin_outlined),
               title: Text(l10n.numberFormatTitle, maxLines: 1, overflow: TextOverflow.ellipsis),
               trailing: SettingValue(numberFormatSample(ref.watch(homeMoneyFormatProvider))),
-              visualDensity: VisualDensity.compact,
+              visualDensity: kCompactRowDensity,
               onTap: () async {
                 final choice = await _pickNumberFormat(context, settings, ref.read(deviceLocaleProvider));
                 if (choice != null) await notifier.update((s) => s.copyWith(numberFormat: choice));
@@ -193,7 +193,7 @@ class SettingsScreen extends ConsumerWidget {
               leading: const Icon(Icons.person_outline),
               title: Text(l10n.yourNameInGroups),
               trailing: SettingValue(resolvedMyName(l10n, settings)),
-              visualDensity: VisualDensity.compact,
+              visualDensity: kCompactRowDensity,
               onTap: () async {
                 final name = await promptText(context, title: l10n.yourName, initial: resolvedMyName(l10n, settings));
                 if (name == null || name.trim().isEmpty) return;

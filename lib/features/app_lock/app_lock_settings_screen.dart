@@ -6,6 +6,7 @@ import '../../data/app_lock/device_authenticator.dart';
 import '../../domain/app_lock/app_lock_policy.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import '../shell/widgets/tile_group.dart';
 import 'app_lock_providers.dart';
 
 const String kAppLockLocation = '/app-lock';
@@ -63,7 +64,7 @@ class AppLockSettingsScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.timer_outlined),
                   title: Text(l10n.appLockAfter),
-                  visualDensity: VisualDensity.compact,
+                  visualDensity: kCompactRowDensity,
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),

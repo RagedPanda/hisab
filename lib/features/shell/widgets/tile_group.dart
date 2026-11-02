@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 /// 16 padding + 24 icon + 16 gap. Dividers start here, Android Settings style.
 const double kTileTitleInset = 56;
 
+/// Shorter rows without [VisualDensity.compact]'s narrower title gap, which
+/// would pull the title 4px left of the [kTileTitleInset] dividers.
+const VisualDensity kCompactRowDensity = VisualDensity(vertical: -2);
+
 /// [rows] with [separator] between each neighbouring pair (none at the ends).
 List<Widget> separatedRows(List<Widget> rows, Widget separator) => [
       for (final (index, row) in rows.indexed) ...[

@@ -13,6 +13,7 @@ import '../../../core/theme.dart';
 import '../../../domain/stats/spend_series.dart';
 import '../../../domain/stats/trend.dart';
 import '../../../l10n/l10n.dart';
+import '../../shell/widgets/common.dart';
 import '../dashboard_keys.dart';
 import '../dashboard_providers.dart';
 import 'dashboard_card.dart';
@@ -71,8 +72,8 @@ class _ModeSwitch extends StatelessWidget {
     final l10n = context.l10n;
     return SegmentedButton<TrendMode>(
       segments: [
-        ButtonSegment(value: TrendMode.daily, label: Text(l10n.trendDaily)),
-        ButtonSegment(value: TrendMode.monthly, label: Text(l10n.trendMonthly)),
+        ButtonSegment(value: TrendMode.daily, label: segmentLabel(l10n.trendDaily)),
+        ButtonSegment(value: TrendMode.monthly, label: segmentLabel(l10n.trendMonthly)),
       ],
       selected: {mode},
       onSelectionChanged: (selection) => onChanged(selection.first),

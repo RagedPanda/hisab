@@ -495,16 +495,18 @@ class BottomActionBar extends StatelessWidget {
 /// segments side by side (P1-5).
 const double kCompactSegmentWidth = 380;
 
+/// A segmented button label that stays on one line: when its segment is too
+/// narrow (small screen, large text, a long translation) it scales down
+/// rather than wrapping mid-word or being clipped. [key] goes on the [Text].
+Widget segmentLabel(String label, {Key? key}) =>
+    FittedBox(fit: BoxFit.scaleDown, child: Text(label, key: key, maxLines: 1, softWrap: false));
+
 /// A [ButtonSegment] whose label is always shown. On narrow screens the icon
 /// is dropped to make room, and the label scales down rather than wrapping or
 /// truncating, so a segment is never left as an unlabeled icon.
 ButtonSegment<T> compactSegment<T>(BuildContext context, {required T value, required String label, required IconData icon}) {
   final narrow = MediaQuery.sizeOf(context).width < kCompactSegmentWidth;
-  return ButtonSegment(
-    value: value,
-    icon: narrow ? null : Icon(icon),
-    label: FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1, softWrap: false)),
-  );
+  return ButtonSegment(value: value, icon: narrow ? null : Icon(icon), label: segmentLabel(label));
 }
 
 /// Location of the first shell tab, used when Back has nowhere else to go.

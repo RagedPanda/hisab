@@ -95,7 +95,7 @@ class _UpcomingHeader extends ConsumerWidget {
             for (final window in UpcomingWindow.values)
               ButtonSegment(
                 value: window,
-                label: Text(l10n.upcomingWindowDays(window.days), key: ValueKey('upcoming.window.${window.name}')),
+                label: segmentLabel(l10n.upcomingWindowDays(window.days), key: ValueKey('upcoming.window.${window.name}')),
               ),
           ],
           selected: {overview.window},

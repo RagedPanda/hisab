@@ -74,8 +74,8 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
             child: SegmentedButton<bool>(
               showSelectedIcon: false,
               segments: [
-                ButtonSegment(value: false, label: Text(l10n.upcoming)),
-                ButtonSegment(value: true, label: Text(l10n.reminderTabHistory)),
+                ButtonSegment(value: false, label: segmentLabel(l10n.upcoming)),
+                ButtonSegment(value: true, label: segmentLabel(l10n.reminderTabHistory)),
               ],
               selected: {_showHistory},
               onSelectionChanged: (selection) => setState(() => _showHistory = selection.first),

@@ -108,6 +108,26 @@ void main() {
       expect((await card())!.lastStatementMinor, 2345678);
     });
 
+    test('a newer statement on another day moves the statement and due days; an older one read late does not', () async {
+      await ingest(_statement, at: DateTime(2026, 10, 13, 10));
+      await ingest(
+        'Statement for HDFC Bank Credit Card XX4521 dated 15-11-26: Total Amt Due Rs 9,000.00, Min Amt Due Rs 450.00, Due Date 05-12-26.',
+        at: DateTime(2026, 11, 16, 10),
+      );
+      var saved = (await card())!;
+      expect(saved.statementDay, 15);
+      expect(saved.dueDay, 5);
+      expect(saved.lastStatementAt, DateTime(2026, 11, 15));
+      await ingest(
+        'Statement for HDFC Bank Credit Card XX4521 dated 12-09-26: Total Amt Due Rs 7,000.00, Min Amt Due Rs 350.00, Due Date 01-10-26.',
+        at: DateTime(2026, 9, 13, 10),
+      );
+      saved = (await card())!;
+      expect(saved.statementDay, 15);
+      expect(saved.dueDay, 5);
+      expect(saved.lastStatementMinor, 900000);
+    });
+
     test('a statement in another currency is not read', () async {
       final status = await ingest('HDFC Bank Credit Card XX4521 statement: Total Amt Due USD 230.00, Due Date 01-11-26.');
       expect(status, IngestStatus.foreignCurrency);

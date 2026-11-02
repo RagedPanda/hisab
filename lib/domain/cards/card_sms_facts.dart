@@ -54,8 +54,8 @@ DateTime statementDateForSms(CardStatementSms statement, {int? statementDay, int
 
 /// The card's statement columns once [statement] is applied, or null when
 /// the stored statement is newer (an old message read late changes nothing).
-/// The due day follows the SMS due date; a missing statement day is taken
-/// from a statement date the SMS states.
+/// The newest statement wins: the due day follows the SMS due date and the
+/// statement day the statement date it states ([statementDayAfter]).
 CardStatementFields? cardStatementFromSms(
   CardStatementSms statement, {
   int? statementDay,
@@ -70,8 +70,18 @@ CardStatementFields? cardStatementFromSms(
     minimumDueMinor: statement.minimumDueMinor,
     statementFromSmsAt: statement.receivedAt,
     dueDay: statement.dueDate.day,
-    statementDay: statementDay ?? statement.statementDate?.day,
+    statementDay: statementDayAfter(statement.statementDate == null ? null : statementAt, statementDay: statementDay),
   );
+}
+
+/// The card's statement day once a statement dated [stated] is read: that
+/// date's day, so a bank moving the cycle moves the card with it; the
+/// stored [statementDay] when the SMS states no date, or when [stated] is
+/// that day clamped to a short month (31 stays 31 after a 30 April bill).
+int? statementDayAfter(DateTime? stated, {int? statementDay}) {
+  if (stated == null) return statementDay;
+  if (statementDay != null && isSameDay(clampedMonthDay(stated.year, stated.month, statementDay), stated)) return statementDay;
+  return stated.day;
 }
 
 /// Whether a statement read from SMS at [receivedAt] sets the card's

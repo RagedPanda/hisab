@@ -74,7 +74,7 @@ class _KindCard extends ConsumerWidget {
           title: Text(labels.title),
           subtitle: Text(needsSetup == null ? labels.help : '${labels.help}\n$needsSetup'),
           value: on,
-          onChanged: salaryMissing ? null : (value) => setNotificationKind(ref, kind, value),
+          onChanged: salaryMissing ? null : (value) => setNotificationKind(ProviderScope.containerOf(context, listen: false), kind, value),
         ),
         if (kind == NotificationKind.eveningSummary && on)
           ListTile(
@@ -85,8 +85,9 @@ class _KindCard extends ConsumerWidget {
             visualDensity: VisualDensity.compact,
             onTap: () async {
               final minute = prefs.eveningSummaryMinute;
+              final container = ProviderScope.containerOf(context, listen: false);
               final picked = await showTimePicker(context: context, initialTime: TimeOfDay(hour: minute ~/ 60, minute: minute % 60));
-              if (picked != null) await setEveningSummaryMinute(ref, picked.hour * 60 + picked.minute);
+              if (picked != null) await setEveningSummaryMinute(container, picked.hour * 60 + picked.minute);
             },
           ),
         Align(
@@ -102,7 +103,7 @@ class _KindCard extends ConsumerWidget {
                 onPressed: () async {
                   final messenger = ScaffoldMessenger.of(context);
                   final sent = l10n.notificationsSampleSent;
-                  await showNotificationSample(ref, kind);
+                  await showNotificationSample(ProviderScope.containerOf(context, listen: false), kind);
                   showTimedSnackBar(messenger, sent);
                 },
               ),

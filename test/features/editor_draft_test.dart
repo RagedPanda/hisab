@@ -61,4 +61,25 @@ void main() {
     expect(fingerprintOf(repeat: const RepeatDraft(frequency: RecurrenceFrequency.weekly)), isNot(fingerprintOf(repeat: monthly)));
     expect(fingerprintOf(repeat: const RepeatDraft()), fingerprintOf(repeat: monthly));
   });
+
+  group('baselineAfterKindSwitch', () {
+    const opened = 'expense-empty';
+    const switched = 'transfer-empty';
+
+    test('an untouched new entry takes the switched form as its baseline', () {
+      expect(baselineAfterKindSwitch(isNew: true, openedWith: opened, before: opened, after: switched), switched);
+    });
+
+    test('a new entry with input keeps its baseline', () {
+      expect(baselineAfterKindSwitch(isNew: true, openedWith: opened, before: 'expense-250', after: switched), opened);
+    });
+
+    test('a stored entry keeps its baseline, so a kind change still asks', () {
+      expect(baselineAfterKindSwitch(isNew: false, openedWith: opened, before: opened, after: switched), opened);
+    });
+
+    test('an editor still loading stays without a baseline', () {
+      expect(baselineAfterKindSwitch(isNew: true, openedWith: null, before: opened, after: switched), isNull);
+    });
+  });
 }

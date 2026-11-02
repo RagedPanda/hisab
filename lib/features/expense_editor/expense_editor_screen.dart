@@ -936,10 +936,12 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                     ],
                     selected: {_kind},
                     onSelectionChanged: (set) => setState(() {
+                      final before = _draft;
                       _kind = set.first;
                       _category = null;
                       _items = [];
                       _amountController.text = '';
+                      _openedWith = baselineAfterKindSwitch(isNew: _existingId == null, openedWith: _openedWith, before: before, after: _draft);
                     }),
                   ),
                 if (_groupId == null) const SizedBox(height: 20),

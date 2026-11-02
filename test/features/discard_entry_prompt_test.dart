@@ -136,4 +136,49 @@ void main() {
     await settle(tester);
     expect(find.text('Edit entry'), findsNothing);
   });
+
+  Future<void> switchKind(WidgetTester tester, String kind) async {
+    await tester.tap(find.text(kind));
+    await settle(tester);
+  }
+
+  testWidgets('switching the kind of an untouched new entry is not input', (tester) async {
+    await pumpApp(tester);
+    for (final kind in ['Transfer', 'Income']) {
+      await openNewEntry(tester);
+      await switchKind(tester, kind);
+      await systemBack(tester);
+      expect(discardDialog, findsNothing, reason: kind);
+      expect(editorTitle, findsNothing, reason: kind);
+    }
+
+    await openNewEntry(tester);
+    await switchKind(tester, 'Transfer');
+    await switchKind(tester, 'Expense');
+    await systemBack(tester);
+    expect(discardDialog, findsNothing, reason: 'switched there and back');
+    expect(editorTitle, findsNothing);
+  });
+
+  testWidgets('input typed after a kind switch still asks', (tester) async {
+    await pumpApp(tester);
+    await openNewEntry(tester);
+    await switchKind(tester, 'Transfer');
+    await enter(tester, amountField, '500');
+    await systemBack(tester);
+    expect(discardDialog, findsOneWidget);
+  });
+
+  testWidgets('switching the kind of a stored entry asks', (tester) async {
+    final container = await pumpApp(tester);
+    await tester.runAsync(() => container.read(entriesRepositoryProvider).saveEntry(
+          EntriesRepository.newExpense(id: 'lunch', amountMinor: 30000, occurredAt: DateTime(2026, 10, 20), note: 'Lunch'),
+        ));
+    appRouter.push('/entry?id=lunch');
+    await settle(tester);
+    await switchKind(tester, 'Income');
+    await systemBack(tester);
+    expect(discardDialog, findsOneWidget);
+  });
 }
+

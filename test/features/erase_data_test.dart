@@ -11,6 +11,7 @@ import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/backup/scheduled_backup_prefs.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/data/repositories/entries_repository.dart';
+import 'package:hisab/features/salary/salary_reminder.dart';
 import 'package:hisab/features/settings/drive_backup_providers.dart';
 import 'package:hisab/domain/backup/backup_schedule.dart';
 import 'package:hisab/domain/backup/scheduled_backup.dart';
@@ -138,10 +139,11 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     final scheduler = FakeBackgroundScheduler()..enabled = true;
     final forgotten = Completer<void>();
+    final gateway = FakeNotificationGateway();
     final container = ProviderContainer(overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
       databaseProvider.overrideWithValue(db),
-      notificationGatewayProvider.overrideWithValue(FakeNotificationGateway()),
+      notificationGatewayProvider.overrideWithValue(gateway),
       driveAccountProvider.overrideWithValue(FakeDriveAccount()),
       backupPassphraseVaultProvider.overrideWithValue(_HeldPassphraseVault(forgotten)),
       backgroundBackupSchedulerProvider.overrideWithValue(scheduler),
@@ -166,6 +168,7 @@ void main() {
     await _settle(tester);
 
     expect(scheduler.enabled, isFalse, reason: 'the background backup job is still cancelled');
+    expect(gateway.cancelled, contains(kSalaryNotificationId), reason: 'a pending salary alert does not outlive the erase');
   });
 }
 

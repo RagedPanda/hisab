@@ -36,6 +36,8 @@ class _SalaryReminderWatcherState extends ConsumerState<SalaryReminderWatcher> {
   }
 
   /// Runs one sync at a time; a request while one is running queues one more.
+  /// Reads through the app-wide container rather than this widget's ref: a
+  /// fresh start after Erase all data unmounts the watcher mid-sync.
   Future<void> sync() async {
     if (!mounted) return;
     if (running) {
@@ -43,10 +45,11 @@ class _SalaryReminderWatcherState extends ConsumerState<SalaryReminderWatcher> {
       return;
     }
     running = true;
+    final container = ProviderScope.containerOf(context, listen: false);
     try {
       do {
         again = false;
-        await syncSalaryReminder(ref.read, now: DateTime.now());
+        await syncSalaryReminder(container.read, now: DateTime.now());
       } while (again && mounted);
     } finally {
       running = false;

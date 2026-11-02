@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/data/db/database.dart';
@@ -8,6 +10,7 @@ import 'package:hisab/data/repositories/sms_log_repository.dart';
 import 'package:hisab/data/sms/sms_channel.dart';
 import 'package:hisab/data/sms/sms_ingest_service.dart';
 import 'package:hisab/data/sms/sms_sync_cursor.dart';
+import 'package:hisab/domain/sms/card_sms.dart';
 import 'package:hisab/domain/sms/sms_outcome.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,6 +19,10 @@ const _cardSpend = 'Rs 1,250.00 spent on HDFC Bank Credit Card XX4521 at AMAZON 
 const _statement = 'Statement for HDFC Bank Credit Card XX4521 dated 12-10-26: Total Amt Due Rs 23,456.78, Min Amt Due Rs 1,180.00, Due Date 01-11-26.';
 const _cardPayment = 'Payment of Rs 12,000.00 received on your HDFC Bank Credit Card ending 4521 on 21-10-2026. Available limit Rs 88,543.21. Thank you.';
 const _bankDebit = 'Rs 12,000.00 debited from HDFC Bank A/c XX7781 on 21-10-26 towards HDFC Credit Card bill. Avl Bal Rs 30,000.00';
+
+/// A bank debit that does not say it paid a card: an expense until the
+/// card's SMS links it (as debits read before card bills were transfers).
+const _plainDebit = 'Rs 12,000.00 debited from HDFC Bank A/c XX7781 on 21-10-26. Avl Bal Rs 30,000.00';
 
 void main() {
   late AppDatabase db;
@@ -109,9 +116,12 @@ void main() {
   });
 
   group('card bill payment', () {
-    test('bank debit first: the expense becomes the transfer to the card', () async {
+    test('bank debit first: a transfer to the card at once, completed by the card SMS', () async {
       await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
       expect(await ingest(_bankDebit, at: DateTime(2026, 10, 21, 11)), IngestStatus.added);
+      final debit = (await liveEntries()).singleWhere((entry) => entry.amountMinor == 1200000);
+      expect(debit.kind, 'transfer', reason: 'paying a card bill is never spend');
+      expect(debit.toAccountId, (await card())!.id);
       final added = <SmsAutoAdded>[];
       final subscription = service.autoAdded.listen(added.add);
 
@@ -126,6 +136,18 @@ void main() {
       expect(payments.single.toAccountId, (await card())!.id);
       expect(payments.single.categoryId, isNotNull, reason: 'the debit keeps a category as a transfer');
       expect(added, isEmpty, reason: 'nothing new was added, so nothing to announce');
+      final cardRow = await smsLog.getById(SmsLogRepository.idFor('VM-HDFCBK-S', _cardPayment, DateTime(2026, 10, 21, 12)));
+      expect(cardRow!.entryId, debit.id, reason: 'the card SMS points at the same transfer');
+    });
+
+    test('a debit read as an expense earlier becomes the transfer when the card SMS comes', () async {
+      await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
+      await ingest(_plainDebit, at: DateTime(2026, 10, 21, 11));
+      expect((await liveEntries()).singleWhere((entry) => entry.amountMinor == 1200000).kind, 'expense');
+      await ingest(_cardPayment, at: DateTime(2026, 10, 21, 12));
+      final payments = [for (final entry in await liveEntries()) if (entry.amountMinor == 1200000) entry];
+      expect(payments.single.kind, 'transfer');
+      expect(payments.single.toAccountId, (await card())!.id);
     });
 
     test('card SMS first: a transfer from the default bank, completed by the bank debit', () async {
@@ -159,7 +181,9 @@ void main() {
       await ingest(_bankDebit, at: DateTime(2026, 10, 21, 11));
       await ingest('Rs 12,000.00 debited from HDFC Bank A/c XX7781 on 22-10-26 towards HDFC Credit Card bill. Avl Bal Rs 18,000.00', at: DateTime(2026, 10, 22, 9));
       final payments = [for (final entry in await liveEntries()) if (entry.amountMinor == 1200000) entry];
-      expect(payments.map((entry) => entry.kind), unorderedEquals(['transfer', 'expense']));
+      expect(payments, hasLength(2), reason: 'a second payment of its own');
+      expect(payments.map((entry) => entry.kind), ['transfer', 'transfer']);
+      expect(payments.map((entry) => entry.accountId).toSet(), {(await accounts.findBySmsKey('HDFC Bank:ac:7781'))!.id});
     });
 
     test('with no bank to take it from, it waits for review and approves into a transfer', () async {
@@ -209,6 +233,80 @@ void main() {
       expect(await smsLog.watchPending().first, isEmpty);
       final payments = [for (final entry in await liveEntries()) if (entry.amountMinor == 1200000) entry];
       expect(payments.single.accountId, (await accounts.findBySmsKey('HDFC Bank:ac:7781'))!.id);
+    });
+  });
+
+  group('bank debit for a card bill', () {
+    const toCard4521 = 'Rs 8,000.00 debited from HDFC Bank A/c XX7781 on 21-10-26 towards Credit Card XX4521. Avl Bal Rs 22,000.00';
+    const axisPayment = 'Payment of Rs 12,000.00 received on your Axis Bank Credit Card ending 9902 on 21-10-2026. Thank you.';
+    Future<Account> axisCard() => accounts.create(name: 'Axis Card', type: 'card', color: 0, bankName: 'Axis Bank', last4: '9902');
+    Future<List<Entry>> expenses() async => [for (final entry in await liveEntries()) if (entry.kind == 'expense') entry];
+
+    test('goes to the card whose digits it names, filed under Credit Card Payment', () async {
+      await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
+      await axisCard();
+      expect(await ingest(toCard4521, at: DateTime(2026, 10, 21, 11)), IngestStatus.added);
+      final payment = (await liveEntries()).singleWhere((entry) => entry.amountMinor == 800000);
+      expect(payment.kind, 'transfer');
+      expect(payment.accountId, (await accounts.findBySmsKey('HDFC Bank:ac:7781'))!.id);
+      expect(payment.toAccountId, (await card())!.id);
+      expect(payment.categoryId, (await categories.findBySeedKey('credit_card_payment'))!.id);
+      expect((await accounts.findBySmsKey('HDFC Bank:ac:7781'))!.balanceMinor, 2200000, reason: 'the bank SMS balance still lands');
+    });
+
+    test('with no card to pay into it waits for review as a transfer, never an expense', () async {
+      expect(await ingest(_bankDebit, at: DateTime(2026, 10, 21, 11)), IngestStatus.pending);
+      expect(await liveEntries(), isEmpty);
+      final row = (await smsLog.watchPending().first).single;
+      expect(isCardBillDebitPayload(jsonDecode(row.parsedJson!) as Map<String, dynamic>), isTrue, reason: 'review and the editor show a transfer');
+      expect(await service.approvePending(row), isNull, reason: 'the user picks the card in the editor');
+      expect(await expenses(), isEmpty);
+
+      await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
+      final entryId = await service.approvePending(row);
+      final payment = (await liveEntries()).singleWhere((entry) => entry.id == entryId);
+      expect(payment.kind, 'transfer');
+      expect(payment.toAccountId, (await card())!.id);
+    });
+
+    test('with auto-add off it waits for review and approves into the transfer', () async {
+      await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
+      expect(await ingest(_bankDebit, at: DateTime(2026, 10, 21, 11), autoAdd: false), IngestStatus.pending);
+      final row = (await smsLog.watchPending().first).single;
+      final entryId = await service.approvePending(row);
+      expect((await liveEntries()).singleWhere((entry) => entry.id == entryId).kind, 'transfer');
+      expect(await expenses(), hasLength(1), reason: 'only the card spend');
+    });
+
+    test('the card SMS moves a transfer guessed to the wrong card onto its own', () async {
+      await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
+      final axis = await axisCard();
+      await ingest('Rs 12,000.00 debited from HDFC Bank A/c XX7781 on 21-10-26 to CRED Club UPI Ref 629450500001.', at: DateTime(2026, 10, 21, 11));
+      expect((await liveEntries()).singleWhere((entry) => entry.amountMinor == 1200000).toAccountId, (await card())!.id, reason: 'the card of the paying bank');
+      expect(await ingest(axisPayment, sender: 'AX-AXISBK-S', at: DateTime(2026, 10, 21, 12)), IngestStatus.added);
+      final payments = [for (final entry in await liveEntries()) if (entry.amountMinor == 1200000) entry];
+      expect(payments, hasLength(1), reason: 'counted once');
+      expect(payments.single.toAccountId, axis.id);
+    });
+
+    test('a statement-following balance comes down once, not again when the card SMS links', () async {
+      await ingest(_statement, at: DateTime(2026, 10, 13, 10));
+      await ingest(_bankDebit, at: DateTime(2026, 10, 21, 11));
+      expect((await card())!.balanceMinor, -(2345678 - 1200000));
+      await ingest(_cardPayment, at: DateTime(2026, 10, 21, 12));
+      expect((await card())!.balanceMinor, -(2345678 - 1200000));
+    });
+
+    test('undo removes the transfer and puts the card balance back', () async {
+      await ingest(_statement, at: DateTime(2026, 10, 13, 10));
+      final added = <SmsAutoAdded>[];
+      final subscription = service.autoAdded.listen(added.add);
+      await ingest(_bankDebit, at: DateTime(2026, 10, 21, 11));
+      await Future<void>.delayed(Duration.zero);
+      await subscription.cancel();
+      await service.undoAutoAdd(added.single);
+      expect(await liveEntries(), isEmpty);
+      expect((await card())!.balanceMinor, -2345678);
     });
   });
 
@@ -286,7 +384,7 @@ void main() {
 
     test('a bank debit linked to the card keeps its own category', () async {
       await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
-      await ingest(_bankDebit, at: DateTime(2026, 10, 21, 11));
+      await ingest(_plainDebit, at: DateTime(2026, 10, 21, 11));
       final debit = (await liveEntries()).singleWhere((entry) => entry.amountMinor == 1200000);
       final bill = (await categories.findBySeedKey('credit_card_bill'))!;
       await entries.setCategory(debit.id, bill.id);
@@ -298,7 +396,7 @@ void main() {
 
     test('a debit filed under Other becomes Credit Card Payment', () async {
       await ingest(_cardSpend, at: DateTime(2026, 10, 20, 9));
-      await ingest(_bankDebit, at: DateTime(2026, 10, 21, 11));
+      await ingest(_plainDebit, at: DateTime(2026, 10, 21, 11));
       final debit = (await liveEntries()).singleWhere((entry) => entry.amountMinor == 1200000);
       await entries.setCategory(debit.id, (await categories.findBySeedKey('other_expense'))!.id);
       await ingest(_cardPayment, at: DateTime(2026, 10, 21, 12));

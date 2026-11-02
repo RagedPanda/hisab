@@ -4,6 +4,8 @@
 /// still returns null for both, so neither ever becomes an expense or income.
 library;
 
+import 'dart:convert';
+
 import '../../core/money.dart';
 import 'bank_senders.dart';
 import 'parsed_transaction.dart';
@@ -171,3 +173,21 @@ Map<String, dynamic> cardPaymentPayload(CardPaymentSms payment, {String? cardAcc
 
 /// Whether a stored SMS parse is a card bill payment ([cardPaymentPayload]).
 bool isCardPaymentPayload(Map<String, dynamic>? parsed) => parsed?['cardPayment'] == true;
+
+/// Whether the stored parse [parsedJson] of an SMS log row is a card's
+/// "payment received" ([cardPaymentPayload]).
+bool isCardPaymentLog(String? parsedJson) {
+  if (parsedJson == null) return false;
+  final decoded = jsonDecode(parsedJson);
+  return decoded is Map<String, dynamic> && isCardPaymentPayload(decoded);
+}
+
+/// Marks the stored parse of a bank debit that pays a card bill, so the
+/// review queue and the editor show it as a transfer into [cardAccountId]
+/// (null when the card is not known yet) rather than spend.
+Map<String, dynamic> withCardBillDebit(Map<String, dynamic> payload, {String? cardAccountId}) => payload
+  ..['cardBill'] = true
+  ..['cardAccountId'] = cardAccountId;
+
+/// Whether a stored SMS parse is a bank debit paying a card bill ([withCardBillDebit]).
+bool isCardBillDebitPayload(Map<String, dynamic>? parsed) => parsed?['cardBill'] == true;

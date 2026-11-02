@@ -580,6 +580,14 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _toAccountId = (parsed['accountId'] as String?) ?? smsAccountId;
       return;
     }
+    if (isCardBillDebitPayload(parsed)) {
+      // A bank debit paying a card bill: a transfer from that account into the card.
+      _kind = 'transfer';
+      _category = await ref.read(categoriesRepositoryProvider).findBySeedKey(kCardPaymentCategoryKey);
+      _accountId = smsAccountId;
+      _toAccountId = parsed['cardAccountId'] as String?;
+      return;
+    }
     if (accountKey != null) _accountId = smsAccountId;
   }
 

@@ -33,7 +33,7 @@ class UdhaarScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.udhaarTitle),
+        title: Text(l10n.udhaarPeopleAndUdhaar),
         actions: [
           IconButton(key: const Key('udhaar.upiId'), tooltip: l10n.udhaarMyUpiId, icon: const Icon(Icons.qr_code_2), onPressed: () => editMyUpiId(context, ref)),
         ],

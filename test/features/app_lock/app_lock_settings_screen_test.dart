@@ -39,6 +39,22 @@ void main() {
     expect(find.textContaining('no screen lock'), findsOneWidget);
   });
 
+  testWidgets('a confirmed prompt still turns the lock on after the screen has closed', (tester) async {
+    final auth = FakeAuthenticator()..hold = true;
+    await openSettings(tester, auth);
+    await tester.tap(lockSwitch);
+    await settle(tester, 4);
+    appRouter.pop();
+    await settle(tester, 4);
+    expect(find.byType(AppLockSettingsScreen), findsNothing);
+    auth.pending!.complete(AppAuthResult.unlocked);
+    await settle(tester, 4);
+
+    expect(tester.takeException(), isNull);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool(kAppLockEnabledKey), isTrue);
+  });
+
   testWidgets('turns on only after the user proves who they are', (tester) async {
     final auth = FakeAuthenticator(results: [AppAuthResult.notUnlocked, AppAuthResult.unlocked]);
     await openSettings(tester, auth);

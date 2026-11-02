@@ -19,9 +19,12 @@ import 'people_repository.dart';
 const settleUpReminderKind = 'settle_up';
 
 class GroupSummary {
-  const GroupSummary({required this.group, required this.members, required this.myNetMinor, required this.totalSpentMinor});
+  const GroupSummary({required this.group, required this.members, required this.myNetMinor, required this.totalSpentMinor, this.balances = const GroupBalances(net: {}, suggested: [], pairwise: [])});
   final Group group;
   final List<Member> members;
+
+  /// The group's balances, for settling with one person across groups.
+  final GroupBalances balances;
 
   /// Positive: others owe me. Negative: I owe.
   final int myNetMinor;
@@ -321,6 +324,7 @@ class GroupsRepository {
       members: members,
       myNetMinor: me == null ? 0 : balances.net[me.id] ?? 0,
       totalSpentMinor: entries.fold(0, (sum, e) => sum + e.$1.amountMinor),
+      balances: balances,
     );
   }
 
@@ -467,6 +471,27 @@ class GroupsRepository {
     return id;
   }
 
+  /// Records several payments, each in its own group, in one transaction
+  /// (settling everything with one person). Returns their ids for Undo.
+  Future<List<String>> addSettlements(
+    List<({String groupId, Transfer transfer})> payments, {
+    DateTime? occurredAt,
+    String note = '',
+    String method = 'cash',
+  }) =>
+      db.transaction(() async => [
+            for (final payment in payments)
+              await addSettlement(
+                groupId: payment.groupId,
+                fromMemberId: payment.transfer.from,
+                toMemberId: payment.transfer.to,
+                amountMinor: payment.transfer.amountMinor,
+                occurredAt: occurredAt,
+                note: note,
+                method: method,
+              ),
+          ]);
+
   /// Edits a recorded payment in place; every field is rewritten so the row
   /// mirrors the sheet exactly.
   Future<void> updateSettlement({
@@ -493,6 +518,13 @@ class GroupsRepository {
       });
 
   Future<void> deleteSettlement(String id) => _setSettlementDeleted(id, DateTime.now());
+
+  /// Deletes several payments at once (Undo of [addSettlements]).
+  Future<void> deleteSettlements(Iterable<String> ids) => db.transaction(() async {
+        for (final id in ids) {
+          await deleteSettlement(id);
+        }
+      });
 
   /// Brings back a deleted payment; does nothing if it is live or its group
   /// is deleted.

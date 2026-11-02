@@ -4842,4 +4842,112 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get udhaarRecordAction => 'उधार लिखें';
+
+  @override
+  String settleWithTitle(String name) {
+    return '$name के साथ हिसाब चुकता करें';
+  }
+
+  @override
+  String get settleWithThisGroup => 'यह ग्रुप';
+
+  @override
+  String get settleWithAllGroups => 'सभी ग्रुप';
+
+  @override
+  String settleWithTheyOwe(String name) {
+    return '$name पर आपका बकाया';
+  }
+
+  @override
+  String settleWithIOwe(String name) {
+    return 'आप पर $name का बकाया';
+  }
+
+  @override
+  String settleWithTotalTheyOwe(String name, String amount) {
+    return 'कुल मिलाकर $name पर आपके $amount बकाया';
+  }
+
+  @override
+  String settleWithTotalIOwe(String name, String amount) {
+    return 'कुल मिलाकर आप पर $name के $amount बकाया';
+  }
+
+  @override
+  String settleWithEvensOut(String symbol) {
+    return '$symbol वाले ग्रुप बराबर हो जाते हैं: कोई पैसा नहीं देना';
+  }
+
+  @override
+  String settleWithSquare(String name) {
+    return 'आपका और $name का हिसाब बराबर है।';
+  }
+
+  @override
+  String settleWithSquareOthers(String name) {
+    return 'इस ग्रुप में $name का बैलेंस अभी बाकी है, पर आपसे नहीं, दूसरों से: हिसाब चुकता करें देखें।';
+  }
+
+  @override
+  String settleWithExplain(String name) {
+    return 'हर ग्रुप में एक भुगतान दर्ज होगा ताकि $name के साथ हर बैलेंस शून्य हो जाए। भुगतान खर्च नहीं हैं।';
+  }
+
+  @override
+  String settleWithAction(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count भुगतान दर्ज करें',
+      one: '1 भुगतान दर्ज करें',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settleWithRecorded(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ग्रुप',
+      one: '1 ग्रुप',
+    );
+    return '$name के साथ $_temp0 में हिसाब चुकता हुआ';
+  }
+
+  @override
+  String settleWithMessageIntro(String name) {
+    return 'नमस्ते $name, हमारा हिसाब:';
+  }
+
+  @override
+  String settleWithMessageOwesMe(String group, String amount) {
+    return '$group: आप पर मेरे $amount बकाया';
+  }
+
+  @override
+  String settleWithMessageIOwe(String group, String amount) {
+    return '$group: मुझ पर आपके $amount बकाया';
+  }
+
+  @override
+  String settleWithMessageTotalOwesMe(String amount) {
+    return 'कुल मिलाकर, आप पर मेरे $amount बकाया।';
+  }
+
+  @override
+  String settleWithMessageTotalIOwe(String amount) {
+    return 'कुल मिलाकर, मुझ पर आपके $amount बकाया।';
+  }
+
+  @override
+  String get settleWithPersonTile => 'एक व्यक्ति के साथ हिसाब चुकता करें';
+
+  @override
+  String get settleWithPersonTileHint =>
+      'आपके और उनके बीच का सब कुछ, यहाँ या सभी ग्रुप में';
+
+  @override
+  String get settleWithPickPerson => 'किसके साथ हिसाब चुकता कर रहे हैं?';
 }

@@ -344,24 +344,32 @@ class _EmptyRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    return Row(
-      children: [
-        Expanded(child: Text(l10n.heroEmptyCaption, style: theme.textTheme.bodyMedium?.copyWith(color: foreground.withValues(alpha: 0.85)))),
-        const SizedBox(width: 8),
-        // A plain button rather than a chip: the app-wide chip theme pins the
-        // fill to `surface`, which would wash the label out on the gradient.
-        FilledButton(
-          onPressed: () => context.push('/entry'),
-          style: FilledButton.styleFrom(
-            backgroundColor: foreground.withValues(alpha: 0.16),
-            foregroundColor: foreground,
-            minimumSize: const Size(0, 40),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            textStyle: theme.textTheme.labelLarge,
-          ),
-          child: Text(l10n.addFirstEntry),
-        ),
-      ],
+    final caption = Text(l10n.heroEmptyCaption, style: theme.textTheme.bodyMedium?.copyWith(color: foreground.withValues(alpha: 0.85)));
+    // A plain button rather than a chip: the app-wide chip theme pins the
+    // fill to `surface`, which would wash the label out on the gradient.
+    final button = FilledButton(
+      onPressed: () => context.push('/entry'),
+      style: FilledButton.styleFrom(
+        backgroundColor: foreground.withValues(alpha: 0.16),
+        foregroundColor: foreground,
+        minimumSize: const Size(0, 40),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        textStyle: theme.textTheme.labelLarge,
+      ),
+      child: Text(l10n.addFirstEntry),
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) => stacksEmptyHeroRow(constraints.maxWidth, MediaQuery.textScalerOf(context).scale(1))
+          ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [caption, const SizedBox(height: 8), button])
+          : Row(children: [Expanded(child: caption), const SizedBox(width: 8), button]),
     );
   }
 }
+
+/// Logical width the empty hero's caption and button need side by side at
+/// the default text size.
+const double kEmptyHeroRowWidth = 280;
+
+/// Whether the empty hero puts its button under the caption: with large text
+/// on a narrow phone the button would leave the caption a sliver a letter wide.
+bool stacksEmptyHeroRow(double maxWidth, double textScale) => maxWidth < kEmptyHeroRowWidth * textScale;

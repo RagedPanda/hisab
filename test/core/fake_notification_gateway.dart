@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:hisab/core/notifications/notification_gateway.dart';
 
 /// In-memory [NotificationGateway]: records what would be posted.
@@ -81,4 +83,17 @@ class FakeNotificationGateway implements NotificationGateway {
   /// Alerts posted for [payload], earliest first.
   List<AlertRequest> alertsFor(String payload) =>
       scheduled.values.where((request) => request.payload == payload).toList()..sort((a, b) => a.fireAt.compareTo(b.fireAt));
+}
+
+/// Holds the permission prompt open until the test completes [release], so a
+/// test can close the screen that asked while it waits.
+class HeldPermissionGateway extends FakeNotificationGateway {
+  HeldPermissionGateway(this.release) : super(notificationsAllowed: false);
+  final Completer<void> release;
+
+  @override
+  Future<bool> requestPermission() async {
+    await release.future;
+    return super.requestPermission();
+  }
 }

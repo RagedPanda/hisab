@@ -134,7 +134,7 @@ void main() {
 
   testWidgets('closing the screen while the permission prompt is up does not throw', (tester) async {
     final released = Completer<void>();
-    final gateway = _HeldPermissionGateway(released);
+    final gateway = HeldPermissionGateway(released);
     await _pumpSalary(tester, gateway: gateway, prefsValues: {'salaryReminderEnabled': false});
     await _reveal(tester, 'salaryReminderSwitch');
     await tester.tap(find.byKey(const Key('salaryReminderSwitch')));
@@ -227,16 +227,4 @@ void main() {
       expect(lines.subtitle, english.salaryNextExpected('30 Dec 2026'));
     });
   });
-}
-
-/// Holds the permission prompt open until the test lets it go.
-class _HeldPermissionGateway extends FakeNotificationGateway {
-  _HeldPermissionGateway(this.release) : super(notificationsAllowed: false);
-  final Completer<void> release;
-
-  @override
-  Future<bool> requestPermission() async {
-    await release.future;
-    return super.requestPermission();
-  }
 }

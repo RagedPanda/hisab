@@ -82,7 +82,7 @@ class ShortcutsScreen extends ConsumerWidget {
   Future<void> _setNotification(BuildContext context, WidgetRef ref, bool enabled) async {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = context.l10n;
-    if (await setAddExpenseNotification(ref, enabled)) return;
+    if (await setAddExpenseNotification(ProviderScope.containerOf(context, listen: false), enabled)) return;
     showActionSnackBar(messenger, message: l10n.addExpenseNotificationBlocked, actionLabel: l10n.settings, onAction: () => openAppSettings());
   }
 

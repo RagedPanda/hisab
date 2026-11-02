@@ -27,11 +27,12 @@ NotificationFacts notificationFactsOf(WidgetRef ref) {
 /// Turns [kind] on or off and brings what is posted in line straight away.
 /// Turning one on asks for the notification permission when it is missing.
 Future<void> setNotificationKind(WidgetRef ref, NotificationKind kind, bool on) async {
+  final container = ProviderScope.containerOf(ref.context, listen: false);
   // The Add expense shortcut asks itself, and stays off without access.
-  if (on && kind != NotificationKind.addExpenseShortcut) await ensureSalaryNotificationPermission(ProviderScope.containerOf(ref.context, listen: false));
+  if (on && kind != NotificationKind.addExpenseShortcut) await ensureSalaryNotificationPermission(container);
   switch (kind) {
     case NotificationKind.addExpenseShortcut:
-      await setAddExpenseNotification(ref, on);
+      await setAddExpenseNotification(container, on);
     case NotificationKind.salary:
       final salary = ref.read(salarySettingsProvider);
       await ref.read(salarySettingsProvider.notifier).save(salary.copyWith(reminderEnabled: on));

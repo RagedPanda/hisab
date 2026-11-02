@@ -9,6 +9,7 @@ import '../reminders/reminder_actions.dart';
 import '../salary/salary_providers.dart';
 import '../salary/salary_reminder.dart' show kSalaryLocation;
 import '../shell/widgets/common.dart';
+import '../shell/widgets/tile_group.dart';
 import '../shortcuts/launcher_sync.dart' show launcherChannelProvider;
 import 'notification_settings_actions.dart';
 
@@ -41,6 +42,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
           if (allowed == false)
             Card(
               key: const Key('notificationsBlocked'),
+              margin: const EdgeInsets.only(bottom: 12),
               child: ListTile(
                 leading: const Icon(Icons.notifications_off_outlined),
                 title: Text(l10n.notificationsBlocked),
@@ -68,6 +70,7 @@ class _KindCard extends ConsumerWidget {
     final salaryMissing = kind == NotificationKind.salary && !ref.watch(salarySettingsProvider).isSetUp;
     return Card(
       key: Key('notificationKind-${kind.name}'),
+      margin: const EdgeInsets.only(bottom: 12),
       child: Column(children: [
         SwitchListTile(
           secondary: Icon(labels.icon),
@@ -82,7 +85,7 @@ class _KindCard extends ConsumerWidget {
             leading: const SizedBox(width: 24),
             title: Text(l10n.eveningSummaryTime),
             trailing: SettingValue(_timeLabel(context, prefs.eveningSummaryMinute)),
-            visualDensity: VisualDensity.compact,
+            visualDensity: kCompactRowDensity,
             onTap: () async {
               final minute = prefs.eveningSummaryMinute;
               final container = ProviderScope.containerOf(context, listen: false);

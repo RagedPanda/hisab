@@ -34,6 +34,7 @@ class ShortcutsScreen extends ConsumerWidget {
               onChanged: (enabled) => _setNotification(context, ref, enabled),
             ),
           ),
+          const SizedBox(height: 12),
           Card(
             child: ListTile(
               key: const Key('shortcuts.tile'),
@@ -44,6 +45,7 @@ class ShortcutsScreen extends ConsumerWidget {
               onTap: () => _addTile(context, ref),
             ),
           ),
+          const SizedBox(height: 12),
           Card(
             child: Column(children: [
               ListTile(

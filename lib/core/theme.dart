@@ -54,6 +54,12 @@ extension MoneyText on TextStyle {
   TextStyle get tabular => copyWith(fontFeatures: kTabularFigures);
 }
 
+/// Cards stand clearly off the page in both themes so grouped rows read as
+/// one block: white on the soft grey-teal page in light, and two tonal steps
+/// above the near-black page in dark (P2-21; one step was too faint).
+Color cardColor(ColorScheme scheme) =>
+    scheme.brightness == Brightness.dark ? scheme.surfaceContainerHigh : scheme.surfaceContainerLowest;
+
 ThemeData buildTheme(Brightness brightness) {
   final scheme = ColorScheme.fromSeed(
     seedColor: kSeedColor,
@@ -73,8 +79,7 @@ ThemeData buildTheme(Brightness brightness) {
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      // One step above the scaffold in dark mode so cards keep their edges (P2-21).
-      color: isDark ? scheme.surfaceContainer : scheme.surfaceContainerLow,
+      color: cardColor(scheme),
     ),
     appBarTheme: AppBarTheme(
       centerTitle: false,
@@ -90,7 +95,8 @@ ThemeData buildTheme(Brightness brightness) {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: scheme.surfaceContainerHigh,
+      // A step past the card in dark so a field inside a card keeps its shape.
+      fillColor: isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerHigh,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
     ),
     bottomSheetTheme: BottomSheetThemeData(backgroundColor: scheme.surface, surfaceTintColor: Colors.transparent),

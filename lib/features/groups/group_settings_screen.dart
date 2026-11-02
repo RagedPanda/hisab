@@ -11,6 +11,7 @@ import '../../domain/split/group_settings.dart';
 import '../../domain/split/split_calculator.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import '../shell/widgets/tile_group.dart';
 import '../split/split_editor.dart';
 import 'group_actions.dart';
 import 'group_detail_screen.dart';
@@ -152,35 +153,33 @@ class GroupSettingsScreen extends ConsumerWidget {
             ),
           ),
           SectionHeader(l10n.groupSettingsManage),
-          Card(
-            child: Column(children: [
-              if (group.archivedAt == null)
-                ListTile(
-                  leading: const Icon(Icons.archive_outlined),
-                  title: Text(l10n.groupArchive),
-                  onTap: () => confirmArchiveGroup(context, ref, detail),
-                )
-              else
-                ListTile(
-                  leading: const Icon(Icons.unarchive_outlined),
-                  title: Text(l10n.groupUnarchive),
-                  onTap: () => repo.unarchiveGroup(group.id),
-                ),
-              if (detail.me != null)
-                ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: Text(l10n.groupLeave),
-                  onTap: () => confirmLeaveGroup(context, ref, detail),
-                ),
+          TileGroup(children: [
+            if (group.archivedAt == null)
               ListTile(
-                leading: Icon(Icons.delete_outline, color: theme.colorScheme.error),
-                title: Text(l10n.deleteGroup, style: TextStyle(color: theme.colorScheme.error)),
-                onTap: () async {
-                  if (await confirmDeleteGroup(context, ref, detail) && context.mounted) context.go('/groups');
-                },
+                leading: const Icon(Icons.archive_outlined),
+                title: Text(l10n.groupArchive),
+                onTap: () => confirmArchiveGroup(context, ref, detail),
+              )
+            else
+              ListTile(
+                leading: const Icon(Icons.unarchive_outlined),
+                title: Text(l10n.groupUnarchive),
+                onTap: () => repo.unarchiveGroup(group.id),
               ),
-            ]),
-          ),
+            if (detail.me != null)
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: Text(l10n.groupLeave),
+                onTap: () => confirmLeaveGroup(context, ref, detail),
+              ),
+            ListTile(
+              leading: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+              title: Text(l10n.deleteGroup, style: TextStyle(color: theme.colorScheme.error)),
+              onTap: () async {
+                if (await confirmDeleteGroup(context, ref, detail) && context.mounted) context.go('/groups');
+              },
+            ),
+          ]),
         ],
       ),
     );

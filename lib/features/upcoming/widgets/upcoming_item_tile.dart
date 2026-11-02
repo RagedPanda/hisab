@@ -44,7 +44,7 @@ class UpcomingItemTile extends ConsumerWidget {
     return ListTile(
       onTap: onTap,
       leading: CircleAvatar(
-        backgroundColor: item.isOverdue ? scheme.errorContainer : scheme.surfaceContainerHigh,
+        backgroundColor: item.isOverdue ? scheme.errorContainer : scheme.surfaceContainerHighest,
         foregroundColor: item.isOverdue ? scheme.onErrorContainer : scheme.onSurfaceVariant,
         child: Icon(upcomingSourceIcon(item.source), size: 20),
       ),

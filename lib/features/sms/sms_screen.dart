@@ -9,6 +9,7 @@ import '../../data/sms/sms_channel.dart';
 import '../../data/sms/sms_ingest_service.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import '../shell/widgets/tile_group.dart';
 import 'widgets/sms_review_card.dart';
 
 class SmsScreen extends ConsumerStatefulWidget {
@@ -119,52 +120,54 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [
-          Card(
-            child: Column(children: [
-              SwitchListTile(
-                title: Text(l10n.readBankSmsAuto),
-                subtitle: Text(supported ? l10n.smsAndroidOnly : l10n.smsNotOnIos),
-                value: settings.smsEnabled && supported,
-                onChanged: supported ? _toggleSms : null,
-              ),
-              SwitchListTile(
-                title: Text(l10n.smsAutoAddTitle),
-                subtitle: Text(l10n.smsAutoAddHelp),
-                value: settings.smsAutoAdd,
-                onChanged: (v) => ref.read(settingsProvider.notifier).update((s) => s.copyWith(smsAutoAdd: v, smsAutoAddChosen: true)),
-              ),
-              if (supported && settings.smsEnabled)
-                ListTile(
-                  leading: _busy ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.refresh),
-                  title: Text(l10n.scanInboxNow),
-                  subtitle: Text(l10n.scanInboxHelp),
-                  onTap: _busy ? null : _scan,
-                ),
+          TileGroup(indent: 16, children: [
+            SwitchListTile(
+              title: Text(l10n.readBankSmsAuto),
+              subtitle: Text(supported ? l10n.smsAndroidOnly : l10n.smsNotOnIos),
+              value: settings.smsEnabled && supported,
+              onChanged: supported ? _toggleSms : null,
+            ),
+            SwitchListTile(
+              title: Text(l10n.smsAutoAddTitle),
+              subtitle: Text(l10n.smsAutoAddHelp),
+              value: settings.smsAutoAdd,
+              onChanged: (v) => ref.read(settingsProvider.notifier).update((s) => s.copyWith(smsAutoAdd: v, smsAutoAddChosen: true)),
+            ),
+          ]),
+          const SizedBox(height: 12),
+          // Rows with icons get their own card so the dividers sit at their title edge.
+          TileGroup(children: [
+            if (supported && settings.smsEnabled)
               ListTile(
-                leading: const Icon(Icons.content_paste),
-                title: Text(l10n.pasteSms),
-                subtitle: Text(l10n.pasteSmsHelp),
-                onTap: () async {
-                  final text = await promptText(context, title: l10n.pasteBankSms, hint: l10n.pasteBankSmsHint);
-                  if (text != null && text.isNotEmpty) await _ingestText(text);
-                },
+                leading: _busy ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.refresh),
+                title: Text(l10n.scanInboxNow),
+                subtitle: Text(l10n.scanInboxHelp),
+                onTap: _busy ? null : _scan,
               ),
-              ListTile(
-                leading: const Icon(Icons.history),
-                title: Text(l10n.smsHistoryTitle),
-                subtitle: Text(l10n.smsHistoryHelp),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/sms/history'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.person_search_outlined),
-                title: Text(l10n.smsPayeesTitle),
-                subtitle: Text(l10n.smsPayeesHelp),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/sms/payees'),
-              ),
-            ]),
-          ),
+            ListTile(
+              leading: const Icon(Icons.content_paste),
+              title: Text(l10n.pasteSms),
+              subtitle: Text(l10n.pasteSmsHelp),
+              onTap: () async {
+                final text = await promptText(context, title: l10n.pasteBankSms, hint: l10n.pasteBankSmsHint);
+                if (text != null && text.isNotEmpty) await _ingestText(text);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: Text(l10n.smsHistoryTitle),
+              subtitle: Text(l10n.smsHistoryHelp),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/sms/history'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_search_outlined),
+              title: Text(l10n.smsPayeesTitle),
+              subtitle: Text(l10n.smsPayeesHelp),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/sms/payees'),
+            ),
+          ]),
           if (_lastResult != null) Padding(padding: const EdgeInsets.all(12), child: Text(_lastResult!, style: Theme.of(context).textTheme.bodyMedium)),
           SectionHeader(l10n.toReview(pending.length)),
           if (pending.isEmpty)

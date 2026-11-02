@@ -8,6 +8,7 @@ import '../../domain/backup/scheduled_backup.dart';
 import '../../l10n/l10n.dart';
 import '../app_lock/app_lock_providers.dart';
 import '../shell/widgets/common.dart';
+import '../shell/widgets/tile_group.dart';
 import 'backup_actions.dart';
 import 'drive_backup_providers.dart';
 import 'drive_backup_screen.dart';
@@ -202,69 +203,63 @@ class _ScheduledBackupScreenState extends ConsumerState<ScheduledBackupScreen> {
               ),
             ),
           ),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  key: const Key('backupFolderTile'),
-                  enabled: !_busy,
-                  leading: const Icon(Icons.folder_outlined),
-                  title: Text(choices.hasFolder ? choices.folderName ?? l10n.backupFolder : l10n.backupFolderNotChosen),
-                  subtitle: choices.hasFolder ? status(ScheduledBackupTarget.folder) : Text(l10n.backupFolderHelp),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: _chooseFolder,
-                ),
-                ListTile(
-                  key: const Key('backupsKeptTile'),
-                  enabled: !_busy,
-                  leading: const Icon(Icons.layers_outlined),
-                  title: Text(l10n.backupsKept),
-                  subtitle: Text(l10n.backupsKeptHelp),
-                  trailing: SettingValue(l10n.backupsKeptValue(choices.keep)),
-                  onTap: () => _chooseKeep(choices.keep),
-                ),
-                if (isDriveBackupSupported)
-                  SwitchListTile(
-                    key: const Key('backupIncludeDrive'),
-                    secondary: const Icon(Icons.cloud_upload_outlined),
-                    title: Text(l10n.backupIncludeDrive),
-                    subtitle: driveConnected
-                        ? (choices.includeDrive ? status(ScheduledBackupTarget.drive) : Text(l10n.backupIncludeDriveHelp))
-                        : Text(l10n.backupIncludeDriveNotConnected),
-                    value: choices.includeDrive && driveConnected,
-                    onChanged: _busy
-                        ? null
-                        : driveConnected
-                            ? (value) => _choices.save(choices.copyWith(includeDrive: value))
-                            : (_) => context.push(kDriveBackupLocation),
-                  ),
-              ],
+          const SizedBox(height: 12),
+          TileGroup(children: [
+            ListTile(
+              key: const Key('backupFolderTile'),
+              enabled: !_busy,
+              leading: const Icon(Icons.folder_outlined),
+              title: Text(choices.hasFolder ? choices.folderName ?? l10n.backupFolder : l10n.backupFolderNotChosen),
+              subtitle: choices.hasFolder ? status(ScheduledBackupTarget.folder) : Text(l10n.backupFolderHelp),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _chooseFolder,
             ),
-          ),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  key: const Key('scheduledBackupPassphrase'),
-                  enabled: !_busy,
-                  leading: Icon(hasPassphrase ? Icons.lock_outline : Icons.lock_open_outlined),
-                  title: Text(l10n.backupPassphrase),
-                  subtitle: Text(
-                    hasPassphrase ? l10n.scheduledBackupPassphraseSaved : l10n.scheduledBackupPassphraseMissing,
-                    style: hasPassphrase || !choices.isOn ? null : TextStyle(color: theme.colorScheme.error),
-                  ),
-                  onTap: _setPassphrase,
-                ),
-                ListTile(
-                  key: const Key('scheduledBackupNow'),
-                  enabled: !_busy,
-                  leading: const Icon(Icons.backup_outlined),
-                  title: Text(l10n.driveBackUpNow),
-                  onTap: _backUpNow,
-                ),
-              ],
+            ListTile(
+              key: const Key('backupsKeptTile'),
+              enabled: !_busy,
+              leading: const Icon(Icons.layers_outlined),
+              title: Text(l10n.backupsKept),
+              subtitle: Text(l10n.backupsKeptHelp),
+              trailing: SettingValue(l10n.backupsKeptValue(choices.keep)),
+              onTap: () => _chooseKeep(choices.keep),
             ),
-          ),
+            if (isDriveBackupSupported)
+              SwitchListTile(
+                key: const Key('backupIncludeDrive'),
+                secondary: const Icon(Icons.cloud_upload_outlined),
+                title: Text(l10n.backupIncludeDrive),
+                subtitle: driveConnected
+                    ? (choices.includeDrive ? status(ScheduledBackupTarget.drive) : Text(l10n.backupIncludeDriveHelp))
+                    : Text(l10n.backupIncludeDriveNotConnected),
+                value: choices.includeDrive && driveConnected,
+                onChanged: _busy
+                    ? null
+                    : driveConnected
+                        ? (value) => _choices.save(choices.copyWith(includeDrive: value))
+                        : (_) => context.push(kDriveBackupLocation),
+              ),
+          ]),
+          const SizedBox(height: 12),
+          TileGroup(children: [
+            ListTile(
+              key: const Key('scheduledBackupPassphrase'),
+              enabled: !_busy,
+              leading: Icon(hasPassphrase ? Icons.lock_outline : Icons.lock_open_outlined),
+              title: Text(l10n.backupPassphrase),
+              subtitle: Text(
+                hasPassphrase ? l10n.scheduledBackupPassphraseSaved : l10n.scheduledBackupPassphraseMissing,
+                style: hasPassphrase || !choices.isOn ? null : TextStyle(color: theme.colorScheme.error),
+              ),
+              onTap: _setPassphrase,
+            ),
+            ListTile(
+              key: const Key('scheduledBackupNow'),
+              enabled: !_busy,
+              leading: const Icon(Icons.backup_outlined),
+              title: Text(l10n.driveBackUpNow),
+              onTap: _backUpNow,
+            ),
+          ]),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: Text(l10n.scheduledBackupPassphraseNote, style: theme.textTheme.bodySmall),

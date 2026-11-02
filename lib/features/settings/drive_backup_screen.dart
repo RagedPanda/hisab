@@ -8,6 +8,7 @@ import '../../data/backup/drive_backup_service.dart';
 import '../../data/backup/drive_backup_store.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import '../shell/widgets/tile_group.dart';
 import 'backup_actions.dart';
 import 'drive_backup_providers.dart';
 
@@ -254,49 +255,47 @@ class _DriveConnectedViewState extends ConsumerState<DriveConnectedView> with _D
             subtitle: Text(driveLastBackupLabel(l10n, lastBackup, locale: locale), key: const Key('driveLastBackup')),
           ),
         ),
-        Card(
-          child: Column(
-            children: [
-              ListTile(
-                key: const Key('driveBackUpNow'),
-                enabled: !busy,
-                leading: const Icon(Icons.cloud_upload_outlined),
-                title: Text(l10n.driveBackUpNow),
-                subtitle: Text(l10n.driveBackUpNowHelp),
-                onTap: _backUp,
-              ),
-              ListTile(
-                key: const Key('driveRestore'),
-                enabled: !busy,
-                leading: const Icon(Icons.cloud_download_outlined),
-                title: Text(l10n.driveRestore),
-                subtitle: Text(l10n.restoreBackupHelp),
-                onTap: _restore,
-              ),
-            ],
-          ),
+        const SizedBox(height: 12),
+        TileGroup(
+          children: [
+            ListTile(
+              key: const Key('driveBackUpNow'),
+              enabled: !busy,
+              leading: const Icon(Icons.cloud_upload_outlined),
+              title: Text(l10n.driveBackUpNow),
+              subtitle: Text(l10n.driveBackUpNowHelp),
+              onTap: _backUp,
+            ),
+            ListTile(
+              key: const Key('driveRestore'),
+              enabled: !busy,
+              leading: const Icon(Icons.cloud_download_outlined),
+              title: Text(l10n.driveRestore),
+              subtitle: Text(l10n.restoreBackupHelp),
+              onTap: _restore,
+            ),
+          ],
         ),
-        Card(
-          child: Column(
-            children: [
-              ListTile(
-                key: const Key('driveDisconnect'),
-                enabled: !busy,
-                leading: const Icon(Icons.link_off),
-                title: Text(l10n.driveDisconnect),
-                subtitle: Text(l10n.driveDisconnectHelp),
-                onTap: _disconnect,
-              ),
-              ListTile(
-                key: const Key('driveDeleteCopy'),
-                enabled: !busy,
-                leading: const Icon(Icons.delete_outline),
-                title: Text(l10n.driveDeleteCopy),
-                subtitle: Text(l10n.driveDeleteCopyHelp),
-                onTap: _deleteCopy,
-              ),
-            ],
-          ),
+        const SizedBox(height: 12),
+        TileGroup(
+          children: [
+            ListTile(
+              key: const Key('driveDisconnect'),
+              enabled: !busy,
+              leading: const Icon(Icons.link_off),
+              title: Text(l10n.driveDisconnect),
+              subtitle: Text(l10n.driveDisconnectHelp),
+              onTap: _disconnect,
+            ),
+            ListTile(
+              key: const Key('driveDeleteCopy'),
+              enabled: !busy,
+              leading: const Icon(Icons.delete_outline),
+              title: Text(l10n.driveDeleteCopy),
+              subtitle: Text(l10n.driveDeleteCopyHelp),
+              onTap: _deleteCopy,
+            ),
+          ],
         ),
       ],
     );

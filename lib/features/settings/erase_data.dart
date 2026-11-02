@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -45,6 +47,21 @@ Future<void> eraseEverything(ProviderContainer container) async {
   await container.read(scheduledBackupChoicesProvider.notifier).syncBackgroundJob();
   await container.read(reminderSchedulerProvider).rescheduleAll();
   await container.read(salaryAlertSinkProvider).apply(const CancelSalaryNotification());
+}
+
+/// Completes once a currency is confirmed: at once when it already is, else
+/// when onboarding after a fresh start saves one.
+Future<void> untilCurrencyConfirmed(ProviderContainer container) {
+  final currencyConfirmed = settingsProvider.select((settings) => settings.currencyConfirmed);
+  if (container.read(currencyConfirmed)) return Future.value();
+  final confirmed = Completer<void>();
+  late final ProviderSubscription<bool> subscription;
+  subscription = container.listen(currencyConfirmed, (_, isConfirmed) {
+    if (!isConfirmed) return;
+    subscription.close();
+    confirmed.complete();
+  });
+  return confirmed.future;
 }
 
 class _EraseConfirmDialog extends StatefulWidget {

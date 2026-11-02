@@ -16,7 +16,7 @@ Future<bool> setAddExpenseNotification(WidgetRef ref, bool enabled) async {
 }
 
 Future<bool> _notificationsAllowedAfterAsking(WidgetRef ref) async {
-  await ensureSalaryNotificationPermission(ref);
+  await ensureSalaryNotificationPermission(ProviderScope.containerOf(ref.context, listen: false));
   try {
     return (await ref.read(notificationServiceProvider).checkPermission()).notificationsAllowed;
   } catch (_) {

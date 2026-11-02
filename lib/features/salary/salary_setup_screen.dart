@@ -43,15 +43,17 @@ String salaryShiftLabel(BuildContext context, SalaryShift shift) => switch (shif
 
 /// Asks for the notification permission (the Android 13+ prompt) unless it
 /// is already granted, so the salary reminder can actually be shown. Never
-/// throws: saving the salary must not depend on the prompt.
-Future<void> ensureSalaryNotificationPermission(WidgetRef ref) async {
+/// throws: saving the salary must not depend on the prompt. Takes the
+/// [container] rather than a widget's ref: the screen may close while the
+/// prompt is up.
+Future<void> ensureSalaryNotificationPermission(ProviderContainer container) async {
   try {
-    final notifications = ref.read(notificationServiceProvider);
+    final notifications = container.read(notificationServiceProvider);
     if (!(await notifications.checkPermission()).notificationsAllowed) await notifications.requestPermission();
   } catch (error) {
     debugPrint('Hisab: notification permission not requested: $error');
   }
-  ref.invalidate(notificationPermissionProvider);
+  container.invalidate(notificationPermissionProvider);
 }
 
 /// Settings > Money > Salary: amount, account, day, weekend shift and the
@@ -98,7 +100,7 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
     final settings = ref.read(settingsProvider);
     final notifier = ref.read(salarySettingsProvider.notifier);
     final now = DateTime.now();
-    if (draft.reminderEnabled) await ensureSalaryNotificationPermission(ref);
+    if (draft.reminderEnabled) await ensureSalaryNotificationPermission(container);
     final saved = await container.read(salaryServiceProvider).saveSalaryRule(settings: draft.copyWith(amountMinor: parsedAmount), today: now, monthStartDay: settings.monthStartDay);
     await notifier.save(saved);
     if (!mounted) return;
@@ -119,7 +121,7 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
   /// Turning the reminder on asks for the permission it needs right away.
   Future<void> setReminderEnabled(bool enabled) async {
     setState(() => draft = draft.copyWith(reminderEnabled: enabled));
-    if (enabled) await ensureSalaryNotificationPermission(ref);
+    if (enabled) await ensureSalaryNotificationPermission(ProviderScope.containerOf(context, listen: false));
   }
 
   Future<void> remove() async {

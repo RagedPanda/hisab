@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -130,6 +132,22 @@ void main() {
     expect(gateway.permissionRequests, 1);
   });
 
+  testWidgets('closing the screen while the permission prompt is up does not throw', (tester) async {
+    final released = Completer<void>();
+    final gateway = _HeldPermissionGateway(released);
+    await _pumpSalary(tester, gateway: gateway, prefsValues: {'salaryReminderEnabled': false});
+    await _reveal(tester, 'salaryReminderSwitch');
+    await tester.tap(find.byKey(const Key('salaryReminderSwitch')));
+    await _settle(tester, 4);
+    appRouter.pop();
+    await _settle(tester);
+    expect(find.byType(SalarySetupScreen), findsNothing);
+    released.complete();
+    await _settle(tester);
+    expect(gateway.permissionRequests, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a declined month-start suggestion is not offered again for the rule, and Remove resets the form', (tester) async {
     final container = await _pumpSalary(tester, prefsValues: {'salaryDay': 25});
     await _enterAndSave(tester, '85000');
@@ -209,4 +227,16 @@ void main() {
       expect(lines.subtitle, english.salaryNextExpected('30 Dec 2026'));
     });
   });
+}
+
+/// Holds the permission prompt open until the test lets it go.
+class _HeldPermissionGateway extends FakeNotificationGateway {
+  _HeldPermissionGateway(this.release) : super(notificationsAllowed: false);
+  final Completer<void> release;
+
+  @override
+  Future<bool> requestPermission() async {
+    await release.future;
+    return super.requestPermission();
+  }
 }

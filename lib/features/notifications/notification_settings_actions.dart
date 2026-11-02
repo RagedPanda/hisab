@@ -28,7 +28,7 @@ NotificationFacts notificationFactsOf(WidgetRef ref) {
 /// Turning one on asks for the notification permission when it is missing.
 Future<void> setNotificationKind(WidgetRef ref, NotificationKind kind, bool on) async {
   // The Add expense shortcut asks itself, and stays off without access.
-  if (on && kind != NotificationKind.addExpenseShortcut) await ensureSalaryNotificationPermission(ref);
+  if (on && kind != NotificationKind.addExpenseShortcut) await ensureSalaryNotificationPermission(ProviderScope.containerOf(ref.context, listen: false));
   switch (kind) {
     case NotificationKind.addExpenseShortcut:
       await setAddExpenseNotification(ref, on);
@@ -53,7 +53,7 @@ Future<void> setEveningSummaryMinute(WidgetRef ref, int minuteOfDay) async {
 /// Posts a sample of [kind] now (asking for the permission first when
 /// needed). The evening summary sample shows today's real figures.
 Future<void> showNotificationSample(WidgetRef ref, NotificationKind kind) async {
-  await ensureSalaryNotificationPermission(ref);
+  await ensureSalaryNotificationPermission(ProviderScope.containerOf(ref.context, listen: false));
   final now = DateTime.now();
   final summary = kind == NotificationKind.eveningSummary
       ? await loadEveningSummary(ref.read, startOfDay(now))

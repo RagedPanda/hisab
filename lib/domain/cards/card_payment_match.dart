@@ -3,17 +3,77 @@
 /// once, as a transfer from the bank account to the card. Pure.
 library;
 
+import '../../data/db/database.dart';
+import 'card_sms_facts.dart';
+
 /// How far apart the two messages of one payment may be.
 const kCardPaymentMatchWindow = Duration(days: 3);
 
 /// Wording that names a card bill as the payee of a bank debit.
 final _cardBillHint = RegExp(
-  r'credit\s*card|card\s*(?:bill|dues|payment|a/c|account)|\bcred\b|cred\.?\s?club|\bcc\s*(?:bill|pay(?:ment)?)\b',
+  r'credit\s*card|card\s*(?:bill|dues|payment|a/c|account)|\bcred\b|cred\.?\s?club|\bcc\s*(?:bill|pay(?:ment)?)\b|billdesk\W{0,3}\w*\W{0,3}card\b',
   caseSensitive: false,
 );
 
 /// Whether [text] (a payee, note or bank SMS) says the money paid a card bill.
 bool hintsCardBillPayment(String text) => _cardBillHint.hasMatch(text);
+
+/// A debit card names a card but pays no card bill.
+final _debitCard = RegExp(r'debit\s*card', caseSensitive: false);
+
+/// Whether the bank debit SMS [body] pays a credit card bill, so it moves
+/// money to a card (a transfer) and is never spend.
+bool isCardBillDebitText(String body) => hintsCardBillPayment(body) && !_debitCard.hasMatch(body);
+
+/// Wording that names the card itself rather than who was paid.
+final _namesCard = RegExp(r'\bcard\b', caseSensitive: false);
+
+/// The payee worth keeping for a card bill debit whose counterparty is
+/// [counterparty]: a biller such as "CRED Club" stays, while the card
+/// itself ("Credit Card XX4521", "HDFC Credit Card bill") is no payee, the
+/// transfer's To account already names it.
+String? cardBillPayee(String? counterparty) => counterparty == null || _namesCard.hasMatch(counterparty) ? null : counterparty;
+
+/// The card digits a bank debit for a card bill names: "towards Credit Card
+/// XX4521", "CC ending 4521", "Card No. XXXX4521", "4xxx xxxx xxxx 4521".
+/// The bank account's own digits ("A/c XX7781") never count.
+final _billedCardDigits = [
+  RegExp(r'(?:credit\s*card|\bcc|\bcard)\s*(?:no\.?|number|a/c|account)?\s*(?:ending(?:\s*(?:with|in))?)?\s*[:\-]?\s*[xX*]+\s?(\d{4})\b', caseSensitive: false),
+  RegExp(r'(?:credit\s*card|\bcc|\bcard)\s*(?:no\.?|number)?\s*(?:ending(?:\s*(?:with|in))?)\s*[:\-]?\s*(\d{4})\b', caseSensitive: false),
+  RegExp(r'\b[0-9xX*]{4}[ -][xX*]{4}[ -][xX*]{4}[ -](\d{4})\b'),
+];
+
+/// The last 4 digits of the card a bank debit for a card bill pays, or null
+/// when it names none.
+String? billedCardLast4(String text) {
+  for (final pattern in _billedCardDigits) {
+    final match = pattern.firstMatch(text);
+    if (match != null) return match.group(1);
+  }
+  return null;
+}
+
+/// The card a bank debit paying a card bill goes to, among [cards] (live
+/// accounts): the card with [cardLast4] when the SMS names digits (none if
+/// no card has them); otherwise the one card of [bank], else the only card
+/// there is. Null when the card cannot be told.
+String? cardForBillDebit(List<Account> cards, {required String? cardLast4, required String? bank}) {
+  if (cardLast4 != null) return matchingCardId(cards, bank: null, last4: cardLast4);
+  final onlyCards = [for (final card in cards) if (card.type == 'card') card];
+  return matchingCardId(onlyCards, bank: bank, last4: null) ?? (onlyCards.length == 1 ? onlyCards.single.id : null);
+}
+
+/// Whether an SMS card bill payment transfer still waits for the SMS of the
+/// other side: its own SMS is of the side that is not [missingCardSide]
+/// ([ownIsCardSide]: the card's "payment received", else the bank debit),
+/// and no SMS but its own ([ownSmsId]) and re-deliveries points at it.
+bool awaitsCardPaymentSide({
+  required bool missingCardSide,
+  required bool ownIsCardSide,
+  required String? ownSmsId,
+  required Iterable<({String id, bool isDuplicate})> pointing,
+}) =>
+    ownSmsId != null && ownIsCardSide != missingCardSide && pointing.every((row) => row.id == ownSmsId || row.isDuplicate);
 
 /// An entry that may be the other side of a card bill payment.
 class CardPaymentCandidate {

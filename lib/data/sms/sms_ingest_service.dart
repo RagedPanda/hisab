@@ -8,7 +8,6 @@ import '../../core/theme.dart';
 import '../../domain/accounts/default_account.dart';
 import '../../domain/cards/card_payment_match.dart';
 import '../../domain/cards/card_sms_facts.dart';
-import '../../domain/cards/card_summary.dart';
 import '../../domain/ledger/balance_effects.dart';
 import '../../domain/sms/bank_senders.dart';
 import '../../domain/sms/card_sms.dart';
@@ -25,6 +24,7 @@ import '../../domain/sms/sms_parser.dart';
 import '../../domain/sms/sms_transaction_key.dart';
 import '../db/database.dart';
 import '../repositories/accounts_repository.dart';
+import '../repositories/card_statement_balance.dart';
 import '../repositories/categories_repository.dart';
 import '../repositories/entries_repository.dart';
 import '../repositories/entry_removal.dart';
@@ -202,6 +202,9 @@ class SmsIngestService {
       return IngestStatus.added;
     }
 
+    // A bank debit paying a card bill is a transfer to the card, never spend.
+    if (_paysCardBill(parsed, message.body)) return _ingestCardBillDebit(id, message, parsed, payload, transactionKey, autoAdd: autoAdd);
+
     if (routeForSms(parsed: parsed, autoAddEnabled: autoAdd, possibleTransaction: true) != SmsRoute.autoAdd) {
       await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.pending, parsed: payload, transactionKey: transactionKey);
       return IngestStatus.pending;
@@ -291,6 +294,15 @@ class SmsIngestService {
       await smsLog.setStatus(row.id, SmsLogStatus.added, entryId: paidCard);
       return paidCard;
     }
+    if (_paysCardBill(parsed, row.body)) {
+      // Without a card to pay into, the user picks it in the editor.
+      final cardId = await _cardForBillDebit(parsed, row.body);
+      if (cardId == null) return null;
+      final entryId = await _addCardBillTransfer(row.id, parsed, cardId);
+      await smsLog.setStatus(row.id, SmsLogStatus.added, entryId: entryId);
+      await reminderLinker?.linkEntry(smsId: row.id, parsed: parsed, entryId: entryId);
+      return entryId;
+    }
     final account = await _ensureAccount(parsed);
     final entryId = await _createEntry(row.id, parsed, await categoryIdFor(parsed), account?.id);
     await _refreshStatementBalance(account?.id);
@@ -367,6 +379,10 @@ class SmsIngestService {
 
   static String? _payeeFor(ParsedTransaction parsed) => parsed.counterparty == null ? null : normalisePayee(parsed.counterparty!);
 
+  /// The payee of a card bill transfer: [_payeeFor] unless the SMS only
+  /// names the card being paid ([cardBillPayee]).
+  static String? _cardBillPayeeFor(ParsedTransaction parsed) => cardBillPayee(parsed.counterparty) == null ? null : _payeeFor(parsed);
+
   /// The account [parsed] belongs to: the one with its SMS key, or for a
   /// card SMS the card that fits its digits ([_findCard]).
   Future<Account?> _knownAccount(ParsedTransaction parsed) => parsed.isCreditCard
@@ -415,25 +431,11 @@ class SmsIngestService {
     return card.copyWith(smsKey: Value(key));
   }
 
-  /// What [cardId] owes counted from a statement of [statementMinor] on
-  /// [statementAt] and the entries since ([balanceSinceStatementMinor]).
-  Future<int> _balanceSinceStatement(String cardId, int statementMinor, DateTime statementAt) async => balanceSinceStatementMinor(
-        cardId: cardId,
-        statementMinor: statementMinor,
-        statementAt: statementAt,
-        movements: await entries.getAccountMovements(cardId, since: statementAt),
-      );
-
   /// Brings a card balance that follows its SMS statement
   /// ([balanceFollowsSmsStatement]) in line with the entries recorded since:
   /// SMS entries never move balances, so a card spend or bill payment read
   /// from SMS (or its undo) is counted here.
-  Future<void> _refreshStatementBalance(String? cardId) async {
-    final card = cardId == null ? null : await accounts.getById(cardId);
-    if (card == null || !balanceFollowsSmsStatement(card)) return;
-    final balance = await _balanceSinceStatement(card.id, card.lastStatementMinor!, card.lastStatementAt!);
-    if (balance != card.balanceMinor) await accounts.update(AccountsCompanion(id: Value(card.id), balanceMinor: Value(balance)));
-  }
+  Future<void> _refreshStatementBalance(String? cardId) => refreshStatementBalances(entries: entries, accounts: accounts, accountIds: [cardId]);
 
   /// The category a card bill payment transfer gets from [entry] (the entry
   /// it was before, if any): see [linkedCardPaymentCategoryId].
@@ -468,7 +470,7 @@ class SmsIngestService {
     if (fields != null) {
       // The statement sets what is owed unless a newer balance is on record.
       final setsBalance = takesSmsStatementBalance(balanceMinor: card.balanceMinor, balanceAsOf: card.balanceAsOf, receivedAt: statement.receivedAt);
-      final balance = setsBalance ? await _balanceSinceStatement(card.id, fields.lastStatementMinor, fields.lastStatementAt) : null;
+      final balance = setsBalance ? await balanceSinceStatement(entries, cardId: card.id, statementMinor: fields.lastStatementMinor, statementAt: fields.lastStatementAt) : null;
       await accounts.applySmsStatement(card.id, fields, balanceMinor: balance);
     }
     await smsLog.record(id: id, sender: message.sender, body: message.body, receivedAt: message.receivedAt, status: SmsLogStatus.added);
@@ -503,7 +505,7 @@ class SmsIngestService {
           transactionKey: transactionKey,
         );
 
-    final linked = card == null ? null : await _linkCardPaymentToBankDebit(payment, card.id);
+    final linked = card == null ? null : await _linkCardPaymentToBankSide(payment, card.id);
     if (linked != null) {
       await record(SmsLogStatus.added, entryId: linked);
       await _refreshStatementBalance(card!.id);
@@ -523,7 +525,7 @@ class SmsIngestService {
   Future<String?> _approveCardPayment(SmsLogData row, CardPaymentSms payment) async {
     final card = await _findCard(bank: payment.bank, last4: payment.cardLast4, key: payment.accountKey) ??
         await _createSmsAccount(bank: payment.bank, isCreditCard: true, last4: payment.cardLast4, key: payment.accountKey);
-    final entryId = await _linkCardPaymentToBankDebit(payment, card.id) ?? await _addCardPaymentTransfer(row.id, payment, card.id);
+    final entryId = await _linkCardPaymentToBankSide(payment, card.id) ?? await _addCardPaymentTransfer(row.id, payment, card.id);
     if (entryId != null) await smsLog.setStatus(row.id, SmsLogStatus.added, entryId: entryId);
     await _refreshStatementBalance(card.id);
     return entryId;
@@ -547,6 +549,38 @@ class SmsIngestService {
       smsId: smsId,
     ).copyWith(toAccountId: Value(cardId)));
     return id;
+  }
+
+  /// The bank's side of this card bill payment, already recorded: a transfer
+  /// from its debit SMS ([_linkCardPaymentToBankTransfer]), else a debit
+  /// recorded as an expense ([_linkCardPaymentToBankDebit]). Returns the
+  /// entry that now records the payment, or null.
+  Future<String?> _linkCardPaymentToBankSide(CardPaymentSms payment, String cardId) async =>
+      await _linkCardPaymentToBankTransfer(payment, cardId) ?? await _linkCardPaymentToBankDebit(payment, cardId);
+
+  /// Completes the transfer a bank debit SMS made for this card bill
+  /// ([_ingestCardBillDebit]), so the payment counts once. One made to
+  /// another card (a guess when the bank SMS named no digits) moves to
+  /// [cardId]: the card's own SMS knows which card was paid.
+  Future<String?> _linkCardPaymentToBankTransfer(CardPaymentSms payment, String cardId) async {
+    final transfers = await entries.smsCardPaymentsBetween(
+      amountMinor: payment.amountMinor,
+      from: payment.occurredAt.subtract(kCardPaymentMatchWindow),
+      to: payment.occurredAt.add(kCardPaymentMatchWindow),
+    );
+    final candidates = [
+      for (final transfer in transfers)
+        if (await _awaitsSide(transfer, cardSide: true))
+          CardPaymentCandidate(entryId: transfer.id, amountMinor: transfer.amountMinor, occurredAt: transfer.occurredAt, hintsCardBill: transfer.toAccountId == cardId),
+    ];
+    final match = pickCardPaymentMatch(candidates, amountMinor: payment.amountMinor, at: payment.occurredAt);
+    if (match == null) return null;
+    final transfer = transfers.firstWhere((entry) => entry.id == match.entryId);
+    if (transfer.toAccountId != cardId) {
+      await entries.setTransfer(transfer.id, toAccountId: cardId, categoryId: transfer.categoryId);
+      await _refreshStatementBalance(transfer.toAccountId);
+    }
+    return transfer.id;
   }
 
   /// Turns the bank debit that paid this card bill into the transfer to
@@ -593,7 +627,7 @@ class SmsIngestService {
     final hinted = hintsCardBillPayment(body);
     final candidates = [
       for (final payment in payments)
-        if (await _awaitsBankSide(payment))
+        if (await _awaitsSide(payment, cardSide: false))
           CardPaymentCandidate(entryId: payment.id, amountMinor: payment.amountMinor, occurredAt: payment.occurredAt, hintsCardBill: hinted),
     ];
     final match = pickCardPaymentMatch(candidates, amountMinor: parsed.amountMinor, at: parsed.occurredAt);
@@ -604,10 +638,79 @@ class SmsIngestService {
     return payment.id;
   }
 
-  /// Whether no SMS other than the card's own (and its re-deliveries) points
-  /// at the transfer [payment] yet.
-  Future<bool> _awaitsBankSide(Entry payment) async =>
-      (await smsLog.forEntry(payment.id)).every((row) => row.id == payment.smsId || row.status == SmsLogStatus.duplicate);
+  /// Whether the SMS card bill payment [payment] still waits for the SMS of
+  /// one side (the card's when [cardSide], else the bank's): see
+  /// [awaitsCardPaymentSide].
+  Future<bool> _awaitsSide(Entry payment, {required bool cardSide}) async {
+    final own = payment.smsId == null ? null : await smsLog.getById(payment.smsId!);
+    return awaitsCardPaymentSide(
+      missingCardSide: cardSide,
+      ownIsCardSide: isCardPaymentLog(own?.parsedJson),
+      ownSmsId: own?.id,
+      pointing: [for (final row in await smsLog.forEntry(payment.id)) (id: row.id, isDuplicate: row.status == SmsLogStatus.duplicate)],
+    );
+  }
+
+  /// Whether [parsed] is a bank debit paying a card bill ([isCardBillDebitText]).
+  static bool _paysCardBill(ParsedTransaction parsed, String body) => parsed.isDebit && !parsed.isCreditCard && isCardBillDebitText(normalizedSmsText(body));
+
+  /// The card the card bill debit [parsed] pays ([cardForBillDebit]).
+  Future<String?> _cardForBillDebit(ParsedTransaction parsed, String body) async =>
+      cardForBillDebit(await accounts.getAll(), cardLast4: billedCardLast4(normalizedSmsText(body)), bank: parsed.bank);
+
+  /// A bank debit paying a card bill: with auto-add on and the card known, a
+  /// transfer from the bank account to the card; otherwise it waits for
+  /// review, marked as a card bill so approving or editing it makes the
+  /// transfer. Either way it is never spend.
+  Future<IngestStatus> _ingestCardBillDebit(
+    String id,
+    RawSms message,
+    ParsedTransaction parsed,
+    Map<String, dynamic> payload,
+    String transactionKey, {
+    required bool autoAdd,
+  }) async {
+    final cardId = await _cardForBillDebit(parsed, message.body);
+    Future<void> record(String status, {String? entryId}) => smsLog.record(
+          id: id,
+          sender: message.sender,
+          body: message.body,
+          receivedAt: message.receivedAt,
+          status: status,
+          parsed: withCardBillDebit(payload, cardAccountId: cardId),
+          entryId: entryId,
+          transactionKey: transactionKey,
+        );
+    if (cardId == null || routeForSms(parsed: parsed, autoAddEnabled: autoAdd, possibleTransaction: true) != SmsRoute.autoAdd) {
+      await record(SmsLogStatus.pending);
+      return IngestStatus.pending;
+    }
+    final entryId = await _addCardBillTransfer(id, parsed, cardId);
+    await record(SmsLogStatus.added, entryId: entryId);
+    await reminderLinker?.linkEntry(smsId: id, parsed: parsed, entryId: entryId);
+    _autoAddedController.add(SmsAutoAdded(smsId: id, entryId: entryId, amountMinor: parsed.amountMinor, isDebit: true, payee: _cardBillPayeeFor(parsed)));
+    return IngestStatus.added;
+  }
+
+  /// A transfer from the bank account of [parsed] into [cardId].
+  Future<String> _addCardBillTransfer(String smsId, ParsedTransaction parsed, String cardId) async {
+    final bank = await _ensureAccount(parsed);
+    final id = newId();
+    await entries.saveEntry(EntriesRepository.newExpense(
+      id: id,
+      kind: 'transfer',
+      amountMinor: parsed.amountMinor,
+      occurredAt: parsed.occurredAt,
+      categoryId: await _cardPaymentCategoryId(),
+      accountId: bank?.id,
+      payee: _cardBillPayeeFor(parsed),
+      note: smsEntryNote(reference: parsed.reference, rawCounterparty: parsed.counterparty),
+      source: 'sms',
+      smsId: smsId,
+    ).copyWith(toAccountId: Value(cardId)));
+    await _refreshStatementBalance(cardId);
+    return id;
+  }
 
   /// Personal chats are never ingested, however much they read like a debit.
   static bool _worthIngesting(RawSms message) =>

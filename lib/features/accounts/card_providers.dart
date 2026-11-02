@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../domain/cards/card_summary.dart';
+import '../../l10n/l10n.dart';
 
 /// One live account by id; null once it is deleted.
 final accountByIdProvider = StreamProvider.family<Account?, String>((ref, id) => ref.watch(accountsRepositoryProvider).watchById(id));
@@ -31,3 +32,22 @@ DateTime cardMovementsSince(Account account, DateTime today) =>
 
 /// Whether [account] is a live credit card (the card screen only fits those).
 bool isCardAccount(Account? account) => account != null && account.type == 'card';
+
+/// What the card [account] shows in account lists ([cardHeadline]), kept up
+/// to date with the bill payments since its last statement.
+CardHeadline watchCardHeadline(WidgetRef ref, Account account) {
+  final since = account.lastStatementAt;
+  final movements = since == null ? const <CardMovement>[] : ref.watch(cardMovementsProvider((cardId: account.id, since: since))).value ?? const <CardMovement>[];
+  return cardHeadline(
+    balanceMinor: account.balanceMinor,
+    lastStatementMinor: account.lastStatementMinor,
+    paidSinceStatementMinor: since == null ? 0 : paymentsSinceMinor(movements, cardId: account.id, since: since),
+  );
+}
+
+/// [headline] as text: "Due ₹X", "Paid" or "₹X credit", amounts written by [format].
+String cardHeadlineText(AppLocalizations l10n, CardHeadline headline, String Function(int amountMinor) format) => switch (headline.kind) {
+      CardHeadlineKind.due => l10n.cardDue(format(headline.amountMinor)),
+      CardHeadlineKind.paid => l10n.cardPaid,
+      CardHeadlineKind.credit => l10n.cardInCredit(format(headline.amountMinor)),
+    };

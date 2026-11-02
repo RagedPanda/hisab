@@ -9,6 +9,7 @@ import '../../../data/db/database.dart';
 import '../../../domain/accounts/account_label.dart';
 import '../../../l10n/l10n.dart';
 import '../../accounts/accounts_screen.dart';
+import '../../accounts/card_providers.dart';
 import '../../shell/widgets/common.dart';
 import '../dashboard_keys.dart';
 import '../dashboard_providers.dart';
@@ -52,7 +53,8 @@ class AccountsCard extends ConsumerWidget {
 }
 
 /// One balance card: name, the ••mask on its own line, credit cards as
-/// "Due", and a prompt to set an opening balance when cash goes negative.
+/// what is left to pay on the last statement ([watchCardHeadline]), and a
+/// prompt to set an opening balance when cash goes negative.
 class _AccountCard extends ConsumerWidget {
   const _AccountCard({required this.account, required this.moneyFormat});
   final Account account;
@@ -66,7 +68,7 @@ class _AccountCard extends ConsumerWidget {
     final isCard = account.type == 'card';
     final needsOpeningBalance = account.type == 'cash' && account.balanceMinor < 0;
     final balanceText = isCard
-        ? l10n.cardDue(formatMinor(account.balanceMinor.abs(), format: moneyFormat, showDecimals: false))
+        ? cardHeadlineText(l10n, watchCardHeadline(ref, account), (amount) => formatMinor(amount, format: moneyFormat, showDecimals: false))
         : formatMinor(account.balanceMinor, format: moneyFormat, showDecimals: false);
     final balanceColor = isCard || needsOpeningBalance ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.onSurface;
     return SizedBox(

@@ -19,6 +19,7 @@ import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
 import '../reminders/reminder_actions.dart';
 import 'account_type_label.dart';
+import 'card_providers.dart';
 import 'card_reminder_sync.dart';
 
 class AccountsScreen extends ConsumerWidget {
@@ -50,9 +51,7 @@ class AccountsScreen extends ConsumerWidget {
                   trailing: Text(
                     account.type != 'card'
                         ? formatMinor(account.balanceMinor, format: moneyFormat)
-                        : account.balanceMinor > 0
-                            ? l10n.cardInCredit(formatMinor(account.balanceMinor, format: moneyFormat))
-                            : l10n.cardDue(formatMinor(account.balanceMinor.abs(), format: moneyFormat)),
+                        : cardHeadlineText(l10n, watchCardHeadline(ref, account), (amount) => formatMinor(amount, format: moneyFormat)),
                     style: TextStyle(fontWeight: FontWeight.w700, color: account.balanceMinor < 0 && account.type != 'card' ? kExpenseColor : null),
                   ),
                   onTap: () => account.type == 'card' ? openCardAccount(context, account.id) : showAccountForm(context, ref, existing: account),

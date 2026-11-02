@@ -64,7 +64,7 @@ class SmsReviewCard extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (parsed != null) AmountText(amount, kind: isCardPaymentPayload(parsed) ? 'transfer' : (isDebit ? 'expense' : 'income')),
+              if (parsed != null) AmountText(amount, kind: isCardPaymentPayload(parsed) || isCardBillDebitPayload(parsed) ? 'transfer' : (isDebit ? 'expense' : 'income')),
             ]),
             const SizedBox(height: 4),
             Text(

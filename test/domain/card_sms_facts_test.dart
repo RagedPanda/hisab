@@ -63,15 +63,41 @@ void main() {
       expect(fields.statementDay, 12);
     });
 
-    test('keeps a statement day the user set', () {
-      final fields = cardStatementFromSms(statement(statementDate: DateTime(2026, 10, 12)), statementDay: 11, dueDay: 30)!;
-      expect(fields.statementDay, 11);
-      expect(fields.dueDay, 1);
+    test('a newer statement on another day moves the statement and due days', () {
+      final fields = cardStatementFromSms(
+        statement(statementDate: DateTime(2026, 11, 15), due: DateTime(2026, 12, 5), receivedAt: DateTime(2026, 11, 16, 10)),
+        statementDay: 12,
+        dueDay: 1,
+        lastStatementAt: DateTime(2026, 10, 12),
+      )!;
+      expect(fields.lastStatementAt, DateTime(2026, 11, 15));
+      expect(fields.statementDay, 15);
+      expect(fields.dueDay, 5);
+    });
+
+    test('a statement that states no date keeps the statement day', () {
+      final fields = cardStatementFromSms(statement(receivedAt: DateTime(2026, 10, 13, 10)), statementDay: 12, dueDay: 1)!;
+      expect(fields.statementDay, 12);
     });
 
     test('an older statement read late changes nothing', () {
       final old = statement(statementDate: DateTime(2026, 9, 12), due: DateTime(2026, 10, 1), receivedAt: DateTime(2026, 9, 13));
       expect(cardStatementFromSms(old, statementDay: 12, dueDay: 1, lastStatementAt: DateTime(2026, 10, 12)), isNull);
+    });
+  });
+
+  group('statementDayAfter', () {
+    test('the day of the stated date', () {
+      expect(statementDayAfter(DateTime(2026, 11, 15), statementDay: 12), 15);
+      expect(statementDayAfter(DateTime(2026, 11, 15)), 15);
+    });
+
+    test('keeps the stored day without a date, or when a short month clamped it', () {
+      expect(statementDayAfter(null, statementDay: 12), 12);
+      expect(statementDayAfter(null), isNull);
+      expect(statementDayAfter(DateTime(2026, 4, 30), statementDay: 31), 31);
+      expect(statementDayAfter(DateTime(2026, 2, 28), statementDay: 30), 30);
+      expect(statementDayAfter(DateTime(2026, 5, 30), statementDay: 31), 30, reason: 'May has a 31st, so the bank moved the day');
     });
   });
 

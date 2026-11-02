@@ -13,6 +13,7 @@ import '../../core/money.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
 import '../../data/db/database.dart';
+import '../../data/repositories/card_statement_balance.dart';
 import '../../data/repositories/entries_repository.dart';
 import '../../data/repositories/entry_removal.dart';
 import '../../data/repositories/groups_repository.dart';
@@ -21,7 +22,7 @@ import '../../data/repositories/project_fields_repository.dart';
 import '../../data/repositories/projects_repository.dart';
 import '../../data/repositories/group_recurring_repository.dart';
 import '../../data/repositories/recurring_repository.dart';
-import '../../domain/cards/card_payment_match.dart' show kCardPaymentCategoryKey;
+import '../../domain/cards/card_payment_match.dart' show cardBillPayee, kCardPaymentCategoryKey;
 import '../../domain/entries/entry_accounts.dart';
 import '../../domain/entries/entry_filter.dart';
 import '../../domain/ledger/balance_effects.dart';
@@ -580,6 +581,15 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       _toAccountId = (parsed['accountId'] as String?) ?? smsAccountId;
       return;
     }
+    if (isCardBillDebitPayload(parsed)) {
+      // A bank debit paying a card bill: a transfer from that account into the card.
+      _kind = 'transfer';
+      _category = await ref.read(categoriesRepositoryProvider).findBySeedKey(kCardPaymentCategoryKey);
+      _accountId = smsAccountId;
+      _toAccountId = parsed['cardAccountId'] as String?;
+      if (cardBillPayee(parsed['counterparty'] as String?) == null) _payeeController.clear();
+      return;
+    }
     if (accountKey != null) _accountId = smsAccountId;
   }
 
@@ -814,6 +824,7 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
                   await ref.read(entriesRepositoryProvider).deleteEntry(_existingId!);
                   if (_previousSnapshot != null) {
                     await ref.read(accountsRepositoryProvider).applyBalanceDeltas(deleteDeltas(_previousSnapshot!));
+                    await _refreshCardBalances([_previousSnapshot!]);
                   }
                   if (context.mounted) popOrGoHome(context);
                 }
@@ -1553,7 +1564,16 @@ class _ExpenseEditorScreenState extends ConsumerState<ExpenseEditorScreen> {
       groupId: _groupId,
     );
     await ref.read(accountsRepositoryProvider).applyBalanceDeltas(editDeltas(previous: _previousSnapshot, next: next));
+    await _refreshCardBalances([?_previousSnapshot, next]);
   }
+
+  /// Re-derives the balance of any card in [snapshots] that follows its SMS
+  /// statement, which SMS entries move only through this.
+  Future<void> _refreshCardBalances(List<EntrySnapshot> snapshots) => refreshStatementBalances(
+        entries: ref.read(entriesRepositoryProvider),
+        accounts: ref.read(accountsRepositoryProvider),
+        accountIds: [for (final snapshot in snapshots) ...[snapshot.accountId, snapshot.toAccountId]],
+      );
 
   @override
   void dispose() {

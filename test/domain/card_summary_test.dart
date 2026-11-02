@@ -298,4 +298,24 @@ void main() {
     expect(hasCardBalanceOnRecord(balanceMinor: 0, balanceAsOf: DateTime(2026, 10, 1)), isTrue);
     expect(hasCardBalanceOnRecord(balanceMinor: -100), isTrue);
   });
+
+  group('cardHeadline', () {
+    test('what is left to pay on the statement, not the whole outstanding', () {
+      expect(cardHeadline(balanceMinor: -3000000, lastStatementMinor: 2000000, paidSinceStatementMinor: 500000), const CardHeadline(CardHeadlineKind.due, 1500000));
+    });
+
+    test('paid once the statement is paid, even with spend since', () {
+      expect(cardHeadline(balanceMinor: -400000, lastStatementMinor: 2000000, paidSinceStatementMinor: 2000000), const CardHeadline(CardHeadlineKind.paid, 0));
+      expect(cardHeadline(balanceMinor: -400000, lastStatementMinor: 2000000, paidSinceStatementMinor: 2500000), const CardHeadline(CardHeadlineKind.paid, 0), reason: 'never below 0');
+    });
+
+    test('credit on the card wins', () {
+      expect(cardHeadline(balanceMinor: 50000, lastStatementMinor: 2000000, paidSinceStatementMinor: 2050000), const CardHeadline(CardHeadlineKind.credit, 50000));
+    });
+
+    test('without a statement, the amount owed', () {
+      expect(cardHeadline(balanceMinor: -125000), const CardHeadline(CardHeadlineKind.due, 125000));
+      expect(cardHeadline(balanceMinor: 0), const CardHeadline(CardHeadlineKind.due, 0));
+    });
+  });
 }

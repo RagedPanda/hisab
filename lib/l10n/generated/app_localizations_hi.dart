@@ -4886,4 +4886,7 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get notificationsDenied =>
       'Hisab की सूचनाएँ बंद हैं। सेटिंग्स में इन्हें चालू करें।';
+
+  @override
+  String get cardNothingDue => 'कोई बकाया नहीं';
 }

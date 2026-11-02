@@ -45,9 +45,10 @@ CardHeadline watchCardHeadline(WidgetRef ref, Account account) {
   );
 }
 
-/// [headline] as text: "Due ₹X", "Paid" or "₹X credit", amounts written by [format].
+/// [headline] as text: "Due ₹X", "Paid", "₹X credit" or "Nothing due", amounts written by [format].
 String cardHeadlineText(AppLocalizations l10n, CardHeadline headline, String Function(int amountMinor) format) => switch (headline.kind) {
       CardHeadlineKind.due => l10n.cardDue(format(headline.amountMinor)),
       CardHeadlineKind.paid => l10n.cardPaid,
       CardHeadlineKind.credit => l10n.cardInCredit(format(headline.amountMinor)),
+      CardHeadlineKind.clear => l10n.cardNothingDue,
     };

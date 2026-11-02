@@ -75,6 +75,7 @@ void main() {
     await card('part', 'Part paid card', -3000000, statement: 2000000);
     await card('paid', 'Paid card', -400000, statement: 500000);
     await card('fresh', 'Fresh card', -125000);
+    await card('new', 'New card', 0);
     Future<void> pay(String cardId, int amount) => container.read(entriesRepositoryProvider).saveEntry(
           EntriesRepository.newExpense(kind: 'transfer', amountMinor: amount, occurredAt: statementAt.add(const Duration(days: 2)), accountId: 'savings')
               .copyWith(toAccountId: Value(cardId)),
@@ -90,5 +91,7 @@ void main() {
     expect(texts('Paid card'), contains('Paid'));
     expect(texts('Paid card'), isNot(contains('Due')));
     expect(texts('Fresh card'), contains('Due ₹1,250'), reason: 'no statement: the amount owed');
+    expect(texts('New card'), contains('Nothing due'), reason: 'no statement and nothing owed');
+    expect(texts('New card'), isNot(contains('Due ₹')));
   });
 }

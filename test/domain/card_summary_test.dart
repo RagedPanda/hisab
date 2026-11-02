@@ -315,7 +315,10 @@ void main() {
 
     test('without a statement, the amount owed', () {
       expect(cardHeadline(balanceMinor: -125000), const CardHeadline(CardHeadlineKind.due, 125000));
-      expect(cardHeadline(balanceMinor: 0), const CardHeadline(CardHeadlineKind.due, 0));
+    });
+
+    test('without a statement and nothing owed, clear rather than "Due 0"', () {
+      expect(cardHeadline(balanceMinor: 0), const CardHeadline(CardHeadlineKind.clear, 0));
     });
   });
 }

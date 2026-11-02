@@ -7861,6 +7861,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notifications are blocked for Hisab. Allow them in Settings.'**
   String get notificationsDenied;
+
+  /// A credit card in account lists with no statement yet and nothing owed on it.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing due'**
+  String get cardNothingDue;
 }
 
 class _AppLocalizationsDelegate

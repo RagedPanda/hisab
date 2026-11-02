@@ -4913,4 +4913,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationsDenied =>
       'Notifications are blocked for Hisab. Allow them in Settings.';
+
+  @override
+  String get cardNothingDue => 'Nothing due';
 }

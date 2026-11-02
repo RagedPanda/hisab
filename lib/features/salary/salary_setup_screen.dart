@@ -92,23 +92,26 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
     setState(() => saving = true);
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
+    // Reads after an await go through the app-wide container: the screen may
+    // be gone by then, and the save still has to finish.
+    final container = ProviderScope.containerOf(context, listen: false);
     final settings = ref.read(settingsProvider);
     final notifier = ref.read(salarySettingsProvider.notifier);
     final now = DateTime.now();
     if (draft.reminderEnabled) await ensureSalaryNotificationPermission(ref);
-    final saved = await ref.read(salaryServiceProvider).saveSalaryRule(settings: draft.copyWith(amountMinor: parsedAmount), today: now, monthStartDay: settings.monthStartDay);
+    final saved = await container.read(salaryServiceProvider).saveSalaryRule(settings: draft.copyWith(amountMinor: parsedAmount), today: now, monthStartDay: settings.monthStartDay);
     await notifier.save(saved);
     if (!mounted) return;
     if (saved.shouldOfferMonthStartAlign(monthStartDay: settings.monthStartDay)) {
       final suggested = suggestedMonthStartDay(saved.salaryDay);
       final align = await confirmDialog(context, title: l10n.salaryAlignTitle(suggested), message: l10n.salaryAlignMessage, confirmLabel: l10n.salaryAlignAction);
       if (align) {
-        await ref.read(settingsProvider.notifier).update((current) => current.copyWith(monthStartDay: suggested));
+        await container.read(settingsProvider.notifier).update((current) => current.copyWith(monthStartDay: suggested));
       } else {
         await notifier.save(saved.copyWith(alignDeclinedRuleId: saved.ruleId));
       }
     }
-    await syncSalaryReminder(ref.read, now: now);
+    await syncSalaryReminder(container.read, now: now);
     messenger.showSnackBar(SnackBar(content: Text(l10n.salarySaved)));
     if (mounted) popOrGoHome(context);
   }
@@ -122,16 +125,17 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
   Future<void> remove() async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
+    final container = ProviderScope.containerOf(context, listen: false);
     final confirmed = await confirmDialog(context, title: l10n.salaryRemove, message: l10n.salaryRemoveBody, confirmLabel: l10n.salaryRemove);
     if (!confirmed) return;
-    await ref.read(salaryServiceProvider).removeSalaryRule(draft.ruleId);
+    await container.read(salaryServiceProvider).removeSalaryRule(draft.ruleId);
     // Back to a blank setup, so setting it up again starts from the defaults.
-    await ref.read(salarySettingsProvider.notifier).save(const SalarySettings());
+    await container.read(salarySettingsProvider.notifier).save(const SalarySettings());
     if (mounted) {
       setState(() => draft = const SalarySettings());
       amountController.clear();
     }
-    await syncSalaryReminder(ref.read, now: DateTime.now());
+    await syncSalaryReminder(container.read, now: DateTime.now());
     messenger.showSnackBar(SnackBar(content: Text(l10n.salaryRemoved)));
     if (mounted) popOrGoHome(context);
   }

@@ -403,6 +403,7 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _import(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
+    final container = ProviderScope.containerOf(context, listen: false);
     final picked = await ref.read(appLockProvider.notifier).whileInSystemScreen(() => FilePicker.pickFiles());
     if (picked.isEmpty) return;
     final data = await picked.first.readAsBytes();
@@ -410,8 +411,8 @@ class SettingsScreen extends ConsumerWidget {
     final passphrase = await promptRestorePassphrase(context);
     if (passphrase == null || !context.mounted) return;
     try {
-      final restored = await ref.read(backupServiceProvider).importEncrypted(data, passphrase);
-      await applyRestoredSettings(ref, restored);
+      final restored = await container.read(backupServiceProvider).importEncrypted(data, passphrase);
+      await applyRestoredSettings(container, restored);
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoredRecords(restored.written))));
     } catch (error) {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.restoreFailed('$error'))));

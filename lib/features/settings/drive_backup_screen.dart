@@ -193,9 +193,10 @@ class _DriveConnectedViewState extends ConsumerState<DriveConnectedView> with _D
     final passphrase = await promptRestorePassphrase(context);
     if (passphrase == null || !mounted) return;
     final l10n = context.l10n;
+    final container = ProviderScope.containerOf(context, listen: false);
     await runDriveAction(() async {
       final restored = await _service.restore(passphrase);
-      await applyRestoredSettings(ref, restored);
+      await applyRestoredSettings(container, restored);
       return l10n.restoredRecords(restored.written);
     });
   }

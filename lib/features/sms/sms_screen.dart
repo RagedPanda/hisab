@@ -133,6 +133,10 @@ class _SmsScreenState extends ConsumerState<SmsScreen> {
               value: settings.smsAutoAdd,
               onChanged: (v) => ref.read(settingsProvider.notifier).update((s) => s.copyWith(smsAutoAdd: v, smsAutoAddChosen: true)),
             ),
+          ]),
+          const SizedBox(height: 12),
+          // Rows with icons get their own card so the dividers sit at their title edge.
+          TileGroup(children: [
             if (supported && settings.smsEnabled)
               ListTile(
                 leading: _busy ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.refresh),

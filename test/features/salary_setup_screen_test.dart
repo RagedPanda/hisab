@@ -132,6 +132,18 @@ void main() {
     expect(gateway.permissionRequests, 1);
   });
 
+  testWidgets('a refused permission turns the reminder switch back off and offers the system settings', (tester) async {
+    final gateway = FakeNotificationGateway(notificationsAllowed: false, grantOnRequest: false);
+    await _pumpSalary(tester, gateway: gateway, prefsValues: {'salaryReminderEnabled': false});
+    await _reveal(tester, 'salaryReminderSwitch');
+    await tester.tap(find.byKey(const Key('salaryReminderSwitch')));
+    await _settle(tester);
+    expect(gateway.permissionRequests, 1);
+    expect(tester.widget<SwitchListTile>(find.byKey(const Key('salaryReminderSwitch'))).value, isFalse);
+    expect(find.text(english.notificationsDenied), findsOneWidget);
+    expect(find.widgetWithText(SnackBarAction, english.settings), findsOneWidget);
+  });
+
   testWidgets('closing the screen while the permission prompt is up does not throw', (tester) async {
     final released = Completer<void>();
     final gateway = HeldPermissionGateway(released);

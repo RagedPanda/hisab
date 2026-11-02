@@ -10,6 +10,7 @@ import '../../data/db/database.dart';
 import '../../domain/reminders/reminder_draft.dart';
 import '../../domain/reminders/reminder_kind.dart';
 import '../../l10n/l10n.dart';
+import '../notifications/notification_permission.dart';
 import '../shell/widgets/common.dart';
 import 'permission_explainer.dart';
 
@@ -123,8 +124,14 @@ Future<void> askReminderPermissionsIfNeeded(BuildContext context, {String? title
   final before = await service.checkPermission();
   if (before.notificationsAllowed || !context.mounted) return;
   final l10n = context.l10n;
+  final messenger = ScaffoldMessenger.of(context);
   final allow = await showPermissionExplainer(context, icon: Icons.notifications_active_outlined, title: title ?? l10n.notifPrePromptTitle, body: body ?? l10n.notifPrePromptBody);
-  if (allow) await service.requestPermission();
+  // Refused (or no longer promptable): the reminder is still saved and shows
+  // in the app; the note says where alerts can be turned back on.
+  if (allow && !await ensureNotificationPermission(container)) {
+    showNotificationsBlockedSnackBar(messenger, l10n);
+    return;
+  }
   if (context.mounted) await askExactReminderAlarmsIfNeeded(context);
   container.invalidate(notificationPermissionProvider);
 }

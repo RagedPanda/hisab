@@ -265,7 +265,8 @@ bool lastStatementExceedsAmountDue({
 }) =>
     lastStatementMinor != null && lastStatementMinor != previousStatementMinor && lastStatementMinor - paidSinceStatementMinor > amountDueMinor;
 
-enum CardHeadlineKind { due, paid, credit }
+/// [clear]: no statement yet and nothing owed, so there is no bill to show.
+enum CardHeadlineKind { due, paid, credit, clear }
 
 /// What a card shows in account lists ([cardHeadline]).
 class CardHeadline {
@@ -286,10 +287,14 @@ class CardHeadline {
 /// The one figure a card shows in account lists: credit on the card; else,
 /// with a statement recorded, what is left to pay on it (the statement less
 /// the payments since, [CardHeadlineKind.paid] once nothing is left, however much was spent
-/// after it); else, with no statement, the amount owed.
+/// after it); else, with no statement, the amount owed, or
+/// [CardHeadlineKind.clear] when nothing is owed (not "Due ₹0").
 CardHeadline cardHeadline({required int balanceMinor, int? lastStatementMinor, int paidSinceStatementMinor = 0}) {
   if (balanceMinor > 0) return CardHeadline(CardHeadlineKind.credit, balanceMinor);
-  if (lastStatementMinor == null) return CardHeadline(CardHeadlineKind.due, outstandingMinor(balanceMinor));
+  if (lastStatementMinor == null) {
+    final owed = outstandingMinor(balanceMinor);
+    return owed > 0 ? CardHeadline(CardHeadlineKind.due, owed) : const CardHeadline(CardHeadlineKind.clear, 0);
+  }
   final left = lastStatementMinor - paidSinceStatementMinor;
   return left > 0 ? CardHeadline(CardHeadlineKind.due, left) : const CardHeadline(CardHeadlineKind.paid, 0);
 }

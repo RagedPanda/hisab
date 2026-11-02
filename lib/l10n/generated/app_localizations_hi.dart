@@ -913,11 +913,6 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String restoreFailed(String error) {
-    return 'वापस लाना विफल: $error';
-  }
-
-  @override
   String get driveBackupTitle => 'Google Drive पर बैकअप लें';
 
   @override
@@ -1033,9 +1028,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get driveErrorNotFound =>
       'इस Google Drive में हिसाब का कोई बैकअप नहीं मिला';
-
-  @override
-  String get driveErrorWrongPassphrase => 'गलत पासफ़्रेज़, या बैकअप खराब है';
 
   @override
   String driveErrorUnknown(String error) {
@@ -4655,7 +4647,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get backupFailureNoPassphrase =>
-      'इस फ़ोन पर कोई पासफ़्रेज़ सहेजा नहीं है';
+      'इस फ़ोन पर कोई पासफ़्रेज़ सहेजा नहीं है; तय समय पर बैकअप में सेट करें';
 
   @override
   String get backupFailureNoFolder => 'कोई फ़ोल्डर नहीं चुना';
@@ -4842,6 +4834,61 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get udhaarRecordAction => 'उधार लिखें';
+
+  @override
+  String get appLockPromptTitle => 'हिसाब ऐप लॉक';
+
+  @override
+  String get appLockPromptHint =>
+      'फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक इस्तेमाल करें';
+
+  @override
+  String get appLockPromptFallback => 'पासकोड इस्तेमाल करें';
+
+  @override
+  String get passphraseMismatch => 'दोनों पासफ़्रेज़ मेल नहीं खाते';
+
+  @override
+  String get passphraseConfirmHint => 'पासफ़्रेज़ फिर से लिखें';
+
+  @override
+  String get passphraseShow => 'पासफ़्रेज़ दिखाएँ';
+
+  @override
+  String get passphraseHide => 'पासफ़्रेज़ छिपाएँ';
+
+  @override
+  String get restorePassphraseHint => 'वह पासफ़्रेज़ जिससे यह बैकअप बना था';
+
+  @override
+  String get restorePassphraseAction => 'वापस लाएँ';
+
+  @override
+  String get restoreWrongPassphrase =>
+      'इस बैकअप का पासफ़्रेज़ गलत है, या फ़ाइल खराब है। वही पासफ़्रेज़ डालें जिससे बैकअप बना था। कुछ नहीं बदला गया।';
+
+  @override
+  String get restoreNotABackup =>
+      'यह फ़ाइल हिसाब का बैकअप नहीं है। कुछ नहीं बदला गया।';
+
+  @override
+  String get restoreFailedUnknown =>
+      'यह बैकअप वापस नहीं ला पाए। फिर से कोशिश करें।';
+
+  @override
+  String get scheduledBackupPassphraseSet =>
+      'पासफ़्रेज़ सहेजा गया। इसे कहीं सुरक्षित लिख लें: वापस लाने के लिए यही चाहिए होगा।';
+
+  @override
+  String get scheduledBackupPassphraseChanged =>
+      'पासफ़्रेज़ बदल गया। नए बैकअप इसी से बनेंगे; पुराने बैकअप के लिए पुराना पासफ़्रेज़ ही चाहिए।';
+
+  @override
+  String get notificationsDenied =>
+      'Hisab की सूचनाएँ बंद हैं। सेटिंग्स में इन्हें चालू करें।';
+
+  @override
+  String get cardNothingDue => 'कोई बकाया नहीं';
 
   @override
   String settleWithTitle(String name) {

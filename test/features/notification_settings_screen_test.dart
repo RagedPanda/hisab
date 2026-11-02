@@ -44,6 +44,23 @@ void main() {
     expect(gateway.alertsFor(kEveningSummaryPayload), isNotEmpty);
   });
 
+  testWidgets('a refused permission leaves every switch off, schedules nothing and offers the system settings', (tester) async {
+    final gateway = FakeNotificationGateway(notificationsAllowed: false, grantOnRequest: false);
+    final container = await createContainer(overrides: [notificationGatewayProvider.overrideWithValue(gateway), launcherChannelProvider.overrideWithValue(FakeLauncherChannel())]);
+    await pumpScreen(tester, container, const NotificationSettingsScreen(), size: const Size(360, 1600));
+
+    for (final kind in [NotificationKind.eveningSummary, NotificationKind.reminders, NotificationKind.bankSms]) {
+      await tapAndWait(tester, switchOf(kind));
+      expect(isOn(tester, kind), isFalse, reason: kind.name);
+      expect(container.read(sharedPreferencesProvider).containsKey(notificationChoiceKey(kind)), isFalse, reason: kind.name);
+    }
+    expect(gateway.permissionRequests, 3);
+    expect(gateway.alertsFor(kEveningSummaryPayload), isEmpty);
+    expect(find.byKey(const Key('eveningSummaryTime')), findsNothing);
+    expect(find.text('Notifications are blocked for Hisab. Allow them in Settings.'), findsOneWidget);
+    expect(find.widgetWithText(SnackBarAction, 'Settings'), findsOneWidget);
+  });
+
   testWidgets('an upgrade with SMS capture on keeps its bank SMS alerts on', (tester) async {
     final container = await createContainer(preferences: {'smsEnabled': true}, overrides: [notificationGatewayProvider.overrideWithValue(FakeNotificationGateway())]);
     await pumpScreen(tester, container, const NotificationSettingsScreen(), size: const Size(360, 1600));

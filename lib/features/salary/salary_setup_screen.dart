@@ -8,6 +8,7 @@ import '../../core/salary_settings.dart';
 import '../../data/db/database.dart';
 import '../../domain/salary/salary_schedule.dart';
 import '../../l10n/l10n.dart';
+import '../notifications/notification_permission.dart';
 import '../shell/widgets/common.dart';
 import 'salary_providers.dart';
 import 'salary_reminder.dart';
@@ -39,21 +40,6 @@ String salaryShiftLabel(BuildContext context, SalaryShift shift) => switch (shif
     l10n.salaryNextExpected(date(status.next)),
   ].join('\n');
   return (title: title, subtitle: subtitle);
-}
-
-/// Asks for the notification permission (the Android 13+ prompt) unless it
-/// is already granted, so the salary reminder can actually be shown. Never
-/// throws: saving the salary must not depend on the prompt. Takes the
-/// [container] rather than a widget's ref: the screen may close while the
-/// prompt is up.
-Future<void> ensureSalaryNotificationPermission(ProviderContainer container) async {
-  try {
-    final notifications = container.read(notificationServiceProvider);
-    if (!(await notifications.checkPermission()).notificationsAllowed) await notifications.requestPermission();
-  } catch (error) {
-    debugPrint('Hisab: notification permission not requested: $error');
-  }
-  container.invalidate(notificationPermissionProvider);
 }
 
 /// Settings > Money > Salary: amount, account, day, weekend shift and the
@@ -100,7 +86,7 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
     final settings = ref.read(settingsProvider);
     final notifier = ref.read(salarySettingsProvider.notifier);
     final now = DateTime.now();
-    if (draft.reminderEnabled) await ensureSalaryNotificationPermission(container);
+    if (draft.reminderEnabled) await ensureNotificationPermission(container);
     final saved = await container.read(salaryServiceProvider).saveSalaryRule(settings: draft.copyWith(amountMinor: parsedAmount), today: now, monthStartDay: settings.monthStartDay);
     await notifier.save(saved);
     if (!mounted) return;
@@ -118,10 +104,16 @@ class _SalarySetupScreenState extends ConsumerState<SalarySetupScreen> {
     if (mounted) popOrGoHome(context);
   }
 
-  /// Turning the reminder on asks for the permission it needs right away.
+  /// Turning the reminder on asks for the permission it needs right away;
+  /// refused, the switch goes back off and points at the system settings.
   Future<void> setReminderEnabled(bool enabled) async {
     setState(() => draft = draft.copyWith(reminderEnabled: enabled));
-    if (enabled) await ensureSalaryNotificationPermission(ProviderScope.containerOf(context, listen: false));
+    if (!enabled) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    if (await ensureNotificationPermission(ProviderScope.containerOf(context, listen: false))) return;
+    if (mounted) setState(() => draft = draft.copyWith(reminderEnabled: false));
+    showNotificationsBlockedSnackBar(messenger, l10n);
   }
 
   Future<void> remove() async {

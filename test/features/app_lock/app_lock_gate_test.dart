@@ -69,6 +69,17 @@ void main() {
     expect(home, findsOneWidget);
   });
 
+  testWidgets('the system prompt is worded in the app language', (tester) async {
+    final auth = FakeAuthenticator();
+    await start(tester, auth, preferences: {...lockOn(), 'localeCode': 'hi'});
+    final prompt = auth.lastPrompt!;
+    expect(prompt.reason, 'हिसाब अनलॉक करें');
+    expect(prompt.title, 'हिसाब ऐप लॉक');
+    expect(prompt.hint, 'फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक इस्तेमाल करें');
+    expect(prompt.cancel, 'रद्द करें');
+    expect(prompt.fallback, 'पासकोड इस्तेमाल करें');
+  });
+
   testWidgets('a picker Hisab opened does not lock it, even set to Immediately', (tester) async {
     final auth = FakeAuthenticator(results: [AppAuthResult.unlocked]);
     final container = await start(tester, auth, preferences: lockOn(timeout: AppLockTimeout.immediately));

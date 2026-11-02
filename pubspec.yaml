@@ -26,6 +26,8 @@ dependencies:
   http: 1.6.0
   intl: ^0.20.3
   local_auth: ^3.0.2
+  local_auth_android: ^2.3.0
+  local_auth_darwin: ^2.0.5
   path: ^1.9.1
   path_provider: ^2.1.6
   permission_handler: ^13.0.2

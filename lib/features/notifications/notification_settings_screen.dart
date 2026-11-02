@@ -11,6 +11,7 @@ import '../salary/salary_reminder.dart' show kSalaryLocation;
 import '../shell/widgets/common.dart';
 import '../shell/widgets/tile_group.dart';
 import '../shortcuts/launcher_sync.dart' show launcherChannelProvider;
+import 'notification_permission.dart';
 import 'notification_settings_actions.dart';
 
 const String kNotificationSettingsLocation = '/notifications';
@@ -77,7 +78,7 @@ class _KindCard extends ConsumerWidget {
           title: Text(labels.title),
           subtitle: Text(needsSetup == null ? labels.help : '${labels.help}\n$needsSetup'),
           value: on,
-          onChanged: salaryMissing ? null : (value) => setNotificationKind(ProviderScope.containerOf(context, listen: false), kind, value),
+          onChanged: salaryMissing ? null : (value) => _setOn(context, value),
         ),
         if (kind == NotificationKind.eveningSummary && on)
           ListTile(
@@ -115,6 +116,15 @@ class _KindCard extends ConsumerWidget {
         ),
       ]),
     );
+  }
+
+  /// Flips the switch; refused notification access leaves it off and offers
+  /// the system settings.
+  Future<void> _setOn(BuildContext context, bool on) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    if (await setNotificationKind(ProviderScope.containerOf(context, listen: false), kind, on)) return;
+    showNotificationsBlockedSnackBar(messenger, l10n, message: kind == NotificationKind.addExpenseShortcut ? l10n.addExpenseNotificationBlocked : null);
   }
 
   /// Why the kind would not notify yet, if it needs something set up first.

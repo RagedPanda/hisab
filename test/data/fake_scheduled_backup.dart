@@ -40,8 +40,14 @@ class FakePassphraseVault implements BackupPassphraseVault {
   FakePassphraseVault([this.passphrase]);
   String? passphrase;
 
+  /// Set to make reading fail, as a platform store that lost its key might.
+  Object? readError;
+
   @override
-  Future<String?> readPassphrase() async => passphrase;
+  Future<String?> readPassphrase() async {
+    if (readError case final error?) throw error;
+    return passphrase;
+  }
 
   @override
   Future<void> savePassphrase(String value) async => passphrase = value;

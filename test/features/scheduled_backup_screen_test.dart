@@ -25,6 +25,7 @@ import '../core/fake_notification_gateway.dart';
 import '../data/fake_drive_backup.dart';
 import '../data/fake_scheduled_backup.dart';
 import '../support/one_line_text.dart';
+import '../support/passphrase_dialog.dart';
 
 class _Harness {
   _Harness(this.container, this.folder, this.vault, this.scheduler);
@@ -89,8 +90,7 @@ Future<_Harness> _pumpScheduledBackup(
 }
 
 Future<void> _enterPassphrase(WidgetTester tester, String passphrase) async {
-  await tester.enterText(find.byType(TextField), passphrase);
-  await tester.tap(find.byType(FilledButton).last);
+  await answerPassphraseDialog(tester, passphrase);
   await _settle(tester);
 }
 
@@ -136,6 +136,23 @@ void main() {
     expect(harness.scheduler.enabled, isTrue);
     expect(find.text('Backups'), findsOneWidget);
     expect(find.text(english.scheduledBackupPassphraseSaved), findsOneWidget);
+    expect(find.text(english.scheduledBackupPassphraseSet), findsOneWidget);
+  });
+
+  testWidgets('changing the saved passphrase needs both entries to agree and says old backups keep the old one', (tester) async {
+    final harness = await _pumpScheduledBackup(tester, choices: daily, passphrase: 'correct horse');
+    await tester.tap(find.byKey(const Key('scheduledBackupPassphrase')));
+    await _settle(tester);
+
+    await answerPassphraseDialog(tester, 'battery staple', confirmation: 'battery stapel');
+    await _settle(tester);
+    expect(find.text(english.passphraseMismatch), findsOneWidget);
+    expect(harness.vault.passphrase, 'correct horse');
+
+    await answerPassphraseDialog(tester, 'battery staple');
+    await _settle(tester);
+    expect(harness.vault.passphrase, 'battery staple');
+    expect(find.text(english.scheduledBackupPassphraseChanged), findsOneWidget);
   });
 
   testWidgets('a dismissed passphrase leaves the schedule off', (tester) async {

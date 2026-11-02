@@ -51,7 +51,7 @@ class ScheduledBackupRunner {
   Future<Map<ScheduledBackupTarget, BackupAttempt>> _run(Set<ScheduledBackupTarget> targets, DateTime now) async {
     if (targets.isEmpty) return const {};
     final choices = readScheduledBackupChoices(prefs);
-    final passphrase = await vault.readPassphrase();
+    final passphrase = await _readPassphrase();
     Uint8List? bytes;
     if (passphrase != null && passphrase.isNotEmpty) {
       final settings = AppSettings.fromPrefs(prefs);
@@ -70,6 +70,16 @@ class ScheduledBackupRunner {
     }
     await writeScheduledBackupHistory(prefs, history);
     return attempts;
+  }
+
+  /// The saved passphrase; one the platform can no longer read counts as
+  /// none, so the user is told to set it again rather than shown an error.
+  Future<String?> _readPassphrase() async {
+    try {
+      return await vault.readPassphrase();
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<BackupAttempt> _attempt(Future<String?> Function() write, DateTime now) async {

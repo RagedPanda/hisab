@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/app_lock/device_authenticator.dart';
 import '../../domain/app_lock/app_lock_policy.dart';
 import '../../l10n/l10n.dart';
+import 'app_lock_prompt.dart';
 import 'app_lock_providers.dart';
 
 /// Covers the whole app with the lock screen while the app lock is locked,
@@ -76,7 +77,7 @@ class _AppLockGateState extends ConsumerState<AppLockGate> {
 
   Future<void> _unlock() async {
     if (!ref.read(appLockedProvider)) return;
-    final result = await ref.read(appLockProvider.notifier).unlock(context.l10n.appLockPromptReason);
+    final result = await ref.read(appLockProvider.notifier).unlock(appLockPrompt(context.l10n, context.l10n.appLockPromptReason));
     if (mounted) setState(() => _lastResult = result);
   }
 

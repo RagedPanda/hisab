@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/features/shell/widgets/common.dart';
+import 'package:hisab/features/shell/widgets/segment_label.dart';
 import 'package:hisab/l10n/generated/app_localizations.dart';
 
 import '../support/one_line_text.dart';
@@ -51,6 +52,7 @@ Future<AppLocalizations> pumpPicker(
   required Locale locale,
   required Widget Function(BuildContext, List<(String, IconData)>) picker,
   required List<(String, IconData)> Function(AppLocalizations) segmentsOf,
+  double textScale = 1,
 }) async {
   tester.view.physicalSize = Size(width, 800);
   tester.view.devicePixelRatio = 1;
@@ -60,6 +62,7 @@ Future<AppLocalizations> pumpPicker(
     locale: locale,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
+    builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)), child: child!),
     home: Scaffold(
       body: Builder(builder: (context) {
         l10n = AppLocalizations.of(context);
@@ -131,8 +134,74 @@ void main() {
     expectOneLine(tester, find.byKey(const Key('narrow')), label);
     expect(tester.widget<Text>(find.byKey(const Key('label'))).data, label);
     final segment = tester.getRect(find.ancestor(of: find.text(label), matching: find.byType(TextButton)));
-    final shown = tester.getRect(find.byType(FittedBox).first);
+    final shown = tester.getRect(find.text(label));
     expect(segment.intersect(shown).size, shown.size, reason: 'the label scales down to fit its segment');
     expect(tester.takeException(), isNull);
+  });
+
+  for (final locale in const [Locale('en'), Locale('hi')]) {
+    for (final textScale in const [1.0, 1.3, 2.0]) {
+      for (final MapEntry(key: name, value: (picker, segmentsOf)) in pickers.entries) {
+        testWidgets('$name labels share one size on one line at 360dp, text x$textScale (${locale.languageCode})', (tester) async {
+          final l10n = await pumpPicker(tester, width: 360, locale: locale, picker: picker, segmentsOf: segmentsOf, textScale: textScale);
+          final segments = segmentsOf(l10n);
+          expectLabelsVisible(tester, segments);
+          final heights = [for (final (label, _) in segments) tester.getRect(find.text(label)).height];
+          for (final (index, (label, _)) in segments.indexed) {
+            expectOneLine(tester, find.byType(SegmentedButton<int>), label);
+            expect(heights[index], moreOrLessEquals(heights.first, epsilon: 0.01), reason: '"$label" is drawn at the same scale as its neighbours');
+          }
+        });
+      }
+    }
+  }
+
+  testWidgets('a label that fits is drawn smaller when a neighbour has to shrink', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: SizedBox(
+            width: 200,
+            child: SegmentedButton<int>(
+              showSelectedIcon: false,
+              expandedInsets: EdgeInsets.zero,
+              segments: [ButtonSegment(value: 0, label: segmentLabel('A much longer label')), ButtonSegment(value: 1, label: segmentLabel('B'))],
+              selected: const {0},
+              onSelectionChanged: (_) {},
+            ),
+          ),
+        ),
+      ),
+    ));
+    final long = tester.getRect(find.text('A much longer label'));
+    final short = tester.getRect(find.text('B'));
+    final natural = tester.renderObject<RenderBox>(find.text('B')).size;
+    expect(long.height, lessThan(natural.height), reason: 'the long label shrinks');
+    expect(short.height, moreOrLessEquals(long.height), reason: 'the short label follows it');
+    expect(tester.takeException(), isNull);
+  });
+
+  group('labelFitScale', () {
+    test('is 1 when the label fits', () {
+      expect(labelFitScale(const Size(50, 20), const BoxConstraints(maxWidth: 100, maxHeight: 40)), 1);
+    });
+    test('shrinks a label that is too wide', () {
+      expect(labelFitScale(const Size(200, 20), const BoxConstraints(maxWidth: 100, maxHeight: 40)), 0.5);
+    });
+    test('shrinks a label that is too tall', () {
+      expect(labelFitScale(const Size(50, 40), const BoxConstraints(maxWidth: 100, maxHeight: 10)), 0.25);
+    });
+    test('takes the tighter of width and height', () {
+      expect(labelFitScale(const Size(200, 40), const BoxConstraints(maxWidth: 100, maxHeight: 10)), 0.25);
+    });
+    test('ignores unbounded sides and empty labels', () {
+      expect(labelFitScale(const Size(200, 40), const BoxConstraints()), 1);
+      expect(labelFitScale(Size.zero, const BoxConstraints(maxWidth: 10, maxHeight: 10)), 1);
+    });
+  });
+
+  group('sharedLabelScale', () {
+    test('is the smallest need', () => expect(sharedLabelScale([1, 0.8, 0.6]), 0.6));
+    test('never enlarges', () => expect(sharedLabelScale([]), 1));
   });
 }

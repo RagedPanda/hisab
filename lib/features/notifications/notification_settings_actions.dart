@@ -7,10 +7,10 @@ import '../../domain/notifications/evening_summary.dart';
 import '../../domain/notifications/notification_kinds.dart';
 import '../salary/salary_providers.dart';
 import '../salary/salary_reminder.dart';
-import '../salary/salary_setup_screen.dart' show ensureSalaryNotificationPermission;
 import '../shortcuts/add_expense_notification_toggle.dart';
 import '../shortcuts/shortcut_settings.dart';
 import 'evening_summary_service.dart';
+import 'notification_permission.dart';
 import 'notification_texts.dart';
 
 /// What this install already does, for switches the user never touched.
@@ -25,15 +25,17 @@ NotificationFacts notificationFactsOf(WidgetRef ref) {
 }
 
 /// Turns [kind] on or off and brings what is posted in line straight away.
-/// Turning one on asks for the notification permission when it is missing.
-/// These take the [container] rather than a widget's ref: the screen may close
-/// while the prompt is up, and the change still has to land.
-Future<void> setNotificationKind(ProviderContainer container, NotificationKind kind, bool on) async {
-  // The Add expense shortcut asks itself, and stays off without access.
-  if (on && kind != NotificationKind.addExpenseShortcut) await ensureSalaryNotificationPermission(container);
+/// Turning one on asks for the notification permission when it is missing;
+/// refused, nothing changes and this returns false so the caller can point at
+/// the system settings. These take the [container] rather than a widget's
+/// ref: the screen may close while the prompt is up, and the change still has
+/// to land.
+Future<bool> setNotificationKind(ProviderContainer container, NotificationKind kind, bool on) async {
+  // The Add expense shortcut asks itself (only where it can be shown).
+  if (on && kind != NotificationKind.addExpenseShortcut && !await ensureNotificationPermission(container)) return false;
   switch (kind) {
     case NotificationKind.addExpenseShortcut:
-      await setAddExpenseNotification(container, on);
+      return setAddExpenseNotification(container, on);
     case NotificationKind.salary:
       final salary = container.read(salarySettingsProvider);
       await container.read(salarySettingsProvider.notifier).save(salary.copyWith(reminderEnabled: on));
@@ -44,6 +46,7 @@ Future<void> setNotificationKind(ProviderContainer container, NotificationKind k
       if (kind == NotificationKind.reminders) await container.read(reminderSchedulerProvider).rescheduleAll();
       if (kind == NotificationKind.eveningSummary) await refreshEveningSummary(container.read);
   }
+  return true;
 }
 
 /// Moves the evening summary to [minuteOfDay] and re-posts it.
@@ -55,7 +58,7 @@ Future<void> setEveningSummaryMinute(ProviderContainer container, int minuteOfDa
 /// Posts a sample of [kind] now (asking for the permission first when
 /// needed). The evening summary sample shows today's real figures.
 Future<void> showNotificationSample(ProviderContainer container, NotificationKind kind) async {
-  await ensureSalaryNotificationPermission(container);
+  await ensureNotificationPermission(container);
   final now = DateTime.now();
   final summary = kind == NotificationKind.eveningSummary
       ? await loadEveningSummary(container.read, startOfDay(now))

@@ -30,10 +30,10 @@ void main() {
 
   Future<void> useChoices(ScheduledBackupChoices choices) => writeScheduledBackupChoices(prefs, choices);
 
-  ScheduledBackupRunner runner({FakeBackupFolder? folder, String? passphrase = _passphrase, FakeDriveBackupStore? drive}) => ScheduledBackupRunner(
+  ScheduledBackupRunner runner({FakeBackupFolder? folder, String? passphrase = _passphrase, FakeDriveBackupStore? drive, FakePassphraseVault? vault}) => ScheduledBackupRunner(
         backups: appBackupService(phone, prefs),
         folder: folder ?? FakeBackupFolder(),
-        vault: FakePassphraseVault(passphrase),
+        vault: vault ?? FakePassphraseVault(passphrase),
         prefs: prefs,
         driveConnected: drive != null,
         driveStore: drive == null ? null : () => drive,
@@ -89,6 +89,16 @@ void main() {
     final folder = FakeBackupFolder();
     final attempts = await runner(folder: folder, passphrase: null).runDue(DateTime(2026, 10, 30, 10));
     expect(attempts[ScheduledBackupTarget.folder]!.failure, ScheduledBackupFailure.noPassphrase);
+    expect(folder.files, isEmpty);
+  });
+
+  test('a saved passphrase the phone can no longer read asks for it again, not a raw error', () async {
+    await useChoices(_daily);
+    final folder = FakeBackupFolder();
+    final vault = FakePassphraseVault(_passphrase)..readError = StateError('key invalidated');
+    final attempts = await runner(folder: folder, vault: vault).runDue(DateTime(2026, 10, 30, 10));
+    expect(attempts[ScheduledBackupTarget.folder]!.failure, ScheduledBackupFailure.noPassphrase);
+    expect(attempts[ScheduledBackupTarget.folder]!.detail, isNull);
     expect(folder.files, isEmpty);
   });
 

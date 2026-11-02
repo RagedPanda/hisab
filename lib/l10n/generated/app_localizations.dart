@@ -1664,12 +1664,6 @@ abstract class AppLocalizations {
   /// **'Restored {count} records'**
   String restoredRecords(int count);
 
-  /// No description provided for @restoreFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Restore failed: {error}'**
-  String restoreFailed(String error);
-
   /// No description provided for @driveBackupTitle.
   ///
   /// In en, this message translates to:
@@ -1867,12 +1861,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No Hisab backup found in this Google Drive'**
   String get driveErrorNotFound;
-
-  /// No description provided for @driveErrorWrongPassphrase.
-  ///
-  /// In en, this message translates to:
-  /// **'Wrong passphrase, or the backup is damaged'**
-  String get driveErrorWrongPassphrase;
 
   /// No description provided for @driveErrorUnknown.
   ///
@@ -7487,7 +7475,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupFailureNoPassphrase.
   ///
   /// In en, this message translates to:
-  /// **'no passphrase saved on this phone'**
+  /// **'no passphrase saved on this phone; set one in Scheduled backup'**
   String get backupFailureNoPassphrase;
 
   /// No description provided for @backupFailureNoFolder.
@@ -7783,6 +7771,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Record udhaar'**
   String get udhaarRecordAction;
+
+  /// No description provided for @appLockPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hisab app lock'**
+  String get appLockPromptTitle;
+
+  /// No description provided for @appLockPromptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your fingerprint, face or screen lock'**
+  String get appLockPromptHint;
+
+  /// No description provided for @appLockPromptFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Use passcode'**
+  String get appLockPromptFallback;
+
+  /// No description provided for @passphraseMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The two passphrases don\'t match'**
+  String get passphraseMismatch;
+
+  /// No description provided for @passphraseConfirmHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the passphrase again'**
+  String get passphraseConfirmHint;
+
+  /// No description provided for @passphraseShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show passphrase'**
+  String get passphraseShow;
+
+  /// No description provided for @passphraseHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide passphrase'**
+  String get passphraseHide;
+
+  /// No description provided for @restorePassphraseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The passphrase this backup was made with'**
+  String get restorePassphraseHint;
+
+  /// No description provided for @restorePassphraseAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restorePassphraseAction;
+
+  /// No description provided for @restoreWrongPassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong passphrase for this backup, or the file is damaged. Use the passphrase it was made with. Nothing was changed.'**
+  String get restoreWrongPassphrase;
+
+  /// No description provided for @restoreNotABackup.
+  ///
+  /// In en, this message translates to:
+  /// **'This file isn\'t a Hisab backup. Nothing was changed.'**
+  String get restoreNotABackup;
+
+  /// No description provided for @restoreFailedUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restore this backup. Try again.'**
+  String get restoreFailedUnknown;
+
+  /// No description provided for @scheduledBackupPassphraseSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase saved. Keep a copy somewhere safe: you need it to restore.'**
+  String get scheduledBackupPassphraseSet;
+
+  /// No description provided for @scheduledBackupPassphraseChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase changed. New backups use it; older backups still need the old one.'**
+  String get scheduledBackupPassphraseChanged;
+
+  /// No description provided for @notificationsDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are blocked for Hisab. Allow them in Settings.'**
+  String get notificationsDenied;
+
+  /// A credit card in account lists with no statement yet and nothing owed on it.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing due'**
+  String get cardNothingDue;
 
   /// No description provided for @settleWithTitle.
   ///

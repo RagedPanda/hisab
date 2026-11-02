@@ -65,4 +65,22 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(openedLocation('/entry')), findsOneWidget);
   });
+
+  testWidgets('with large text on a narrow phone the first-entry button sits under the caption', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final container = await createContainer(overrides: [heroDataProvider.overrideWithValue(AsyncData(_hero(expense: 0, previousExpense: 0, showsFirstRun: true)))]);
+    await pumpScreen(tester, container, const Scaffold(body: Padding(padding: EdgeInsets.all(16), child: HeroCard())));
+    await tester.pumpAndSettle();
+
+    final caption = tester.getRect(find.text('Nothing spent yet this month'));
+    expect(tester.getRect(find.widgetWithText(FilledButton, 'Add your first entry')).top, greaterThanOrEqualTo(caption.bottom));
+    expect(tester.takeException(), isNull);
+  });
+
+  test('the empty hero stacks only when the text needs more room than the card has', () {
+    expect(stacksEmptyHeroRow(300, 1), isFalse);
+    expect(stacksEmptyHeroRow(300, 1.3), isTrue);
+    expect(stacksEmptyHeroRow(400, 1.3), isFalse);
+  });
 }

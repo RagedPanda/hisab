@@ -184,6 +184,14 @@ void main() {
     expect(find.text(openedLocation('/udhaar/person/$rahulId')), findsOneWidget);
   });
 
+  testWidgets('the Home card rounds each person to whole rupees like its totals', (tester) async {
+    final container = await createContainer();
+    await seedRahul(tester, container, amountMinor: 250050);
+    await pumpScreen(tester, container, const Scaffold(body: SingleChildScrollView(child: UdhaarCard())));
+    expect(find.text('You get ₹2,501'), findsOneWidget);
+    expect(find.text('owes you ₹2,501'), findsOneWidget);
+  });
+
   testWidgets('the Home card opens the People & udhaar list even with one person', (tester) async {
     final container = await createContainer();
     await seedRahul(tester, container, amountMinor: 250000);

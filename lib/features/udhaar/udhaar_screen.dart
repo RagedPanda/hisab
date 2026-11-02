@@ -88,14 +88,17 @@ Future<String?> addPersonFromDialog(BuildContext context, WidgetRef ref) async {
 
 /// One person and what they owe me or I owe them; opens their page.
 class UdhaarPersonTile extends ConsumerWidget {
-  const UdhaarPersonTile({super.key, required this.person, required this.balance});
+  const UdhaarPersonTile({super.key, required this.person, required this.balance, this.wholeAmounts = false});
   final Person person;
   final int balance;
+
+  /// Rounds the amount to whole units, as Home cards do.
+  final bool wholeAmounts;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final amount = formatMinor(balance.abs(), format: ref.watch(homeMoneyFormatProvider));
+    final amount = formatMinor(balance.abs(), format: ref.watch(homeMoneyFormatProvider), showDecimals: wholeAmounts ? false : null);
     final status = balance > 0
         ? l10n.udhaarOwesYouShort(amount)
         : balance < 0

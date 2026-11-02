@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/features/shell/widgets/common.dart';
 import 'package:hisab/l10n/generated/app_localizations.dart';
 
+import '../support/one_line_text.dart';
+
 /// The labels the app shows with [compactSegment]: the entry kind tabs (entry
 /// editor and recurring rule form) and the theme picker in Settings.
 List<(String, IconData)> kindSegments(AppLocalizations l10n) =>
@@ -108,4 +110,29 @@ void main() {
       });
     }
   }
+
+  testWidgets('segmentLabel keeps a long label on one line inside a narrow segment, and keys the Text', (tester) async {
+    const label = 'A rather long segment label';
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: SizedBox(
+            width: 120,
+            child: SegmentedButton<int>(
+              key: const Key('narrow'),
+              segments: [ButtonSegment(value: 0, label: segmentLabel(label, key: const Key('label'))), const ButtonSegment(value: 1, label: Text('B'))],
+              selected: const {0},
+              onSelectionChanged: (_) {},
+            ),
+          ),
+        ),
+      ),
+    ));
+    expectOneLine(tester, find.byKey(const Key('narrow')), label);
+    expect(tester.widget<Text>(find.byKey(const Key('label'))).data, label);
+    final segment = tester.getRect(find.ancestor(of: find.text(label), matching: find.byType(TextButton)));
+    final shown = tester.getRect(find.byType(FittedBox).first);
+    expect(segment.intersect(shown).size, shown.size, reason: 'the label scales down to fit its segment');
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -100,6 +100,12 @@ List<PersonGroupShare> personShares(List<PersonSettleGroup> groups, {required St
 bool hasBalancesInOtherGroups(List<PersonSettleGroup> groups, {required String groupId, required String memberId}) =>
     personShares(groups, groupId: groupId, memberId: memberId, allGroups: true).any((share) => share.groupId != groupId);
 
+/// Whether [memberId] still pays or is paid by someone in [groupId]'s Settle
+/// up list. When I am square with them but this is true, their balance is
+/// with others (often routed there by simplified debts), not with me.
+bool settlesWithOthersIn(List<PersonSettleGroup> groups, {required String groupId, required String memberId}) =>
+    groups.where((group) => group.groupId == groupId).any((group) => group.suggested.any((transfer) => transfer.from == memberId || transfer.to == memberId));
+
 /// One currency's total of [shares]: positive, they owe me.
 typedef PersonTotal = ({String symbol, int netMinor});
 

@@ -7838,6 +7838,12 @@ abstract class AppLocalizations {
   /// **'You and {name} are square.'**
   String settleWithSquare(String name);
 
+  /// No description provided for @settleWithSquareOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} still has a balance in this group, but with others, not you: see Settle up.'**
+  String settleWithSquareOthers(String name);
+
   /// No description provided for @settleWithExplain.
   ///
   /// In en, this message translates to:

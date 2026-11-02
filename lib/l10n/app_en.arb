@@ -1698,6 +1698,8 @@
   "@settleWithEvensOut": {"placeholders": {"symbol": {"type": "String"}}},
   "settleWithSquare": "You and {name} are square.",
   "@settleWithSquare": {"placeholders": {"name": {"type": "String"}}},
+  "settleWithSquareOthers": "{name} still has a balance in this group, but with others, not you: see Settle up.",
+  "@settleWithSquareOthers": {"placeholders": {"name": {"type": "String"}}},
   "settleWithExplain": "Records one payment in each group so every balance with {name} is zero. Payments are not spending.",
   "@settleWithExplain": {"placeholders": {"name": {"type": "String"}}},
   "settleWithAction": "Record {count, plural, =1{1 payment} other{{count} payments}}",

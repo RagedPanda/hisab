@@ -4885,6 +4885,11 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String settleWithSquareOthers(String name) {
+    return 'इस ग्रुप में $name का बैलेंस अभी बाकी है, पर आपसे नहीं, दूसरों से: हिसाब चुकता करें देखें।';
+  }
+
+  @override
   String settleWithExplain(String name) {
     return 'हर ग्रुप में एक भुगतान दर्ज होगा ताकि $name के साथ हर बैलेंस शून्य हो जाए। भुगतान खर्च नहीं हैं।';
   }

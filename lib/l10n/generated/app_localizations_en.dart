@@ -4912,6 +4912,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String settleWithSquareOthers(String name) {
+    return '$name still has a balance in this group, but with others, not you: see Settle up.';
+  }
+
+  @override
   String settleWithExplain(String name) {
     return 'Records one payment in each group so every balance with $name is zero. Payments are not spending.';
   }

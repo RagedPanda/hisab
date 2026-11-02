@@ -86,6 +86,16 @@ void main() {
     });
   });
 
+  group('settlesWithOthersIn', () {
+    test('true when they are in this group\'s Settle up list, even if not with me', () {
+      final routed = ledger('sq', const [Transfer('sq-asha', 'sq-ben', 100)], emails: {'me': null, 'sq-asha': null, 'sq-ben': null, 'sq-chetan': null});
+      expect(settlesWithOthersIn([routed], groupId: 'sq', memberId: 'sq-asha'), isTrue);
+      expect(settlesWithOthersIn([routed], groupId: 'sq', memberId: 'sq-ben'), isTrue);
+      expect(settlesWithOthersIn([routed], groupId: 'sq', memberId: 'sq-chetan'), isFalse);
+      expect(settlesWithOthersIn([routed], groupId: 'other', memberId: 'sq-asha'), isFalse);
+    });
+  });
+
   group('settlement', () {
     test('they owe me: they pay me; I owe them: I pay them', () {
       const owedToMe = PersonGroupShare(groupId: 'g', symbol: '₹', myMemberId: 'me', theirMemberId: 'amit', netMinor: 1500);

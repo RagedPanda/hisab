@@ -1333,6 +1333,7 @@
   "settleWithTotalIOwe": "कुल मिलाकर आप पर {name} के {amount} बकाया",
   "settleWithEvensOut": "{symbol} वाले ग्रुप बराबर हो जाते हैं: कोई पैसा नहीं देना",
   "settleWithSquare": "आपका और {name} का हिसाब बराबर है।",
+  "settleWithSquareOthers": "इस ग्रुप में {name} का बैलेंस अभी बाकी है, पर आपसे नहीं, दूसरों से: हिसाब चुकता करें देखें।",
   "settleWithExplain": "हर ग्रुप में एक भुगतान दर्ज होगा ताकि {name} के साथ हर बैलेंस शून्य हो जाए। भुगतान खर्च नहीं हैं।",
   "settleWithAction": "{count, plural, =1{1 भुगतान दर्ज करें} other{{count} भुगतान दर्ज करें}}",
   "settleWithRecorded": "{name} के साथ {count, plural, =1{1 ग्रुप} other{{count} ग्रुप}} में हिसाब चुकता हुआ",

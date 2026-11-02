@@ -174,9 +174,13 @@ class _SettleWithPersonSheetState extends ConsumerState<SettleWithPersonSheet> {
               ),
             ],
             const SizedBox(height: 12),
-            if (shares.isEmpty)
-              Text(l10n.settleWithSquare(_name), style: theme.textTheme.bodyLarge)
-            else ...[
+            if (shares.isEmpty) ...[
+              Text(l10n.settleWithSquare(_name), style: theme.textTheme.bodyLarge),
+              if (!allGroups && settlesWithOthersIn(groups, groupId: widget.groupId, memberId: widget.member.id)) ...[
+                const SizedBox(height: 8),
+                Text(l10n.settleWithSquareOthers(_name), style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              ],
+            ] else ...[
               for (final share in shares)
                 ListTile(
                   key: ValueKey('settle-with-${share.groupId}'),

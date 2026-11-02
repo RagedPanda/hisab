@@ -106,6 +106,7 @@ void main() {
 
     await tapVisible(tester, find.text('Priya').first);
     expect(inSheet(find.text('You and Priya are square.')), findsOneWidget);
+    expect(inSheet(find.textContaining('with others')), findsNothing, reason: 'Priya is in nobody\'s Settle up row any more');
     expect(inSheet(find.textContaining('Record')), findsNothing);
     await leaveApp(tester);
   });

@@ -26,6 +26,7 @@ import '../reminders/reminders_settings_tile.dart';
 import '../salary/salary_providers.dart';
 import '../salary/salary_reminder.dart';
 import '../shell/widgets/common.dart';
+import '../shell/widgets/tile_group.dart';
 import '../shortcuts/launcher_sync.dart' show launcherChannelProvider;
 import '../shortcuts/shortcuts_screen.dart';
 import 'backup_actions.dart';
@@ -83,108 +84,101 @@ class SettingsScreen extends ConsumerWidget {
             ]),
           ),
           SectionHeader(l10n.money),
-          Card(
-            child: Column(children: [
-              ListTile(
-                leading: const Icon(Icons.currency_rupee),
-                title: Text(l10n.currency),
-                trailing: SettingValue(currencyShortLabel(settings.currencyCode)),
-                visualDensity: VisualDensity.compact,
-                onTap: () async {
-                  final code = await showCurrencyPicker(context, selectedCode: settings.currencyCode);
-                  if (code != null) await notifier.update((s) => s.copyWith(currencyCode: code, currencyConfirmed: true));
-                },
-              ),
-              ListTile(leading: const Icon(Icons.account_balance_outlined), title: Text(l10n.accounts), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/accounts')),
-              ListTile(
-                leading: const Icon(Icons.account_balance_wallet_outlined),
-                title: Text(l10n.defaultAccount),
-                subtitle: Text(l10n.defaultAccountHelp, maxLines: 1, overflow: TextOverflow.ellipsis),
-                trailing: SettingValue(_defaultAccountLabel(ref, settings.defaultAccountId)),
-                visualDensity: VisualDensity.compact,
-                onTap: () async {
-                  final id = await _pickDefaultAccount(context, ref, settings.defaultAccountId);
-                  if (id != null) await notifier.update((s) => s.copyWith(defaultAccountId: id));
-                },
-              ),
-              ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.categories), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/categories')),
-              ListTile(
-                key: const Key('settingsQuickEntries'),
-                leading: const Icon(Icons.bolt_outlined),
-                title: Text(l10n.quickEntries),
-                subtitle: Text(l10n.quickEntriesHint, maxLines: 1, overflow: TextOverflow.ellipsis),
-                trailing: const Icon(Icons.chevron_right),
-                visualDensity: VisualDensity.compact,
-                onTap: () => context.push(kQuickEntriesLocation),
-              ),
-            ]),
-          ),
+          TileGroup(children: [
+            ListTile(
+              leading: const Icon(Icons.currency_rupee),
+              title: Text(l10n.currency),
+              trailing: SettingValue(currencyShortLabel(settings.currencyCode)),
+              visualDensity: VisualDensity.compact,
+              onTap: () async {
+                final code = await showCurrencyPicker(context, selectedCode: settings.currencyCode);
+                if (code != null) await notifier.update((s) => s.copyWith(currencyCode: code, currencyConfirmed: true));
+              },
+            ),
+            ListTile(leading: const Icon(Icons.account_balance_outlined), title: Text(l10n.accounts), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/accounts')),
+            ListTile(
+              leading: const Icon(Icons.account_balance_wallet_outlined),
+              title: Text(l10n.defaultAccount),
+              subtitle: Text(l10n.defaultAccountHelp, maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: SettingValue(_defaultAccountLabel(ref, settings.defaultAccountId)),
+              visualDensity: VisualDensity.compact,
+              onTap: () async {
+                final id = await _pickDefaultAccount(context, ref, settings.defaultAccountId);
+                if (id != null) await notifier.update((s) => s.copyWith(defaultAccountId: id));
+              },
+            ),
+            ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.categories), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/categories')),
+            ListTile(
+              key: const Key('settingsQuickEntries'),
+              leading: const Icon(Icons.bolt_outlined),
+              title: Text(l10n.quickEntries),
+              subtitle: Text(l10n.quickEntriesHint, maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: const Icon(Icons.chevron_right),
+              visualDensity: VisualDensity.compact,
+              onTap: () => context.push(kQuickEntriesLocation),
+            ),
+          ]),
           SectionHeader(l10n.advancedSettings),
-          Card(
-            key: const Key('settingsAdvanced'),
-            child: Column(children: [
-              ListTile(leading: const Icon(Icons.savings_outlined), title: Text(l10n.budgets), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/budgets')),
-              ListTile(leading: const Icon(Icons.folder_outlined), title: Text(l10n.projects), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/projects')),
-              ListTile(leading: const Icon(Icons.repeat), title: Text(l10n.recurringTitle), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/recurring')),
-              ListTile(leading: const Icon(Icons.autorenew), title: Text(l10n.subscriptions), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/subscriptions')),
-              ListTile(
-                key: const Key('settings.udhaar'),
-                leading: const Icon(Icons.handshake_outlined),
-                title: Text(l10n.udhaarPeopleAndUdhaar),
-                subtitle: Text(l10n.udhaarPeopleHint, maxLines: 1, overflow: TextOverflow.ellipsis),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/udhaar'),
-              ),
-              ListTile(
-                key: const Key('settingsSalary'),
-                leading: const Icon(Icons.payments_outlined),
-                title: Text(salary.isSetUp ? l10n.salaryTitle : l10n.salarySetUp),
-                subtitle: salary.isSetUp
-                    ? Text(l10n.salarySummary(formatMinor(salary.amountMinor, format: ref.watch(homeMoneyFormatProvider)), salary.salaryDay), maxLines: 1, overflow: TextOverflow.ellipsis)
-                    : null,
-                trailing: const Icon(Icons.chevron_right),
-                visualDensity: VisualDensity.compact,
-                onTap: () => context.push(kSalaryLocation),
-              ),
-              ListTile(
-                leading: const Icon(Icons.calendar_month_outlined),
-                title: Text(l10n.monthStartsOn),
-                subtitle: Text(l10n.monthStartsOnHelp, maxLines: 1, overflow: TextOverflow.ellipsis),
-                trailing: SettingValue(l10n.dayNumber(settings.monthStartDay)),
-                visualDensity: VisualDensity.compact,
-                onTap: () async {
-                  final text = await promptText(context, title: l10n.monthStartPrompt, hint: l10n.monthStartsOnExplain, initial: '${settings.monthStartDay}', keyboardType: TextInputType.number);
-                  final day = int.tryParse(text ?? '');
-                  if (day != null && day >= 1 && day <= 28) await notifier.update((s) => s.copyWith(monthStartDay: day));
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.pin_outlined),
-                title: Text(l10n.numberFormatTitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-                trailing: SettingValue(numberFormatSample(ref.watch(homeMoneyFormatProvider))),
-                visualDensity: VisualDensity.compact,
-                onTap: () async {
-                  final choice = await _pickNumberFormat(context, settings, ref.read(deviceLocaleProvider));
-                  if (choice != null) await notifier.update((s) => s.copyWith(numberFormat: choice));
-                },
-              ),
-            ]),
-          ),
+          TileGroup(key: const Key('settingsAdvanced'), children: [
+            ListTile(leading: const Icon(Icons.savings_outlined), title: Text(l10n.budgets), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/budgets')),
+            ListTile(leading: const Icon(Icons.folder_outlined), title: Text(l10n.projects), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/projects')),
+            ListTile(leading: const Icon(Icons.repeat), title: Text(l10n.recurringTitle), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/recurring')),
+            ListTile(leading: const Icon(Icons.autorenew), title: Text(l10n.subscriptions), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/subscriptions')),
+            ListTile(
+              key: const Key('settings.udhaar'),
+              leading: const Icon(Icons.handshake_outlined),
+              title: Text(l10n.udhaarPeopleAndUdhaar),
+              subtitle: Text(l10n.udhaarPeopleHint, maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/udhaar'),
+            ),
+            ListTile(
+              key: const Key('settingsSalary'),
+              leading: const Icon(Icons.payments_outlined),
+              title: Text(salary.isSetUp ? l10n.salaryTitle : l10n.salarySetUp),
+              subtitle: salary.isSetUp
+                  ? Text(l10n.salarySummary(formatMinor(salary.amountMinor, format: ref.watch(homeMoneyFormatProvider)), salary.salaryDay), maxLines: 1, overflow: TextOverflow.ellipsis)
+                  : null,
+              trailing: const Icon(Icons.chevron_right),
+              visualDensity: VisualDensity.compact,
+              onTap: () => context.push(kSalaryLocation),
+            ),
+            ListTile(
+              leading: const Icon(Icons.calendar_month_outlined),
+              title: Text(l10n.monthStartsOn),
+              subtitle: Text(l10n.monthStartsOnHelp, maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: SettingValue(l10n.dayNumber(settings.monthStartDay)),
+              visualDensity: VisualDensity.compact,
+              onTap: () async {
+                final text = await promptText(context, title: l10n.monthStartPrompt, hint: l10n.monthStartsOnExplain, initial: '${settings.monthStartDay}', keyboardType: TextInputType.number);
+                final day = int.tryParse(text ?? '');
+                if (day != null && day >= 1 && day <= 28) await notifier.update((s) => s.copyWith(monthStartDay: day));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.pin_outlined),
+              title: Text(l10n.numberFormatTitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: SettingValue(numberFormatSample(ref.watch(homeMoneyFormatProvider))),
+              visualDensity: VisualDensity.compact,
+              onTap: () async {
+                final choice = await _pickNumberFormat(context, settings, ref.read(deviceLocaleProvider));
+                if (choice != null) await notifier.update((s) => s.copyWith(numberFormat: choice));
+              },
+            ),
+          ]),
           SectionHeader(l10n.automation),
-          Card(
-            child: ListTile(
+          TileGroup(children: [
+            ListTile(
               leading: const Icon(Icons.sms_outlined),
               title: Text(l10n.bankSms),
               subtitle: Text(settings.smsEnabled ? l10n.bankSmsOn : l10n.off),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/sms'),
             ),
-          ),
-          const Card(child: RemindersSettingsTile()),
-          const Card(child: NotificationsSettingsTile()),
-          if (ref.watch(launcherChannelProvider).isSupported)
-            Card(
-              child: ListTile(
+            const RemindersSettingsTile(),
+            const NotificationsSettingsTile(),
+            if (ref.watch(launcherChannelProvider).isSupported)
+              ListTile(
                 key: const Key('settings.shortcuts'),
                 leading: const Icon(Icons.widgets_outlined),
                 title: Text(l10n.shortcutsTitle),
@@ -192,7 +186,7 @@ class SettingsScreen extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(kShortcutsLocation),
               ),
-            ),
+          ]),
           SectionHeader(l10n.groups),
           Card(
             child: ListTile(
@@ -209,43 +203,41 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           SectionHeader(l10n.backupAndSync),
-          Card(
-            child: Column(children: [
+          TileGroup(children: [
+            ListTile(
+              leading: const Icon(Icons.lock_outline),
+              title: Text(l10n.exportBackup),
+              subtitle: Text(l10n.exportBackupHelp),
+              onTap: () => _export(context, ref),
+            ),
+            ListTile(
+              leading: const Icon(Icons.restore),
+              title: Text(l10n.restoreBackup),
+              subtitle: Text(l10n.restoreBackupHelp),
+              onTap: () => _import(context, ref),
+            ),
+            if (isDriveBackupSupported)
               ListTile(
-                leading: const Icon(Icons.lock_outline),
-                title: Text(l10n.exportBackup),
-                subtitle: Text(l10n.exportBackupHelp),
-                onTap: () => _export(context, ref),
-              ),
-              ListTile(
-                leading: const Icon(Icons.restore),
-                title: Text(l10n.restoreBackup),
-                subtitle: Text(l10n.restoreBackupHelp),
-                onTap: () => _import(context, ref),
-              ),
-              if (isDriveBackupSupported)
-                ListTile(
-                  key: const Key('driveBackupTile'),
-                  leading: const Icon(Icons.cloud_upload_outlined),
-                  title: Text(l10n.driveBackupTitle),
-                  subtitle: Text(_driveBackupSubtitle(l10n, ref.watch(driveBackupEmailProvider))),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push(kDriveBackupLocation),
-                ),
-              ListTile(
-                key: const Key('scheduledBackupTile'),
-                leading: const Icon(Icons.schedule),
-                title: Text(l10n.scheduledBackupTitle),
-                subtitle: Text(
-                  scheduledBackupSummary(l10n, ref.watch(scheduledBackupChoicesProvider), ref.watch(scheduledBackupHistoryProvider), locale: Localizations.localeOf(context).toString()),
-                  style: scheduledBackupFailing(ref.watch(scheduledBackupChoicesProvider), ref.watch(scheduledBackupHistoryProvider)) ? TextStyle(color: Theme.of(context).colorScheme.error) : null,
-                ),
+                key: const Key('driveBackupTile'),
+                leading: const Icon(Icons.cloud_upload_outlined),
+                title: Text(l10n.driveBackupTitle),
+                subtitle: Text(_driveBackupSubtitle(l10n, ref.watch(driveBackupEmailProvider))),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push(kScheduledBackupLocation),
+                onTap: () => context.push(kDriveBackupLocation),
               ),
-            ]),
-          ),
-          const Card(child: AppLockSettingsTile()),
+            ListTile(
+              key: const Key('scheduledBackupTile'),
+              leading: const Icon(Icons.schedule),
+              title: Text(l10n.scheduledBackupTitle),
+              subtitle: Text(
+                scheduledBackupSummary(l10n, ref.watch(scheduledBackupChoicesProvider), ref.watch(scheduledBackupHistoryProvider), locale: Localizations.localeOf(context).toString()),
+                style: scheduledBackupFailing(ref.watch(scheduledBackupChoicesProvider), ref.watch(scheduledBackupHistoryProvider)) ? TextStyle(color: Theme.of(context).colorScheme.error) : null,
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(kScheduledBackupLocation),
+            ),
+            const AppLockSettingsTile(),
+          ]),
           const SizedBox(height: 12),
           Card(
             child: ListTile(

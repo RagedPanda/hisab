@@ -84,6 +84,7 @@ class AppLockSettingsScreen extends ConsumerWidget {
           ),
           if (settings.enabled && ref.watch(secureWindowChannelProvider).isSupported)
             Card(
+              margin: const EdgeInsets.only(top: 12),
               child: SwitchListTile(
                 key: const Key('appLockHideInRecents'),
                 secondary: const Icon(Icons.visibility_off_outlined),

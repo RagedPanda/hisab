@@ -4997,4 +4997,23 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get settleWithPickPerson => 'किसके साथ हिसाब चुकता कर रहे हैं?';
+
+  @override
+  String addCategoryNamed(String name) {
+    return '\"$name\" जोड़ें';
+  }
+
+  @override
+  String get addCategoryNamedHint => 'नई श्रेणी, अगली बार भी मिलेगी';
+
+  @override
+  String get putUnder => 'किसके अंदर रखें';
+
+  @override
+  String get ownTopLevelCategory => 'अलग मुख्य श्रेणी';
+
+  @override
+  String suggestedParent(String name) {
+    return '$name (सुझाव)';
+  }
 }

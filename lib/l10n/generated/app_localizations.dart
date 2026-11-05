@@ -7993,6 +7993,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Who are you settling with?'**
   String get settleWithPickPerson;
+
+  /// No description provided for @addCategoryNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Add \"{name}\"'**
+  String addCategoryNamed(String name);
+
+  /// No description provided for @addCategoryNamedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New category, there next time too'**
+  String get addCategoryNamedHint;
+
+  /// No description provided for @putUnder.
+  ///
+  /// In en, this message translates to:
+  /// **'Put under'**
+  String get putUnder;
+
+  /// No description provided for @ownTopLevelCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Its own category (top level)'**
+  String get ownTopLevelCategory;
+
+  /// No description provided for @suggestedParent.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (suggested)'**
+  String suggestedParent(String name);
 }
 
 class _AppLocalizationsDelegate

@@ -5024,4 +5024,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settleWithPickPerson => 'Who are you settling with?';
+
+  @override
+  String addCategoryNamed(String name) {
+    return 'Add \"$name\"';
+  }
+
+  @override
+  String get addCategoryNamedHint => 'New category, there next time too';
+
+  @override
+  String get putUnder => 'Put under';
+
+  @override
+  String get ownTopLevelCategory => 'Its own category (top level)';
+
+  @override
+  String suggestedParent(String name) {
+    return '$name (suggested)';
+  }
 }

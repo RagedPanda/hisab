@@ -1358,5 +1358,10 @@
   "settleWithMessageTotalIOwe": "कुल मिलाकर, मुझ पर आपके {amount} बकाया।",
   "settleWithPersonTile": "एक व्यक्ति के साथ हिसाब चुकता करें",
   "settleWithPersonTileHint": "आपके और उनके बीच का सब कुछ, यहाँ या सभी ग्रुप में",
-  "settleWithPickPerson": "किसके साथ हिसाब चुकता कर रहे हैं?"
+  "settleWithPickPerson": "किसके साथ हिसाब चुकता कर रहे हैं?",
+  "addCategoryNamed": "\"{name}\" जोड़ें",
+  "addCategoryNamedHint": "नई श्रेणी, अगली बार भी मिलेगी",
+  "putUnder": "किसके अंदर रखें",
+  "ownTopLevelCategory": "अलग मुख्य श्रेणी",
+  "suggestedParent": "{name} (सुझाव)"
 }

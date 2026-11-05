@@ -71,6 +71,29 @@ void main() {
     await reinstalled.close();
   });
 
+  test('a category made from the picker under a built-in parent survives a restore onto a fresh install', () async {
+    final original = AppDatabase(NativeDatabase.memory());
+    final repo = CategoriesRepository(original);
+    final food = (await repo.findBySeedKey('food'))!;
+    final iceCreamId = await repo.create(name: 'Ice cream', icon: food.icon, color: food.color, kind: 'expense', parentId: food.id);
+    final cash = (await liveAccounts(original)).single;
+    final entryId = await addEntry(original, categoryId: iceCreamId, accountId: cash.id);
+    final backup = await BackupService(original).snapshot();
+    await original.close();
+
+    final reinstalled = AppDatabase(NativeDatabase.memory());
+    await BackupService(reinstalled).importSnapshot(backup);
+
+    final live = await liveCategories(reinstalled);
+    expect(live.length, catalogSize + 1);
+    final iceCream = live.singleWhere((c) => c.id == iceCreamId);
+    expect((iceCream.name, iceCream.parentId, iceCream.seedKey), ('Ice cream', food.id, null));
+    expect(live.where((c) => c.id == food.id), hasLength(1), reason: 'its parent is the kept built-in copy');
+    final entry = await (reinstalled.select(reinstalled.entries)..where((t) => t.id.equals(entryId))).getSingle();
+    expect(entry.categoryId, iceCreamId);
+    await reinstalled.close();
+  });
+
   test('lookups by key survive duplicates an old restore left behind', () async {
     final db = AppDatabase(NativeDatabase.memory());
     await liveCategories(db);

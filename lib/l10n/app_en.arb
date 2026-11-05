@@ -1734,5 +1734,12 @@
   "@settleWithMessageTotalIOwe": {"placeholders": {"amount": {"type": "String"}}},
   "settleWithPersonTile": "Settle up with one person",
   "settleWithPersonTileHint": "Everything between you and them, here or across groups",
-  "settleWithPickPerson": "Who are you settling with?"
+  "settleWithPickPerson": "Who are you settling with?",
+  "addCategoryNamed": "Add \"{name}\"",
+  "@addCategoryNamed": {"placeholders": {"name": {"type": "String"}}},
+  "addCategoryNamedHint": "New category, there next time too",
+  "putUnder": "Put under",
+  "ownTopLevelCategory": "Its own category (top level)",
+  "suggestedParent": "{name} (suggested)",
+  "@suggestedParent": {"placeholders": {"name": {"type": "String"}}}
 }

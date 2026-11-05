@@ -1203,7 +1203,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get entries => 'Entries';
 
   @override
-  String get searchEntriesHint => 'Search payee, note, item or category';
+  String get searchEntriesHint => 'Search payee, note, item, category or #tag';
 
   @override
   String get noEntriesTitle => 'Nothing here yet';
@@ -2209,7 +2209,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tags => 'Tags';
 
   @override
-  String get tagsHint => 'Comma separated, e.g. home, trip';
+  String get tagsHint => 'Separate with commas, e.g. ice cream, trip';
 
   @override
   String get showResults => 'Show results';

@@ -1203,7 +1203,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get entries => 'लेन-देन';
 
   @override
-  String get searchEntriesHint => 'नाम, नोट, आइटम या श्रेणी खोजें';
+  String get searchEntriesHint => 'नाम, नोट, आइटम, श्रेणी या #टैग खोजें';
 
   @override
   String get noEntriesTitle => 'अभी यहाँ कुछ नहीं';
@@ -2201,7 +2201,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get tags => 'टैग';
 
   @override
-  String get tagsHint => 'कॉमा से अलग करें, जैसे home, trip';
+  String get tagsHint => 'कॉमा से अलग करें, जैसे ice cream, trip';
 
   @override
   String get showResults => 'नतीजे दिखाएँ';

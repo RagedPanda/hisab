@@ -2153,7 +2153,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchEntriesHint.
   ///
   /// In en, this message translates to:
-  /// **'Search payee, note, item or category'**
+  /// **'Search payee, note, item, category or #tag'**
   String get searchEntriesHint;
 
   /// No description provided for @noEntriesTitle.
@@ -3791,7 +3791,7 @@ abstract class AppLocalizations {
   /// No description provided for @tagsHint.
   ///
   /// In en, this message translates to:
-  /// **'Comma separated, e.g. home, trip'**
+  /// **'Separate with commas, e.g. ice cream, trip'**
   String get tagsHint;
 
   /// No description provided for @showResults.

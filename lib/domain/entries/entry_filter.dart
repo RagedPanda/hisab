@@ -103,15 +103,23 @@ class EntryFacts {
   final String tags;
 }
 
-/// Tags written as `#home, trip` or `home trip`: split on commas and spaces,
-/// `#` dropped, duplicates removed ignoring case, first spelling kept.
+/// Tags written as `ice cream, trip` or `#food #trip`: split on commas (and
+/// on whitespace that starts a new `#hashtag`), so a tag may hold spaces.
+/// `#` dropped, inner whitespace collapsed, duplicates removed ignoring case,
+/// first spelling kept.
 List<String> parseTags(String raw) {
   final seen = <String>{};
   return [
-    for (final part in raw.split(RegExp(r'[,\s]+')))
-      if (part.replaceFirst(RegExp('^#+'), '') case final tag when tag.isNotEmpty && seen.add(tag.toLowerCase())) tag,
+    for (final part in raw.split(_tagSeparator))
+      if (_tidyTag(part) case final tag when tag.isNotEmpty && seen.add(tag.toLowerCase())) tag,
   ];
 }
+
+/// A comma (ASCII, full-width or ideographic), a line break, or whitespace
+/// followed by `#`.
+final _tagSeparator = RegExp(r'[,，、\n]|\s+(?=#)');
+
+String _tidyTag(String part) => part.trim().replaceFirst(RegExp(r'^#+'), '').replaceAll(RegExp(r'\s+'), ' ').trim();
 
 /// [tags] as stored on an entry: `home, trip`.
 String formatTags(Iterable<String> tags) => tags.join(', ');
@@ -131,11 +139,22 @@ List<String> distinctTags(Iterable<String> rawTags) {
 }
 
 /// Whether [query] appears (ignoring case) in the payee, note, item names,
-/// category names or tags. A blank query matches everything.
+/// category names or tags. A blank query matches everything. A query starting
+/// with `#` searches tags only: each tag in it (`#ice cream`, `#food #trip`)
+/// must begin one of the entry's tags, so `#ice cream` finds the tag
+/// `ice cream` and keeps matching while it is still being typed.
 bool matchesSearch(String query, EntryFacts facts) {
-  final needle = query.trim().toLowerCase();
+  final trimmed = query.trim();
+  if (trimmed.startsWith('#')) return _matchesTagSearch(trimmed, facts.tags);
+  final needle = trimmed.toLowerCase();
   if (needle.isEmpty) return true;
   return [facts.payee ?? '', facts.note, facts.tags, ...facts.itemNames, ...facts.categoryNames].any((text) => text.toLowerCase().contains(needle));
+}
+
+bool _matchesTagSearch(String query, String rawTags) {
+  final wanted = [for (final tag in parseTags(query)) tag.toLowerCase()];
+  final entryTags = [for (final tag in parseTags(rawTags)) tag.toLowerCase()];
+  return wanted.every((want) => entryTags.any((tag) => tag.startsWith(want)));
 }
 
 /// Whether the entry passes every filter that is on.

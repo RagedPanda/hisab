@@ -415,7 +415,7 @@
   "splitHelpByItem": "Each item is split among the people who shared it.",
 
   "entries": "Entries",
-  "searchEntriesHint": "Search payee, note, item or category",
+  "searchEntriesHint": "Search payee, note, item, category or #tag",
   "noEntriesTitle": "Nothing here yet",
   "noEntriesBody": "Entries for this month will appear grouped by day.",
 
@@ -750,7 +750,7 @@
   "maxAmount": "Max",
   "dates": "Dates",
   "tags": "Tags",
-  "tagsHint": "Comma separated, e.g. home, trip",
+  "tagsHint": "Separate with commas, e.g. ice cream, trip",
   "showResults": "Show results",
   "clearAll": "Clear all",
   "resultsCount": "{count, plural, =1{1 result} other{{count} results}}",

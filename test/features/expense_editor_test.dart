@@ -421,6 +421,16 @@ void main() {
       expect(saved.tags, 'home, goa');
     });
 
+    testWidgets('a tag can hold spaces', (tester) async {
+      final container = await openEditor(tester);
+      await enterEditorAmount(tester, '120');
+      await openMoreDetails(tester);
+      await revealInEditor(tester, tagsField);
+      await tester.enterText(tagsField, 'ice  cream, #late night #Ice Cream');
+      await saveEditor(tester);
+      expect((await savedEntries(tester, container)).single.tags, 'ice cream, late night');
+    });
+
     testWidgets('editing a tagged entry keeps its tags', (tester) async {
       final container = await openEditor(tester, location: () => '/entry?id=trip', seed: (container) async => seedEntry(container, id: 'trip', payee: 'Cab', amountMinor: 40000, accountId: await cashAccountId(container), tags: 'goa, work'));
       expect(tester.widget<TextField>(tagsField).controller!.text, 'goa, work', reason: 'tags open More details on their own');

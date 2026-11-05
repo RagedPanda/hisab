@@ -127,14 +127,82 @@ void main() {
   test('formatTags and withTag keep one spelling of each tag', () {
     expect(formatTags(['home', 'trip']), 'home, trip');
     expect(withTag('', 'goa'), 'goa');
-    expect(withTag('#home trip', 'Goa'), 'home, trip, Goa');
+    expect(withTag('#home #trip', 'Goa'), 'home, trip, Goa');
     expect(withTag('home, Goa', 'goa'), 'home, Goa', reason: 'already there, ignoring case');
+    expect(withTag('trip', 'ice cream'), 'trip, ice cream', reason: 'a spaced tag stays one tag');
+    expect(withTag('Ice Cream', 'ice  cream'), 'Ice Cream');
   });
 
-  test('parseTags and distinctTags', () {
-    expect(parseTags('#home, trip  #Home,,'), ['home', 'trip']);
-    expect(parseTags(''), isEmpty);
+  group('parseTags', () {
+    test('commas separate tags and spaces stay inside one', () {
+      expect(parseTags('ice cream, trip'), ['ice cream', 'trip']);
+      expect(parseTags('home trip'), ['home trip']);
+      expect(parseTags('  ice   cream  ,  late   night snack '), ['ice cream', 'late night snack'], reason: 'trimmed, inner whitespace collapsed');
+    });
+
+    test('hashtags still split on the space before each #', () {
+      expect(parseTags('#food #trip'), ['food', 'trip']);
+      expect(parseTags('#ice cream'), ['ice cream']);
+      expect(parseTags('#ice cream #goa trip'), ['ice cream', 'goa trip']);
+      expect(parseTags('##home'), ['home']);
+      expect(parseTags('# ice cream'), ['ice cream'], reason: 'space after # is dropped');
+    });
+
+    test('mixed commas and hashtags', () {
+      expect(parseTags('#home, trip  #Home,,'), ['home', 'trip']);
+      expect(parseTags('work, #ice cream #goa,family dinner'), ['work', 'ice cream', 'goa', 'family dinner']);
+    });
+
+    test('duplicates removed ignoring case and spacing, first spelling kept', () {
+      expect(parseTags('Ice Cream, ice cream, ICE  CREAM, ice'), ['Ice Cream', 'ice']);
+    });
+
+    test('empty parts and blank input give nothing', () {
+      expect(parseTags(''), isEmpty);
+      expect(parseTags(' , ,, # , ## '), isEmpty);
+    });
+
+    test('unicode and Hindi tags, other comma forms and line breaks', () {
+      expect(parseTags('घर का खर्च, यात्रा'), ['घर का खर्च', 'यात्रा']);
+      expect(parseTags('#दिवाली #घर का सामान'), ['दिवाली', 'घर का सामान']);
+      expect(parseTags('café，trip、goa\nwork'), ['café', 'trip', 'goa', 'work']);
+      expect(parseTags('ice\u00a0cream'), ['ice cream'], reason: 'a no-break space counts as a space');
+    });
+
+    test('stored comma-joined tags read back unchanged', () {
+      const stored = 'home, ice cream, trip';
+      expect(formatTags(parseTags(stored)), stored);
+    });
+  });
+
+  test('distinctTags', () {
     expect(distinctTags(['trip, #home', 'Diwali', 'HOME']), ['Diwali', 'home', 'trip']);
+    expect(distinctTags(['ice cream, trip', 'Ice  Cream', 'ice']), ['ice', 'ice cream', 'trip']);
+  });
+
+  group('tags in search and filters', () {
+    EntryFacts tagged(String tags) => EntryFacts(amountMinor: 100, occurredAt: DateTime(2026, 11, 1), tags: tags);
+
+    test('the tag filter matches exactly that tag', () {
+      const filter = EntryFilter(tag: 'ice cream');
+      expect(matchesEntryFilter(filter, tagged('trip, Ice Cream')), isTrue);
+      expect(matchesEntryFilter(filter, tagged('ice, cream')), isFalse);
+      expect(matchesEntryFilter(const EntryFilter(tag: 'ice'), tagged('ice cream')), isFalse);
+    });
+
+    test('a #query searches tags by their start', () {
+      expect(matchesSearch('#ice cream', tagged('trip, ice cream')), isTrue);
+      expect(matchesSearch('#ice c', tagged('ice cream')), isTrue, reason: 'still matches while typing');
+      expect(matchesSearch('#cream', tagged('ice cream')), isFalse);
+      expect(matchesSearch('#food #trip', tagged('food, trip')), isTrue);
+      expect(matchesSearch('#food #trip', tagged('food')), isFalse);
+      expect(matchesSearch('#ice', EntryFacts(amountMinor: 1, occurredAt: DateTime(2026), note: 'ice')), isFalse, reason: '# looks at tags only');
+      expect(matchesSearch('#', tagged('')), isTrue);
+    });
+
+    test('a plain query still finds text inside tags', () {
+      expect(matchesSearch('cream', tagged('ice cream')), isTrue);
+    });
   });
 
   test('validateAmountRange', () {

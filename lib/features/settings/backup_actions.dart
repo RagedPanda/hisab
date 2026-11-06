@@ -31,6 +31,10 @@ String newPassphraseProblemLabel(AppLocalizations l10n, NewPassphraseProblem pro
   NewPassphraseProblem.mismatch => l10n.passphraseMismatch,
 };
 
+/// Lines the guidance and problems under a passphrase field may wrap onto,
+/// enough for a long translation at the largest text size.
+const _kGuidanceMaxLines = 8;
+
 /// Passphrase entry, hidden as it is typed. With [confirm] it asks for the
 /// passphrase twice and checks length and match before closing.
 class BackupPassphraseDialog extends StatefulWidget {
@@ -82,9 +86,11 @@ class _BackupPassphraseDialogState extends State<BackupPassphraseDialog> {
             onChanged: (_) => setState(() => _problem = null),
             onSubmitted: widget.confirm ? null : (_) => _submit(),
             decoration: InputDecoration(
-              hintText: widget.confirm ? l10n.backupPassphraseHelp : l10n.restorePassphraseHint,
+              // Guidance sits under the field, where it can wrap; a hint is cut to one line.
+              helperText: widget.confirm ? l10n.backupPassphraseHelp : l10n.restorePassphraseHint,
+              helperMaxLines: _kGuidanceMaxLines,
               errorText: problem == NewPassphraseProblem.tooShort ? newPassphraseProblemLabel(l10n, NewPassphraseProblem.tooShort) : null,
-              errorMaxLines: 2,
+              errorMaxLines: _kGuidanceMaxLines,
               suffixIcon: IconButton(
                 tooltip: _visible ? l10n.passphraseHide : l10n.passphraseShow,
                 icon: Icon(_visible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
@@ -104,7 +110,7 @@ class _BackupPassphraseDialogState extends State<BackupPassphraseDialog> {
               decoration: InputDecoration(
                 hintText: l10n.passphraseConfirmHint,
                 errorText: problem == NewPassphraseProblem.mismatch ? newPassphraseProblemLabel(l10n, NewPassphraseProblem.mismatch) : null,
-                errorMaxLines: 2,
+                errorMaxLines: _kGuidanceMaxLines,
               ),
             ),
         ],

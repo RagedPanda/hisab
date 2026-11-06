@@ -133,7 +133,7 @@ class _DailyChart extends StatelessWidget {
                 showTitles: true,
                 reservedSize: 40,
                 interval: maxY / 2,
-                getTitlesWidget: (value, meta) => Text(axisAmountLabel(value, format: moneyFormat), style: labelStyle, textAlign: TextAlign.left),
+                getTitlesWidget: (value, meta) => ChartAxisLabel(axisAmountLabel(value, format: moneyFormat), style: labelStyle, alignment: Alignment.centerLeft),
               ),
             ),
             bottomTitles: AxisTitles(
@@ -142,7 +142,7 @@ class _DailyChart extends StatelessWidget {
                 reservedSize: 22,
                 interval: 1,
                 getTitlesWidget: (value, meta) => labelDays.contains(value.round()) && value == value.roundToDouble()
-                    ? Padding(padding: const EdgeInsets.only(top: 6), child: Text('${value.round()}', style: labelStyle))
+                    ? Padding(padding: const EdgeInsets.only(top: 6), child: ChartAxisLabel('${value.round()}', style: labelStyle))
                     : const SizedBox.shrink(),
               ),
             ),
@@ -243,7 +243,7 @@ class MonthlyBars extends StatelessWidget {
                 showTitles: true,
                 reservedSize: 40,
                 interval: maxY / 2,
-                getTitlesWidget: (value, meta) => Text(axisAmountLabel(value, format: moneyFormat), style: labelStyle, textAlign: TextAlign.left),
+                getTitlesWidget: (value, meta) => ChartAxisLabel(axisAmountLabel(value, format: moneyFormat), style: labelStyle, alignment: Alignment.centerLeft),
               ),
             ),
             bottomTitles: AxisTitles(
@@ -252,7 +252,7 @@ class MonthlyBars extends StatelessWidget {
                 reservedSize: 22,
                 getTitlesWidget: (value, meta) => Padding(
                   padding: const EdgeInsets.only(top: 6),
-                  child: Text(monthLabel(months[value.round()].range.start), style: labelStyle),
+                  child: ChartAxisLabel(monthLabel(months[value.round()].range.start), style: labelStyle),
                 ),
               ),
             ),

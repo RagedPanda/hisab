@@ -70,18 +70,44 @@ void main() {
     expect((await readDb(tester, () => liveEntries(container))).single.categoryId, iceCream.id);
   });
 
-  testWidgets('partial matches keep the add row, below them; an exact match hides it', (tester) async {
+  testWidgets('partial matches keep the add row, pinned above them; an exact match hides it', (tester) async {
     await openEditor(tester);
     await openPicker(tester);
 
     await search(tester, 'food');
     expect(addRow, findsOneWidget);
     expect(find.text('Food & Dining'), findsWidgets);
-    expect(tester.getTopLeft(addRow).dy, greaterThan(tester.getTopLeft(find.text('Food & Dining').first).dy));
+    expect(tester.getTopLeft(addRow).dy, lessThan(tester.getTopLeft(find.text('Food & Dining').first).dy), reason: 'in sight above the keyboard');
+    expect(find.descendant(of: find.byType(ListView).last, matching: addRow), findsNothing, reason: 'not one of the matches');
+    final firstMatch = find.descendant(of: find.byType(ListView).last, matching: find.byType(ListTile)).first;
+    expect(find.descendant(of: firstMatch, matching: find.textContaining('Food')), findsWidgets, reason: 'the first row of the list is still the first match');
 
     await search(tester, 'GROCERIES ');
     expect(addRow, findsNothing);
     expect(find.text('Groceries'), findsOneWidget);
+  });
+
+  testWidgets('"New category" suggests a parent as the name is typed, until one is picked by hand', (tester) async {
+    final container = await openEditor(tester);
+    final transportId = await readDb(tester, () => seededCategoryId(container, 'transport'));
+    await openPicker(tester);
+    await tester.scrollUntilVisible(newRow, 300, scrollable: find.byType(Scrollable).last);
+    await tapAndSettle(tester, newRow);
+    expect(find.descendant(of: parentChoice, matching: find.text('Its own category (top level)')), findsOneWidget, reason: 'nothing typed yet');
+
+    await tester.enterText(nameField, 'Ice cream');
+    await settle(tester);
+    expect(find.descendant(of: parentChoice, matching: find.text('Food & Dining (suggested)')), findsOneWidget);
+
+    await tapAndSettle(tester, parentChoice);
+    await tester.tap(find.text('Transport').last);
+    await settle(tester);
+    await tester.enterText(nameField, 'Ice cream cone');
+    await settle(tester);
+    expect(find.descendant(of: parentChoice, matching: find.text('Transport')), findsOneWidget, reason: 'a parent picked by hand stays');
+
+    await tapAndSettle(tester, saveButton);
+    expect((await categories(tester, container)).singleWhere((category) => category.name == 'Ice cream cone').parentId, transportId);
   });
 
   testWidgets('the new category can go top level, taking its own colour', (tester) async {

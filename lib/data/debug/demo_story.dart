@@ -19,6 +19,12 @@ import '../repositories/sms_log_repository.dart';
 import '../repositories/udhaar_repository.dart';
 import '../sms/sms_ingest_service.dart';
 
+/// Tags on every Goa trip bill, so Settings → Tags has something to show.
+const String kDemoTripTags = 'goa, trip';
+
+/// Tags for generated entries by payee: a few habits worth tagging.
+const Map<String, String> kDemoPayeeTags = {'Cafe Coffee Day': 'office', 'Haldiram': 'family'};
+
 /// One trip bill split equally between every member.
 class DemoTripExpense {
   const DemoTripExpense({required this.payee, required this.categoryKey, required this.amountMinor, required this.daysAgo, required this.paidBy});
@@ -120,7 +126,7 @@ Future<void> _seedDairyBill(AppDatabase db, {required DateTime now, required Str
       accountId: accountId,
       payee: 'Gwala Ji',
       source: source,
-    ),
+    ).copyWith(tags: const Value('home')),
     items: items,
   );
 }
@@ -154,7 +160,7 @@ Future<void> _seedTrip(
         groupId: groupId,
         paidByMemberId: paidBy,
         splitMethod: 'equal',
-      ),
+      ).copyWith(tags: const Value(kDemoTripTags)),
       splits: [
         for (final (index, member) in members.indexed)
           SplitsCompanion.insert(id: newId(), entryId: entryId, memberId: member.id, amountMinor: shares[index], shareValue: const Value(1)),

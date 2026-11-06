@@ -8023,6 +8023,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} (suggested)'**
   String suggestedParent(String name);
+
+  /// No description provided for @manageTagsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename, merge or remove tags'**
+  String get manageTagsHint;
+
+  /// No description provided for @searchTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Search tags'**
+  String get searchTags;
+
+  /// No description provided for @noTagsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No tags yet'**
+  String get noTagsTitle;
+
+  /// No description provided for @noTagsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag entries, like #trip or #office, to find and tidy them here'**
+  String get noTagsBody;
+
+  /// No description provided for @noMatchingTag.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching tag'**
+  String get noMatchingTag;
+
+  /// No description provided for @renameTagTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename #{tag}'**
+  String renameTagTitle(String tag);
+
+  /// No description provided for @tagNameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'One tag only, without commas'**
+  String get tagNameInvalid;
+
+  /// No description provided for @mergeTagTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge into #{tag}?'**
+  String mergeTagTitle(String tag);
+
+  /// No description provided for @mergeTagBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries tagged #{from} will be tagged #{to} instead. An entry with both keeps one.'**
+  String mergeTagBody(String from, String to);
+
+  /// No description provided for @mergeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge'**
+  String get mergeAction;
+
+  /// No description provided for @removeTagTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove #{tag} from {count, plural, =1{1 entry} other{{count} entries}}?'**
+  String removeTagTitle(String tag, int count);
+
+  /// No description provided for @removeTagBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The entries stay.'**
+  String get removeTagBody;
+
+  /// No description provided for @tagRenamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Renamed #{from} to #{to}'**
+  String tagRenamed(String from, String to);
+
+  /// No description provided for @tagMerged.
+  ///
+  /// In en, this message translates to:
+  /// **'Merged #{from} into #{to}'**
+  String tagMerged(String from, String to);
+
+  /// No description provided for @tagRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed #{tag}'**
+  String tagRemoved(String tag);
 }
 
 class _AppLocalizationsDelegate

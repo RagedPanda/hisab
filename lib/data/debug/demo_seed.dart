@@ -51,7 +51,7 @@ Future<void> seedDemoData(AppDatabase db, {required int entryCount, DateTime? no
         accountId: accountIds[item.accountIndex],
         payee: item.payee,
         source: kDemoSource,
-      ));
+      ).copyWith(tags: Value(kDemoPayeeTags[item.payee] ?? '')));
     }
   });
 
@@ -75,7 +75,7 @@ Future<void> seedDemoData(AppDatabase db, {required int entryCount, DateTime? no
       groupId: groupId,
       paidByMemberId: me.id,
       splitMethod: 'equal',
-    ),
+    ).copyWith(tags: const Value(kDemoTripTags)),
     splits: [
       for (final member in members) SplitsCompanion.insert(id: newId(), entryId: entryId, memberId: member.id, amountMinor: 300000, shareValue: const Value(1)),
     ],

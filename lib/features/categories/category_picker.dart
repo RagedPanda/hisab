@@ -71,22 +71,29 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
     _expandedId = widget.selectedId;
   }
 
-  /// Opens the add sheet for [name] under a suggested parent and, once
-  /// saved, closes the picker with the new (or same-named existing) category.
+  /// Opens the add sheet for [name] under a suggested parent (kept up to
+  /// date as the name is typed) and, once saved, closes the picker with the
+  /// new (or same-named existing) category.
   Future<void> _create(String name, List<Category> categories) async {
     final locale = Localizations.localeOf(context);
     final sameKind = categories.where((category) => category.kind == widget.kind).toList();
     final topLevel = [for (final node in buildCategoryTree(sameKind)) node.category];
-    final suggestedId = name.isEmpty
-        ? null
-        : suggestParentId(name, [for (final category in sameKind) categoryOption(category, locale)], keywordKey: categoryKeyForText(name, income: widget.kind == 'income'));
+    final options = [for (final category in sameKind) categoryOption(category, locale)];
+    Category? suggestFor(String typed) {
+      final tidy = typed.trim();
+      if (tidy.isEmpty) return null;
+      final suggestedId = suggestParentId(tidy, options, keywordKey: categoryKeyForText(tidy, income: widget.kind == 'income'));
+      return topLevel.where((category) => category.id == suggestedId).firstOrNull;
+    }
+
     final created = await showCategoryForm(
       context,
       ref,
       kind: widget.kind,
       initialName: name,
       parentChoices: topLevel,
-      suggestedParent: topLevel.where((category) => category.id == suggestedId).firstOrNull,
+      suggestedParent: suggestFor(name),
+      suggestParent: suggestFor,
     );
     if (created != null && mounted) Navigator.pop(context, created);
   }
@@ -119,6 +126,9 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
             onChanged: (value) => setState(() => _query = value),
           ),
         ),
+        // Pinned under the search field rather than after the matches, so it
+        // stays in sight above the keyboard however many categories match.
+        if (offerAdd) _AddNamedTile(name: categoryNameFromQuery(_query), onTap: () => _create(categoryNameFromQuery(_query), categories)),
         Expanded(
           child: searching
               ? ListView(
@@ -130,18 +140,6 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
                         title: Text(category.displayName(context)),
                         subtitle: category.parentId == null ? null : Text(byId[category.parentId]?.displayName(context) ?? ''),
                         onTap: () => Navigator.pop(context, category),
-                      ),
-                    if (offerAdd)
-                      ListTile(
-                        key: const ValueKey('category.addNamed'),
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                          foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                          child: const Icon(Icons.add),
-                        ),
-                        title: Text(context.l10n.addCategoryNamed(categoryNameFromQuery(_query)), style: const TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: Text(context.l10n.addCategoryNamedHint),
-                        onTap: () => _create(categoryNameFromQuery(_query), categories),
                       ),
                     if (matches.isEmpty && !offerAdd) EmptyState(icon: Icons.search_off, title: context.l10n.noMatchingCategory),
                   ],
@@ -178,6 +176,34 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
                 ),
         ),
       ],
+    );
+  }
+}
+
+/// The `Add "name"` row a search with no exact match offers: a tinted tile
+/// so it reads as an action, not one of the matches.
+class _AddNamedTile extends StatelessWidget {
+  const _AddNamedTile({required this.name, required this.onTap});
+  final String name;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Material(
+        color: scheme.primaryContainer,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          key: const ValueKey('category.addNamed'),
+          leading: CircleAvatar(backgroundColor: scheme.primary, foregroundColor: scheme.onPrimary, child: const Icon(Icons.add)),
+          title: Text(context.l10n.addCategoryNamed(name), style: TextStyle(fontWeight: FontWeight.w600, color: scheme.onPrimaryContainer)),
+          subtitle: Text(context.l10n.addCategoryNamedHint, style: TextStyle(color: scheme.onPrimaryContainer)),
+          onTap: onTap,
+        ),
+      ),
     );
   }
 }

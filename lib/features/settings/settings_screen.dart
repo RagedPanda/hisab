@@ -29,6 +29,7 @@ import '../shell/widgets/common.dart';
 import '../shell/widgets/tile_group.dart';
 import '../shortcuts/launcher_sync.dart' show launcherChannelProvider;
 import '../shortcuts/shortcuts_screen.dart';
+import '../tags/tags_screen.dart';
 import 'backup_actions.dart';
 import 'drive_backup_providers.dart';
 import 'drive_backup_screen.dart';
@@ -108,6 +109,15 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
             ListTile(leading: const Icon(Icons.category_outlined), title: Text(l10n.categories), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/categories')),
+            ListTile(
+              key: const Key('settingsTags'),
+              leading: const Icon(Icons.sell_outlined),
+              title: Text(l10n.tags),
+              subtitle: Text(l10n.manageTagsHint, maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: const Icon(Icons.chevron_right),
+              visualDensity: kCompactRowDensity,
+              onTap: () => context.push(kTagsLocation),
+            ),
             ListTile(
               key: const Key('settingsQuickEntries'),
               leading: const Icon(Icons.bolt_outlined),

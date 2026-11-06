@@ -12,6 +12,7 @@ import 'package:hisab/data/debug/demo_seed.dart';
 import 'package:hisab/features/quick_entries/quick_entries_screen.dart';
 import 'package:hisab/features/shell/router.dart';
 import 'package:hisab/features/spending_calendar/spending_calendar_screen.dart';
+import 'package:hisab/features/tags/tags_screen.dart';
 import 'package:hisab/features/udhaar/udhaar_routes.dart';
 import 'package:hisab/features/upcoming/upcoming_routes.dart';
 import 'package:integration_test/integration_test.dart';
@@ -76,6 +77,10 @@ void main() {
 
     await _open(tester, kUdhaarLocation);
     await shoot(tester, '14-udhaar');
+    await goBack(tester);
+
+    await _open(tester, kTagsLocation);
+    await shoot(tester, '15-tags');
     await goBack(tester);
 
     await app.read(settingsProvider.notifier).update((settings) => settings.copyWith(themeMode: ThemeMode.dark));

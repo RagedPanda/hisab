@@ -33,6 +33,7 @@ import '../sms/sms_entry_category_screen.dart';
 import '../sms/sms_payees_screen.dart';
 import '../sms/sms_review_screen.dart';
 import '../spending_calendar/spending_calendar_screen.dart';
+import '../tags/tags_screen.dart';
 import '../upcoming/upcoming_calendar_screen.dart';
 import '../upcoming/upcoming_routes.dart';
 import '../sms/sms_screen.dart';
@@ -129,6 +130,7 @@ final appRouter = GoRouter(
     ),
     GoRoute(path: kSalaryLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const SalarySetupScreen()),
     GoRoute(path: kQuickEntriesLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const QuickEntriesScreen()),
+    GoRoute(path: kTagsLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const TagsScreen()),
     GoRoute(path: kShortcutsLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const ShortcutsScreen()),
     GoRoute(path: kDriveBackupLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const DriveBackupScreen()),
     GoRoute(path: kScheduledBackupLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const ScheduledBackupScreen()),

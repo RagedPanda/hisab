@@ -20,6 +20,7 @@ Every screen of Hisab as it looks on Android and on iOS, shot over the same made
 12. [Quick entries](#quick-entries)
 13. [Spending calendar (dark)](#spending-calendar-dark)
 14. [Udhaar](#udhaar)
+15. [Tags](#tags)
 
 ## Dashboard
 
@@ -215,6 +216,20 @@ People & udhaar: money lent to or borrowed from people outside any group, with w
   </tr>
 </table>
 
-[‹ Previous: Spending calendar (dark)](#spending-calendar-dark) · [Contents](#contents) · Next ›
+[‹ Previous: Spending calendar (dark)](#spending-calendar-dark) · [Contents](#contents) · [Next: Tags ›](#tags)
+
+## Tags
+
+Settings → Tags: every tag with how many entries carry it, most used first. Tap one for its entries across all time; rename, merge or remove a tag everywhere at once, with Undo.
+
+<table>
+  <tr><th>Android</th><th>iOS</th></tr>
+  <tr>
+    <td align="center"><img src="screenshots/framed/android/15-tags.png" width="300" alt="Tags on Android"></td>
+    <td align="center"><img src="screenshots/framed/ios/15-tags.png" width="300" alt="Tags on iOS"></td>
+  </tr>
+</table>
+
+[‹ Previous: Udhaar](#udhaar) · [Contents](#contents) · Next ›
 
 <sub>Shot with <code>tool/readme_screenshots.sh</code> on an Android emulator and an iPhone simulator.</sub>

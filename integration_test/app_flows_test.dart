@@ -371,7 +371,7 @@ void main() {
     expect(find.text('Salary'), findsOneWidget);
     expect(find.text('Mother Dairy'), findsNothing);
     await tapFinder(tester, _chip('All'));
-    await enterText(tester, find.widgetWithText(TextField, 'Search payee, note, item or category'), 'cow');
+    await enterText(tester, find.widgetWithText(TextField, 'Search or #tag'), 'cow');
     expect(find.text('Mother Dairy'), findsOneWidget, reason: 'search matches item names');
     expect(find.text('Salary'), findsNothing);
     await shoot(tester, 'entries_search');

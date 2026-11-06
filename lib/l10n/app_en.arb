@@ -415,7 +415,7 @@
   "splitHelpByItem": "Each item is split among the people who shared it.",
 
   "entries": "Entries",
-  "searchEntriesHint": "Search payee, note, category or #tag",
+  "searchEntriesHint": "Search or #tag",
   "noEntriesTitle": "Nothing here yet",
   "noEntriesBody": "Entries for this month will appear grouped by day.",
 

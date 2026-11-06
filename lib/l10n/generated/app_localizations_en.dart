@@ -1203,7 +1203,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get entries => 'Entries';
 
   @override
-  String get searchEntriesHint => 'Search payee, note, category or #tag';
+  String get searchEntriesHint => 'Search or #tag';
 
   @override
   String get noEntriesTitle => 'Nothing here yet';

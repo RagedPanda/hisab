@@ -2153,7 +2153,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchEntriesHint.
   ///
   /// In en, this message translates to:
-  /// **'Search payee, note, category or #tag'**
+  /// **'Search or #tag'**
   String get searchEntriesHint;
 
   /// No description provided for @noEntriesTitle.

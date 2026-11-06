@@ -1203,7 +1203,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get entries => 'लेन-देन';
 
   @override
-  String get searchEntriesHint => 'नाम, नोट, श्रेणी या #टैग खोजें';
+  String get searchEntriesHint => 'खोजें या #टैग';
 
   @override
   String get noEntriesTitle => 'अभी यहाँ कुछ नहीं';

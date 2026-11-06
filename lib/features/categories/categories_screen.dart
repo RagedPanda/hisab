@@ -1,16 +1,14 @@
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/app_icons.dart';
 import '../../core/providers.dart';
-import '../../core/theme.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/categories_repository.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import 'category_form.dart';
 import 'subcategory_preview.dart';
 
 class CategoriesScreen extends ConsumerStatefulWidget {
@@ -122,86 +120,4 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
       ],
     );
   }
-}
-
-Future<void> showCategoryForm(BuildContext context, WidgetRef ref, {required String kind, Category? parent, Category? existing}) {
-  final nameController = TextEditingController(text: existing?.name ?? '');
-  final unitsController = TextEditingController(text: existing?.units ?? '');
-  var icon = existing?.icon ?? parent?.icon ?? 'category';
-  var color = existing?.color ?? parent?.color ?? kPaletteColors.first;
-  final l10n = context.l10n;
-  final parentName = parent?.displayName(context);
-  final existingName = existing?.displayName(context);
-  return showModalBottomSheet(
-    context: context,
-    useRootNavigator: true,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
-    builder: (sheetContext) => StatefulBuilder(
-      builder: (sheetContext, setSheetState) => Padding(
-        padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.viewInsetsOf(sheetContext).bottom + 16),
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            Text(existingName == null ? (parentName == null ? l10n.newCategory : l10n.newSubcategoryOf(parentName)) : l10n.editNamed(existingName), style: Theme.of(sheetContext).textTheme.titleLarge),
-            const SizedBox(height: 12),
-            TextField(controller: nameController, autofocus: true, decoration: InputDecoration(labelText: l10n.name), textCapitalization: TextCapitalization.words),
-            const SizedBox(height: 12),
-            TextField(controller: unitsController, decoration: InputDecoration(labelText: l10n.unitsForItems, hintText: l10n.unitsHint)),
-            const SizedBox(height: 12),
-            Text(l10n.colour, style: Theme.of(sheetContext).textTheme.labelLarge),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final option in kPaletteColors)
-                  GestureDetector(
-                    onTap: () => setSheetState(() => color = option),
-                    child: CircleAvatar(
-                      radius: 16,
-                      backgroundColor: Color(option),
-                      child: color == option ? const Icon(Icons.check, color: Colors.white, size: 18) : null,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(l10n.icon, style: Theme.of(sheetContext).textTheme.labelLarge),
-            SizedBox(
-              height: 160,
-              child: GridView.count(
-                crossAxisCount: 8,
-                children: [
-                  for (final name in pickableIconNames)
-                    IconButton(
-                      isSelected: icon == name,
-                      onPressed: () => setSheetState(() => icon = name),
-                      icon: Icon(appIcons[name], color: icon == name ? Color(color) : null),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-              onPressed: () async {
-                final name = nameController.text.trim();
-                if (name.isEmpty) return;
-                final units = unitsController.text.split(',').map((u) => u.trim()).where((u) => u.isNotEmpty).join(',');
-                final repo = ref.read(categoriesRepositoryProvider);
-                if (existing == null) {
-                  await repo.create(name: name, icon: icon, color: color, kind: kind, parentId: parent?.id, units: units);
-                } else {
-                  await repo.update(CategoriesCompanion(id: Value(existing.id), name: Value(name), icon: Value(icon), color: Value(color), units: Value(units)));
-                }
-                if (sheetContext.mounted) Navigator.pop(sheetContext);
-              },
-              child: Text(l10n.save),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
 }

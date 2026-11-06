@@ -2153,7 +2153,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchEntriesHint.
   ///
   /// In en, this message translates to:
-  /// **'Search payee, note, item or category'**
+  /// **'Search or #tag'**
   String get searchEntriesHint;
 
   /// No description provided for @noEntriesTitle.
@@ -3791,7 +3791,7 @@ abstract class AppLocalizations {
   /// No description provided for @tagsHint.
   ///
   /// In en, this message translates to:
-  /// **'Comma separated, e.g. home, trip'**
+  /// **'Separate with commas, e.g. ice cream, trip'**
   String get tagsHint;
 
   /// No description provided for @showResults.
@@ -7799,7 +7799,7 @@ abstract class AppLocalizations {
   /// No description provided for @passphraseConfirmHint.
   ///
   /// In en, this message translates to:
-  /// **'Type the passphrase again'**
+  /// **'Type it again'**
   String get passphraseConfirmHint;
 
   /// No description provided for @passphraseShow.
@@ -7993,6 +7993,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Who are you settling with?'**
   String get settleWithPickPerson;
+
+  /// No description provided for @addCategoryNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Add \"{name}\"'**
+  String addCategoryNamed(String name);
+
+  /// No description provided for @addCategoryNamedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New category, there next time too'**
+  String get addCategoryNamedHint;
+
+  /// No description provided for @putUnder.
+  ///
+  /// In en, this message translates to:
+  /// **'Put under'**
+  String get putUnder;
+
+  /// No description provided for @ownTopLevelCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Its own category (top level)'**
+  String get ownTopLevelCategory;
+
+  /// No description provided for @suggestedParent.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (suggested)'**
+  String suggestedParent(String name);
 }
 
 class _AppLocalizationsDelegate

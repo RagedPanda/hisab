@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../data/db/database.dart';
 import '../../data/repositories/categories_repository.dart';
+import '../../domain/categories/category_suggestion.dart';
+import '../../domain/sms/sms_categorizer.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
 import '../shell/widgets/common.dart';
+import 'category_form.dart';
 import 'subcategory_preview.dart';
 
 final _recentCategoryIdsProvider = FutureProvider.family<List<String>, String>((ref, kind) => ref.watch(entriesRepositoryProvider).recentCategoryIds(kind: kind));
@@ -28,8 +31,10 @@ final Category clearedCategory = Category(
 
 /// Bottom sheet that lets the user pick a parent or child category. When
 /// [allowClear] is set, an "Uncategorised" row returns [clearedCategory] so a
-/// previously assigned category can be removed.
-Future<Category?> showCategoryPicker(BuildContext context, {required String kind, String? selectedId, bool allowClear = false}) {
+/// previously assigned category can be removed. When [allowCreate] is set, a
+/// search with no exact match offers to add it as a new category (and the
+/// list ends with "New category"); the new category is returned as the pick.
+Future<Category?> showCategoryPicker(BuildContext context, {required String kind, String? selectedId, bool allowClear = false, bool allowCreate = true}) {
   return showModalBottomSheet<Category>(
     context: context,
     isScrollControlled: true,
@@ -39,16 +44,17 @@ Future<Category?> showCategoryPicker(BuildContext context, {required String kind
       expand: false,
       initialChildSize: 0.85,
       maxChildSize: 0.95,
-      builder: (context, controller) => _CategoryPickerBody(kind: kind, selectedId: selectedId, allowClear: allowClear, controller: controller),
+      builder: (context, controller) => _CategoryPickerBody(kind: kind, selectedId: selectedId, allowClear: allowClear, allowCreate: allowCreate, controller: controller),
     ),
   );
 }
 
 class _CategoryPickerBody extends ConsumerStatefulWidget {
-  const _CategoryPickerBody({required this.kind, required this.selectedId, required this.allowClear, required this.controller});
+  const _CategoryPickerBody({required this.kind, required this.selectedId, required this.allowClear, required this.allowCreate, required this.controller});
   final String kind;
   final String? selectedId;
   final bool allowClear;
+  final bool allowCreate;
   final ScrollController controller;
 
   @override
@@ -65,6 +71,26 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
     _expandedId = widget.selectedId;
   }
 
+  /// Opens the add sheet for [name] under a suggested parent and, once
+  /// saved, closes the picker with the new (or same-named existing) category.
+  Future<void> _create(String name, List<Category> categories) async {
+    final locale = Localizations.localeOf(context);
+    final sameKind = categories.where((category) => category.kind == widget.kind).toList();
+    final topLevel = [for (final node in buildCategoryTree(sameKind)) node.category];
+    final suggestedId = name.isEmpty
+        ? null
+        : suggestParentId(name, [for (final category in sameKind) categoryOption(category, locale)], keywordKey: categoryKeyForText(name, income: widget.kind == 'income'));
+    final created = await showCategoryForm(
+      context,
+      ref,
+      kind: widget.kind,
+      initialName: name,
+      parentChoices: topLevel,
+      suggestedParent: topLevel.where((category) => category.id == suggestedId).firstOrNull,
+    );
+    if (created != null && mounted) Navigator.pop(context, created);
+  }
+
   @override
   Widget build(BuildContext context) {
     final categories = ref.watch(categoriesProvider).value ?? const <Category>[];
@@ -77,6 +103,10 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
     final byId = {for (final c in categories) c.id: c};
     final selected = widget.selectedId == null ? null : byId[widget.selectedId];
     final expanded = _expandedId == null ? null : (byId[_expandedId]?.parentId ?? _expandedId);
+    final locale = Localizations.localeOf(context);
+    final offerAdd = widget.allowCreate &&
+        searching &&
+        !hasCategoryNamed(_query, [for (final category in categories) if (category.kind == widget.kind) categoryOption(category, locale)]);
     final recent = (ref.watch(_recentCategoryIdsProvider(widget.kind)).value ?? const <String>[]).map((id) => byId[id]).whereType<Category>().toList();
 
     return Column(
@@ -101,7 +131,19 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
                         subtitle: category.parentId == null ? null : Text(byId[category.parentId]?.displayName(context) ?? ''),
                         onTap: () => Navigator.pop(context, category),
                       ),
-                    if (matches.isEmpty) EmptyState(icon: Icons.search_off, title: context.l10n.noMatchingCategory),
+                    if (offerAdd)
+                      ListTile(
+                        key: const ValueKey('category.addNamed'),
+                        leading: CircleAvatar(
+                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                          foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                          child: const Icon(Icons.add),
+                        ),
+                        title: Text(context.l10n.addCategoryNamed(categoryNameFromQuery(_query)), style: const TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: Text(context.l10n.addCategoryNamedHint),
+                        onTap: () => _create(categoryNameFromQuery(_query), categories),
+                      ),
+                    if (matches.isEmpty && !offerAdd) EmptyState(icon: Icons.search_off, title: context.l10n.noMatchingCategory),
                   ],
                 )
               : ListView(
@@ -124,6 +166,13 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
                         selected: selected,
                         onToggle: () => setState(() => _expandedId = expanded == node.category.id ? null : node.category.id),
                         onPick: (category) => Navigator.pop(context, category),
+                      ),
+                    if (widget.allowCreate)
+                      ListTile(
+                        key: const ValueKey('category.new'),
+                        leading: const Icon(Icons.add),
+                        title: Text(context.l10n.newCategory),
+                        onTap: () => _create('', categories),
                       ),
                   ],
                 ),

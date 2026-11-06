@@ -343,7 +343,7 @@
   "splitHelpAdjustment": "पहले अतिरिक्त राशि ली जाती है, बाकी चुने हुए लोगों में बराबर बँटती है।",
   "splitHelpByItem": "हर आइटम उसे साझा करने वालों में बँटता है।",
   "entries": "लेन-देन",
-  "searchEntriesHint": "नाम, नोट, आइटम या श्रेणी खोजें",
+  "searchEntriesHint": "खोजें या #टैग",
   "noEntriesTitle": "अभी यहाँ कुछ नहीं",
   "noEntriesBody": "इस महीने के लेन-देन दिन के हिसाब से यहाँ दिखेंगे।",
   "settled": "हिसाब बराबर",
@@ -639,7 +639,7 @@
   "maxAmount": "ज़्यादा से ज़्यादा",
   "dates": "तारीख़ें",
   "tags": "टैग",
-  "tagsHint": "कॉमा से अलग करें, जैसे home, trip",
+  "tagsHint": "कॉमा से अलग करें, जैसे ice cream, trip",
   "showResults": "नतीजे दिखाएँ",
   "clearAll": "सब हटाएँ",
   "resultsCount": "{count, plural, =1{1 नतीजा} other{{count} नतीजे}}",
@@ -1326,7 +1326,7 @@
   "appLockPromptHint": "फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक इस्तेमाल करें",
   "appLockPromptFallback": "पासकोड इस्तेमाल करें",
   "passphraseMismatch": "दोनों पासफ़्रेज़ मेल नहीं खाते",
-  "passphraseConfirmHint": "पासफ़्रेज़ फिर से लिखें",
+  "passphraseConfirmHint": "फिर से लिखें",
   "passphraseShow": "पासफ़्रेज़ दिखाएँ",
   "passphraseHide": "पासफ़्रेज़ छिपाएँ",
   "restorePassphraseHint": "वह पासफ़्रेज़ जिससे यह बैकअप बना था",
@@ -1358,5 +1358,10 @@
   "settleWithMessageTotalIOwe": "कुल मिलाकर, मुझ पर आपके {amount} बकाया।",
   "settleWithPersonTile": "एक व्यक्ति के साथ हिसाब चुकता करें",
   "settleWithPersonTileHint": "आपके और उनके बीच का सब कुछ, यहाँ या सभी ग्रुप में",
-  "settleWithPickPerson": "किसके साथ हिसाब चुकता कर रहे हैं?"
+  "settleWithPickPerson": "किसके साथ हिसाब चुकता कर रहे हैं?",
+  "addCategoryNamed": "\"{name}\" जोड़ें",
+  "addCategoryNamedHint": "नई श्रेणी, अगली बार भी मिलेगी",
+  "putUnder": "किसके अंदर रखें",
+  "ownTopLevelCategory": "अलग मुख्य श्रेणी",
+  "suggestedParent": "{name} (सुझाव)"
 }

@@ -89,7 +89,7 @@ class _EntryFilterBodyState extends ConsumerState<_EntryFilterBody> {
   }
 
   Future<void> _pickCategory() async {
-    final picked = await showCategoryPicker(context, kind: widget.categoryKind, selectedId: _draft.categoryId);
+    final picked = await showCategoryPicker(context, kind: widget.categoryKind, selectedId: _draft.categoryId, allowCreate: false);
     if (picked != null) setState(() => _draft = _draft.copyWith(categoryId: picked.id));
   }
 

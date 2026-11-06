@@ -59,7 +59,7 @@ const Map<String, List<String>> _debitRules = {
   'laundry': ['laundry', 'dry clean', 'dryclean', 'dhobi', 'ironing', 'uclean'],
   'drinking_water': ['bisleri', 'kinley', 'aquafina', 'water can', 'mineral water'],
   'alcohol': ['wine', 'liquor', 'bar ', 'pub', 'brewery', 'beer', 'tasmac', 'bevco', 'wines'],
-  'bakery_sweets': ['sweets', 'mithai', 'haldiram', 'bikanervala', 'cake', 'theobroma'],
+  'bakery_sweets': ['sweets', 'mithai', 'haldiram', 'bikanervala', 'cake', 'theobroma', 'ice cream', 'icecream', 'kulfi', 'baskin'],
   'toys': ['hamleys', 'toys', 'lego', 'funskool'],
   'bank_charges': ['charges', 'fee charged', 'annual fee', 'sms charges', 'atm charges', 'penalty', 'gst', 'service charge', 'amb charge', 'non maintenance'],
   'taxes': ['income tax', 'tax payment', 'advance tax', 'tds', 'gst payment', 'property tax', 'challan'],
@@ -135,6 +135,14 @@ String? _bestMatch(String haystack, Map<String, List<String>> rules, int Functio
     }
   }
   return best;
+}
+
+/// The category key whose merchant keywords appear in [text], such as a name
+/// typed for a new category, or null when none do.
+String? categoryKeyForText(String text, {bool income = false}) {
+  final haystack = text.toLowerCase();
+  final rules = income ? _creditRules : _debitRules;
+  return _bestMatch(haystack, rules, _indexOfWord) ?? _bestMatch(haystack, rules, _indexOfSubstring);
 }
 
 /// Returns the best category key for [txn], falling back to a generic key.

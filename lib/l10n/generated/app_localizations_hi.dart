@@ -1203,7 +1203,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get entries => 'लेन-देन';
 
   @override
-  String get searchEntriesHint => 'नाम, नोट, आइटम या श्रेणी खोजें';
+  String get searchEntriesHint => 'खोजें या #टैग';
 
   @override
   String get noEntriesTitle => 'अभी यहाँ कुछ नहीं';
@@ -2201,7 +2201,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get tags => 'टैग';
 
   @override
-  String get tagsHint => 'कॉमा से अलग करें, जैसे home, trip';
+  String get tagsHint => 'कॉमा से अलग करें, जैसे ice cream, trip';
 
   @override
   String get showResults => 'नतीजे दिखाएँ';
@@ -4849,7 +4849,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get passphraseMismatch => 'दोनों पासफ़्रेज़ मेल नहीं खाते';
 
   @override
-  String get passphraseConfirmHint => 'पासफ़्रेज़ फिर से लिखें';
+  String get passphraseConfirmHint => 'फिर से लिखें';
 
   @override
   String get passphraseShow => 'पासफ़्रेज़ दिखाएँ';
@@ -4997,4 +4997,23 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get settleWithPickPerson => 'किसके साथ हिसाब चुकता कर रहे हैं?';
+
+  @override
+  String addCategoryNamed(String name) {
+    return '\"$name\" जोड़ें';
+  }
+
+  @override
+  String get addCategoryNamedHint => 'नई श्रेणी, अगली बार भी मिलेगी';
+
+  @override
+  String get putUnder => 'किसके अंदर रखें';
+
+  @override
+  String get ownTopLevelCategory => 'अलग मुख्य श्रेणी';
+
+  @override
+  String suggestedParent(String name) {
+    return '$name (सुझाव)';
+  }
 }

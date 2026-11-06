@@ -223,21 +223,33 @@ class GroupShareLine extends ConsumerWidget {
 }
 
 class SectionHeader extends StatelessWidget {
-  const SectionHeader(this.title, {super.key, this.trailing, this.padding = const EdgeInsets.fromLTRB(16, 20, 16, 8)});
+  const SectionHeader(this.title, {super.key, this.trailing, this.padding = const EdgeInsets.fromLTRB(16, 20, 16, 8), this.wrapsTrailing = false});
   final String title;
   final Widget? trailing;
   final EdgeInsetsGeometry padding;
 
+  /// Moves a wide [trailing] (a mode switch) under the title when large text
+  /// leaves no room beside it, instead of squeezing the title to nothing.
+  final bool wrapsTrailing;
+
   @override
   Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700);
     return Padding(
       padding: padding,
-      child: Row(
-        children: [
-          Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700))),
-          ?trailing,
-        ],
-      ),
+      child: wrapsTrailing
+          ? Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 4,
+              children: [Text(title, style: style), ?trailing],
+            )
+          : Row(
+              children: [
+                Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: style)),
+                ?trailing,
+              ],
+            ),
     );
   }
 }

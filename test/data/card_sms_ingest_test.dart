@@ -274,6 +274,7 @@ void main() {
       expect(payment.accountId, (await accounts.findBySmsKey('HDFC Bank:ac:7781'))!.id);
       expect(payment.toAccountId, (await card())!.id);
       expect(payment.categoryId, (await categories.findBySeedKey('credit_card_payment'))!.id);
+      expect((payment.payee, payment.note), (null, ''), reason: '"Credit Card XX4521" only names the card; the row is titled after it');
       expect((await accounts.findBySmsKey('HDFC Bank:ac:7781'))!.balanceMinor, 2200000, reason: 'the bank SMS balance still lands');
     });
 

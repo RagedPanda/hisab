@@ -47,6 +47,7 @@ class _TrendCardState extends ConsumerState<TrendCard> {
         return DashboardSection(
           title: l10n.spendingTrend,
           trailing: _ModeSwitch(mode: _mode, onChanged: (mode) => setState(() => _mode = mode)),
+          wrapsTrailing: true,
           child: DashboardCard(
             key: kTrendCardKey,
             child: SizedBox(

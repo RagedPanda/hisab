@@ -5118,4 +5118,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupFailureGeneric => 'something went wrong; try again later';
+
+  @override
+  String cardBillEntryTitle(String card) {
+    return 'Card bill · $card';
+  }
 }

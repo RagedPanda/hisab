@@ -99,6 +99,9 @@ ThemeData buildTheme(Brightness brightness) {
       fillColor: isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerHigh,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
     ),
+    // Dialogs sit on the card colour: the default (surfaceContainerHigh) was
+    // the light field fill, so filled fields vanished inside light dialogs.
+    dialogTheme: base.dialogTheme.copyWith(backgroundColor: cardColor(scheme)),
     bottomSheetTheme: BottomSheetThemeData(backgroundColor: scheme.surface, surfaceTintColor: Colors.transparent),
     chipTheme: base.chipTheme.copyWith(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

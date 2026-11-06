@@ -61,6 +61,18 @@ class AmountText extends ConsumerWidget {
   }
 }
 
+/// The title of an [EntryTile]: the payee, else the note, else for money
+/// paid into a card "Card bill · card name", else the category.
+String entryTileTitle(AppLocalizations l10n, EntryDetails details, {required String? categoryName}) {
+  final entry = details.entry;
+  final udhaarKind = UdhaarKind.parse(entry.udhaarKind);
+  if (udhaarKind != null) return udhaarEntryTitle(l10n, udhaarKind, entry.payee ?? '');
+  if (entry.payee?.isNotEmpty == true) return entry.payee!;
+  if (entry.note.isNotEmpty) return entry.note;
+  if (details.toAccount case final card? when entry.kind == 'transfer' && card.type == 'card') return l10n.cardBillEntryTitle(card.name);
+  return categoryName ?? (entry.kind == 'transfer' ? l10n.kindTransfer : l10n.uncategorised);
+}
+
 /// One row in a transactions list.
 class EntryTile extends StatelessWidget {
   const EntryTile({super.key, required this.details, this.onTap, this.showDate = false});
@@ -75,13 +87,7 @@ class EntryTile extends StatelessWidget {
     final category = details.category;
     final categoryName = category?.displayName(context);
     final udhaarKind = UdhaarKind.parse(entry.udhaarKind);
-    final title = udhaarKind != null
-        ? udhaarEntryTitle(l10n, udhaarKind, entry.payee ?? '')
-        : entry.payee?.isNotEmpty == true
-        ? entry.payee!
-        : entry.note.isNotEmpty
-            ? entry.note
-            : categoryName ?? (entry.kind == 'transfer' ? l10n.kindTransfer : l10n.uncategorised);
+    final title = entryTileTitle(l10n, details, categoryName: categoryName);
     final locale = Localizations.localeOf(context).toString();
     final accountLabel = entry.kind == 'transfer' && details.account != null && details.toAccount != null
         ? l10n.transferArrow(details.account!.name, details.toAccount!.name)
@@ -223,21 +229,33 @@ class GroupShareLine extends ConsumerWidget {
 }
 
 class SectionHeader extends StatelessWidget {
-  const SectionHeader(this.title, {super.key, this.trailing, this.padding = const EdgeInsets.fromLTRB(16, 20, 16, 8)});
+  const SectionHeader(this.title, {super.key, this.trailing, this.padding = const EdgeInsets.fromLTRB(16, 20, 16, 8), this.wrapsTrailing = false});
   final String title;
   final Widget? trailing;
   final EdgeInsetsGeometry padding;
 
+  /// Moves a wide [trailing] (a mode switch) under the title when large text
+  /// leaves no room beside it, instead of squeezing the title to nothing.
+  final bool wrapsTrailing;
+
   @override
   Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700);
     return Padding(
       padding: padding,
-      child: Row(
-        children: [
-          Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700))),
-          ?trailing,
-        ],
-      ),
+      child: wrapsTrailing
+          ? Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 4,
+              children: [Text(title, style: style), ?trailing],
+            )
+          : Row(
+              children: [
+                Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: style)),
+                ?trailing,
+              ],
+            ),
     );
   }
 }

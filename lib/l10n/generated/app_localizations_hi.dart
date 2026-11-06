@@ -5092,4 +5092,9 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get backupFailureGeneric =>
       'कुछ गड़बड़ हुई; थोड़ी देर बाद फिर कोशिश करें';
+
+  @override
+  String cardBillEntryTitle(String card) {
+    return 'कार्ड बिल · $card';
+  }
 }

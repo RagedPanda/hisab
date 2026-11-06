@@ -1764,5 +1764,7 @@
   "driveErrorFull": "Your Google Drive is full. Free up some space and try again.",
   "driveErrorGeneric": "Google Drive didn't respond as expected. Try again later.",
   "backupFailureDriveFull": "Google Drive is full; free up some space",
-  "backupFailureGeneric": "something went wrong; try again later"
+  "backupFailureGeneric": "something went wrong; try again later",
+  "cardBillEntryTitle": "Card bill · {card}",
+  "@cardBillEntryTitle": {"placeholders": {"card": {"type": "String"}}}
 }

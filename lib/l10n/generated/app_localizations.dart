@@ -8131,6 +8131,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'something went wrong; try again later'**
   String get backupFailureGeneric;
+
+  /// No description provided for @cardBillEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Card bill · {card}'**
+  String cardBillEntryTitle(String card);
 }
 
 class _AppLocalizationsDelegate

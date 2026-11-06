@@ -48,16 +48,19 @@ class DashboardCard extends StatelessWidget {
 
 /// Optional section header above a card, plus the gap to the next card.
 class DashboardSection extends StatelessWidget {
-  const DashboardSection({super.key, this.title, this.trailing, required this.child});
+  const DashboardSection({super.key, this.title, this.trailing, this.wrapsTrailing = false, required this.child});
   final String? title;
   final Widget? trailing;
   final Widget child;
+
+  /// See [SectionHeader.wrapsTrailing].
+  final bool wrapsTrailing;
 
   @override
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (title != null) SectionHeader(title!, trailing: trailing, padding: kDashboardHeaderPadding),
+          if (title != null) SectionHeader(title!, trailing: trailing, padding: kDashboardHeaderPadding, wrapsTrailing: wrapsTrailing),
           child,
           const SizedBox(height: kDashboardCardGap),
         ],

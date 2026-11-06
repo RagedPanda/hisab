@@ -1381,5 +1381,6 @@
   "driveErrorFull": "आपका Google Drive भर गया है। थोड़ी जगह खाली करें और फिर कोशिश करें।",
   "driveErrorGeneric": "Google Drive से ठीक जवाब नहीं मिला। थोड़ी देर बाद फिर कोशिश करें।",
   "backupFailureDriveFull": "Google Drive भर गया है; थोड़ी जगह खाली करें",
-  "backupFailureGeneric": "कुछ गड़बड़ हुई; थोड़ी देर बाद फिर कोशिश करें"
+  "backupFailureGeneric": "कुछ गड़बड़ हुई; थोड़ी देर बाद फिर कोशिश करें",
+  "cardBillEntryTitle": "कार्ड बिल · {card}"
 }

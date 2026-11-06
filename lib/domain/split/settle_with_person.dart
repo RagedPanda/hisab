@@ -120,6 +120,10 @@ List<PersonTotal> personTotals(Iterable<PersonGroupShare> shares) {
   return [for (final MapEntry(key: symbol, value: net) in bySymbol.entries) (symbol: symbol, netMinor: net)];
 }
 
+/// The "... in all" totals to show under [shares]: none for a single group,
+/// whose total would only repeat its own line.
+List<PersonTotal> personSummaryTotals(List<PersonGroupShare> shares) => shares.length > 1 ? personTotals(shares) : const [];
+
 /// The single amount I pay the person when everything is in one currency and
 /// I owe overall (what a UPI payment should be for), else null.
 int? singleCurrencyAmountIOwe(Iterable<PersonGroupShare> shares) {

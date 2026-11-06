@@ -244,4 +244,20 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('an expense row keeps its effect and amount inside the row at text x2', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final container = await createContainer();
+    final groupId = (await tester.runAsync(() => container.read(groupsRepositoryProvider).createGroup(name: 'Book club', icon: 'school', myName: 'You', otherMembers: ['Amit'])))!;
+    await tester.runAsync(() async {
+      final members = await memberIdsByName(container, groupId);
+      await addEqualExpense(container, groupId, paidBy: members['You']!, totalMinor: 132000, note: 'Beach shack drinks');
+    });
+    await pumpScreen(tester, container, GroupDetailScreen(groupId: groupId));
+    await settle(tester);
+
+    expect(find.text('you lent'), findsOneWidget);
+    expect(tester.takeException(), isNull, reason: 'no overflow under the amount');
+  });
 }

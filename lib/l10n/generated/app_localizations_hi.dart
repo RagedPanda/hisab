@@ -1030,11 +1030,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'इस Google Drive में हिसाब का कोई बैकअप नहीं मिला';
 
   @override
-  String driveErrorUnknown(String error) {
-    return 'Google Drive विफल: $error';
-  }
-
-  @override
   String get pasted => 'पेस्ट किया गया';
 
   @override
@@ -4664,11 +4659,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get backupFailureOffline => 'इंटरनेट कनेक्शन नहीं है';
 
   @override
-  String backupFailureUnknown(String error) {
-    return '$error';
-  }
-
-  @override
   String cardFromSms(String date) {
     return 'SMS से, $date';
   }
@@ -5082,6 +5072,26 @@ class AppLocalizationsHi extends AppLocalizations {
   String tagRemoved(String tag) {
     return '#$tag हटाया';
   }
+
+  @override
+  String get driveErrorSignedOut =>
+      'Google साइन-इन की अवधि खत्म हो गई या अनुमति हटा दी गई। फिर कोशिश करें और Google के पूछने पर साइन इन करें।';
+
+  @override
+  String get driveErrorFull =>
+      'आपका Google Drive भर गया है। थोड़ी जगह खाली करें और फिर कोशिश करें।';
+
+  @override
+  String get driveErrorGeneric =>
+      'Google Drive से ठीक जवाब नहीं मिला। थोड़ी देर बाद फिर कोशिश करें।';
+
+  @override
+  String get backupFailureDriveFull =>
+      'Google Drive भर गया है; थोड़ी जगह खाली करें';
+
+  @override
+  String get backupFailureGeneric =>
+      'कुछ गड़बड़ हुई; थोड़ी देर बाद फिर कोशिश करें';
 
   @override
   String cardBillEntryTitle(String card) {

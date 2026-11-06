@@ -355,8 +355,6 @@
   "driveErrorCancelled": "Google sign-in was cancelled",
   "driveErrorOffline": "Couldn't reach Google Drive. Check your connection and try again.",
   "driveErrorNotFound": "No Hisab backup found in this Google Drive",
-  "driveErrorUnknown": "Google Drive failed: {error}",
-  "@driveErrorUnknown": {"placeholders": {"error": {"type": "String"}}},
 
   "pasted": "PASTED",
   "smsFoundReview": "Transaction found. Review it below.",
@@ -1618,8 +1616,6 @@
   "backupFailureFolderUnavailable": "the folder can't be reached; choose it again",
   "backupFailureSignInNeeded": "Google needs you to sign in again in Back up to Google Drive",
   "backupFailureOffline": "no internet connection",
-  "backupFailureUnknown": "{error}",
-  "@backupFailureUnknown": {"placeholders": {"error": {"type": "String"}}},
   "cardFromSms": "From SMS, {date}",
   "@cardFromSms": {"placeholders": {"date": {"type": "String"}}},
   "cardMinimumDue": "Minimum due {amount}",
@@ -1764,6 +1760,11 @@
   "@tagMerged": {"placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
   "tagRemoved": "Removed #{tag}",
   "@tagRemoved": {"placeholders": {"tag": {"type": "String"}}},
+  "driveErrorSignedOut": "Google sign-in expired or access was removed. Try again and sign in when Google asks.",
+  "driveErrorFull": "Your Google Drive is full. Free up some space and try again.",
+  "driveErrorGeneric": "Google Drive didn't respond as expected. Try again later.",
+  "backupFailureDriveFull": "Google Drive is full; free up some space",
+  "backupFailureGeneric": "something went wrong; try again later",
   "cardBillEntryTitle": "Card bill · {card}",
   "@cardBillEntryTitle": {"placeholders": {"card": {"type": "String"}}}
 }

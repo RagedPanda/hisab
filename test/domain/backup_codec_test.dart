@@ -23,4 +23,13 @@ void main() {
       throwsA(isA<BackupFormatException>()),
     );
   });
+
+  test('backupHeaderProblem turns away a file that is not a backup without a passphrase', () async {
+    final bytes = await encryptBackup(payload: {'app': 'hisab'}, passphrase: 'correct horse');
+    expect(backupHeaderProblem(bytes), isNull);
+    expect(backupHeaderProblem('{"app": "hisab"}'.codeUnits)?.problem, BackupFormatProblem.notABackup);
+    expect(backupHeaderProblem(List<int>.filled(200, 0x41))?.problem, BackupFormatProblem.notABackup);
+    expect(backupHeaderProblem(bytes.sublist(0, 20))?.problem, BackupFormatProblem.notABackup);
+    expect(backupHeaderProblem(const []), isNotNull);
+  });
 }

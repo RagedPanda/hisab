@@ -1862,12 +1862,6 @@ abstract class AppLocalizations {
   /// **'No Hisab backup found in this Google Drive'**
   String get driveErrorNotFound;
 
-  /// No description provided for @driveErrorUnknown.
-  ///
-  /// In en, this message translates to:
-  /// **'Google Drive failed: {error}'**
-  String driveErrorUnknown(String error);
-
   /// No description provided for @pasted.
   ///
   /// In en, this message translates to:
@@ -7502,12 +7496,6 @@ abstract class AppLocalizations {
   /// **'no internet connection'**
   String get backupFailureOffline;
 
-  /// No description provided for @backupFailureUnknown.
-  ///
-  /// In en, this message translates to:
-  /// **'{error}'**
-  String backupFailureUnknown(String error);
-
   /// No description provided for @cardFromSms.
   ///
   /// In en, this message translates to:
@@ -8113,6 +8101,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Removed #{tag}'**
   String tagRemoved(String tag);
+
+  /// No description provided for @driveErrorSignedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in expired or access was removed. Try again and sign in when Google asks.'**
+  String get driveErrorSignedOut;
+
+  /// No description provided for @driveErrorFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Google Drive is full. Free up some space and try again.'**
+  String get driveErrorFull;
+
+  /// No description provided for @driveErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive didn\'t respond as expected. Try again later.'**
+  String get driveErrorGeneric;
+
+  /// No description provided for @backupFailureDriveFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive is full; free up some space'**
+  String get backupFailureDriveFull;
+
+  /// No description provided for @backupFailureGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'something went wrong; try again later'**
+  String get backupFailureGeneric;
 
   /// No description provided for @cardBillEntryTitle.
   ///

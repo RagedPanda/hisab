@@ -295,7 +295,6 @@
   "driveErrorCancelled": "Google साइन-इन रद्द किया गया",
   "driveErrorOffline": "Google Drive तक नहीं पहुँच पाए। कनेक्शन जाँचें और फिर कोशिश करें।",
   "driveErrorNotFound": "इस Google Drive में हिसाब का कोई बैकअप नहीं मिला",
-  "driveErrorUnknown": "Google Drive विफल: {error}",
   "pasted": "पेस्ट किया गया",
   "smsFoundReview": "लेन-देन मिला। नीचे समीक्षा करें।",
   "smsAdded": "लेन-देन जोड़ा गया।",
@@ -1277,7 +1276,6 @@
   "backupFailureFolderUnavailable": "फ़ोल्डर तक पहुँच नहीं; उसे फिर से चुनें",
   "backupFailureSignInNeeded": "Google Drive पर बैकअप लें में जाकर फिर से साइन इन करें",
   "backupFailureOffline": "इंटरनेट कनेक्शन नहीं है",
-  "backupFailureUnknown": "{error}",
   "cardFromSms": "SMS से, {date}",
   "cardMinimumDue": "न्यूनतम देय {amount}",
   "cardSmsAvailableLimit": "{amount} लिमिट बची, SMS से, {date}",
@@ -1379,5 +1377,10 @@
   "tagRenamed": "#{from} का नाम बदलकर #{to} किया",
   "tagMerged": "#{from} को #{to} में मिलाया",
   "tagRemoved": "#{tag} हटाया",
+  "driveErrorSignedOut": "Google साइन-इन की अवधि खत्म हो गई या अनुमति हटा दी गई। फिर कोशिश करें और Google के पूछने पर साइन इन करें।",
+  "driveErrorFull": "आपका Google Drive भर गया है। थोड़ी जगह खाली करें और फिर कोशिश करें।",
+  "driveErrorGeneric": "Google Drive से ठीक जवाब नहीं मिला। थोड़ी देर बाद फिर कोशिश करें।",
+  "backupFailureDriveFull": "Google Drive भर गया है; थोड़ी जगह खाली करें",
+  "backupFailureGeneric": "कुछ गड़बड़ हुई; थोड़ी देर बाद फिर कोशिश करें",
   "cardBillEntryTitle": "कार्ड बिल · {card}"
 }

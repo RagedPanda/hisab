@@ -206,4 +206,21 @@ void main() {
     await _waitFor(tester, () => find.textContaining('Restored ').evaluate().isNotEmpty);
     expect(find.textContaining('Restored '), findsOneWidget);
   });
+
+  testWidgets('a picked file that is not a Hisab backup is turned away before the passphrase', (tester) async {
+    final temp = Directory.systemTemp.createTempSync('hisab-settings-test');
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final notABackup = File('${temp.path}/photo.jpg')..writeAsBytesSync(List<int>.generate(512, (index) => index % 256));
+    final picker = _FakeFilePicker()..picked = [_PickedFile(notABackup)];
+    final originalPicker = FilePickerPlatform.instance;
+    FilePickerPlatform.instance = picker;
+    addTearDown(() => FilePickerPlatform.instance = originalPicker);
+    await _pumpSettings(tester);
+
+    await _tapVisible(tester, find.text('Restore from backup'));
+    final message = lookupAppLocalizations(const Locale('en')).restoreNotABackup;
+    await _waitFor(tester, () => find.text(message).evaluate().isNotEmpty);
+    expect(find.text(message), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing, reason: 'no passphrase is asked for a file that is not a backup');
+  });
 }

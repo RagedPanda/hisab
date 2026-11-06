@@ -146,6 +146,26 @@ void main() {
       expect(find.text('office'), findsOneWidget);
     });
 
+    testWidgets('a search typed over Settings → Tags stays on that page, not the Entries tab', (tester) async {
+      await pumpEntries(tester);
+      await enter(tester, searchField, 'landlord');
+      appRouter.go(kTagsLocation);
+      await settle(tester);
+
+      await tester.tap(find.text('office'));
+      await settle(tester);
+      expect(tester.widget<TextField>(searchField).controller!.text, isEmpty, reason: 'the tab search does not narrow the tag list');
+      expect(find.text('Chai Point'), findsOneWidget);
+
+      await enter(tester, searchField, 'zzz');
+      await tester.pageBack();
+      await settle(tester);
+      appRouter.go('/transactions');
+      await settle(tester);
+      expect(tester.widget<TextField>(searchField).controller!.text, 'landlord', reason: 'the tab keeps its own search');
+      expect(find.text('Landlord'), findsOneWidget);
+    });
+
     testWidgets('category, account and today chips narrow the list and each cross drops only its own', (tester) async {
       late final String foodId;
       late final String cashId;

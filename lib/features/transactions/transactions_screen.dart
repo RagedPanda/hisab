@@ -43,6 +43,23 @@ final _kindFilterProvider = NotifierProvider<_KindFilterNotifier, String?>(_Kind
 /// bar), so Back returns there: Settings → Tags opens it.
 const String kPushedEntriesRoute = '/entries';
 
+/// The list at [kPushedEntriesRoute]. It keeps its own search and filters, so
+/// what is typed over Settings → Tags neither comes from the Entries tab nor
+/// is left behind in it.
+class PushedTransactionsScreen extends StatelessWidget {
+  const PushedTransactionsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+        overrides: [
+          _searchProvider.overrideWith(_SearchNotifier.new),
+          _kindFilterProvider.overrideWith(_KindFilterNotifier.new),
+          _entryFilterProvider.overrideWith(_EntryFilterNotifier.new),
+        ],
+        child: const TransactionsScreen(),
+      );
+}
+
 /// Filters carried in the route, e.g. `/transactions?category=<id>` from the
 /// dashboard donut, `?account=<id>` from an account card or `?day=2026-10-24`
 /// from the Home "Today" figure, `/entries?tag=<name>` from Settings → Tags.

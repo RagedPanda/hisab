@@ -642,7 +642,7 @@
   "tagsHint": "कॉमा से अलग करें, जैसे ice cream, trip",
   "showResults": "नतीजे दिखाएँ",
   "clearAll": "सब हटाएँ",
-  "resultsCount": "{count, plural, =1{1 नतीजा} other{{count} नतीजे}}",
+  "resultsCount": "{count, plural, =0{0 नतीजे} =1{1 नतीजा} other{{count} नतीजे}}",
   "filteredTotal": "कुल खर्च",
   "itemBoughtTimes": "{quantity} · {count, plural, =1{1 बार} other{{count} बार}}",
   "moreItems": "+{count} और आइटम",

@@ -2216,6 +2216,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count नतीजे',
       one: '1 नतीजा',
+      zero: '0 नतीजे',
     );
     return '$_temp0';
   }

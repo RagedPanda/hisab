@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/providers.dart';
 import 'package:hisab/data/db/database.dart';
 import 'package:hisab/features/shell/router.dart';
+import 'package:hisab/features/shell/widgets/common.dart';
 
 import '../support/app_harness.dart';
 import '../support/editor_harness.dart';
@@ -101,10 +102,14 @@ void main() {
     await openPicker(tester);
     await search(tester, 'ice cream');
     await tapAndSettle(tester, addRow);
+    final transport = (await categories(tester, container)).singleWhere((category) => category.id == transportId);
+    IconBadge preview() => tester.widget<IconBadge>(find.byKey(const ValueKey('categoryForm.preview')));
+    expect(preview().icon, isNot(transport.icon), reason: 'starts with the suggested parent\'s look');
 
     await tapAndSettle(tester, parentChoice);
     await tester.tap(find.text('Transport').last);
     await settle(tester);
+    expect((preview().icon, preview().color), (transport.icon, transport.color), reason: 'the preview shows the look the new category takes');
     await tapAndSettle(tester, saveButton);
     expect((await categories(tester, container)).singleWhere((category) => category.name == 'Ice cream').parentId, transportId);
   });

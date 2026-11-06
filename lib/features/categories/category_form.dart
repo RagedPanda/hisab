@@ -9,6 +9,7 @@ import '../../data/db/database.dart';
 import '../../domain/categories/category_suggestion.dart';
 import '../../l10n/category_names.dart';
 import '../../l10n/l10n.dart';
+import '../shell/widgets/common.dart';
 
 /// [category] as the suggestion helpers see it, with its stored and
 /// localised names.
@@ -89,7 +90,7 @@ Future<Category?> showCategoryForm(
           children: [
             Text(existingName == null ? (parentName == null ? l10n.newCategory : l10n.newSubcategoryOf(parentName)) : l10n.editNamed(existingName), style: Theme.of(sheetContext).textTheme.titleLarge),
             const SizedBox(height: 12),
-            TextField(key: const ValueKey('categoryForm.name'), controller: nameController, autofocus: initialName.isEmpty, decoration: InputDecoration(labelText: l10n.name), textCapitalization: TextCapitalization.words),
+            TextField(key: const ValueKey('categoryForm.name'), controller: nameController, autofocus: initialName.isEmpty, decoration: InputDecoration(labelText: l10n.name, prefixIcon: Padding(padding: const EdgeInsets.all(8), child: IconBadge(key: const ValueKey('categoryForm.preview'), icon: icon, color: color, size: 32))), textCapitalization: TextCapitalization.words),
             if (choices != null) ...[
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(

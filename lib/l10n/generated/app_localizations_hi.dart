@@ -120,6 +120,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count आइटम',
       one: '1 आइटम',
+      zero: '$count आइटम',
     );
     return '$_temp0';
   }
@@ -239,6 +240,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$days दिन',
       one: '1 दिन',
+      zero: '$days दिन',
     );
     return '$limit में से $amount बाकी · $_temp0';
   }
@@ -325,6 +327,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count एसएमएस समीक्षा के लिए',
       one: '1 एसएमएस समीक्षा के लिए',
+      zero: '$count एसएमएस समीक्षा के लिए',
     );
     return '$_temp0';
   }
@@ -612,6 +615,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count लोग',
       one: '1 व्यक्ति',
+      zero: '$count लोग',
     );
     return '$payer ने चुकाया · $_temp0';
   }
@@ -1374,6 +1378,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count सदस्य',
       one: '1 सदस्य',
+      zero: '$count सदस्य',
     );
     return '$_temp0';
   }
@@ -1597,6 +1602,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count नई श्रेणियाँ',
       one: '1 नई श्रेणी',
+      zero: '$count नई श्रेणियाँ',
     );
     return '$_temp0';
   }
@@ -1623,6 +1629,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count श्रेणियाँ',
       one: '1 श्रेणी',
+      zero: '$count श्रेणियाँ',
     );
     return '$_temp0';
   }
@@ -1813,6 +1820,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count यात्री',
       one: '1 यात्री',
+      zero: '$count यात्री',
     );
     return '$_temp0';
   }
@@ -1977,6 +1985,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count पुरानी एंट्री दिखाएँ',
       one: '1 पुरानी एंट्री दिखाएँ',
+      zero: '$count पुरानी एंट्री दिखाएँ',
     );
     return '$_temp0';
   }
@@ -2226,6 +2235,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count बार',
       one: '1 बार',
+      zero: '$count बार',
     );
     return '$quantity · $_temp0';
   }
@@ -2487,6 +2497,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$days दिन पहले',
       one: '1 दिन पहले',
+      zero: '$days दिन पहले',
     );
     return '$_temp0';
   }
@@ -2614,6 +2625,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count SMS देखने बाकी',
       one: '1 SMS देखना बाकी',
+      zero: '$count SMS देखने बाकी',
     );
     return '$_temp0';
   }
@@ -2625,6 +2637,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: 'अगले 3 दिन में $count बिल देय',
       one: 'अगले 3 दिन में 1 बिल देय',
+      zero: 'अगले 3 दिन में $count बिल देय',
     );
     return '$_temp0';
   }
@@ -2651,6 +2664,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$days दिन में देय',
       one: 'कल देय',
+      zero: 'आज देय',
     );
     return '$_temp0';
   }
@@ -2662,6 +2676,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$days दिन से बकाया',
       one: '1 दिन से बकाया',
+      zero: '$days दिन से बकाया',
     );
     return '$_temp0';
   }
@@ -2869,6 +2884,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: 'हर $count दिन',
       one: 'हर दिन',
+      zero: 'हर $count दिन',
     );
     return '$_temp0';
   }
@@ -2880,6 +2896,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: 'हर $count हफ़्ते',
       one: 'हर हफ़्ते',
+      zero: 'हर $count हफ़्ते',
     );
     return '$_temp0';
   }
@@ -2891,6 +2908,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: 'हर $count महीने',
       one: 'हर महीने',
+      zero: 'हर $count महीने',
     );
     return '$_temp0';
   }
@@ -2902,6 +2920,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: 'हर $count साल',
       one: 'हर साल',
+      zero: 'हर $count साल',
     );
     return '$_temp0';
   }
@@ -2936,6 +2955,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count बार',
       one: '1 बार',
+      zero: '$count बार',
     );
     return '$_temp0';
   }
@@ -3025,6 +3045,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: 'और $count बाक़ी',
       one: 'और 1 बाक़ी',
+      zero: 'और $count बाक़ी',
     );
     return '$_temp0';
   }
@@ -3057,6 +3078,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count दोहराई जाने वाली एंट्री पुष्टि के लिए',
       one: '1 दोहराई जाने वाली एंट्री पुष्टि के लिए',
+      zero: '$count दोहराई जाने वाली एंट्री पुष्टि के लिए',
     );
     return '$_temp0';
   }
@@ -3108,6 +3130,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count चालू सब्सक्रिप्शन',
       one: '1 चालू सब्सक्रिप्शन',
+      zero: '$count चालू सब्सक्रिप्शन',
     );
     return '$_temp0';
   }
@@ -3173,6 +3196,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$days दिन में रिन्यू',
       one: 'कल रिन्यू',
+      zero: 'आज रिन्यू',
     );
     return '$_temp0';
   }
@@ -3236,6 +3260,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: 'हर $count दिन',
       one: 'रोज़',
+      zero: 'हर $count दिन',
     );
     return '$_temp0';
   }
@@ -3247,6 +3272,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: 'हर $count हफ़्ते',
       one: 'हर हफ़्ते',
+      zero: 'हर $count हफ़्ते',
     );
     return '$_temp0';
   }
@@ -3258,6 +3284,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: 'हर $count महीने',
       one: 'हर महीने',
+      zero: 'हर $count महीने',
     );
     return '$_temp0';
   }
@@ -3269,6 +3296,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: 'हर $count साल',
       one: 'हर साल',
+      zero: 'हर $count साल',
     );
     return '$_temp0';
   }
@@ -3373,6 +3401,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count खर्च',
       one: '1 खर्च',
+      zero: '$count खर्च',
     );
     return '$_temp0';
   }
@@ -3423,6 +3452,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$weight हिस्से',
       one: '1 हिस्सा',
+      zero: '$weight हिस्से',
     );
     return '$_temp0';
   }
@@ -3466,6 +3496,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: 'अभी $count भुगतान बचते हैं',
       one: 'अभी 1 भुगतान बचता है',
+      zero: 'अभी $count भुगतान बचते हैं',
     );
     return '$_temp0';
   }
@@ -3734,6 +3765,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$skipped छोड़ी गईं',
       one: '1 छोड़ी गई',
+      zero: '$skipped छोड़ी गईं',
     );
     return '$_temp0, $_temp1';
   }
@@ -3878,6 +3910,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: 'एसएमएस से $count एंट्री जोड़ी गईं',
       one: 'एसएमएस से 1 एंट्री जोड़ी गई',
+      zero: 'एसएमएस से $count एंट्री जोड़ी गईं',
     );
     return '$_temp0';
   }
@@ -3907,6 +3940,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$days दिन से बकाया',
       one: '1 दिन से बकाया',
+      zero: '$days दिन से बकाया',
     );
     return '$_temp0';
   }
@@ -4040,6 +4074,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$days दिन बाद',
       one: '1 दिन बाद',
+      zero: '$days दिन बाद',
     );
     return '$_temp0';
   }
@@ -4123,6 +4158,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$days दिन तक',
       one: '1 दिन तक',
+      zero: '$days दिन तक',
     );
     return '$_temp0';
   }
@@ -4232,6 +4268,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count लोगों को आपको $amount देने हैं',
       one: '1 व्यक्ति को आपको $amount देने हैं',
+      zero: '$count लोगों को आपको $amount देने हैं',
     );
     return '$_temp0';
   }
@@ -4939,6 +4976,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count भुगतान दर्ज करें',
       one: '1 भुगतान दर्ज करें',
+      zero: '$count भुगतान दर्ज करें',
     );
     return '$_temp0';
   }
@@ -4950,6 +4988,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count ग्रुप',
       one: '1 ग्रुप',
+      zero: '$count ग्रुप',
     );
     return '$name के साथ $_temp0 में हिसाब चुकता हुआ';
   }
@@ -5052,6 +5091,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count प्रविष्टियों',
       one: '1 प्रविष्टि',
+      zero: '$count प्रविष्टियों',
     );
     return '$_temp0 से #$tag हटाएँ?';
   }

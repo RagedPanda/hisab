@@ -43,4 +43,111 @@ void main() {
     expect(hindi.resultsCount(1), '1 नतीजा');
     expect(hindi.resultsCount(4), '4 नतीजे');
   });
+
+  group('Hindi plurals with zero', () {
+    final hindi = AppLocalizationsHi();
+    // Each message at a given count; amounts avoid the digit 1 so a stray singular shows.
+    final messages = <String, String Function(int)>{
+      'itemCount': hindi.itemCount,
+      'budgetLeftWithDays': (n) => hindi.budgetLeftWithDays('₹500', '₹900', n),
+      'smsToReview': hindi.smsToReview,
+      'paidByPeople': (n) => hindi.paidByPeople('रवि', n),
+      'memberCount': hindi.memberCount,
+      'suggestedCategoriesNew': hindi.suggestedCategoriesNew,
+      'packCategoryCount': hindi.packCategoryCount,
+      'travellersCount': hindi.travellersCount,
+      'showOlderRows': hindi.showOlderRows,
+      'itemBoughtTimes': (n) => hindi.itemBoughtTimes('2 kg', n),
+      'reminderNotifyDaysBefore': hindi.reminderNotifyDaysBefore,
+      'eveningSummaryReview': hindi.eveningSummaryReview,
+      'eveningSummaryDue': hindi.eveningSummaryDue,
+      'reminderDueInDays': hindi.reminderDueInDays,
+      'reminderOverdueDays': hindi.reminderOverdueDays,
+      'recurringEveryDays': hindi.recurringEveryDays,
+      'recurringEveryWeeks': hindi.recurringEveryWeeks,
+      'recurringEveryMonths': hindi.recurringEveryMonths,
+      'recurringEveryYears': hindi.recurringEveryYears,
+      'recurringTimes': hindi.recurringTimes,
+      'recurringMoreWaiting': hindi.recurringMoreWaiting,
+      'recurringToConfirm': hindi.recurringToConfirm,
+      'subscriptionsActiveCount': hindi.subscriptionsActiveCount,
+      'subscriptionRenewsInDays': hindi.subscriptionRenewsInDays,
+      'subscriptionEveryDays': hindi.subscriptionEveryDays,
+      'subscriptionEveryWeeks': hindi.subscriptionEveryWeeks,
+      'subscriptionEveryMonths': hindi.subscriptionEveryMonths,
+      'subscriptionEveryYears': hindi.subscriptionEveryYears,
+      'groupTotalsExpenseCount': hindi.groupTotalsExpenseCount,
+      'groupSettingsWeightValue': (n) => hindi.groupSettingsWeightValue(n, '$n'),
+      'groupSettingsSimplifySaves': hindi.groupSettingsSimplifySaves,
+      'recurringAddedSkipped (skipped)': (n) => hindi.recurringAddedSkipped(2, n),
+      'smsAutoAddedMany': hindi.smsAutoAddedMany,
+      'upcomingOverdueBy': hindi.upcomingOverdueBy,
+      'salaryDaysAfter': hindi.salaryDaysAfter,
+      'salaryMatchWindowDays': hindi.salaryMatchWindowDays,
+      'settleReminderPeopleOweYou': (n) => hindi.settleReminderPeopleOweYou(n, '₹500'),
+      'settleWithAction': hindi.settleWithAction,
+      'settleWithRecorded': (n) => hindi.settleWithRecorded('रवि', n),
+      'removeTagTitle': (n) => hindi.removeTagTitle('ghar', n),
+      'resultsCount': hindi.resultsCount,
+    };
+    final standaloneOne = RegExp(r'(?<!\d)1(?!\d)');
+
+    test('no message reads as singular for 0', () {
+      for (final MapEntry(key: name, value: message) in messages.entries) {
+        expect(message(0), isNot(message(1)), reason: name);
+        expect(message(0), isNot(contains(standaloneOne)), reason: name);
+      }
+    });
+
+    test('spot checks', () {
+      expect(hindi.itemCount(0), '0 आइटम');
+      expect(hindi.memberCount(0), '0 सदस्य');
+      expect(hindi.smsToReview(0), '0 एसएमएस समीक्षा के लिए');
+      expect(hindi.reminderDueInDays(0), 'आज देय');
+      expect(hindi.reminderDueInDays(1), 'कल देय');
+      expect(hindi.subscriptionRenewsInDays(0), 'आज रिन्यू');
+      expect(hindi.removeTagTitle('ghar', 0), '0 प्रविष्टियों से #ghar हटाएँ?');
+      expect(hindi.removeTagTitle('ghar', 1), '1 प्रविष्टि से #ghar हटाएँ?');
+      expect(hindi.recurringAddedSkipped(0, 0), 'कोई नहीं जोड़ी गई, 0 छोड़ी गईं');
+    });
+
+    test('every Hindi plural with =1 also has =0', () {
+      // Hindi plural rules put 0 in "one", so a =1 case without =0 reads "1 ..." for zero.
+      final arb = jsonDecode(File('lib/l10n/app_hi.arb').readAsStringSync()) as Map<String, dynamic>;
+      for (final MapEntry(:key, :value) in arb.entries) {
+        if (key.startsWith('@')) continue;
+        for (final selectors in pluralSelectors(value as String)) {
+          if (selectors.contains('=1') || selectors.contains('one')) expect(selectors, contains('=0'), reason: key);
+        }
+      }
+    });
+  });
+}
+
+/// The branch selectors (`=0`, `=1`, `other`, ...) of each ICU plural in [message].
+List<Set<String>> pluralSelectors(String message) {
+  int closing(String text, int open) {
+    var depth = 0;
+    for (var index = open; index < text.length; index++) {
+      if (text[index] == '{') depth++;
+      if (text[index] == '}' && --depth == 0) return index;
+    }
+    throw FormatException('unbalanced braces', text);
+  }
+
+  final selector = RegExp(r'\s*(=\d+|\w+)\{');
+  return [
+    for (final plural in RegExp(r'\{\w+, plural, ').allMatches(message))
+      () {
+        final body = message.substring(plural.end, closing(message, plural.start));
+        final selectors = <String>{};
+        var index = 0;
+        while (index < body.length) {
+          final match = selector.matchAsPrefix(body, index)!;
+          selectors.add(match.group(1)!);
+          index = closing(body, match.end - 1) + 1;
+        }
+        return selectors;
+      }(),
+  ];
 }

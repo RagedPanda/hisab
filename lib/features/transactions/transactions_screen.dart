@@ -41,34 +41,43 @@ final _kindFilterProvider = NotifierProvider<_KindFilterNotifier, String?>(_Kind
 
 /// Filters carried in the route, e.g. `/transactions?category=<id>` from the
 /// dashboard donut, `?account=<id>` from an account card or `?day=2026-10-24`
-/// from the Home "Today" figure. Dismissing a chip navigates to the same
-/// route without that parameter.
+/// from the Home "Today" figure, `?tag=<name>` from Settings → Tags.
+/// Dismissing a chip navigates to the same route without that parameter.
 class RouteFilters {
-  const RouteFilters({this.categoryId, this.accountId, this.day});
+  const RouteFilters({this.categoryId, this.accountId, this.day, this.tag});
   final String? categoryId;
   final String? accountId;
+  final String? tag;
 
   /// One calendar day, local midnight.
   final DateTime? day;
 
   static RouteFilters of(BuildContext context) {
     final params = GoRouterState.of(context).uri.queryParameters;
-    return RouteFilters(categoryId: params['category'], accountId: params['account'], day: parseIsoDay(params['day']));
+    return RouteFilters(categoryId: params['category'], accountId: params['account'], day: parseIsoDay(params['day']), tag: params['tag']);
   }
 
-  bool get isEmpty => categoryId == null && accountId == null && day == null;
+  bool get isEmpty => categoryId == null && accountId == null && day == null && tag == null;
 
-  String locationWithout({bool category = false, bool account = false, bool day = false}) => Uri(
+  String locationWithout({bool category = false, bool account = false, bool day = false, bool tag = false}) => Uri(
         path: '/transactions',
         queryParameters: {
           if (!category && categoryId != null) 'category': categoryId!,
           if (!account && accountId != null) 'account': accountId!,
           if (!day && this.day != null) 'day': isoDay(this.day!),
+          if (!tag && this.tag != null) 'tag': this.tag!,
         },
       ).toString().replaceFirst(RegExp(r'\?$'), '');
 
-  EntryFilter get asFilter => EntryFilter(categoryId: categoryId, accountId: accountId, from: day, to: day);
+  EntryFilter get asFilter => EntryFilter(categoryId: categoryId, accountId: accountId, from: day, to: day, tag: tag);
+
+  /// The period to load: the day when one is set, all time for a tag (so the
+  /// list holds every entry the Tags screen counted), else none.
+  ({DateTime start, DateTime end})? get dateWindow => asFilter.dateWindow ?? (tag == null ? null : EntryFilter(from: DateTime(1900)).dateWindow);
 }
+
+/// The Entries list narrowed to entries tagged [tag], across all time.
+String entriesForTagLocation(String tag) => Uri(path: '/transactions', queryParameters: {'tag': tag}).toString();
 
 /// The Entries list narrowed to the single day [day].
 String entriesForDayLocation(DateTime day) => '/transactions?day=${isoDay(day)}';
@@ -110,7 +119,7 @@ class TransactionsScreen extends ConsumerWidget {
     final routeFilters = RouteFilters.of(context);
     final routeFilter = routeFilters.asFilter;
     // The sheet's dates win when both are set; both filters still apply below.
-    final window = filter.dateWindow ?? routeFilter.dateWindow;
+    final window = filter.dateWindow ?? routeFilters.dateWindow;
     final async = window == null ? ref.watch(monthEntriesProvider) : ref.watch(windowEntriesProvider(window));
     final entries = (async.value ?? const <EntryDetails>[]).where((d) {
       if (kindFilter != null && d.entry.kind != kindFilter) return false;
@@ -181,6 +190,8 @@ class TransactionsScreen extends ConsumerWidget {
                       : dateRangeLabel(routeFilters.day, routeFilters.day, locale: Localizations.localeOf(context).toString()),
                   onDeleted: () => context.go(routeFilters.locationWithout(day: true)),
                 ),
+              if (routeFilters.tag != null)
+                _RouteFilterChip(label: '#${routeFilters.tag}', onDeleted: () => context.go(routeFilters.locationWithout(tag: true))),
               _ProjectFilterChip(selectedId: filter.projectId),
               ..._activeFilterChips(context, ref, filter, moneyFormat),
               for (final (label, value) in [(l10n.all, null), (l10n.kindExpenses, 'expense'), (l10n.income, 'income'), (l10n.kindTransfers, 'transfer')])

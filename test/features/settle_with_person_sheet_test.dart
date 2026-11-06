@@ -50,7 +50,7 @@ void main() {
     expect(inSheet(find.text('This group')), findsOneWidget);
     expect(inSheet(find.text('Goa')), findsOneWidget);
     expect(inSheet(find.text('Flat')), findsNothing, reason: 'this group by default');
-    expect(inSheet(find.text('Amit owes you ₹150 in all')), findsOneWidget);
+    expect(inSheet(find.textContaining('in all')), findsNothing, reason: 'one group has no total to repeat');
     expect(inSheet(find.text('Record 1 payment')), findsOneWidget);
     expect(inSheet(find.text('Pay with UPI')), findsNothing, reason: 'Amit owes me, so there is nothing to pay');
 
@@ -96,7 +96,7 @@ void main() {
     await tapVisible(tester, find.descendant(of: find.byType(BottomSheet), matching: find.text('Priya')));
     expect(inSheet(find.text('Settle up with Priya')), findsOneWidget);
     expect(inSheet(find.text('All groups')), findsNothing, reason: 'Priya is in no other group');
-    expect(inSheet(find.text('You owe Priya ₹100 in all')), findsOneWidget);
+    expect(inSheet(find.textContaining('in all')), findsNothing, reason: 'one group has no total to repeat');
 
     await tapVisible(tester, inSheet(find.text('Pay with UPI')));
     expect(world.launchedUris.single.queryParameters, allOf(containsPair('pa', 'priya@upi'), containsPair('am', '100.00')));

@@ -193,7 +193,7 @@ class _SettleWithPersonSheetState extends ConsumerState<SettleWithPersonSheet> {
                   ),
                 ),
               const Divider(),
-              for (final total in totals)
+              for (final total in personSummaryTotals(shares))
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Text(

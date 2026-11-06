@@ -1683,7 +1683,7 @@
   "appLockPromptHint": "Use your fingerprint, face or screen lock",
   "appLockPromptFallback": "Use passcode",
   "passphraseMismatch": "The two passphrases don't match",
-  "passphraseConfirmHint": "Type the passphrase again",
+  "passphraseConfirmHint": "Type it again",
   "passphraseShow": "Show passphrase",
   "passphraseHide": "Hide passphrase",
   "restorePassphraseHint": "The passphrase this backup was made with",

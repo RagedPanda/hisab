@@ -4849,7 +4849,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get passphraseMismatch => 'दोनों पासफ़्रेज़ मेल नहीं खाते';
 
   @override
-  String get passphraseConfirmHint => 'पासफ़्रेज़ फिर से लिखें';
+  String get passphraseConfirmHint => 'फिर से लिखें';
 
   @override
   String get passphraseShow => 'पासफ़्रेज़ दिखाएँ';

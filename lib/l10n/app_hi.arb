@@ -1326,7 +1326,7 @@
   "appLockPromptHint": "फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक इस्तेमाल करें",
   "appLockPromptFallback": "पासकोड इस्तेमाल करें",
   "passphraseMismatch": "दोनों पासफ़्रेज़ मेल नहीं खाते",
-  "passphraseConfirmHint": "पासफ़्रेज़ फिर से लिखें",
+  "passphraseConfirmHint": "फिर से लिखें",
   "passphraseShow": "पासफ़्रेज़ दिखाएँ",
   "passphraseHide": "पासफ़्रेज़ छिपाएँ",
   "restorePassphraseHint": "वह पासफ़्रेज़ जिससे यह बैकअप बना था",

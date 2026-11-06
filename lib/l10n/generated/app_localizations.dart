@@ -7799,7 +7799,7 @@ abstract class AppLocalizations {
   /// No description provided for @passphraseConfirmHint.
   ///
   /// In en, this message translates to:
-  /// **'Type the passphrase again'**
+  /// **'Type it again'**
   String get passphraseConfirmHint;
 
   /// No description provided for @passphraseShow.

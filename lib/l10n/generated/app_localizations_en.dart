@@ -4875,7 +4875,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passphraseMismatch => 'The two passphrases don\'t match';
 
   @override
-  String get passphraseConfirmHint => 'Type the passphrase again';
+  String get passphraseConfirmHint => 'Type it again';
 
   @override
   String get passphraseShow => 'Show passphrase';

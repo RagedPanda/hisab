@@ -1,14 +1,18 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:google_sign_in/google_sign_in.dart' show GoogleSignInException;
 import 'package:http/http.dart' as http;
 
 import '../../domain/backup/backup_codec.dart';
+import '../../domain/backup/drive_failure.dart';
 import '../../domain/money/money_format.dart';
 import 'backup_service.dart';
 import 'drive_account.dart';
 import 'drive_backup_store.dart';
 import 'drive_rest_backup_store.dart';
+
+export '../../domain/backup/drive_failure.dart' show DriveBackupFailure;
 
 /// Manual backup to and restore from the user's Drive. The encryption and
 /// the merge are [BackupService]'s; this only moves its ciphertext.
@@ -35,15 +39,13 @@ class DriveBackupService {
   Future<bool> deleteDriveCopy() => store.delete();
 }
 
-/// Why a Drive action failed, for picking the message to show.
-enum DriveBackupFailure { cancelled, offline, notFound, wrongPassphrase, unknown }
-
 /// Sorts an error thrown by a Drive action into a [DriveBackupFailure].
 DriveBackupFailure driveBackupFailureOf(Object error) => switch (error) {
       DriveSignInCancelledException() => DriveBackupFailure.cancelled,
+      DriveSignInNeededException() || GoogleSignInException() => DriveBackupFailure.signedOut,
       DriveBackupNotFoundException() => DriveBackupFailure.notFound,
       BackupFormatException() => DriveBackupFailure.wrongPassphrase,
       SocketException() || http.ClientException() || TimeoutException() => DriveBackupFailure.offline,
-      DriveRequestException(statusCode: >= 500) => DriveBackupFailure.offline,
+      DriveRequestException(:final statusCode, :final body) => driveStatusFailure(statusCode, body),
       _ => DriveBackupFailure.unknown,
     };

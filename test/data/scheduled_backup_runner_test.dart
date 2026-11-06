@@ -5,6 +5,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/data/backup/app_backup_service.dart';
 import 'package:hisab/data/backup/drive_account.dart';
+import 'package:hisab/data/backup/drive_rest_backup_store.dart';
 import 'package:hisab/data/backup/scheduled_backup_channel.dart';
 import 'package:hisab/data/backup/scheduled_backup_prefs.dart';
 import 'package:hisab/data/backup/scheduled_backup_runner.dart';
@@ -129,5 +130,19 @@ void main() {
     final attempts = await runner(folder: folder, drive: drive).runDue(DateTime(2026, 10, 31, 10));
     expect(attempts[ScheduledBackupTarget.drive]!.failure, ScheduledBackupFailure.signInNeeded);
     expect(attempts[ScheduledBackupTarget.folder]!.succeeded, isTrue);
+  });
+
+  test('a full Drive and an unexpected error are recorded without the raw error text', () async {
+    await useChoices(_daily.copyWith(includeDrive: true));
+    final drive = FakeDriveBackupStore()
+      ..failWith = const DriveRequestException(403, '{"error": {"errors": [{"reason": "storageQuotaExceeded"}]}}');
+    final folder = FakeBackupFolder();
+    final full = await runner(folder: folder, drive: drive).runNow(DateTime(2026, 10, 30, 10));
+    expect(full[ScheduledBackupTarget.drive]!.failure, ScheduledBackupFailure.driveFull);
+
+    drive.failWith = StateError('PlatformException(boom)');
+    final odd = await runner(folder: folder, drive: drive).runNow(DateTime(2026, 10, 30, 11));
+    expect(odd[ScheduledBackupTarget.drive]!.failure, ScheduledBackupFailure.unknown);
+    expect(odd[ScheduledBackupTarget.drive]!.detail, isNull);
   });
 }

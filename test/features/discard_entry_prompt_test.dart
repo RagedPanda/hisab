@@ -27,7 +27,7 @@ void main() {
     await settle(tester);
     await enter(tester, find.widgetWithText(TextField, 'Search categories'), 'milk');
     await settle(tester);
-    await tester.tap(find.textContaining('Milk').first);
+    await tester.tap(find.text('Milk & Dairy'));
     await settle(tester);
   }
 

@@ -19,6 +19,7 @@ import '../data/repositories/people_repository.dart';
 import '../data/repositories/reminders_repository.dart';
 import '../data/repositories/settle_schedule_repository.dart';
 import '../data/repositories/sms_log_repository.dart';
+import '../data/repositories/tags_repository.dart';
 import '../data/sms/reminder_payment_adapter.dart';
 import '../data/sms/sms_channel.dart';
 import '../data/sms/sms_ingest_service.dart';
@@ -151,6 +152,10 @@ final windowEntriesProvider = StreamProvider.family<List<EntryDetails>, ({DateTi
 
 /// Every tag used on a live entry, for the Entries tag filter.
 final entryTagsProvider = StreamProvider((ref) => ref.watch(entriesRepositoryProvider).watchTagTexts().map(distinctTags));
+final tagsRepositoryProvider = Provider((ref) => TagsRepository(ref.watch(databaseProvider)));
+
+/// Every tag in use with its entry count, most used first, for Settings → Tags.
+final tagCountsProvider = StreamProvider((ref) => ref.watch(tagsRepositoryProvider).watchTagCounts());
 final monthTotalsProvider = StreamProvider((ref) {
   final range = ref.watch(selectedRangeProvider);
   return ref.watch(entriesRepositoryProvider).watchTotals(range);

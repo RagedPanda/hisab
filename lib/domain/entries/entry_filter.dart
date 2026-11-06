@@ -121,6 +121,16 @@ final _tagSeparator = RegExp(r'[,，、\n]|\s+(?=#)');
 
 String _tidyTag(String part) => part.trim().replaceFirst(RegExp(r'^#+'), '').replaceAll(RegExp(r'\s+'), ' ').trim();
 
+/// [input] as one tag name, tidied the way [parseTags] tidies each tag
+/// (`  #Ice   cream ` is `Ice cream`), or null when it is blank or holds a
+/// separator and so would make more than one tag.
+String? tagNameFrom(String input) {
+  final trimmed = input.trim();
+  if (trimmed.contains(_tagSeparator)) return null;
+  final tag = _tidyTag(trimmed);
+  return tag.isEmpty ? null : tag;
+}
+
 /// [tags] as stored on an entry: `home, trip`.
 String formatTags(Iterable<String> tags) => tags.join(', ');
 

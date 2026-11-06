@@ -1364,7 +1364,7 @@
   "putUnder": "किसके अंदर रखें",
   "ownTopLevelCategory": "अलग मुख्य श्रेणी",
   "suggestedParent": "{name} (सुझाव)",
-  "manageTagsHint": "टैग का नाम बदलें, मिलाएँ या हटाएँ",
+  "manageTagsHint": "नाम बदलें, मिलाएँ या हटाएँ",
   "searchTags": "टैग खोजें",
   "noTagsTitle": "अभी कोई टैग नहीं",
   "noTagsBody": "प्रविष्टियों पर #trip या #office जैसे टैग लगाएँ, फिर उन्हें यहाँ ढूँढें और सँवारें",

@@ -5018,7 +5018,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get manageTagsHint => 'टैग का नाम बदलें, मिलाएँ या हटाएँ';
+  String get manageTagsHint => 'नाम बदलें, मिलाएँ या हटाएँ';
 
   @override
   String get searchTags => 'टैग खोजें';

@@ -90,4 +90,30 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(LineChart), findsOneWidget);
   });
+
+  for (final (locale, title) in const [(Locale('en'), 'Spending trend'), (Locale('hi'), 'खर्च का रुझान')]) {
+    testWidgets('the title keeps its room and the switch moves under it at text x2 (${locale.languageCode})', (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final container = await createContainer(overrides: [trendDataProvider.overrideWithValue(AsyncData(_trend()))]);
+      await pumpScreen(tester, container, const Scaffold(body: SingleChildScrollView(padding: EdgeInsets.all(16), child: TrendCard())), locale: locale);
+      await tester.pumpAndSettle();
+
+      final titleRect = tester.getRect(find.text(title));
+      expect(titleRect.width, greaterThan(200), reason: 'before, the switch squeezed the title to nothing');
+      expect(tester.getRect(find.byType(SegmentedButton<TrendMode>)).top, greaterThanOrEqualTo(titleRect.bottom));
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('with room to spare the switch sits beside the title', (tester) async {
+    // The test font is far wider than the real one, so give it a wide screen.
+    final container = await createContainer(overrides: [trendDataProvider.overrideWithValue(AsyncData(_trend()))]);
+    await pumpScreen(tester, container, const Scaffold(body: SingleChildScrollView(padding: EdgeInsets.all(16), child: TrendCard())), size: const Size(600, 780));
+    await tester.pumpAndSettle();
+    final titleRect = tester.getRect(find.text('Spending trend'));
+    final switchRect = tester.getRect(find.byType(SegmentedButton<TrendMode>));
+    expect(switchRect.left, greaterThan(titleRect.right));
+    expect(switchRect.top, lessThan(titleRect.bottom));
+  });
 }

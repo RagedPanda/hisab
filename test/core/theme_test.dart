@@ -27,6 +27,11 @@ void main() {
         expect(theme.inputDecorationTheme.fillColor, isNot(card));
       });
 
+      test('a filled field stands off the dialog behind it', () {
+        final dialog = theme.dialogTheme.backgroundColor!;
+        expect(_contrast(theme.inputDecorationTheme.fillColor!, dialog), greaterThan(1.1));
+      });
+
       test('row dividers are visible on the card', () {
         expect(_contrast(theme.colorScheme.outlineVariant, card), greaterThan(1.3));
       });

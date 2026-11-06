@@ -127,6 +127,12 @@ void main() {
       expect(personTotals(const []), isEmpty);
     });
 
+    test('summary totals only when there are several groups', () {
+      expect(personSummaryTotals([share('₹', 1500)]), isEmpty);
+      expect(personSummaryTotals(const []), isEmpty);
+      expect(personSummaryTotals([share('₹', 1500), share('₹', -600)]), [(symbol: '₹', netMinor: 900)]);
+    });
+
     test('a UPI amount only when one currency and I owe overall', () {
       expect(singleCurrencyAmountIOwe([share('₹', 500), share('₹', -800)]), 300);
       expect(singleCurrencyAmountIOwe([share('₹', 500), share('₹', -200)]), isNull);

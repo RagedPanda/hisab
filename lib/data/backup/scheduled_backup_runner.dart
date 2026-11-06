@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/settings.dart';
 import '../../domain/backup/backup_file_name.dart';
+import '../../domain/backup/drive_failure.dart';
 import '../../domain/backup/scheduled_backup.dart';
 import 'backup_service.dart';
 import 'drive_account.dart';
@@ -86,8 +87,7 @@ class ScheduledBackupRunner {
     try {
       return BackupAttempt(at: now, detail: await write());
     } catch (error) {
-      final failure = scheduledBackupFailureOf(error);
-      return BackupAttempt(at: now, failure: failure, detail: failure == ScheduledBackupFailure.unknown ? '$error' : null);
+      return BackupAttempt(at: now, failure: scheduledBackupFailureOf(error));
     }
   }
 
@@ -119,9 +119,5 @@ ScheduledBackupFailure scheduledBackupFailureOf(Object error) => switch (error) 
       _NoFolderChosen() => ScheduledBackupFailure.noFolder,
       BackupFolderUnavailableException() => ScheduledBackupFailure.folderUnavailable,
       DriveSignInNeededException() => ScheduledBackupFailure.signInNeeded,
-      _ => switch (driveBackupFailureOf(error)) {
-          DriveBackupFailure.cancelled => ScheduledBackupFailure.signInNeeded,
-          DriveBackupFailure.offline => ScheduledBackupFailure.offline,
-          _ => ScheduledBackupFailure.unknown,
-        },
+      _ => scheduledFailureOfDrive(driveBackupFailureOf(error)),
     };

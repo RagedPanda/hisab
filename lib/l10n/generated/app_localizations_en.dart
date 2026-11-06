@@ -1030,11 +1030,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driveErrorNotFound => 'No Hisab backup found in this Google Drive';
 
   @override
-  String driveErrorUnknown(String error) {
-    return 'Google Drive failed: $error';
-  }
-
-  @override
   String get pasted => 'PASTED';
 
   @override
@@ -4691,11 +4686,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupFailureOffline => 'no internet connection';
 
   @override
-  String backupFailureUnknown(String error) {
-    return '$error';
-  }
-
-  @override
   String cardFromSms(String date) {
     return 'From SMS, $date';
   }
@@ -5108,6 +5098,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String tagRemoved(String tag) {
     return 'Removed #$tag';
+  }
+
+  @override
+  String get driveErrorSignedOut =>
+      'Google sign-in expired or access was removed. Try again and sign in when Google asks.';
+
+  @override
+  String get driveErrorFull =>
+      'Your Google Drive is full. Free up some space and try again.';
+
+  @override
+  String get driveErrorGeneric =>
+      'Google Drive didn\'t respond as expected. Try again later.';
+
+  @override
+  String get backupFailureDriveFull =>
+      'Google Drive is full; free up some space';
+
+  @override
+  String get backupFailureGeneric => 'something went wrong; try again later';
+
+  @override
+  String cardBillEntryTitle(String card) {
+    return 'Card bill · $card';
   }
 
   @override

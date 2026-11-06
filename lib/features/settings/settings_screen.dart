@@ -13,6 +13,7 @@ import '../../core/providers.dart';
 import '../../core/settings.dart';
 import '../../data/db/database.dart';
 import '../../domain/accounts/default_account.dart';
+import '../../domain/backup/backup_codec.dart';
 import '../../domain/backup/backup_file_name.dart';
 import '../../domain/currency/currency_lookup.dart';
 import '../currency/currency_picker.dart';
@@ -410,6 +411,12 @@ class SettingsScreen extends ConsumerWidget {
     if (picked.isEmpty) return;
     final data = await picked.first.readAsBytes();
     if (!context.mounted) return;
+    // A file that isn't a Hisab backup is turned away before the passphrase is asked.
+    final headerProblem = backupHeaderProblem(data);
+    if (headerProblem != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(restoreFailureMessage(l10n, headerProblem))));
+      return;
+    }
     final passphrase = await promptRestorePassphrase(context);
     if (passphrase == null || !context.mounted) return;
     try {

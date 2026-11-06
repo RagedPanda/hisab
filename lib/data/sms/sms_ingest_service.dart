@@ -704,7 +704,9 @@ class SmsIngestService {
       categoryId: await _cardPaymentCategoryId(),
       accountId: bank?.id,
       payee: _cardBillPayeeFor(parsed),
-      note: smsEntryNote(reference: parsed.reference, rawCounterparty: parsed.counterparty),
+      // Wording that only names the card is left out: the row titles itself
+      // after the To card instead ([entryTileTitle]).
+      note: smsEntryNote(reference: parsed.reference, rawCounterparty: cardBillPayee(parsed.counterparty)),
       source: 'sms',
       smsId: smsId,
     ).copyWith(toAccountId: Value(cardId)));

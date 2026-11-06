@@ -121,7 +121,7 @@ class GroupDetailScreen extends ConsumerWidget {
               ],
             ),
           ],
-          bottom: TabBar(tabs: [Tab(text: l10n.kindExpenses), Tab(text: l10n.balances), Tab(text: l10n.members)]),
+          bottom: TabBar(tabs: [for (final label in [l10n.kindExpenses, l10n.balances, l10n.members]) Tab(child: segmentLabel(label))]),
         ),
         floatingActionButton: archived
             ? null

@@ -16,9 +16,9 @@ double labelFitScale(Size natural, BoxConstraints constraints) {
 /// them needs, so neighbouring labels stay the same size.
 double sharedLabelScale(Iterable<double> needs) => needs.fold(1, math.min);
 
-/// A segmented button label kept on one line. Too big for its segment, it is
-/// drawn smaller rather than wrapped or clipped, and every label inside the
-/// same [SegmentedButton] is drawn at the same scale.
+/// A segmented button or tab label kept on one line. Too big for its segment,
+/// it is drawn smaller rather than wrapped or clipped, and every label inside
+/// the same [SegmentedButton] or [TabBar] is drawn at the same scale.
 class SegmentLabel extends SingleChildRenderObjectWidget {
   SegmentLabel(String label, {super.key, Key? textKey}) : super(child: Text(label, key: textKey, maxLines: 1, softWrap: false));
 
@@ -30,12 +30,12 @@ class SegmentLabel extends SingleChildRenderObjectWidget {
 
   static final _groups = Expando<SegmentLabelGroup>();
 
-  /// The labels of one segmented button share a group; a label outside one
-  /// stands alone.
+  /// The labels of one segmented button or tab bar share a group; a label
+  /// outside one stands alone.
   static SegmentLabelGroup? _groupOf(BuildContext context) {
     Element? button;
     context.visitAncestorElements((element) {
-      if (element.widget is! SegmentedButton) return true;
+      if (element.widget is! SegmentedButton && element.widget is! TabBar) return true;
       button = element;
       return false;
     });
@@ -44,9 +44,9 @@ class SegmentLabel extends SingleChildRenderObjectWidget {
   }
 }
 
-/// What each label of one segmented button needs, so all draw at the
-/// smallest. Labels report during layout; the shared scale is read at paint,
-/// after the whole button has laid out.
+/// What each label of one segmented button or tab bar needs, so all draw at
+/// the smallest. Labels report during layout; the shared scale is read at
+/// paint, after the whole button has laid out.
 class SegmentLabelGroup {
   final _needs = <RenderSegmentLabel, double>{};
 

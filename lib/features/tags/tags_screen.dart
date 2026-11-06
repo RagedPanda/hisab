@@ -128,6 +128,10 @@ class _TagMenu extends StatelessWidget {
   }
 }
 
+/// Whether [input] holds nothing but spaces and `#`: not a name yet, so
+/// Save stays off without calling it an error.
+bool _blankTagInput(String input) => input.replaceAll('#', '').trim().isEmpty;
+
 /// Asks for a new name for tag [current]; Save stays off until the text is
 /// one tag (see [tagNameFrom]). Resolves to the text, or null when cancelled.
 Future<String?> _promptTagName(BuildContext context, String current) {
@@ -148,7 +152,7 @@ Future<String?> _promptTagName(BuildContext context, String current) {
             key: const ValueKey('tagRename.field'),
             controller: controller,
             autofocus: true,
-            decoration: InputDecoration(prefixText: '#', errorText: valid || controller.text.trim().isEmpty ? null : l10n.tagNameInvalid),
+            decoration: InputDecoration(prefixText: '#', errorText: valid || _blankTagInput(controller.text) ? null : l10n.tagNameInvalid),
             onChanged: (_) => setDialogState(() {}),
             onSubmitted: (_) => submit(),
           ),

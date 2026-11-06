@@ -92,9 +92,12 @@ void main() {
     await settle(tester);
     expect(find.text('One tag only, without commas'), findsOneWidget);
     expect(tester.widget<FilledButton>(renameSave).onPressed, isNull);
-    await tester.enterText(renameField, '   ');
-    await settle(tester);
-    expect(tester.widget<FilledButton>(renameSave).onPressed, isNull);
+    for (final blank in ['   ', ' ## ']) {
+      await tester.enterText(renameField, blank);
+      await settle(tester);
+      expect(tester.widget<FilledButton>(renameSave).onPressed, isNull);
+      expect(find.text('One tag only, without commas'), findsNothing, reason: 'no name yet is not a comma mistake');
+    }
   });
 
   testWidgets('renaming onto another tag asks to merge, then leaves one tag per entry', (tester) async {

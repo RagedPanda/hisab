@@ -25,7 +25,9 @@ const _topLevel = '';
 /// [parentChoices] turns on a "Put under" choice between those top-level
 /// categories (with [suggestedParent] listed first and preselected) and a
 /// top-level category; icon and colour follow the chosen parent until the
-/// user picks their own. [initialName] prefills the name. Creating a name that
+/// user picks their own. [initialName] prefills the name. With
+/// [suggestParent], the suggestion follows the name as it is typed until the
+/// user picks a parent themselves. Creating a name that
 /// already exists under the same parent returns that category instead.
 Future<Category?> showCategoryForm(
   BuildContext context,
@@ -36,15 +38,18 @@ Future<Category?> showCategoryForm(
   String initialName = '',
   List<Category>? parentChoices,
   Category? suggestedParent,
+  Category? Function(String name)? suggestParent,
 }) {
   final nameController = TextEditingController(text: existing?.name ?? initialName);
   final unitsController = TextEditingController(text: existing?.units ?? '');
-  final choices = parentChoices == null ? null : [?suggestedParent, ...parentChoices.where((choice) => choice.id != suggestedParent?.id)];
-  final byId = {for (final choice in choices ?? const <Category>[]) choice.id: choice};
-  var parentId = choices == null ? parent?.id : (suggestedParent?.id ?? _topLevel);
-  final topLevelColor = nextCategoryColor([for (final choice in choices ?? const <Category>[]) choice.color], kPaletteColors);
+  final byId = {for (final choice in [...?parentChoices, ?suggestedParent]) choice.id: choice};
+  var suggested = suggestedParent;
+  var parentTouched = false;
+  List<Category>? choices() => parentChoices == null ? null : [?suggested, ...parentChoices.where((choice) => choice.id != suggested?.id)];
+  var parentId = parentChoices == null ? parent?.id : (suggestedParent?.id ?? _topLevel);
+  final topLevelColor = nextCategoryColor([for (final choice in byId.values) choice.color], kPaletteColors);
   var icon = existing?.icon ?? parent?.icon ?? suggestedParent?.icon ?? 'category';
-  var color = existing?.color ?? parent?.color ?? suggestedParent?.color ?? (choices == null ? kPaletteColors.first : topLevelColor);
+  var color = existing?.color ?? parent?.color ?? suggestedParent?.color ?? (parentChoices == null ? kPaletteColors.first : topLevelColor);
   var styleTouched = false;
   final l10n = context.l10n;
   final locale = Localizations.localeOf(context);
@@ -57,6 +62,14 @@ Future<Category?> showCategoryForm(
     final chosen = byId[chosenId];
     icon = chosen?.icon ?? 'category';
     color = chosen?.color ?? topLevelColor;
+  }
+
+  void followName(String name) {
+    if (suggestParent == null || parentTouched) return;
+    final next = suggestParent(name);
+    if (next?.id == suggested?.id) return;
+    suggested = next;
+    followParent(next?.id ?? _topLevel);
   }
 
   Future<Category?> save() async {
@@ -90,8 +103,8 @@ Future<Category?> showCategoryForm(
           children: [
             Text(existingName == null ? (parentName == null ? l10n.newCategory : l10n.newSubcategoryOf(parentName)) : l10n.editNamed(existingName), style: Theme.of(sheetContext).textTheme.titleLarge),
             const SizedBox(height: 12),
-            TextField(key: const ValueKey('categoryForm.name'), controller: nameController, autofocus: initialName.isEmpty, decoration: InputDecoration(labelText: l10n.name, prefixIcon: Padding(padding: const EdgeInsets.all(8), child: IconBadge(key: const ValueKey('categoryForm.preview'), icon: icon, color: color, size: 32))), textCapitalization: TextCapitalization.words),
-            if (choices != null) ...[
+            TextField(key: const ValueKey('categoryForm.name'), controller: nameController, autofocus: initialName.isEmpty, onChanged: (name) => setSheetState(() => followName(name)), decoration: InputDecoration(labelText: l10n.name, prefixIcon: Padding(padding: const EdgeInsets.all(8), child: IconBadge(key: const ValueKey('categoryForm.preview'), icon: icon, color: color, size: 32))), textCapitalization: TextCapitalization.words),
+            if (choices() case final choices?) ...[
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 key: const ValueKey('categoryForm.parent'),
@@ -99,14 +112,17 @@ Future<Category?> showCategoryForm(
                 isExpanded: true,
                 decoration: InputDecoration(labelText: l10n.putUnder),
                 items: [
-                  for (final choice in choices.take(suggestedParent == null ? 0 : 1)) _parentItem(sheetContext, choice, suggested: true),
+                  for (final choice in choices.take(suggested == null ? 0 : 1)) _parentItem(sheetContext, choice, suggested: true),
                   DropdownMenuItem(
                     value: _topLevel,
                     child: Row(children: [const Icon(Icons.category_outlined), const SizedBox(width: 12), Expanded(child: Text(l10n.ownTopLevelCategory, overflow: TextOverflow.ellipsis))]),
                   ),
-                  for (final choice in choices.skip(suggestedParent == null ? 0 : 1)) _parentItem(sheetContext, choice, suggested: false),
+                  for (final choice in choices.skip(suggested == null ? 0 : 1)) _parentItem(sheetContext, choice, suggested: false),
                 ],
-                onChanged: (value) => setSheetState(() => followParent(value)),
+                onChanged: (value) => setSheetState(() {
+                  parentTouched = true;
+                  followParent(value);
+                }),
               ),
             ],
             const SizedBox(height: 12),

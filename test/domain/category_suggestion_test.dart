@@ -56,6 +56,9 @@ void main() {
       expect(suggestParentId('Fuel for generator', options), 'transport');
       expect(suggestParentId('Sweets box', options), 'food');
       expect(suggestParentId('Transport passes', options), 'transport', reason: 'a top-level match is its own parent');
+      expect(suggestParentId(' transport ', options), isNull, reason: 'the name of a top-level category is that category, not a child of it');
+      expect(suggestParentId('खाना-पीना', options), isNull);
+      expect(suggestParentId('fuel', options), 'transport', reason: 'a subcategory name still points at its parent');
     });
 
     test('falls back to the keyword guess, then to nothing', () {

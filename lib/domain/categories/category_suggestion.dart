@@ -59,7 +59,9 @@ int _overlap(List<String> wanted, CategoryOption option) {
 /// The top-level category a new category called [name] most likely belongs
 /// under: the parent of the category sharing the most words with it, else
 /// the parent of the category whose seed key is [keywordKey] (a merchant
-/// keyword guess), else null. Ties go to the earlier option.
+/// keyword guess), else null. Ties go to the earlier option. A name that is
+/// already a top-level category gets null: it is that category, not a child
+/// of it.
 String? suggestParentId(String name, List<CategoryOption> options, {String? keywordKey}) {
   final wanted = _words(name);
   CategoryOption? best;
@@ -72,7 +74,8 @@ String? suggestParentId(String name, List<CategoryOption> options, {String? keyw
     }
   }
   best ??= keywordKey == null ? null : options.where((option) => option.seedKey == keywordKey).firstOrNull;
-  return best == null ? null : best.parentId ?? best.id;
+  if (best == null || (best.parentId == null && _namedAs(best, foldCategoryName(name)))) return null;
+  return best.parentId ?? best.id;
 }
 
 /// Colour for a new top-level category: the first of [palette] no top-level

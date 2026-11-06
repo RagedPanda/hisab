@@ -16,6 +16,8 @@ const backupMagic = 'HISAB1';
 const _saltLength = 16;
 const _nonceLength = 12;
 const _iterations = 200000;
+const _macLength = 16;
+const _headerLength = backupMagic.length + _saltLength + _nonceLength;
 
 /// Why a backup could not be opened. AES-GCM cannot tell a wrong
 /// passphrase from a damaged file, so [wrongPassphrase] covers both.
@@ -59,23 +61,28 @@ Future<Uint8List> encryptBackup({
   return builder.toBytes();
 }
 
+/// Why [bytes] cannot be a Hisab backup (too short, or no "HISAB1" magic),
+/// or null when they look like one. Needs no passphrase, so a restore can
+/// turn away a wrong file before asking for one.
+BackupFormatException? backupHeaderProblem(List<int> bytes) {
+  if (bytes.length < _headerLength + _macLength) {
+    return const BackupFormatException('File is too small to be a Hisab backup');
+  }
+  final magic = ascii.decode(bytes.sublist(0, backupMagic.length), allowInvalid: true);
+  return magic == backupMagic ? null : const BackupFormatException('Not a Hisab backup file');
+}
+
 Future<Map<String, dynamic>> decryptBackup({
   required List<int> bytes,
   required String passphrase,
 }) async {
-  final headerLength = backupMagic.length + _saltLength + _nonceLength;
-  if (bytes.length < headerLength + 16) {
-    throw const BackupFormatException('File is too small to be a Hisab backup');
-  }
-  final magic = ascii.decode(bytes.sublist(0, backupMagic.length), allowInvalid: true);
-  if (magic != backupMagic) {
-    throw const BackupFormatException('Not a Hisab backup file');
-  }
+  final headerProblem = backupHeaderProblem(bytes);
+  if (headerProblem != null) throw headerProblem;
   var offset = backupMagic.length;
   final salt = bytes.sublist(offset, offset += _saltLength);
   final nonce = bytes.sublist(offset, offset += _nonceLength);
-  final cipherText = bytes.sublist(offset, bytes.length - 16);
-  final mac = Mac(bytes.sublist(bytes.length - 16));
+  final cipherText = bytes.sublist(offset, bytes.length - _macLength);
+  final mac = Mac(bytes.sublist(bytes.length - _macLength));
   final key = await deriveKey(passphrase, salt);
   try {
     final plain = await AesGcm.with256bits().decrypt(

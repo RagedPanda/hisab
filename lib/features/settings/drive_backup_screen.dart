@@ -18,9 +18,11 @@ const String kDriveBackupLocation = '/settings/drive-backup';
 String driveFailureMessage(AppLocalizations l10n, Object error) => switch (driveBackupFailureOf(error)) {
   DriveBackupFailure.cancelled => l10n.driveErrorCancelled,
   DriveBackupFailure.offline => l10n.driveErrorOffline,
+  DriveBackupFailure.signedOut => l10n.driveErrorSignedOut,
+  DriveBackupFailure.driveFull => l10n.driveErrorFull,
   DriveBackupFailure.notFound => l10n.driveErrorNotFound,
   DriveBackupFailure.wrongPassphrase => restoreFailureMessage(l10n, error),
-  DriveBackupFailure.unknown => l10n.driveErrorUnknown('$error'),
+  DriveBackupFailure.unknown => l10n.driveErrorGeneric,
 };
 
 /// The Drive copy's status line: last backup time, none yet, or checking.

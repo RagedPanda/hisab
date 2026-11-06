@@ -28,8 +28,9 @@ String backupFailureLabel(AppLocalizations l10n, BackupAttempt attempt) => switc
   ScheduledBackupFailure.noFolder => l10n.backupFailureNoFolder,
   ScheduledBackupFailure.folderUnavailable => l10n.backupFailureFolderUnavailable,
   ScheduledBackupFailure.signInNeeded => l10n.backupFailureSignInNeeded,
+  ScheduledBackupFailure.driveFull => l10n.backupFailureDriveFull,
   ScheduledBackupFailure.offline => l10n.backupFailureOffline,
-  ScheduledBackupFailure.unknown || null => l10n.backupFailureUnknown(attempt.detail ?? ''),
+  ScheduledBackupFailure.unknown || null => l10n.backupFailureGeneric,
 };
 
 /// Where [target] is, as the user knows it.

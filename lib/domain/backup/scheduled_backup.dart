@@ -21,6 +21,9 @@ enum ScheduledBackupFailure {
 
   /// Google needs the user to sign in again before Drive can be written.
   signInNeeded,
+
+  /// The user's Google Drive storage is full.
+  driveFull,
   offline,
   unknown;
 
@@ -33,7 +36,7 @@ class BackupAttempt {
   final DateTime at;
   final ScheduledBackupFailure? failure;
 
-  /// The file written, or the error text for an [ScheduledBackupFailure.unknown] failure.
+  /// The file written. Older builds kept an unknown failure's error text here; it is not shown.
   final String? detail;
 
   bool get succeeded => failure == null;

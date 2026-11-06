@@ -251,7 +251,7 @@ void main() {
     await settle(tester);
     await apply(tester);
 
-    expect(find.text('Nothing here yet'), findsOneWidget, reason: 'every entry is from this month');
+    expect(find.text('No matches'), findsOneWidget, reason: 'every entry is from this month');
     expect(find.byKey(const ValueKey('entries.filter.dates')), findsOneWidget);
     await openSheet(tester);
     await tapInSheet(tester, find.byKey(const ValueKey('filter.dates')));

@@ -5082,4 +5082,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String tagRemoved(String tag) {
     return '#$tag हटाया';
   }
+
+  @override
+  String get noMatchesTitle => 'कुछ नहीं मिला';
+
+  @override
+  String get noMatchesBody => 'दूसरे शब्द आज़माएँ, या फ़िल्टर हटाएँ।';
 }

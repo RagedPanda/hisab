@@ -75,6 +75,16 @@ void main() {
     expect(resultsCount, findsNothing);
   });
 
+  testWidgets('a search that finds nothing says so rather than "Nothing here yet"', (tester) async {
+    await pumpEntries(tester);
+
+    await enter(tester, searchField, 'zzz');
+    await settle(tester);
+    expect(find.byKey(const ValueKey('entries.noMatches')), findsOneWidget);
+    expect(find.text('No matches'), findsOneWidget);
+    expect(find.text('Nothing here yet'), findsNothing);
+  });
+
   testWidgets('Clear all empties the search box and lifts every filter', (tester) async {
     await pumpEntries(tester);
 
@@ -97,7 +107,7 @@ void main() {
     expect(find.text('Chai Point'), findsNothing);
 
     await tapChip(tester, find.widgetWithText(ChoiceChip, 'Transfers'));
-    expect(find.text('Nothing here yet'), findsOneWidget, reason: 'no transfers were recorded');
+    expect(find.text('No matches'), findsOneWidget, reason: 'no transfers were recorded');
     expect(find.text('0 results'), findsOneWidget);
 
     await tapChip(tester, find.widgetWithText(ChoiceChip, 'All'));
@@ -192,7 +202,7 @@ void main() {
       appRouter.go('/transactions?category=missing&account=missing');
       await settle(tester);
       expect(find.widgetWithText(InputChip, 'Category'), findsOneWidget);
-      expect(find.text('Nothing here yet'), findsOneWidget);
+      expect(find.text('No matches'), findsOneWidget);
     });
 
     testWidgets('a past day shows its date and loads that day only', (tester) async {

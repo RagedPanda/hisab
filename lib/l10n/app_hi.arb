@@ -1378,5 +1378,7 @@
   "removeTagBody": "प्रविष्टियाँ बनी रहेंगी।",
   "tagRenamed": "#{from} का नाम बदलकर #{to} किया",
   "tagMerged": "#{from} को #{to} में मिलाया",
-  "tagRemoved": "#{tag} हटाया"
+  "tagRemoved": "#{tag} हटाया",
+  "noMatchesTitle": "कुछ नहीं मिला",
+  "noMatchesBody": "दूसरे शब्द आज़माएँ, या फ़िल्टर हटाएँ।"
 }

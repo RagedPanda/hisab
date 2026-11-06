@@ -230,7 +230,9 @@ class TransactionsScreen extends ConsumerWidget {
             child: async.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : groups.isEmpty
-                    ? EmptyState(icon: Icons.receipt_long_outlined, title: l10n.noEntriesTitle, message: l10n.noEntriesBody)
+                    ? narrowed
+                        ? EmptyState(key: const ValueKey('entries.noMatches'), icon: Icons.search_off, title: l10n.noMatchesTitle, message: l10n.noMatchesBody)
+                        : EmptyState(icon: Icons.receipt_long_outlined, title: l10n.noEntriesTitle, message: l10n.noEntriesBody)
                     : ListView.builder(
                         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),

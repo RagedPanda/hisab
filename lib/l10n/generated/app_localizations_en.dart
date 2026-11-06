@@ -5109,4 +5109,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String tagRemoved(String tag) {
     return 'Removed #$tag';
   }
+
+  @override
+  String get noMatchesTitle => 'No matches';
+
+  @override
+  String get noMatchesBody => 'Try other words, or clear the filters.';
 }

@@ -5082,4 +5082,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String tagRemoved(String tag) {
     return '#$tag हटाया';
   }
+
+  @override
+  String cardBillEntryTitle(String card) {
+    return 'कार्ड बिल · $card';
+  }
 }

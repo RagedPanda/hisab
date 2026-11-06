@@ -5109,4 +5109,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String tagRemoved(String tag) {
     return 'Removed #$tag';
   }
+
+  @override
+  String cardBillEntryTitle(String card) {
+    return 'Card bill · $card';
+  }
 }

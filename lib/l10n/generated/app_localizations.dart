@@ -8113,6 +8113,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Removed #{tag}'**
   String tagRemoved(String tag);
+
+  /// No description provided for @cardBillEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Card bill · {card}'**
+  String cardBillEntryTitle(String card);
 }
 
 class _AppLocalizationsDelegate

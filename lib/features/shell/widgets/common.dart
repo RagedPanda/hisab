@@ -61,6 +61,18 @@ class AmountText extends ConsumerWidget {
   }
 }
 
+/// The title of an [EntryTile]: the payee, else the note, else for money
+/// paid into a card "Card bill · card name", else the category.
+String entryTileTitle(AppLocalizations l10n, EntryDetails details, {required String? categoryName}) {
+  final entry = details.entry;
+  final udhaarKind = UdhaarKind.parse(entry.udhaarKind);
+  if (udhaarKind != null) return udhaarEntryTitle(l10n, udhaarKind, entry.payee ?? '');
+  if (entry.payee?.isNotEmpty == true) return entry.payee!;
+  if (entry.note.isNotEmpty) return entry.note;
+  if (details.toAccount case final card? when entry.kind == 'transfer' && card.type == 'card') return l10n.cardBillEntryTitle(card.name);
+  return categoryName ?? (entry.kind == 'transfer' ? l10n.kindTransfer : l10n.uncategorised);
+}
+
 /// One row in a transactions list.
 class EntryTile extends StatelessWidget {
   const EntryTile({super.key, required this.details, this.onTap, this.showDate = false});
@@ -75,13 +87,7 @@ class EntryTile extends StatelessWidget {
     final category = details.category;
     final categoryName = category?.displayName(context);
     final udhaarKind = UdhaarKind.parse(entry.udhaarKind);
-    final title = udhaarKind != null
-        ? udhaarEntryTitle(l10n, udhaarKind, entry.payee ?? '')
-        : entry.payee?.isNotEmpty == true
-        ? entry.payee!
-        : entry.note.isNotEmpty
-            ? entry.note
-            : categoryName ?? (entry.kind == 'transfer' ? l10n.kindTransfer : l10n.uncategorised);
+    final title = entryTileTitle(l10n, details, categoryName: categoryName);
     final locale = Localizations.localeOf(context).toString();
     final accountLabel = entry.kind == 'transfer' && details.account != null && details.toAccount != null
         ? l10n.transferArrow(details.account!.name, details.toAccount!.name)

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/dates.dart';
 import 'package:hisab/features/shell/router.dart';
+import 'package:hisab/features/tags/tags_screen.dart';
 import 'package:hisab/features/transactions/transactions_screen.dart';
 
 import '../support/app_harness.dart';
@@ -113,6 +114,28 @@ void main() {
   });
 
   group('route filters', () {
+    testWidgets('a tag opened from Settings → Tags lists over it, and Back returns there', (tester) async {
+      await pumpEntries(tester);
+      appRouter.go(kTagsLocation);
+      await settle(tester);
+
+      await tester.tap(find.text('office'));
+      await settle(tester);
+      expect(appRouter.state.uri.toString(), entriesForTagLocation('office'));
+      expect(find.widgetWithText(InputChip, '#office'), findsOneWidget);
+      expect(find.text('Chai Point'), findsOneWidget);
+      expect(find.text('Landlord'), findsNothing);
+
+      await deleteChip(tester, '#office');
+      expect(appRouter.state.uri.toString(), kPushedEntriesRoute, reason: 'the chip swaps the pushed page, not the tab');
+      expect(find.text('Landlord'), findsOneWidget);
+
+      await tester.pageBack();
+      await settle(tester);
+      expect(appRouter.state.uri.toString(), kTagsLocation);
+      expect(find.text('office'), findsOneWidget);
+    });
+
     testWidgets('category, account and today chips narrow the list and each cross drops only its own', (tester) async {
       late final String foodId;
       late final String cashId;

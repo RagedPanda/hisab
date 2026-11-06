@@ -65,7 +65,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                                       title: Text(tag.tag),
                                       subtitle: Text(l10n.entryCountLabel(tag.count)),
                                       trailing: _TagMenu(onRename: () => _rename(tag, all), onRemove: () => _remove(tag)),
-                                      onTap: () => context.go(entriesForTagLocation(tag.tag)),
+                                      onTap: () => context.push(entriesForTagLocation(tag.tag)),
                                       onLongPress: () => _rename(tag, all),
                                     ),
                                 ],

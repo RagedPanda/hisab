@@ -5043,4 +5043,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String suggestedParent(String name) {
     return '$name (suggested)';
   }
+
+  @override
+  String get manageTagsHint => 'Rename, merge or remove tags';
+
+  @override
+  String get searchTags => 'Search tags';
+
+  @override
+  String get noTagsTitle => 'No tags yet';
+
+  @override
+  String get noTagsBody =>
+      'Tag entries, like #trip or #office, to find and tidy them here';
+
+  @override
+  String get noMatchingTag => 'No matching tag';
+
+  @override
+  String renameTagTitle(String tag) {
+    return 'Rename #$tag';
+  }
+
+  @override
+  String get tagNameInvalid => 'One tag only, without commas';
+
+  @override
+  String mergeTagTitle(String tag) {
+    return 'Merge into #$tag?';
+  }
+
+  @override
+  String mergeTagBody(String from, String to) {
+    return 'Entries tagged #$from will be tagged #$to instead. An entry with both keeps one.';
+  }
+
+  @override
+  String get mergeAction => 'Merge';
+
+  @override
+  String removeTagTitle(String tag, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries',
+      one: '1 entry',
+    );
+    return 'Remove #$tag from $_temp0?';
+  }
+
+  @override
+  String get removeTagBody => 'The entries stay.';
+
+  @override
+  String tagRenamed(String from, String to) {
+    return 'Renamed #$from to #$to';
+  }
+
+  @override
+  String tagMerged(String from, String to) {
+    return 'Merged #$from into #$to';
+  }
+
+  @override
+  String tagRemoved(String tag) {
+    return 'Removed #$tag';
+  }
 }

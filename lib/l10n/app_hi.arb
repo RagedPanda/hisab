@@ -1363,5 +1363,20 @@
   "addCategoryNamedHint": "नई श्रेणी, अगली बार भी मिलेगी",
   "putUnder": "किसके अंदर रखें",
   "ownTopLevelCategory": "अलग मुख्य श्रेणी",
-  "suggestedParent": "{name} (सुझाव)"
+  "suggestedParent": "{name} (सुझाव)",
+  "manageTagsHint": "टैग का नाम बदलें, मिलाएँ या हटाएँ",
+  "searchTags": "टैग खोजें",
+  "noTagsTitle": "अभी कोई टैग नहीं",
+  "noTagsBody": "प्रविष्टियों पर #trip या #office जैसे टैग लगाएँ, फिर उन्हें यहाँ ढूँढें और सँवारें",
+  "noMatchingTag": "कोई मिलता टैग नहीं",
+  "renameTagTitle": "#{tag} का नाम बदलें",
+  "tagNameInvalid": "सिर्फ़ एक टैग, बिना कॉमा के",
+  "mergeTagTitle": "#{tag} में मिलाएँ?",
+  "mergeTagBody": "#{from} वाली प्रविष्टियों पर अब #{to} लगेगा। जिन पर दोनों हैं, उन पर एक ही रहेगा।",
+  "mergeAction": "मिलाएँ",
+  "removeTagTitle": "{count, plural, =1{1 प्रविष्टि} other{{count} प्रविष्टियों}} से #{tag} हटाएँ?",
+  "removeTagBody": "प्रविष्टियाँ बनी रहेंगी।",
+  "tagRenamed": "#{from} का नाम बदलकर #{to} किया",
+  "tagMerged": "#{from} को #{to} में मिलाया",
+  "tagRemoved": "#{tag} हटाया"
 }

@@ -91,6 +91,34 @@ const Map<String, List<String>> _creditRules = {
   'self_transfer': ['self', 'own account'],
 };
 
+/// Everyday words a category name may be, for suggesting its parent when
+/// the merchant keywords above find nothing: "Jalebi" goes under Food. Kept
+/// apart from the SMS rules (and matched as whole words only) because words
+/// such as "auto" or "tea" turn up in bank messages for other reasons.
+const Map<String, List<String>> _everydayNameRules = {
+  'snacks_tea': ['snacks', 'snack', 'tea', 'samosa', 'kachori', 'pakora', 'pakoda', 'pakode', 'bhajji', 'bhajiya', 'vada pav', 'vada', 'pav bhaji', 'pani puri', 'panipuri', 'golgappa', 'golgappe', 'gol gappe', 'puchka', 'bhel', 'bhel puri', 'sev puri', 'dahi puri', 'chaat', 'tikki', 'momos', 'momo', 'dhokla', 'namkeen', 'chips', 'maggi', 'sandwich', 'poha', 'upma', 'idli', 'dosa', 'lassi', 'juice', 'cold drink', 'soft drink', 'coconut water', 'nimbu pani', 'shikanji', 'समोसा', 'कचौरी', 'पकौड़े', 'चाट', 'गोलगप्पे', 'चाय', 'नाश्ता'],
+  'bakery_sweets': ['jalebi', 'rasgulla', 'rasgolla', 'rosogolla', 'gulab jamun', 'rasmalai', 'ras malai', 'laddu', 'laddoo', 'ladoo', 'barfi', 'burfi', 'kaju katli', 'peda', 'halwa', 'kheer', 'sandesh', 'soan papdi', 'imarti', 'ghevar', 'rabri', 'rabdi', 'malpua', 'chocolate', 'chocolates', 'pastry', 'pastries', 'cookies', 'biscuits', 'brownie', 'donut', 'जलेबी', 'रसगुल्ला', 'लड्डू', 'मिठाई', 'बर्फी'],
+  'restaurants': ['lunch', 'dinner', 'breakfast', 'thali', 'pizza', 'noodles', 'chowmein', 'dining out', 'eating out'],
+  'vegetables_fruits': ['vegetables', 'vegetable', 'veggies', 'sabzi', 'sabji', 'fruits', 'fruit', 'mango', 'mangoes', 'banana', 'bananas', 'onion', 'onions', 'potato', 'potatoes', 'tomato', 'tomatoes', 'सब्ज़ी', 'सब्जी', 'फल'],
+  'milk_dairy': ['paneer', 'curd', 'dahi', 'ghee', 'butter', 'cheese', 'buttermilk', 'chaas', 'दूध', 'दही'],
+  'meat_fish_eggs': ['chicken', 'mutton', 'fish', 'egg', 'eggs', 'prawns', 'meat'],
+  'groceries': ['ration', 'atta', 'rice', 'dal', 'sugar', 'masala', 'spices', 'राशन'],
+  'cab_auto': ['auto', 'rickshaw', 'cab', 'taxi', 'bike taxi'],
+  'public_transport': ['bus', 'local train', 'bus pass', 'metro card'],
+  'fuel': ['cng'],
+  'medicines': ['tablets', 'syrup', 'dawai', 'दवा', 'दवाई'],
+  'doctor': ['doctor', 'consultation', 'checkup', 'check up'],
+  'dental_eye': ['dentist', 'dental', 'glasses', 'spectacles', 'contact lenses'],
+  'salon': ['haircut', 'hair cut', 'shave', 'facial', 'waxing', 'massage'],
+  'clothing': ['clothes', 'shirt', 'shirts', 'jeans', 'saree', 'sari', 'kurta', 'shoes', 'sandals', 'chappal', 'kapde', 'कपड़े'],
+  'books_stationery': ['books', 'notebook', 'notebooks', 'pens', 'pencils'],
+  'festivals_puja': ['diwali', 'holi', 'rakhi', 'raksha bandhan', 'navratri', 'eid', 'christmas', 'puja', 'pooja', 'crackers', 'diya', 'दिवाली', 'होली', 'पूजा'],
+  'outings': ['party', 'picnic', 'outing', 'outings'],
+  'gifts_given': ['gift', 'gifts', 'birthday gift'],
+  'pet_food': ['dog food', 'cat food'],
+  'tips': ['tip', 'tips'],
+};
+
 /// Message kinds that settle the category on their own, whatever the
 /// merchant text says.
 const Map<TxnKind, String> _kindCategories = {
@@ -142,7 +170,9 @@ String? _bestMatch(String haystack, Map<String, List<String>> rules, int Functio
 String? categoryKeyForText(String text, {bool income = false}) {
   final haystack = text.toLowerCase();
   final rules = income ? _creditRules : _debitRules;
-  return _bestMatch(haystack, rules, _indexOfWord) ?? _bestMatch(haystack, rules, _indexOfSubstring);
+  return _bestMatch(haystack, rules, _indexOfWord) ??
+      (income ? null : _bestMatch(haystack, _everydayNameRules, _indexOfWord)) ??
+      _bestMatch(haystack, rules, _indexOfSubstring);
 }
 
 /// Returns the best category key for [txn], falling back to a generic key.

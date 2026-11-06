@@ -314,7 +314,7 @@ class MemberSpendChart extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 40,
                       interval: maxY / 2,
-                      getTitlesWidget: (value, meta) => Text(axisAmountLabel(value, format: moneyFormat), style: labelStyle),
+                      getTitlesWidget: (value, meta) => ChartAxisLabel(axisAmountLabel(value, format: moneyFormat), style: labelStyle, alignment: Alignment.centerLeft),
                     ),
                   ),
                   bottomTitles: AxisTitles(

@@ -50,3 +50,29 @@ String withoutTag(String raw, String tag) {
   if (!_carries(tags, tag)) return raw;
   return formatTags(tags.where((each) => each.toLowerCase() != tag.toLowerCase()));
 }
+
+/// What saving a rename of tag [current] as [input] does.
+enum TagRenameKind {
+  /// [input] is not one tag name (see [tagNameFrom]).
+  invalid,
+
+  /// Same name, same spelling: nothing to do.
+  unchanged,
+
+  /// A new name, or [current] respelled.
+  rename,
+
+  /// The name of another tag in use: the two become one.
+  merge,
+}
+
+/// The outcome of renaming [current] to [input] given every tag in use
+/// ([tags]), with the name to rename to: [input] tidied, or the other tag's
+/// own spelling for a merge.
+({TagRenameKind kind, String? to}) planTagRename(String current, String input, Iterable<String> tags) {
+  final name = tagNameFrom(input);
+  if (name == null) return (kind: TagRenameKind.invalid, to: null);
+  if (name == current) return (kind: TagRenameKind.unchanged, to: name);
+  final other = otherTagNamed(name, tags, except: current);
+  return other == null ? (kind: TagRenameKind.rename, to: name) : (kind: TagRenameKind.merge, to: other);
+}

@@ -84,4 +84,20 @@ void main() {
 
     test('leaves text without the tag exactly as it was', () => expect(withoutTag('#home  #food', 'trip'), '#home  #food'));
   });
+
+  group('planTagRename', () {
+    const tags = ['goa', 'Trip', 'दिवाली'];
+
+    test('a new name renames, tidied', () => expect(planTagRename('goa', '  #Goa   2026 ', tags), (kind: TagRenameKind.rename, to: 'Goa 2026')));
+    test('a case change renames', () => expect(planTagRename('goa', 'Goa', tags), (kind: TagRenameKind.rename, to: 'Goa')));
+    test('the same name does nothing', () => expect(planTagRename('goa', ' #goa', tags), (kind: TagRenameKind.unchanged, to: 'goa')));
+    test('another tag\'s name merges into it, keeping its spelling', () {
+      expect(planTagRename('goa', 'trip', tags), (kind: TagRenameKind.merge, to: 'Trip'));
+      expect(planTagRename('goa', 'दिवाली', tags), (kind: TagRenameKind.merge, to: 'दिवाली'));
+    });
+    test('blank or several tags is invalid', () {
+      expect(planTagRename('goa', '  ', tags).kind, TagRenameKind.invalid);
+      expect(planTagRename('goa', 'goa, trip', tags).kind, TagRenameKind.invalid);
+    });
+  });
 }

@@ -1766,5 +1766,7 @@
   "backupFailureDriveFull": "Google Drive is full; free up some space",
   "backupFailureGeneric": "something went wrong; try again later",
   "cardBillEntryTitle": "Card bill · {card}",
-  "@cardBillEntryTitle": {"placeholders": {"card": {"type": "String"}}}
+  "@cardBillEntryTitle": {"placeholders": {"card": {"type": "String"}}},
+  "noMatchesTitle": "No matches",
+  "noMatchesBody": "Try other words, or clear the filters."
 }

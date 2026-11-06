@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/domain/categories/category_catalog.dart';
 import 'package:hisab/domain/categories/category_packs.dart';
 import 'package:hisab/l10n/category_names.dart';
+import 'package:hisab/l10n/generated/app_localizations_hi.dart';
 
 void main() {
   final english = jsonDecode(File('lib/l10n/app_en.arb').readAsStringSync()) as Map<String, dynamic>;
@@ -34,4 +35,12 @@ void main() {
       expect(names.values.where((name) => name.trim().isEmpty), isEmpty);
     });
   }
+
+  test('Hindi counts zero results as zero, not one', () {
+    // Hindi plural rules put 0 in "one", so a bare =1 case would read "1 नतीजा".
+    final hindi = AppLocalizationsHi();
+    expect(hindi.resultsCount(0), '0 नतीजे');
+    expect(hindi.resultsCount(1), '1 नतीजा');
+    expect(hindi.resultsCount(4), '4 नतीजे');
+  });
 }

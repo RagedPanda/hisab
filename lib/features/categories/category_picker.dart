@@ -102,18 +102,14 @@ class _CategoryPickerBodyState extends ConsumerState<_CategoryPickerBody> {
   Widget build(BuildContext context) {
     final categories = ref.watch(categoriesProvider).value ?? const <Category>[];
     final tree = buildCategoryTree(categories, kind: widget.kind);
-    final needle = _query.trim().toLowerCase();
-    final searching = needle.isNotEmpty;
-    final matches = searching
-        ? categories.where((c) => c.kind == widget.kind && (c.name.toLowerCase().contains(needle) || c.displayName(context).toLowerCase().contains(needle))).toList()
-        : const <Category>[];
+    final searching = _query.trim().isNotEmpty;
     final byId = {for (final c in categories) c.id: c};
     final selected = widget.selectedId == null ? null : byId[widget.selectedId];
     final expanded = _expandedId == null ? null : (byId[_expandedId]?.parentId ?? _expandedId);
     final locale = Localizations.localeOf(context);
-    final offerAdd = widget.allowCreate &&
-        searching &&
-        !hasCategoryNamed(_query, [for (final category in categories) if (category.kind == widget.kind) categoryOption(category, locale)]);
+    final options = [for (final category in categories) if (category.kind == widget.kind) categoryOption(category, locale)];
+    final matches = [for (final id in searchCategoryIds(_query, options)) byId[id]!];
+    final offerAdd = widget.allowCreate && searching && !hasCategoryNamed(_query, options);
     final recent = (ref.watch(_recentCategoryIdsProvider(widget.kind)).value ?? const <String>[]).map((id) => byId[id]).whereType<Category>().toList();
 
     return Column(

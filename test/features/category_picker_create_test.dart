@@ -87,6 +87,18 @@ void main() {
     expect(find.text('Groceries'), findsOneWidget);
   });
 
+  testWidgets('search matches word starts, so "ice" does not list Vehicle Service', (tester) async {
+    await openEditor(tester);
+    await openPicker(tester);
+
+    await search(tester, 'ice');
+    expect(find.text('Vehicle Service & Repairs'), findsNothing);
+    expect(find.text('Add "Ice"'), findsOneWidget);
+
+    await search(tester, 'serv');
+    expect(find.text('Vehicle Service & Repairs'), findsOneWidget, reason: 'a later word still matches');
+  });
+
   testWidgets('"New category" suggests a parent as the name is typed, until one is picked by hand', (tester) async {
     final container = await openEditor(tester);
     final transportId = await readDb(tester, () => seededCategoryId(container, 'transport'));

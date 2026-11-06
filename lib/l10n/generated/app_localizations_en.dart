@@ -5123,4 +5123,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String cardBillEntryTitle(String card) {
     return 'Card bill · $card';
   }
+
+  @override
+  String get noMatchesTitle => 'No matches';
+
+  @override
+  String get noMatchesBody => 'Try other words, or clear the filters.';
 }

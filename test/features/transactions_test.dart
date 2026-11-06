@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/dates.dart';
 import 'package:hisab/features/shell/router.dart';
+import 'package:hisab/features/tags/tags_screen.dart';
 import 'package:hisab/features/transactions/transactions_screen.dart';
 
 import '../support/app_harness.dart';
@@ -74,6 +75,16 @@ void main() {
     expect(resultsCount, findsNothing);
   });
 
+  testWidgets('a search that finds nothing says so rather than "Nothing here yet"', (tester) async {
+    await pumpEntries(tester);
+
+    await enter(tester, searchField, 'zzz');
+    await settle(tester);
+    expect(find.byKey(const ValueKey('entries.noMatches')), findsOneWidget);
+    expect(find.text('No matches'), findsOneWidget);
+    expect(find.text('Nothing here yet'), findsNothing);
+  });
+
   testWidgets('Clear all empties the search box and lifts every filter', (tester) async {
     await pumpEntries(tester);
 
@@ -96,7 +107,7 @@ void main() {
     expect(find.text('Chai Point'), findsNothing);
 
     await tapChip(tester, find.widgetWithText(ChoiceChip, 'Transfers'));
-    expect(find.text('Nothing here yet'), findsOneWidget, reason: 'no transfers were recorded');
+    expect(find.text('No matches'), findsOneWidget, reason: 'no transfers were recorded');
     expect(find.text('0 results'), findsOneWidget);
 
     await tapChip(tester, find.widgetWithText(ChoiceChip, 'All'));
@@ -113,6 +124,48 @@ void main() {
   });
 
   group('route filters', () {
+    testWidgets('a tag opened from Settings → Tags lists over it, and Back returns there', (tester) async {
+      await pumpEntries(tester);
+      appRouter.go(kTagsLocation);
+      await settle(tester);
+
+      await tester.tap(find.text('office'));
+      await settle(tester);
+      expect(appRouter.state.uri.toString(), entriesForTagLocation('office'));
+      expect(find.widgetWithText(InputChip, '#office'), findsOneWidget);
+      expect(find.text('Chai Point'), findsOneWidget);
+      expect(find.text('Landlord'), findsNothing);
+
+      await deleteChip(tester, '#office');
+      expect(appRouter.state.uri.toString(), kPushedEntriesRoute, reason: 'the chip swaps the pushed page, not the tab');
+      expect(find.text('Landlord'), findsOneWidget);
+
+      await tester.pageBack();
+      await settle(tester);
+      expect(appRouter.state.uri.toString(), kTagsLocation);
+      expect(find.text('office'), findsOneWidget);
+    });
+
+    testWidgets('a search typed over Settings → Tags stays on that page, not the Entries tab', (tester) async {
+      await pumpEntries(tester);
+      await enter(tester, searchField, 'landlord');
+      appRouter.go(kTagsLocation);
+      await settle(tester);
+
+      await tester.tap(find.text('office'));
+      await settle(tester);
+      expect(tester.widget<TextField>(searchField).controller!.text, isEmpty, reason: 'the tab search does not narrow the tag list');
+      expect(find.text('Chai Point'), findsOneWidget);
+
+      await enter(tester, searchField, 'zzz');
+      await tester.pageBack();
+      await settle(tester);
+      appRouter.go('/transactions');
+      await settle(tester);
+      expect(tester.widget<TextField>(searchField).controller!.text, 'landlord', reason: 'the tab keeps its own search');
+      expect(find.text('Landlord'), findsOneWidget);
+    });
+
     testWidgets('category, account and today chips narrow the list and each cross drops only its own', (tester) async {
       late final String foodId;
       late final String cashId;
@@ -169,7 +222,7 @@ void main() {
       appRouter.go('/transactions?category=missing&account=missing');
       await settle(tester);
       expect(find.widgetWithText(InputChip, 'Category'), findsOneWidget);
-      expect(find.text('Nothing here yet'), findsOneWidget);
+      expect(find.text('No matches'), findsOneWidget);
     });
 
     testWidgets('a past day shows its date and loads that day only', (tester) async {

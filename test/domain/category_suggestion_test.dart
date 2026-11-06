@@ -79,6 +79,61 @@ void main() {
     expect(categoryKeyForText('Something new'), isNull);
   });
 
+  test('categoryKeyForText knows everyday food, snack and sweet names', () {
+    for (final name in ['Jalebi', 'Rasgulla', 'Gulab jamun', 'Kaju katli', 'मिठाई']) {
+      expect(categoryKeyForText(name), 'bakery_sweets', reason: name);
+    }
+    for (final name in ['Samosa', 'Pani puri', 'Vada pav', 'Momos', 'Tea', 'समोसा']) {
+      expect(categoryKeyForText(name), 'snacks_tea', reason: name);
+    }
+    expect(categoryKeyForText('Chai'), 'restaurants', reason: 'the merchant keywords still win');
+    expect(categoryKeyForText('Dahi puri'), 'snacks_tea', reason: 'the longer phrase beats dahi');
+    expect(categoryKeyForText('Sabzi'), 'vegetables_fruits');
+    expect(categoryKeyForText('Paneer'), 'milk_dairy');
+    expect(categoryKeyForText('Office lunch'), 'restaurants');
+    expect(categoryKeyForText('Auto'), 'cab_auto');
+    expect(categoryKeyForText('Haircut'), 'salon');
+    expect(categoryKeyForText('Diwali shopping'), 'festivals_puja');
+    expect(categoryKeyForText('Tutorial'), isNull, reason: 'whole words only: no "tutorial" for "tea"');
+    expect(categoryKeyForText('Auto', income: true), isNull, reason: 'expense words never suggest an income parent');
+  });
+
+  test('everyday names land under their parent', () {
+    expect(suggestParentId('Jalebi', options, keywordKey: categoryKeyForText('Jalebi')), 'food');
+    expect(suggestParentId('Pani puri', options, keywordKey: categoryKeyForText('Pani puri')), 'food');
+  });
+
+  group('searchCategoryIds', () {
+    final searchable = [
+      _option('service', ['Vehicle Service & Repairs']),
+      _option('sweets', ['Bakery & Sweets', 'बेकरी और मिठाई']),
+      _option('ice', ['Ice cream']),
+      _option('cafe', ['Café visits']),
+      _option('juice', ['Juice']),
+    ];
+
+    test('matches word starts only, so "ice" skips Vehicle Service and Juice', () {
+      expect(searchCategoryIds('ice', searchable), ['ice']);
+    });
+
+    test('names that start with the query come before later words that do', () {
+      final options = [_option('a', ['Snacks, Tea & Coffee']), _option('b', ['Tea'])];
+      expect(searchCategoryIds('tea', options), ['b', 'a']);
+      expect(searchCategoryIds('s', searchable), ['service', 'sweets'], reason: 'a later word each, kept in the given order');
+    });
+
+    test('ignores case, spacing and accents and matches localised names', () {
+      expect(searchCategoryIds('  CAFE ', searchable), ['cafe']);
+      expect(searchCategoryIds('मिठाई', searchable), ['sweets']);
+      expect(searchCategoryIds('ice  cr', searchable), ['ice']);
+      expect(searchCategoryIds('repairs', searchable), ['service']);
+    });
+
+    test('an empty query lists none', () {
+      expect(searchCategoryIds('  ', searchable), isEmpty);
+    });
+  });
+
   test('nextCategoryColor takes the first unused palette colour, then cycles', () {
     expect(nextCategoryColor([1, 2], [1, 2, 3, 4]), 3);
     expect(nextCategoryColor([1, 2, 3, 4, 1], [1, 2, 3, 4]), 2);

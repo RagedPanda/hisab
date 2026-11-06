@@ -8137,6 +8137,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Card bill · {card}'**
   String cardBillEntryTitle(String card);
+
+  /// No description provided for @noMatchesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get noMatchesTitle;
+
+  /// No description provided for @noMatchesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try other words, or clear the filters.'**
+  String get noMatchesBody;
 }
 
 class _AppLocalizationsDelegate

@@ -39,12 +39,36 @@ final _entryFilterProvider = NotifierProvider<_EntryFilterNotifier, EntryFilter>
 final _searchProvider = NotifierProvider<_SearchNotifier, String>(_SearchNotifier.new);
 final _kindFilterProvider = NotifierProvider<_KindFilterNotifier, String?>(_KindFilterNotifier.new);
 
+/// Path of the Entries list pushed over another screen (outside the tab
+/// bar), so Back returns there: Settings → Tags opens it.
+const String kPushedEntriesRoute = '/entries';
+
+/// The list at [kPushedEntriesRoute]. It keeps its own search and filters, so
+/// what is typed over Settings → Tags neither comes from the Entries tab nor
+/// is left behind in it.
+class PushedTransactionsScreen extends StatelessWidget {
+  const PushedTransactionsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+        overrides: [
+          _searchProvider.overrideWith(_SearchNotifier.new),
+          _kindFilterProvider.overrideWith(_KindFilterNotifier.new),
+          _entryFilterProvider.overrideWith(_EntryFilterNotifier.new),
+        ],
+        child: const TransactionsScreen(),
+      );
+}
+
 /// Filters carried in the route, e.g. `/transactions?category=<id>` from the
 /// dashboard donut, `?account=<id>` from an account card or `?day=2026-10-24`
-/// from the Home "Today" figure, `?tag=<name>` from Settings → Tags.
+/// from the Home "Today" figure, `/entries?tag=<name>` from Settings → Tags.
 /// Dismissing a chip navigates to the same route without that parameter.
 class RouteFilters {
-  const RouteFilters({this.categoryId, this.accountId, this.day, this.tag});
+  const RouteFilters({this.path = '/transactions', this.categoryId, this.accountId, this.day, this.tag});
+
+  /// The Entries tab, or [kPushedEntriesRoute].
+  final String path;
   final String? categoryId;
   final String? accountId;
   final String? tag;
@@ -53,14 +77,18 @@ class RouteFilters {
   final DateTime? day;
 
   static RouteFilters of(BuildContext context) {
-    final params = GoRouterState.of(context).uri.queryParameters;
-    return RouteFilters(categoryId: params['category'], accountId: params['account'], day: parseIsoDay(params['day']), tag: params['tag']);
+    final uri = GoRouterState.of(context).uri;
+    final params = uri.queryParameters;
+    return RouteFilters(path: uri.path, categoryId: params['category'], accountId: params['account'], day: parseIsoDay(params['day']), tag: params['tag']);
   }
 
   bool get isEmpty => categoryId == null && accountId == null && day == null && tag == null;
 
+  /// Whether this is the pushed list rather than the Entries tab.
+  bool get isPushed => path == kPushedEntriesRoute;
+
   String locationWithout({bool category = false, bool account = false, bool day = false, bool tag = false}) => Uri(
-        path: '/transactions',
+        path: path,
         queryParameters: {
           if (!category && categoryId != null) 'category': categoryId!,
           if (!account && accountId != null) 'account': accountId!,
@@ -76,8 +104,9 @@ class RouteFilters {
   ({DateTime start, DateTime end})? get dateWindow => asFilter.dateWindow ?? (tag == null ? null : EntryFilter(from: DateTime(1900)).dateWindow);
 }
 
-/// The Entries list narrowed to entries tagged [tag], across all time.
-String entriesForTagLocation(String tag) => Uri(path: '/transactions', queryParameters: {'tag': tag}).toString();
+/// The Entries list narrowed to entries tagged [tag], across all time, as a
+/// pushed screen so Back returns to where it was opened from.
+String entriesForTagLocation(String tag) => Uri(path: kPushedEntriesRoute, queryParameters: {'tag': tag}).toString();
 
 /// The Entries list narrowed to the single day [day].
 String entriesForDayLocation(DateTime day) => '/transactions?day=${isoDay(day)}';
@@ -128,11 +157,13 @@ class TransactionsScreen extends ConsumerWidget {
     }).toList();
     final groups = groupConsecutiveByDay(entries, (details) => details.entry.occurredAt);
     final narrowed = search.trim().isNotEmpty || !filter.isEmpty || kindFilter != null || !routeFilters.isEmpty;
+    // The pushed list swaps its own page, keeping the screen below for Back.
+    void showRoute(String location) => routeFilters.isPushed ? context.pushReplacement(location) : context.go(location);
     void clearAll() {
       ref.read(_searchProvider.notifier).set('');
       ref.read(_entryFilterProvider.notifier).set(const EntryFilter());
       ref.read(_kindFilterProvider.notifier).set(null);
-      if (!routeFilters.isEmpty) context.go('/transactions');
+      if (!routeFilters.isEmpty) showRoute(routeFilters.path);
     }
 
     return Scaffold(
@@ -176,22 +207,22 @@ class TransactionsScreen extends ConsumerWidget {
               if (routeFilters.categoryId != null)
                 _RouteFilterChip(
                   label: _categoryFilterLabel(context, ref, routeFilters.categoryId!),
-                  onDeleted: () => context.go(routeFilters.locationWithout(category: true)),
+                  onDeleted: () => showRoute(routeFilters.locationWithout(category: true)),
                 ),
               if (routeFilters.accountId != null)
                 _RouteFilterChip(
                   label: _accountFilterLabel(ref, routeFilters.accountId!),
-                  onDeleted: () => context.go(routeFilters.locationWithout(account: true)),
+                  onDeleted: () => showRoute(routeFilters.locationWithout(account: true)),
                 ),
               if (routeFilters.day != null)
                 _RouteFilterChip(
                   label: isSameDay(routeFilters.day!, DateTime.now())
                       ? l10n.today
                       : dateRangeLabel(routeFilters.day, routeFilters.day, locale: Localizations.localeOf(context).toString()),
-                  onDeleted: () => context.go(routeFilters.locationWithout(day: true)),
+                  onDeleted: () => showRoute(routeFilters.locationWithout(day: true)),
                 ),
               if (routeFilters.tag != null)
-                _RouteFilterChip(label: '#${routeFilters.tag}', onDeleted: () => context.go(routeFilters.locationWithout(tag: true))),
+                _RouteFilterChip(label: '#${routeFilters.tag}', onDeleted: () => showRoute(routeFilters.locationWithout(tag: true))),
               _ProjectFilterChip(selectedId: filter.projectId),
               ..._activeFilterChips(context, ref, filter, moneyFormat),
               for (final (label, value) in [(l10n.all, null), (l10n.kindExpenses, 'expense'), (l10n.income, 'income'), (l10n.kindTransfers, 'transfer')])
@@ -216,7 +247,9 @@ class TransactionsScreen extends ConsumerWidget {
             child: async.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : groups.isEmpty
-                    ? EmptyState(icon: Icons.receipt_long_outlined, title: l10n.noEntriesTitle, message: l10n.noEntriesBody)
+                    ? narrowed
+                        ? EmptyState(key: const ValueKey('entries.noMatches'), icon: Icons.search_off, title: l10n.noMatchesTitle, message: l10n.noMatchesBody)
+                        : EmptyState(icon: Icons.receipt_long_outlined, title: l10n.noEntriesTitle, message: l10n.noEntriesBody)
                     : ListView.builder(
                         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),

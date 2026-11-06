@@ -46,6 +46,31 @@ CategoryOption? existingCategoryNamed(String name, Iterable<CategoryOption> opti
   return null;
 }
 
+/// How well [name] answers the folded search [folded]: 0 when the name
+/// starts with it, 1 when a later word does, null when neither ("ice" sits
+/// inside "Vehicle Service" but starts no word there).
+int? _searchRank(String name, String folded) {
+  final candidate = foldCategoryName(name);
+  if (candidate.startsWith(folded)) return 0;
+  return RegExp(r'[^\p{L}\p{N}\p{M}]' + RegExp.escape(folded), unicode: true).hasMatch(candidate) ? 1 : null;
+}
+
+/// The ids of [options] a picker search for [query] lists, best first: names
+/// that start with the query, then names with a later word that does, each
+/// tier in the order given. Matching is on word starts only and ignores case,
+/// spacing and accents (see [foldCategoryName]); an empty query lists none.
+List<String> searchCategoryIds(String query, Iterable<CategoryOption> options) {
+  final folded = foldCategoryName(query);
+  if (folded.isEmpty) return const [];
+  final ranked = <(int, String)>[];
+  for (final option in options) {
+    final ranks = option.names.map((name) => _searchRank(name, folded)).whereType<int>();
+    if (ranks.isNotEmpty) ranked.add((ranks.reduce((a, b) => a < b ? a : b), option.id));
+  }
+  // List.sort is not stable, so partition by tier to keep the given order.
+  return [for (final tier in [0, 1]) for (final (rank, id) in ranked) if (rank == tier) id];
+}
+
 /// Words of three or more letters, for loose matching.
 List<String> _words(String text) => foldCategoryName(text).split(RegExp(r'[^\p{L}\p{N}\p{M}]+', unicode: true)).where((word) => word.length >= 3).toList();
 

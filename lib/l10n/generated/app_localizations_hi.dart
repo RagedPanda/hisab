@@ -2211,6 +2211,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count नतीजे',
       one: '1 नतीजा',
+      zero: '0 नतीजे',
     );
     return '$_temp0';
   }
@@ -5097,4 +5098,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String cardBillEntryTitle(String card) {
     return 'कार्ड बिल · $card';
   }
+
+  @override
+  String get noMatchesTitle => 'कुछ नहीं मिला';
+
+  @override
+  String get noMatchesBody => 'दूसरे शब्द आज़माएँ, या फ़िल्टर हटाएँ।';
 }

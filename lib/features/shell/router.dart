@@ -131,6 +131,7 @@ final appRouter = GoRouter(
     GoRoute(path: kSalaryLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const SalarySetupScreen()),
     GoRoute(path: kQuickEntriesLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const QuickEntriesScreen()),
     GoRoute(path: kTagsLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const TagsScreen()),
+    GoRoute(path: kPushedEntriesRoute, parentNavigatorKey: _rootKey, builder: (_, _) => const PushedTransactionsScreen()),
     GoRoute(path: kShortcutsLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const ShortcutsScreen()),
     GoRoute(path: kDriveBackupLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const DriveBackupScreen()),
     GoRoute(path: kScheduledBackupLocation, parentNavigatorKey: _rootKey, builder: (_, _) => const ScheduledBackupScreen()),

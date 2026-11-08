@@ -17,6 +17,7 @@ import 'package:hisab/features/groups/group_totals_screen.dart';
 import 'package:hisab/features/shell/router.dart';
 
 import 'package:hisab/features/dashboard/widgets/category_donut.dart';
+import 'package:hisab/features/dashboard/widgets/dashboard_card.dart' show ChartAxisLabel;
 import 'package:hisab/features/shell/widgets/common.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:hisab/domain/money/money_format_resolver.dart';
@@ -202,4 +203,47 @@ void main() {
     }
     expect(tester.takeException(), isNull);
   });
+
+  for (final locale in const [Locale('en'), Locale('hi')]) {
+    testWidgets('at text x2 every member name under the bars is drawn at one size (${locale.languageCode})', (tester) async {
+      tester.view.physicalSize = const Size(412, 900);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final names = {'me': locale.languageCode == 'hi' ? 'आप' : 'You', 'priya': 'Priya', 'rahul': 'Rahul'};
+      await tester.pumpWidget(MaterialApp(
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: MemberSpendChart(
+              rows: const [
+                MemberSpend(memberId: 'me', paidMinor: 60000, shareMinor: 50000),
+                MemberSpend(memberId: 'priya', paidMinor: 30000, shareMinor: 20000),
+                MemberSpend(memberId: 'rahul', paidMinor: 40000, shareMinor: 60000),
+              ],
+              nameOf: (memberId) => names[memberId]!,
+              moneyFormat: resolveMoneyFormat(currencyCode: 'INR'),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      final chart = find.byType(BarChart);
+      // Devanagari lines are taller than Latin ones, so a name drawn at its
+      // own scale would come out smaller than its neighbours: the names share
+      // one axis scale instead.
+      final scales = [
+        for (final name in names.values) drawnScale(tester, find.descendant(of: find.descendant(of: chart, matching: find.byType(ChartAxisLabel)), matching: find.text(name))),
+      ];
+      for (final scale in scales) {
+        expect(scale, moreOrLessEquals(scales.first), reason: 'every name on the axis is drawn at one scale');
+      }
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

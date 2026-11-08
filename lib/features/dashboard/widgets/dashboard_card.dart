@@ -31,9 +31,15 @@ const Curve kChartCurve = Curves.easeOutCubic;
 /// A chart axis label kept on one line inside the room the axis reserves for
 /// it: at large text sizes it is drawn smaller rather than wrapped or clipped,
 /// and every label on the same [axis] of one chart is drawn at the same scale.
+/// Given a [width], the label takes that slot, centred, and a longer label
+/// ends in an ellipsis.
 class ChartAxisLabel extends SingleChildRenderObjectWidget {
-  ChartAxisLabel(String label, {super.key, required this.axis, TextStyle? style, this.alignment = Alignment.center})
-      : super(child: Text(label, style: style, maxLines: 1, softWrap: false));
+  ChartAxisLabel(String label, {super.key, required this.axis, TextStyle? style, this.alignment = Alignment.center, double? width})
+      : super(
+          child: width == null
+              ? Text(label, style: style, maxLines: 1, softWrap: false)
+              : SizedBox(width: width, child: Text(label, style: style, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center)),
+        );
 
   /// The side of the chart this label sits on: `meta.axisSide` in fl_chart's
   /// `getTitlesWidget`.

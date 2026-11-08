@@ -21,3 +21,6 @@ List<double> leftAxisLabelHeights(WidgetTester tester, Finder chart, {double axi
       if (tester.getRect(labels.at(index)).right <= chartLeft + axisWidth + 0.01) tester.getRect(labels.at(index)).height,
   ];
 }
+
+/// The scale [text] is drawn at: its painted height over its laid-out height.
+double drawnScale(WidgetTester tester, Finder text) => tester.getRect(text).height / tester.renderObject<RenderParagraph>(text).size.height;

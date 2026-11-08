@@ -147,4 +147,24 @@ void main() {
     expectAxisLabels(find.byType(BarChart), [], ['Aug 26', 'Jan 27']);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('the labels on one axis share one size at text x2', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await _pumpTrend(tester, _trend());
+
+    void expectOneScale(Finder chart) {
+      final heights = leftAxisLabelHeights(tester, chart);
+      expect(heights.length, greaterThan(1));
+      for (final height in heights) {
+        expect(height, moreOrLessEquals(heights.first), reason: 'before, "₹0" was drawn bigger than "₹25K"');
+      }
+    }
+
+    expectOneScale(find.byType(LineChart));
+    await tester.tap(find.text('Monthly'));
+    await tester.pumpAndSettle();
+    expectOneScale(find.byType(BarChart));
+    expect(tester.takeException(), isNull);
+  });
 }

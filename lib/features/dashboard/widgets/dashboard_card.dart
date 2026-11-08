@@ -2,11 +2,13 @@
 /// section wrapper, the skeleton swap and the chart tokens from the spec.
 library;
 
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../shell/widgets/common.dart';
+import '../../shell/widgets/segment_label.dart';
 
 /// Vertical gap between cards.
 const double kDashboardCardGap = 12;
@@ -27,16 +29,38 @@ Duration chartAnimation(BuildContext context) =>
 const Curve kChartCurve = Curves.easeOutCubic;
 
 /// A chart axis label kept on one line inside the room the axis reserves for
-/// it: at large text sizes it is drawn smaller rather than wrapped or clipped.
-class ChartAxisLabel extends StatelessWidget {
-  const ChartAxisLabel(this.label, {super.key, this.style, this.alignment = Alignment.center});
-  final String label;
-  final TextStyle? style;
-  final AlignmentGeometry alignment;
+/// it: at large text sizes it is drawn smaller rather than wrapped or clipped,
+/// and every label on the same [axis] of one chart is drawn at the same scale.
+class ChartAxisLabel extends SingleChildRenderObjectWidget {
+  ChartAxisLabel(String label, {super.key, required this.axis, TextStyle? style, this.alignment = Alignment.center})
+      : super(child: Text(label, style: style, maxLines: 1, softWrap: false));
+
+  /// The side of the chart this label sits on: `meta.axisSide` in fl_chart's
+  /// `getTitlesWidget`.
+  final AxisSide axis;
+  final Alignment alignment;
 
   @override
-  Widget build(BuildContext context) =>
-      FittedBox(fit: BoxFit.scaleDown, alignment: alignment, child: Text(label, style: style, maxLines: 1, softWrap: false));
+  RenderSegmentLabel createRenderObject(BuildContext context) => RenderSegmentLabel(_groupOf(context), alignment);
+
+  @override
+  void updateRenderObject(BuildContext context, RenderSegmentLabel renderObject) => renderObject
+    ..group = _groupOf(context)
+    ..alignment = alignment;
+
+  static final _groups = Expando<Map<AxisSide, SegmentLabelGroup>>();
+
+  /// The labels on one side of one chart share a group.
+  SegmentLabelGroup? _groupOf(BuildContext context) {
+    Element? chart;
+    context.visitAncestorElements((element) {
+      if (element.widget is! LineChart && element.widget is! BarChart) return true;
+      chart = element;
+      return false;
+    });
+    final found = chart;
+    return found == null ? null : (_groups[found] ??= {})[axis] ??= SegmentLabelGroup();
+  }
 }
 
 /// Colours for chart slices that have no category colour of their own.

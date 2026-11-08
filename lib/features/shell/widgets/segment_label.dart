@@ -44,9 +44,9 @@ class SegmentLabel extends SingleChildRenderObjectWidget {
   }
 }
 
-/// What each label of one segmented button or tab bar needs, so all draw at
-/// the smallest. Labels report during layout; the shared scale is read at
-/// paint, after the whole button has laid out.
+/// What each label of one segmented button, tab bar or chart axis needs, so
+/// all draw at the smallest. Labels report during layout; the shared scale is
+/// read at paint, after the whole group has laid out.
 class SegmentLabelGroup {
   final _needs = <RenderSegmentLabel, double>{};
 
@@ -70,7 +70,7 @@ class SegmentLabelGroup {
 }
 
 class RenderSegmentLabel extends RenderProxyBox {
-  RenderSegmentLabel(this._group);
+  RenderSegmentLabel(this._group, [this._alignment = Alignment.center]);
 
   SegmentLabelGroup? _group;
   set group(SegmentLabelGroup? value) {
@@ -80,17 +80,24 @@ class RenderSegmentLabel extends RenderProxyBox {
     markNeedsLayout();
   }
 
+  /// Where the scaled child sits in this box.
+  Alignment _alignment;
+  set alignment(Alignment value) {
+    if (value == _alignment) return;
+    _alignment = value;
+    markNeedsPaint();
+  }
+
   /// The scale this label alone would need.
   double _need = 1;
 
   double get _scale => math.min(_need, _group?.scale ?? 1);
 
-  /// Centres the child, drawn at [_scale], in this box.
+  /// Places the child, drawn at [_scale], in this box at [_alignment].
   Matrix4 get _paintTransform {
     final scale = _scale;
-    final childSize = child!.size;
-    return Matrix4.translationValues((size.width - childSize.width * scale) / 2, (size.height - childSize.height * scale) / 2, 0)
-      ..scaleByDouble(scale, scale, 1, 1);
+    final offset = _alignment.alongOffset((size - child!.size * scale) as Offset);
+    return Matrix4.translationValues(offset.dx, offset.dy, 0)..scaleByDouble(scale, scale, 1, 1);
   }
 
   @override

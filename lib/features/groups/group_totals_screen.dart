@@ -325,14 +325,8 @@ class MemberSpendChart extends StatelessWidget {
                       reservedSize: 22,
                       getTitlesWidget: (value, meta) => Padding(
                         padding: const EdgeInsets.only(top: 6),
-                        // At large text the name is drawn smaller to fit the axis height.
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: SizedBox(
-                            width: textScaler.scale(56),
-                            child: Text(nameOf(rows[value.round()].memberId), maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: labelStyle),
-                          ),
-                        ),
+                        // At large text every name is drawn at one smaller scale to fit the axis height.
+                        child: ChartAxisLabel(nameOf(rows[value.round()].memberId), axis: meta.axisSide, style: labelStyle, width: textScaler.scale(56)),
                       ),
                     ),
                   ),

@@ -229,6 +229,10 @@ class _Centre extends StatelessWidget {
 /// into a long amount like "CHF 2,54,000" (#101).
 const double kLegendValueGap = 12;
 
+/// Whether a legend row [maxWidth] wide puts its percent and amount on a
+/// second line: when large text leaves the name no room beside them.
+bool stacksLegendRow(double maxWidth, double textScale) => maxWidth < kDonutLegendMinWidth * textScale;
+
 class _LegendRow extends StatelessWidget {
   const _LegendRow({required this.slice, required this.selected, required this.moneyFormat, required this.onTap});
   final _Slice slice;
@@ -240,31 +244,60 @@ class _LegendRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final name = Row(
+      children: [
+        Container(width: 10, height: 10, decoration: BoxDecoration(color: slice.color, shape: BoxShape.circle)),
+        const SizedBox(width: 10),
+        Expanded(child: Text(slice.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium)),
+      ],
+    );
+    final percent = ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 44),
+      child: Text(l10n.percentOf(slice.percent), maxLines: 1, softWrap: false, textAlign: TextAlign.end, style: theme.textTheme.labelLarge?.tabular),
+    );
+    final amount = Text(formatMinor(slice.share.minor, format: moneyFormat, showDecimals: false), textAlign: TextAlign.end, style: theme.textTheme.bodyMedium?.tabular);
     return InkWell(
       onTap: slice.share.isOthers ? null : onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        height: 48,
+        constraints: const BoxConstraints(minHeight: 48),
         padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
           color: selected ? theme.colorScheme.primary.withValues(alpha: 0.08) : null,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Row(
-          children: [
-            Container(width: 10, height: 10, decoration: BoxDecoration(color: slice.color, shape: BoxShape.circle)),
-            const SizedBox(width: 10),
-            Expanded(child: Text(slice.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium)),
-            ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 44),
-              child: Text(l10n.percentOf(slice.percent), maxLines: 1, softWrap: false, textAlign: TextAlign.end, style: theme.textTheme.labelLarge?.tabular),
-            ),
-            const SizedBox(width: kLegendValueGap),
-            ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 72),
-              child: Text(formatMinor(slice.share.minor, format: moneyFormat, showDecimals: false), textAlign: TextAlign.end, style: theme.textTheme.bodyMedium?.tabular),
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) => stacksLegendRow(constraints.maxWidth, MediaQuery.textScalerOf(context).scale(1))
+              // The amount under the name, shrunk rather than cut if even a
+              // line of its own is too narrow.
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      name,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          percent,
+                          const SizedBox(width: kLegendValueGap),
+                          Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: amount)),
+                        ],
+                      ),
+                    ],
+                  ),
+                )
+              : SizedBox(
+                  height: 48,
+                  child: Row(
+                    children: [
+                      Expanded(child: name),
+                      percent,
+                      const SizedBox(width: kLegendValueGap),
+                      ConstrainedBox(constraints: const BoxConstraints(minWidth: 72), child: amount),
+                    ],
+                  ),
+                ),
         ),
       ),
     );

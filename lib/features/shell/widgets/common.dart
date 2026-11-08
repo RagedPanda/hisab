@@ -244,12 +244,7 @@ class SectionHeader extends StatelessWidget {
     return Padding(
       padding: padding,
       child: wrapsTrailing
-          ? Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              runSpacing: 4,
-              children: [Text(title, style: style), ?trailing],
-            )
+          ? TrailingWrap(title: Text(title, style: style), trailing: trailing)
           : Row(
               children: [
                 Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: style)),
@@ -258,6 +253,22 @@ class SectionHeader extends StatelessWidget {
             ),
     );
   }
+}
+
+/// A [title] with [trailing] at the far end of its line, moved under the
+/// title when large text leaves no room for both side by side.
+class TrailingWrap extends StatelessWidget {
+  const TrailingWrap({super.key, required this.title, this.trailing});
+  final Widget title;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        runSpacing: 4,
+        children: [title, ?trailing],
+      );
 }
 
 /// Trailing text action of a [SectionHeader] with a full 48dp tap target.

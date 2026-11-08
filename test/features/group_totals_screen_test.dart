@@ -24,6 +24,7 @@ import 'package:hisab/domain/split/group_totals.dart';
 import 'package:hisab/l10n/generated/app_localizations.dart';
 import 'package:hisab/core/theme.dart' show kExpenseColor;
 
+import '../support/one_line_text.dart';
 import '../support/app_harness.dart' show settle;
 import '../support/group_harness.dart' show addEqualExpense, createContainer, leaveApp, memberIdsByName, openAppAt, tapVisible;
 
@@ -194,6 +195,11 @@ void main() {
     final paid = tester.getRect(find.text('₹10,320').last);
     final share = tester.getRect(find.text('₹5,160').first);
     expect(paid.right, lessThan(share.left), reason: 'paid and share do not run into each other');
+    final heights = leftAxisLabelHeights(tester, find.byType(BarChart));
+    expect(heights.length, greaterThan(1));
+    for (final height in heights) {
+      expect(height, moreOrLessEquals(heights.first), reason: 'every amount on the axis is drawn at one size');
+    }
     expect(tester.takeException(), isNull);
   });
 }

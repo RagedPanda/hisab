@@ -10,6 +10,7 @@ import '../../../core/providers.dart';
 import '../../../core/theme.dart';
 import '../../../domain/stats/month_summary.dart';
 import '../../../l10n/l10n.dart';
+import '../../shell/widgets/common.dart';
 import '../../transactions/transactions_screen.dart';
 import '../dashboard_keys.dart';
 import '../dashboard_providers.dart';
@@ -73,18 +74,20 @@ class _HeroContent extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              l10n.spentInMonth(formatMonthName(data.range, locale: locale)),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.labelLarge?.copyWith(color: foreground.withValues(alpha: 0.85)),
-                            ),
+                      // Full width, so the pill sits at the far end when it fits beside the title.
+                      SizedBox(
+                        width: double.infinity,
+                        child: TrailingWrap(
+                          title: Text(
+                            l10n.spentInMonth(formatMonthName(data.range, locale: locale)),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelLarge?.copyWith(color: foreground.withValues(alpha: 0.85)),
                           ),
-                          if (summary.percentVsPrevious != null) _ComparisonPill(percent: summary.percentVsPrevious!, previousRange: data.previousRange, foreground: foreground),
-                        ],
+                          trailing: summary.percentVsPrevious == null
+                              ? null
+                              : _ComparisonPill(percent: summary.percentVsPrevious!, previousRange: data.previousRange, foreground: foreground),
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Row(

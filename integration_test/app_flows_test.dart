@@ -801,10 +801,20 @@ void main() {
     await tapText(tester, 'Export encrypted backup');
     expect(find.text('Backup passphrase'), findsOneWidget);
     await shoot(tester, 'backup_passphrase');
-    await enterText(tester, _dialogField(), 'short');
+    // The new-passphrase dialog asks twice: the passphrase, then the same again.
+    final passphraseField = find.byKey(const Key('backupPassphraseField'));
+    final confirmField = find.byKey(const Key('backupPassphraseConfirmField'));
+    await enterText(tester, passphraseField, 'short');
+    await enterText(tester, confirmField, 'short');
     await tapFinder(tester, _filled('Save'));
     expect(find.text('Use at least 8 characters'), findsOneWidget, reason: 'short passphrase rejected, share sheet not opened');
     await shoot(tester, 'backup_passphrase_short');
+    await enterText(tester, passphraseField, 'correct horse battery');
+    await enterText(tester, confirmField, 'correct horse batteries');
+    await tapFinder(tester, _filled('Save'));
+    expect(find.text("The two passphrases don't match"), findsOneWidget, reason: 'mismatched copy rejected, share sheet not opened');
+    await tapFinder(tester, find.widgetWithText(TextButton, 'Cancel'));
+    expect(find.byType(AlertDialog), findsNothing, reason: 'Cancel closes the dialog');
 
     const passphrase = 'correct horse battery';
     final bytes = await shared.read(backupServiceProvider).exportEncrypted(passphrase);

@@ -12,6 +12,7 @@ import 'package:hisab/features/dashboard/dashboard_providers.dart';
 import 'package:hisab/features/dashboard/widgets/trend_card.dart';
 
 import '../support/app_harness.dart';
+import '../support/one_line_text.dart';
 
 /// Six months from August 2026 to January 2027, so the labels span a year.
 List<PeriodTotal> _sixMonths({int expense = 1200000}) => [
@@ -115,5 +116,35 @@ void main() {
     final switchRect = tester.getRect(find.byType(SegmentedButton<TrendMode>));
     expect(switchRect.left, greaterThan(titleRect.right));
     expect(switchRect.top, lessThan(titleRect.bottom));
+  });
+
+  testWidgets('axis labels stay on one line inside their reserved room at text x2', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await _pumpTrend(tester, _trend());
+
+    void expectAxisLabels(Finder chart, List<String> amounts, List<String> bottom) {
+      final chartRect = tester.getRect(chart);
+      for (final label in amounts) {
+        expectOneLine(tester, chart, label);
+        final rect = tester.getRect(find.descendant(of: chart, matching: find.text(label)));
+        expect(rect.left, greaterThanOrEqualTo(chartRect.left - 0.01), reason: '"$label" starts inside the chart');
+        expect(rect.right, lessThanOrEqualTo(chartRect.left + 40.01), reason: '"$label" fits the 40dp amount axis');
+      }
+      for (final label in bottom) {
+        expectOneLine(tester, chart, label);
+        final rect = tester.getRect(find.descendant(of: chart, matching: find.text(label)));
+        expect(rect.bottom, lessThanOrEqualTo(chartRect.bottom + 0.01), reason: '"$label" is not cut off below the chart');
+      }
+    }
+
+    // ₹10,000 so far against ₹24,800 last month: the axis tops out at ₹25K.
+    expectAxisLabels(find.byType(LineChart), ['₹25K'], ['1']);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.text('Monthly'));
+    await tester.pumpAndSettle();
+    expectAxisLabels(find.byType(BarChart), [], ['Aug 26', 'Jan 27']);
+    expect(tester.takeException(), isNull);
   });
 }

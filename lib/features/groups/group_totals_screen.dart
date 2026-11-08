@@ -277,6 +277,8 @@ class MemberSpendChart extends StatelessWidget {
     final largest = rows.fold(0, (maximum, row) => max(maximum, max(row.paidMinor, row.shareMinor)));
     final maxY = niceCeiling(largest / 100);
     final labelStyle = theme.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant);
+    // The name slot grows with the text size so a name keeps its room.
+    final textScaler = MediaQuery.textScalerOf(context);
     final rodWidth = rows.length > 5 ? 8.0 : 14.0;
     String amount(int minor) => formatMinor(minor, format: moneyFormat, showDecimals: false);
     return Column(
@@ -314,7 +316,7 @@ class MemberSpendChart extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 40,
                       interval: maxY / 2,
-                      getTitlesWidget: (value, meta) => Text(axisAmountLabel(value, format: moneyFormat), style: labelStyle),
+                      getTitlesWidget: (value, meta) => ChartAxisLabel(axisAmountLabel(value, format: moneyFormat), style: labelStyle, alignment: Alignment.centerLeft),
                     ),
                   ),
                   bottomTitles: AxisTitles(
@@ -323,9 +325,13 @@ class MemberSpendChart extends StatelessWidget {
                       reservedSize: 22,
                       getTitlesWidget: (value, meta) => Padding(
                         padding: const EdgeInsets.only(top: 6),
-                        child: SizedBox(
-                          width: 56,
-                          child: Text(nameOf(rows[value.round()].memberId), maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: labelStyle),
+                        // At large text the name is drawn smaller to fit the axis height.
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: SizedBox(
+                            width: textScaler.scale(56),
+                            child: Text(nameOf(rows[value.round()].memberId), maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: labelStyle),
+                          ),
                         ),
                       ),
                     ),
@@ -382,7 +388,12 @@ class MemberSpendChart extends StatelessWidget {
                   ),
                   ConstrainedBox(
                     constraints: const BoxConstraints(minWidth: 72),
-                    child: Text(amount(row.shareMinor), textAlign: TextAlign.end, style: theme.textTheme.bodyMedium?.tabular),
+                    // The gap sits inside the minimum width, so it only shows once a large
+                    // amount or large text would make the two columns touch.
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: Text(amount(row.shareMinor), textAlign: TextAlign.end, style: theme.textTheme.bodyMedium?.tabular),
+                    ),
                   ),
                 ],
               ),

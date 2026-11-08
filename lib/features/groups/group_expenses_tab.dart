@@ -261,14 +261,20 @@ class _Effect extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(label, style: theme.textTheme.labelSmall!.copyWith(color: color ?? theme.colorScheme.onSurfaceVariant)),
-        if (amount != null) Text(amount!, style: theme.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, color: color).tabular),
-      ],
+    // At large text the two lines outgrow the row's trailing slot; they are
+    // drawn smaller rather than overflowing it.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerRight,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(label, style: theme.textTheme.labelSmall!.copyWith(color: color ?? theme.colorScheme.onSurfaceVariant)),
+          if (amount != null) Text(amount!, style: theme.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, color: color).tabular),
+        ],
+      ),
     );
   }
 }

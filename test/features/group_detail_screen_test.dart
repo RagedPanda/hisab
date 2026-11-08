@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/core/providers.dart';
@@ -11,8 +12,9 @@ import 'package:hisab/features/groups/group_totals_screen.dart';
 import 'package:hisab/features/groups/groups_screen.dart';
 import 'package:hisab/features/shell/router.dart';
 
-import '../support/app_harness.dart' show settle;
+import '../support/app_harness.dart' show pumpScreen, settle;
 import '../support/group_harness.dart';
+import '../support/one_line_text.dart';
 
 /// Opens the group's share options from the app bar and taps [option].
 Future<void> shareOption(WidgetTester tester, String option) async {
@@ -214,5 +216,48 @@ void main() {
     await tapVisible(tester, find.widgetWithText(FilledButton, 'Remove'));
     expect(await members(), isNot(contains('Rohan Mehta')));
     await leaveApp(tester);
+  });
+
+  for (final (locale, labels) in const [(Locale('en'), ['Expenses', 'Balances', 'Members']), (Locale('hi'), ['खर्च', 'बैलेंस', 'सदस्य'])]) {
+    testWidgets('the tab labels stay whole and on one line at text x2 on a 360dp screen (${locale.languageCode})', (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final container = await createContainer();
+      final groupId = (await tester.runAsync(() => container.read(groupsRepositoryProvider).createGroup(name: 'Book club', icon: 'school', myName: 'You', otherMembers: ['Amit'])))!;
+      await pumpScreen(tester, container, GroupDetailScreen(groupId: groupId), locale: locale);
+      await settle(tester);
+
+      final heights = <double>[];
+      for (final label in labels) {
+        final shown = find.descendant(of: find.byType(TabBar), matching: find.text(label));
+        expectOneLine(tester, find.byType(TabBar), label);
+        final paragraph = tester.renderObject<RenderParagraph>(shown);
+        expect(paragraph.size.width, greaterThanOrEqualTo(paragraph.getMaxIntrinsicWidth(double.infinity) - 0.01), reason: '"$label" is laid out whole, not faded at the tab edge');
+        final labelRect = tester.getRect(shown);
+        final tabRect = tester.getRect(find.ancestor(of: shown, matching: find.byType(Tab)));
+        expect(tabRect.intersect(labelRect).size, labelRect.size, reason: '"$label" is not cut off by its tab');
+        heights.add(labelRect.height);
+      }
+      for (final (index, height) in heights.indexed) {
+        expect(height, moreOrLessEquals(heights.first, epsilon: 0.01), reason: '"${labels[index]}" is drawn at the same size as its neighbours');
+      }
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('an expense row keeps its effect and amount inside the row at text x2', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final container = await createContainer();
+    final groupId = (await tester.runAsync(() => container.read(groupsRepositoryProvider).createGroup(name: 'Book club', icon: 'school', myName: 'You', otherMembers: ['Amit'])))!;
+    await tester.runAsync(() async {
+      final members = await memberIdsByName(container, groupId);
+      await addEqualExpense(container, groupId, paidBy: members['You']!, totalMinor: 132000, note: 'Beach shack drinks');
+    });
+    await pumpScreen(tester, container, GroupDetailScreen(groupId: groupId));
+    await settle(tester);
+
+    expect(find.text('you lent'), findsOneWidget);
+    expect(tester.takeException(), isNull, reason: 'no overflow under the amount');
   });
 }

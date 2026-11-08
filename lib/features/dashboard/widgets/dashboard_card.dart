@@ -26,6 +26,19 @@ Duration chartAnimation(BuildContext context) =>
 
 const Curve kChartCurve = Curves.easeOutCubic;
 
+/// A chart axis label kept on one line inside the room the axis reserves for
+/// it: at large text sizes it is drawn smaller rather than wrapped or clipped.
+class ChartAxisLabel extends StatelessWidget {
+  const ChartAxisLabel(this.label, {super.key, this.style, this.alignment = Alignment.center});
+  final String label;
+  final TextStyle? style;
+  final AlignmentGeometry alignment;
+
+  @override
+  Widget build(BuildContext context) =>
+      FittedBox(fit: BoxFit.scaleDown, alignment: alignment, child: Text(label, style: style, maxLines: 1, softWrap: false));
+}
+
 /// Colours for chart slices that have no category colour of their own.
 List<Color> chartFallbackColors(ColorScheme scheme) => [scheme.primary, kAccentColor, scheme.tertiary, const Color(0xFF6C8EAD), const Color(0xFF9C7BB8)];
 

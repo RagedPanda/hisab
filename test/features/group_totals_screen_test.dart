@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisab/app.dart';
@@ -18,6 +19,9 @@ import 'package:hisab/features/shell/router.dart';
 import 'package:hisab/features/dashboard/widgets/category_donut.dart';
 import 'package:hisab/features/shell/widgets/common.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:hisab/domain/money/money_format_resolver.dart';
+import 'package:hisab/domain/split/group_totals.dart';
+import 'package:hisab/l10n/generated/app_localizations.dart';
 import 'package:hisab/core/theme.dart' show kExpenseColor;
 
 import '../support/app_harness.dart' show settle;
@@ -161,5 +165,35 @@ void main() {
     expect(tooltips, {'Paid ₹0', 'Share ₹100', 'Paid ₹200'}, reason: 'touching a bar says what it is: I paid nothing, Priya paid 200, each share is 100');
     expect(tooltip.getTooltipColor(chart.barGroups.first), Theme.of(tester.element(find.byType(BarChart))).colorScheme.surfaceContainerHighest);
     await leaveApp(tester);
+  });
+
+  testWidgets('at text x2 member names stay inside the chart and the two amount columns keep apart', (tester) async {
+    tester.view.physicalSize = const Size(600, 900);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: MemberSpendChart(
+            rows: const [MemberSpend(memberId: 'you', paidMinor: 1032000, shareMinor: 516000), MemberSpend(memberId: 'ravi', paidMinor: 0, shareMinor: 516000)],
+            nameOf: (memberId) => memberId == 'you' ? 'You' : 'Ravi',
+            moneyFormat: resolveMoneyFormat(currencyCode: 'INR'),
+          ),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    final name = tester.renderObject<RenderParagraph>(find.descendant(of: find.byType(BarChart), matching: find.text('Ravi')));
+    expect(name.didExceedMaxLines, isFalse, reason: 'the name under its bars is not cut short');
+    final paid = tester.getRect(find.text('₹10,320').last);
+    final share = tester.getRect(find.text('₹5,160').first);
+    expect(paid.right, lessThan(share.left), reason: 'paid and share do not run into each other');
+    expect(tester.takeException(), isNull);
   });
 }

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -82,5 +83,35 @@ void main() {
     expect(stacksEmptyHeroRow(300, 1), isFalse);
     expect(stacksEmptyHeroRow(300, 1.3), isTrue);
     expect(stacksEmptyHeroRow(400, 1.3), isFalse);
+  });
+
+  for (final (locale, title) in const [(Locale('en'), 'Spent in'), (Locale('hi'), 'का खर्च')]) {
+    testWidgets('at text x2 the comparison pill moves under a whole title (${locale.languageCode})', (tester) async {
+      // The test font is far wider than the real one: a wide screen leaves the
+      // title room of its own, but not beside the pill.
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final container = await createContainer(overrides: [heroDataProvider.overrideWithValue(AsyncData(_hero(expense: 1060000, previousExpense: 1000000)))]);
+      await pumpScreen(tester, container, const Scaffold(body: Padding(padding: EdgeInsets.all(16), child: HeroCard())), locale: locale, size: const Size(600, 900));
+      await tester.pumpAndSettle();
+
+      final titleFinder = find.textContaining(title);
+      expect(tester.renderObject<RenderParagraph>(titleFinder).didExceedMaxLines, isFalse, reason: 'before, the pill squeezed the title to an ellipsis');
+      final pill = find.textContaining('6%');
+      expect(tester.renderObject<RenderParagraph>(pill).didExceedMaxLines, isFalse);
+      expect(tester.getRect(pill).top, greaterThanOrEqualTo(tester.getRect(titleFinder).bottom), reason: 'the pill wraps under the title');
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('with room the comparison pill sits at the far end of the title line', (tester) async {
+    final container = await createContainer(overrides: [heroDataProvider.overrideWithValue(AsyncData(_hero(expense: 1060000, previousExpense: 1000000)))]);
+    await pumpScreen(tester, container, const Scaffold(body: Padding(padding: EdgeInsets.all(16), child: HeroCard())), size: const Size(600, 900));
+    await tester.pumpAndSettle();
+    final title = tester.getRect(find.text('Spent in October'));
+    final pill = tester.getRect(find.ancestor(of: find.text('▲ 6% vs Sep'), matching: find.byType(Container)).first);
+    final card = tester.getRect(find.byKey(kHeroCardKey));
+    expect(pill.right, moreOrLessEquals(card.right - 4 - 20), reason: 'at the end, inside the card margin and padding');
+    expect(pill.center.dy, moreOrLessEquals(title.center.dy, epsilon: 0.5), reason: 'on the title line');
   });
 }

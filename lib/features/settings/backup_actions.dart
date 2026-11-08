@@ -71,6 +71,8 @@ class _BackupPassphraseDialogState extends State<BackupPassphraseDialog> {
     final l10n = context.l10n;
     final problem = _problem;
     return AlertDialog(
+      // With the keyboard up and large text, a wrapped error can outgrow the space left.
+      scrollable: true,
       title: Text(l10n.backupPassphrase),
       content: Column(
         mainAxisSize: MainAxisSize.min,

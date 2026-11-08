@@ -60,4 +60,18 @@ void main() {
     _expectShownInFull(tester, l10n.passphraseTooShort);
     expect(find.text(l10n.backupPassphraseHelp), findsNothing);
   });
+
+  testWidgets('with the keyboard up, a mismatch error that wraps keeps the dialog inside the screen', (tester) async {
+    final l10n = await _openDialog(tester, confirm: true, locale: const Locale('en'));
+    tester.view.viewInsets = FakeViewPadding(bottom: 360 * tester.view.devicePixelRatio);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('backupPassphraseField')), 'long enough');
+    await tester.enterText(find.byKey(const Key('backupPassphraseConfirmField')), 'something else');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull, reason: 'no overflow');
+    await tester.ensureVisible(find.text(l10n.passphraseMismatch));
+    expect(find.text(l10n.passphraseMismatch), findsOneWidget);
+  });
 }

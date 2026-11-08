@@ -204,6 +204,9 @@ class _Donut extends StatelessWidget {
       );
 }
 
+/// Width of the amount and caption inside the donut's hole.
+const double kDonutCentreWidth = 84;
+
 class _Centre extends StatelessWidget {
   const _Centre({required this.amount, required this.caption});
   final String amount;
@@ -212,13 +215,23 @@ class _Centre extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final captionStyle = theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    final growth = MediaQuery.textScalerOf(context).scale(1);
     return SizedBox(
-      width: 84,
+      width: kDonutCentreWidth,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           FittedBox(fit: BoxFit.scaleDown, child: Text(amount, maxLines: 1, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700).tabular)),
-          Text(caption, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          // Larger text gets room to match, and a second line, then the
+          // caption is drawn smaller to fit the hole: whole, never cut short.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: kDonutCentreWidth * growth),
+              child: Text(caption, maxLines: growth > 1 ? 2 : 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, textWidthBasis: TextWidthBasis.longestLine, style: captionStyle),
+            ),
+          ),
         ],
       ),
     );
